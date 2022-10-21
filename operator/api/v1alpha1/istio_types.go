@@ -23,13 +23,8 @@ import (
 
 // IstioSpec defines the desired state of Istio
 type IstioSpec struct {
-	ReleaseName string `json:"releaseName,omitempty"`
-}
-
-// IstioStatus defines the observed state of Istio
-type IstioStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	ReleaseName string     `json:"releaseName,omitempty"`
+	MeshConfig  MeshConfig `json:"meshConfig,omitempty"`
 }
 
 //+kubebuilder:object:root=true

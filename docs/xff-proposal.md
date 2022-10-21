@@ -1,8 +1,16 @@
+# Istio v1alpha1 proposal
+
+## Summary 
+
 This document proposes  istio-manager API exposed to users. Initial version covers hpa and resources configuration for Istio components such as istiod, ingress gateway and sidecars. This version also covers configuration needed to forward client information to workloads (client address via xff).
+
+## Details
 
 API specification on root level was split into `controlPlane` and `dataPlane` as described in Istio overview. `controlPlane` holds resources and hpa configuration for `istiod` component and general configuration called `meshConfig`. For this moment `meshConfig` will expose configuration to define `numTrustedProxies`, which is required for xff. `dataPlane` configuration contains resources and hpa configuration for `ingressGateway` component.
 
 Status will be implemented per `kyma-operator` requirements.
+
+## Istio CR example
 
 ```
 apiVersion: operator.kyma-project.io/v1alpha1
@@ -57,6 +65,8 @@ spec:
 status:
   state: Ready | Processing | Error | Deleting
 ```
+
+## Future plans
 
 In the future `meshConfig` specification can be enhanced with tracing specific configuration by defining `extensionProvider`. `ingressGateway` specification can be enhanced to enable users to define gardener domain annotations simplifying use of custom domain to expose workload.
 

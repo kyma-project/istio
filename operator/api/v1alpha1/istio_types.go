@@ -23,8 +23,9 @@ import (
 
 // IstioSpec defines the desired state of Istio
 type IstioSpec struct {
-	ReleaseName string     `json:"releaseName,omitempty"`
-	MeshConfig  MeshConfig `json:"meshConfig,omitempty"`
+	ReleaseName  string       `json:"releaseName,omitempty"`
+	Controlplane Controlplane `json:"controlplane"`
+	Dataplane    Dataplane    `json:"dataplane"`
 }
 
 //+kubebuilder:object:root=true

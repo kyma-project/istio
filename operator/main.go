@@ -45,7 +45,7 @@ const (
 	failureMaxDelayDefault      = 1000 * time.Second
 
 	chartPath    = "./istio-chart"
-	chartNs      = "istio-system"
+	chartNs      = "kyma-system"
 	nameOverride = "istio-operator"
 )
 

@@ -10,7 +10,7 @@ metadata:
     app.kubernetes.io/part-of: istio
     control-plane: controller-manager
   name: istio-controller-manager-metrics-service
-  namespace: istio-system
+  namespace: kyma-system
 spec:
   ports:
   - name: https

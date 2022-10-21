@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/name: rolebinding
     app.kubernetes.io/part-of: istio
   name: istio-leader-election-rolebinding
-  namespace: istio-system
+  namespace: kyma-system
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -17,4 +17,4 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: istio-controller-manager
-  namespace: istio-system
+  namespace: kyma-system

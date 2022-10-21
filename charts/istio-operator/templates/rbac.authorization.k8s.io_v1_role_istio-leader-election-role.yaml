@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/part-of: istio
     app.kubernets.io/managed-by: kustomize
   name: istio-leader-election-role
-  namespace: istio-system
+  namespace: kyma-system
 rules:
 - apiGroups:
   - ""

@@ -9,4 +9,4 @@ metadata:
     app.kubernetes.io/name: namespace
     app.kubernetes.io/part-of: istio
     control-plane: controller-manager
-  name: istio-system
+  name: kyma-system

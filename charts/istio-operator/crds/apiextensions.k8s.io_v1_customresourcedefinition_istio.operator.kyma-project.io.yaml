@@ -36,6 +36,41 @@ spec:
           spec:
             description: IstioSpec defines the desired state of Istio
             properties:
+              meshConfig:
+                properties:
+                  accessLogEncoding:
+                    type: string
+                  accessLogFile:
+                    type: string
+                  extensionProviders:
+                    items:
+                      properties:
+                        name:
+                          type: string
+                        path:
+                          type: string
+                      type: object
+                    type: array
+                  gatewayTopology:
+                    properties:
+                      forwardClientCertDetails:
+                        type: string
+                      numTrustedProxies:
+                        type: integer
+                    type: object
+                  holdApplicationUntilProxyStarts:
+                    type: boolean
+                  tracing:
+                    properties:
+                      sampling:
+                        type: integer
+                      zipkin:
+                        properties:
+                          address:
+                            type: string
+                        type: object
+                    type: object
+                type: object
               releaseName:
                 type: string
             type: object

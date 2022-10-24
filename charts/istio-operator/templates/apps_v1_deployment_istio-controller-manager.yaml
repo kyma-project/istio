@@ -71,7 +71,7 @@ spec:
         - --leader-elect
         command:
         - /manager
-        image: op-skr-registry.localhost:8889/unsigned/operator-images/istio-operator:0.0.1
+        image: op-skr-registry.localhost:50092/unsigned/operator-images/istio-operator:0.0.1
         livenessProbe:
           httpGet:
             path: /healthz

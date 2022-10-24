@@ -244,11 +244,3 @@ add
 ```bash
 kubectl apply -f kyma.yaml -n kcp-system
 ```
-
-..to add Istio module
-
-```yaml
-spec:
-  modules:
-  - name: Istio
-```

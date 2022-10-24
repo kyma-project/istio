@@ -2,21 +2,21 @@ package builder
 
 import (
 	"encoding/json"
-	"log"
 
 	"istio.io/api/operator/v1alpha1"
 	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 )
 
 type istioOperatorBuilder struct {
-	logger        *log.Logger
 	istioOperator istioOperator.IstioOperator
+
+	// Stored internally and returned on call to Get()
+	mergeError error
 }
 
-func NewIstioOperatorBuilder(logger *log.Logger, baseOperator ...istioOperator.IstioOperator) istioOperatorBuilder {
+func NewIstioOperatorBuilder(baseOperator ...istioOperator.IstioOperator) istioOperatorBuilder {
 	newBuilder := istioOperatorBuilder{}
-	newBuilder.logger = logger
-	if len(baseOperator) < 1 {
+	if len(baseOperator) > 0 {
 		newBuilder.istioOperator = baseOperator[0]
 	} else {
 		newBuilder.istioOperator = istioOperator.IstioOperator{
@@ -33,30 +33,43 @@ type Mergeable interface {
 }
 
 // MergeWith executes merge from supplied Mergeable with the builder stored IstioOperator as parameter
-func (b *istioOperatorBuilder) MergeWith(toMerge ...Mergeable) (*istioOperatorBuilder, error) {
+func (b *istioOperatorBuilder) MergeWith(toMerge ...Mergeable) *istioOperatorBuilder {
 	for _, merge := range toMerge {
 		out, err := merge.Merge(b.istioOperator)
 		if err != nil {
-			return nil, err
+			b.mergeError = err
+			return b
 		}
 		b.istioOperator = out
 	}
-	return b, nil
+	return b
 }
 
-func (b *istioOperatorBuilder) String() string {
-	s, err := json.Marshal(b.istioOperator)
-	if err != nil {
-		b.logger.Fatal(err)
+func (b *istioOperatorBuilder) GetString() (string, error) {
+	if b.mergeError != nil {
+		return "", b.mergeError
 	}
 
-	return string(s)
+	s, err := json.Marshal(b.istioOperator)
+	if err != nil {
+		return "", err
+	}
+
+	return string(s), nil
 }
 
 func (b *istioOperatorBuilder) GetJSONByteArray() ([]byte, error) {
+	if b.mergeError != nil {
+		return nil, b.mergeError
+	}
+
 	return json.Marshal(b.istioOperator)
 }
 
-func (b *istioOperatorBuilder) Get() istioOperator.IstioOperator {
-	return b.istioOperator
+func (b *istioOperatorBuilder) Get() (istioOperator.IstioOperator, error) {
+	if b.mergeError != nil {
+		return istioOperator.IstioOperator{}, b.mergeError
+	}
+
+	return b.istioOperator, nil
 }

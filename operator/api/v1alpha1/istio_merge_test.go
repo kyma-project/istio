@@ -3,6 +3,8 @@ package v1alpha1_test
 import (
 	"testing"
 
+	istioOperatorSpec "istio.io/api/operator/v1alpha1"
+
 	"github.com/brianvoe/gofakeit"
 	"github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/pkg/lib/builder"
@@ -17,8 +19,11 @@ func Test_MergeWith(t *testing.T) {
 	gofakeit.Struct(&someKymaOperator)
 	someKymaOperator.Spec.Controlplane.MeshConfig.GatewayTopology.NumTrustedProxies = 4
 
-	someIstioOperator := istioOperator.IstioOperator{}
-	gofakeit.Struct(&someIstioOperator)
+	someIstioOperator := istioOperator.IstioOperator{
+		Spec: &istioOperatorSpec.IstioOperatorSpec{
+			MeshConfig: &structpb.Struct{},
+		},
+	}
 	gatewayTopo, err := structpb.NewValue(map[string]interface{}{
 		"numTrustedProxies": 5,
 	})
@@ -44,8 +49,8 @@ func Test_MergeWith(t *testing.T) {
 		int(out.Spec.MeshConfig.Fields["gatewayTopology"].
 			GetStructValue().Fields["numTrustedProxies"].GetNumberValue()))
 
-	require.NoError(t,errString)
-	require.NoError(t,errJson)
+	require.NoError(t, errString)
+	require.NoError(t, errJson)
 }
 
 func Test_NoBaseOperator(t *testing.T) {

@@ -1,18 +1,17 @@
+---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.9.2
   creationTimestamp: null
-  labels:
-    app.kubernetes.io/component: istio-operator.kyma-project.io
-  name: istios.operator.kyma-project.io
+  name: istio.operator.kyma-project.io
 spec:
   group: operator.kyma-project.io
   names:
     kind: Istio
     listKind: IstioList
-    plural: istios
+    plural: istio
     singular: istio
   scope: Namespaced
   versions:
@@ -46,23 +45,12 @@ spec:
                             properties:
                               maxReplicas:
                                 type: integer
-                              metrics:
-                                items:
-                                  properties:
-                                    resource:
-                                      properties:
-                                        name:
-                                          type: string
-                                        targetAverageUtilization:
-                                          type: integer
-                                      type: object
-                                    type:
-                                      type: string
-                                  type: object
-                                type: array
                               minReplicas:
                                 minimum: 1
                                 type: integer
+                            required:
+                            - maxReplicas
+                            - minReplicas
                             type: object
                           resources:
                             properties:
@@ -74,6 +62,9 @@ spec:
                                   memory:
                                     pattern: ^[1-9](\d?)+(Mi|Gi)$
                                     type: string
+                                required:
+                                - cpu
+                                - memory
                                 type: object
                               requests:
                                 properties:
@@ -83,7 +74,13 @@ spec:
                                   memory:
                                     pattern: ^[1-9](\d?)+(Mi|Gi)$
                                     type: string
+                                required:
+                                - cpu
+                                - memory
                                 type: object
+                            required:
+                            - limits
+                            - requests
                             type: object
                           strategy:
                             properties:
@@ -95,9 +92,16 @@ spec:
                                   maxUnavailable:
                                     pattern: ^[1-9][\d]?%|100%|\d+$
                                     type: string
+                                required:
+                                - maxSurge
+                                - maxUnavailable
                                 type: object
+                            required:
+                            - rollingUpdate
                             type: object
                         type: object
+                    required:
+                    - deployment
                     type: object
                   meshConfig:
                     properties:
@@ -105,75 +109,18 @@ spec:
                         properties:
                           numTrustedProxies:
                             type: integer
+                        required:
+                        - numTrustedProxies
                         type: object
                     type: object
                 type: object
               dataplane:
-                properties:
-                  ingressGateway:
-                    properties:
-                      deployment:
-                        properties:
-                          hpa:
-                            properties:
-                              maxReplicas:
-                                type: integer
-                              metrics:
-                                items:
-                                  properties:
-                                    resource:
-                                      properties:
-                                        name:
-                                          type: string
-                                        targetAverageUtilization:
-                                          type: integer
-                                      type: object
-                                    type:
-                                      type: string
-                                  type: object
-                                type: array
-                              minReplicas:
-                                minimum: 1
-                                type: integer
-                            type: object
-                          resources:
-                            properties:
-                              limits:
-                                properties:
-                                  cpu:
-                                    pattern: ^[1-9](\d?)+(m|g)$
-                                    type: string
-                                  memory:
-                                    pattern: ^[1-9](\d?)+(Mi|Gi)$
-                                    type: string
-                                type: object
-                              requests:
-                                properties:
-                                  cpu:
-                                    pattern: ^[1-9](\d?)+(m|g)$
-                                    type: string
-                                  memory:
-                                    pattern: ^[1-9](\d?)+(Mi|Gi)$
-                                    type: string
-                                type: object
-                            type: object
-                          strategy:
-                            properties:
-                              rollingUpdate:
-                                properties:
-                                  maxSurge:
-                                    pattern: ^[1-9][\d]?%|100%|\d+$
-                                    type: string
-                                  maxUnavailable:
-                                    pattern: ^[1-9][\d]?%|100%|\d+$
-                                    type: string
-                                type: object
-                            type: object
-                        type: object
-                    type: object
                 type: object
               releaseName:
                 type: string
+            required:
+            - controlplane
+            - dataplane
             type: object
           status:
             description: Status defines the observed state of CustomObject.

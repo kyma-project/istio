@@ -1,12 +1,52 @@
 apiVersion: operator.kyma-project.io/v1alpha1
 kind: Istio
 metadata:
-  labels:
-    app.kubernetes.io/name: istio
-    app.kubernetes.io/instance: istio-sample
-    app.kubernetes.io/part-of: istio
-    app.kuberentes.io/managed-by: kustomize
-    app.kubernetes.io/created-by: istio
   name: istio-sample
+  labels:
+    app.kubernetes.io/name: istio-sample
 spec:
-  releaseName: "v0.0.1"
+  controlplane:
+    istiod:
+      deployment:
+        hpa: 
+          maxReplicas: 5
+          minReplicas: 2
+        strategy:
+          rollingUpdate:
+            maxSurge: 50%
+            maxUnavailable: "0"
+        resources:
+          limits:
+            cpu: 250m
+            memory: 384Mi
+          requests:
+            cpu: 10m
+            memory: 128Mi
+    meshConfig:
+      gatewayTopology:
+        numTrustedProxies: 1
+  dataplane:
+    ingressGateway:
+      deployment:
+        hpa: 
+          maxReplicas: 5
+          minReplicas: 2
+          metrics:
+          - resource:
+              name: cpu
+              targetAverageUtilization: 80
+            type: Resource
+          - resource:
+              name: memory
+              targetAverageUtilization: 80
+        strategy:
+          rollingUpdate:
+            maxSurge: 50%
+            maxUnavailable: "0"
+        resources:
+          limits:
+            cpu: 2000m
+            memory: 1024Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi

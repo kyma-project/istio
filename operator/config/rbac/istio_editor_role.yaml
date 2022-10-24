@@ -14,7 +14,7 @@ rules:
 - apiGroups:
   - operator.kyma-project.io
   resources:
-  - istio
+  - istios
   verbs:
   - create
   - delete
@@ -26,6 +26,6 @@ rules:
 - apiGroups:
   - operator.kyma-project.io
   resources:
-  - istio/status
+  - istios/status
   verbs:
   - get

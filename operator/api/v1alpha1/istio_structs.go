@@ -53,7 +53,7 @@ type Resources struct {
 
 type Deployment struct {
 	// +kubebuilder:validation:Optional
-	Hpa Hpa `json:"hpa",omitempty`
+	Hpa Hpa `json:"hpa,omitempty"`
 	// +kubebuilder:validation:Optional
 	Strategy Strategy `json:"strategy,omitempty"`
 	// +kubebuilder:validation:Optional
@@ -69,7 +69,7 @@ type Controlplane struct {
 	// +kubebuilder:validation:Optional
 	MeshConfig MeshConfig `json:"meshConfig,omitempty"`
 	// +kubebuilder:validation:Optional
-	Istiod Istiod `json:"istiod",omitempty`
+	Istiod Istiod `json:"istiod,omitempty"`
 }
 
 type Dataplane struct {

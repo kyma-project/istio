@@ -6,9 +6,18 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - create
+  - get
+  - patch
+  - update
+- apiGroups:
   - operator.kyma-project.io
   resources:
-  - istio
+  - istios
   verbs:
   - create
   - delete
@@ -20,13 +29,13 @@ rules:
 - apiGroups:
   - operator.kyma-project.io
   resources:
-  - istio/finalizers
+  - istios/finalizers
   verbs:
   - update
 - apiGroups:
   - operator.kyma-project.io
   resources:
-  - istio/status
+  - istios/status
   verbs:
   - get
   - patch

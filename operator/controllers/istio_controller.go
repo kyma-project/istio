@@ -41,9 +41,10 @@ func TemplateRateLimiter(failureBaseDelay time.Duration, failureMaxDelay time.Du
 		&workqueue.BucketRateLimiter{Limiter: rate.NewLimiter(rate.Limit(frequency), burst)})
 }
 
-//+kubebuilder:rbac:groups=operator.kyma-project.io,resources=istio,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=operator.kyma-project.io,resources=istio/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=operator.kyma-project.io,resources=istio/finalizers,verbs=update
+//+kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios/finalizers,verbs=update
+//+kubebuilder:rbac:groups="",resources=namespaces,verbs=get;create;update;patch
 
 func (r *IstioReconciler) SetupWithManager(mgr ctrl.Manager, chartPath string, configFlags, setFlags types.Flags, rateLimiter RateLimiter) error {
 	ConfigFlags = configFlags

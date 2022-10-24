@@ -14,7 +14,7 @@ rules:
 - apiGroups:
   - operator.kyma-project.io
   resources:
-  - istio
+  - istios
   verbs:
   - get
   - list
@@ -22,6 +22,6 @@ rules:
 - apiGroups:
   - operator.kyma-project.io
   resources:
-  - istio/status
+  - istios/status
   verbs:
   - get

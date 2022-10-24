@@ -241,7 +241,7 @@ add
   - "*"
 ```
 
-10. Enable Istio in Kyma
+4. Enable Istio in Kyma
 
 Edit Kyma CR ...
 

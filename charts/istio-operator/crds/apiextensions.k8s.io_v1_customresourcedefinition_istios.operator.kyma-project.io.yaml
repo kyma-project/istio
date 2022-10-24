@@ -6,13 +6,13 @@ metadata:
   creationTimestamp: null
   labels:
     app.kubernetes.io/component: istio-operator.kyma-project.io
-  name: istio.operator.kyma-project.io
+  name: istios.operator.kyma-project.io
 spec:
   group: operator.kyma-project.io
   names:
     kind: Istio
     listKind: IstioList
-    plural: istio
+    plural: istios
     singular: istio
   scope: Namespaced
   versions:
@@ -36,40 +36,86 @@ spec:
           spec:
             description: IstioSpec defines the desired state of Istio
             properties:
-              meshConfig:
+              controlplane:
                 properties:
-                  accessLogEncoding:
-                    type: string
-                  accessLogFile:
-                    type: string
-                  extensionProviders:
-                    items:
-                      properties:
-                        name:
-                          type: string
-                        path:
-                          type: string
-                      type: object
-                    type: array
-                  gatewayTopology:
+                  istiod:
                     properties:
-                      forwardClientCertDetails:
-                        type: string
-                      numTrustedProxies:
-                        type: integer
-                    type: object
-                  holdApplicationUntilProxyStarts:
-                    type: boolean
-                  tracing:
-                    properties:
-                      sampling:
-                        type: integer
-                      zipkin:
+                      deployment:
                         properties:
-                          address:
-                            type: string
+                          hpa:
+                            properties:
+                              maxReplicas:
+                                type: integer
+                              minReplicas:
+                                minimum: 1
+                                type: integer
+                            required:
+                            - maxReplicas
+                            - minReplicas
+                            type: object
+                          resources:
+                            properties:
+                              limits:
+                                properties:
+                                  cpu:
+                                    pattern: ^[1-9](\d?)+(m|g)$
+                                    type: string
+                                  memory:
+                                    pattern: ^[1-9](\d?)+(Mi|Gi)$
+                                    type: string
+                                required:
+                                - cpu
+                                - memory
+                                type: object
+                              requests:
+                                properties:
+                                  cpu:
+                                    pattern: ^[1-9](\d?)+(m|g)$
+                                    type: string
+                                  memory:
+                                    pattern: ^[1-9](\d?)+(Mi|Gi)$
+                                    type: string
+                                required:
+                                - cpu
+                                - memory
+                                type: object
+                            required:
+                            - limits
+                            - requests
+                            type: object
+                          strategy:
+                            properties:
+                              rollingUpdate:
+                                properties:
+                                  maxSurge:
+                                    pattern: ^[1-9][\d]?%|100%|\d+$
+                                    type: string
+                                  maxUnavailable:
+                                    pattern: ^[1-9][\d]?%|100%|\d+$
+                                    type: string
+                                required:
+                                - maxSurge
+                                - maxUnavailable
+                                type: object
+                            required:
+                            - rollingUpdate
+                            type: object
+                        type: object
+                    required:
+                    - deployment
+                    type: object
+                  meshConfig:
+                    properties:
+                      gatewayTopology:
+                        properties:
+                          numTrustedProxies:
+                            type: integer
+                        required:
+                        - numTrustedProxies
                         type: object
                     type: object
+                type: object
+              dataplane:
                 type: object
               releaseName:
                 type: string

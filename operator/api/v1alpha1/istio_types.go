@@ -23,14 +23,16 @@ import (
 
 // IstioSpec defines the desired state of Istio
 type IstioSpec struct {
-	ReleaseName  string       `json:"releaseName,omitempty"`
+	// +kubebuilder:validation:Optional
+	ReleaseName string `json:"releaseName,omitempty"`
+	// +kubebuilder:validation:Optional
 	Controlplane Controlplane `json:"controlplane"`
-	Dataplane    Dataplane    `json:"dataplane"`
+	// +kubebuilder:validation:Optional
+	Dataplane Dataplane `json:"dataplane"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
-//+kubebuilder:resource:path=istio
 
 // Istio is the Schema for the istio API
 type Istio struct {

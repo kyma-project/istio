@@ -119,6 +119,9 @@ spec:
                 type: object
               releaseName:
                 type: string
+            required:
+            - controlplane
+            - dataplane
             type: object
           status:
             description: Status defines the observed state of CustomObject.

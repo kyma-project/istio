@@ -182,11 +182,9 @@ repositoryContexts:
 
 ## Install modular Kyma on the k3d cluster
 
-1. Install the latest versions of `module-manager` and `lifecycle-manager`
+1. Install the latest versions of `module-manager` and `lifecycle-manager` with `kyma alpha deploy`
 
 ```bash
-kyma alpha deploy
-
 - Kustomize ready
 - Lifecycle Manager deployed
 - Module Manager deployed
@@ -243,10 +241,8 @@ add
 
 10. Enable Istio in Kyma
 
-Edit Kyma CR ...
-
 ```bash
-kubectl edit kymas.operator.kyma-project.io -n kcp-system default-kyma
+kubectl apply -f kyma.yaml -n kcp-system
 ```
 
 ..to add Istio module

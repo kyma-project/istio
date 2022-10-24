@@ -25,10 +25,12 @@ import (
 type IstioSpec struct {
 	// +kubebuilder:validation:Optional
 	ReleaseName string `json:"releaseName,omitempty"`
+
 	// +kubebuilder:validation:Optional
-	Controlplane Controlplane `json:"controlplane"`
+	Controlplane Controlplane `json:"controlplane,omitempty"`
+
 	// +kubebuilder:validation:Optional
-	Dataplane Dataplane `json:"dataplane"`
+	Dataplane Dataplane `json:"dataplane,omitempty"`
 }
 
 //+kubebuilder:object:root=true

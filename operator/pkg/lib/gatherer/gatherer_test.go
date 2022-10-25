@@ -17,7 +17,8 @@ import (
 const (
 	IstioResourceName string = "some-istio"
 	IstioNamespace    string = "kyma-system"
-	TestReleaseName   string = "test-release-name"
+	TestLabelKey      string = "test-key"
+	TestLabelVal      string = "test-val"
 	DefaultNamespace  string = "default"
 )
 
@@ -42,8 +43,9 @@ func Test_GetIstioCR(t *testing.T) {
 	istio_kymaSystem := v1alpha1.Istio{ObjectMeta: v1.ObjectMeta{
 		Name:      IstioResourceName,
 		Namespace: IstioNamespace,
-	}, Spec: v1alpha1.IstioSpec{
-		ReleaseName: TestReleaseName,
+		Labels: map[string]string{
+			TestLabelKey: TestLabelVal,
+		},
 	}}
 
 	client := createClientSet(t, &kymaSystem, &istio_kymaSystem)
@@ -51,7 +53,7 @@ func Test_GetIstioCR(t *testing.T) {
 	istioCr, err := gatherer.GetIstioCR(context.TODO(), client, IstioResourceName, IstioNamespace)
 
 	require.NoError(t, err)
-	require.Equal(t, istio_kymaSystem.Spec.ReleaseName, istioCr.Spec.ReleaseName)
+	require.Equal(t, istio_kymaSystem.ObjectMeta.Labels[TestLabelKey], istioCr.ObjectMeta.Labels[TestLabelKey])
 
 	noObjectClient := createClientSet(t, &kymaSystem)
 	istioCrNoObject, err := gatherer.GetIstioCR(context.TODO(), noObjectClient, IstioResourceName, IstioNamespace)
@@ -70,15 +72,17 @@ func Test_ListIstioCR(t *testing.T) {
 	istio_kymaSystem := v1alpha1.Istio{ObjectMeta: v1.ObjectMeta{
 		Name:      IstioResourceName,
 		Namespace: IstioNamespace,
-	}, Spec: v1alpha1.IstioSpec{
-		ReleaseName: TestReleaseName,
+		Labels: map[string]string{
+			TestLabelKey: TestLabelVal,
+		},
 	}}
 
 	istio_default := v1alpha1.Istio{ObjectMeta: v1.ObjectMeta{
 		Name:      IstioResourceName,
 		Namespace: DefaultNamespace,
-	}, Spec: v1alpha1.IstioSpec{
-		ReleaseName: TestReleaseName,
+		Labels: map[string]string{
+			TestLabelKey: TestLabelVal,
+		},
 	}}
 
 	client := createClientSet(t, &kymaSystem, &istio_kymaSystem, &istio_default)

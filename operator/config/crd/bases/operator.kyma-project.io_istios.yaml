@@ -36,9 +36,11 @@ spec:
             description: IstioSpec defines the desired state of Istio
             properties:
               config:
+                description: Configurion.
                 properties:
                   numTrustedProxies:
-                    description: Configurion.
+                    description: Defines the number of trusted proxies deployed in
+                      front of the Istio gateway proxy.
                     type: integer
                 type: object
               releaseName:

@@ -3,7 +3,6 @@ package builder
 import (
 	"encoding/json"
 
-	"istio.io/api/operator/v1alpha1"
 	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 )
 
@@ -14,18 +13,14 @@ type istioOperatorBuilder struct {
 	mergeError error
 }
 
-// Creates new istioOperatorBuilder, if supplied with arguments will set the base for the merge to the first argument supplied
-func NewIstioOperatorBuilder(baseOperator ...istioOperator.IstioOperator) istioOperatorBuilder {
-	newBuilder := istioOperatorBuilder{}
-	if len(baseOperator) > 0 {
-		newBuilder.istioOperator = baseOperator[0]
-	} else {
-		newBuilder.istioOperator = istioOperator.IstioOperator{
-			Spec: &v1alpha1.IstioOperatorSpec{},
-		}
-	}
+// Creates new istioOperatorBuilder
+func NewIstioOperatorBuilder() *istioOperatorBuilder {
+	return &istioOperatorBuilder{}
+}
 
-	return newBuilder
+func (b *istioOperatorBuilder) SetBaseOperator(base istioOperator.IstioOperator) *istioOperatorBuilder {
+	b.istioOperator = base
+	return b
 }
 
 // Mergeable exposes Merge function, types that implement this interface should be able to append their configuration to IstioOperator

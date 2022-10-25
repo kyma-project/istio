@@ -20,7 +20,7 @@ func Test_MergeWith(t *testing.T) {
 	op.Spec.Namespace = "prevNamespace"
 
 	fake := FakeMergeable{NewNamespaceName: NewNamespaceName}
-	builder := builder.NewIstioOperatorBuilder(op)
+	builder := builder.NewIstioOperatorBuilder().SetBaseOperator(op)
 
 	operator, err := builder.MergeWith(fake).Build()
 

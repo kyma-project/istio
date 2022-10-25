@@ -36,6 +36,12 @@ spec:
           spec:
             description: IstioSpec defines the desired state of Istio
             properties:
+              config:
+                properties:
+                  numTrustedProxies:
+                    description: Configurion.
+                    type: integer
+                type: object
               releaseName:
                 type: string
             type: object

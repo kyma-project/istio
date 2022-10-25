@@ -25,6 +25,9 @@ import (
 type IstioSpec struct {
 	// +kubebuilder:validation:Optional
 	ReleaseName string `json:"releaseName,omitempty"`
+
+	// +kubebuilder:validation:Optional
+	Config Config `json:"config,omitempty"`
 }
 
 //+kubebuilder:object:root=true

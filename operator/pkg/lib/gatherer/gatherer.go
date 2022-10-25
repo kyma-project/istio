@@ -8,6 +8,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// GetIstioCR fetches the Istio CR from the cluster using client with supplied name and namespace
 func GetIstioCR(ctx context.Context, client client.Client, name string, namespace string) (*v1alpha1.Istio, error) {
 	cr := v1alpha1.Istio{}
 	err := client.Get(ctx, types.NamespacedName{Namespace: namespace, Name: name}, &cr)
@@ -18,7 +19,8 @@ func GetIstioCR(ctx context.Context, client client.Client, name string, namespac
 	return &cr, nil
 }
 
-func ListIstioCR(ctx context.Context, kubeclient client.Client, namespace... string) (*v1alpha1.IstioList, error) {
+// GetIstioCR lists all Istio CRs on the cluster if no namespace is supplied, or from the supplied namespaces
+func ListIstioCR(ctx context.Context, kubeclient client.Client, namespace ...string) (*v1alpha1.IstioList, error) {
 	list := v1alpha1.IstioList{}
 
 	if len(namespace) == 0 {

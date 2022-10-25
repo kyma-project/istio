@@ -22,7 +22,7 @@ const (
 )
 
 // Get returns the chart information to be processed.
-func (m *ManifestResolver) Get(obj types.BaseCustomObject, logger logr.Logger) (types.InstallationSpec, error) {
+func (m *ManifestResolver) Get(obj types.BaseCustomObject, _ logr.Logger) (types.InstallationSpec, error) {
 	istioOperator, valid := obj.(*operatorv1alpha1.Istio)
 	if !valid {
 		return types.InstallationSpec{},

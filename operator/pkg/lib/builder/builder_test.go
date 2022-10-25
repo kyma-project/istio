@@ -22,7 +22,7 @@ func Test_MergeWith(t *testing.T) {
 	fake := FakeMergeable{NewNamespaceName: NewNamespaceName}
 	builder := builder.NewIstioOperatorBuilder(op)
 
-	operator, err := builder.MergeWith(fake).Get()
+	operator, err := builder.MergeWith(fake).Build()
 
 	require.NoError(t, err)
 	require.Equal(t, operator.Spec.Namespace, NewNamespaceName)
@@ -32,7 +32,7 @@ func Test_NoBaseOperator(t *testing.T) {
 	fake := FakeMergeable{NewNamespaceName: NewNamespaceName}
 	builder := builder.NewIstioOperatorBuilder()
 
-	operator, err := builder.MergeWith(fake).Get()
+	operator, err := builder.MergeWith(fake).Build()
 
 	require.NoError(t, err)
 	require.Equal(t, operator.Spec.Namespace, NewNamespaceName)
@@ -42,7 +42,7 @@ func Test_Error(t *testing.T) {
 	fake := FakeMergeable{ThrowError: errors.New("some-error")}
 	builder := builder.NewIstioOperatorBuilder()
 
-	operator, err := builder.MergeWith(fake).Get()
-	require.Empty(t,operator)
-	require.Error(t,err)
+	operator, err := builder.MergeWith(fake).Build()
+	require.Empty(t, operator)
+	require.Error(t, err)
 }

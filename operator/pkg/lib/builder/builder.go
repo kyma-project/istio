@@ -14,6 +14,7 @@ type istioOperatorBuilder struct {
 	mergeError error
 }
 
+// Creates new istioOperatorBuilder, if supplied with arguments will set the base for the merge to the first argument supplied
 func NewIstioOperatorBuilder(baseOperator ...istioOperator.IstioOperator) istioOperatorBuilder {
 	newBuilder := istioOperatorBuilder{}
 	if len(baseOperator) > 0 {
@@ -27,6 +28,7 @@ func NewIstioOperatorBuilder(baseOperator ...istioOperator.IstioOperator) istioO
 	return newBuilder
 }
 
+// Mergeable exposes Merge function, types that implement this interface should be able to append their configuration to IstioOperator
 type Mergeable interface {
 	// merge should merge any new configuration with the istioOperator parameter, overwriting if needed
 	Merge(istioOperator.IstioOperator) (istioOperator.IstioOperator, error)
@@ -45,7 +47,8 @@ func (b *istioOperatorBuilder) MergeWith(toMerge ...Mergeable) *istioOperatorBui
 	return b
 }
 
-func (b *istioOperatorBuilder) GetString() (string, error) {
+// BuildString returns the built IstioOperator marshaled to JSON string
+func (b *istioOperatorBuilder) BuildString() (string, error) {
 	if b.mergeError != nil {
 		return "", b.mergeError
 	}
@@ -58,7 +61,8 @@ func (b *istioOperatorBuilder) GetString() (string, error) {
 	return string(s), nil
 }
 
-func (b *istioOperatorBuilder) GetJSONByteArray() ([]byte, error) {
+// BuildJSONByteArray returns the built IstioOperator marshaled to JSON []byte
+func (b *istioOperatorBuilder) BuildJSONByteArray() ([]byte, error) {
 	if b.mergeError != nil {
 		return nil, b.mergeError
 	}
@@ -66,7 +70,8 @@ func (b *istioOperatorBuilder) GetJSONByteArray() ([]byte, error) {
 	return json.Marshal(b.istioOperator)
 }
 
-func (b *istioOperatorBuilder) Get() (istioOperator.IstioOperator, error) {
+// Build returns the built IstioOperator
+func (b *istioOperatorBuilder) Build() (istioOperator.IstioOperator, error) {
 	if b.mergeError != nil {
 		return istioOperator.IstioOperator{}, b.mergeError
 	}

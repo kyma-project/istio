@@ -113,7 +113,7 @@ func main() {
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr, chartPath, ConfigFlags, SetFlags, ratelimiter); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Sample")
+		setupLog.Error(err, "unable to create controller", "controller", "Istio")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder

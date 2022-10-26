@@ -18,7 +18,7 @@ type IstioReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// ManifestResolver represents the chart information for the passed Sample resource.
+// ManifestResolver represents the chart information for the passed Istio resource.
 type ManifestResolver struct {
 	chartPath string
 }

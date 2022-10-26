@@ -10,7 +10,7 @@ require (
 	github.com/onsi/gomega v1.22.1
 	github.com/stretchr/testify v1.8.1
 	golang.org/x/time v0.1.0
-	istio.io/api v0.0.0-20221021183946-6b7b70196148
+	istio.io/api v0.0.0-20221021183946-6b7b70196148 // indirect
 	istio.io/istio v0.0.0-20221023221338-9a6e009adc35
 	k8s.io/api v0.25.3
 	k8s.io/apiextensions-apiserver v0.25.2

@@ -2,12 +2,9 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/go-logr/logr"
-	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/module-manager/operator/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var (
@@ -23,14 +20,8 @@ const (
 
 // Get returns the chart information to be processed.
 func (m *ManifestResolver) Get(obj types.BaseCustomObject, _ logr.Logger) (types.InstallationSpec, error) {
-	istioOperator, valid := obj.(*operatorv1alpha1.Istio)
-	if !valid {
-		return types.InstallationSpec{},
-			fmt.Errorf("invalid type conversion for %s", client.ObjectKeyFromObject(obj))
-	}
 	return types.InstallationSpec{
-		ChartPath:   m.chartPath,
-		ReleaseName: istioOperator.Spec.ReleaseName,
+		ChartPath: m.chartPath,
 		ChartFlags: types.ChartFlags{
 			ConfigFlags: ConfigFlags,
 			SetFlags:    SetFlags,

@@ -24,9 +24,6 @@ import (
 // IstioSpec defines the desired state of Istio
 type IstioSpec struct {
 	// +kubebuilder:validation:Optional
-	ReleaseName string `json:"releaseName,omitempty"`
-
-	// +kubebuilder:validation:Optional
 	Config Config `json:"config,omitempty"`
 }
 

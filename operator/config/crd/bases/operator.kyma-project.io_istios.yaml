@@ -43,8 +43,6 @@ spec:
                       front of the Istio gateway proxy.
                     type: integer
                 type: object
-              releaseName:
-                type: string
             type: object
           status:
             description: Status defines the observed state of CustomObject.

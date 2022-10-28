@@ -1,71 +1,83 @@
-package v1alpha1_test
+package v1alpha1
 
 import (
-	"testing"
-
-	istioOperatorSpec "istio.io/api/operator/v1alpha1"
-
-	"github.com/brianvoe/gofakeit"
-	"github.com/kyma-project/istio/operator/api/v1alpha1"
-	"github.com/kyma-project/istio/operator/pkg/lib/builder"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/structpb"
+	"istio.io/api/mesh/v1alpha1"
+	operatorv1alpha1 "istio.io/api/operator/v1alpha1"
 	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
+	"istio.io/istio/pkg/config/mesh"
+	"istio.io/istio/pkg/util/protomarshal"
+	"testing"
 )
 
-func Test_MergeWith(t *testing.T) {
-	// Given
-	someKymaOperator := v1alpha1.Istio{}
-	gofakeit.Struct(&someKymaOperator)
-	someKymaOperator.Spec.Controlplane.MeshConfig.GatewayTopology.NumTrustedProxies = 4
+func TestIstioMergeInto(t *testing.T) {
 
-	someIstioOperator := istioOperator.IstioOperator{
-		Spec: &istioOperatorSpec.IstioOperatorSpec{
-			MeshConfig: &structpb.Struct{},
-		},
-	}
-	gatewayTopo, err := structpb.NewValue(map[string]interface{}{
-		"numTrustedProxies": 5,
+	t.Run("Should update numTrustedProxies on IstioOperator from 1 to 5", func(t *testing.T) {
+		// given
+		m := mesh.DefaultMeshConfig()
+		m.DefaultConfig.GatewayTopology = &v1alpha1.Topology{NumTrustedProxies: 1}
+		meshConfig, err := convert(m)
+		if err != nil {
+			t.Error(err)
+		}
+
+		iop := istioOperator.IstioOperator{
+			Spec: &operatorv1alpha1.IstioOperatorSpec{
+				MeshConfig: meshConfig,
+			},
+		}
+
+		istioCR := Istio{Spec: IstioSpec{Config: Config{NumTrustedProxies: 5}}}
+
+		// when
+		out, err := istioCR.MergeInto(iop)
+
+		// then
+		require.NoError(t, err)
+		require.Equal(t, float64(5), out.Spec.MeshConfig.Fields["defaultConfig"].
+			GetStructValue().Fields["gatewayTopology"].GetStructValue().Fields["numTrustedProxies"].GetNumberValue())
+
 	})
-	if err != nil {
-		t.Fatal(err)
-	}
 
-	if len(someIstioOperator.Spec.MeshConfig.Fields) == 0 {
-		someIstioOperator.Spec.MeshConfig.Fields = make(map[string]*structpb.Value)
-	}
+	t.Run("Should set numTrustedProxies on IstioOperator to 5 when no GatewayTopology is configured", func(t *testing.T) {
+		// given
+		m := mesh.DefaultMeshConfig()
+		meshConfig, err := convert(m)
+		if err != nil {
+			t.Error(err)
+		}
 
-	someIstioOperator.Spec.MeshConfig.Fields["gatewayTopology"] = gatewayTopo
+		iop := istioOperator.IstioOperator{
+			Spec: &operatorv1alpha1.IstioOperatorSpec{
+				MeshConfig: meshConfig,
+			},
+		}
 
-	// When
-	operatorBuilder := builder.NewIstioOperatorBuilder(someIstioOperator)
-	out, err := operatorBuilder.MergeWith(someKymaOperator).Get()
-	_, errString := operatorBuilder.MergeWith(someKymaOperator).GetString()
-	_, errJson := operatorBuilder.MergeWith(someKymaOperator).GetJSONByteArray()
+		istioCR := Istio{Spec: IstioSpec{Config: Config{NumTrustedProxies: 5}}}
 
-	// Then
-	require.NoError(t, err)
-	require.Equal(t, someKymaOperator.Spec.Controlplane.MeshConfig.GatewayTopology.NumTrustedProxies,
-		int(out.Spec.MeshConfig.Fields["gatewayTopology"].
-			GetStructValue().Fields["numTrustedProxies"].GetNumberValue()))
+		// when
+		out, err := istioCR.MergeInto(iop)
 
-	require.NoError(t, errString)
-	require.NoError(t, errJson)
+		// then
+		require.NoError(t, err)
+		require.Equal(t, float64(5), out.Spec.MeshConfig.Fields["defaultConfig"].
+			GetStructValue().Fields["gatewayTopology"].GetStructValue().Fields["numTrustedProxies"].GetNumberValue())
+
+	})
+
 }
 
-func Test_NoBaseOperator(t *testing.T) {
-	// Given
-	someKymaOperator := v1alpha1.Istio{}
-	gofakeit.Struct(&someKymaOperator)
-	someKymaOperator.Spec.Controlplane.MeshConfig.GatewayTopology.NumTrustedProxies = 4
+func convert(a *v1alpha1.MeshConfig) (*structpb.Struct, error) {
 
-	// When
-	operatorBuilder := builder.NewIstioOperatorBuilder()
-	out, err := operatorBuilder.MergeWith(someKymaOperator).Get()
+	mMap, err := protomarshal.ToJSONMap(a)
+	if err != nil {
+		return nil, err
+	}
 
-	// Then
-	require.NoError(t, err)
-	require.Equal(t, someKymaOperator.Spec.Controlplane.MeshConfig.GatewayTopology.NumTrustedProxies,
-		int(out.Spec.MeshConfig.Fields["gatewayTopology"].
-			GetStructValue().Fields["numTrustedProxies"].GetNumberValue()))
+	if mStruct, err := structpb.NewStruct(mMap); err != nil {
+		return nil, err
+	} else {
+		return mStruct, nil
+	}
 }

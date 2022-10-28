@@ -2,6 +2,7 @@ package v1alpha1
 
 import (
 	"encoding/json"
+
 	"google.golang.org/protobuf/types/known/structpb"
 	meshv1alpha1 "istio.io/api/mesh/v1alpha1"
 	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
@@ -9,6 +10,9 @@ import (
 )
 
 func (i *Istio) MergeInto(op istioOperator.IstioOperator) (istioOperator.IstioOperator, error) {
+	if i.Spec.Config.NumTrustedProxies == nil {
+		return op, nil
+	}
 
 	c, err := unmarshalMeshConfig(op.Spec.MeshConfig)
 	if err != nil {
@@ -18,9 +22,9 @@ func (i *Istio) MergeInto(op istioOperator.IstioOperator) (istioOperator.IstioOp
 	// Since the gateway topology is not part of the default configuration, and we do not explicitly set it in the
 	// chart, it could be nil.
 	if c.DefaultConfig.GatewayTopology != nil {
-		c.DefaultConfig.GatewayTopology.NumTrustedProxies = uint32(i.Spec.Config.NumTrustedProxies)
+		c.DefaultConfig.GatewayTopology.NumTrustedProxies = uint32(*i.Spec.Config.NumTrustedProxies)
 	} else {
-		c.DefaultConfig.GatewayTopology = &meshv1alpha1.Topology{NumTrustedProxies: uint32(i.Spec.Config.NumTrustedProxies)}
+		c.DefaultConfig.GatewayTopology = &meshv1alpha1.Topology{NumTrustedProxies: uint32(*i.Spec.Config.NumTrustedProxies)}
 	}
 
 	if updatedConfig, err := marshalMeshConfig(c); err != nil {

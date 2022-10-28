@@ -1,6 +1,8 @@
 package v1alpha1
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/structpb"
 	"istio.io/api/mesh/v1alpha1"
@@ -8,7 +10,6 @@ import (
 	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	"istio.io/istio/pkg/config/mesh"
 	"istio.io/istio/pkg/util/protomarshal"
-	"testing"
 )
 
 func TestIstioMergeInto(t *testing.T) {
@@ -28,7 +29,8 @@ func TestIstioMergeInto(t *testing.T) {
 			},
 		}
 
-		istioCR := Istio{Spec: IstioSpec{Config: Config{NumTrustedProxies: 5}}}
+		numProxies := 5
+		istioCR := Istio{Spec: IstioSpec{Config: Config{NumTrustedProxies: &numProxies}}}
 
 		// when
 		out, err := istioCR.MergeInto(iop)
@@ -54,14 +56,43 @@ func TestIstioMergeInto(t *testing.T) {
 			},
 		}
 
-		istioCR := Istio{Spec: IstioSpec{Config: Config{NumTrustedProxies: 5}}}
+		numProxies := 5
+
+		istioCR := Istio{Spec: IstioSpec{Config: Config{NumTrustedProxies: &numProxies}}}
 
 		// when
 		out, err := istioCR.MergeInto(iop)
 
 		// then
 		require.NoError(t, err)
-		require.Equal(t, float64(5), out.Spec.MeshConfig.Fields["defaultConfig"].
+		require.Equal(t, float64(numProxies), out.Spec.MeshConfig.Fields["defaultConfig"].
+			GetStructValue().Fields["gatewayTopology"].GetStructValue().Fields["numTrustedProxies"].GetNumberValue())
+
+	})
+
+	t.Run("Should change nothing if config is empty", func(t *testing.T) {
+		// given
+		m := mesh.DefaultMeshConfig()
+		m.DefaultConfig.GatewayTopology = &v1alpha1.Topology{NumTrustedProxies: 1}
+		meshConfig, err := convert(m)
+		if err != nil {
+			t.Error(err)
+		}
+
+		iop := istioOperator.IstioOperator{
+			Spec: &operatorv1alpha1.IstioOperatorSpec{
+				MeshConfig: meshConfig,
+			},
+		}
+
+		istioCR := Istio{Spec: IstioSpec{}}
+
+		// when
+		out, err := istioCR.MergeInto(iop)
+
+		// then
+		require.NoError(t, err)
+		require.Equal(t, float64(1), out.Spec.MeshConfig.Fields["defaultConfig"].
 			GetStructValue().Fields["gatewayTopology"].GetStructValue().Fields["numTrustedProxies"].GetNumberValue())
 
 	})

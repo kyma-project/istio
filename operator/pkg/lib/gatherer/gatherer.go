@@ -19,7 +19,7 @@ func GetIstioCR(ctx context.Context, client client.Client, name string, namespac
 	return &cr, nil
 }
 
-// GetIstioCR lists all Istio CRs on the cluster if no namespace is supplied, or from the supplied namespaces
+// ListIstioCR lists all Istio CRs on the cluster if no namespace is supplied, or from the supplied namespaces
 func ListIstioCR(ctx context.Context, kubeclient client.Client, namespace ...string) (*v1alpha1.IstioList, error) {
 	list := v1alpha1.IstioList{}
 

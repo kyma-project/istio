@@ -19,6 +19,9 @@ func (i *Istio) MergeInto(op istioOperator.IstioOperator) (istioOperator.IstioOp
 		return op, err
 	}
 
+	if c.DefaultConfig == nil {
+		c.DefaultConfig = &meshv1alpha1.ProxyConfig{}
+	}
 	// Since the gateway topology is not part of the default configuration, and we do not explicitly set it in the
 	// chart, it could be nil.
 	if c.DefaultConfig.GatewayTopology != nil {

@@ -1,0 +1,20 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/component: istio-operator.kyma-project.io
+    app.kubernetes.io/created-by: istio
+    app.kubernetes.io/instance: leader-election-rolebinding
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: rolebinding
+    app.kubernetes.io/part-of: istio
+  name: istio-leader-election-rolebinding
+  namespace: kyma-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: istio-leader-election-role
+subjects:
+- kind: ServiceAccount
+  name: istio-controller-manager
+  namespace: kyma-system

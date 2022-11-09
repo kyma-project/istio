@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest an idea for this project
+about: Suggest an improvement to the project
 title: ''
 labels: kind/feature
 assignees: ''
@@ -24,6 +24,9 @@ assignees: ''
 - [ ] provide documentation
 - [ ] provide unit tests
 - [ ] test on SKR
+- [ ] verify resource limits
+- [ ] followup issue
+- [ ] publish release notes and _What's New_ updates for Kyma customers
 - [ ] verify resource limits
 - [ ] followup issue
 

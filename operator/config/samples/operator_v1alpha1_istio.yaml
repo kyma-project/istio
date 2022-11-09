@@ -1,0 +1,9 @@
+apiVersion: operator.kyma-project.io/v1alpha1
+kind: Istio
+metadata:
+  name: istio-sample
+  labels:
+    app.kubernetes.io/name: istio-sample
+spec:
+  config:
+    numTrustedProxies: 1

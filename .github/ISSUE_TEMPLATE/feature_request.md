@@ -24,7 +24,6 @@ assignees: ''
 - [ ] provide documentation
 - [ ] provide unit tests
 - [ ] test on SKR
-- [ ] verify [Get started guides](https://kyma-project.io/docs/kyma/latest/02-get-started/) 
 - [ ] verify resource limits
 - [ ] followup issue
 

@@ -1,7 +1,6 @@
 package v1alpha1
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -118,8 +117,6 @@ func TestIstioMergeInto(t *testing.T) {
 
 		// when
 		out, err := istioCR.MergeInto(iop)
-		fmt.Println(out)
-		fmt.Println(iop)
 
 		// then
 		require.NoError(t, err)

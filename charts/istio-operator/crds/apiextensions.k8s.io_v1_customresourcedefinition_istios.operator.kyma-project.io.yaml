@@ -35,7 +35,7 @@ spec:
             type: object
           spec:
             description: Defines the desired specification for installing or updating
-              Istio
+              Istio.
             properties:
               config:
                 description: Configuration for the Istio installation.

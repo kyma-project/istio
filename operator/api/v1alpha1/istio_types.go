@@ -21,7 +21,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// IstioSpec defines the desired state of Istio
+// Defines the desired specification for installing or updating Istio.
 type IstioSpec struct {
 	// +kubebuilder:validation:Optional
 	Config Config `json:"config,omitempty"`
@@ -30,7 +30,7 @@ type IstioSpec struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// Istio is the Schema for the istio API
+// Contains Istio CR specification and current status.
 type Istio struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -41,7 +41,7 @@ type Istio struct {
 
 //+kubebuilder:object:root=true
 
-// IstioList contains a list of Istio
+// Contains a list of Istio's.
 type IstioList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

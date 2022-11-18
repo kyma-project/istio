@@ -1,6 +1,6 @@
 package v1alpha1
 
-// Configurion.
+// Configuration for the Istio installation.
 type Config struct {
 	// Defines the number of trusted proxies deployed in front of the Istio gateway proxy.
 	// +kubebuilder:validation:Optional

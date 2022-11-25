@@ -244,3 +244,4 @@ add
 ```bash
 kubectl apply -f kyma.yaml -n kcp-system
 ```
+

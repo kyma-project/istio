@@ -5,6 +5,7 @@ import (
 
 	"google.golang.org/protobuf/types/known/structpb"
 	meshv1alpha1 "istio.io/api/mesh/v1alpha1"
+	"istio.io/api/operator/v1alpha1"
 	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	"istio.io/istio/pkg/util/protomarshal"
 )
@@ -12,6 +13,14 @@ import (
 func (i *Istio) MergeInto(op istioOperator.IstioOperator) (istioOperator.IstioOperator, error) {
 	if i.Spec.Config.NumTrustedProxies == nil {
 		return op, nil
+	}
+
+	if op.Spec == nil {
+		op.Spec = &v1alpha1.IstioOperatorSpec{}
+	}
+
+	if op.Spec.MeshConfig == nil {
+		op.Spec.MeshConfig = &structpb.Struct{}
 	}
 
 	c, err := unmarshalMeshConfig(op.Spec.MeshConfig)
@@ -22,6 +31,7 @@ func (i *Istio) MergeInto(op istioOperator.IstioOperator) (istioOperator.IstioOp
 	if c.DefaultConfig == nil {
 		c.DefaultConfig = &meshv1alpha1.ProxyConfig{}
 	}
+
 	// Since the gateway topology is not part of the default configuration, and we do not explicitly set it in the
 	// chart, it could be nil.
 	if c.DefaultConfig.GatewayTopology != nil {

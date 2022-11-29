@@ -70,6 +70,48 @@ func TestIstioMergeInto(t *testing.T) {
 
 	})
 
+	t.Run("Should set numTrustedProxies on IstioOperator to 5 when IstioOperator has nil spec", func(t *testing.T) {
+		// given
+		iop := istioOperator.IstioOperator{
+			Spec: nil,
+		}
+
+		numProxies := 5
+
+		istioCR := Istio{Spec: IstioSpec{Config: Config{NumTrustedProxies: &numProxies}}}
+
+		// when
+		out, err := istioCR.MergeInto(iop)
+
+		// then
+		require.NoError(t, err)
+		require.Equal(t, float64(numProxies), out.Spec.MeshConfig.Fields["defaultConfig"].
+			GetStructValue().Fields["gatewayTopology"].GetStructValue().Fields["numTrustedProxies"].GetNumberValue())
+
+	})
+
+	t.Run("Should set numTrustedProxies on IstioOperator to 5 when IstioOperator has nil mesh config", func(t *testing.T) {
+		// given
+		iop := istioOperator.IstioOperator{
+			Spec: &operatorv1alpha1.IstioOperatorSpec{
+				MeshConfig: nil,
+			},
+		}
+
+		numProxies := 5
+
+		istioCR := Istio{Spec: IstioSpec{Config: Config{NumTrustedProxies: &numProxies}}}
+
+		// when
+		out, err := istioCR.MergeInto(iop)
+
+		// then
+		require.NoError(t, err)
+		require.Equal(t, float64(numProxies), out.Spec.MeshConfig.Fields["defaultConfig"].
+			GetStructValue().Fields["gatewayTopology"].GetStructValue().Fields["numTrustedProxies"].GetNumberValue())
+
+	})
+
 	t.Run("Should change nothing if config is empty", func(t *testing.T) {
 		// given
 		m := mesh.DefaultMeshConfig()

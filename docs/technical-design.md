@@ -1,8 +1,7 @@
 # Technical Design
 
 ## To be discussed
-- What will happen if a user sets a previous version of Istio (which is currently supported in CR). Do we support downgrades?
-- How is the Istio Operator with default values stored?
+
 
 ## IstioOperator
 
@@ -10,28 +9,28 @@
 
 ### Ownership of current resources in Kyma repository
 
+When moving to a more modularised architecture, the [IstioOperator resources](https://github.com/kyma-project/kyma/tree/main/resources/istio), 
+the [additional istio-resources](https://github.com/kyma-project/kyma/tree/main/resources/istio-resources) and 
+the [certificates](https://github.com/kyma-project/kyma/tree/main/resources/certificates) must have clear ownership.
+
+
 #### Assumptions 
-- Grafana dashboards and resources are not handled by the operator.
+- Grafana dashboards and resources are not owned by the operator.
 
-### Validation of the Istio Version
-The following validations for the version of Istio in the `IstioCR` must be considered:
-- Version is one of the supported versions by the operator
-- As recommended by Istio:
-  > The installed Istio version is no more than one minor version less than the upgrade version. For example, 1.6.0 or higher is required before you start the upgrade process to 1.7.x. 
-
+### Handling of Istio version
+We don't want to expose the version. That means that the version of Istio is coupled to the version of the operator. The benefit of this is,
+that we are in full control of the versioning and hide this complexity from the user.  
+That means if we want to release a new Istio version, we have to release a new version of the operator.
 
 ## IstioController
 
 ![Component Diagram](./controller-component-diagram.svg)
 
-### Assumptions
-- Istio version is defined through IstioCR and there is a defined number of versions supported, e.g. last three
-
 ### Installation & Upgrade of Istio
-The Istio installation, upgrade and uninstall is done using [Istio Go client module](https://github.com/istio/client-go).
+The Istio installation, upgrade and uninstall is done using [Istio Go module](https://github.com/istio/istio).
 
 ### Reconciliation
-The reconciliation is done by multiple self-contained reconcilers to have a better extensibility and maintainability. This means each reconciler must have its clearly separated responsibility.
+The reconciliation is done by multiple self-contained reconcilers to have a better extensibility and maintainability. This means each reconciler must have its clearly separated responsibility
 and must work in isolation when assessing whether reconciliation is required, applying changes and returning a status.  
 
 Although we want the reconcilers to be as decoupled and independent as possible, there is an execution dependency as we first need to install/upgrade Istio ( done by `IstioInstallationReconciler`)
@@ -39,23 +38,23 @@ before the other reconcilers can be executed.
 
 ### Components
 #### IstioReconciler
-This is the reconciler that takes care of the entire istio reconciliation process. 
-The responsibility of this reconciler is to create the fetch the current configuration and pass it on to the other reconciler together with the desired configuration. 
+This is the reconciler that takes care of the entire Istio reconciliation process. 
+The responsibility of this reconciler is to fetch the current configuration and pass it on to the other reconciler together with the desired configuration. 
 It also controls the reconciliation process by running the reconcilers considering the execution dependencies between them.
 
 #### IstioInstallationReconciler
-This reconciler handles the installation, upgrade and uninstall of Istio in the cluster. The reconciler also creates the IstioOperator
-that will be used to apply changes to the Istio installation in combination with the [Istio Go client module](https://github.com/istio/client-go).
-The IstioOperator is created by merging the `IstioCR` with the IstioOperator with Kyma default values. This means this component will also take
-care of supporting different IstioOperator versions based on the given IstioVersion.
+This reconciler decides if an installation, upgrade or uninstall of Istio in the cluster must be done. The reconciler also creates the IstioOperator
+which is used to make changes to the Istio installation by passing it to the `IstioManager`.
+
+The installed IstioOperator is created by merging the `IstioCR` with the IstioOperator with Kyma default values.
 
 ##### IstioManager
-This component contains the logic for managing the Istio installation. It also knows the supported client versions and forwards the 
-Istio API requests (e.g. Install, Upgrade) to the correct version of `IstioClient`.
+This component contains the logic for managing the Istio installation. It knows about the supported client versions and forwards the 
+Istio API requests (e.g. Install, Upgrade) to the correct version of `IstioClient` if there are breaking changes.
 
 ##### IstioClient
-The IstioClient encapsulates the [Istio Go client module](https://github.com/istio/client-go) for one specific Istio version. 
-As we do not expect breaking changes in all new API versions, there should always be a default version that is used.
+A IstioClient encapsulates a specific version of the [Istio Go module](https://github.com/istio/istio). 
+As we want to support canary updates at some point we might need to support two version of the library if there are breaking changes.
 
 #### ProxySidecarReconciler
 This reconciler must be executed after the `IstioInstallationReconciler`. Its responsibility is to restart pods based on specific configuration changes.
@@ -64,6 +63,7 @@ As of now the following scenarios must be covered by this reconciler:
 - Restart pods with proxy sidecar when CNI config changed
 - Restart pods with proxy sidecar after Istio version update
 - Restart pods without proxy sidecar, because of Istio downtime
+- Restart pods with proxy sidecar when proxy resources change
 
 #### IstioIngressGatewayReconciler
 This reconciler must be executed after the `IstioInstallationReconciler`. Its responsibility is to restart the Istio ingress gateway ingress gate  based on specific configuration changes.

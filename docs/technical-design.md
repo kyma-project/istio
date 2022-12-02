@@ -1,14 +1,31 @@
 # Technical Design
 
-![Technical Design Diagram](./technical-design.svg)
+## To be discussed
+- What will happen if a user sets a previous version of Istio (which is currently supported in CR). Do we support downgrades?
+- How is the Istio Operator with default values stored?
 
-## Istio Operator
+## IstioOperator
+
+![IstioOperator Overview](./istio-operator-overview.svg)
+
+### Ownership of current resources in Kyma repository
+
+#### Assumptions 
+- Grafana dashboards and resources are not handled by the operator.
+
+### Validation of the Istio Version
+The following validations for the version of Istio in the `IstioCR` must be considered:
+- Version is one of the supported versions by the operator
+- As recommended by Istio:
+  > The installed Istio version is no more than one minor version less than the upgrade version. For example, 1.6.0 or higher is required before you start the upgrade process to 1.7.x. 
+
+
+## IstioController
+
+![Component Diagram](./controller-component-diagram.svg)
 
 ### Assumptions
-- Istio version is defined through IstioCR
-  - We support three versions of Istio at a time. A validation webhook will make sure that IstioCR the applied istio version is valid.
-- Grafana dashboards and resources are not handled by the operator.
-- The Istio upgrade process won't support canary upgrades in the first version of the operator.
+- Istio version is defined through IstioCR and there is a defined number of versions supported, e.g. last three
 
 ### Installation & Upgrade of Istio
 The Istio installation, upgrade and uninstall is done using [Istio Go client module](https://github.com/istio/client-go).
@@ -29,7 +46,8 @@ It also controls the reconciliation process by running the reconcilers consideri
 #### IstioInstallationReconciler
 This reconciler handles the installation, upgrade and uninstall of Istio in the cluster. The reconciler also creates the IstioOperator
 that will be used to apply changes to the Istio installation in combination with the [Istio Go client module](https://github.com/istio/client-go).
-The IstioOperator is created by merging the `IstioCR` with the IstioOperator with Kyma default values. 
+The IstioOperator is created by merging the `IstioCR` with the IstioOperator with Kyma default values. This means this component will also take
+care of supporting different IstioOperator versions based on the given IstioVersion.
 
 ##### IstioManager
 This component contains the logic for managing the Istio installation. It also knows the supported client versions and forwards the 

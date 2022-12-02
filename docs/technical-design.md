@@ -1,6 +1,6 @@
 # Technical Design
 
-![Alt text](./technical-design.svg)
+![Technical Design Diagram](./technical-design.svg)
 
 ## Istio Operator
 

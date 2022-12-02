@@ -3,19 +3,37 @@
 ## To be discussed
 
 
-## IstioOperator
+## Istio operator
 
 ![IstioOperator Overview](./istio-operator-overview.svg)
 
 ### Ownership of current resources in Kyma repository
 
-When moving to a more modularised architecture, the [IstioOperator resources](https://github.com/kyma-project/kyma/tree/main/resources/istio), 
+When moving to a more modularised architecture, the [IstioOperator resource](https://github.com/kyma-project/kyma/tree/main/resources/istio), 
 the [additional istio-resources](https://github.com/kyma-project/kyma/tree/main/resources/istio-resources) and 
-the [certificates](https://github.com/kyma-project/kyma/tree/main/resources/certificates) must have clear ownership.
+the [certificates](https://github.com/kyma-project/kyma/tree/main/resources/certificates) must have a clear ownership.  
+A good way to decide on the ownership is to anaylse the change interval, the dependencies on the resources and the cohesion with other resources.
 
+#### IstioOperator resource
+This is moved into our new Istio operator and used to define the default values for Istio, which can be customised by the user through `IstioCR`.
 
-#### Assumptions 
-- Grafana dashboards and resources are not owned by the operator.
+#### istio-resources
+
+##### Istio Grafana dashboards
+It's still needs to be decided who will have the ownership of the dashboards. There are different things to consider like the change interval or relevance of Istio version updates.
+
+##### Istio ServiceMonitor & istio-healthz Virtual Service
+They provide monitoring capability for the Istio installation and should therefore be reconciled by the operator.
+
+##### Global mTLS PeerAuthentication
+This is tightly coupled to our Istio installation and should therefore be reconciled by the operator.
+
+##### Kyma Gateway
+This should be moved to the API Gateway as it's a default gateway we want to provide, and it has a stronger relation to the responsibilities
+of the API Gateway that to Istio. Since API Gateway is already dependent on Istio, we do not add any additional dependency by moving it. 
+
+#### Certificate resources
+They should also be moved to API Gateway as they are tightly coupled with the `Kyma Gateway` resource.
 
 ### Handling of Istio version
 We don't want to expose the version. That means that the version of Istio is coupled to the version of the operator. The benefit of this is,

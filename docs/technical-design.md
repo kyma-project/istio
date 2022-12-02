@@ -1,5 +1,7 @@
 # Technical Design
 
+![Alt text](./technical-design.svg)
+
 ## Istio Operator
 
 ### Assumptions

@@ -72,7 +72,7 @@ restart of the sidecar proxies or the Ingress gateway and are therefore much fas
 Given this dynamic in execution, we must always consider the slowest reconciliation process when defining `SyncPeriod`. Also, we have to consider that if we later add another controller to this operator, this new controller will also use the same frequency.  
 Using `RequeueAfter` on the other hand gives us more freedom, but also makes it a bit more complex to understand what is being done and why.
 
-We have decided to use `RequeueAfter` as this gives us the ability to perform the matching as often as possible without the risk of repeatedly checking the slowest reconciliation process or piling up requests in the reconciliation queue.
+We have decided to use `RequeueAfter` with a frequency of 5 minutes, as this gives us the ability to perform the matching as often as possible without the risk of repeatedly checking the slowest reconciliation process or piling up requests in the reconciliation queue.
 
 The queuing of reconciliation requests is handled by [controller-runtime](https://pkg.go.dev/sigs.k8s.io/controller-runtime) and is out of scope of this design.
 

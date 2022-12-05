@@ -53,11 +53,17 @@ and must work in isolation when assessing whether reconciliation is required, ap
 Although we want the reconcilers to be as decoupled and independent as possible, there is an execution dependency as we first need to install/upgrade Istio ( done by `IstioInstallationReconciler`)
 before the other reconcilers can be executed.
 
+The reconciliation should be invoked as often as possible. 
+
+#### Reconciliation Interval
+
+
 ### Components
 #### IstioReconciler
 This is the reconciler that takes care of the entire Istio reconciliation process. 
 The responsibility of this reconciler is to fetch the current configuration and pass it on to the other reconciler together with the desired configuration. 
 It also controls the reconciliation process by running the reconcilers considering the execution dependencies between them.
+This reconciler should be run at least every 20 minutes.
 
 #### IstioInstallationReconciler
 This reconciler decides if an installation, upgrade or uninstall of Istio in the cluster must be done. The reconciler also creates the IstioOperator

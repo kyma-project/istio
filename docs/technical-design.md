@@ -47,16 +47,34 @@ That means if we want to release a new Istio version, we have to release a new v
 The Istio installation, upgrade and uninstall is done using [Istio Go module](https://github.com/istio/istio).
 
 ### Reconciliation
-The reconciliation is done by multiple self-contained reconcilers to have a better extensibility and maintainability. This means each reconciler must have its clearly separated responsibility
+The reconciliation is done by multiple self-contained sub-reconcilers to have a better extensibility and maintainability. This means each of this reconcilers must have its clearly separated responsibility
 and must work in isolation when assessing whether reconciliation is required, applying changes and returning a status.  
 
 Although we want the reconcilers to be as decoupled and independent as possible, there is an execution dependency as we first need to install/upgrade Istio ( done by `IstioInstallationReconciler`)
 before the other reconcilers can be executed.
 
-The reconciliation should be invoked as often as possible. 
+#### Interval
 
-#### Reconciliation Interval
+Since this module deals with security-related topics, we want to perform the reconciliation as often as possible.
+This means that we do not only want to reconcile when `IstioCR` changes, but also want to check time-based that resources have not been changed and are in the expected state.  
+The default reconciliation frequency of a manager is defined by the [SyncPeriod](https://pkg.go.dev/sigs.k8s.io/controller-runtime/pkg/manager#Options) and is set to 10 hours by default.
+So one option is to change the `SyncPeriod` to match the desired reconciliation interval.
+Another option is to always return `RequeueAfter` in the result of the Reconcile function to trigger the next reconciliation:
+```go
+func Reconcile(ctx context.Context, o reconcile.Request) (reconcile.Result, error) {
+	// Implement business logic of reading and writing objects here
+	return reconcile.Result{RequeueAfter: : 5 * time.Minute}, nil
+}
+```
 
+The biggest challenge in deciding on an appropriate interval is that the time required to perform the reconciliation can vary a lot. Small changes may only require a 
+restart of the sidecar proxies or the Ingress gateway and are therefore much faster than a new installation or a Canary upgrade.  
+Given this dynamic in execution, we must always consider the slowest reconciliation process when defining `SyncPeriod`. Also, we have to consider that if we later add another controller to this operator, this new controller will also use the same frequency.  
+Using `RequeueAfter` on the other hand gives us more freedom, but also makes it a bit more complex to understand what is being done and why.
+
+We have decided to use `RequeueAfter` as this gives us the ability to perform the matching as often as possible without the risk of repeatedly checking the slowest reconciliation process or piling up requests in the reconciliation queue.
+
+The queuing of reconciliation requests is handled by [controller-runtime](https://pkg.go.dev/sigs.k8s.io/controller-runtime) and is out of scope of this design.
 
 ### Components
 #### IstioReconciler

@@ -9,10 +9,9 @@
 
 ### Ownership of current resources in Kyma repository
 
-When moving to a more modularised architecture, the [IstioOperator resource](https://github.com/kyma-project/kyma/tree/main/resources/istio), 
+In the transitioning to a more modularised architecture, the [IstioOperator resource](https://github.com/kyma-project/kyma/tree/main/resources/istio), 
 the [additional istio-resources](https://github.com/kyma-project/kyma/tree/main/resources/istio-resources) and 
-the [certificates](https://github.com/kyma-project/kyma/tree/main/resources/certificates) must have a clear ownership.  
-A good way to decide on the ownership is to anaylse the change interval, the dependencies on the resources and the cohesion with other resources.
+the [certificates](https://github.com/kyma-project/kyma/tree/main/resources/certificates) must be moved to the new modules.
 
 #### IstioOperator resource
 This is moved into our new Istio operator and used to define the default values for Istio, which can be customised by the user through `IstioCR`.
@@ -68,7 +67,8 @@ The installed IstioOperator is created by merging the `IstioCR` with the IstioOp
 
 ##### IstioManager
 This component contains the logic for managing the Istio installation. It knows about the supported client versions and forwards the 
-Istio API requests (e.g. Install, Upgrade) to the correct version of `IstioClient` if there are breaking changes.
+Istio API requests (e.g. Install, Upgrade) to the correct version of `IstioClient` if there are breaking changes.  
+Depending on how the Istio Go module behaves, it may not be necessary to support multiple clients for the time being. For the first simple implementation, we can probably do without the IstioManager for the time being.
 
 ##### IstioClient
 A IstioClient encapsulates a specific version of the [Istio Go module](https://github.com/istio/istio). 

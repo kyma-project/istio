@@ -15,7 +15,6 @@ type SidecarImage struct {
 
 func (r SidecarImage) matchesImageIn(container v1.Container) bool {
 	// TODO Understand why we can do a full string match
-	// TODO Find better function name
 	containsRepository := strings.Contains(container.Image, r.Repository)
 	containsTag := strings.HasSuffix(container.Image, r.Tag)
 	return containsRepository && containsTag

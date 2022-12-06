@@ -149,6 +149,42 @@ func TestGetPodsWithDifferentSidecarImage(t *testing.T) {
 
 			},
 		},
+		{
+			name: "should ignore pod that has different image tag when it has not all condition status as True",
+			c: createClientSet(t,
+				fixPodWithSidecarAndConditionStatus("app", "custom", "istio/proxyv2", "1.12.0", "False"),
+			),
+			expectedImage: pods.SidecarImage{
+				Repository: "istio/proxyv2",
+				Tag:        "1.10.0",
+			},
+			wantError:  false,
+			assertFunc: func(t require.TestingT, val interface{}) { require.Empty(t, val) },
+		},
+		{
+			name: "should ignore pod that has different image tag when it has a deletion timestamp",
+			c: createClientSet(t,
+				fixPodWithSidecarWithDeletionTimestamp("app", "custom", "istio/proxyv2", "1.12.0"),
+			),
+			expectedImage: pods.SidecarImage{
+				Repository: "istio/proxyv2",
+				Tag:        "1.10.0",
+			},
+			wantError:  false,
+			assertFunc: func(t require.TestingT, val interface{}) { require.Empty(t, val) },
+		},
+		{
+			name: "should ignore pod that has different image tag when proxy container name is not in istio annotation",
+			c: createClientSet(t,
+				fixPodWithSidecarWithSidecarContainerName("app", "custom", "istio/proxyv2", "1.12.0", "custom-sidecar-proxy-name"),
+			),
+			expectedImage: pods.SidecarImage{
+				Repository: "istio/proxyv2",
+				Tag:        "1.10.0",
+			},
+			wantError:  false,
+			assertFunc: func(t require.TestingT, val interface{}) { require.Empty(t, val) },
+		},
 	}
 
 	for _, tt := range tests {

@@ -6,7 +6,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func fixPodWithProxyImage(podName, namespace, proxyImageRepository, proxyImageTag string) *v1.Pod {
+func fixPodWithSidecar(podName, namespace, proxyImageRepository, proxyImageTag string) *v1.Pod {
+	return fixPodWithProxyImageAndConditionStatus(podName, namespace, proxyImageRepository, proxyImageTag, "True")
+}
+
+func fixPodWithProxyImageAndConditionStatus(podName, namespace, proxyImageRepository, proxyImageTag string, conditionStatus v1.ConditionStatus) *v1.Pod {
 	return &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      podName,
@@ -14,7 +18,7 @@ func fixPodWithProxyImage(podName, namespace, proxyImageRepository, proxyImageTa
 			OwnerReferences: []metav1.OwnerReference{
 				{Kind: "ReplicaSet"},
 			},
-			Annotations: map[string]string{"sidecar.istio.io/status": fmt.Sprintf(`{"containers":[%s]}`, proxyImageRepository)},
+			Annotations: map[string]string{"sidecar.istio.io/status": "{\"containers\":[\"istio-proxy\"]}"},
 		},
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Pod",
@@ -22,6 +26,12 @@ func fixPodWithProxyImage(podName, namespace, proxyImageRepository, proxyImageTa
 		},
 		Status: v1.PodStatus{
 			Phase: "Running",
+			Conditions: []v1.PodCondition{
+				{
+					Type:   "Ready",
+					Status: conditionStatus,
+				},
+			},
 		},
 		Spec: v1.PodSpec{
 			InitContainers: []v1.Container{
@@ -38,6 +48,33 @@ func fixPodWithProxyImage(podName, namespace, proxyImageRepository, proxyImageTa
 				{
 					Name:  "istio-proxy",
 					Image: fmt.Sprintf(`%s:%s`, proxyImageRepository, proxyImageTag)},
+			},
+		},
+	}
+}
+
+func fixPodWithoutSidecar(name, namespace string) *v1.Pod {
+	return &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			OwnerReferences: []metav1.OwnerReference{
+				{Kind: "ReplicaSet"},
+			},
+		},
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Pod",
+			APIVersion: "v1",
+		},
+		Status: v1.PodStatus{
+			Phase: "Running",
+		},
+		Spec: v1.PodSpec{
+			Containers: []v1.Container{
+				{
+					Name:  "workload-container",
+					Image: "workload-image:1.0",
+				},
 			},
 		},
 	}

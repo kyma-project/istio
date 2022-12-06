@@ -54,3 +54,26 @@ func GetPodsWithDifferentSidecarImage(ctx context.Context, c client.Client, expe
 
 	return outputPodsList, nil
 }
+
+func getPodsForCNIChange(ctx context.Context, c client.Client, expectedImage SidecarImage) (outputPodsList v1.PodList, err error) {
+	podList, err := getAllRunningPods(ctx, c)
+	// TODO add logs
+	if err != nil {
+		return outputPodsList, err
+	}
+
+	podList.DeepCopyInto(&outputPodsList)
+	outputPodsList.Items = []v1.Pod{}
+
+	for _, pod := range podList.Items {
+		if !isPodReady(pod) {
+			continue
+		}
+
+		if hasSidecarContainerWithWithDifferentImage(pod, expectedImage) {
+			outputPodsList.Items = append(outputPodsList.Items, *pod.DeepCopy())
+		}
+	}
+
+	return
+}

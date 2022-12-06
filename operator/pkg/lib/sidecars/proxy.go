@@ -32,3 +32,7 @@ func Reset(c client.Client, logger logr.Logger) error {
 
 	return nil
 }
+
+func DeleteSidecarWithDifferentImage(ctx context.Context, c client.Client, expectedImage pods.SidecarImage) {
+	pods.GetPodsWithDifferentSidecarImage(ctx, c, expectedImage)
+}

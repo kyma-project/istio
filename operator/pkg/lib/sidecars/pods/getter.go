@@ -63,7 +63,6 @@ func getNamespacesWithIstioInjection(ctx context.Context, c client.Client) (*v1.
 
 func GetPodsWithDifferentSidecarImage(ctx context.Context, c client.Client, expectedImage SidecarImage) (outputPodsList v1.PodList, err error) {
 	podList, err := getAllRunningPods(ctx, c)
-	// TODO add logs
 	if err != nil {
 		return outputPodsList, err
 	}

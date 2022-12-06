@@ -10,6 +10,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"testing"
+	"time"
 )
 
 func createClientSet(t *testing.T, objects ...client.Object) client.Client {
@@ -48,8 +49,14 @@ func TestGetPodsForCNIChange(t *testing.T) {
 		{
 			name: "should get 2 pods with istio-init when they are in Running state when CNI is enabled",
 			c: createClientSet(t,
-				fixPodWithSidecar("application1", "enabled", "istio/proxyv2", "1.10.0"),
-				fixPodWithSidecar("application2", "enabled", "istio/proxyv2", "1.10.0"),
+				newSidecarPodBuilder().
+					setName("application1").
+					setNamespace("enabled").
+					build(),
+				newSidecarPodBuilder().
+					setName("application2").
+					setNamespace("enabled").
+					build(),
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
 			wantError:     false,
@@ -82,66 +89,54 @@ func TestGetPodsForCNIChange(t *testing.T) {
 func TestGetPodsWithDifferentSidecarImage(t *testing.T) {
 	ctx := context.TODO()
 
+	expectedImage := pods.SidecarImage{
+		Repository: "istio/proxyv2",
+		Tag:        "1.10.0",
+	}
+
 	tests := []struct {
-		name          string
-		c             client.Client
-		expectedImage pods.SidecarImage
-		wantError     bool
-		assertFunc    func(t require.TestingT, val interface{})
+		name       string
+		c          client.Client
+		assertFunc func(t require.TestingT, val interface{})
 	}{
 		{
 			name: "should not return pods without istio sidecar",
 			c: createClientSet(t,
 				fixPodWithoutSidecar("app", "custom"),
 			),
-			expectedImage: pods.SidecarImage{
-				Repository: "istio/proxyv2",
-				Tag:        "1.10.0",
-			},
-			wantError:  false,
 			assertFunc: func(t require.TestingT, val interface{}) { require.Empty(t, val) },
 		},
 		{
 			name: "should not return any pod when pods have correct image",
 			c: createClientSet(t,
-				fixPodWithSidecar("app", "custom", "istio/proxyv2", "1.10.0"),
+				newSidecarPodBuilder().build(),
 			),
-			expectedImage: pods.SidecarImage{
-				Repository: "istio/proxyv2",
-				Tag:        "1.10.0",
-			},
-			wantError:  false,
 			assertFunc: func(t require.TestingT, val interface{}) { require.Empty(t, val) },
 		},
 		{
 			name: "should return pod with different image repository",
 			c: createClientSet(t,
-				fixPodWithSidecar("app", "custom", "istio/proxyv2", "1.10.0"),
-				fixPodWithSidecar("changedSidecarPod", "custom", "istio/different-proxy", "1.10.0"),
+				newSidecarPodBuilder().build(),
+				newSidecarPodBuilder().
+					setName("changedSidecarPod").
+					setSidecarImageRepository("istio/different-proxy").
+					build(),
 			),
-			expectedImage: pods.SidecarImage{
-				Repository: "istio/proxyv2",
-				Tag:        "1.10.0",
-			},
-			wantError: false,
 			assertFunc: func(t require.TestingT, val interface{}) {
 				require.NotEmpty(t, val)
 				resultPods := val.([]v1.Pod)
 				require.Equal(t, "changedSidecarPod", resultPods[0].Name)
-
 			},
 		},
 		{
 			name: "should return pod with different image tag",
 			c: createClientSet(t,
-				fixPodWithSidecar("app", "custom", "istio/proxyv2", "1.10.0"),
-				fixPodWithSidecar("changedSidecarPod", "custom", "istio/proxyv2", "1.11.0"),
+				newSidecarPodBuilder().build(),
+				newSidecarPodBuilder().
+					setName("changedSidecarPod").
+					setSidecarImageTag("1.11.0").
+					build(),
 			),
-			expectedImage: pods.SidecarImage{
-				Repository: "istio/proxyv2",
-				Tag:        "1.10.0",
-			},
-			wantError: false,
 			assertFunc: func(t require.TestingT, val interface{}) {
 				require.NotEmpty(t, val)
 				resultPods := val.([]v1.Pod)
@@ -152,51 +147,40 @@ func TestGetPodsWithDifferentSidecarImage(t *testing.T) {
 		{
 			name: "should ignore pod that has different image tag when it has not all condition status as True",
 			c: createClientSet(t,
-				fixPodWithSidecarAndConditionStatus("app", "custom", "istio/proxyv2", "1.12.0", "False"),
+				newSidecarPodBuilder().
+					setSidecarImageTag("1.12.0").
+					setConditionStatus("False").
+					build(),
 			),
-			expectedImage: pods.SidecarImage{
-				Repository: "istio/proxyv2",
-				Tag:        "1.10.0",
-			},
-			wantError:  false,
 			assertFunc: func(t require.TestingT, val interface{}) { require.Empty(t, val) },
 		},
 		{
 			name: "should ignore pod that has different image tag when it has a deletion timestamp",
 			c: createClientSet(t,
-				fixPodWithSidecarWithDeletionTimestamp("app", "custom", "istio/proxyv2", "1.12.0"),
+				newSidecarPodBuilder().
+					setSidecarImageTag("1.12.0").
+					setDeletionTimestamp(time.Now()).
+					build(),
 			),
-			expectedImage: pods.SidecarImage{
-				Repository: "istio/proxyv2",
-				Tag:        "1.10.0",
-			},
-			wantError:  false,
 			assertFunc: func(t require.TestingT, val interface{}) { require.Empty(t, val) },
 		},
 		{
 			name: "should ignore pod that has different image tag when proxy container name is not in istio annotation",
 			c: createClientSet(t,
-				fixPodWithSidecarWithSidecarContainerName("app", "custom", "istio/proxyv2", "1.12.0", "custom-sidecar-proxy-name"),
+				newSidecarPodBuilder().
+					setSidecarImageTag("1.12.0").
+					setSidecarContainerName("custom-sidecar-proxy-container-name").
+					build(),
 			),
-			expectedImage: pods.SidecarImage{
-				Repository: "istio/proxyv2",
-				Tag:        "1.10.0",
-			},
-			wantError:  false,
 			assertFunc: func(t require.TestingT, val interface{}) { require.Empty(t, val) },
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			podList, err := pods.GetPodsWithDifferentSidecarImage(ctx, tt.c, tt.expectedImage)
+			podList, err := pods.GetPodsWithDifferentSidecarImage(ctx, tt.c, expectedImage)
 
-			if tt.wantError {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-			}
-
+			require.NoError(t, err)
 			tt.assertFunc(t, podList.Items)
 		})
 	}

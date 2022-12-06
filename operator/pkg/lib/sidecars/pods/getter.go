@@ -45,7 +45,9 @@ func GetPodsWithDifferentSidecarImage(ctx context.Context, c client.Client, expe
 	outputPodsList.Items = []v1.Pod{}
 
 	for _, pod := range podList.Items {
-		if hasIstioSidecarStatusAnnotation(pod) && isPodReady(pod) && hasSidecarContainerWithWithDifferentImage(pod, expectedImage) {
+		if hasIstioSidecarStatusAnnotation(pod) &&
+			isPodReady(pod) &&
+			hasSidecarContainerWithWithDifferentImage(pod, expectedImage) {
 			outputPodsList.Items = append(outputPodsList.Items, *pod.DeepCopy())
 		}
 	}

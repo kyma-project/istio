@@ -57,3 +57,8 @@ func isContainerIstioSidecar(container v1.Container, istioSidecarNames []string)
 	}
 	return false
 }
+
+func HasResetWarning(pod v1.Pod) bool {
+	_, exists := pod.Annotations[AnnotationResetWarningKey]
+	return exists
+}

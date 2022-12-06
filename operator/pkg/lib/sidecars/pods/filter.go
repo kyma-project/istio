@@ -49,6 +49,16 @@ func hasSidecarContainerWithWithDifferentImage(pod v1.Pod, expectedImage Sidecar
 	return false
 }
 
+func hasInitContainer(containers []v1.Container, initContainerName string) bool {
+	proxyImage := ""
+	for _, container := range containers {
+		if container.Name == initContainerName {
+			proxyImage = container.Image
+		}
+	}
+	return proxyImage != ""
+}
+
 func isContainerIstioSidecar(container v1.Container, istioSidecarNames []string) bool {
 	for _, sidecarName := range istioSidecarNames {
 		if sidecarName == container.Name {

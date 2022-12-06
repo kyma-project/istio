@@ -6,7 +6,6 @@ import (
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -32,7 +31,8 @@ func TestGetPodsForCNIChange(t *testing.T) {
 		c             client.Client
 		expectedImage pods.SidecarImage
 		wantError     bool
-		assertFunc    func(t require.TestingT, val interface{})
+		wantEmpty     bool
+		wantLen       int
 	}{
 		{
 			name: "should not get any pod without istio-init container when CNI is enabled",
@@ -40,14 +40,27 @@ func TestGetPodsForCNIChange(t *testing.T) {
 				fixPodWithoutInitContainer("application1", "enabled", "Running", map[string]string{}, map[string]string{}),
 				fixPodWithoutInitContainer("application2", "enabled", "Terminating", map[string]string{}, map[string]string{}),
 			),
-			wantError:  false,
-			assertFunc: func(t require.TestingT, val interface{}) { require.Empty(t, val) },
+			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
+			wantError:     false,
+			wantEmpty:     true,
+			wantLen:       0,
+		},
+		{
+			name: "should get 2 pods with istio-init when they are in Running state when CNI is enabled",
+			c: createClientSet(t,
+				fixPodWithSidecar("application1", "enabled", "istio/proxyv2", "1.10.0"),
+				fixPodWithSidecar("application2", "enabled", "istio/proxyv2", "1.10.0"),
+			),
+			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
+			wantError:     false,
+			wantEmpty:     false,
+			wantLen:       2,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			pods, err := pods.GetPodsForCNIChange(ctx, tt.c, tt.expectedImage)
+			podList, err := pods.GetPodsForCNIChange(ctx, tt.c, tt.expectedImage)
 
 			if tt.wantError {
 				require.Error(t, err)
@@ -55,47 +68,14 @@ func TestGetPodsForCNIChange(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			tt.assertFunc(t, pods.Items)
-		})
-	}
-}
+			if tt.wantEmpty {
+				require.Empty(t, podList.Items)
+			} else {
+				require.NotEmpty(t, podList.Items)
+			}
 
-func fixPodWithoutInitContainer(name, namespace, phase string, annotations map[string]string, labels map[string]string) *v1.Pod {
-	return &v1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-			OwnerReferences: []metav1.OwnerReference{
-				{Kind: "ReplicaSet"},
-			},
-			Labels:      labels,
-			Annotations: annotations,
-		},
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Pod",
-			APIVersion: "v1",
-		},
-		Status: v1.PodStatus{
-			Phase: v1.PodPhase(phase),
-		},
-		Spec: v1.PodSpec{
-			InitContainers: []v1.Container{
-				{
-					Name:  "istio-validation",
-					Image: "istio-validation",
-				},
-			},
-			Containers: []v1.Container{
-				{
-					Name:  name + "-container",
-					Image: "image:6.9",
-				},
-				{
-					Name:  "istio-proxy",
-					Image: "istio-proxy",
-				},
-			},
-		},
+			require.Len(t, podList.Items, tt.wantLen)
+		})
 	}
 }
 

@@ -53,6 +53,45 @@ func fixPodWithProxyImageAndConditionStatus(podName, namespace, proxyImageReposi
 	}
 }
 
+func fixPodWithoutInitContainer(name, namespace, phase string, annotations map[string]string, labels map[string]string) *v1.Pod {
+	return &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			OwnerReferences: []metav1.OwnerReference{
+				{Kind: "ReplicaSet"},
+			},
+			Labels:      labels,
+			Annotations: annotations,
+		},
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Pod",
+			APIVersion: "v1",
+		},
+		Status: v1.PodStatus{
+			Phase: v1.PodPhase(phase),
+		},
+		Spec: v1.PodSpec{
+			InitContainers: []v1.Container{
+				{
+					Name:  "istio-validation",
+					Image: "istio-validation",
+				},
+			},
+			Containers: []v1.Container{
+				{
+					Name:  name + "-container",
+					Image: "image:6.9",
+				},
+				{
+					Name:  "istio-proxy",
+					Image: "istio-proxy",
+				},
+			},
+		},
+	}
+}
+
 func fixPodWithoutSidecar(name, namespace string) *v1.Pod {
 	return &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{

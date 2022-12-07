@@ -101,7 +101,7 @@ func GetPodsForCNIChange(ctx context.Context, c client.Client, isCNIEnabled bool
 		containerName = istioValidationContainerName
 	}
 
-	istioNamespaceList, err := getNamespacesWithIstioInjection(ctx, c)
+	injectionEnabledNamespaceList, err := getNamespacesWithIstioInjection(ctx, c)
 	if err != nil {
 		return outputPodsList, err
 	}
@@ -111,20 +111,38 @@ func GetPodsForCNIChange(ctx context.Context, c client.Client, isCNIEnabled bool
 
 	for _, pod := range podList.Items {
 		if isPodReady(pod) && hasInitContainer(pod.Spec.InitContainers, containerName) &&
-			isPodInNamespaceList(pod, istioNamespaceList.Items) {
+			// TODO: Fix checking only pods in istio namespaces and filter out kube-system ns pods
+			isPodInNamespaceList(pod, injectionEnabledNamespaceList.Items) {
 			outputPodsList.Items = append(outputPodsList.Items, *pod.DeepCopy())
 		}
 	}
 
-	return
+	return outputPodsList, nil
 }
 
-func isPodInNamespaceList(pod v1.Pod, namespaceList []v1.Namespace) bool {
-	for _, namespace := range namespaceList {
-		if pod.ObjectMeta.Namespace == namespace.Name {
-			return true
+func GetPodsWithoutSidecar(ctx context.Context, c client.Client, isSidecarInjectionEnabledByDefault bool) (outputPodsList v1.PodList, err error) {
+	podList, err := getAllRunningPods(ctx, c)
+	// TODO add logs
+	if err != nil {
+		return outputPodsList, err
+	}
+
+	injectionEnabledNamespaceList, err := getNamespacesWithIstioInjection(ctx, c)
+	if err != nil {
+		return outputPodsList, err
+	}
+
+	podList.DeepCopyInto(&outputPodsList)
+	outputPodsList.Items = []v1.Pod{}
+
+	for _, pod := range podList.Items {
+		if isPodReady(pod) &&
+			!hasIstioSidecarContainer(pod.Spec.Containers, istioSidecarName) &&
+			// TODO: Fix checking only pods in istio namespaces and filter out kube-system ns pods
+			isPodInNamespaceList(pod, injectionEnabledNamespaceList.Items) {
+			outputPodsList.Items = append(outputPodsList.Items, *pod.DeepCopy())
 		}
 	}
 
-	return false
+	return outputPodsList, nil
 }

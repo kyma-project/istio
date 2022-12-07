@@ -21,7 +21,6 @@ func hasTrueStatusConditions(pod v1.Pod) bool {
 			return false
 		}
 	}
-
 	return true
 }
 
@@ -29,7 +28,6 @@ func isPodRunning(pod v1.Pod) bool {
 	if pod.Status.Phase != v1.PodRunning {
 		return false
 	}
-
 	return true
 }
 
@@ -67,6 +65,15 @@ func hasInitContainer(containers []v1.Container, initContainerName string) bool 
 	return proxyImage != ""
 }
 
+func hasIstioSidecarContainer(containers []v1.Container, istioSidecarName string) bool {
+	for _, container := range containers {
+		if isContainerIstioSidecar(container, []string{istioSidecarName}) {
+			return true
+		}
+	}
+	return false
+}
+
 func isContainerIstioSidecar(container v1.Container, istioSidecarNames []string) bool {
 	for _, sidecarName := range istioSidecarNames {
 		if sidecarName == container.Name {
@@ -79,4 +86,46 @@ func isContainerIstioSidecar(container v1.Container, istioSidecarNames []string)
 func HasResetWarning(pod v1.Pod) bool {
 	_, exists := pod.Annotations[AnnotationResetWarningKey]
 	return exists
+}
+
+func isPodInNamespaceList(pod v1.Pod, namespaceList []v1.Namespace) bool {
+	for _, namespace := range namespaceList {
+		if pod.ObjectMeta.Namespace == namespace.Name {
+			return true
+		}
+	}
+	return false
+}
+
+func checkPodSidecarInjectionLogic(pod v1.Pod, sidecarInjectionEnabledByDefault bool) (requireSidecar bool) {
+	namespaceLabelValue, namespaceLabeled := pod.Annotations["reconciler/namespace-istio-injection"]
+	podAnnotationValue, podAnnotated := pod.Annotations["sidecar.istio.io/inject"]
+	podLabelValue, podLabeled := pod.Labels["sidecar.istio.io/inject"]
+
+	//Automatic sidecar injection is ignored for pods on the host network
+	if pod.Spec.HostNetwork {
+		return false
+	}
+
+	if namespaceLabeled && namespaceLabelValue == "disabled" {
+		return false
+	}
+
+	if podLabeled && podLabelValue == "false" {
+		return false
+	}
+
+	if !podLabeled && podAnnotated && podAnnotationValue == "false" {
+		return false
+	}
+
+	if !sidecarInjectionEnabledByDefault && !namespaceLabeled && podAnnotated && podAnnotationValue == "true" {
+		return false
+	}
+
+	if !sidecarInjectionEnabledByDefault && !namespaceLabeled && !podAnnotated && !podLabeled {
+		return false
+	}
+
+	return true
 }

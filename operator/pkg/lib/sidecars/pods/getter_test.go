@@ -41,8 +41,10 @@ func TestGetPodsForCNIChange(t *testing.T) {
 		{
 			name: "should not get any pod without istio-init container when CNI is enabled",
 			c: createClientSet(t,
-				fixPodWithoutIstioInitContainer("application1", "enabled", "Running", map[string]string{}, map[string]string{}),
-				fixPodWithoutIstioInitContainer("application2", "enabled", "Terminating", map[string]string{}, map[string]string{}),
+				newSidecarPodBuilder().setName("application1").setNamespace("enabled").
+					setInitContainer("istio-validation").setPodStatusPhase("Running").build(),
+				newSidecarPodBuilder().setName("application2").setNamespace("enabled").
+					setInitContainer("istio-validation").setPodStatusPhase("Terminating").build(),
 				enabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -239,6 +241,99 @@ func TestGetPodsWithDifferentSidecarImage(t *testing.T) {
 
 			require.NoError(t, err)
 			tt.assertFunc(t, podList.Items)
+		})
+	}
+}
+
+func TestGetPodsWithoutSidecar(t *testing.T) {
+	ctx := context.Background()
+	enabledNamespace := fixNamespaceWith("enabled", map[string]string{"istio-injection": "enabled"})
+	disabledNamespace := fixNamespaceWith("disabled", map[string]string{"istio-injection": "disabled"})
+	noLabelNamespace := fixNamespaceWith("nolabel", map[string]string{"testns": "true"})
+
+	tests := []struct {
+		name                      string
+		c                         client.Client
+		expectedImage             pods.SidecarImage
+		isSidecarInjectionEnabled bool
+		wantError                 bool
+		wantEmpty                 bool
+		wantLen                   int
+	}{
+		{
+			name: "should get pod with proper namespace label",
+			c: createClientSet(t,
+				newSidecarPodBuilder().setName("application1").setNamespace("enabled").
+					disableSidecar().build(),
+				newSidecarPodBuilder().setName("application2").setNamespace("enabled").
+					setPodStatusPhase("Terminating").disableSidecar().build(),
+				enabledNamespace,
+			),
+			expectedImage:             pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
+			isSidecarInjectionEnabled: true,
+			wantError:                 false,
+			wantEmpty:                 false,
+			wantLen:                   1,
+		},
+		{
+			name: "should not get pod with Istio sidecar",
+			c: createClientSet(t,
+				newSidecarPodBuilder().setName("application1").setNamespace("nolabel").build(),
+				noLabelNamespace,
+			),
+			expectedImage:             pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
+			isSidecarInjectionEnabled: true,
+			wantError:                 false,
+			wantEmpty:                 true,
+			wantLen:                   0,
+		},
+		{
+			name: "should get pod without Istio sidecar in namespace labeled istio-injection=enabled",
+			c: createClientSet(t,
+				newSidecarPodBuilder().setName("application1").setNamespace("enabled").
+					disableSidecar().build(),
+				newSidecarPodBuilder().setName("application2").setNamespace("enabled").build(),
+				enabledNamespace,
+			),
+			expectedImage:             pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
+			isSidecarInjectionEnabled: true,
+			wantError:                 false,
+			wantEmpty:                 false,
+			wantLen:                   1,
+		},
+		{
+			name: "should not get pod without Istio sidecar in namespace labeled istio-injection=disabled",
+			c: createClientSet(t,
+				newSidecarPodBuilder().setName("application1").setNamespace("disabled").
+					disableSidecar().build(),
+				newSidecarPodBuilder().setName("application2").setNamespace("disabled").build(),
+				disabledNamespace,
+			),
+			expectedImage:             pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
+			isSidecarInjectionEnabled: true,
+			wantError:                 false,
+			wantEmpty:                 true,
+			wantLen:                   0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			podList, err := pods.GetPodsWithoutSidecar(ctx, tt.c, tt.isSidecarInjectionEnabled)
+
+			if tt.wantError {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+
+			if tt.wantEmpty {
+				require.Empty(t, podList.Items)
+			} else {
+				require.NotEmpty(t, podList.Items)
+			}
+
+			require.Len(t, podList.Items, tt.wantLen)
 		})
 	}
 }

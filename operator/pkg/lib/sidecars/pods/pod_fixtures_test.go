@@ -9,8 +9,9 @@ import (
 
 type SidecarPodFixtureBuilder struct {
 	name, namespace                                               string
-	sidecarImageRepository, sidecarImageTag, sidecarContainerName string
+	sidecarContainerName, sidecarImageRepository, sidecarImageTag string
 	initContainerName                                             string
+	podAnnotations                                                map[string]string
 	podStatusPhase                                                v1.PodPhase
 	conditionStatus                                               v1.ConditionStatus
 	deletionTimestamp                                             *metav1.Time
@@ -20,12 +21,13 @@ func newSidecarPodBuilder() *SidecarPodFixtureBuilder {
 	return &SidecarPodFixtureBuilder{
 		name:                   "app",
 		namespace:              "custom",
-		podStatusPhase:         "Running",
+		sidecarContainerName:   "istio-proxy",
 		sidecarImageRepository: "istio/proxyv2",
 		sidecarImageTag:        "1.10.0",
-		conditionStatus:        "True",
-		sidecarContainerName:   "istio-proxy",
 		initContainerName:      "istio-init",
+		podAnnotations:         map[string]string{"sidecar.istio.io/status": "{\"containers\":[\"istio-proxy\"]}"},
+		podStatusPhase:         "Running",
+		conditionStatus:        "True",
 	}
 }
 
@@ -64,6 +66,15 @@ func (r *SidecarPodFixtureBuilder) setSidecarContainerName(value string) *Sideca
 	return r
 }
 
+func (r *SidecarPodFixtureBuilder) disableSidecar() *SidecarPodFixtureBuilder {
+	r.sidecarContainerName = "workload"
+	r.sidecarImageRepository = "image"
+	r.sidecarImageTag = "1.0"
+	r.initContainerName = "customer-init"
+	r.podAnnotations = map[string]string{}
+	return r
+}
+
 func (r *SidecarPodFixtureBuilder) setConditionStatus(value v1.ConditionStatus) *SidecarPodFixtureBuilder {
 	r.conditionStatus = value
 	return r
@@ -82,7 +93,7 @@ func (r *SidecarPodFixtureBuilder) build() *v1.Pod {
 			OwnerReferences: []metav1.OwnerReference{
 				{Kind: "ReplicaSet"},
 			},
-			Annotations:       map[string]string{"sidecar.istio.io/status": "{\"containers\":[\"istio-proxy\"]}"},
+			Annotations:       r.podAnnotations,
 			DeletionTimestamp: r.deletionTimestamp,
 		},
 		TypeMeta: metav1.TypeMeta{
@@ -113,45 +124,6 @@ func (r *SidecarPodFixtureBuilder) build() *v1.Pod {
 				{
 					Name:  r.sidecarContainerName,
 					Image: fmt.Sprintf(`%s:%s`, r.sidecarImageRepository, r.sidecarImageTag)},
-			},
-		},
-	}
-}
-
-func fixPodWithoutIstioInitContainer(name, namespace, phase string, annotations map[string]string, labels map[string]string) *v1.Pod {
-	return &v1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-			OwnerReferences: []metav1.OwnerReference{
-				{Kind: "ReplicaSet"},
-			},
-			Labels:      labels,
-			Annotations: annotations,
-		},
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Pod",
-			APIVersion: "v1",
-		},
-		Status: v1.PodStatus{
-			Phase: v1.PodPhase(phase),
-		},
-		Spec: v1.PodSpec{
-			InitContainers: []v1.Container{
-				{
-					Name:  "istio-validation",
-					Image: "istio-validation",
-				},
-			},
-			Containers: []v1.Container{
-				{
-					Name:  name + "-container",
-					Image: "image:6.9",
-				},
-				{
-					Name:  "istio-proxy",
-					Image: "istio-proxy",
-				},
 			},
 		},
 	}

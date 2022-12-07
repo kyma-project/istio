@@ -63,36 +63,3 @@ func GetIstioPodsWithDifferentImage(inputPodList *v1.PodList) (outputPodList v1.
 
 	return
 }
-
-func checkPodSidecarInjectionLogic(pod v1.Pod, sidecarInjectionEnabledByDefault bool) (requireSidecar bool) {
-	namespaceLabelValue, namespaceLabeled := pod.Annotations["reconciler/namespace-istio-injection"]
-	podAnnotationValue, podAnnotated := pod.Annotations["sidecar.istio.io/inject"]
-	podLabelValue, podLabeled := pod.Labels["sidecar.istio.io/inject"]
-
-	//Automatic sidecar injection is ignored for pods on the host network
-	if pod.Spec.HostNetwork {
-		return false
-	}
-
-	if namespaceLabeled && namespaceLabelValue == "disabled" {
-		return false
-	}
-
-	if podLabeled && podLabelValue == "false" {
-		return false
-	}
-
-	if !podLabeled && podAnnotated && podAnnotationValue == "false" {
-		return false
-	}
-
-	if !sidecarInjectionEnabledByDefault && !namespaceLabeled && podAnnotated && podAnnotationValue == "true" {
-		return false
-	}
-
-	if !sidecarInjectionEnabledByDefault && !namespaceLabeled && !podAnnotated && !podLabeled {
-		return false
-	}
-
-	return true
-}

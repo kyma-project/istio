@@ -14,7 +14,7 @@ the [additional istio-resources](https://github.com/kyma-project/kyma/tree/main/
 the [certificates](https://github.com/kyma-project/kyma/tree/main/resources/certificates) must be moved to the new modules.
 
 #### IstioOperator resource
-This is moved into our new Istio operator and used to define the default values for Istio, which can be customised by the user through `IstioCR`.
+This is moved into our new Istio operator and used to define the default values for Istio, which can be customised by the user through `Istio CR`.
 
 #### istio-resources
 
@@ -48,7 +48,7 @@ That means if we want to release a new Istio version, we have to release a new v
 The Istio installation, upgrade and uninstall is done using [Istio Go module](https://github.com/istio/istio).
 
 ### Reconciliation of Istio
-The reconciliation loop of Istio is based on the [IstioCR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md) custom resource and is controlled by the `IstioController`. This controller contains multiple self-contained components we decided to call reconcilers.   
+The reconciliation loop of Istio is based on the [Istio CR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md) custom resource and is controlled by the `IstioController`. This controller contains multiple self-contained components we decided to call reconcilers.   
 We decided to split the logic in these reconcilers to have a better extensibility and maintainability. This means each of this reconcilers must have its clearly separated responsibility
 and must work in isolation when assessing whether reconciliation is required, applying changes and returning a status.  
 
@@ -58,7 +58,7 @@ before the other reconcilers can be executed.
 #### Interval
 
 Since this module deals with security-related topics, we want to perform the reconciliation as often as possible.
-This means that we do not only want to reconcile when [IstioCR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md) changes, but also want to check time-based that resources have not been changed and are in the expected state.  
+This means that we do not only want to reconcile when [Istio CR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md) changes, but also want to check time-based that resources have not been changed and are in the expected state.  
 The default reconciliation frequency of a manager is defined by the [SyncPeriod](https://pkg.go.dev/sigs.k8s.io/controller-runtime/pkg/manager#Options) and is set to 10 hours by default.
 So one option is to change the `SyncPeriod` to match the desired reconciliation interval.
 Another option is to always return `RequeueAfter` in the result of the Reconcile function to trigger the next reconciliation:
@@ -82,7 +82,7 @@ The queuing of reconciliation requests is handled by [controller-runtime](https:
 ![Component Diagram](./controller-component-diagram.svg)
 
 #### IstioController
-This is the controller that takes care of the entire Istio reconciliation process and is bound to [IstioCR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md).
+This is the controller that takes care of the entire Istio reconciliation process and is bound to [Istio CR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md).
 The responsibility is to control the reconciliation process by triggering the reconcilers considering the execution dependencies between them. The controller will also
 pass the desired state to the reconcilers.
 
@@ -90,7 +90,7 @@ pass the desired state to the reconcilers.
 This reconciler decides if an installation, upgrade or uninstall of Istio in the cluster must be done. The reconciler also creates the IstioOperator
 which is used to make changes to the Istio installation by passing it to the `IstioManager`.
 
-The installed IstioOperator is created by merging the `IstioCR` with the IstioOperator with Kyma default values.
+The installed IstioOperator is created by merging the `Istio CR` with the IstioOperator with Kyma default values.
 
 ##### IstioManager
 This component contains the logic for managing the Istio installation. It knows about the supported client versions and forwards the 

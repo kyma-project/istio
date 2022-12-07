@@ -83,8 +83,8 @@ The queuing of reconciliation requests is handled by [controller-runtime](https:
 
 #### IstioController
 This is the controller that takes care of the entire Istio reconciliation process and is bound to [IstioCR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md).
-The responsibility of this controller is to fetch the current configuration and pass it on to the reconcilers together with the desired configuration. 
-It also controls the reconciliation process by running the reconcilers considering the execution dependencies between them.
+The responsibility is to control the reconciliation process by triggering the reconcilers considering the execution dependencies between them. The controller will also
+pass the desired state to the reconcilers.
 
 #### IstioInstallationReconciler
 This reconciler decides if an installation, upgrade or uninstall of Istio in the cluster must be done. The reconciler also creates the IstioOperator

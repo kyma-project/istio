@@ -26,7 +26,8 @@ We will not consider theis resource in this design, because it's planned to repl
 More information can be found in this [PR](https://github.com/kyma-project/kyma/pull/16247).
 
 ##### istio-healthz Virtual Service
-This resource provides monitoring capability for the Istio installation and should therefore be reconciled by the operator.
+This resource offers the possibility to monitor Istio externally by exposing an endpoint. This should not be part of the Istio module,
+and therefore a user who needs this external monitoring should take care of this particular configuration.
 
 ##### Global mTLS PeerAuthentication
 This is tightly coupled to our Istio installation and should therefore be reconciled by the operator.
@@ -114,12 +115,6 @@ This reconciler must be executed after the `IstioInstallationReconciler`. Its re
 
 As of now the following scenarios must be covered by this reconciler:
 - Restart when `numTrustedProxies` changed.
-
-#### MonitoringReconciler
-This reconciler must be executed after the `IstioInstallationReconciler` and it applies resources for monitoring the istio installation.
-
-As of now the following resources are part of the monitoring:
-- `VirtualService` for monitoring of the Istio health by an external system
 
 #### PeerAuthenticationReconciler
 This reconciler must be executed after the `IstioInstallationReconciler` and it applies a PeerAuthentication that configures

@@ -48,12 +48,14 @@ That means if we want to release a new Istio version, we have to release a new v
 The Istio installation, upgrade and uninstall is done using [Istio Go module](https://github.com/istio/istio).
 
 ### Reconciliation of Istio
-The reconciliation loop of Istio is based on the [Istio CR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md) custom resource and is controlled by the `IstioController`. This controller contains multiple self-contained components we decided to call reconcilers.   
-We decided to split the logic in these reconcilers to have a better extensibility and maintainability. This means each of this reconcilers must have its clearly separated responsibility
+The reconciliation loop of Istio is based on the [Istio CR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md) custom resource and is controlled by the `IstioController`. This controller contains several self-contained components, which we have suffixed with reconciliation.   
+We decided to split the logic in these reconciliation components to have a better extensibility and maintainability. This means each of this components must have its clearly separated responsibility
 and must work in isolation when assessing whether reconciliation is required, applying changes and returning a status.  
 
-Although we want the reconcilers to be as decoupled and independent as possible, there is an execution dependency as we first need to install/upgrade Istio ( done by `IstioInstallationReconciler`)
-before the other reconcilers can be executed.
+Although we want the reconciliation components to be as decoupled and independent as possible, there is an execution dependency as we first need to install/upgrade Istio ( done by `IstioInstallationReconciliation`)
+before the other components can be executed. This is visualized in the following diagram of the reconciliation loop.
+
+![Reconciliation Loop Diagram](./reconciliation-sequence-diagram.svg)
 
 #### Interval
 
@@ -79,15 +81,15 @@ We have decided to use `RequeueAfter` with a frequency of 5 minutes, as this giv
 The queuing of reconciliation requests is handled by [controller-runtime](https://pkg.go.dev/sigs.k8s.io/controller-runtime) and is out of scope of this design.
 
 ### Components
-![Component Diagram](./controller-component-diagram.svg)
+![Controller Component Diagram](./controller-component-diagram.svg)
 
 #### IstioController
 This is the controller that takes care of the entire Istio reconciliation process and is bound to [Istio CR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md).
-The responsibility is to control the reconciliation process by triggering the reconcilers considering the execution dependencies between them. The controller will also
-pass the desired state to the reconcilers.
+The responsibility is to control the reconciliation process by triggering the reconciliation components considering the execution dependencies between them. The controller will also
+pass the desired state to the reconciliation components.
 
-#### IstioInstallationReconciler
-This reconciler decides if an installation, upgrade or uninstall of Istio in the cluster must be done. The reconciler also creates the IstioOperator
+#### IstioInstallationReconciliation
+This component decides if an installation, upgrade or uninstall of Istio in the cluster must be done. It also creates the IstioOperator
 which is used to make changes to the Istio installation by passing it to the `IstioManager`.
 
 The installed IstioOperator is created by merging the `Istio CR` with the IstioOperator with Kyma default values.
@@ -101,23 +103,23 @@ Depending on how the Istio Go module behaves, it may not be necessary to support
 A IstioClient encapsulates a specific version of the [Istio Go module](https://github.com/istio/istio). 
 As we want to support canary updates at some point we might need to support two version of the library if there are breaking changes.
 
-#### ProxySidecarReconciler
-This reconciler must be executed after the `IstioInstallationReconciler`. Its responsibility is to restart pods based on specific configuration changes.
+#### ProxySidecarReconciliation
+This component must be executed after the `IstioInstallationReconciliation`. Its responsibility is to restart pods based on specific configuration changes.
 
-As of now the following scenarios must be covered by this reconciler:
+As of now the following scenarios must be covered by this component:
 - Restart pods with proxy sidecar when CNI config changed
 - Restart pods with proxy sidecar after Istio version update
 - Restart pods without proxy sidecar, because of Istio downtime
 - Restart pods with proxy sidecar when proxy resources change
 
-#### IstioIngressGatewayReconciler
-This reconciler must be executed after the `IstioInstallationReconciler`. Its responsibility is to restart the Istio ingress gateway ingress gate  based on specific configuration changes.
+#### IstioIngressGatewayReconciliation
+This component must be executed after the `IstioInstallationReconciliation`. Its responsibility is to restart the Istio ingress gateway ingress gate  based on specific configuration changes.
 
-As of now the following scenarios must be covered by this reconciler:
+As of now the following scenarios must be covered by this component:
 - Restart when `numTrustedProxies` changed.
 
-#### PeerAuthenticationReconciler
-This reconciler must be executed after the `IstioInstallationReconciler` and it applies a PeerAuthentication that configures
+#### PeerAuthenticationReconciliation
+This component must be executed after the `IstioInstallationReconciliation` and it applies a PeerAuthentication that configures
 the default mTLS mode in the cluster.
 
 

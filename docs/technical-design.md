@@ -21,8 +21,12 @@ This is moved into our new Istio operator and used to define the default values 
 ##### Istio Grafana dashboards
 It's still needs to be decided who will have the ownership of the dashboards. There are different things to consider like the change interval or relevance of Istio version updates.
 
-##### Istio ServiceMonitor & istio-healthz Virtual Service
-They provide monitoring capability for the Istio installation and should therefore be reconciled by the operator.
+##### Istio ServiceMonitor
+We will not consider theis resource in this design, because it's planned to replace it. 
+More information can be found in this [PR](https://github.com/kyma-project/kyma/pull/16247).
+
+##### istio-healthz Virtual Service
+This resource provides monitoring capability for the Istio installation and should therefore be reconciled by the operator.
 
 ##### Global mTLS PeerAuthentication
 This is tightly coupled to our Istio installation and should therefore be reconciled by the operator.
@@ -39,15 +43,12 @@ We don't want to expose the version. That means that the version of Istio is cou
 that we are in full control of the versioning and hide this complexity from the user.  
 That means if we want to release a new Istio version, we have to release a new version of the operator.
 
-## IstioController
-
-![Component Diagram](./controller-component-diagram.svg)
-
 ### Installation & Upgrade of Istio
 The Istio installation, upgrade and uninstall is done using [Istio Go module](https://github.com/istio/istio).
 
-### Reconciliation
-The reconciliation is done by multiple self-contained sub-reconcilers to have a better extensibility and maintainability. This means each of this reconcilers must have its clearly separated responsibility
+### Reconciliation of Istio
+The reconciliation loop of Istio is based on the [IstioCR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md) custom resource and is controlled by the `IstioController`. This controller contains multiple self-contained components we decided to call reconcilers.   
+We decided to split the logic in these reconcilers to have a better extensibility and maintainability. This means each of this reconcilers must have its clearly separated responsibility
 and must work in isolation when assessing whether reconciliation is required, applying changes and returning a status.  
 
 Although we want the reconcilers to be as decoupled and independent as possible, there is an execution dependency as we first need to install/upgrade Istio ( done by `IstioInstallationReconciler`)
@@ -56,7 +57,7 @@ before the other reconcilers can be executed.
 #### Interval
 
 Since this module deals with security-related topics, we want to perform the reconciliation as often as possible.
-This means that we do not only want to reconcile when `IstioCR` changes, but also want to check time-based that resources have not been changed and are in the expected state.  
+This means that we do not only want to reconcile when [IstioCR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md) changes, but also want to check time-based that resources have not been changed and are in the expected state.  
 The default reconciliation frequency of a manager is defined by the [SyncPeriod](https://pkg.go.dev/sigs.k8s.io/controller-runtime/pkg/manager#Options) and is set to 10 hours by default.
 So one option is to change the `SyncPeriod` to match the desired reconciliation interval.
 Another option is to always return `RequeueAfter` in the result of the Reconcile function to trigger the next reconciliation:
@@ -77,11 +78,12 @@ We have decided to use `RequeueAfter` with a frequency of 5 minutes, as this giv
 The queuing of reconciliation requests is handled by [controller-runtime](https://pkg.go.dev/sigs.k8s.io/controller-runtime) and is out of scope of this design.
 
 ### Components
-#### IstioReconciler
-This is the reconciler that takes care of the entire Istio reconciliation process. 
-The responsibility of this reconciler is to fetch the current configuration and pass it on to the other reconciler together with the desired configuration. 
+![Component Diagram](./controller-component-diagram.svg)
+
+#### IstioController
+This is the controller that takes care of the entire Istio reconciliation process and is bound to [IstioCR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md).
+The responsibility of this controller is to fetch the current configuration and pass it on to the reconcilers together with the desired configuration. 
 It also controls the reconciliation process by running the reconcilers considering the execution dependencies between them.
-This reconciler should be run at least every 20 minutes.
 
 #### IstioInstallationReconciler
 This reconciler decides if an installation, upgrade or uninstall of Istio in the cluster must be done. The reconciler also creates the IstioOperator
@@ -117,7 +119,6 @@ As of now the following scenarios must be covered by this reconciler:
 This reconciler must be executed after the `IstioInstallationReconciler` and it applies resources for monitoring the istio installation.
 
 As of now the following resources are part of the monitoring:
-- `ServiceMonitor` resource for Istio used by the monitoring module 
 - `VirtualService` for monitoring of the Istio health by an external system
 
 #### PeerAuthenticationReconciler

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
+	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/restart"
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -56,7 +57,7 @@ func RestartPodWithDifferentSidecarImage(ctx context.Context, c client.Client, e
 		podListToRestart.Items = append(podListToRestart.Items, pod)
 	}
 
-	err = reset(ctx, c, podListToRestart)
+	_, err = restart.Restart(ctx, c, podListToRestart)
 	if err != nil {
 		return err
 	}
@@ -65,8 +66,4 @@ func RestartPodWithDifferentSidecarImage(ctx context.Context, c client.Client, e
 
 	return nil
 
-}
-
-func reset(ctx context.Context, c client.Client, podList v1.PodList) error {
-	return nil
 }

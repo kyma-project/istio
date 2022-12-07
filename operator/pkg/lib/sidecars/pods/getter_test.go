@@ -26,11 +26,14 @@ func createClientSet(t *testing.T, objects ...client.Object) client.Client {
 
 func TestGetPodsForCNIChange(t *testing.T) {
 	ctx := context.Background()
+	enabledNamespace := fixNamespaceWith("enabled", map[string]string{"istio-injection": "enabled"})
+	disabledNamespace := fixNamespaceWith("disabled", map[string]string{"istio-injection": "disabled"})
 
 	tests := []struct {
 		name          string
 		c             client.Client
 		expectedImage pods.SidecarImage
+		isCNIEnabled  bool
 		wantError     bool
 		wantEmpty     bool
 		wantLen       int
@@ -38,10 +41,12 @@ func TestGetPodsForCNIChange(t *testing.T) {
 		{
 			name: "should not get any pod without istio-init container when CNI is enabled",
 			c: createClientSet(t,
-				fixPodWithoutInitContainer("application1", "enabled", "Running", map[string]string{}, map[string]string{}),
-				fixPodWithoutInitContainer("application2", "enabled", "Terminating", map[string]string{}, map[string]string{}),
+				fixPodWithoutIstioInitContainer("application1", "enabled", "Running", map[string]string{}, map[string]string{}),
+				fixPodWithoutIstioInitContainer("application2", "enabled", "Terminating", map[string]string{}, map[string]string{}),
+				enabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
+			isCNIEnabled:  true,
 			wantError:     false,
 			wantEmpty:     true,
 			wantLen:       0,
@@ -49,25 +54,77 @@ func TestGetPodsForCNIChange(t *testing.T) {
 		{
 			name: "should get 2 pods with istio-init when they are in Running state when CNI is enabled",
 			c: createClientSet(t,
-				newSidecarPodBuilder().
-					setName("application1").
-					setNamespace("enabled").
-					build(),
-				newSidecarPodBuilder().
-					setName("application2").
-					setNamespace("enabled").
-					build(),
+				newSidecarPodBuilder().setName("application1").setNamespace("enabled").build(),
+				newSidecarPodBuilder().setName("application2").setNamespace("enabled").build(),
+				enabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
+			isCNIEnabled:  true,
 			wantError:     false,
 			wantEmpty:     false,
 			wantLen:       2,
+		},
+		{
+			name: "should not get pod with istio-init in Terminating state",
+			c: createClientSet(t,
+				newSidecarPodBuilder().setName("application1").setNamespace("enabled").build(),
+				newSidecarPodBuilder().setName("application2").setNamespace("enabled").
+					setPodStatusPhase("Terminating").build(),
+				enabledNamespace,
+			),
+			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
+			isCNIEnabled:  true,
+			wantError:     false,
+			wantEmpty:     false,
+			wantLen:       1,
+		},
+		{
+			name: "should not get pod with istio-validation container when CNI is enabled",
+			c: createClientSet(t,
+				newSidecarPodBuilder().setName("application1").setNamespace("enabled").build(),
+				newSidecarPodBuilder().setName("application2").setNamespace("enabled").
+					setInitContainer("istio-validation").build(),
+				enabledNamespace,
+			),
+			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
+			isCNIEnabled:  true,
+			wantError:     false,
+			wantEmpty:     false,
+			wantLen:       1,
+		},
+		{
+			name: "should get 2 pods with istio-validation container when CNI is disabled",
+			c: createClientSet(t,
+				newSidecarPodBuilder().setName("application1").setNamespace("enabled").
+					setInitContainer("istio-validation").build(),
+				newSidecarPodBuilder().setName("application2").setNamespace("enabled").
+					setInitContainer("istio-validation").build(),
+				enabledNamespace,
+			),
+			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
+			isCNIEnabled:  false,
+			wantError:     false,
+			wantEmpty:     false,
+			wantLen:       2,
+		},
+		{
+			name: "should not get any pod with istio-validation container in disabled namespace when CNI is disabled",
+			c: createClientSet(t,
+				newSidecarPodBuilder().setName("application1").setNamespace("disabled").
+					setInitContainer("istio-validation").build(),
+				disabledNamespace,
+			),
+			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
+			isCNIEnabled:  false,
+			wantError:     false,
+			wantEmpty:     true,
+			wantLen:       0,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			podList, err := pods.GetPodsForCNIChange(ctx, tt.c, tt.expectedImage)
+			podList, err := pods.GetPodsForCNIChange(ctx, tt.c, tt.isCNIEnabled)
 
 			if tt.wantError {
 				require.Error(t, err)

@@ -8,19 +8,24 @@ import (
 )
 
 type SidecarPodFixtureBuilder struct {
-	name, namespace, sidecarImageRepository, sidecarImageTag, sidecarContainerName string
-	conditionStatus                                                                v1.ConditionStatus
-	deletionTimestamp                                                              *metav1.Time
+	name, namespace                                               string
+	sidecarImageRepository, sidecarImageTag, sidecarContainerName string
+	initContainerName                                             string
+	podStatusPhase                                                v1.PodPhase
+	conditionStatus                                               v1.ConditionStatus
+	deletionTimestamp                                             *metav1.Time
 }
 
 func newSidecarPodBuilder() *SidecarPodFixtureBuilder {
 	return &SidecarPodFixtureBuilder{
 		name:                   "app",
 		namespace:              "custom",
+		podStatusPhase:         "Running",
 		sidecarImageRepository: "istio/proxyv2",
 		sidecarImageTag:        "1.10.0",
 		conditionStatus:        "True",
 		sidecarContainerName:   "istio-proxy",
+		initContainerName:      "istio-init",
 	}
 }
 
@@ -31,6 +36,16 @@ func (r *SidecarPodFixtureBuilder) setName(value string) *SidecarPodFixtureBuild
 
 func (r *SidecarPodFixtureBuilder) setNamespace(value string) *SidecarPodFixtureBuilder {
 	r.namespace = value
+	return r
+}
+
+func (r *SidecarPodFixtureBuilder) setPodStatusPhase(value v1.PodPhase) *SidecarPodFixtureBuilder {
+	r.podStatusPhase = value
+	return r
+}
+
+func (r *SidecarPodFixtureBuilder) setInitContainer(value string) *SidecarPodFixtureBuilder {
+	r.initContainerName = value
 	return r
 }
 
@@ -75,7 +90,7 @@ func (r *SidecarPodFixtureBuilder) build() *v1.Pod {
 			APIVersion: "v1",
 		},
 		Status: v1.PodStatus{
-			Phase: "Running",
+			Phase: r.podStatusPhase,
 			Conditions: []v1.PodCondition{
 				{
 					Type:   "Ready",
@@ -86,8 +101,8 @@ func (r *SidecarPodFixtureBuilder) build() *v1.Pod {
 		Spec: v1.PodSpec{
 			InitContainers: []v1.Container{
 				{
-					Name:  "istio-init",
-					Image: "istio-init",
+					Name:  r.initContainerName,
+					Image: r.initContainerName,
 				},
 			},
 			Containers: []v1.Container{
@@ -103,7 +118,7 @@ func (r *SidecarPodFixtureBuilder) build() *v1.Pod {
 	}
 }
 
-func fixPodWithoutInitContainer(name, namespace, phase string, annotations map[string]string, labels map[string]string) *v1.Pod {
+func fixPodWithoutIstioInitContainer(name, namespace, phase string, annotations map[string]string, labels map[string]string) *v1.Pod {
 	return &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -165,6 +180,15 @@ func fixPodWithoutSidecar(name, namespace string) *v1.Pod {
 					Image: "workload-image:1.0",
 				},
 			},
+		},
+	}
+}
+
+func fixNamespaceWith(name string, labels map[string]string) *v1.Namespace {
+	return &v1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   name,
+			Labels: labels,
 		},
 	}
 }

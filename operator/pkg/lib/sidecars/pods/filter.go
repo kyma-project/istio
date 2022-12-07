@@ -12,7 +12,7 @@ func hasIstioSidecarStatusAnnotation(pod v1.Pod) bool {
 
 func isPodReady(pod v1.Pod) bool {
 	isMarkedForDeletion := pod.ObjectMeta.DeletionTimestamp != nil
-	return !isMarkedForDeletion && hasTrueStatusConditions(pod)
+	return !isMarkedForDeletion && hasTrueStatusConditions(pod) && isPodRunning(pod)
 }
 
 func hasTrueStatusConditions(pod v1.Pod) bool {
@@ -20,6 +20,14 @@ func hasTrueStatusConditions(pod v1.Pod) bool {
 		if condition.Status != v1.ConditionTrue {
 			return false
 		}
+	}
+
+	return true
+}
+
+func isPodRunning(pod v1.Pod) bool {
+	if pod.Status.Phase != v1.PodRunning {
+		return false
 	}
 
 	return true

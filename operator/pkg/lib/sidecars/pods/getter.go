@@ -13,6 +13,12 @@ type SidecarImage struct {
 	Tag        string
 }
 
+const (
+	istioValidationContainerName = "istio-validation"
+	istioInitContainerName       = "istio-init"
+	istioSidecarName             = "istio-proxy"
+)
+
 func (r SidecarImage) matchesImageIn(container v1.Container) bool {
 	// TODO Understand why we can do a full string match
 	containsRepository := strings.Contains(container.Image, r.Repository)
@@ -35,15 +41,15 @@ func getAllRunningPods(ctx context.Context, c client.Client) (*v1.PodList, error
 
 func getNamespacesWithIstioInjection(ctx context.Context, c client.Client) (*v1.NamespaceList, error) {
 	allNamespaceList := &v1.NamespaceList{}
-	requiredNamespaceList := &v1.NamespaceList{}
+	istioInjectionNamespaceList := &v1.NamespaceList{}
 
 	err := c.List(ctx, allNamespaceList, client.MatchingLabels{"istio-injection": "enabled"})
 	if err != nil {
-		return requiredNamespaceList, err
+		return istioInjectionNamespaceList, err
 	}
 
-	allNamespaceList.DeepCopyInto(requiredNamespaceList)
-	requiredNamespaceList.Items = []v1.Namespace{}
+	allNamespaceList.DeepCopyInto(istioInjectionNamespaceList)
+	istioInjectionNamespaceList.Items = []v1.Namespace{}
 
 	for _, namespace := range allNamespaceList.Items {
 		switch namespace.ObjectMeta.Name {
@@ -54,11 +60,11 @@ func getNamespacesWithIstioInjection(ctx context.Context, c client.Client) (*v1.
 		case "istio-system":
 			continue
 		default:
-			requiredNamespaceList.Items = append(requiredNamespaceList.Items, namespace)
+			istioInjectionNamespaceList.Items = append(istioInjectionNamespaceList.Items, namespace)
 		}
 	}
 
-	return requiredNamespaceList, err
+	return istioInjectionNamespaceList, err
 }
 
 func GetPodsWithDifferentSidecarImage(ctx context.Context, c client.Client, expectedImage SidecarImage) (outputPodsList v1.PodList, err error) {
@@ -81,24 +87,31 @@ func GetPodsWithDifferentSidecarImage(ctx context.Context, c client.Client, expe
 	return outputPodsList, nil
 }
 
-func GetPodsForCNIChange(ctx context.Context, c client.Client, expectedImage SidecarImage) (outputPodsList v1.PodList, err error) {
+func GetPodsForCNIChange(ctx context.Context, c client.Client, isCNIEnabled bool) (outputPodsList v1.PodList, err error) {
 	podList, err := getAllRunningPods(ctx, c)
 	// TODO add logs
 	if err != nil {
 		return outputPodsList, err
 	}
 
-	//istioNamespaceList, err := getNamespacesWithIstioInjection(ctx, c)
-	//if err != nil {
-	//	return outputPodsList, err
-	//}
+	var containerName string
+	if isCNIEnabled {
+		containerName = istioInitContainerName
+	} else {
+		containerName = istioValidationContainerName
+	}
+
+	istioNamespaceList, err := getNamespacesWithIstioInjection(ctx, c)
+	if err != nil {
+		return outputPodsList, err
+	}
 
 	podList.DeepCopyInto(&outputPodsList)
 	outputPodsList.Items = []v1.Pod{}
 
 	for _, pod := range podList.Items {
-		// TODO: init container name logic
-		if isPodReady(pod) && hasInitContainer(pod.Spec.Containers, "istio-init") {
+		if isPodReady(pod) && hasInitContainer(pod.Spec.InitContainers, containerName) &&
+			isPodInNamespaceList(pod, istioNamespaceList.Items) {
 			outputPodsList.Items = append(outputPodsList.Items, *pod.DeepCopy())
 		}
 	}
@@ -106,8 +119,8 @@ func GetPodsForCNIChange(ctx context.Context, c client.Client, expectedImage Sid
 	return
 }
 
-func isPodInNamespaceList(pod v1.Pod, namespaceList v1.NamespaceList) bool {
-	for _, namespace := range namespaceList.Items {
+func isPodInNamespaceList(pod v1.Pod, namespaceList []v1.Namespace) bool {
+	for _, namespace := range namespaceList {
 		if pod.ObjectMeta.Namespace == namespace.Name {
 			return true
 		}

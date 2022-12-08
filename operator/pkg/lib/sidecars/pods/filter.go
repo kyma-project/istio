@@ -108,21 +108,6 @@ func isSystemNamespace(name string) bool {
 	}
 	return false
 }
-//
-//func checkPodSidecarInjectionLogic(pod v1.Pod, sidecarInjectionEnabledByDefault bool) (requireSidecar bool) {
-//	podAnnotationValue, podAnnotated := pod.Annotations["sidecar.istio.io/inject"]
-//	_, podLabeled := pod.Labels["sidecar.istio.io/inject"]
-//
-//	if !sidecarInjectionEnabledByDefault && !namespaceLabeled && podAnnotated && podAnnotationValue == "true" {
-//		return false
-//	}
-//
-//	if !sidecarInjectionEnabledByDefault && !namespaceLabeled && !podAnnotated && !podLabeled {
-//		return false
-//	}
-//
-//	return true
-//}
 
 func isPodAnnotatedOrLabeledWithIstioInjectFalse(pod v1.Pod) bool {
 	podAnnotationValue, podAnnotated := pod.Annotations["sidecar.istio.io/inject"]

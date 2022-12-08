@@ -214,6 +214,16 @@ func TestGetPodsWithDifferentSidecarImage(t *testing.T) {
 			assertFunc: func(t require.TestingT, val interface{}) { require.Empty(t, val) },
 		},
 		{
+			name: "should ignore pod that has different image tag when phase is not running",
+			c: createClientSet(t,
+				newSidecarPodBuilder().
+					setSidecarImageTag("1.12.0").
+					setPodStatusPhase("Pending").
+					build(),
+			),
+			assertFunc: func(t require.TestingT, val interface{}) { require.Empty(t, val) },
+		},
+		{
 			name: "should ignore pod that has different image tag when it has a deletion timestamp",
 			c: createClientSet(t,
 				newSidecarPodBuilder().

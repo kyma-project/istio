@@ -39,32 +39,26 @@ func getAllRunningPods(ctx context.Context, c client.Client) (*v1.PodList, error
 	return podList, nil
 }
 
-func getNamespacesWithIstioInjection(ctx context.Context, c client.Client) (*v1.NamespaceList, error) {
-	allNamespaceList := &v1.NamespaceList{}
-	istioInjectionNamespaceList := &v1.NamespaceList{}
+func getNamespacesWithIstioInjectionDisabled(ctx context.Context, c client.Client) (*v1.NamespaceList, error) {
+	unfilteredDisabledList := &v1.NamespaceList{}
+	disabledList := &v1.NamespaceList{}
 
-	err := c.List(ctx, allNamespaceList, client.MatchingLabels{"istio-injection": "enabled"})
+	err := c.List(ctx, unfilteredDisabledList, client.MatchingLabels{"istio-injection": "disabled"})
 	if err != nil {
-		return istioInjectionNamespaceList, err
+		return disabledList, err
 	}
 
-	allNamespaceList.DeepCopyInto(istioInjectionNamespaceList)
-	istioInjectionNamespaceList.Items = []v1.Namespace{}
+	unfilteredDisabledList.DeepCopyInto(disabledList)
+	disabledList.Items = []v1.Namespace{}
 
-	for _, namespace := range allNamespaceList.Items {
-		switch namespace.ObjectMeta.Name {
-		case "kube-system":
+	for _, namespace := range unfilteredDisabledList.Items {
+		if isSystemNamespace(namespace.ObjectMeta.Name) {
 			continue
-		case "kube-public":
-			continue
-		case "istio-system":
-			continue
-		default:
-			istioInjectionNamespaceList.Items = append(istioInjectionNamespaceList.Items, namespace)
 		}
+		disabledList.Items = append(disabledList.Items, namespace)
 	}
 
-	return istioInjectionNamespaceList, err
+	return disabledList, err
 }
 
 func GetPodsWithDifferentSidecarImage(ctx context.Context, c client.Client, expectedImage SidecarImage) (outputPodsList v1.PodList, err error) {
@@ -89,7 +83,7 @@ func GetPodsWithDifferentSidecarImage(ctx context.Context, c client.Client, expe
 
 func GetPodsForCNIChange(ctx context.Context, c client.Client, isCNIEnabled bool) (outputPodsList v1.PodList, err error) {
 	podList, err := getAllRunningPods(ctx, c)
-	// TODO add logs
+	// TODO: add logs
 	if err != nil {
 		return outputPodsList, err
 	}
@@ -101,7 +95,7 @@ func GetPodsForCNIChange(ctx context.Context, c client.Client, isCNIEnabled bool
 		containerName = istioValidationContainerName
 	}
 
-	injectionEnabledNamespaceList, err := getNamespacesWithIstioInjection(ctx, c)
+	injectionDisabledNamespaceList, err := getNamespacesWithIstioInjectionDisabled(ctx, c)
 	if err != nil {
 		return outputPodsList, err
 	}
@@ -111,8 +105,8 @@ func GetPodsForCNIChange(ctx context.Context, c client.Client, isCNIEnabled bool
 
 	for _, pod := range podList.Items {
 		if isPodReady(pod) && hasInitContainer(pod.Spec.InitContainers, containerName) &&
-			// TODO: Fix checking only pods in istio namespaces and filter out kube-system ns pods
-			isPodInNamespaceList(pod, injectionEnabledNamespaceList.Items) {
+			!isPodInNamespaceList(pod, injectionDisabledNamespaceList.Items) &&
+			!isSystemNamespace(pod.Namespace) {
 			outputPodsList.Items = append(outputPodsList.Items, *pod.DeepCopy())
 		}
 	}
@@ -122,12 +116,12 @@ func GetPodsForCNIChange(ctx context.Context, c client.Client, isCNIEnabled bool
 
 func GetPodsWithoutSidecar(ctx context.Context, c client.Client, isSidecarInjectionEnabledByDefault bool) (outputPodsList v1.PodList, err error) {
 	podList, err := getAllRunningPods(ctx, c)
-	// TODO add logs
+	// TODO: add logs
 	if err != nil {
 		return outputPodsList, err
 	}
 
-	injectionEnabledNamespaceList, err := getNamespacesWithIstioInjection(ctx, c)
+	injectionDisabledNamespaceList, err := getNamespacesWithIstioInjectionDisabled(ctx, c)
 	if err != nil {
 		return outputPodsList, err
 	}
@@ -138,8 +132,10 @@ func GetPodsWithoutSidecar(ctx context.Context, c client.Client, isSidecarInject
 	for _, pod := range podList.Items {
 		if isPodReady(pod) &&
 			!hasIstioSidecarContainer(pod.Spec.Containers, istioSidecarName) &&
-			// TODO: Fix checking only pods in istio namespaces and filter out kube-system ns pods
-			isPodInNamespaceList(pod, injectionEnabledNamespaceList.Items) {
+			!isPodInNamespaceList(pod, injectionDisabledNamespaceList.Items) &&
+			!isSystemNamespace(pod.Namespace) &&
+			!isPodInHostNetwork(pod) &&
+			!isPodAnnotatedOrLabeledWithIstioInjectFalse(pod) {
 			outputPodsList.Items = append(outputPodsList.Items, *pod.DeepCopy())
 		}
 	}

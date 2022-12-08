@@ -97,35 +97,50 @@ func isPodInNamespaceList(pod v1.Pod, namespaceList []v1.Namespace) bool {
 	return false
 }
 
-func checkPodSidecarInjectionLogic(pod v1.Pod, sidecarInjectionEnabledByDefault bool) (requireSidecar bool) {
-	namespaceLabelValue, namespaceLabeled := pod.Annotations["reconciler/namespace-istio-injection"]
+func isSystemNamespace(name string) bool {
+	switch name {
+	case "kube-system":
+		return true
+	case "kube-public":
+		return true
+	case "istio-system":
+		return true
+	}
+	return false
+}
+//
+//func checkPodSidecarInjectionLogic(pod v1.Pod, sidecarInjectionEnabledByDefault bool) (requireSidecar bool) {
+//	podAnnotationValue, podAnnotated := pod.Annotations["sidecar.istio.io/inject"]
+//	_, podLabeled := pod.Labels["sidecar.istio.io/inject"]
+//
+//	if !sidecarInjectionEnabledByDefault && !namespaceLabeled && podAnnotated && podAnnotationValue == "true" {
+//		return false
+//	}
+//
+//	if !sidecarInjectionEnabledByDefault && !namespaceLabeled && !podAnnotated && !podLabeled {
+//		return false
+//	}
+//
+//	return true
+//}
+
+func isPodAnnotatedOrLabeledWithIstioInjectFalse(pod v1.Pod) bool {
 	podAnnotationValue, podAnnotated := pod.Annotations["sidecar.istio.io/inject"]
 	podLabelValue, podLabeled := pod.Labels["sidecar.istio.io/inject"]
 
+	if podLabeled && podLabelValue == "false" {
+		return true
+	}
+	if !podLabeled && podAnnotated && podAnnotationValue == "false" {
+		return true
+	}
+	return false
+}
+
+func isPodInHostNetwork(pod v1.Pod) bool {
 	//Automatic sidecar injection is ignored for pods on the host network
 	if pod.Spec.HostNetwork {
-		return false
+		return true
 	}
-
-	if namespaceLabeled && namespaceLabelValue == "disabled" {
-		return false
-	}
-
-	if podLabeled && podLabelValue == "false" {
-		return false
-	}
-
-	if !podLabeled && podAnnotated && podAnnotationValue == "false" {
-		return false
-	}
-
-	if !sidecarInjectionEnabledByDefault && !namespaceLabeled && podAnnotated && podAnnotationValue == "true" {
-		return false
-	}
-
-	if !sidecarInjectionEnabledByDefault && !namespaceLabeled && !podAnnotated && !podLabeled {
-		return false
-	}
-
-	return true
+	return false
 }

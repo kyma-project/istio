@@ -17,6 +17,7 @@ func podWithoutOwnerFixture(name, namespace string) v1.Pod {
 		},
 	}
 }
+
 func podFixture(name, namespace, ownerKind, ownerName string) v1.Pod {
 	return v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{

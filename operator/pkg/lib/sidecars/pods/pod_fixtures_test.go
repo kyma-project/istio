@@ -12,9 +12,11 @@ type SidecarPodFixtureBuilder struct {
 	sidecarContainerName, sidecarImageRepository, sidecarImageTag string
 	initContainerName                                             string
 	podAnnotations                                                map[string]string
+	podLabels                                                     map[string]string
 	podStatusPhase                                                v1.PodPhase
 	conditionStatus                                               v1.ConditionStatus
 	deletionTimestamp                                             *metav1.Time
+	hostNetwork                                                   bool
 }
 
 func newSidecarPodBuilder() *SidecarPodFixtureBuilder {
@@ -26,8 +28,10 @@ func newSidecarPodBuilder() *SidecarPodFixtureBuilder {
 		sidecarImageTag:        "1.10.0",
 		initContainerName:      "istio-init",
 		podAnnotations:         map[string]string{"sidecar.istio.io/status": "{\"containers\":[\"istio-proxy\"]}"},
+		podLabels:              map[string]string{},
 		podStatusPhase:         "Running",
 		conditionStatus:        "True",
+		hostNetwork:            false,
 	}
 }
 
@@ -43,6 +47,21 @@ func (r *SidecarPodFixtureBuilder) setNamespace(value string) *SidecarPodFixture
 
 func (r *SidecarPodFixtureBuilder) setPodStatusPhase(value v1.PodPhase) *SidecarPodFixtureBuilder {
 	r.podStatusPhase = value
+	return r
+}
+
+func (r *SidecarPodFixtureBuilder) setPodAnnotations(value map[string]string) *SidecarPodFixtureBuilder {
+	r.podAnnotations = value
+	return r
+}
+
+func (r *SidecarPodFixtureBuilder) setPodLabels(value map[string]string) *SidecarPodFixtureBuilder {
+	r.podLabels = value
+	return r
+}
+
+func (r *SidecarPodFixtureBuilder) setPodHostNetwork() *SidecarPodFixtureBuilder {
+	r.hostNetwork = true
 	return r
 }
 
@@ -94,6 +113,7 @@ func (r *SidecarPodFixtureBuilder) build() *v1.Pod {
 				{Kind: "ReplicaSet"},
 			},
 			Annotations:       r.podAnnotations,
+			Labels:            r.podLabels,
 			DeletionTimestamp: r.deletionTimestamp,
 		},
 		TypeMeta: metav1.TypeMeta{
@@ -125,6 +145,7 @@ func (r *SidecarPodFixtureBuilder) build() *v1.Pod {
 					Name:  r.sidecarContainerName,
 					Image: fmt.Sprintf(`%s:%s`, r.sidecarImageRepository, r.sidecarImageTag)},
 			},
+			HostNetwork: r.hostNetwork,
 		},
 	}
 }

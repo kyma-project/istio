@@ -1,11 +1,13 @@
 package restart
 
 import (
+	"context"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func restartActionFactory(pod v1.Pod) restartAction {
+func restartActionFactory(ctx context.Context, c client.Client, pod v1.Pod) restartAction {
 	ownedBy, exists := getOwnerReferences(pod)
 
 	if !exists {
@@ -16,8 +18,10 @@ func restartActionFactory(pod v1.Pod) restartAction {
 	case "Job":
 		return newOwnedByJobAction(pod)
 	case "ReplicaSet":
+		return getReplicaSetAction(ctx, c, pod, ownedBy)
 	case "ReplicationController":
 	default:
+		return newRolloutAction(pod, ownedBy)
 	}
 	return nil
 

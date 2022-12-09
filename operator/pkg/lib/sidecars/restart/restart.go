@@ -29,7 +29,7 @@ func Restart(ctx context.Context, c client.Client, podList v1.PodList) ([]Restar
 	warnings := make([]RestartWarning, 0)
 
 	for _, pod := range podList.Items {
-		currentWarnings, err := restartActionFactory(pod).run()
+		currentWarnings, err := restartActionFactory(ctx, c, pod).run()
 		if err != nil {
 			// TODO decide what to do in this case
 		}

@@ -1,26 +1,20 @@
 package restart
 
 import (
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"context"
+
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const rolloutTimeoutMessage = "pod could not be rolled out by resource owner's controller."
 
-type rolloutAction struct {
-	object actionObject
-}
-
-func newRolloutAction(pod v1.Pod, ownedBy *metav1.OwnerReference) rolloutAction {
-	return rolloutAction{
-		object: actionObject{
-			Name:      ownedBy.Name,
-			Namespace: pod.Namespace,
-			Kind:      ownedBy.Kind,
-		},
+func newRolloutAction(object actionObject) restartAction {
+	return restartAction{
+		run:    rolloutRun,
+		object: object,
 	}
 }
 
-func (r rolloutAction) run() ([]RestartWarning, error) {
-	return []RestartWarning{newRestartWarning(r.object, rolloutTimeoutMessage)}, nil
+func rolloutRun(ctx context.Context, client client.Client, object actionObject) ([]RestartWarning, error) {
+	return []RestartWarning{newRestartWarning(object, rolloutTimeoutMessage)}, nil
 }

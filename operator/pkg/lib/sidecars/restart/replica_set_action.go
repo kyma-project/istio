@@ -2,6 +2,7 @@ package restart
 
 import (
 	"context"
+
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -21,18 +22,18 @@ func getReplicaSetAction(ctx context.Context, c client.Client, pod v1.Pod, repli
 		// TODO in the existing code only logging happens and execution continues. Is this a good thing?
 	}
 
-	// TODO for better understanding - why do we delete the RS if there is no parent?
 	if rsOwnedBy, exists := getReplicaSetOwner(replicaSet); !exists {
-		// TODO add pod delete action
-		return nil
+		return newDeleteAction(actionObject{
+			Name:      pod.Name,
+			Namespace: pod.Namespace,
+			Kind:      pod.Kind,
+		})
 	} else {
-		return rolloutAction{
-			object: actionObject{
-				Name:      rsOwnedBy.Name,
-				Namespace: replicaSet.Namespace,
-				Kind:      rsOwnedBy.Kind,
-			},
-		}
+		return newRolloutAction(actionObject{
+			Name:      rsOwnedBy.Name,
+			Namespace: replicaSet.Namespace,
+			Kind:      rsOwnedBy.Kind,
+		})
 	}
 }
 

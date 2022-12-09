@@ -2,6 +2,7 @@ package restart
 
 import (
 	"context"
+
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -29,7 +30,8 @@ func Restart(ctx context.Context, c client.Client, podList v1.PodList) ([]Restar
 	warnings := make([]RestartWarning, 0)
 
 	for _, pod := range podList.Items {
-		currentWarnings, err := restartActionFactory(ctx, c, pod).run()
+		action := restartActionFactory(ctx, c, pod)
+		currentWarnings, err := action.run(ctx, c, action.object)
 		if err != nil {
 			// TODO decide what to do in this case
 		}

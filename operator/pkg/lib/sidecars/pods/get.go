@@ -2,40 +2,36 @@ package pods
 
 import (
 	"context"
-	"fmt"
-	"github.com/go-logr/logr"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
 )
 
-const AnnotationResetWarningKey = "istio.reconciler.kyma-project.io/proxy-reset-warning"
-
-func GetAllIstioPods(ctx context.Context, c client.Client, logger logr.Logger) (*v1.PodList, error) {
-	podList, err := GetIstioPodsWithSelectors(ctx, c)
-	if err != nil {
-		return nil, err
-	}
-
-	podsWithDifferentImage := GetIstioPodsWithDifferentImage(podList)
-
-	// TODO: Remove this log
-	logger.Info(fmt.Sprintln(podsWithDifferentImage))
-
-	return podList, err
+type SidecarImage struct {
+	Repository string
+	Tag        string
 }
 
-func GetIstioPodsWithSelectors(ctx context.Context, c client.Client) (*v1.PodList, error) {
+const (
+	istioValidationContainerName = "istio-validation"
+	istioInitContainerName       = "istio-init"
+	istioSidecarName             = "istio-proxy"
+)
+
+func (r SidecarImage) matchesImageIn(container v1.Container) bool {
+	// TODO Understand why we can do a full string match
+	containsRepository := strings.Contains(container.Image, r.Repository)
+	containsTag := strings.HasSuffix(container.Image, r.Tag)
+	return containsRepository && containsTag
+}
+
+func getAllRunningPods(ctx context.Context, c client.Client) (*v1.PodList, error) {
 	podList := &v1.PodList{}
 
-	sidecarAnnotation := fields.OneTermEqualSelector("metadata.annotations", "sidecar.istio.io/status")
-	phase := fields.OneTermEqualSelector("status.phase", string(v1.PodRunning))
-	// TODO: Selector (or in naive loop) for istio sidecar names from annotations
-	resetWarningAnnotation := fields.OneTermNotEqualSelector("metadata.annotations", AnnotationResetWarningKey)
+	isRunning := fields.OneTermEqualSelector("status.phase", string(v1.PodRunning))
 
-	selectors := fields.AndSelectors(sidecarAnnotation, phase, resetWarningAnnotation)
-	err := c.List(ctx, podList, client.MatchingFieldsSelector{Selector: selectors})
+	err := c.List(ctx, podList, client.MatchingFieldsSelector{Selector: isRunning})
 	if err != nil {
 		return podList, err
 	}
@@ -43,23 +39,113 @@ func GetIstioPodsWithSelectors(ctx context.Context, c client.Client) (*v1.PodLis
 	return podList, nil
 }
 
-func GetIstioPodsWithDifferentImage(inputPodList *v1.PodList) (outputPodList v1.PodList) {
-	inputPodList.DeepCopyInto(&outputPodList)
-	outputPodList.Items = []v1.Pod{}
+func getNamespacesWithIstioLabelsAndInjectionDisabled(ctx context.Context, c client.Client) (*v1.NamespaceList, *v1.NamespaceList, error) {
+	unfilteredLabeledList := &v1.NamespaceList{}
+	labeledList := &v1.NamespaceList{}
+	disabledList := &v1.NamespaceList{}
 
-	tmpPrefix := ""
-	tmpSuffix := ""
+	err := c.List(ctx, unfilteredLabeledList, client.HasLabels{"istio-injection"})
+	if err != nil {
+		return labeledList, disabledList, err
+	}
 
-	// TODO: Check if it's possible to create Selector for prefix and suffix
-	for _, pod := range inputPodList.Items {
-		for _, container := range pod.Spec.Containers {
-			containsPrefix := strings.Contains(container.Image, tmpPrefix)
-			hasSuffix := strings.HasSuffix(container.Image, tmpSuffix)
-			if !hasSuffix || !containsPrefix {
-				outputPodList.Items = append(outputPodList.Items, *pod.DeepCopy())
-			}
+	unfilteredLabeledList.DeepCopyInto(labeledList)
+	labeledList.Items = []v1.Namespace{}
+	unfilteredLabeledList.DeepCopyInto(disabledList)
+	disabledList.Items = []v1.Namespace{}
+
+	for _, namespace := range unfilteredLabeledList.Items {
+		if isSystemNamespace(namespace.ObjectMeta.Name) {
+			continue
+		}
+		if namespace.Labels["istio-injection"] == "disabled" {
+			disabledList.Items = append(disabledList.Items, namespace)
+		}
+		labeledList.Items = append(labeledList.Items, namespace)
+	}
+
+	return labeledList, disabledList, err
+}
+
+func GetPodsWithDifferentSidecarImage(ctx context.Context, c client.Client, expectedImage SidecarImage) (outputPodsList v1.PodList, err error) {
+	podList, err := getAllRunningPods(ctx, c)
+	if err != nil {
+		return outputPodsList, err
+	}
+
+	podList.DeepCopyInto(&outputPodsList)
+	outputPodsList.Items = []v1.Pod{}
+
+	for _, pod := range podList.Items {
+		if hasIstioSidecarStatusAnnotation(pod) &&
+			isPodReady(pod) &&
+			hasSidecarContainerWithWithDifferentImage(pod, expectedImage) {
+			outputPodsList.Items = append(outputPodsList.Items, *pod.DeepCopy())
 		}
 	}
 
-	return
+	return outputPodsList, nil
+}
+
+func GetPodsForCNIChange(ctx context.Context, c client.Client, isCNIEnabled bool) (outputPodsList v1.PodList, err error) {
+	podList, err := getAllRunningPods(ctx, c)
+	// TODO: add logs
+	if err != nil {
+		return outputPodsList, err
+	}
+
+	var containerName string
+	if isCNIEnabled {
+		containerName = istioInitContainerName
+	} else {
+		containerName = istioValidationContainerName
+	}
+
+	_, injectionDisabledNamespaceList, err := getNamespacesWithIstioLabelsAndInjectionDisabled(ctx, c)
+	if err != nil {
+		return outputPodsList, err
+	}
+
+	podList.DeepCopyInto(&outputPodsList)
+	outputPodsList.Items = []v1.Pod{}
+
+	for _, pod := range podList.Items {
+		if isPodReady(pod) && hasInitContainer(pod.Spec.InitContainers, containerName) &&
+			!isPodInNamespaceList(pod, injectionDisabledNamespaceList.Items) &&
+			!isSystemNamespace(pod.Namespace) {
+			outputPodsList.Items = append(outputPodsList.Items, *pod.DeepCopy())
+		}
+	}
+
+	return outputPodsList, nil
+}
+
+func GetPodsWithoutSidecar(ctx context.Context, c client.Client, isSidecarInjectionEnabledByDefault bool) (outputPodsList v1.PodList, err error) {
+	podList, err := getAllRunningPods(ctx, c)
+	// TODO: add logs
+	if err != nil {
+		return outputPodsList, err
+	}
+
+	injectionLabeledNamespaceList, injectionDisabledNamespaceList, err := getNamespacesWithIstioLabelsAndInjectionDisabled(ctx, c)
+	if err != nil {
+		return outputPodsList, err
+	}
+
+	podList.DeepCopyInto(&outputPodsList)
+	outputPodsList.Items = []v1.Pod{}
+
+	for _, pod := range podList.Items {
+		isPodInInjectionLabeledNamespace := isPodInNamespaceList(pod, injectionLabeledNamespaceList.Items)
+		if isPodReady(pod) &&
+			!hasIstioSidecarContainer(pod.Spec.Containers, istioSidecarName) &&
+			!isSystemNamespace(pod.Namespace) &&
+			!isPodInHostNetwork(pod) &&
+			!isPodInNamespaceList(pod, injectionDisabledNamespaceList.Items) &&
+			isPodEligibleToRestart(pod, isSidecarInjectionEnabledByDefault, isPodInInjectionLabeledNamespace) {
+			outputPodsList.Items = append(outputPodsList.Items, *pod.DeepCopy())
+		}
+	}
+
+	return outputPodsList, nil
 }

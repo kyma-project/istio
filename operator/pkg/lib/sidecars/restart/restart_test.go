@@ -2,6 +2,8 @@ package restart_test
 
 import (
 	"context"
+	"testing"
+
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/restart"
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
@@ -9,7 +11,6 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	"testing"
 )
 
 func TestRestart(t *testing.T) {
@@ -185,6 +186,7 @@ func TestRestart(t *testing.T) {
 
 func fakeClient(t *testing.T, objects ...client.Object) client.Client {
 	err := v1.AddToScheme(scheme.Scheme)
+	require.NoError(t, err)
 	err = appsv1.AddToScheme(scheme.Scheme)
 	require.NoError(t, err)
 

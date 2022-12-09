@@ -24,7 +24,11 @@ func restartActionFactory(ctx context.Context, c client.Client, pod v1.Pod) rest
 		// TODO: Decide on action in here
 		fallthrough
 	default:
-		return newRolloutAction(actionObjectFromPod(pod))
+		return newRolloutAction(actionObject{
+			Name:      ownedBy.Name,
+			Namespace: pod.Namespace,
+			Kind:      ownedBy.Kind,
+		})
 	}
 }
 

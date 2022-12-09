@@ -2,6 +2,7 @@ package restart
 
 import (
 	"context"
+	"fmt"
 
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -19,15 +20,16 @@ func getReplicaSetAction(ctx context.Context, c client.Client, pod v1.Pod, repli
 	var replicaSet = &appsv1.ReplicaSet{}
 	err := c.Get(ctx, replicaSetKey, replicaSet)
 	if err != nil {
-		// TODO in the existing code only logging happens and execution continues. Is this a good thing?
+		return restartAction{
+			run: warningAction{
+				message: fmt.Sprintf("The replica set could not be retrieved: %s", err),
+			}.run,
+			object: actionObjectFromPod(pod),
+		}
 	}
 
 	if rsOwnedBy, exists := getReplicaSetOwner(replicaSet); !exists {
-		return newDeleteAction(actionObject{
-			Name:      pod.Name,
-			Namespace: pod.Namespace,
-			Kind:      pod.Kind,
-		})
+		return newDeleteAction(actionObjectFromPod(pod))
 	} else {
 		return newRolloutAction(actionObject{
 			Name:      rsOwnedBy.Name,

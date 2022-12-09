@@ -7,6 +7,9 @@
 
 ![IstioOperator Overview](./istio-operator-overview.svg)
 
+We want to keep the operator as simple as possible, that's why we decided to start with one controller that consists of self-contained components 
+executing reconciliation logic. The resource used by this controller is [Istio CR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md).
+
 ### Ownership of current resources in Kyma repository
 
 In the transitioning to a more modularised architecture, the [IstioOperator resource](https://github.com/kyma-project/kyma/tree/main/resources/istio), 
@@ -46,6 +49,9 @@ That means if we want to release a new Istio version, we have to release a new v
 
 ### Installation & Upgrade of Istio
 The Istio installation, upgrade and uninstall is done using [Istio Go module](https://github.com/istio/istio).
+The following diagram describes the reconciliation process for installing, uninstalling and canary upgrading (using revisions) of Istio.
+
+![Istio Installation Reconciliation](./istio-installation-reconciliation.svg)
 
 ### Reconciliation of Istio
 The reconciliation loop of Istio is based on the [Istio CR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md) custom resource and is controlled by the `IstioController`. This controller contains several self-contained components, which we have suffixed with reconciliation.   
@@ -54,7 +60,7 @@ and must work in isolation when assessing whether reconciliation is required, ap
 As they are completely isolated, we can move these components to their own controller if we consider it necessary.
 
  The reconciliation loop of `IstioController` is visualized in the following diagram.
-![Reconciliation Loop Diagram](./reconciliation-sequence-diagram.svg)
+![Reconciliation Loop Diagram](./istio-controller-reconciliation-loop.svg)
 
 #### Interval
 
@@ -73,9 +79,8 @@ func Reconcile(ctx context.Context, o reconcile.Request) (reconcile.Result, erro
 The biggest challenge in deciding on an appropriate interval is that the time required to perform the reconciliation can vary a lot. Small changes may only require a 
 restart of the sidecar proxies or the Ingress gateway and are therefore much faster than a new installation or a Canary upgrade.
 
-In the end we can start with using `SyncPeriod` as we only want to have a single controller for now. When we add more controllers we can use `RequeueAfter`  if
-they should be triggered on different intervals.
-We decided to start with an interval of 5 minutes as the reconciliation of an installation or canary upgrade might take several minutes.
+We can start with using `SyncPeriod` set to 5 minutes as we only want to have a single controller for now and if it's no problem to start with a higher time-based reconciliation. When we add more controllers we can use `RequeueAfter` if
+they should be triggered on different intervals or if we want to have a different interval while a long running-process like installation is executed.
 
 The queuing of reconciliation requests is handled by [controller-runtime](https://pkg.go.dev/sigs.k8s.io/controller-runtime) and is out of scope of this design.
 

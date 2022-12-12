@@ -5,6 +5,8 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
+const AnnotationResetWarningKey = "istio.reconciler.kyma-project.io/proxy-reset-warning"
+
 func hasIstioSidecarStatusAnnotation(pod v1.Pod) bool {
 	_, exists := pod.Annotations["sidecar.istio.io/status"]
 	return exists
@@ -109,17 +111,23 @@ func isSystemNamespace(name string) bool {
 	return false
 }
 
-func isPodAnnotatedOrLabeledWithIstioInjectFalse(pod v1.Pod) bool {
+func isPodEligibleToRestart(pod v1.Pod, isSidecarInjectionEnabledByDefault, podNamespaceLabeled bool) bool {
 	podAnnotationValue, podAnnotated := pod.Annotations["sidecar.istio.io/inject"]
 	podLabelValue, podLabeled := pod.Labels["sidecar.istio.io/inject"]
 
 	if podLabeled && podLabelValue == "false" {
-		return true
+		return false
 	}
 	if !podLabeled && podAnnotated && podAnnotationValue == "false" {
-		return true
+		return false
 	}
-	return false
+	if !isSidecarInjectionEnabledByDefault && !podNamespaceLabeled && podAnnotated && podAnnotationValue == "true" {
+		return false
+	}
+	if !isSidecarInjectionEnabledByDefault && !podNamespaceLabeled && !podAnnotated && !podLabeled {
+		return false
+	}
+	return true
 }
 
 func isPodInHostNetwork(pod v1.Pod) bool {

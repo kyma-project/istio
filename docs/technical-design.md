@@ -56,8 +56,8 @@ The following diagram describes the reconciliation process for installing, unins
 ### Reconciliation of Istio
 The reconciliation loop of Istio is based on the [Istio CR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md) custom resource and is controlled by the `IstioController`. This controller contains several self-contained components, which we have suffixed with reconciliation.   
 We decided to split the logic in these reconciliation components to have a better extensibility and maintainability. This means each of this components must have its clearly separated responsibility
-and must work in isolation when assessing whether reconciliation is required, applying changes and returning a status.
-As they are completely isolated, we can move these components to their own controller if we consider it necessary.
+and must work in isolation when assessing whether reconciliation is required, applying changes and returning a status.  
+The execution the reconciliation must be fast, and we must avoid many blocking calls. If we have long-running tasks, they must be executed asynchronously and the status should be evaluated in the next reconciliation cycle.
 
  The reconciliation loop of `IstioController` is visualized in the following diagram.
 ![Reconciliation Loop Diagram](./istio-controller-reconciliation-loop.svg)
@@ -85,6 +85,10 @@ they should be triggered on different intervals or if we want to have a differen
 The queuing of reconciliation requests is handled by [controller-runtime](https://pkg.go.dev/sigs.k8s.io/controller-runtime) and is out of scope of this design.
 
 ### Components
+We need to make sure that each component is completely independent and can calculate what to do during the reconciliation, independent of the alignment of other components and based only on the state in the cluster.
+The reason for this is that we want to use only one controller, which does all the logic to reconcile with Istio. But since we have independent components, we can move them to new controllers if it is necessary to 
+simplify `IstioController`.
+
 ![Controller Component Diagram](./controller-component-diagram.svg)
 
 #### IstioController
@@ -111,6 +115,8 @@ As we want to support canary updates at some point we might need to support two 
 The responsibility of this component is to keep the proxy sidecars in the desired state. This means that it restarts pods that are part of the service mesh or 
 that need to be added to the service mesh.
 The desired state is represented by [Istio CR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md) and the Istio Version coupled to the Operator.
+This component carries a high risk that its execution takes too long for synchronous execution in the controller. We need to check its performance during implementation 
+and assess whether its logic needs to be executed asynchronously, e.g. as part of a job or a cron job.
 
 As of now the following scenarios must be covered by this component:
 - Restart pods with proxy sidecar when CNI config changed

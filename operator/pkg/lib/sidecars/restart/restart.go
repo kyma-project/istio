@@ -30,12 +30,15 @@ func Restart(ctx context.Context, c client.Client, podList v1.PodList) ([]Restar
 	warnings := make([]RestartWarning, 0)
 
 	for _, pod := range podList.Items {
-		action := restartActionFactory(ctx, c, pod)
+		action, err := restartActionFactory(ctx, c, pod)
+		if err != nil {
+			return nil, err
+		}
+
 		currentWarnings, err := action.run(ctx, c, action.object)
 		if err != nil {
-			// TODO decide what to do in this case
+			return nil, err
 		}
-		// TODO does it make sense to implement warning as a custom error?
 		warnings = append(warnings, currentWarnings...)
 	}
 

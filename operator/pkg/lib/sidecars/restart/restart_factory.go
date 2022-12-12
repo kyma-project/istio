@@ -8,27 +8,26 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func restartActionFactory(ctx context.Context, c client.Client, pod v1.Pod) restartAction {
+func restartActionFactory(ctx context.Context, c client.Client, pod v1.Pod) (restartAction, error) {
 	ownedBy, exists := getOwnerReferences(pod)
 
 	if !exists {
-		return newOwnerNotFoundAction(pod)
+		return newOwnerNotFoundAction(pod), nil
 	}
 
 	switch ownedBy.Kind {
 	case "Job":
-		return newOwnedByJobAction(pod)
+		return newOwnedByJobAction(pod), nil
 	case "ReplicaSet":
 		return getReplicaSetAction(ctx, c, pod, ownedBy)
 	case "ReplicationController":
-		// TODO: Decide on action in here
-		fallthrough
+		return newDeleteAction(actionObjectFromPod(pod)), nil
 	default:
 		return newRolloutAction(actionObject{
 			Name:      ownedBy.Name,
 			Namespace: pod.Namespace,
 			Kind:      ownedBy.Kind,
-		})
+		}), nil
 	}
 }
 

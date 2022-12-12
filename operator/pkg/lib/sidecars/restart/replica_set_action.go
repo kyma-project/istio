@@ -2,15 +2,16 @@ package restart
 
 import (
 	"context"
-	"fmt"
 
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func getReplicaSetAction(ctx context.Context, c client.Client, pod v1.Pod, replicaSetRef *metav1.OwnerReference) restartAction {
+func getReplicaSetAction(ctx context.Context, c client.Client, pod v1.Pod, replicaSetRef *metav1.OwnerReference) (restartAction, error) {
 
 	replicaSetKey := client.ObjectKey{
 		Namespace: pod.Namespace,
@@ -20,22 +21,20 @@ func getReplicaSetAction(ctx context.Context, c client.Client, pod v1.Pod, repli
 	var replicaSet = &appsv1.ReplicaSet{}
 	err := c.Get(ctx, replicaSetKey, replicaSet)
 	if err != nil {
-		return restartAction{
-			run: warningAction{
-				message: fmt.Sprintf("The replica set could not be retrieved: %s", err),
-			}.run,
-			object: actionObjectFromPod(pod),
+		if k8serrors.IsNotFound(err) {
+			return newOwnerNotFoundAction(pod), nil
 		}
+		return restartAction{}, err
 	}
 
 	if rsOwnedBy, exists := getReplicaSetOwner(replicaSet); !exists {
-		return newDeleteAction(actionObjectFromPod(pod))
+		return newDeleteAction(actionObjectFromPod(pod)), nil
 	} else {
 		return newRolloutAction(actionObject{
 			Name:      rsOwnedBy.Name,
 			Namespace: replicaSet.Namespace,
 			Kind:      rsOwnedBy.Kind,
-		})
+		}), nil
 	}
 }
 

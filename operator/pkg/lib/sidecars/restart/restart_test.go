@@ -8,10 +8,15 @@ import (
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
+
+const annotationName = "kubectl.kubernetes.io/restartedAt"
 
 func TestRestart(t *testing.T) {
 	ctx := context.TODO()
@@ -79,9 +84,9 @@ func TestRestart(t *testing.T) {
 		require.Contains(t, warnings[0].Message, "owned by a Job")
 	})
 
-	t.Run("should return warning when pod is owned by a Deployment and restart timed out", func(t *testing.T) {
+	t.Run("should rollout restart Deployment if the pod is owned by one", func(t *testing.T) {
 		// given
-		c := fakeClient(t)
+		c := fakeClient(t, &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Name: "owner", Namespace: "test-ns"}})
 
 		podList := v1.PodList{
 			Items: []v1.Pod{
@@ -94,15 +99,18 @@ func TestRestart(t *testing.T) {
 
 		// then
 		require.NoError(t, err)
-		require.NotEmpty(t, warnings)
+		require.Empty(t, warnings)
 
-		require.Equal(t, "owner", warnings[0].Name)
-		require.Contains(t, warnings[0].Message, "could not be rolled out")
+		obj := appsv1.Deployment{}
+		err = c.Get(context.TODO(), types.NamespacedName{Namespace: "test-ns", Name: "owner"}, &obj)
+		require.NoError(t, err)
+
+		require.NotEmpty(t, "owner", obj.Annotations[annotationName])
 	})
 
-	t.Run("should return warning when pod is owned by a DaemonSet and restart timed out", func(t *testing.T) {
+	t.Run("should rollout restart DaemonSet if the pod is owned by one", func(t *testing.T) {
 		// given
-		c := fakeClient(t)
+		c := fakeClient(t, &appsv1.DaemonSet{ObjectMeta: metav1.ObjectMeta{Name: "owner", Namespace: "test-ns"}})
 
 		podList := v1.PodList{
 			Items: []v1.Pod{
@@ -115,22 +123,47 @@ func TestRestart(t *testing.T) {
 
 		// then
 		require.NoError(t, err)
-		require.NotEmpty(t, warnings)
+		require.Empty(t, warnings)
 
-		require.Equal(t, "owner", warnings[0].Name)
-		require.Contains(t, warnings[0].Message, "could not be rolled out")
+		obj := appsv1.DaemonSet{}
+		err = c.Get(context.TODO(), types.NamespacedName{Namespace: "test-ns", Name: "owner"}, &obj)
+		require.NoError(t, err)
+
+		require.NotEmpty(t, "owner", obj.Annotations[annotationName])
 	})
 
-	t.Run("should return warning when pod is owned by a ReplicaSet and restart timed out", func(t *testing.T) {
+	t.Run("should delete a pod belonging to a ReplicaSet with no owner", func(t *testing.T) {
 		// given
-		rsName := "podOwner"
-		namespace := "test-ns"
+		pod := podFixture("p1", "test-ns", "ReplicaSet", "owner")
+		c := fakeClient(t, &appsv1.ReplicaSet{ObjectMeta: metav1.ObjectMeta{Name: "owner", Namespace: "test-ns"}}, &pod)
 
-		c := fakeClient(t, replicaSetFixture(rsName, namespace, "rsOwner", "Deployment"))
+		podList := v1.PodList{
+			Items: []v1.Pod{pod},
+		}
+
+		// when
+		warnings, err := restart.Restart(ctx, c, podList)
+
+		// then
+		require.NoError(t, err)
+		require.Empty(t, warnings)
+
+		obj := v1.Pod{}
+		err = c.Get(context.TODO(), types.NamespacedName{Namespace: "test-ns", Name: "p1"}, &obj)
+
+		require.Error(t, err)
+		require.True(t, k8serrors.IsNotFound(err))
+	})
+
+	t.Run("should rollout restart StatefulSet if the pod is owned by one", func(t *testing.T) {
+		// given
+		pod := podFixture("p1", "test-ns", "StatefulSet", "owner")
+
+		c := fakeClient(t, &appsv1.StatefulSet{ObjectMeta: metav1.ObjectMeta{Name: "owner", Namespace: "test-ns"}}, &pod)
 
 		podList := v1.PodList{
 			Items: []v1.Pod{
-				podFixture("p1", namespace, "ReplicaSet", rsName),
+				pod,
 			},
 		}
 
@@ -139,21 +172,26 @@ func TestRestart(t *testing.T) {
 
 		// then
 		require.NoError(t, err)
-		require.NotEmpty(t, warnings)
+		require.Empty(t, warnings)
 
-		require.Equal(t, "rsOwner", warnings[0].Name)
-		require.Contains(t, warnings[0].Message, "could not be rolled out")
+		obj := appsv1.StatefulSet{}
+		err = c.Get(context.TODO(), types.NamespacedName{Namespace: "test-ns", Name: "owner"}, &obj)
+		require.NoError(t, err)
+
+		require.NotEmpty(t, "owner", obj.Annotations[annotationName])
 	})
 
-	t.Run("should return warning when pod is owned by a StatefulSet and restart timed out", func(t *testing.T) {
+	t.Run("should return a warning when Pod is owned by a ReplicaSet that is not found", func(t *testing.T) {
 		// given
-		c := fakeClient(t)
+		pod := podFixture("p1", "test-ns", "ReplicaSet", "podOwner")
 
 		podList := v1.PodList{
 			Items: []v1.Pod{
-				podFixture("p1", "test-ns", "StatefulSet", "owner"),
+				pod,
 			},
 		}
+
+		c := fakeClient(t, &pod)
 
 		// when
 		warnings, err := restart.Restart(ctx, c, podList)
@@ -162,25 +200,46 @@ func TestRestart(t *testing.T) {
 		require.NoError(t, err)
 		require.NotEmpty(t, warnings)
 
-		require.Equal(t, "owner", warnings[0].Name)
-		require.Contains(t, warnings[0].Message, "could not be rolled out")
+		pods := v1.PodList{}
+		err = c.List(context.TODO(), &pods)
+
+		require.NoError(t, err)
+		require.NotEmpty(t, pods.Items)
 	})
 
-	t.Run("should delete pod when it's is owned by a ReplicaSet that is not found", func(t *testing.T) {
+	t.Run("should not delete pod when it is owned by a ReplicaSet that is found", func(t *testing.T) {
 		// given
-		c := fakeClient(t)
+		pod := podFixture("p1", "test-ns", "ReplicaSet", "podOwner")
 
 		podList := v1.PodList{
 			Items: []v1.Pod{
-				podFixture("p1", "test-ns", "ReplicaSet", "podOwner"),
+				pod,
 			},
 		}
 
+		c := fakeClient(t, &pod, &appsv1.ReplicaSet{ObjectMeta: metav1.ObjectMeta{
+			OwnerReferences: []metav1.OwnerReference{
+				{Name: "name", Kind: "ReplicaSet"},
+			},
+			Name:      "podOwner",
+			Namespace: "test-ns",
+		}}, &appsv1.ReplicaSet{ObjectMeta: metav1.ObjectMeta{
+			Name:      "name",
+			Namespace: "test-ns",
+		}})
+
 		// when
-		restart.Restart(ctx, c, podList)
+		warnings, err := restart.Restart(ctx, c, podList)
 
 		// then
-		// TODO
+		require.NoError(t, err)
+		require.Empty(t, warnings)
+
+		pods := v1.PodList{}
+		err = c.List(context.TODO(), &pods)
+
+		require.NoError(t, err)
+		require.NotEmpty(t, pods.Items)
 	})
 }
 

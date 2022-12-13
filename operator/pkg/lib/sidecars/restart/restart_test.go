@@ -108,6 +108,31 @@ func TestRestart(t *testing.T) {
 		require.NotEmpty(t, "owner", obj.Annotations[annotationName])
 	})
 
+	t.Run("should rollout restart one Deployment if two pods are owned by one", func(t *testing.T) {
+		// given
+		c := fakeClient(t, &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Name: "owner", Namespace: "test-ns"}})
+
+		podList := v1.PodList{
+			Items: []v1.Pod{
+				podFixture("p1", "test-ns", "Deployment", "owner"),
+				podFixture("p2", "test-ns", "Deployment", "owner"),
+			},
+		}
+
+		// when
+		warnings, err := restart.Restart(ctx, c, podList)
+
+		// then
+		require.NoError(t, err)
+		require.Empty(t, warnings)
+
+		obj := appsv1.Deployment{}
+		err = c.Get(context.TODO(), types.NamespacedName{Namespace: "test-ns", Name: "owner"}, &obj)
+		require.NoError(t, err)
+
+		require.NotEmpty(t, "owner", obj.Annotations[annotationName])
+	})
+
 	t.Run("should rollout restart DaemonSet if the pod is owned by one", func(t *testing.T) {
 		// given
 		c := fakeClient(t, &appsv1.DaemonSet{ObjectMeta: metav1.ObjectMeta{Name: "owner", Namespace: "test-ns"}})

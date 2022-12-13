@@ -5,8 +5,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-const AnnotationResetWarningKey = "istio.reconciler.kyma-project.io/proxy-reset-warning"
-
 func hasIstioSidecarStatusAnnotation(pod v1.Pod) bool {
 	_, exists := pod.Annotations["sidecar.istio.io/status"]
 	return exists
@@ -80,11 +78,6 @@ func isContainerIstioSidecar(container v1.Container, istioSidecarNames []string)
 		}
 	}
 	return false
-}
-
-func HasResetWarning(pod v1.Pod) bool {
-	_, exists := pod.Annotations[AnnotationResetWarningKey]
-	return exists
 }
 
 func isPodInNamespaceList(pod v1.Pod, namespaceList []v1.Namespace) bool {

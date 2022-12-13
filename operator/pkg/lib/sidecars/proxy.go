@@ -36,20 +36,20 @@ import (
 //	return nil
 //}
 
-func ProxyReset(ctx context.Context, c client.Client, expectedImage pods.SidecarImage, namespaceEnabledByDefault, cniEnabled bool, logger *logr.Logger) error {
+func ProxyReset(ctx context.Context, c client.Client, expectedImage pods.SidecarImage, namespaceEnabledByDefault, cniEnabled bool, logger *logr.Logger) ([]restart.RestartWarning, error) {
 	differentImagePodList, err := pods.GetPodsWithDifferentSidecarImage(ctx, c, expectedImage)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	noSidecarPodList, err := pods.GetPodsWithoutSidecar(ctx, c, namespaceEnabledByDefault)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	cniPodList, err := pods.GetPodsForCNIChange(ctx, c, cniEnabled)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var podListToRestart v1.PodList
@@ -70,13 +70,13 @@ func ProxyReset(ctx context.Context, c client.Client, expectedImage pods.Sidecar
 		podListToRestart.Items = append(podListToRestart.Items, pod)
 	}
 
-	_, err = restart.Restart(ctx, c, podListToRestart)
+	warnings, err := restart.Restart(ctx, c, podListToRestart)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	logger.V(2).Info("proxy reset for successfully done")
 
-	return nil
+	return warnings, nil
 
 }

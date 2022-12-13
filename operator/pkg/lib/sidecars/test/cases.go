@@ -14,12 +14,14 @@ import (
 const annotationName = "kubectl.kubernetes.io/restartedAt"
 
 func (s *scenario) aRestartHappens(enabledByDefault, cniEnabled string) error {
-	return sidecars.ProxyReset(context.TODO(),
+	warnings, err := sidecars.ProxyReset(context.TODO(),
 		s.Client,
 		pods.SidecarImage{Repository: "istio/proxyv2", Tag: s.istioVersion},
 		enabledByDefault == "true",
 		cniEnabled == "true",
 		&s.logger)
+	s.restartWarnings = warnings
+	return err
 }
 
 func (s *scenario) allRequiredResourcesAreDeleted() error {

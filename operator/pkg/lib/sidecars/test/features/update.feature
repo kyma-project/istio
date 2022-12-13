@@ -1,8 +1,11 @@
 Feature: Istio upgrade
 
   Scenario: Upgrading Istio version
-    Given there is cluster with Istio "1.14.4"
-    And there are pods with not yet injected sidecars
-    When a restart happens with target Istio "1.14.4", default injection == "false" and CNI enabled == "false"
+    Given there is a cluster with Istio "1.14.4", default injection == "false" and CNI enabled == "false"
+    And there are Pods missing sidecar
+    And there are Pods with Istio "1.13.3" sidecar
+    And there are Pods with Istio "1.14.4" sidecar
+    And there are not ready Pods
+    When a restart happens with target Istio "1.14.4"
     Then all required resources are restarted
     And all required resources are deleted

@@ -13,12 +13,12 @@ import (
 
 const annotationName = "kubectl.kubernetes.io/restartedAt"
 
-func (s *scenario) aRestartHappens(sidecarImage, enabledByDefault, cniEnabled string) error {
+func (s *scenario) aRestartHappens(sidecarImage string) error {
 	warnings, err := sidecars.ProxyReset(context.TODO(),
 		s.Client,
 		pods.SidecarImage{Repository: "istio/proxyv2", Tag: sidecarImage},
-		enabledByDefault == "true",
-		cniEnabled == "true",
+		s.injectionNamespaceSelector == SidecarEnabledAndDefault,
+		s.cniEnabled,
 		&s.logger)
 	s.restartWarnings = warnings
 	return err
@@ -55,7 +55,16 @@ func (s *scenario) allRequiredResourcesAreRestarted() error {
 }
 
 func (s *scenario) thereArePodsWithNotYetInjectedSidecars() error {
-	return s.WithNotYetInjectedPods()
+	return s.WithPodsMissingSidecar()
+}
+
+func (s *scenario) WithConfig(istioVersion, injection, cni string) error {
+	s.istioVersion = istioVersion
+	s.cniEnabled = cni == "true"
+	if injection == "true" {
+		s.injectionNamespaceSelector = SidecarEnabledAndDefault
+	}
+	return nil
 }
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
@@ -67,9 +76,11 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 		return ctx, err
 	})
 
-	ctx.Step(`^there is cluster with Istio "([^"]*)"$`, s.WithIstioVersion)
-	ctx.Step(`^a restart happens with target Istio "([^"]*)", default injection == "([^"]*)" and CNI enabled == "([^"]*)"$`, s.aRestartHappens)
+	ctx.Step(`^there is a cluster with Istio "([^"]*)", default injection == "([^"]*)" and CNI enabled == "([^"]*)"$`, s.WithConfig)
+	ctx.Step(`^a restart happens with target Istio "([^"]*)"`, s.aRestartHappens)
 	ctx.Step(`^all required resources are deleted$`, s.allRequiredResourcesAreDeleted)
 	ctx.Step(`^all required resources are restarted$`, s.allRequiredResourcesAreRestarted)
-	ctx.Step(`^there are pods with not yet injected sidecars$`, s.thereArePodsWithNotYetInjectedSidecars)
+	ctx.Step(`^there are Pods missing sidecar`, s.WithPodsMissingSidecar)
+	ctx.Step(`^there are not ready Pods$`, s.WithNotReadyPods)
+	ctx.Step(`^there are Pods with Istio "([^"]*)" sidecar$`, s.WithSidecarInVersionXPods)
 }

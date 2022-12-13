@@ -13,10 +13,10 @@ import (
 
 const annotationName = "kubectl.kubernetes.io/restartedAt"
 
-func (s *scenario) aRestartHappens(enabledByDefault, cniEnabled string) error {
+func (s *scenario) aRestartHappens(sidecarImage, enabledByDefault, cniEnabled string) error {
 	warnings, err := sidecars.ProxyReset(context.TODO(),
 		s.Client,
-		pods.SidecarImage{Repository: "istio/proxyv2", Tag: s.istioVersion},
+		pods.SidecarImage{Repository: "istio/proxyv2", Tag: sidecarImage},
 		enabledByDefault == "true",
 		cniEnabled == "true",
 		&s.logger)
@@ -68,7 +68,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	})
 
 	ctx.Step(`^there is cluster with Istio "([^"]*)"$`, s.WithIstioVersion)
-	ctx.Step(`^a restart happens with default injection == "([^"]*)" and CNI enabled == "([^"]*)"$`, s.aRestartHappens)
+	ctx.Step(`^a restart happens with target Istio "([^"]*)", default injection == "([^"]*)" and CNI enabled == "([^"]*)"$`, s.aRestartHappens)
 	ctx.Step(`^all required resources are deleted$`, s.allRequiredResourcesAreDeleted)
 	ctx.Step(`^all required resources are restarted$`, s.allRequiredResourcesAreRestarted)
 	ctx.Step(`^there are pods with not yet injected sidecars$`, s.thereArePodsWithNotYetInjectedSidecars)

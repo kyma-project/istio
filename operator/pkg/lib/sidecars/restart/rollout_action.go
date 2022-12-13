@@ -55,8 +55,9 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 
 	obj.SetAnnotations(annotations)
 
+	patch := client.StrategicMergeFrom(obj)
 	err = retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-		return k8sclient.Update(ctx, obj)
+		return k8sclient.Patch(ctx, obj, patch)
 	})
 
 	if err != nil {

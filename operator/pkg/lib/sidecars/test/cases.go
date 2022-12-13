@@ -13,10 +13,12 @@ import (
 
 const annotationName = "kubectl.kubernetes.io/restartedAt"
 
-func (s *scenario) aRestartHappens() error {
-	return sidecars.RestartPodWithDifferentSidecarImage(context.TODO(),
+func (s *scenario) aRestartHappens(enabledByDefault, cniEnabled string) error {
+	return sidecars.ProxyReset(context.TODO(),
 		s.Client,
 		pods.SidecarImage{Repository: "istio/proxyv2", Tag: s.istioVersion},
+		enabledByDefault == "true",
+		cniEnabled == "true",
 		&s.logger)
 }
 
@@ -25,7 +27,7 @@ func (s *scenario) allRequiredResourcesAreDeleted() error {
 		obj := v
 		err := s.Client.Get(context.TODO(), types.NamespacedName{Name: v.GetName(), Namespace: v.GetNamespace()}, obj)
 		if err == nil {
-			return fmt.Errorf("the object %s/%s was deleted but shouldn't", v.GetNamespace(), v.GetName())
+			return fmt.Errorf("the Pod %s/%s was deleted but shouldn't", v.GetNamespace(), v.GetName())
 		}
 
 		if !k8serrors.IsNotFound(err) {
@@ -44,7 +46,7 @@ func (s *scenario) allRequiredResourcesAreRestarted() error {
 		}
 
 		if _, ok := obj.GetAnnotations()[annotationName]; !ok {
-			return fmt.Errorf("the annotation %s wasn't applied for object %s/%s", annotationName, obj.GetNamespace(), obj.GetName())
+			return fmt.Errorf("the annotation %s wasn't applied for %s %s/%s", annotationName, obj.GetObjectKind().GroupVersionKind().Kind, obj.GetNamespace(), obj.GetName())
 		}
 	}
 	return nil
@@ -64,7 +66,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	})
 
 	ctx.Step(`^there is cluster with Istio "([^"]*)"$`, s.WithIstioVersion)
-	ctx.Step(`^a restart happens$`, s.aRestartHappens)
+	ctx.Step(`^a restart happens with default injection == "([^"]*)" and CNI enabled == "([^"]*)"$`, s.aRestartHappens)
 	ctx.Step(`^all required resources are deleted$`, s.allRequiredResourcesAreDeleted)
 	ctx.Step(`^all required resources are restarted$`, s.allRequiredResourcesAreRestarted)
 	ctx.Step(`^there are pods with not yet injected sidecars$`, s.thereArePodsWithNotYetInjectedSidecars)

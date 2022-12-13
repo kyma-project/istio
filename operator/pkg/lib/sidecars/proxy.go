@@ -2,6 +2,7 @@ package sidecars
 
 import (
 	"context"
+
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/restart"
@@ -35,15 +36,27 @@ import (
 //	return nil
 //}
 
-func RestartPodWithDifferentSidecarImage(ctx context.Context, c client.Client, expectedImage pods.SidecarImage, logger *logr.Logger) error {
+func ProxyReset(ctx context.Context, c client.Client, expectedImage pods.SidecarImage, namespaceEnabledByDefault, cniEnabled bool, logger *logr.Logger) error {
 	differentImagePodList, err := pods.GetPodsWithDifferentSidecarImage(ctx, c, expectedImage)
 	if err != nil {
 		return err
 	}
 
+	noSidecarPodList, err := pods.GetPodsWithoutSidecar(ctx, c, namespaceEnabledByDefault)
+	if err != nil {
+		return err
+	}
+
+	cniPodList, err := pods.GetPodsForCNIChange(ctx, c, cniEnabled)
+	if err != nil {
+		return err
+	}
+
 	var podListToRestart v1.PodList
-	differentImagePodList.DeepCopyInto(&podListToRestart)
 	podListToRestart.Items = []v1.Pod{}
+	differentImagePodList.DeepCopyInto(&podListToRestart)
+	podListToRestart.Items = append(podListToRestart.Items, noSidecarPodList.DeepCopy().Items...)
+	podListToRestart.Items = append(podListToRestart.Items, cniPodList.DeepCopy().Items...)
 
 	for _, pod := range differentImagePodList.Items {
 		// We need to skip pods with reset warning as they can't be restarted for some reason.

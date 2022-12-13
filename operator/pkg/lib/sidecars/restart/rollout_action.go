@@ -7,6 +7,7 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -38,8 +39,9 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 		return nil, fmt.Errorf("kind %s not found", object.Kind)
 	}
 
-	err = k8sclient.Get(ctx, types.NamespacedName{Name: object.Name, Namespace: object.Namespace}, obj)
-
+	err = retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+		return k8sclient.Get(ctx, types.NamespacedName{Name: object.Name, Namespace: object.Namespace}, obj)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +55,9 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 
 	obj.SetAnnotations(annotations)
 
-	err = k8sclient.Update(ctx, obj)
+	err = retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+		return k8sclient.Update(ctx, obj)
+	})
 
 	if err != nil {
 		return nil, err

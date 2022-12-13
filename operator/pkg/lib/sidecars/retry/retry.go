@@ -6,13 +6,16 @@ import (
 	"k8s.io/client-go/util/retry"
 )
 
+var (
+	DefaultBackoff = retry.DefaultBackoff
+)
+
 func IsRetryError(err error) bool {
 	if errors.IsTooManyRequests(err) ||
 		errors.IsServerTimeout(err) ||
 		errors.IsTimeout(err) ||
 		errors.IsServiceUnavailable(err) ||
-		errors.IsConflict(err) ||
-		errors.IsNotFound(err) {
+		errors.IsConflict(err) {
 		return true
 	}
 	return false

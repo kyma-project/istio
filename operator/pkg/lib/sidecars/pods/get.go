@@ -2,10 +2,12 @@ package pods
 
 import (
 	"context"
+	"strings"
+
+	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
 )
 
 type SidecarImage struct {
@@ -31,7 +33,9 @@ func getAllRunningPods(ctx context.Context, c client.Client) (*v1.PodList, error
 
 	isRunning := fields.OneTermEqualSelector("status.phase", string(v1.PodRunning))
 
-	err := c.List(ctx, podList, client.MatchingFieldsSelector{Selector: isRunning})
+	err := retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+		return c.List(ctx, podList, client.MatchingFieldsSelector{Selector: isRunning})
+	})
 	if err != nil {
 		return podList, err
 	}
@@ -44,7 +48,9 @@ func getNamespacesWithIstioLabelsAndInjectionDisabled(ctx context.Context, c cli
 	labeledList := &v1.NamespaceList{}
 	disabledList := &v1.NamespaceList{}
 
-	err := c.List(ctx, unfilteredLabeledList, client.HasLabels{"istio-injection"})
+	err := retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+		return c.List(ctx, unfilteredLabeledList, client.HasLabels{"istio-injection"})
+	})
 	if err != nil {
 		return labeledList, disabledList, err
 	}

@@ -10,7 +10,7 @@ require (
 	github.com/onsi/gomega v1.24.1
 	github.com/stretchr/testify v1.8.1
 	gitlab.com/rodrigoodhin/gocure v0.0.0-20220718065339-f14dfe79276a
-	golang.org/x/time v0.2.0
+	golang.org/x/time v0.3.0
 	google.golang.org/protobuf v1.28.1
 	istio.io/api v0.0.0-20221021183946-6b7b70196148
 	istio.io/istio v0.0.0-20221023221338-9a6e009adc35

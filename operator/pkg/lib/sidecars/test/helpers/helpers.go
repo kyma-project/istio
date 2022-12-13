@@ -1,13 +1,15 @@
-package pods_test
+package helpers
 
 import (
 	"fmt"
+	"reflect"
+	"time"
+
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"time"
 )
 
-type SidecarPodFixtureBuilder struct {
+type sidecarPodFixtureBuilder struct {
 	name, namespace                                               string
 	sidecarContainerName, sidecarImageRepository, sidecarImageTag string
 	initContainerName                                             string
@@ -19,8 +21,8 @@ type SidecarPodFixtureBuilder struct {
 	hostNetwork                                                   bool
 }
 
-func newSidecarPodBuilder() *SidecarPodFixtureBuilder {
-	return &SidecarPodFixtureBuilder{
+func NewSidecarPodBuilder() *sidecarPodFixtureBuilder {
+	return &sidecarPodFixtureBuilder{
 		name:                   "app",
 		namespace:              "custom",
 		sidecarContainerName:   "istio-proxy",
@@ -35,57 +37,57 @@ func newSidecarPodBuilder() *SidecarPodFixtureBuilder {
 	}
 }
 
-func (r *SidecarPodFixtureBuilder) setName(value string) *SidecarPodFixtureBuilder {
+func (r *sidecarPodFixtureBuilder) SetName(value string) *sidecarPodFixtureBuilder {
 	r.name = value
 	return r
 }
 
-func (r *SidecarPodFixtureBuilder) setNamespace(value string) *SidecarPodFixtureBuilder {
+func (r *sidecarPodFixtureBuilder) SetNamespace(value string) *sidecarPodFixtureBuilder {
 	r.namespace = value
 	return r
 }
 
-func (r *SidecarPodFixtureBuilder) setPodStatusPhase(value v1.PodPhase) *SidecarPodFixtureBuilder {
+func (r *sidecarPodFixtureBuilder) SetPodStatusPhase(value v1.PodPhase) *sidecarPodFixtureBuilder {
 	r.podStatusPhase = value
 	return r
 }
 
-func (r *SidecarPodFixtureBuilder) setPodAnnotations(value map[string]string) *SidecarPodFixtureBuilder {
+func (r *sidecarPodFixtureBuilder) SetPodAnnotations(value map[string]string) *sidecarPodFixtureBuilder {
 	r.podAnnotations = value
 	return r
 }
 
-func (r *SidecarPodFixtureBuilder) setPodLabels(value map[string]string) *SidecarPodFixtureBuilder {
+func (r *sidecarPodFixtureBuilder) SetPodLabels(value map[string]string) *sidecarPodFixtureBuilder {
 	r.podLabels = value
 	return r
 }
 
-func (r *SidecarPodFixtureBuilder) setPodHostNetwork() *SidecarPodFixtureBuilder {
+func (r *sidecarPodFixtureBuilder) SetPodHostNetwork() *sidecarPodFixtureBuilder {
 	r.hostNetwork = true
 	return r
 }
 
-func (r *SidecarPodFixtureBuilder) setInitContainer(value string) *SidecarPodFixtureBuilder {
+func (r *sidecarPodFixtureBuilder) SetInitContainer(value string) *sidecarPodFixtureBuilder {
 	r.initContainerName = value
 	return r
 }
 
-func (r *SidecarPodFixtureBuilder) setSidecarImageRepository(value string) *SidecarPodFixtureBuilder {
+func (r *sidecarPodFixtureBuilder) SetSidecarImageRepository(value string) *sidecarPodFixtureBuilder {
 	r.sidecarImageRepository = value
 	return r
 }
 
-func (r *SidecarPodFixtureBuilder) setSidecarImageTag(value string) *SidecarPodFixtureBuilder {
+func (r *sidecarPodFixtureBuilder) SetSidecarImageTag(value string) *sidecarPodFixtureBuilder {
 	r.sidecarImageTag = value
 	return r
 }
 
-func (r *SidecarPodFixtureBuilder) setSidecarContainerName(value string) *SidecarPodFixtureBuilder {
+func (r *sidecarPodFixtureBuilder) SetSidecarContainerName(value string) *sidecarPodFixtureBuilder {
 	r.sidecarContainerName = value
 	return r
 }
 
-func (r *SidecarPodFixtureBuilder) disableSidecar() *SidecarPodFixtureBuilder {
+func (r *sidecarPodFixtureBuilder) DisableSidecar() *sidecarPodFixtureBuilder {
 	r.sidecarContainerName = "workload"
 	r.sidecarImageRepository = "image"
 	r.sidecarImageTag = "1.0"
@@ -94,17 +96,17 @@ func (r *SidecarPodFixtureBuilder) disableSidecar() *SidecarPodFixtureBuilder {
 	return r
 }
 
-func (r *SidecarPodFixtureBuilder) setConditionStatus(value v1.ConditionStatus) *SidecarPodFixtureBuilder {
+func (r *sidecarPodFixtureBuilder) SetConditionStatus(value v1.ConditionStatus) *sidecarPodFixtureBuilder {
 	r.conditionStatus = value
 	return r
 }
 
-func (r *SidecarPodFixtureBuilder) setDeletionTimestamp(value time.Time) *SidecarPodFixtureBuilder {
+func (r *sidecarPodFixtureBuilder) SetDeletionTimestamp(value time.Time) *sidecarPodFixtureBuilder {
 	r.deletionTimestamp = &metav1.Time{Time: value}
 	return r
 }
 
-func (r *SidecarPodFixtureBuilder) build() *v1.Pod {
+func (r *sidecarPodFixtureBuilder) Build() *v1.Pod {
 	return &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      r.name,
@@ -150,7 +152,7 @@ func (r *SidecarPodFixtureBuilder) build() *v1.Pod {
 	}
 }
 
-func fixPodWithoutSidecar(name, namespace string) *v1.Pod {
+func FixPodWithoutSidecar(name, namespace string) *v1.Pod {
 	return &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -177,11 +179,25 @@ func fixPodWithoutSidecar(name, namespace string) *v1.Pod {
 	}
 }
 
-func fixNamespaceWith(name string, labels map[string]string) *v1.Namespace {
+func FixNamespaceWith(name string, labels map[string]string) *v1.Namespace {
 	return &v1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   name,
 			Labels: labels,
 		},
 	}
+}
+
+func Clone(oldObj interface{}) interface{} {
+	newObj := reflect.New(reflect.TypeOf(oldObj).Elem())
+	oldVal := reflect.ValueOf(oldObj).Elem()
+	newVal := newObj.Elem()
+	for i := 0; i < oldVal.NumField(); i++ {
+		newValField := newVal.Field(i)
+		if newValField.CanSet() {
+			newValField.Set(oldVal.Field(i))
+		}
+	}
+
+	return newObj.Interface()
 }

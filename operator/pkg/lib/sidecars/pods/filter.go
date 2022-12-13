@@ -27,10 +27,7 @@ func hasTrueStatusConditions(pod v1.Pod) bool {
 }
 
 func isPodRunning(pod v1.Pod) bool {
-	if pod.Status.Phase != v1.PodRunning {
-		return false
-	}
-	return true
+	return pod.Status.Phase == v1.PodRunning
 }
 
 func getIstioSidecarNamesInPod(pod v1.Pod) []string {
@@ -132,8 +129,5 @@ func isPodEligibleToRestart(pod v1.Pod, isSidecarInjectionEnabledByDefault, podN
 
 func isPodInHostNetwork(pod v1.Pod) bool {
 	//Automatic sidecar injection is ignored for pods on the host network
-	if pod.Spec.HostNetwork {
-		return true
-	}
-	return false
+	return pod.Spec.HostNetwork
 }

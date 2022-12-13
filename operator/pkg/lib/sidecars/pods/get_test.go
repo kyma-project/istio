@@ -12,6 +12,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"testing"
 	"time"
+
+	. "github.com/kyma-project/istio/operator/pkg/lib/sidecars/test/helpers"
 )
 
 func createClientSet(t *testing.T, objects ...client.Object) client.Client {
@@ -27,8 +29,8 @@ func createClientSet(t *testing.T, objects ...client.Object) client.Client {
 
 func TestGetPodsForCNIChange(t *testing.T) {
 	ctx := context.Background()
-	enabledNamespace := fixNamespaceWith("enabled", map[string]string{"istio-injection": "enabled"})
-	disabledNamespace := fixNamespaceWith("disabled", map[string]string{"istio-injection": "disabled"})
+	enabledNamespace := FixNamespaceWith("enabled", map[string]string{"istio-injection": "enabled"})
+	disabledNamespace := FixNamespaceWith("disabled", map[string]string{"istio-injection": "disabled"})
 
 	tests := []struct {
 		name          string
@@ -41,10 +43,10 @@ func TestGetPodsForCNIChange(t *testing.T) {
 		{
 			name: "should not get any pod without istio-init container when CNI is enabled",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("enabled").
-					setInitContainer("istio-validation").setPodStatusPhase("Running").build(),
-				newSidecarPodBuilder().setName("application2").setNamespace("enabled").
-					setInitContainer("istio-validation").setPodStatusPhase("Terminating").build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
+					SetInitContainer("istio-validation").SetPodStatusPhase("Running").Build(),
+				NewSidecarPodBuilder().SetName("application2").SetNamespace("enabled").
+					SetInitContainer("istio-validation").SetPodStatusPhase("Terminating").Build(),
 				enabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -55,10 +57,10 @@ func TestGetPodsForCNIChange(t *testing.T) {
 		{
 			name: "should not get pods in system namespaces when CNI is enabled",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("kube-system").build(),
-				newSidecarPodBuilder().setName("application2").setNamespace("kube-public").build(),
-				newSidecarPodBuilder().setName("application3").setNamespace("istio-system").build(),
-				newSidecarPodBuilder().setName("application4").setNamespace("enabled").build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("kube-system").Build(),
+				NewSidecarPodBuilder().SetName("application2").SetNamespace("kube-public").Build(),
+				NewSidecarPodBuilder().SetName("application3").SetNamespace("istio-system").Build(),
+				NewSidecarPodBuilder().SetName("application4").SetNamespace("enabled").Build(),
 				enabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -69,8 +71,8 @@ func TestGetPodsForCNIChange(t *testing.T) {
 		{
 			name: "should get 2 pods with istio-init when they are in Running state when CNI is enabled",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("enabled").build(),
-				newSidecarPodBuilder().setName("application2").setNamespace("enabled").build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").Build(),
+				NewSidecarPodBuilder().SetName("application2").SetNamespace("enabled").Build(),
 				enabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -81,9 +83,9 @@ func TestGetPodsForCNIChange(t *testing.T) {
 		{
 			name: "should not get pod with istio-init in Terminating state",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("enabled").build(),
-				newSidecarPodBuilder().setName("application2").setNamespace("enabled").
-					setPodStatusPhase("Terminating").build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").Build(),
+				NewSidecarPodBuilder().SetName("application2").SetNamespace("enabled").
+					SetPodStatusPhase("Terminating").Build(),
 				enabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -94,9 +96,9 @@ func TestGetPodsForCNIChange(t *testing.T) {
 		{
 			name: "should not get pod with istio-validation container when CNI is enabled",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("enabled").build(),
-				newSidecarPodBuilder().setName("application2").setNamespace("enabled").
-					setInitContainer("istio-validation").build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").Build(),
+				NewSidecarPodBuilder().SetName("application2").SetNamespace("enabled").
+					SetInitContainer("istio-validation").Build(),
 				enabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -107,10 +109,10 @@ func TestGetPodsForCNIChange(t *testing.T) {
 		{
 			name: "should get 2 pods with istio-validation container when CNI is disabled",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("enabled").
-					setInitContainer("istio-validation").build(),
-				newSidecarPodBuilder().setName("application2").setNamespace("enabled").
-					setInitContainer("istio-validation").build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
+					SetInitContainer("istio-validation").Build(),
+				NewSidecarPodBuilder().SetName("application2").SetNamespace("enabled").
+					SetInitContainer("istio-validation").Build(),
 				enabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -121,8 +123,8 @@ func TestGetPodsForCNIChange(t *testing.T) {
 		{
 			name: "should not get any pod with istio-validation container in disabled namespace when CNI is disabled",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("disabled").
-					setInitContainer("istio-validation").build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("disabled").
+					SetInitContainer("istio-validation").Build(),
 				disabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -164,25 +166,25 @@ func TestGetPodsWithDifferentSidecarImage(t *testing.T) {
 		{
 			name: "should not return pods without istio sidecar",
 			c: createClientSet(t,
-				fixPodWithoutSidecar("app", "custom"),
+				FixPodWithoutSidecar("app", "custom"),
 			),
 			assertFunc: func(t require.TestingT, val interface{}) { require.Empty(t, val) },
 		},
 		{
 			name: "should not return any pod when pods have correct image",
 			c: createClientSet(t,
-				newSidecarPodBuilder().build(),
+				NewSidecarPodBuilder().Build(),
 			),
 			assertFunc: func(t require.TestingT, val interface{}) { require.Empty(t, val) },
 		},
 		{
 			name: "should return pod with different image repository",
 			c: createClientSet(t,
-				newSidecarPodBuilder().build(),
-				newSidecarPodBuilder().
-					setName("changedSidecarPod").
-					setSidecarImageRepository("istio/different-proxy").
-					build(),
+				NewSidecarPodBuilder().Build(),
+				NewSidecarPodBuilder().
+					SetName("changedSidecarPod").
+					SetSidecarImageRepository("istio/different-proxy").
+					Build(),
 			),
 			assertFunc: func(t require.TestingT, val interface{}) {
 				require.NotEmpty(t, val)
@@ -193,11 +195,11 @@ func TestGetPodsWithDifferentSidecarImage(t *testing.T) {
 		{
 			name: "should return pod with different image tag",
 			c: createClientSet(t,
-				newSidecarPodBuilder().build(),
-				newSidecarPodBuilder().
-					setName("changedSidecarPod").
-					setSidecarImageTag("1.11.0").
-					build(),
+				NewSidecarPodBuilder().Build(),
+				NewSidecarPodBuilder().
+					SetName("changedSidecarPod").
+					SetSidecarImageTag("1.11.0").
+					Build(),
 			),
 			assertFunc: func(t require.TestingT, val interface{}) {
 				require.NotEmpty(t, val)
@@ -209,40 +211,40 @@ func TestGetPodsWithDifferentSidecarImage(t *testing.T) {
 		{
 			name: "should ignore pod that has different image tag when it has not all condition status as True",
 			c: createClientSet(t,
-				newSidecarPodBuilder().
-					setSidecarImageTag("1.12.0").
-					setConditionStatus("False").
-					build(),
+				NewSidecarPodBuilder().
+					SetSidecarImageTag("1.12.0").
+					SetConditionStatus("False").
+					Build(),
 			),
 			assertFunc: func(t require.TestingT, val interface{}) { require.Empty(t, val) },
 		},
 		{
 			name: "should ignore pod that has different image tag when phase is not running",
 			c: createClientSet(t,
-				newSidecarPodBuilder().
-					setSidecarImageTag("1.12.0").
-					setPodStatusPhase("Pending").
-					build(),
+				NewSidecarPodBuilder().
+					SetSidecarImageTag("1.12.0").
+					SetPodStatusPhase("Pending").
+					Build(),
 			),
 			assertFunc: func(t require.TestingT, val interface{}) { require.Empty(t, val) },
 		},
 		{
 			name: "should ignore pod that has different image tag when it has a deletion timestamp",
 			c: createClientSet(t,
-				newSidecarPodBuilder().
-					setSidecarImageTag("1.12.0").
-					setDeletionTimestamp(time.Now()).
-					build(),
+				NewSidecarPodBuilder().
+					SetSidecarImageTag("1.12.0").
+					SetDeletionTimestamp(time.Now()).
+					Build(),
 			),
 			assertFunc: func(t require.TestingT, val interface{}) { require.Empty(t, val) },
 		},
 		{
 			name: "should ignore pod that has different image tag when proxy container name is not in istio annotation",
 			c: createClientSet(t,
-				newSidecarPodBuilder().
-					setSidecarImageTag("1.12.0").
-					setSidecarContainerName("custom-sidecar-proxy-container-name").
-					build(),
+				NewSidecarPodBuilder().
+					SetSidecarImageTag("1.12.0").
+					SetSidecarContainerName("custom-sidecar-proxy-container-name").
+					Build(),
 			),
 			assertFunc: func(t require.TestingT, val interface{}) { require.Empty(t, val) },
 		},
@@ -260,9 +262,9 @@ func TestGetPodsWithDifferentSidecarImage(t *testing.T) {
 
 func TestGetPodsWithoutSidecar(t *testing.T) {
 	ctx := context.Background()
-	enabledNamespace := fixNamespaceWith("enabled", map[string]string{"istio-injection": "enabled"})
-	disabledNamespace := fixNamespaceWith("disabled", map[string]string{"istio-injection": "disabled"})
-	noLabelNamespace := fixNamespaceWith("nolabel", map[string]string{"testns": "true"})
+	enabledNamespace := FixNamespaceWith("enabled", map[string]string{"istio-injection": "enabled"})
+	disabledNamespace := FixNamespaceWith("disabled", map[string]string{"istio-injection": "disabled"})
+	noLabelNamespace := FixNamespaceWith("nolabel", map[string]string{"testns": "true"})
 
 	type sidecarTest struct {
 		name          string
@@ -275,10 +277,10 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should get pod without Istio sidecar and with proper namespace label",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("enabled").
-					disableSidecar().build(),
-				newSidecarPodBuilder().setName("application2").setNamespace("enabled").
-					disableSidecar().setPodStatusPhase("Terminating").build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
+					DisableSidecar().Build(),
+				NewSidecarPodBuilder().SetName("application2").SetNamespace("enabled").
+					DisableSidecar().SetPodStatusPhase("Terminating").Build(),
 				enabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -287,14 +289,14 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pods without Istio sidecar in system namespaces",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("enabled").
-					disableSidecar().build(),
-				newSidecarPodBuilder().setName("application2").setNamespace("kube-system").
-					disableSidecar().build(),
-				newSidecarPodBuilder().setName("application3").setNamespace("kube-public").
-					disableSidecar().build(),
-				newSidecarPodBuilder().setName("application4").setNamespace("istio-system").
-					disableSidecar().build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
+					DisableSidecar().Build(),
+				NewSidecarPodBuilder().SetName("application2").SetNamespace("kube-system").
+					DisableSidecar().Build(),
+				NewSidecarPodBuilder().SetName("application3").SetNamespace("kube-public").
+					DisableSidecar().Build(),
+				NewSidecarPodBuilder().SetName("application4").SetNamespace("istio-system").
+					DisableSidecar().Build(),
 				enabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -303,7 +305,7 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod with Istio sidecar",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("nolabel").build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").Build(),
 				noLabelNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -312,9 +314,9 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should get pod without Istio sidecar in namespace labeled istio-injection=enabled",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("enabled").
-					disableSidecar().build(),
-				newSidecarPodBuilder().setName("application2").setNamespace("enabled").build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
+					DisableSidecar().Build(),
+				NewSidecarPodBuilder().SetName("application2").SetNamespace("enabled").Build(),
 				enabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -323,9 +325,9 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar in namespace labeled istio-injection=disabled",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("disabled").
-					disableSidecar().build(),
-				newSidecarPodBuilder().setName("application2").setNamespace("disabled").build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("disabled").
+					DisableSidecar().Build(),
+				NewSidecarPodBuilder().SetName("application2").SetNamespace("disabled").Build(),
 				disabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -334,8 +336,8 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod with Istio sidecar and annotated sidecar.istio.io/inject=true in namespace labeled istio-injection=enabled",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("enabled").
-					setPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
+					SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).Build(),
 				enabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -344,8 +346,8 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should get pod without Istio sidecar and annotated sidecar.istio.io/inject=true in namespace labeled istio-injection=enabled",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("enabled").
-					disableSidecar().setPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
+					DisableSidecar().SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).Build(),
 				enabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -354,8 +356,8 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar and annotated sidecar.istio.io/inject=true in namespace labeled istio-injection=disabled",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("disabled").
-					disableSidecar().setPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("disabled").
+					DisableSidecar().SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).Build(),
 				disabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -364,8 +366,8 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar and annotated sidecar.istio.io/inject=false in namespace labeled istio-injection=enabled",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("enabled").
-					disableSidecar().setPodAnnotations(map[string]string{"sidecar.istio.io/inject": "false"}).build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
+					DisableSidecar().SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "false"}).Build(),
 				enabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -374,8 +376,8 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar and annotated sidecar.istio.io/inject=false in namespace labeled istio-injection=disabled",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("disabled").
-					disableSidecar().setPodAnnotations(map[string]string{"sidecar.istio.io/inject": "false"}).build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("disabled").
+					DisableSidecar().SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "false"}).Build(),
 				disabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -384,8 +386,8 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should get pod without Istio sidecar in namespace without label",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("nolabel").
-					disableSidecar().build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").
+					DisableSidecar().Build(),
 				noLabelNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -394,10 +396,10 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod in HostNetwork",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("nolabel").setPodHostNetwork().
-					disableSidecar().build(),
-				newSidecarPodBuilder().setName("application2").setNamespace("nolabel").setPodHostNetwork().
-					disableSidecar().setPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").SetPodHostNetwork().
+					DisableSidecar().Build(),
+				NewSidecarPodBuilder().SetName("application2").SetNamespace("nolabel").SetPodHostNetwork().
+					DisableSidecar().SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).Build(),
 				noLabelNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -406,8 +408,8 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should get pod without Istio sidecar when annotated sidecar.istio.io/inject=true in namespace without label",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("nolabel").
-					disableSidecar().setPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").
+					DisableSidecar().SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).Build(),
 				noLabelNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -416,8 +418,8 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar when annotated sidecar.istio.io/inject=false in namespace without label",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("nolabel").
-					disableSidecar().setPodAnnotations(map[string]string{"sidecar.istio.io/inject": "false"}).build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").
+					DisableSidecar().SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "false"}).Build(),
 				noLabelNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -426,10 +428,10 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should get pod without Istio sidecar and labeled sidecar.istio.io/inject=true (or not labeled) in namespace without label",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("nolabel").
-					disableSidecar().setPodLabels(map[string]string{"sidecar.istio.io/inject": "true"}).build(),
-				newSidecarPodBuilder().setName("application2").setNamespace("nolabel").
-					disableSidecar().build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").
+					DisableSidecar().SetPodLabels(map[string]string{"sidecar.istio.io/inject": "true"}).Build(),
+				NewSidecarPodBuilder().SetName("application2").SetNamespace("nolabel").
+					DisableSidecar().Build(),
 				noLabelNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -438,8 +440,8 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar and labeled sidecar.istio.io/inject=false in namespace without label",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("nolabel").
-					disableSidecar().setPodLabels(map[string]string{"sidecar.istio.io/inject": "false"}).build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").
+					DisableSidecar().SetPodLabels(map[string]string{"sidecar.istio.io/inject": "false"}).Build(),
 				noLabelNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -448,9 +450,9 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar and annotated sidecar.istio.io/inject=true and labeled sidecar.istio.io/inject=false in namespace labeled istio-injection=enabled",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("enabled").
-					disableSidecar().setPodLabels(map[string]string{"sidecar.istio.io/inject": "false"}).
-					setPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
+					DisableSidecar().SetPodLabels(map[string]string{"sidecar.istio.io/inject": "false"}).
+					SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).Build(),
 				enabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -459,9 +461,9 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should get pod without Istio sidecar and annotated sidecar.istio.io/inject=false and labeled sidecar.istio.io/inject=true in namespace labeled istio-injection=enabled",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("enabled").
-					disableSidecar().setPodAnnotations(map[string]string{"sidecar.istio.io/inject": "false"}).
-					setPodLabels(map[string]string{"sidecar.istio.io/inject": "true"}).build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
+					DisableSidecar().SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "false"}).
+					SetPodLabels(map[string]string{"sidecar.istio.io/inject": "true"}).Build(),
 				enabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -470,10 +472,10 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar with label sidecar.istio.io/inject=true (or false) in namespace labeled istio-injection=enabled",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("disabled").disableSidecar().
-					setPodLabels(map[string]string{"sidecar.istio.io/inject": "true"}).build(),
-				newSidecarPodBuilder().setName("application2").setNamespace("disabled").disableSidecar().
-					setPodLabels(map[string]string{"sidecar.istio.io/inject": "false"}).build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("disabled").DisableSidecar().
+					SetPodLabels(map[string]string{"sidecar.istio.io/inject": "true"}).Build(),
+				NewSidecarPodBuilder().SetName("application2").SetNamespace("disabled").DisableSidecar().
+					SetPodLabels(map[string]string{"sidecar.istio.io/inject": "false"}).Build(),
 				disabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -493,10 +495,10 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should get pod with proper namespace label",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("enabled").
-					disableSidecar().build(),
-				newSidecarPodBuilder().setName("application2").setNamespace("enabled").
-					disableSidecar().setPodStatusPhase("Terminating").build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
+					DisableSidecar().Build(),
+				NewSidecarPodBuilder().SetName("application2").SetNamespace("enabled").
+					DisableSidecar().SetPodStatusPhase("Terminating").Build(),
 				enabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -505,7 +507,7 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod with Istio sidecar",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("enabled").build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").Build(),
 				enabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -514,9 +516,9 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar in namespace labeled istio-injection=disabled",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("disabled").
-					disableSidecar().build(),
-				newSidecarPodBuilder().setName("application2").setNamespace("disabled").build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("disabled").
+					DisableSidecar().Build(),
+				NewSidecarPodBuilder().SetName("application2").SetNamespace("disabled").Build(),
 				disabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -525,8 +527,8 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod with Istio sidecar and annotated sidecar.istio.io/inject=true in namespace labeled istio-injection=enabled",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("enabled").
-					setPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
+					SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).Build(),
 				enabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -535,8 +537,8 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should get pod without Istio sidecar and annotated sidecar.istio.io/inject=true in namespace labeled istio-injection=enabled",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("enabled").disableSidecar().
-					setPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").DisableSidecar().
+					SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).Build(),
 				enabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -545,8 +547,8 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar and annotated sidecar.istio.io/inject=true in namespace labeled istio-injection=disabled",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("disabled").disableSidecar().
-					setPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("disabled").DisableSidecar().
+					SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).Build(),
 				disabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -555,8 +557,8 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar and annotated sidecar.istio.io/inject=false in namespace labeled istio-injection=enabled",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("enabled").disableSidecar().
-					setPodAnnotations(map[string]string{"sidecar.istio.io/inject": "false"}).build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").DisableSidecar().
+					SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "false"}).Build(),
 				enabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -565,8 +567,8 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar and annotated sidecar.istio.io/inject=false in namespace labeled istio-injection=disabled",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("disabled").disableSidecar().
-					setPodAnnotations(map[string]string{"sidecar.istio.io/inject": "false"}).build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("disabled").DisableSidecar().
+					SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "false"}).Build(),
 				disabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -575,8 +577,8 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar when not annotated in namespace without label",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("nolabel").
-					disableSidecar().build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").
+					DisableSidecar().Build(),
 				noLabelNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -585,10 +587,10 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod in HostNetwork",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("nolabel").disableSidecar().
-					setPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).setPodHostNetwork().build(),
-				newSidecarPodBuilder().setName("application2").setNamespace("nolabel").
-					disableSidecar().setPodHostNetwork().build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").DisableSidecar().
+					SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).SetPodHostNetwork().Build(),
+				NewSidecarPodBuilder().SetName("application2").SetNamespace("nolabel").
+					DisableSidecar().SetPodHostNetwork().Build(),
 				noLabelNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -597,8 +599,8 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar and annotated sidecar.istio.io/inject=true in namespace without label",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("nolabel").disableSidecar().
-					setPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").DisableSidecar().
+					SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).Build(),
 				noLabelNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -607,8 +609,8 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar and annotated sidecar.istio.io/inject=false in namespace without label",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("nolabel").disableSidecar().
-					setPodAnnotations(map[string]string{"sidecar.istio.io/inject": "false"}).build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").DisableSidecar().
+					SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "false"}).Build(),
 				noLabelNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -617,8 +619,8 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should get pod without Istio sidecar and labeled sidecar.istio.io/inject=true in namespace without label",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("nolabel").disableSidecar().
-					setPodLabels(map[string]string{"sidecar.istio.io/inject": "true"}).build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").DisableSidecar().
+					SetPodLabels(map[string]string{"sidecar.istio.io/inject": "true"}).Build(),
 				noLabelNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -627,9 +629,9 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar and annotated sidecar.istio.io/inject=true and labeled sidecar.istio.io/inject=false in namespace labeled istio-injection=enabled",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("enabled").disableSidecar().
-					setPodLabels(map[string]string{"sidecar.istio.io/inject": "false"}).
-					setPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").DisableSidecar().
+					SetPodLabels(map[string]string{"sidecar.istio.io/inject": "false"}).
+					SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).Build(),
 				enabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -638,10 +640,10 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar and labeled sidecar.istio.io/inject=false (or true) in namespace labeled istio-injection=disabled",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("disabled").disableSidecar().
-					setPodLabels(map[string]string{"sidecar.istio.io/inject": "false"}).build(),
-				newSidecarPodBuilder().setName("application2").setNamespace("disabled").disableSidecar().
-					setPodLabels(map[string]string{"sidecar.istio.io/inject": "true"}).build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("disabled").DisableSidecar().
+					SetPodLabels(map[string]string{"sidecar.istio.io/inject": "false"}).Build(),
+				NewSidecarPodBuilder().SetName("application2").SetNamespace("disabled").DisableSidecar().
+					SetPodLabels(map[string]string{"sidecar.istio.io/inject": "true"}).Build(),
 				disabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -650,9 +652,9 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should get pod without Istio sidecar and annotated sidecar.istio.io/inject=false and labeled sidecar.istio.io/inject=true in namespace labeled istio-injection=enabled",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("enabled").disableSidecar().
-					setPodLabels(map[string]string{"sidecar.istio.io/inject": "true"}).
-					setPodAnnotations(map[string]string{"sidecar.istio.io/inject": "false"}).build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").DisableSidecar().
+					SetPodLabels(map[string]string{"sidecar.istio.io/inject": "true"}).
+					SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "false"}).Build(),
 				enabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -661,10 +663,10 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar and labeled sidecar.istio.io/inject=false (or not labeled at all) in namespace without label",
 			c: createClientSet(t,
-				newSidecarPodBuilder().setName("application1").setNamespace("nolabel").disableSidecar().
-					setPodLabels(map[string]string{"sidecar.istio.io/inject": "false"}).build(),
-				newSidecarPodBuilder().setName("application2").setNamespace("nolabel").
-					disableSidecar().build(),
+				NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").DisableSidecar().
+					SetPodLabels(map[string]string{"sidecar.istio.io/inject": "false"}).Build(),
+				NewSidecarPodBuilder().SetName("application2").SetNamespace("nolabel").
+					DisableSidecar().Build(),
 				noLabelNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},

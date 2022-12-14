@@ -267,30 +267,14 @@ func TestRestart(t *testing.T) {
 		require.NotEmpty(t, pods.Items)
 	})
 
-	t.Run("should do only one rollout if the ReplicaSet has multiple pods", func(t *testing.T) {
+	t.Run("should do only one rollout if the StatefulSet has multiple pods", func(t *testing.T) {
 		// given
-		c := fakeClient(t, &appsv1.ReplicaSet{
-			ObjectMeta: metav1.ObjectMeta{
-				OwnerReferences: []metav1.OwnerReference{
-					{
-						Name: "rsOwner",
-						Kind: "Deployment",
-					},
-				},
-				Name:      "podOwner",
-				Namespace: "test-ns",
-			},
-		}, &appsv1.Deployment{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "rsOwner",
-				Namespace: "test-ns",
-			},
-		})
+		c := fakeClient(t, &appsv1.StatefulSet{ObjectMeta: metav1.ObjectMeta{Name: "podOwner", Namespace: "test-ns"}})
 
 		podList := v1.PodList{
 			Items: []v1.Pod{
-				podFixture("p1", "test-ns", "ReplicaSet", "podOwner"),
-				podFixture("p2", "test-ns", "ReplicaSet", "podOwner"),
+				podFixture("p1", "test-ns", "StatefulSet", "podOwner"),
+				podFixture("p2", "test-ns", "StatefulSet", "podOwner"),
 			},
 		}
 
@@ -301,10 +285,10 @@ func TestRestart(t *testing.T) {
 		require.NoError(t, err)
 		require.Empty(t, warnings)
 
-		dep := appsv1.Deployment{}
-		err = c.Get(context.TODO(), types.NamespacedName{Namespace: "test-ns", Name: "rsOwner"}, &dep)
+		dep := appsv1.StatefulSet{}
+		err = c.Get(context.TODO(), types.NamespacedName{Namespace: "test-ns", Name: "podOwner"}, &dep)
 		require.NoError(t, err)
-		require.Equal(t, "1000", dep.ResourceVersion, "Deployment should patch only once")
+		require.Equal(t, "1000", dep.ResourceVersion, "StatefulSet should patch only once")
 	})
 }
 

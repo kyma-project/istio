@@ -10,7 +10,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func ProxyReset(ctx context.Context, c client.Client, expectedImage pods.SidecarImage, namespaceEnabledByDefault, cniEnabled bool, logger logr.Logger) ([]restart.RestartWarning, error) {
+func ProxyReset(ctx context.Context, c client.Client, expectedImage pods.SidecarImage, namespaceEnabledByDefault, cniEnabled bool, logger *logr.Logger) ([]restart.RestartWarning, error) {
 	differentImagePodList, err := pods.GetPodsWithDifferentSidecarImage(ctx, c, expectedImage)
 	if err != nil {
 		return nil, err
@@ -31,11 +31,6 @@ func ProxyReset(ctx context.Context, c client.Client, expectedImage pods.Sidecar
 	differentImagePodList.DeepCopyInto(&podListToRestart)
 	podListToRestart.Items = append(podListToRestart.Items, noSidecarPodList.DeepCopy().Items...)
 	podListToRestart.Items = append(podListToRestart.Items, cniPodList.DeepCopy().Items...)
-
-	for _, pod := range differentImagePodList.Items {
-		// TODO Decide if have to keep the reset warning filter based on annotation
-		podListToRestart.Items = append(podListToRestart.Items, pod)
-	}
 
 	warnings, err := restart.Restart(ctx, c, podListToRestart)
 	if err != nil {

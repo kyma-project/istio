@@ -291,7 +291,7 @@ func TestRestart(t *testing.T) {
 		require.Equal(t, "1000", dep.ResourceVersion, "StatefulSet should patch only once")
 	})
 
-	t.Run("should rollout restart ReplicaSet if the pod is owned by one that is found", func(t *testing.T) {
+	t.Run("should rollout restart ReplicaSet owner if the pod is owned by one that is found and has an owner", func(t *testing.T) {
 		// given
 		pod := podFixture("p1", "test-ns", "ReplicaSet", "podOwner")
 
@@ -303,12 +303,12 @@ func TestRestart(t *testing.T) {
 
 		c := fakeClient(t, &pod, &appsv1.ReplicaSet{ObjectMeta: metav1.ObjectMeta{
 			OwnerReferences: []metav1.OwnerReference{
-				{Name: "name", Kind: "ReplicaSet"},
+				{Name: "rsOwner", Kind: "ReplicaSet"},
 			},
 			Name:      "podOwner",
 			Namespace: "test-ns",
 		}}, &appsv1.ReplicaSet{ObjectMeta: metav1.ObjectMeta{
-			Name:      "name",
+			Name:      "rsOwner",
 			Namespace: "test-ns",
 		}})
 
@@ -320,7 +320,7 @@ func TestRestart(t *testing.T) {
 		require.Empty(t, warnings)
 
 		replicaSet := appsv1.ReplicaSet{}
-		err = c.Get(context.TODO(), types.NamespacedName{Name: "podOwner", Namespace: "test-ns"}, &replicaSet)
+		err = c.Get(context.TODO(), types.NamespacedName{Name: "rsOwner", Namespace: "test-ns"}, &replicaSet)
 
 		require.NoError(t, err)
 		require.NotEmpty(t, replicaSet.Annotations[annotationName])

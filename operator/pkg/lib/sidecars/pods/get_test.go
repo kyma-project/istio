@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/kyma-project/istio/operator/pkg/lib/sidecars/test/helpers"
+	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/test/helpers"
 )
 
 func createClientSet(t *testing.T, objects ...client.Object) client.Client {
@@ -29,8 +29,8 @@ func createClientSet(t *testing.T, objects ...client.Object) client.Client {
 
 func TestGetPodsForCNIChange(t *testing.T) {
 	ctx := context.Background()
-	enabledNamespace := FixNamespaceWith("enabled", map[string]string{"istio-injection": "enabled"})
-	disabledNamespace := FixNamespaceWith("disabled", map[string]string{"istio-injection": "disabled"})
+	enabledNamespace := helpers.FixNamespaceWith("enabled", map[string]string{"istio-injection": "enabled"})
+	disabledNamespace := helpers.FixNamespaceWith("disabled", map[string]string{"istio-injection": "disabled"})
 
 	tests := []struct {
 		name          string
@@ -43,9 +43,9 @@ func TestGetPodsForCNIChange(t *testing.T) {
 		{
 			name: "should not get any pod without istio-init container when CNI is enabled",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
 					SetInitContainer("istio-validation").SetPodStatusPhase("Running").Build(),
-				NewSidecarPodBuilder().SetName("application2").SetNamespace("enabled").
+				helpers.NewSidecarPodBuilder().SetName("application2").SetNamespace("enabled").
 					SetInitContainer("istio-validation").SetPodStatusPhase("Terminating").Build(),
 				enabledNamespace,
 			),
@@ -57,10 +57,10 @@ func TestGetPodsForCNIChange(t *testing.T) {
 		{
 			name: "should not get pods in system namespaces when CNI is enabled",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("kube-system").Build(),
-				NewSidecarPodBuilder().SetName("application2").SetNamespace("kube-public").Build(),
-				NewSidecarPodBuilder().SetName("application3").SetNamespace("istio-system").Build(),
-				NewSidecarPodBuilder().SetName("application4").SetNamespace("enabled").Build(),
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("kube-system").Build(),
+				helpers.NewSidecarPodBuilder().SetName("application2").SetNamespace("kube-public").Build(),
+				helpers.NewSidecarPodBuilder().SetName("application3").SetNamespace("istio-system").Build(),
+				helpers.NewSidecarPodBuilder().SetName("application4").SetNamespace("enabled").Build(),
 				enabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -71,8 +71,8 @@ func TestGetPodsForCNIChange(t *testing.T) {
 		{
 			name: "should get 2 pods with istio-init when they are in Running state when CNI is enabled",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").Build(),
-				NewSidecarPodBuilder().SetName("application2").SetNamespace("enabled").Build(),
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").Build(),
+				helpers.NewSidecarPodBuilder().SetName("application2").SetNamespace("enabled").Build(),
 				enabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -83,8 +83,8 @@ func TestGetPodsForCNIChange(t *testing.T) {
 		{
 			name: "should not get pod with istio-init in Terminating state",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").Build(),
-				NewSidecarPodBuilder().SetName("application2").SetNamespace("enabled").
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").Build(),
+				helpers.NewSidecarPodBuilder().SetName("application2").SetNamespace("enabled").
 					SetPodStatusPhase("Terminating").Build(),
 				enabledNamespace,
 			),
@@ -96,8 +96,8 @@ func TestGetPodsForCNIChange(t *testing.T) {
 		{
 			name: "should not get pod with istio-validation container when CNI is enabled",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").Build(),
-				NewSidecarPodBuilder().SetName("application2").SetNamespace("enabled").
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").Build(),
+				helpers.NewSidecarPodBuilder().SetName("application2").SetNamespace("enabled").
 					SetInitContainer("istio-validation").Build(),
 				enabledNamespace,
 			),
@@ -109,9 +109,9 @@ func TestGetPodsForCNIChange(t *testing.T) {
 		{
 			name: "should get 2 pods with istio-validation container when CNI is disabled",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
 					SetInitContainer("istio-validation").Build(),
-				NewSidecarPodBuilder().SetName("application2").SetNamespace("enabled").
+				helpers.NewSidecarPodBuilder().SetName("application2").SetNamespace("enabled").
 					SetInitContainer("istio-validation").Build(),
 				enabledNamespace,
 			),
@@ -123,7 +123,7 @@ func TestGetPodsForCNIChange(t *testing.T) {
 		{
 			name: "should not get any pod with istio-validation container in disabled namespace when CNI is disabled",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("disabled").
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("disabled").
 					SetInitContainer("istio-validation").Build(),
 				disabledNamespace,
 			),
@@ -166,22 +166,22 @@ func TestGetPodsWithDifferentSidecarImage(t *testing.T) {
 		{
 			name: "should not return pods without istio sidecar",
 			c: createClientSet(t,
-				FixPodWithoutSidecar("app", "custom"),
+				helpers.FixPodWithoutSidecar("app", "custom"),
 			),
 			assertFunc: func(t require.TestingT, val interface{}) { require.Empty(t, val) },
 		},
 		{
 			name: "should not return any pod when pods have correct image",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().Build(),
+				helpers.NewSidecarPodBuilder().Build(),
 			),
 			assertFunc: func(t require.TestingT, val interface{}) { require.Empty(t, val) },
 		},
 		{
 			name: "should return pod with different image repository",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().Build(),
-				NewSidecarPodBuilder().
+				helpers.NewSidecarPodBuilder().Build(),
+				helpers.NewSidecarPodBuilder().
 					SetName("changedSidecarPod").
 					SetSidecarImageRepository("istio/different-proxy").
 					Build(),
@@ -195,8 +195,8 @@ func TestGetPodsWithDifferentSidecarImage(t *testing.T) {
 		{
 			name: "should return pod with different image tag",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().Build(),
-				NewSidecarPodBuilder().
+				helpers.NewSidecarPodBuilder().Build(),
+				helpers.NewSidecarPodBuilder().
 					SetName("changedSidecarPod").
 					SetSidecarImageTag("1.11.0").
 					Build(),
@@ -211,7 +211,7 @@ func TestGetPodsWithDifferentSidecarImage(t *testing.T) {
 		{
 			name: "should ignore pod that has different image tag when it has not all condition status as True",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().
+				helpers.NewSidecarPodBuilder().
 					SetSidecarImageTag("1.12.0").
 					SetConditionStatus("False").
 					Build(),
@@ -221,7 +221,7 @@ func TestGetPodsWithDifferentSidecarImage(t *testing.T) {
 		{
 			name: "should ignore pod that has different image tag when phase is not running",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().
+				helpers.NewSidecarPodBuilder().
 					SetSidecarImageTag("1.12.0").
 					SetPodStatusPhase("Pending").
 					Build(),
@@ -231,7 +231,7 @@ func TestGetPodsWithDifferentSidecarImage(t *testing.T) {
 		{
 			name: "should ignore pod that has different image tag when it has a deletion timestamp",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().
+				helpers.NewSidecarPodBuilder().
 					SetSidecarImageTag("1.12.0").
 					SetDeletionTimestamp(time.Now()).
 					Build(),
@@ -241,7 +241,7 @@ func TestGetPodsWithDifferentSidecarImage(t *testing.T) {
 		{
 			name: "should ignore pod that has different image tag when proxy container name is not in istio annotation",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().
+				helpers.NewSidecarPodBuilder().
 					SetSidecarImageTag("1.12.0").
 					SetSidecarContainerName("custom-sidecar-proxy-container-name").
 					Build(),
@@ -262,9 +262,9 @@ func TestGetPodsWithDifferentSidecarImage(t *testing.T) {
 
 func TestGetPodsWithoutSidecar(t *testing.T) {
 	ctx := context.Background()
-	enabledNamespace := FixNamespaceWith("enabled", map[string]string{"istio-injection": "enabled"})
-	disabledNamespace := FixNamespaceWith("disabled", map[string]string{"istio-injection": "disabled"})
-	noLabelNamespace := FixNamespaceWith("nolabel", map[string]string{"testns": "true"})
+	enabledNamespace := helpers.FixNamespaceWith("enabled", map[string]string{"istio-injection": "enabled"})
+	disabledNamespace := helpers.FixNamespaceWith("disabled", map[string]string{"istio-injection": "disabled"})
+	noLabelNamespace := helpers.FixNamespaceWith("nolabel", map[string]string{"testns": "true"})
 
 	type sidecarTest struct {
 		name          string
@@ -277,9 +277,9 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should get pod without Istio sidecar and with proper namespace label",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
 					DisableSidecar().Build(),
-				NewSidecarPodBuilder().SetName("application2").SetNamespace("enabled").
+				helpers.NewSidecarPodBuilder().SetName("application2").SetNamespace("enabled").
 					DisableSidecar().SetPodStatusPhase("Terminating").Build(),
 				enabledNamespace,
 			),
@@ -289,13 +289,13 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pods without Istio sidecar in system namespaces",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
 					DisableSidecar().Build(),
-				NewSidecarPodBuilder().SetName("application2").SetNamespace("kube-system").
+				helpers.NewSidecarPodBuilder().SetName("application2").SetNamespace("kube-system").
 					DisableSidecar().Build(),
-				NewSidecarPodBuilder().SetName("application3").SetNamespace("kube-public").
+				helpers.NewSidecarPodBuilder().SetName("application3").SetNamespace("kube-public").
 					DisableSidecar().Build(),
-				NewSidecarPodBuilder().SetName("application4").SetNamespace("istio-system").
+				helpers.NewSidecarPodBuilder().SetName("application4").SetNamespace("istio-system").
 					DisableSidecar().Build(),
 				enabledNamespace,
 			),
@@ -305,7 +305,7 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod with Istio sidecar",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").Build(),
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").Build(),
 				noLabelNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -314,9 +314,9 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should get pod without Istio sidecar in namespace labeled istio-injection=enabled",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
 					DisableSidecar().Build(),
-				NewSidecarPodBuilder().SetName("application2").SetNamespace("enabled").Build(),
+				helpers.NewSidecarPodBuilder().SetName("application2").SetNamespace("enabled").Build(),
 				enabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -325,9 +325,9 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar in namespace labeled istio-injection=disabled",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("disabled").
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("disabled").
 					DisableSidecar().Build(),
-				NewSidecarPodBuilder().SetName("application2").SetNamespace("disabled").Build(),
+				helpers.NewSidecarPodBuilder().SetName("application2").SetNamespace("disabled").Build(),
 				disabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -336,7 +336,7 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod with Istio sidecar and annotated sidecar.istio.io/inject=true in namespace labeled istio-injection=enabled",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
 					SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).Build(),
 				enabledNamespace,
 			),
@@ -346,7 +346,7 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should get pod without Istio sidecar and annotated sidecar.istio.io/inject=true in namespace labeled istio-injection=enabled",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
 					DisableSidecar().SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).Build(),
 				enabledNamespace,
 			),
@@ -356,7 +356,7 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar and annotated sidecar.istio.io/inject=true in namespace labeled istio-injection=disabled",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("disabled").
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("disabled").
 					DisableSidecar().SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).Build(),
 				disabledNamespace,
 			),
@@ -366,7 +366,7 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar and annotated sidecar.istio.io/inject=false in namespace labeled istio-injection=enabled",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
 					DisableSidecar().SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "false"}).Build(),
 				enabledNamespace,
 			),
@@ -376,7 +376,7 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar and annotated sidecar.istio.io/inject=false in namespace labeled istio-injection=disabled",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("disabled").
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("disabled").
 					DisableSidecar().SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "false"}).Build(),
 				disabledNamespace,
 			),
@@ -386,7 +386,7 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should get pod without Istio sidecar in namespace without label",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").
 					DisableSidecar().Build(),
 				noLabelNamespace,
 			),
@@ -396,9 +396,9 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod in HostNetwork",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").SetPodHostNetwork().
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").SetPodHostNetwork().
 					DisableSidecar().Build(),
-				NewSidecarPodBuilder().SetName("application2").SetNamespace("nolabel").SetPodHostNetwork().
+				helpers.NewSidecarPodBuilder().SetName("application2").SetNamespace("nolabel").SetPodHostNetwork().
 					DisableSidecar().SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).Build(),
 				noLabelNamespace,
 			),
@@ -408,7 +408,7 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should get pod without Istio sidecar when annotated sidecar.istio.io/inject=true in namespace without label",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").
 					DisableSidecar().SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).Build(),
 				noLabelNamespace,
 			),
@@ -418,7 +418,7 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar when annotated sidecar.istio.io/inject=false in namespace without label",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").
 					DisableSidecar().SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "false"}).Build(),
 				noLabelNamespace,
 			),
@@ -428,9 +428,9 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should get pod without Istio sidecar and labeled sidecar.istio.io/inject=true (or not labeled) in namespace without label",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").
 					DisableSidecar().SetPodLabels(map[string]string{"sidecar.istio.io/inject": "true"}).Build(),
-				NewSidecarPodBuilder().SetName("application2").SetNamespace("nolabel").
+				helpers.NewSidecarPodBuilder().SetName("application2").SetNamespace("nolabel").
 					DisableSidecar().Build(),
 				noLabelNamespace,
 			),
@@ -440,7 +440,7 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar and labeled sidecar.istio.io/inject=false in namespace without label",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").
 					DisableSidecar().SetPodLabels(map[string]string{"sidecar.istio.io/inject": "false"}).Build(),
 				noLabelNamespace,
 			),
@@ -450,7 +450,7 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar and annotated sidecar.istio.io/inject=true and labeled sidecar.istio.io/inject=false in namespace labeled istio-injection=enabled",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
 					DisableSidecar().SetPodLabels(map[string]string{"sidecar.istio.io/inject": "false"}).
 					SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).Build(),
 				enabledNamespace,
@@ -461,7 +461,7 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should get pod without Istio sidecar and annotated sidecar.istio.io/inject=false and labeled sidecar.istio.io/inject=true in namespace labeled istio-injection=enabled",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
 					DisableSidecar().SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "false"}).
 					SetPodLabels(map[string]string{"sidecar.istio.io/inject": "true"}).Build(),
 				enabledNamespace,
@@ -472,9 +472,9 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar with label sidecar.istio.io/inject=true (or false) in namespace labeled istio-injection=enabled",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("disabled").DisableSidecar().
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("disabled").DisableSidecar().
 					SetPodLabels(map[string]string{"sidecar.istio.io/inject": "true"}).Build(),
-				NewSidecarPodBuilder().SetName("application2").SetNamespace("disabled").DisableSidecar().
+				helpers.NewSidecarPodBuilder().SetName("application2").SetNamespace("disabled").DisableSidecar().
 					SetPodLabels(map[string]string{"sidecar.istio.io/inject": "false"}).Build(),
 				disabledNamespace,
 			),
@@ -495,9 +495,9 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should get pod with proper namespace label",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
 					DisableSidecar().Build(),
-				NewSidecarPodBuilder().SetName("application2").SetNamespace("enabled").
+				helpers.NewSidecarPodBuilder().SetName("application2").SetNamespace("enabled").
 					DisableSidecar().SetPodStatusPhase("Terminating").Build(),
 				enabledNamespace,
 			),
@@ -507,7 +507,7 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod with Istio sidecar",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").Build(),
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").Build(),
 				enabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -516,9 +516,9 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar in namespace labeled istio-injection=disabled",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("disabled").
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("disabled").
 					DisableSidecar().Build(),
-				NewSidecarPodBuilder().SetName("application2").SetNamespace("disabled").Build(),
+				helpers.NewSidecarPodBuilder().SetName("application2").SetNamespace("disabled").Build(),
 				disabledNamespace,
 			),
 			expectedImage: pods.SidecarImage{Repository: "istio/proxyv2", Tag: "1.10.0"},
@@ -527,7 +527,7 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod with Istio sidecar and annotated sidecar.istio.io/inject=true in namespace labeled istio-injection=enabled",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").
 					SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).Build(),
 				enabledNamespace,
 			),
@@ -537,7 +537,7 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should get pod without Istio sidecar and annotated sidecar.istio.io/inject=true in namespace labeled istio-injection=enabled",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").DisableSidecar().
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").DisableSidecar().
 					SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).Build(),
 				enabledNamespace,
 			),
@@ -547,7 +547,7 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar and annotated sidecar.istio.io/inject=true in namespace labeled istio-injection=disabled",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("disabled").DisableSidecar().
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("disabled").DisableSidecar().
 					SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).Build(),
 				disabledNamespace,
 			),
@@ -557,7 +557,7 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar and annotated sidecar.istio.io/inject=false in namespace labeled istio-injection=enabled",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").DisableSidecar().
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").DisableSidecar().
 					SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "false"}).Build(),
 				enabledNamespace,
 			),
@@ -567,7 +567,7 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar and annotated sidecar.istio.io/inject=false in namespace labeled istio-injection=disabled",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("disabled").DisableSidecar().
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("disabled").DisableSidecar().
 					SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "false"}).Build(),
 				disabledNamespace,
 			),
@@ -577,7 +577,7 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar when not annotated in namespace without label",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").
 					DisableSidecar().Build(),
 				noLabelNamespace,
 			),
@@ -587,9 +587,9 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod in HostNetwork",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").DisableSidecar().
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").DisableSidecar().
 					SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).SetPodHostNetwork().Build(),
-				NewSidecarPodBuilder().SetName("application2").SetNamespace("nolabel").
+				helpers.NewSidecarPodBuilder().SetName("application2").SetNamespace("nolabel").
 					DisableSidecar().SetPodHostNetwork().Build(),
 				noLabelNamespace,
 			),
@@ -599,7 +599,7 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar and annotated sidecar.istio.io/inject=true in namespace without label",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").DisableSidecar().
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").DisableSidecar().
 					SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).Build(),
 				noLabelNamespace,
 			),
@@ -609,7 +609,7 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar and annotated sidecar.istio.io/inject=false in namespace without label",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").DisableSidecar().
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").DisableSidecar().
 					SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "false"}).Build(),
 				noLabelNamespace,
 			),
@@ -619,7 +619,7 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should get pod without Istio sidecar and labeled sidecar.istio.io/inject=true in namespace without label",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").DisableSidecar().
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").DisableSidecar().
 					SetPodLabels(map[string]string{"sidecar.istio.io/inject": "true"}).Build(),
 				noLabelNamespace,
 			),
@@ -629,7 +629,7 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar and annotated sidecar.istio.io/inject=true and labeled sidecar.istio.io/inject=false in namespace labeled istio-injection=enabled",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").DisableSidecar().
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").DisableSidecar().
 					SetPodLabels(map[string]string{"sidecar.istio.io/inject": "false"}).
 					SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "true"}).Build(),
 				enabledNamespace,
@@ -640,9 +640,9 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar and labeled sidecar.istio.io/inject=false (or true) in namespace labeled istio-injection=disabled",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("disabled").DisableSidecar().
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("disabled").DisableSidecar().
 					SetPodLabels(map[string]string{"sidecar.istio.io/inject": "false"}).Build(),
-				NewSidecarPodBuilder().SetName("application2").SetNamespace("disabled").DisableSidecar().
+				helpers.NewSidecarPodBuilder().SetName("application2").SetNamespace("disabled").DisableSidecar().
 					SetPodLabels(map[string]string{"sidecar.istio.io/inject": "true"}).Build(),
 				disabledNamespace,
 			),
@@ -652,7 +652,7 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should get pod without Istio sidecar and annotated sidecar.istio.io/inject=false and labeled sidecar.istio.io/inject=true in namespace labeled istio-injection=enabled",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").DisableSidecar().
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("enabled").DisableSidecar().
 					SetPodLabels(map[string]string{"sidecar.istio.io/inject": "true"}).
 					SetPodAnnotations(map[string]string{"sidecar.istio.io/inject": "false"}).Build(),
 				enabledNamespace,
@@ -663,9 +663,9 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 		{
 			name: "should not get pod without Istio sidecar and labeled sidecar.istio.io/inject=false (or not labeled at all) in namespace without label",
 			c: createClientSet(t,
-				NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").DisableSidecar().
+				helpers.NewSidecarPodBuilder().SetName("application1").SetNamespace("nolabel").DisableSidecar().
 					SetPodLabels(map[string]string{"sidecar.istio.io/inject": "false"}).Build(),
-				NewSidecarPodBuilder().SetName("application2").SetNamespace("nolabel").
+				helpers.NewSidecarPodBuilder().SetName("application2").SetNamespace("nolabel").
 					DisableSidecar().Build(),
 				noLabelNamespace,
 			),

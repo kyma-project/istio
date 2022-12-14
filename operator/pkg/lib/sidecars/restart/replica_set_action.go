@@ -3,10 +3,10 @@ package restart
 import (
 	"context"
 
+	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/util/retry"
 
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -20,7 +20,7 @@ func getReplicaSetAction(ctx context.Context, c client.Client, pod v1.Pod, repli
 	}
 
 	var replicaSet = &appsv1.ReplicaSet{}
-	err := retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+	err := retry.RetryOnError(retry.DefaultRetry, func() error {
 		return c.Get(ctx, replicaSetKey, replicaSet)
 	})
 	if err != nil {

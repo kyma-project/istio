@@ -18,7 +18,6 @@ type SidecarImage struct {
 const (
 	istioValidationContainerName = "istio-validation"
 	istioInitContainerName       = "istio-init"
-	istioSidecarName             = "istio-proxy"
 )
 
 func (r SidecarImage) matchesImageIn(container v1.Container) bool {
@@ -144,7 +143,7 @@ func GetPodsWithoutSidecar(ctx context.Context, c client.Client, isSidecarInject
 	for _, pod := range podList.Items {
 		isPodInInjectionLabeledNamespace := isPodInNamespaceList(pod, injectionLabeledNamespaceList.Items)
 		if isPodReady(pod) &&
-			!hasIstioSidecarContainer(pod.Spec.Containers, istioSidecarName) &&
+			!hasIstioSidecarContainer(pod.Spec.Containers) &&
 			!isSystemNamespace(pod.Namespace) &&
 			!isPodInHostNetwork(pod) &&
 			!isPodInNamespaceList(pod, injectionDisabledNamespaceList.Items) &&

@@ -1,8 +1,11 @@
 package pods
 
 import (
-	"encoding/json"
 	v1 "k8s.io/api/core/v1"
+)
+
+const (
+	istioSidecarName = "istio-proxy"
 )
 
 func hasIstioSidecarStatusAnnotation(pod v1.Pod) bool {
@@ -28,24 +31,10 @@ func isPodRunning(pod v1.Pod) bool {
 	return pod.Status.Phase == v1.PodRunning
 }
 
-func getIstioSidecarNamesInPod(pod v1.Pod) []string {
-	type istioStatusStruct struct {
-		Containers []string `json:"containers"`
-	}
-	istioStatus := istioStatusStruct{}
-	err := json.Unmarshal([]byte(pod.Annotations["sidecar.istio.io/status"]), &istioStatus)
-	if err != nil {
-		return []string{}
-	}
-	return istioStatus.Containers
-}
-
 func hasSidecarContainerWithWithDifferentImage(pod v1.Pod, expectedImage SidecarImage) bool {
-	// TODO Why can't we simply assume the pod name to be istio-proxy? Because of istio-init?
-	istioContainerNames := getIstioSidecarNamesInPod(pod)
 
 	for _, container := range pod.Spec.Containers {
-		if isContainerIstioSidecar(container, istioContainerNames) && !expectedImage.matchesImageIn(container) {
+		if isContainerIstioSidecar(container) && !expectedImage.matchesImageIn(container) {
 			return true
 		}
 	}
@@ -62,22 +51,17 @@ func hasInitContainer(containers []v1.Container, initContainerName string) bool 
 	return proxyImage != ""
 }
 
-func hasIstioSidecarContainer(containers []v1.Container, istioSidecarName string) bool {
+func hasIstioSidecarContainer(containers []v1.Container) bool {
 	for _, container := range containers {
-		if isContainerIstioSidecar(container, []string{istioSidecarName}) {
+		if isContainerIstioSidecar(container) {
 			return true
 		}
 	}
 	return false
 }
 
-func isContainerIstioSidecar(container v1.Container, istioSidecarNames []string) bool {
-	for _, sidecarName := range istioSidecarNames {
-		if sidecarName == container.Name {
-			return true
-		}
-	}
-	return false
+func isContainerIstioSidecar(container v1.Container) bool {
+	return istioSidecarName == container.Name
 }
 
 func isPodInNamespaceList(pod v1.Pod, namespaceList []v1.Namespace) bool {

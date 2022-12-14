@@ -2,12 +2,16 @@ package pods
 
 import (
 	"context"
-	"strings"
-
+	"fmt"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+)
+
+const (
+	istioValidationContainerName = "istio-validation"
+	istioInitContainerName       = "istio-init"
 )
 
 type SidecarImage struct {
@@ -15,16 +19,12 @@ type SidecarImage struct {
 	Tag        string
 }
 
-const (
-	istioValidationContainerName = "istio-validation"
-	istioInitContainerName       = "istio-init"
-)
+func (r SidecarImage) String() string {
+	return fmt.Sprintf("%s:%s", r.Repository, r.Tag)
+}
 
 func (r SidecarImage) matchesImageIn(container v1.Container) bool {
-	// TODO Understand why we can do a full string match
-	containsRepository := strings.Contains(container.Image, r.Repository)
-	containsTag := strings.HasSuffix(container.Image, r.Tag)
-	return containsRepository && containsTag
+	return container.Image == r.String()
 }
 
 func getAllRunningPods(ctx context.Context, c client.Client) (*v1.PodList, error) {

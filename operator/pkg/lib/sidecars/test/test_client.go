@@ -31,14 +31,16 @@ const (
 )
 
 type scenario struct {
-	Client                    client.Client
-	ToBeDeletedObjects        []client.Object
-	ToBeRestartedObjects      []client.Object
-	logger                    logr.Logger
-	istioVersion              string
-	cniEnabled                bool
+	Client                     client.Client
+	ToBeDeletedObjects         []client.Object
+	ToBeRestartedObjects       []client.Object
+	NotToBeDeletedObjects      []client.Object
+	NotToBeRestartedObjects    []client.Object
+	logger                     logr.Logger
+	istioVersion               string
+	cniEnabled                 bool
 	injectionNamespaceSelector NamespaceSelector
-	restartWarnings           []restart.RestartWarning
+	restartWarnings            []restart.RestartWarning
 }
 
 func NewScenario() (*scenario, error) {
@@ -58,7 +60,7 @@ func NewScenario() (*scenario, error) {
 			helpers.FixNamespaceWith(sidecarEnabledNamespace, map[string]string{"istio-injection": "enabled"}),
 			helpers.FixNamespaceWith(sidecarDisabledNamespace, map[string]string{"istio-injection": "disabled"}),
 		).Build(),
-		logger: logr.Discard(),
+		logger:                     logr.Discard(),
 		injectionNamespaceSelector: SidecarEnabled,
 	}, nil
 }

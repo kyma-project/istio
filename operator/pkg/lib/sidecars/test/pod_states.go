@@ -21,10 +21,14 @@ func (b *scenario) createObjectInAllNamespaces(toCreate client.Object, deleteIn 
 
 	if deleteIn&Default > 0 {
 		b.ToBeDeletedObjects = append(b.ToBeDeletedObjects, toCreateDefault)
+	} else {
+		b.NotToBeDeletedObjects = append(b.NotToBeDeletedObjects, toCreateDefault)
 	}
 
 	if restartIn&Default > 0 {
 		b.ToBeRestartedObjects = append(b.ToBeRestartedObjects, toCreateDefault)
+	} else {
+		b.NotToBeRestartedObjects = append(b.NotToBeRestartedObjects, toCreateDefault)
 	}
 
 	toCreateDisabled := helpers.Clone(toCreate).(client.Object)
@@ -36,10 +40,14 @@ func (b *scenario) createObjectInAllNamespaces(toCreate client.Object, deleteIn 
 
 	if deleteIn&SidecarDisabled > 0 {
 		b.ToBeDeletedObjects = append(b.ToBeDeletedObjects, toCreateDisabled)
+	} else {
+		b.NotToBeDeletedObjects = append(b.NotToBeDeletedObjects, toCreateDisabled)
 	}
 
 	if restartIn&SidecarDisabled > 0 {
 		b.ToBeRestartedObjects = append(b.ToBeRestartedObjects, toCreateDisabled)
+	} else {
+		b.NotToBeRestartedObjects = append(b.NotToBeRestartedObjects, toCreateDisabled)
 	}
 
 	toCreateEnabled := helpers.Clone(toCreate).(client.Object)
@@ -51,10 +59,14 @@ func (b *scenario) createObjectInAllNamespaces(toCreate client.Object, deleteIn 
 
 	if deleteIn&SidecarEnabled > 0 {
 		b.ToBeDeletedObjects = append(b.ToBeDeletedObjects, toCreateEnabled)
+	} else {
+		b.NotToBeDeletedObjects = append(b.NotToBeDeletedObjects, toCreateEnabled)
 	}
 
 	if restartIn&SidecarEnabled > 0 {
 		b.ToBeRestartedObjects = append(b.ToBeRestartedObjects, toCreateEnabled)
+	} else {
+		b.NotToBeRestartedObjects = append(b.NotToBeRestartedObjects, toCreateEnabled)
 	}
 	return nil
 }

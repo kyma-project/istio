@@ -7,5 +7,7 @@ Feature: Istio upgrade
     And there are Pods with Istio "1.14.4" sidecar
     And there are not ready Pods
     When a restart happens with target Istio "1.14.4"
-    Then all required resources are restarted
+    Then no unrequired resource is restarted
+    And no unrequired resource is deleted
+    And all required resources are restarted
     And all required resources are deleted

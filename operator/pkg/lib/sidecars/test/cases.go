@@ -54,6 +54,32 @@ func (s *scenario) allRequiredResourcesAreRestarted() error {
 	return nil
 }
 
+func (s *scenario) noUnrequiredResourcesAreDeleted() error {
+	for _, v := range s.NotToBeDeletedObjects {
+		obj := v
+		err := s.Client.Get(context.TODO(), types.NamespacedName{Name: v.GetName(), Namespace: v.GetNamespace()}, obj)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *scenario) noUnrequiredResourcesAreRestarted() error {
+	for _, v := range s.ToBeRestartedObjects {
+		obj := v
+		err := s.Client.Get(context.TODO(), types.NamespacedName{Name: v.GetName(), Namespace: v.GetNamespace()}, obj)
+		if err != nil {
+			return err
+		}
+
+		if _, ok := obj.GetAnnotations()[annotationName]; ok {
+			return fmt.Errorf("the annotation %s was applied for %s %s/%s but shouldn't", annotationName, obj.GetObjectKind().GroupVersionKind().Kind, obj.GetNamespace(), obj.GetName())
+		}
+	}
+	return nil
+}
+
 func (s *scenario) WithConfig(istioVersion, injection, cni string) error {
 	s.istioVersion = istioVersion
 	s.cniEnabled = cni == "true"
@@ -79,4 +105,6 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^there are Pods missing sidecar`, s.WithPodsMissingSidecar)
 	ctx.Step(`^there are not ready Pods$`, s.WithNotReadyPods)
 	ctx.Step(`^there are Pods with Istio "([^"]*)" sidecar$`, s.WithSidecarInVersionXPods)
+	ctx.Step(`^no unrequired resource is deleted$`, s.noUnrequiredResourcesAreDeleted)
+	ctx.Step(`^no unrequired resource is restarted$`, s.noUnrequiredResourcesAreRestarted)
 }

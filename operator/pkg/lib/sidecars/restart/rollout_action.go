@@ -13,7 +13,7 @@ import (
 
 const rolloutTimeoutMessage = "pod could not be rolled out by resource owner's controller."
 
-const annotationName = "istio-operator.kyma-project.io/restartedAt"
+const restartAnnotationName = "istio-operator.kyma-project.io/restartedAt"
 
 func newRolloutAction(object actionObject) restartAction {
 	return restartAction{
@@ -50,7 +50,7 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 			annotations = map[string]string{}
 		}
 
-		annotations[annotationName] = time.Now().Format(time.RFC3339)
+		annotations[restartAnnotationName] = time.Now().Format(time.RFC3339)
 		obj.SetAnnotations(annotations)
 
 		patch := client.StrategicMergeFrom(obj)

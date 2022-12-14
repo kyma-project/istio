@@ -105,7 +105,7 @@ func TestRestart(t *testing.T) {
 		err = c.Get(context.TODO(), types.NamespacedName{Namespace: "test-ns", Name: "owner"}, &obj)
 		require.NoError(t, err)
 
-		require.NotEmpty(t, "owner", obj.Annotations[annotationName])
+		require.NotEmpty(t, obj.Annotations[annotationName])
 	})
 
 	t.Run("should rollout restart one Deployment if two pods are owned by one", func(t *testing.T) {
@@ -130,7 +130,7 @@ func TestRestart(t *testing.T) {
 		err = c.Get(context.TODO(), types.NamespacedName{Namespace: "test-ns", Name: "owner"}, &obj)
 		require.NoError(t, err)
 
-		require.NotEmpty(t, "owner", obj.Annotations[annotationName])
+		require.NotEmpty(t, obj.Annotations[annotationName])
 	})
 
 	t.Run("should rollout restart DaemonSet if the pod is owned by one", func(t *testing.T) {
@@ -154,7 +154,7 @@ func TestRestart(t *testing.T) {
 		err = c.Get(context.TODO(), types.NamespacedName{Namespace: "test-ns", Name: "owner"}, &obj)
 		require.NoError(t, err)
 
-		require.NotEmpty(t, "owner", obj.Annotations[annotationName])
+		require.NotEmpty(t, obj.Annotations[annotationName])
 	})
 
 	t.Run("should delete a pod belonging to a ReplicaSet with no owner", func(t *testing.T) {
@@ -203,7 +203,7 @@ func TestRestart(t *testing.T) {
 		err = c.Get(context.TODO(), types.NamespacedName{Namespace: "test-ns", Name: "owner"}, &obj)
 		require.NoError(t, err)
 
-		require.NotEmpty(t, "owner", obj.Annotations[annotationName])
+		require.NotEmpty(t, obj.Annotations[annotationName])
 	})
 
 	t.Run("should return a warning when Pod is owned by a ReplicaSet that is not found", func(t *testing.T) {

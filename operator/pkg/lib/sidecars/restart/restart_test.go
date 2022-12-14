@@ -266,6 +266,46 @@ func TestRestart(t *testing.T) {
 		require.NoError(t, err)
 		require.NotEmpty(t, pods.Items)
 	})
+
+	t.Run("should do only one rollout if the ReplicaSet has multiple pods", func(t *testing.T) {
+		// given
+		c := fakeClient(t, &appsv1.ReplicaSet{
+			ObjectMeta: metav1.ObjectMeta{
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						Name: "rsOwner",
+						Kind: "Deployment",
+					},
+				},
+				Name:      "podOwner",
+				Namespace: "test-ns",
+			},
+		}, &appsv1.Deployment{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "rsOwner",
+				Namespace: "test-ns",
+			},
+		})
+
+		podList := v1.PodList{
+			Items: []v1.Pod{
+				podFixture("p1", "test-ns", "ReplicaSet", "podOwner"),
+				podFixture("p2", "test-ns", "ReplicaSet", "podOwner"),
+			},
+		}
+
+		// when
+		warnings, err := restart.Restart(ctx, c, podList)
+
+		// then
+		require.NoError(t, err)
+		require.Empty(t, warnings)
+
+		dep := appsv1.Deployment{}
+		err = c.Get(context.TODO(), types.NamespacedName{Namespace: "test-ns", Name: "rsOwner"}, &dep)
+		require.NoError(t, err)
+		require.Equal(t, "1000", dep.ResourceVersion, "Deployment should patch only once")
+	})
 }
 
 func fakeClient(t *testing.T, objects ...client.Object) client.Client {

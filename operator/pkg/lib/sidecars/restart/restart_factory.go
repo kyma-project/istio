@@ -51,6 +51,11 @@ type actionObject struct {
 	Kind      string
 }
 
+// getKey returns a key that identifies this object
+func (r actionObject) getKey() string {
+	return r.Name + r.Namespace + r.Kind
+}
+
 func actionObjectFromPod(pod v1.Pod) actionObject {
 	return actionObject{
 		Name:      pod.Name,

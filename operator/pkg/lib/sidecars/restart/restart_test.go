@@ -16,7 +16,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
-const annotationName = "kubectl.kubernetes.io/restartedAt"
+const annotationName = "istio-operator.kyma-project.io/restartedAt"
 
 func TestRestart(t *testing.T) {
 	ctx := context.TODO()
@@ -289,6 +289,41 @@ func TestRestart(t *testing.T) {
 		err = c.Get(context.TODO(), types.NamespacedName{Namespace: "test-ns", Name: "podOwner"}, &dep)
 		require.NoError(t, err)
 		require.Equal(t, "1000", dep.ResourceVersion, "StatefulSet should patch only once")
+	})
+
+	t.Run("should rollout restart ReplicaSet if the pod is owned by one that is found", func(t *testing.T) {
+		// given
+		pod := podFixture("p1", "test-ns", "ReplicaSet", "podOwner")
+
+		podList := v1.PodList{
+			Items: []v1.Pod{
+				pod,
+			},
+		}
+
+		c := fakeClient(t, &pod, &appsv1.ReplicaSet{ObjectMeta: metav1.ObjectMeta{
+			OwnerReferences: []metav1.OwnerReference{
+				{Name: "name", Kind: "ReplicaSet"},
+			},
+			Name:      "podOwner",
+			Namespace: "test-ns",
+		}}, &appsv1.ReplicaSet{ObjectMeta: metav1.ObjectMeta{
+			Name:      "name",
+			Namespace: "test-ns",
+		}})
+
+		// when
+		warnings, err := restart.Restart(ctx, c, podList)
+
+		// then
+		require.NoError(t, err)
+		require.Empty(t, warnings)
+
+		replicaSet := appsv1.ReplicaSet{}
+		err = c.Get(context.TODO(), types.NamespacedName{Name: "podOwner", Namespace: "test-ns"}, &replicaSet)
+
+		require.NoError(t, err)
+		require.NotEmpty(t, replicaSet.Annotations[annotationName])
 	})
 }
 

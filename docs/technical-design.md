@@ -51,18 +51,10 @@ That means if we want to release a new Istio version, we have to release a new v
 The Istio installation, upgrade and uninstall is done using [Istio Go module](https://github.com/istio/istio).
 The evaluation of Istio's installation options in an operator was done in this [PR](https://github.tools.sap/xf-goat/kyma-istio-operator). The result was that the best way for our use case was to use the
 [Istio Go module](https://github.com/istio/istio) to use directly.  
-In the sample implementation, the [istio.Install function](https://github.tools.sap/xf-goat/kyma-istio-operator/blob/ec0f99786408407b4a6d8b79abe3af6c389cd35d/controllers/servicemesh_controller.go#L73) of the 
-Istio operator is used for installation. This causes Istio to be installed in a synchronous way, i.e. the reconciliation loop is blocked until Istio is installed, which can take several minutes.
-For this reason, we have decided to install the operator and CR separately, as this does not lead to a long blocking of the reconciliation loop of our controller.
-
-The [IstioOperator of Istio](https://github.com/istio/istio/tree/master/operator) is installed in the cluster with the command [operator init](https://istio.io/latest/docs/reference/commands/istioctl/#istioctl-operator-init)([Go implementation](https://github.com/istio/istio/blob/master/operator/cmd/mesh/operator-init.go)).
-An example of how this can be done can be found [here](https://github.tools.sap/xf-goat/kyma-istio-operator/blob/62b81c82fb2120f9b67003b22c39f10a3e6fffc3/controllers/servicemesh_controller.go#L80). After the `IstioOperator` is installed, 
-we can apply the `IstioOperator CR` for the initial installation or updates of the CR.
-The `operator init` command can also be used to install a specific revision (required for canary upgrades) or to use a customised operator image.
-An installed operator can be removed with the command [operator remove](https://istio.io/latest/docs/reference/commands/istioctl/#istioctl-operator-remove)([Go implementation](https://github.com/istio/istio/blob/master/operator/cmd/mesh/operator-remove.go)).
-
-The command `operator init` applies the CRDs and the `IstioOperator` to the cluster. The deployment can take a few seconds. This is something you would normally want to avoid in a tuning loop, but as 
-this only happens during the installation, upgrade or uninstallation of the `IstioOperator`, we feel that for convenience it makes sense to run a longer reconciliation loop in this case.
+In the sample implementation, the [istio.Install function](https://github.tools.sap/xf-goat/kyma-istio-operator/blob/ec0f99786408407b4a6d8b79abe3af6c389cd35d/controllers/servicemesh_controller.go#L73) is used for installation.
+The installation of Istio is executed as a synchronous and blocking call that checks the proper status of the installation. This means that the reconciliation loop is blocked until Istio is installed.  
+The installation or upgrade scenario is not often executed and the call to the function `Install` should be protected by checks so that it is only executed when necessary.
+Therefore, we have agreed that it is okay to block our reconciliation loop during the installation of Istio.
  
 The following diagram describes the reconciliation process for installing, uninstalling and canary upgrading (using revisions) of Istio.
 
@@ -120,20 +112,12 @@ This component also contains the logic to carry out Istio actions like install, 
 As we want to support canary updates at some point we might need to support two version of the library if there are breaking changes. In this case the `IstioVersionManager` needs to handle
 the supported versions of the `IstioClient`.
 
-##### IstioVersionManager
-In case of breaking changes we may need to use the correct [Istio Go module](https://github.com/istio/istio) version for the installed [IstioOperator](https://github.com/istio/istio/tree/master/operator).
-If we need to support this scenario, this should be handled by an `IstioClient` for each version. The `IstioVersionManager` will act as the abstraction layer of the `IstioClient` by mapping 
-the requests to the correct version of the `IstioClient`.  
-For the first simple implementation, we can probably do without the `IstioVersionManager` for now.
-
-![Controller Component Diagram Multiple Istio Version](./controller-component-diagram-multiple-version.svg)
-
 #### ProxySidecarReconciliation
 The responsibility of this component is to keep the proxy sidecars in the desired state. This means that it restarts pods that are part of the service mesh or 
 that need to be added to the service mesh.
 The desired state is represented by [Istio CR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md) and the Istio Version coupled to the Operator.
-This component carries a high risk that its execution takes too long for synchronous execution in the controller. We need to check its performance during implementation 
-and assess whether its logic needs to be executed asynchronously, e.g. as part of a job or a cron job.
+This component carries a high risk that its execution takes too long for execution in this controller. We need to check its performance during implementation 
+and assess whether its logic needs to be executed separately.
 
 As of now the following scenarios must be covered by this component:
 - Restart pods with proxy sidecar when CNI config changed

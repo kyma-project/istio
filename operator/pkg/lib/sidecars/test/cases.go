@@ -54,10 +54,6 @@ func (s *scenario) allRequiredResourcesAreRestarted() error {
 	return nil
 }
 
-func (s *scenario) thereArePodsWithNotYetInjectedSidecars() error {
-	return s.WithPodsMissingSidecar()
-}
-
 func (s *scenario) WithConfig(istioVersion, injection, cni string) error {
 	s.istioVersion = istioVersion
 	s.cniEnabled = cni == "true"

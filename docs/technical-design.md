@@ -1,8 +1,5 @@
 # Technical Design
 
-## To be discussed
-
-
 ## Kyma Istio operator
 
 ![Kyma IstioOperator Overview](./istio-operator-overview.svg)

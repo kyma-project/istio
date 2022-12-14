@@ -32,7 +32,7 @@ func getAllRunningPods(ctx context.Context, c client.Client) (*v1.PodList, error
 
 	isRunning := fields.OneTermEqualSelector("status.phase", string(v1.PodRunning))
 
-	err := retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+	err := retry.RetryOnError(retry.DefaultRetry, func() error {
 		return c.List(ctx, podList, client.MatchingFieldsSelector{Selector: isRunning})
 	})
 	if err != nil {
@@ -47,7 +47,7 @@ func getNamespacesWithIstioLabelsAndInjectionDisabled(ctx context.Context, c cli
 	labeledList := &v1.NamespaceList{}
 	disabledList := &v1.NamespaceList{}
 
-	err := retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+	err := retry.RetryOnError(retry.DefaultRetry, func() error {
 		return c.List(ctx, unfilteredLabeledList, client.HasLabels{"istio-injection"})
 	})
 	if err != nil {

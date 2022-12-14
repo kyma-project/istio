@@ -8,9 +8,10 @@ import (
 
 var (
 	DefaultBackoff = retry.DefaultBackoff
+	DefaultRetry   = retry.DefaultRetry
 )
 
-func IsRetryError(err error) bool {
+func IsRetriable(err error) bool {
 	if errors.IsTooManyRequests(err) ||
 		errors.IsServerTimeout(err) ||
 		errors.IsTimeout(err) ||
@@ -22,9 +23,5 @@ func IsRetryError(err error) bool {
 }
 
 func RetryOnError(backoff wait.Backoff, fn func() error) error {
-	return retry.OnError(backoff, IsRetryError, fn)
-}
-
-func RetryOnConflict(backoff wait.Backoff, fn func() error) error {
-	return retry.RetryOnConflict(backoff, fn)
+	return retry.OnError(backoff, IsRetriable, fn)
 }

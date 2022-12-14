@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -39,7 +39,7 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 		return nil, fmt.Errorf("kind %s not found", object.Kind)
 	}
 
-	err = retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+	err = retry.RetryOnError(retry.DefaultRetry, func() error {
 		return k8sclient.Get(ctx, types.NamespacedName{Name: object.Name, Namespace: object.Namespace}, obj)
 	})
 	if err != nil {
@@ -56,7 +56,7 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 	obj.SetAnnotations(annotations)
 
 	patch := client.StrategicMergeFrom(obj)
-	err = retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+	err = retry.RetryOnError(retry.DefaultBackoff, func() error {
 		return k8sclient.Patch(ctx, obj, patch)
 	})
 

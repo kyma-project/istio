@@ -13,7 +13,7 @@ import (
 
 const rolloutTimeoutMessage = "pod could not be rolled out by resource owner's controller."
 
-const annotationName = "kubectl.kubernetes.io/restartedAt"
+const annotationName = "istio-operator.kyma-project.io/restartedAt"
 
 func newRolloutAction(object actionObject) restartAction {
 	return restartAction{

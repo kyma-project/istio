@@ -36,7 +36,7 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 	case "StatefulSet":
 		obj = &appsv1.StatefulSet{}
 	default:
-		return nil, fmt.Errorf("kind %s not found", object.Kind)
+		return nil, fmt.Errorf("kind %s is not supported for rollout", object.Kind)
 	}
 
 	err = retry.RetryOnError(retry.DefaultBackoff, func() error {

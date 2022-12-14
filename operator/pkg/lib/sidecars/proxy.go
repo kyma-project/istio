@@ -10,7 +10,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func ProxyReset(ctx context.Context, c client.Client, expectedImage pods.SidecarImage, namespaceEnabledByDefault, cniEnabled bool, logger *logr.Logger) ([]restart.RestartWarning, error) {
+func ProxyReset(ctx context.Context, c client.Client, expectedImage pods.SidecarImage, namespaceEnabledByDefault, cniEnabled bool, logger logr.Logger) ([]restart.RestartWarning, error) {
 	differentImagePodList, err := pods.GetPodsWithDifferentSidecarImage(ctx, c, expectedImage)
 	if err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ func ProxyReset(ctx context.Context, c client.Client, expectedImage pods.Sidecar
 		return nil, err
 	}
 
-	logger.V(2).Info("proxy reset for successfully done")
+	logger.Info("proxy reset for successfully done")
 
 	return warnings, nil
 

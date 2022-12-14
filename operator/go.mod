@@ -14,7 +14,7 @@ require (
 	istio.io/istio v0.0.0-20221023221338-9a6e009adc35
 	k8s.io/api v0.25.4
 	k8s.io/apiextensions-apiserver v0.25.2
-	k8s.io/apimachinery v0.25.4
+	k8s.io/apimachinery v0.26.0
 	k8s.io/client-go v0.25.4
 	sigs.k8s.io/controller-runtime v0.13.1
 )
@@ -156,12 +156,12 @@ require (
 	go.uber.org/zap v1.23.0 // indirect
 	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa // indirect
 	golang.org/x/exp v0.0.0-20221023144134-a1e5550cf13e // indirect
-	golang.org/x/net v0.2.0 // indirect
+	golang.org/x/net v0.3.1-0.20221206200815-1e63c2f08a10 // indirect
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.2.0 // indirect
-	golang.org/x/term v0.2.0 // indirect
-	golang.org/x/text v0.4.0 // indirect
+	golang.org/x/sys v0.3.0 // indirect
+	golang.org/x/term v0.3.0 // indirect
+	golang.org/x/text v0.5.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.2.0 // indirect
 	google.golang.org/api v0.100.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
@@ -176,9 +176,9 @@ require (
 	k8s.io/cli-runtime v0.25.2 // indirect
 	k8s.io/component-base v0.25.2 // indirect
 	k8s.io/klog/v2 v2.80.1 // indirect
-	k8s.io/kube-openapi v0.0.0-20220803164354-a70c9af30aea // indirect
+	k8s.io/kube-openapi v0.0.0-20221012153701-172d655c2280 // indirect
 	k8s.io/kubectl v0.25.2 // indirect
-	k8s.io/utils v0.0.0-20220823124924-e9cbc92d1a73 // indirect
+	k8s.io/utils v0.0.0-20221107191617-1a15be271d1d // indirect
 	oras.land/oras-go v1.2.0 // indirect
 	sigs.k8s.io/json v0.0.0-20220713155537-f223a00ba0e2 // indirect
 	sigs.k8s.io/kustomize/api v0.12.1 // indirect

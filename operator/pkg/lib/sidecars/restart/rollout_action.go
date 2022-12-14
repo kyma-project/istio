@@ -39,24 +39,21 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 		return nil, fmt.Errorf("kind %s not found", object.Kind)
 	}
 
-	err = retry.RetryOnError(retry.DefaultRetry, func() error {
-		return k8sclient.Get(ctx, types.NamespacedName{Name: object.Name, Namespace: object.Namespace}, obj)
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	annotations := obj.GetAnnotations()
-	if len(annotations) == 0 {
-		annotations = map[string]string{}
-	}
-
-	annotations[annotationName] = time.Now().Format(time.RFC3339)
-
-	obj.SetAnnotations(annotations)
-
-	patch := client.StrategicMergeFrom(obj)
 	err = retry.RetryOnError(retry.DefaultBackoff, func() error {
+		err := k8sclient.Get(ctx, types.NamespacedName{Name: object.Name, Namespace: object.Namespace}, obj)
+		if err != nil {
+			return err
+		}
+
+		annotations := obj.GetAnnotations()
+		if len(annotations) == 0 {
+			annotations = map[string]string{}
+		}
+
+		annotations[annotationName] = time.Now().Format(time.RFC3339)
+		obj.SetAnnotations(annotations)
+
+		patch := client.StrategicMergeFrom(obj)
 		return k8sclient.Patch(ctx, obj, patch)
 	})
 

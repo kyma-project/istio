@@ -53,8 +53,7 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 		annotations[restartAnnotationName] = time.Now().Format(time.RFC3339)
 		obj.SetAnnotations(annotations)
 
-		patch := client.StrategicMergeFrom(obj)
-		return k8sclient.Patch(ctx, obj, patch)
+		return k8sclient.Update(ctx, obj)
 	})
 
 	if err != nil {

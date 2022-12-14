@@ -31,6 +31,7 @@ func getReplicaSetAction(ctx context.Context, c client.Client, pod v1.Pod, repli
 	}
 
 	if rsOwnedBy, exists := getReplicaSetOwner(replicaSet); !exists {
+		// If the ReplicaSet is not managed by a parent resource(e.g. deployment), we need to delete the pods in the ReplicaSet to force a restart.
 		return newDeleteAction(actionObjectFromPod(pod)), nil
 	} else {
 		return newRolloutAction(actionObject{

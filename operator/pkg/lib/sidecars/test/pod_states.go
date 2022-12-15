@@ -93,7 +93,9 @@ func (b *scenario) WithSidecarInVersionXPods(sidecarTag string) error {
 
 	selector := AllNamespaces
 	if sidecarTag == b.istioVersion {
-		selector = AllNamespaces &^ b.injectionNamespaceSelector
+		// To be discussed: Support restart of resources that have sidecar but shouldn't
+		//selector = AllNamespaces &^ b.injectionNamespaceSelector
+		selector = NoNamespace
 	}
 
 	return b.createObjectInAllNamespaces(&deployment, NoNamespace, selector)
@@ -104,13 +106,13 @@ func (b *scenario) WithPodsMissingSidecar() error {
 	notInjected.OwnerReferences = []metav1.OwnerReference{
 		{
 			Kind: "Deployment",
-			Name: "owner-not-yet",
+			Name: "owner-missing-sidecar",
 		},
 	}
 
 	deployment := appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "owner-not-yet",
+			Name: "owner-missing-sidecar",
 		},
 	}
 

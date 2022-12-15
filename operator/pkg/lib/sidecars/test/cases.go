@@ -11,7 +11,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-const annotationName = "kubectl.kubernetes.io/restartedAt"
+const restartAnnotationName = "istio-operator.kyma-project.io/restartedAt"
 
 func (s *scenario) aRestartHappens(sidecarImage string) error {
 	warnings, err := sidecars.ProxyReset(context.TODO(),
@@ -47,8 +47,8 @@ func (s *scenario) allRequiredResourcesAreRestarted() error {
 			return err
 		}
 
-		if _, ok := obj.GetAnnotations()[annotationName]; !ok {
-			return fmt.Errorf("the annotation %s wasn't applied for %s %s/%s", annotationName, obj.GetObjectKind().GroupVersionKind().Kind, obj.GetNamespace(), obj.GetName())
+		if _, ok := obj.GetAnnotations()[restartAnnotationName]; !ok {
+			return fmt.Errorf("the annotation %s wasn't applied for %s %s/%s", restartAnnotationName, obj.GetObjectKind().GroupVersionKind().Kind, obj.GetNamespace(), obj.GetName())
 		}
 	}
 	return nil
@@ -66,15 +66,15 @@ func (s *scenario) noUnrequiredResourcesAreDeleted() error {
 }
 
 func (s *scenario) noUnrequiredResourcesAreRestarted() error {
-	for _, v := range s.ToBeRestartedObjects {
+	for _, v := range s.NotToBeRestartedObjects {
 		obj := v
 		err := s.Client.Get(context.TODO(), types.NamespacedName{Name: v.GetName(), Namespace: v.GetNamespace()}, obj)
 		if err != nil {
 			return err
 		}
 
-		if _, ok := obj.GetAnnotations()[annotationName]; ok {
-			return fmt.Errorf("the annotation %s was applied for %s %s/%s but shouldn't", annotationName, obj.GetObjectKind().GroupVersionKind().Kind, obj.GetNamespace(), obj.GetName())
+		if _, ok := obj.GetAnnotations()[restartAnnotationName]; ok {
+			return fmt.Errorf("the annotation %s was applied for %s %s/%s but shouldn't", restartAnnotationName, obj.GetObjectKind().GroupVersionKind().Kind, obj.GetNamespace(), obj.GetName())
 		}
 	}
 	return nil

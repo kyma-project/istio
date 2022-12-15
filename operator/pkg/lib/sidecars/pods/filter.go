@@ -51,15 +51,6 @@ func hasInitContainer(containers []v1.Container, initContainerName string) bool 
 	return proxyImage != ""
 }
 
-func hasIstioSidecarContainer(containers []v1.Container) bool {
-	for _, container := range containers {
-		if isContainerIstioSidecar(container) {
-			return true
-		}
-	}
-	return false
-}
-
 func isContainerIstioSidecar(container v1.Container) bool {
 	return istioSidecarName == container.Name
 }
@@ -83,28 +74,4 @@ func isSystemNamespace(name string) bool {
 		return true
 	}
 	return false
-}
-
-func isPodEligibleToRestart(pod v1.Pod, isSidecarInjectionEnabledByDefault, podNamespaceLabeled bool) bool {
-	podAnnotationValue, podAnnotated := pod.Annotations["sidecar.istio.io/inject"]
-	podLabelValue, podLabeled := pod.Labels["sidecar.istio.io/inject"]
-
-	if podLabeled && podLabelValue == "false" {
-		return false
-	}
-	if !podLabeled && podAnnotated && podAnnotationValue == "false" {
-		return false
-	}
-	if !isSidecarInjectionEnabledByDefault && !podNamespaceLabeled && podAnnotated && podAnnotationValue == "true" {
-		return false
-	}
-	if !isSidecarInjectionEnabledByDefault && !podNamespaceLabeled && !podAnnotated && !podLabeled {
-		return false
-	}
-	return true
-}
-
-func isPodInHostNetwork(pod v1.Pod) bool {
-	//Automatic sidecar injection is ignored for pods on the host network
-	return pod.Spec.HostNetwork
 }

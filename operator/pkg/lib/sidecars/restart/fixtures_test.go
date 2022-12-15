@@ -1,7 +1,6 @@
 package restart_test
 
 import (
-	v1apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -36,15 +35,4 @@ func podFixture(name, namespace, ownerKind, ownerName string) v1.Pod {
 			APIVersion: "v1",
 		},
 	}
-}
-
-func replicaSetFixture(name, namespace, ownerName, ownerKind string) *v1apps.ReplicaSet {
-	return &v1apps.ReplicaSet{
-		ObjectMeta: metav1.ObjectMeta{
-			OwnerReferences: []metav1.OwnerReference{
-				{Name: ownerName, Kind: ownerKind},
-			},
-			Name:      name,
-			Namespace: namespace,
-		}}
 }

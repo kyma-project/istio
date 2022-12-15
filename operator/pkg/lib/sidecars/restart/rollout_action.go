@@ -12,8 +12,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const rolloutTimeoutMessage = "pod could not be rolled out by resource owner's controller."
-
 const restartAnnotationName = "istio-operator.kyma-project.io/restartedAt"
 
 func newRolloutAction(object actionObject) restartAction {

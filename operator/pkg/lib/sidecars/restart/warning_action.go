@@ -29,11 +29,3 @@ func newOwnedByJobAction(pod v1.Pod) restartAction {
 		run:    warningAction{message: ownedByJobMessage}.run,
 	}
 }
-
-func newWarningActionObject(pod v1.Pod) actionObject {
-	return actionObject{
-		Name:      pod.Name,
-		Namespace: pod.Namespace,
-		Kind:      pod.Kind,
-	}
-}

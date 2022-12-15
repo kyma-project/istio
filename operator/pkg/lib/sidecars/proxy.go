@@ -16,7 +16,6 @@ func ProxyReset(ctx context.Context, c client.Client, expectedImage pods.Sidecar
 		return nil, err
 	}
 
-
 	cniPodList, err := pods.GetPodsForCNIChange(ctx, c, cniEnabled, logger)
 	if err != nil {
 		return nil, err

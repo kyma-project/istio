@@ -93,8 +93,7 @@ func (b *scenario) WithSidecarInVersionXPods(sidecarTag string) error {
 
 	selector := AllNamespaces
 	if sidecarTag == b.istioVersion {
-		// To be discussed: Support restart of resources that have sidecar but shouldn't
-		//selector = AllNamespaces &^ b.injectionNamespaceSelector
+		// We don't support restart in any other case than Istio version change
 		selector = NoNamespace
 	}
 
@@ -121,7 +120,8 @@ func (b *scenario) WithPodsMissingSidecar() error {
 		return err
 	}
 
-	return b.createObjectInAllNamespaces(&deployment, NoNamespace, b.injectionNamespaceSelector)
+	// The restart for pods missing sidecar was implemented as a workaround and will no longer be supported for Istio >= 1.16, so restartIn is set to NoNamespace
+	return b.createObjectInAllNamespaces(&deployment, NoNamespace, NoNamespace)
 }
 
 func (b *scenario) WithNotReadyPods() error {

@@ -127,34 +127,3 @@ func GetPodsForCNIChange(ctx context.Context, c client.Client, isCNIEnabled bool
 
 	return outputPodsList, nil
 }
-
-func GetPodsWithoutSidecar(ctx context.Context, c client.Client, isSidecarInjectionEnabledByDefault bool, logger *logr.Logger) (outputPodsList v1.PodList, err error) {
-	podList, err := getAllRunningPods(ctx, c)
-	if err != nil {
-		return outputPodsList, err
-	}
-
-	injectionLabeledNamespaceList, injectionDisabledNamespaceList, err := getNamespacesWithIstioLabelsAndInjectionDisabled(ctx, c)
-	if err != nil {
-		return outputPodsList, err
-	}
-
-	podList.DeepCopyInto(&outputPodsList)
-	outputPodsList.Items = []v1.Pod{}
-
-	for _, pod := range podList.Items {
-		isPodInInjectionLabeledNamespace := isPodInNamespaceList(pod, injectionLabeledNamespaceList.Items)
-		if isPodReady(pod) &&
-			!hasIstioSidecarContainer(pod.Spec.Containers) &&
-			!isSystemNamespace(pod.Namespace) &&
-			!isPodInHostNetwork(pod) &&
-			!isPodInNamespaceList(pod, injectionDisabledNamespaceList.Items) &&
-			isPodEligibleToRestart(pod, isSidecarInjectionEnabledByDefault, isPodInInjectionLabeledNamespace) {
-			outputPodsList.Items = append(outputPodsList.Items, *pod.DeepCopy())
-		}
-	}
-
-	logger.Info("Pods without sidecars", "number of pods", len(outputPodsList.Items))
-
-	return outputPodsList, nil
-}

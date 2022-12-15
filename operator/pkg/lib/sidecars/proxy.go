@@ -16,10 +16,6 @@ func ProxyReset(ctx context.Context, c client.Client, expectedImage pods.Sidecar
 		return nil, err
 	}
 
-	noSidecarPodList, err := pods.GetPodsWithoutSidecar(ctx, c, namespaceEnabledByDefault, logger)
-	if err != nil {
-		return nil, err
-	}
 
 	cniPodList, err := pods.GetPodsForCNIChange(ctx, c, cniEnabled, logger)
 	if err != nil {
@@ -29,7 +25,6 @@ func ProxyReset(ctx context.Context, c client.Client, expectedImage pods.Sidecar
 	var podListToRestart v1.PodList
 	podListToRestart.Items = []v1.Pod{}
 	differentImagePodList.DeepCopyInto(&podListToRestart)
-	podListToRestart.Items = append(podListToRestart.Items, noSidecarPodList.DeepCopy().Items...)
 	podListToRestart.Items = append(podListToRestart.Items, cniPodList.DeepCopy().Items...)
 
 	warnings, err := restart.Restart(ctx, c, podListToRestart, logger)

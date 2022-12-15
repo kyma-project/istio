@@ -3,6 +3,7 @@ package restart
 import (
 	"context"
 	"fmt"
+	"github.com/go-logr/logr"
 	"time"
 
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
@@ -22,7 +23,9 @@ func newRolloutAction(object actionObject) restartAction {
 	}
 }
 
-func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObject) ([]RestartWarning, error) {
+func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObject, logger *logr.Logger) ([]RestartWarning, error) {
+	logger.Info("Roll out pod due to proxy restart", "name", object.Name, "namespace", object.Namespace)
+
 	var obj client.Object
 	var err error
 

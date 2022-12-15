@@ -2,6 +2,7 @@ package restart
 
 import (
 	"context"
+	"github.com/go-logr/logr"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -41,7 +42,7 @@ func getOwnerReferences(pod v1.Pod) (*metav1.OwnerReference, bool) {
 }
 
 type restartAction struct {
-	run    func(context.Context, client.Client, actionObject) ([]RestartWarning, error)
+	run    func(context.Context, client.Client, actionObject, *logr.Logger) ([]RestartWarning, error)
 	object actionObject
 }
 

@@ -11,17 +11,17 @@ import (
 )
 
 func ProxyReset(ctx context.Context, c client.Client, expectedImage pods.SidecarImage, namespaceEnabledByDefault, cniEnabled bool, logger *logr.Logger) ([]restart.RestartWarning, error) {
-	differentImagePodList, err := pods.GetPodsWithDifferentSidecarImage(ctx, c, expectedImage)
+	differentImagePodList, err := pods.GetPodsWithDifferentSidecarImage(ctx, c, expectedImage, logger)
 	if err != nil {
 		return nil, err
 	}
 
-	noSidecarPodList, err := pods.GetPodsWithoutSidecar(ctx, c, namespaceEnabledByDefault)
+	noSidecarPodList, err := pods.GetPodsWithoutSidecar(ctx, c, namespaceEnabledByDefault, logger)
 	if err != nil {
 		return nil, err
 	}
 
-	cniPodList, err := pods.GetPodsForCNIChange(ctx, c, cniEnabled)
+	cniPodList, err := pods.GetPodsForCNIChange(ctx, c, cniEnabled, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -32,12 +32,12 @@ func ProxyReset(ctx context.Context, c client.Client, expectedImage pods.Sidecar
 	podListToRestart.Items = append(podListToRestart.Items, noSidecarPodList.DeepCopy().Items...)
 	podListToRestart.Items = append(podListToRestart.Items, cniPodList.DeepCopy().Items...)
 
-	warnings, err := restart.Restart(ctx, c, podListToRestart)
+	warnings, err := restart.Restart(ctx, c, podListToRestart, logger)
 	if err != nil {
 		return nil, err
 	}
 
-	logger.Info("proxy reset for successfully done")
+	logger.Info("Proxy reset done")
 
 	return warnings, nil
 

@@ -3,6 +3,7 @@ package pods
 import (
 	"context"
 	"fmt"
+	"github.com/go-logr/logr"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -72,7 +73,7 @@ func getNamespacesWithIstioLabelsAndInjectionDisabled(ctx context.Context, c cli
 	return labeledList, disabledList, err
 }
 
-func GetPodsWithDifferentSidecarImage(ctx context.Context, c client.Client, expectedImage SidecarImage) (outputPodsList v1.PodList, err error) {
+func GetPodsWithDifferentSidecarImage(ctx context.Context, c client.Client, expectedImage SidecarImage, logger *logr.Logger) (outputPodsList v1.PodList, err error) {
 	podList, err := getAllRunningPods(ctx, c)
 	if err != nil {
 		return outputPodsList, err
@@ -89,12 +90,12 @@ func GetPodsWithDifferentSidecarImage(ctx context.Context, c client.Client, expe
 		}
 	}
 
+	logger.Info("Pods with different istio proxy image", "number of pods", len(outputPodsList.Items), "expected image", expectedImage)
 	return outputPodsList, nil
 }
 
-func GetPodsForCNIChange(ctx context.Context, c client.Client, isCNIEnabled bool) (outputPodsList v1.PodList, err error) {
+func GetPodsForCNIChange(ctx context.Context, c client.Client, isCNIEnabled bool, logger *logr.Logger) (outputPodsList v1.PodList, err error) {
 	podList, err := getAllRunningPods(ctx, c)
-	// TODO: add logs
 	if err != nil {
 		return outputPodsList, err
 	}
@@ -122,12 +123,13 @@ func GetPodsForCNIChange(ctx context.Context, c client.Client, isCNIEnabled bool
 		}
 	}
 
+	logger.Info("Pods that need to adapt to CNI change", "number of pods", len(outputPodsList.Items))
+
 	return outputPodsList, nil
 }
 
-func GetPodsWithoutSidecar(ctx context.Context, c client.Client, isSidecarInjectionEnabledByDefault bool) (outputPodsList v1.PodList, err error) {
+func GetPodsWithoutSidecar(ctx context.Context, c client.Client, isSidecarInjectionEnabledByDefault bool, logger *logr.Logger) (outputPodsList v1.PodList, err error) {
 	podList, err := getAllRunningPods(ctx, c)
-	// TODO: add logs
 	if err != nil {
 		return outputPodsList, err
 	}
@@ -151,6 +153,8 @@ func GetPodsWithoutSidecar(ctx context.Context, c client.Client, isSidecarInject
 			outputPodsList.Items = append(outputPodsList.Items, *pod.DeepCopy())
 		}
 	}
+
+	logger.Info("Pods without sidecars", "number of pods", len(outputPodsList.Items))
 
 	return outputPodsList, nil
 }

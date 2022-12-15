@@ -2,6 +2,7 @@ package restart_test
 
 import (
 	"context"
+	"github.com/go-logr/logr"
 	"testing"
 
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/restart"
@@ -20,6 +21,7 @@ const restartAnnotationName = "istio-operator.kyma-project.io/restartedAt"
 
 func TestRestart(t *testing.T) {
 	ctx := context.TODO()
+	logger := logr.Discard()
 
 	t.Run("should return warning when pod has no owner", func(t *testing.T) {
 		// given
@@ -32,7 +34,7 @@ func TestRestart(t *testing.T) {
 		}
 
 		// when
-		warnings, err := restart.Restart(ctx, c, podList)
+		warnings, err := restart.Restart(ctx, c, podList, &logger)
 
 		// then
 		require.NoError(t, err)
@@ -53,7 +55,7 @@ func TestRestart(t *testing.T) {
 		}
 
 		// when
-		warnings, err := restart.Restart(ctx, c, podList)
+		warnings, err := restart.Restart(ctx, c, podList, &logger)
 
 		// then
 		require.NoError(t, err)
@@ -74,7 +76,7 @@ func TestRestart(t *testing.T) {
 		}
 
 		// when
-		warnings, err := restart.Restart(ctx, c, podList)
+		warnings, err := restart.Restart(ctx, c, podList, &logger)
 
 		// then
 		require.NoError(t, err)
@@ -95,7 +97,7 @@ func TestRestart(t *testing.T) {
 		}
 
 		// when
-		warnings, err := restart.Restart(ctx, c, podList)
+		warnings, err := restart.Restart(ctx, c, podList, &logger)
 
 		// then
 		require.NoError(t, err)
@@ -120,7 +122,7 @@ func TestRestart(t *testing.T) {
 		}
 
 		// when
-		warnings, err := restart.Restart(ctx, c, podList)
+		warnings, err := restart.Restart(ctx, c, podList, &logger)
 
 		// then
 		require.NoError(t, err)
@@ -144,7 +146,7 @@ func TestRestart(t *testing.T) {
 		}
 
 		// when
-		warnings, err := restart.Restart(ctx, c, podList)
+		warnings, err := restart.Restart(ctx, c, podList, &logger)
 
 		// then
 		require.NoError(t, err)
@@ -167,7 +169,7 @@ func TestRestart(t *testing.T) {
 		}
 
 		// when
-		warnings, err := restart.Restart(ctx, c, podList)
+		warnings, err := restart.Restart(ctx, c, podList, &logger)
 
 		// then
 		require.NoError(t, err)
@@ -193,7 +195,7 @@ func TestRestart(t *testing.T) {
 		}
 
 		// when
-		warnings, err := restart.Restart(ctx, c, podList)
+		warnings, err := restart.Restart(ctx, c, podList, &logger)
 
 		// then
 		require.NoError(t, err)
@@ -219,7 +221,7 @@ func TestRestart(t *testing.T) {
 		c := fakeClient(t, &pod)
 
 		// when
-		warnings, err := restart.Restart(ctx, c, podList)
+		warnings, err := restart.Restart(ctx, c, podList, &logger)
 
 		// then
 		require.NoError(t, err)
@@ -254,7 +256,7 @@ func TestRestart(t *testing.T) {
 		}})
 
 		// when
-		warnings, err := restart.Restart(ctx, c, podList)
+		warnings, err := restart.Restart(ctx, c, podList, &logger)
 
 		// then
 		require.NoError(t, err)
@@ -279,7 +281,7 @@ func TestRestart(t *testing.T) {
 		}
 
 		// when
-		warnings, err := restart.Restart(ctx, c, podList)
+		warnings, err := restart.Restart(ctx, c, podList, &logger)
 
 		// then
 		require.NoError(t, err)
@@ -313,7 +315,7 @@ func TestRestart(t *testing.T) {
 		}})
 
 		// when
-		warnings, err := restart.Restart(ctx, c, podList)
+		warnings, err := restart.Restart(ctx, c, podList, &logger)
 
 		// then
 		require.NoError(t, err)

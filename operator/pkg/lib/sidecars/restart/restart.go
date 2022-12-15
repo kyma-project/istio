@@ -2,6 +2,7 @@ package restart
 
 import (
 	"context"
+	"github.com/go-logr/logr"
 
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -25,7 +26,7 @@ func newRestartWarning(o actionObject, message string) RestartWarning {
 	}
 }
 
-func Restart(ctx context.Context, c client.Client, podList v1.PodList) ([]RestartWarning, error) {
+func Restart(ctx context.Context, c client.Client, podList v1.PodList, logger *logr.Logger) ([]RestartWarning, error) {
 
 	warnings := make([]RestartWarning, 0)
 	processedActionObjects := make(map[string]bool)
@@ -38,7 +39,7 @@ func Restart(ctx context.Context, c client.Client, podList v1.PodList) ([]Restar
 
 		// We want to avoid performing the same action multiple times for a parent if it contains multiple pods that need to be restarted.
 		if _, exists := processedActionObjects[action.object.getKey()]; !exists {
-			currentWarnings, err := action.run(ctx, c, action.object)
+			currentWarnings, err := action.run(ctx, c, action.object, logger)
 			if err != nil {
 				return nil, err
 			}

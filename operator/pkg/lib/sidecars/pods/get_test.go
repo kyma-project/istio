@@ -3,6 +3,7 @@ package pods_test
 import (
 	"context"
 	"fmt"
+	"github.com/go-logr/logr"
 	"github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
 	"github.com/stretchr/testify/require"
@@ -29,6 +30,8 @@ func createClientSet(t *testing.T, objects ...client.Object) client.Client {
 
 func TestGetPodsForCNIChange(t *testing.T) {
 	ctx := context.Background()
+	logger := logr.Discard()
+
 	enabledNamespace := helpers.FixNamespaceWith("enabled", map[string]string{"istio-injection": "enabled"})
 	disabledNamespace := helpers.FixNamespaceWith("disabled", map[string]string{"istio-injection": "disabled"})
 
@@ -137,7 +140,7 @@ func TestGetPodsForCNIChange(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			podList, err := pods.GetPodsForCNIChange(ctx, tt.c, tt.isCNIEnabled)
+			podList, err := pods.GetPodsForCNIChange(ctx, tt.c, tt.isCNIEnabled, &logger)
 			require.NoError(t, err)
 
 			if tt.wantEmpty {
@@ -157,6 +160,7 @@ func TestGetPodsForCNIChange(t *testing.T) {
 
 func TestGetPodsWithDifferentSidecarImage(t *testing.T) {
 	ctx := context.TODO()
+	logger := logr.Discard()
 
 	expectedImage := pods.SidecarImage{
 		Repository: "istio/proxyv2",
@@ -257,7 +261,7 @@ func TestGetPodsWithDifferentSidecarImage(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			podList, err := pods.GetPodsWithDifferentSidecarImage(ctx, tt.c, expectedImage)
+			podList, err := pods.GetPodsWithDifferentSidecarImage(ctx, tt.c, expectedImage, &logger)
 
 			require.NoError(t, err)
 			tt.assertFunc(t, podList.Items)
@@ -267,6 +271,8 @@ func TestGetPodsWithDifferentSidecarImage(t *testing.T) {
 
 func TestGetPodsWithoutSidecar(t *testing.T) {
 	ctx := context.Background()
+	logger := logr.Discard()
+
 	enabledNamespace := helpers.FixNamespaceWith("enabled", map[string]string{"istio-injection": "enabled"})
 	disabledNamespace := helpers.FixNamespaceWith("disabled", map[string]string{"istio-injection": "disabled"})
 	noLabelNamespace := helpers.FixNamespaceWith("nolabel", map[string]string{"testns": "true"})
@@ -490,7 +496,7 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 
 	for _, tt := range sidecarInjectionEnabledTests {
 		t.Run(fmt.Sprintf("sidecar injection enabled by default %s", tt.name), func(t *testing.T) {
-			podList, err := pods.GetPodsWithoutSidecar(ctx, tt.c, true)
+			podList, err := pods.GetPodsWithoutSidecar(ctx, tt.c, true, &logger)
 			require.NoError(t, err)
 			require.Len(t, podList.Items, tt.wantLen)
 
@@ -685,7 +691,7 @@ func TestGetPodsWithoutSidecar(t *testing.T) {
 
 	for _, tt := range sidecarInjectionDisabledTests {
 		t.Run(fmt.Sprintf("sidecar injection disabled by default %s", tt.name), func(t *testing.T) {
-			podList, err := pods.GetPodsWithoutSidecar(ctx, tt.c, false)
+			podList, err := pods.GetPodsWithoutSidecar(ctx, tt.c, false, &logger)
 			require.NoError(t, err)
 			require.Len(t, podList.Items, tt.wantLen)
 

@@ -27,21 +27,21 @@ func newRestartWarning(o actionObject, message string) RestartWarning {
 }
 
 func Restart(ctx context.Context, c client.Client, podList v1.PodList, logger *logr.Logger) ([]RestartWarning, error) {
-
 	warnings := make([]RestartWarning, 0)
 	processedActionObjects := make(map[string]bool)
 
 	for _, pod := range podList.Items {
 		action, err := restartActionFactory(ctx, c, pod)
 		if err != nil {
-			return nil, err
+			logger.Error(err, "creating an action for a pod failed")
+			continue
 		}
 
 		// We want to avoid performing the same action multiple times for a parent if it contains multiple pods that need to be restarted.
 		if _, exists := processedActionObjects[action.object.getKey()]; !exists {
 			currentWarnings, err := action.run(ctx, c, action.object, logger)
 			if err != nil {
-				return nil, err
+				logger.Error(err, "running an action for a pod failed")
 			}
 			warnings = append(warnings, currentWarnings...)
 			processedActionObjects[action.object.getKey()] = true

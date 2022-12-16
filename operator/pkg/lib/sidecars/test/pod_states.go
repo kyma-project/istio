@@ -11,67 +11,67 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (b *scenario) createObjectInAllNamespaces(toCreate client.Object, deleteIn NamespaceSelector, restartIn NamespaceSelector) error {
+func (s *scenario) createObjectInAllNamespaces(toCreate client.Object, deleteIn NamespaceSelector, restartIn NamespaceSelector) error {
 	toCreateDefault := helpers.Clone(toCreate).(client.Object)
 	toCreateDefault.SetNamespace(noAnnotationNamespace)
-	err := b.Client.Create(context.TODO(), toCreateDefault)
+	err := s.Client.Create(context.TODO(), toCreateDefault)
 	if err != nil {
 		return err
 	}
 
 	if deleteIn&Default > 0 {
-		b.ToBeDeletedObjects = append(b.ToBeDeletedObjects, toCreateDefault)
+		s.ToBeDeletedObjects = append(s.ToBeDeletedObjects, toCreateDefault)
 	} else {
-		b.NotToBeDeletedObjects = append(b.NotToBeDeletedObjects, toCreateDefault)
+		s.NotToBeDeletedObjects = append(s.NotToBeDeletedObjects, toCreateDefault)
 	}
 
 	if restartIn&Default > 0 {
-		b.ToBeRestartedObjects = append(b.ToBeRestartedObjects, toCreateDefault)
+		s.ToBeRestartedObjects = append(s.ToBeRestartedObjects, toCreateDefault)
 	} else {
-		b.NotToBeRestartedObjects = append(b.NotToBeRestartedObjects, toCreateDefault)
+		s.NotToBeRestartedObjects = append(s.NotToBeRestartedObjects, toCreateDefault)
 	}
 
 	toCreateDisabled := helpers.Clone(toCreate).(client.Object)
 	toCreateDisabled.SetNamespace(sidecarDisabledNamespace)
-	err = b.Client.Create(context.TODO(), toCreateDisabled)
+	err = s.Client.Create(context.TODO(), toCreateDisabled)
 	if err != nil {
 		return err
 	}
 
 	if deleteIn&SidecarDisabled > 0 {
-		b.ToBeDeletedObjects = append(b.ToBeDeletedObjects, toCreateDisabled)
+		s.ToBeDeletedObjects = append(s.ToBeDeletedObjects, toCreateDisabled)
 	} else {
-		b.NotToBeDeletedObjects = append(b.NotToBeDeletedObjects, toCreateDisabled)
+		s.NotToBeDeletedObjects = append(s.NotToBeDeletedObjects, toCreateDisabled)
 	}
 
 	if restartIn&SidecarDisabled > 0 {
-		b.ToBeRestartedObjects = append(b.ToBeRestartedObjects, toCreateDisabled)
+		s.ToBeRestartedObjects = append(s.ToBeRestartedObjects, toCreateDisabled)
 	} else {
-		b.NotToBeRestartedObjects = append(b.NotToBeRestartedObjects, toCreateDisabled)
+		s.NotToBeRestartedObjects = append(s.NotToBeRestartedObjects, toCreateDisabled)
 	}
 
 	toCreateEnabled := helpers.Clone(toCreate).(client.Object)
 	toCreateEnabled.SetNamespace(sidecarEnabledNamespace)
-	err = b.Client.Create(context.TODO(), toCreateEnabled)
+	err = s.Client.Create(context.TODO(), toCreateEnabled)
 	if err != nil {
 		return err
 	}
 
 	if deleteIn&SidecarEnabled > 0 {
-		b.ToBeDeletedObjects = append(b.ToBeDeletedObjects, toCreateEnabled)
+		s.ToBeDeletedObjects = append(s.ToBeDeletedObjects, toCreateEnabled)
 	} else {
-		b.NotToBeDeletedObjects = append(b.NotToBeDeletedObjects, toCreateEnabled)
+		s.NotToBeDeletedObjects = append(s.NotToBeDeletedObjects, toCreateEnabled)
 	}
 
 	if restartIn&SidecarEnabled > 0 {
-		b.ToBeRestartedObjects = append(b.ToBeRestartedObjects, toCreateEnabled)
+		s.ToBeRestartedObjects = append(s.ToBeRestartedObjects, toCreateEnabled)
 	} else {
-		b.NotToBeRestartedObjects = append(b.NotToBeRestartedObjects, toCreateEnabled)
+		s.NotToBeRestartedObjects = append(s.NotToBeRestartedObjects, toCreateEnabled)
 	}
 	return nil
 }
 
-func (b *scenario) WithSidecarInVersionXPods(sidecarTag string) error {
+func (s *scenario) WithSidecarInVersionXPods(sidecarTag string) error {
 	injectedIstioPod := helpers.NewSidecarPodBuilder().SetSidecarImageTag(sidecarTag).SetName(fmt.Sprintf("injected-%s", sidecarTag)).Build()
 	injectedIstioPod.OwnerReferences = []metav1.OwnerReference{
 		{
@@ -86,21 +86,21 @@ func (b *scenario) WithSidecarInVersionXPods(sidecarTag string) error {
 		},
 	}
 
-	err := b.createObjectInAllNamespaces(injectedIstioPod, NoNamespace, NoNamespace)
+	err := s.createObjectInAllNamespaces(injectedIstioPod, NoNamespace, NoNamespace)
 	if err != nil {
 		return err
 	}
 
 	selector := AllNamespaces
-	if sidecarTag == b.istioVersion {
+	if sidecarTag == s.istioVersion {
 		// We don't support restart in any other case than Istio version change
 		selector = NoNamespace
 	}
 
-	return b.createObjectInAllNamespaces(&deployment, NoNamespace, selector)
+	return s.createObjectInAllNamespaces(&deployment, NoNamespace, selector)
 }
 
-func (b *scenario) WithPodsMissingSidecar() error {
+func (s *scenario) WithPodsMissingSidecar() error {
 	notInjected := helpers.NewSidecarPodBuilder().DisableSidecar().SetName("not-injected").Build()
 	notInjected.OwnerReferences = []metav1.OwnerReference{
 		{
@@ -115,16 +115,16 @@ func (b *scenario) WithPodsMissingSidecar() error {
 		},
 	}
 
-	err := b.createObjectInAllNamespaces(notInjected, NoNamespace, NoNamespace)
+	err := s.createObjectInAllNamespaces(notInjected, NoNamespace, NoNamespace)
 	if err != nil {
 		return err
 	}
 
 	// The restart for pods missing sidecar was implemented as a workaround and will no longer be supported for Istio >= 1.16, so restartIn is set to NoNamespace
-	return b.createObjectInAllNamespaces(&deployment, NoNamespace, NoNamespace)
+	return s.createObjectInAllNamespaces(&deployment, NoNamespace, NoNamespace)
 }
 
-func (b *scenario) WithNotReadyPods() error {
+func (s *scenario) WithNotReadyPods() error {
 	pendingPod := helpers.NewSidecarPodBuilder().DisableSidecar().SetPodStatusPhase("Pending").SetName("pending-pod").Build()
 	pendingPod.OwnerReferences = []metav1.OwnerReference{
 		{
@@ -139,10 +139,10 @@ func (b *scenario) WithNotReadyPods() error {
 		},
 	}
 
-	err := b.createObjectInAllNamespaces(pendingPod, NoNamespace, NoNamespace)
+	err := s.createObjectInAllNamespaces(pendingPod, NoNamespace, NoNamespace)
 	if err != nil {
 		return err
 	}
 
-	return b.createObjectInAllNamespaces(&deployment, NoNamespace, NoNamespace)
+	return s.createObjectInAllNamespaces(&deployment, NoNamespace, NoNamespace)
 }

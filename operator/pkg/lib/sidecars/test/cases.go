@@ -17,7 +17,6 @@ func (s *scenario) aRestartHappens(sidecarImage string) error {
 	warnings, err := sidecars.ProxyReset(context.TODO(),
 		s.Client,
 		pods.SidecarImage{Repository: "istio/proxyv2", Tag: sidecarImage},
-		s.injectionNamespaceSelector == SidecarEnabledAndDefault,
 		s.cniEnabled,
 		&s.logger)
 	s.restartWarnings = warnings
@@ -29,7 +28,7 @@ func (s *scenario) allRequiredResourcesAreDeleted() error {
 		obj := v
 		err := s.Client.Get(context.TODO(), types.NamespacedName{Name: v.GetName(), Namespace: v.GetNamespace()}, obj)
 		if err == nil {
-			return fmt.Errorf("the Pod %s/%s was deleted but shouldn't", v.GetNamespace(), v.GetName())
+			return fmt.Errorf("the pod %s/%s should have been deleted, but was not deleted", v.GetNamespace(), v.GetName())
 		}
 
 		if !k8serrors.IsNotFound(err) {
@@ -54,7 +53,7 @@ func (s *scenario) allRequiredResourcesAreRestarted() error {
 	return nil
 }
 
-func (s *scenario) noUnrequiredResourcesAreDeleted() error {
+func (s *scenario) onlyRequiredResourcesAreDeleted() error {
 	for _, v := range s.NotToBeDeletedObjects {
 		obj := v
 		err := s.Client.Get(context.TODO(), types.NamespacedName{Name: v.GetName(), Namespace: v.GetNamespace()}, obj)
@@ -65,7 +64,7 @@ func (s *scenario) noUnrequiredResourcesAreDeleted() error {
 	return nil
 }
 
-func (s *scenario) noUnrequiredResourcesAreRestarted() error {
+func (s *scenario) onlyRequiredresourcesAreRestarted() error {
 	for _, v := range s.NotToBeRestartedObjects {
 		obj := v
 		err := s.Client.Get(context.TODO(), types.NamespacedName{Name: v.GetName(), Namespace: v.GetNamespace()}, obj)
@@ -93,7 +92,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	var s scenario
 
 	ctx.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
-		scen, err := NewScenario()
+		scen, err := newScenario()
 		s = *scen
 		return ctx, err
 	})
@@ -105,6 +104,6 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^there are Pods missing sidecar`, s.WithPodsMissingSidecar)
 	ctx.Step(`^there are not ready Pods$`, s.WithNotReadyPods)
 	ctx.Step(`^there are Pods with Istio "([^"]*)" sidecar$`, s.WithSidecarInVersionXPods)
-	ctx.Step(`^no unrequired resource is deleted$`, s.noUnrequiredResourcesAreDeleted)
-	ctx.Step(`^no unrequired resource is restarted$`, s.noUnrequiredResourcesAreRestarted)
+	ctx.Step(`^no resource that is not supposed to be deleted is deleted$`, s.onlyRequiredResourcesAreDeleted)
+	ctx.Step(`^no resource that is not supposed to be restarted is restarted$`, s.onlyRequiredresourcesAreRestarted)
 }

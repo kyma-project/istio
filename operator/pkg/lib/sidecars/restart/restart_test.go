@@ -182,6 +182,29 @@ func TestRestart(t *testing.T) {
 		require.True(t, k8serrors.IsNotFound(err))
 	})
 
+	t.Run("should delete a pod managed by a ReplicationController", func(t *testing.T) {
+		// given
+		pod := podFixture("p1", "test-ns", "ReplicationController", "owner")
+		c := fakeClient(t, &v1.ReplicationController{ObjectMeta: metav1.ObjectMeta{Name: "owner", Namespace: "test-ns"}}, &pod)
+
+		podList := v1.PodList{
+			Items: []v1.Pod{pod},
+		}
+
+		// when
+		warnings, err := restart.Restart(ctx, c, podList, &logger)
+
+		// then
+		require.NoError(t, err)
+		require.Empty(t, warnings)
+
+		obj := v1.Pod{}
+		err = c.Get(context.TODO(), types.NamespacedName{Namespace: "test-ns", Name: "p1"}, &obj)
+
+		require.Error(t, err)
+		require.True(t, k8serrors.IsNotFound(err))
+	})
+
 	t.Run("should rollout restart StatefulSet if the pod is owned by one", func(t *testing.T) {
 		// given
 		pod := podFixture("p1", "test-ns", "StatefulSet", "owner")

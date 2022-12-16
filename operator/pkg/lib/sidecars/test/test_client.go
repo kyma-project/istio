@@ -20,12 +20,14 @@ const noAnnotationNamespace = "default-sidecar"
 type NamespaceSelector uint
 
 const (
-	NoNamespace              NamespaceSelector = 0
-	Default                  NamespaceSelector = 1
-	SidecarDisabled          NamespaceSelector = 2
-	SidecarEnabled           NamespaceSelector = 4
-	SidecarEnabledAndDefault NamespaceSelector = 5
-	AllNamespaces            NamespaceSelector = 7
+	NoNamespace                      NamespaceSelector = 0
+	Default                          NamespaceSelector = 1
+	SidecarDisabled                  NamespaceSelector = 2
+	DisabledAndDefault               NamespaceSelector = 3
+	SidecarEnabled                   NamespaceSelector = 4
+	SidecarEnabledAndDefault         NamespaceSelector = 5
+	SidecarEnabledAndSidecarDisabled NamespaceSelector = 6
+	AllNamespaces                    NamespaceSelector = 7
 )
 
 type scenario struct {

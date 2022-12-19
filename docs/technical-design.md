@@ -4,75 +4,76 @@
 
 ![Kyma IstioOperator Overview](./istio-operator-overview.svg)
 
-We want to keep the operator as simple as possible, that's why we decided to start with one controller that consists of self-contained components 
+We want to keep the Kyma Istio operator as simple as possible. That's why we decided to start with one controller that consists of several self-contained components
 executing reconciliation logic. The resource used by this controller is [Istio CR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md).
 
 ### Ownership of current resources in Kyma repository
 
-In the transitioning to a more modularised architecture, the [IstioOperator resource](https://github.com/kyma-project/kyma/tree/main/resources/istio), 
+In order to transition to a more modularised architecture, the [IstioOperator resource](https://github.com/kyma-project/kyma/tree/main/resources/istio), 
 the [additional istio-resources](https://github.com/kyma-project/kyma/tree/main/resources/istio-resources) and 
 the [certificates](https://github.com/kyma-project/kyma/tree/main/resources/certificates) must be moved to the new modules.
 
 #### IstioOperator resource
-This is moved into our new Kyma Istio operator and used to define the default values for Istio, which can be customised by the user through `Istio CR`.
+The IstioOperator resource is moved into the new Kyma Istio operator. It is used to define default values for Istio, which can be customised by the user through Istio CR. 
 
 #### istio-resources
 
 ##### Istio Grafana dashboards
-It's still needs to be decided who will have the ownership of the dashboards. There are different things to consider like the change interval or relevance of Istio version updates.
+It still needs to be decided who will have ownership of the dashboards. To make the right choice, such aspects as the change interval or relevance of Istio version updates should be considered.
 
 ##### Istio ServiceMonitor
-We will not consider theis resource in this design, because it's planned to replace it. 
-More information can be found in this [PR](https://github.com/kyma-project/kyma/pull/16247).
+We do not consider Istio ServiceMonitor in the design, because this resource is planned to be replaced. 
+For more information, see this [PR](https://github.com/kyma-project/kyma/pull/16247).
 
 ##### istio-healthz Virtual Service
-This resource offers the possibility to monitor Istio externally by exposing an endpoint. This should not be part of the Istio module,
-and therefore a user who needs this external monitoring should take care of this particular configuration.
+Isito-healthz Virtual Service offers the possibility of monitoring Istio externally by exposing an endpoint. This resource is not part of the Istio module.
+Therefore, a user who needs such external monitoring must take care of this particular configuration.
 
 ##### Global mTLS PeerAuthentication
-This is tightly coupled to our Istio installation and should therefore be reconciled by the operator.
+Global mTLS PeerAuthentication is tightly coupled with the Istio installation. Therefore, it should be reconciled by the operator.
 
 ##### Kyma Gateway
-This should be moved to the API Gateway as it's a default gateway we want to provide, and it has a stronger relation to the responsibilities
-of the API Gateway that to Istio. Since API Gateway is already dependent on Istio, we do not add any additional dependency by moving it. 
+Kyma Gateway is moved to the API Gateway, as it is a default gateway we want to provide, and its responsibilities are more closely connected
+to API Gateway that to Istio. Since API Gateway is already dependent on Istio, we do not add any additional dependency by moving it. 
 
 #### Certificate resources
-They should also be moved to API Gateway as they are tightly coupled with the `Kyma Gateway` resource.
+Certificate resources are moved to API Gateway, as they are tightly coupled with the Kyma Gateway resource.
 
 ### Handling of Istio version
-We don't want to expose the version. That means that the version of Istio is coupled to the version of the operator. The benefit of this is,
-that we are in full control of the versioning and hide this complexity from the user.  
-That means if we want to release a new Istio version, we have to release a new version of the operator.
+We don't want to expose the version. That means that the version of Istio is coupled with the version of the operator. The benefit of this solution is,
+that it gives us full control of the versioning and enables us to hide this complexity from the user.  
+If we want to release a new Istio version, we have to release a new version of the operator as well.
 
 ### Installation of Istio
-The Istio installation, upgrade and uninstall is done using [Istio Go module](https://github.com/istio/istio).
-The evaluation of Istio's installation options in an operator was done in this [PR](https://github.tools.sap/xf-goat/kyma-istio-operator). The result was that the best way for our use case was to use the
-[Istio Go module](https://github.com/istio/istio) to use directly.  
+The Istio installation, upgrade and uninstallation is done using the [Istio Go module](https://github.com/istio/istio).
+The evaluation of Istio's installation options in an operator was done in this [PR](https://github.tools.sap/xf-goat/kyma-istio-operator). The result was that the best way for our use case is to utilize the
+[Istio Go module](https://github.com/istio/istio) directly.  
 In the sample implementation, the [istio.Install function](https://github.tools.sap/xf-goat/kyma-istio-operator/blob/ec0f99786408407b4a6d8b79abe3af6c389cd35d/controllers/servicemesh_controller.go#L73) is used for installation.
 The installation of Istio is executed as a synchronous and blocking call that checks the proper status of the installation. This means that the reconciliation loop is blocked until Istio is installed.  
-The installation or upgrade scenario is not often executed and the call to the function `Install` should be protected by checks so that it is only executed when necessary.
-Therefore, we have agreed that it is okay to block our reconciliation loop during the installation of Istio.
+The installation or upgrade scenario is not often executed. The call to the `Install` function should be protected by checks so that it is only executed when necessary.
+Therefore, we have agreed that it is okay to block the reconciliation loop during the installation of Istio.
  
-The following diagram describes the reconciliation process for installing, uninstalling and canary upgrading (using revisions) of Istio.
+The following diagram shows the reconciliation process for installing, uninstalling, and canary upgrading (using revisions) Istio.
 
 ![Istio Installation Reconciliation](./istio-installation-reconciliation.svg)
 
 ### Reconciliation of Istio
-The reconciliation loop of Istio is based on the [Istio CR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md) custom resource and is controlled by the `IstioController`. This controller contains several self-contained components, which we have suffixed with reconciliation.   
+The reconciliation loop of Istio is based on the [Istio CR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md) custom resource and is controlled by `IstioController`. This controller contains several self-contained components, which we have suffixed with reconciliation.   
 We decided to split the logic in these reconciliation components to have a better extensibility and maintainability. This means each of this components must have its clearly separated responsibility
-and must work in isolation when assessing whether reconciliation is required, applying changes and returning a status.  
-The execution the reconciliation must be fast, and we must avoid many blocking calls. If we have long-running tasks, they must be executed asynchronously and the status should be evaluated in the next reconciliation cycle.
+and must work in isolation when assessing whether reconciliation is required, applying changes, and returning a status.  
+The execution of the reconciliation must be fast, and we must avoid many blocking calls. Long-running tasks must be executed asynchronously, and the status must be evaluated in the next reconciliation cycle.
 
- The reconciliation loop of `IstioController` is visualized in the following diagram.
+ The following diagram shows the reconciliation loop of `IstioController`:
 ![Reconciliation Loop Diagram](./istio-controller-reconciliation-loop.svg)
 
 #### Interval
 
-Since this module deals with security-related topics, we want to perform the reconciliation as often as possible.
-This means that we do not only want to reconcile when [Istio CR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md) changes, but also want to check time-based that resources have not been changed and are in the expected state.  
-The default reconciliation frequency of a manager is defined by the [SyncPeriod](https://pkg.go.dev/sigs.k8s.io/controller-runtime/pkg/manager#Options) and is set to 10 hours by default.
-So one option is to change the `SyncPeriod` to match the desired reconciliation interval.
-Another option is to always return `RequeueAfter` in the result of the Reconcile function to trigger the next reconciliation:
+Since the Isito module deals with security-related topics, we want to perform the reconciliation as often as possible.
+Not only do we want to reconcile when [Istio CR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md) changes, but also to verify regularly if resources remain unchanged and are in the expected state.  
+The reconciliation frequency of a manager is determined by the [SyncPeriod](https://pkg.go.dev/sigs.k8s.io/controller-runtime/pkg/manager#Options). By default, it is set to 10 hours.
+To match the desired reconciliation interval, use one of the following options:
+- Change the `SyncPeriod`, so it matches the desired value.
+- Always return `RequeueAfter` in the result of the Reconcile function to trigger the next reconciliation:
 ```go
 func Reconcile(ctx context.Context, o reconcile.Request) (reconcile.Result, error) {
 	// Implement business logic of reading and writing objects here
@@ -80,61 +81,61 @@ func Reconcile(ctx context.Context, o reconcile.Request) (reconcile.Result, erro
 }
 ```
 
-The biggest challenge in deciding on an appropriate interval is that the time required to perform the reconciliation can vary a lot. Small changes may only require a 
-restart of the sidecar proxies or the Ingress gateway and are therefore much faster than a new installation or a Canary upgrade.
+The time needed to perform the reconciliation can vary a lot, so choosing an appropriate interval might be challenging. Small changes may only require
+restarting the sidecar proxies or the Ingress gateway. Therefore, they are much faster than a new installation or a Canary upgrade.
 
-We can start with using `SyncPeriod` set to 5 minutes as we only want to have a single controller for now and if it's no problem to start with a higher time-based reconciliation. When we add more controllers we can use `RequeueAfter` if
-they should be triggered on different intervals or if we want to have a different interval while a long running-process like installation is executed.
+We can start with using `SyncPeriod` set to 5 minutes. For now, we only want to have a single controller, so it is not a problem to start with a higher time-based reconciliation. When we add more controllers we can use `RequeueAfter`
+in order to trigger them at different intervals, or to have a different interval while a long-running process like installation is executed.
 
 The queuing of reconciliation requests is handled by [controller-runtime](https://pkg.go.dev/sigs.k8s.io/controller-runtime) and is out of scope of this design.
 
 ### Components
-We need to make sure that each reconciliation component is completely independent and can calculate what to do during the reconciliation, independent of the reconciliation of other components and based only on the state in the cluster.
-The reason for this is that, for the sake of simplicity, we want to start with just one controller that handles all the logic to reconcile Istio. But since we have independent components, we can move them into new controllers if necessary to
-improve the performance of `IstioController`.
+We need to make sure that each reconciliation component is completely independent and can calculate what to do during the reconciliation independently of the reconciliation of other components and based only on the state in a cluster.
+The reason for this is that, for the sake of simplicity, we want to start with just one controller that handles all the logic to reconcile Istio. Since we have independent components, we can move them into new controllers if 
+improving the performance of `IstioController` is necessary.
 
 ![Controller Component Diagram](./controller-component-diagram.svg)
 
 #### IstioController
-This is the controller that takes care of the entire Istio reconciliation process and is bound to [Istio CR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md).
-The responsibility is to control the reconciliation process by triggering the reconciliation components and passing the desired state to them.
+IstioController takes care of the entire Istio reconciliation process and is bound to [Istio CR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md).
+Its responsibility is to control the reconciliation process by triggering the reconciliation components and passing the desired state to them.
 
 #### IstioInstallationReconciliation
-This component decides if an installation, upgrade or uninstall of Istio in the cluster must be done. It also creates the [IstioOperator CR](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/)
-which is used to apply changes to the Istio installation. The applied `IstioOperator CR` is created by merging the `Istio CR` with the IstioOperator with Kyma default values.
+This component decides if an installation, upgrade, or uninstallation of Istio in a cluster must be done. It also creates the [IstioOperator CR](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/)
+which is used to apply changes to the Istio installation. The applied `IstioOperator CR` is created by merging `Istio CR` with IstioOperator containing Kyma default values.
 
 ##### IstioClient
-A IstioClient encapsulates a specific version of the [Istio Go module](https://github.com/istio/istio) and is used to implement calls to the Istio API.
+IstioClient encapsulates a specific version of the [Istio Go module](https://github.com/istio/istio) and is used to implement calls to Istio API.
 This component also contains the logic to carry out Istio actions like install, upgrade and uninstall (described [here](#installation-of-istio)).
 As we want to support canary updates at some point we might need to support two version of the library if there are breaking changes. In this case the `IstioVersionManager` needs to handle
-the supported versions of the `IstioClient`.
+the supported versions of `IstioClient`.
 
 #### ProxySidecarReconciliation
-The responsibility of this component is to keep the proxy sidecars in the desired state. This means that it restarts pods that are part of the service mesh or 
-that need to be added to the service mesh.
-The desired state is represented by [Istio CR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md) and the Istio Version coupled to the Operator.
-This component carries a high risk that its execution takes too long for execution in this controller. We need to check its performance during implementation 
+ProxySidecarReconcilation component is responsible for keeping the proxy sidecars in the desired state. It restarts Pods that are part of Service Mesh or 
+that need to be added to Service Mesh.
+The desired state is represented by [Istio CR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md) and Istio Version coupled to the Operator.
+This component carries a high risk that its execution in this controller takes too long. We need to check its performance during the implementation 
 and assess whether its logic needs to be executed separately.
 
-As of now the following scenarios must be covered by this component:
-- Restart pods with proxy sidecar when CNI config changed
-- Restart pods with proxy sidecar after Istio version update
-- Restart pods without proxy sidecar, because of Istio downtime
-- Restart pods with proxy sidecar when proxy resources change
+For now, the following scenarios must be covered by this component:
+- Restart Pods with proxy sidecar when CNI config changes.
+- Restart Pods with proxy sidecar after an Istio version update.
+- Restart Pods without proxy sidecar because of Istio downtime.
+- Restart Pods with proxy sidecar when proxy resources change.
 
 #### IstioIngressGatewayReconciliation
-The components responsibility is to bring the Istio Ingress Gateway in the desired state.
+The IstioIngressGatewayReconciliation component is responsible for bringing Istio Ingress Gateway to the desired state.
 The desired state is represented by [Istio CR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md).
 
-As of now the following scenarios must be covered by this component:
-- Restart when `numTrustedProxies` changed.
-  - To decouple the restart from the rollout of the `numTrustedProxies` by the `IstioInstallationReconciliation`, a state (e.g. an annotation) should be use.
+For now, the following scenarios must be covered by this component:
+- Restart when `numTrustedProxies` change.
+  - To decouple the restart from the rollout of `numTrustedProxies` by the `IstioInstallationReconciliation`, use a state (e.g. an annotation).
 
 #### PeerAuthenticationReconciliation
-This component applies a PeerAuthentication that configures the default mTLS mode in the cluster.
-This should only be applied if Istio is installed, and this PeerAuthentication does not exist or the generation has been changed, as we want to ensure that it is always our expected configuration.
+The PeerAuthenticationReconcilation component applies the PeerAuthentication that configures default mTLS mode in a cluster.
+The PeerAuthenticationReconcilation must only be applied if Istio is installed and PeerAuthentication does not already exist or the generation is changed, as we want to ensure that it is always our expected configuration.
 
 
 ## Scenario: Users bring their own Istio installation
-In this scenario the API Gateway would support defined Istio versions. A user can then install one of the supported istio versions.
-There should be a documentation to explain what needs to be configured to expose a ServiceMonitor for the monitoring module.
+In this scenario, API Gateway supports the defined Istio versions. The user can then install one of the supported Istio versions.
+There should be documentation explaining what needs to be configured to expose a ServiceMonitor for the monitoring module.

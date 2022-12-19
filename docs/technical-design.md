@@ -34,7 +34,7 @@ Global mTLS PeerAuthentication is tightly coupled with the Istio installation. T
 
 ##### Kyma Gateway
 Kyma Gateway is moved to the API Gateway, as it is a default gateway we want to provide, and its responsibilities are more closely connected
-to API Gateway that to Istio. Since API Gateway is already dependent on Istio, we do not add any additional dependency by moving it. 
+to API Gateway than to Istio. Since API Gateway is already dependent on Istio, we do not add any additional dependency by moving it. 
 
 #### Certificate resources
 Certificate resources are moved to API Gateway, as they are tightly coupled with the Kyma Gateway resource.
@@ -107,8 +107,6 @@ which is used to apply changes to the Istio installation. The applied `IstioOper
 ##### IstioClient
 IstioClient encapsulates a specific version of the [Istio Go module](https://github.com/istio/istio) and is used to implement calls to Istio API.
 This component also contains the logic to carry out Istio actions like install, upgrade and uninstall (described [here](#installation-of-istio)).
-As we want to support canary updates at some point we might need to support two version of the library if there are breaking changes. In this case the `IstioVersionManager` needs to handle
-the supported versions of `IstioClient`.
 
 #### ProxySidecarReconciliation
 ProxySidecarReconcilation component is responsible for keeping the proxy sidecars in the desired state. It restarts Pods that are part of Service Mesh or 
@@ -120,7 +118,6 @@ and assess whether its logic needs to be executed separately.
 For now, the following scenarios must be covered by this component:
 - Restart Pods with proxy sidecar when CNI config changes.
 - Restart Pods with proxy sidecar after an Istio version update.
-- Restart Pods without proxy sidecar because of Istio downtime.
 - Restart Pods with proxy sidecar when proxy resources change.
 
 #### IstioIngressGatewayReconciliation

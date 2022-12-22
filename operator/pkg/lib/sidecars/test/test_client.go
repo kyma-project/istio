@@ -55,11 +55,15 @@ func newScenario() (*scenario, error) {
 	}
 
 	return &scenario{
-		Client: fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(
-			helpers.FixNamespaceWith(noAnnotationNamespace, nil),
-			helpers.FixNamespaceWith(sidecarEnabledNamespace, map[string]string{"istio-injection": "enabled"}),
-			helpers.FixNamespaceWith(sidecarDisabledNamespace, map[string]string{"istio-injection": "disabled"}),
-		).Build(),
+		Client: fake.NewClientBuilder().
+			WithScheme(scheme.Scheme).
+			WithObjects(
+				helpers.FixNamespaceWith(noAnnotationNamespace, nil),
+				helpers.FixNamespaceWith(sidecarEnabledNamespace, map[string]string{"istio-injection": "enabled"}),
+				helpers.FixNamespaceWith(sidecarDisabledNamespace, map[string]string{"istio-injection": "disabled"}),
+			).
+			WithIndex(&corev1.Pod{}, "status.phase", helpers.FakePodStatusPhaseIndexer).
+			Build(),
 		logger:                     logr.Discard(),
 		injectionNamespaceSelector: SidecarEnabled,
 	}, nil

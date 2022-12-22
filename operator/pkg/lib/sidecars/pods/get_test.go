@@ -23,7 +23,11 @@ func createClientSet(t *testing.T, objects ...client.Object) client.Client {
 	err = v1.AddToScheme(scheme.Scheme)
 	require.NoError(t, err)
 
-	fakeClient := fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build()
+	fakeClient := fake.NewClientBuilder().
+		WithScheme(scheme.Scheme).
+		WithObjects(objects...).
+		WithIndex(&v1.Pod{}, "status.phase", helpers.FakePodStatusPhaseIndexer).
+		Build()
 
 	return fakeClient
 }

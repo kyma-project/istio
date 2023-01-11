@@ -17,12 +17,15 @@ limitations under the License.
 package controllers
 
 import (
+	"context"
 	"time"
 
 	"golang.org/x/time/rate"
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/ratelimiter"
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
@@ -41,11 +44,35 @@ func TemplateRateLimiter(failureBaseDelay time.Duration, failureMaxDelay time.Du
 		&workqueue.BucketRateLimiter{Limiter: rate.NewLimiter(rate.Limit(frequency), burst)})
 }
 
-//+kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios/finalizers,verbs=update
-//+kubebuilder:rbac:groups="",resources=namespaces,verbs=get;create;update;patch
+func NewReconciler(mgr manager.Manager) *IstioReconciler {
+	return &IstioReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}
+}
 
+func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	logger := log.FromContext(ctx)
+
+	logger.Info("Was called to reconcile Kyma Istio Service Mesh")
+
+	istioSpec := operatorv1alpha1.Istio{}
+	var err = r.Client.Get(ctx, req.NamespacedName, &istioSpec)
+	if err != nil {
+		logger.Error(err, "Error during fetching Istio CR")
+	}
+
+	if err = ensureIstioOperator(&istioSpec); err != nil {
+		logger.Error(err, "Error occurred during reconciliation of Istio Operator")
+	}
+
+	return ctrl.Result{}, nil
+}
+
+// +kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios/finalizers,verbs=update
+// +kubebuilder:rbac:groups="",resources=namespaces,verbs=get;create;update;patch
 func (r *IstioReconciler) SetupWithManager(mgr ctrl.Manager, chartPath string, configFlags, setFlags types.Flags, rateLimiter RateLimiter) error {
 	ConfigFlags = configFlags
 	SetFlags = setFlags

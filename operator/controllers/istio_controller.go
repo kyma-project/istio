@@ -30,8 +30,8 @@ import (
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 
-	"github.com/kyma-project/module-manager/operator/pkg/declarative"
-	"github.com/kyma-project/module-manager/operator/pkg/types"
+	"github.com/kyma-project/module-manager/pkg/declarative"
+	"github.com/kyma-project/module-manager/pkg/types"
 )
 
 // TemplateRateLimiter implements a rate limiter for a client-go.workqueue.  It has
@@ -62,7 +62,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		logger.Error(err, "Error during fetching Istio CR")
 	}
 
-	if err = ensureIstioOperator(&istioSpec); err != nil {
+	if err = reconcileIstio(&istioSpec); err != nil {
 		logger.Error(err, "Error occurred during reconciliation of Istio Operator")
 	}
 

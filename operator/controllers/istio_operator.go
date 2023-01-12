@@ -24,7 +24,7 @@ func initializeLog() *istiolog.Options {
 	return logoptions
 }
 
-func ensureIstioOperator(istioSpec operatorv1alpha1.Istio) error {
+func reconcileIstio(istioSpec *operatorv1alpha1.Istio) error {
 	istioLogOptions := initializeLog()
 	installerScope := istiolog.RegisterScope("installer", "installer", 0)
 	consoleLogger := clog.NewConsoleLogger(os.Stdout, os.Stderr, installerScope)

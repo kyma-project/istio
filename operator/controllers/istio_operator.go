@@ -29,7 +29,7 @@ func reconcileIstio(istioSpec *operatorv1alpha1.Istio) error {
 	installerScope := istiolog.RegisterScope("installer", "installer", 0)
 	consoleLogger := clog.NewConsoleLogger(os.Stdout, os.Stderr, installerScope)
 	printer := istio.NewPrinterForWriter(os.Stdout)
-	iopFileName := "./hack/default-istio-operator.yaml"
+	iopFileName := "default-istio-operator.yaml"
 	iopFileNames := make([]string, 0, 1)
 	iopFileNames = append(iopFileNames, iopFileName)
 	installArgs := &istio.InstallArgs{SkipConfirmation: true, Verify: true, InFilenames: iopFileNames}

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/go-logr/logr"
-	"github.com/kyma-project/module-manager/pkg/types"
+	"github.com/kyma-project/module-manager/operator/pkg/types"
 )
 
 var (

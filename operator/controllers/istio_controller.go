@@ -30,8 +30,8 @@ import (
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 
-	"github.com/kyma-project/module-manager/pkg/declarative"
-	"github.com/kyma-project/module-manager/pkg/types"
+	"github.com/kyma-project/module-manager/operator/pkg/declarative"
+	"github.com/kyma-project/module-manager/operator/pkg/types"
 )
 
 // TemplateRateLimiter implements a rate limiter for a client-go.workqueue.  It has

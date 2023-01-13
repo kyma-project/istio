@@ -3,7 +3,7 @@ package controllers
 import (
 	"time"
 
-	"github.com/kyma-project/module-manager/pkg/declarative"
+	"github.com/kyma-project/module-manager/operator/pkg/declarative"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"

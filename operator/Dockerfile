@@ -16,6 +16,7 @@ COPY main.go main.go
 COPY api/ api/
 COPY controllers/ controllers/
 
+
 # Build
 # the GOARCH has not a default value to allow the binary be built according to the host where the command
 # was called. For example, if we call make docker-build in a local env which has the Apple Silicon M1 SO
@@ -29,6 +30,7 @@ FROM gcr.io/distroless/static:nonroot
 WORKDIR /
 COPY istio-chart/ istio-chart/
 COPY --from=builder /workspace/manager .
+COPY default-istio-operator.yaml default-istio-operator.yaml
 USER 65532:65532
 
 ENTRYPOINT ["/manager"]

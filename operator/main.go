@@ -34,7 +34,7 @@ import (
 
 	componentv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/controllers"
-	"github.com/kyma-project/module-manager/pkg/types"
+	"github.com/kyma-project/module-manager/operator/pkg/types"
 	//+kubebuilder:scaffold:imports
 )
 

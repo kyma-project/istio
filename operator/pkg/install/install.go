@@ -24,6 +24,7 @@ func initializeLog() *istiolog.Options {
 	return logoptions
 }
 
+// ReconcileIstio setup configuration and runs an Istio installation with merged Istio Operator manifest file.
 func ReconcileIstio(istioCR *operatorv1alpha1.Istio) error {
 	istioLogOptions := initializeLog()
 	installerScope := istiolog.RegisterScope("installer", "installer", 0)

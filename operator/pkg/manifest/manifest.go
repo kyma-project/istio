@@ -10,26 +10,27 @@ import (
 )
 
 var (
-	DefaultIstioOperatorFile = "default-istio-operator-k3d.yaml"
+	defaultIstioOperatorFile = "default-istio-operator-k3d.yaml"
 )
 
+// Merge applies configuration from IstioCR to the default Kyma Istio Operator file.
 func Merge(istioCR *operatorv1alpha1.Istio) (string, error) {
-	b, err := os.ReadFile(DefaultIstioOperatorFile)
+	manifest, err := os.ReadFile(defaultIstioOperatorFile)
 	if err != nil {
 		return "", err
 	}
 
-	d, err := applyIstioCR(istioCR, b)
+	mergedManifest, err := applyIstioCR(istioCR, manifest)
 	if err != nil {
 		return "", err
 	}
-	filePath := fmt.Sprintf("/tmp/%s", DefaultIstioOperatorFile)
-	err = os.WriteFile(filePath, d, 0o644)
+	mergedManifestFilePath := fmt.Sprintf("/tmp/%s", defaultIstioOperatorFile)
+	err = os.WriteFile(mergedManifestFilePath, mergedManifest, 0o644)
 	if err != nil {
 		return "", err
 	}
 
-	return filePath, nil
+	return mergedManifestFilePath, nil
 }
 
 func applyIstioCR(istioCR *operatorv1alpha1.Istio, operatorManifest []byte) ([]byte, error) {

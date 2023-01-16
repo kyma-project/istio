@@ -201,7 +201,6 @@ spec:
           secretName: istio-ingressgateway-ca-certs
         serviceAnnotations:
           dns.gardener.cloud/class: garden
-          dns.gardener.cloud/dnsnames: '*.goatz.shoot.canary.k8s-hana.ondemand.com'
           reconciler.kyma-project.io/managed-by-reconciler-disclaimer: |
             DO NOT EDIT - This resource is managed by Kyma.
             Any modifications are discarded and the resource is reverted to the original state.

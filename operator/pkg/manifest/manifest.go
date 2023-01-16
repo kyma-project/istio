@@ -13,7 +13,7 @@ var (
 	defaultIstioOperatorFile = "default-istio-operator-k3d.yaml"
 )
 
-// Merge applies configuration from IstioCR to the default Kyma Istio Operator file.
+// Merge applies configuration from IstioCR to the default Kyma Istio Operator file, saves it to a file and returns its path.
 func Merge(istioCR *operatorv1alpha1.Istio) (string, error) {
 	manifest, err := os.ReadFile(defaultIstioOperatorFile)
 	if err != nil {

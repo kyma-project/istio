@@ -29,6 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/ratelimiter"
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
+	"github.com/kyma-project/istio/operator/pkg/install"
 
 	"github.com/kyma-project/module-manager/operator/pkg/declarative"
 	"github.com/kyma-project/module-manager/operator/pkg/types"
@@ -56,13 +57,12 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 	logger.Info("Was called to reconcile Kyma Istio Service Mesh")
 
-	istioSpec := operatorv1alpha1.Istio{}
-	var err = r.Client.Get(ctx, req.NamespacedName, &istioSpec)
-	if err != nil {
+	istioCR := operatorv1alpha1.Istio{}
+	if err := r.Client.Get(ctx, req.NamespacedName, &istioCR); err != nil {
 		logger.Error(err, "Error during fetching Istio CR")
 	}
 
-	if err = reconcileIstio(&istioSpec); err != nil {
+	if err := install.ReconcileIstio(&istioCR); err != nil {
 		logger.Error(err, "Error occurred during reconciliation of Istio Operator")
 	}
 

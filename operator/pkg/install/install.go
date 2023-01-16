@@ -1,10 +1,10 @@
-package controllers
+package install
 
 import (
 	"os"
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
-
+	"github.com/kyma-project/istio/operator/pkg/manifest"
 	istio "istio.io/istio/operator/cmd/mesh"
 	"istio.io/istio/operator/pkg/util/clog"
 	istiolog "istio.io/pkg/log"
@@ -24,14 +24,18 @@ func initializeLog() *istiolog.Options {
 	return logoptions
 }
 
-func reconcileIstio(istioSpec *operatorv1alpha1.Istio) error {
+func ReconcileIstio(istioCR *operatorv1alpha1.Istio) error {
 	istioLogOptions := initializeLog()
 	installerScope := istiolog.RegisterScope("installer", "installer", 0)
 	consoleLogger := clog.NewConsoleLogger(os.Stdout, os.Stderr, installerScope)
 	printer := istio.NewPrinterForWriter(os.Stdout)
-	iopFileName := "default-istio-operator.yaml"
 	iopFileNames := make([]string, 0, 1)
-	iopFileNames = append(iopFileNames, iopFileName)
+
+	mergedIstioOperator, err := manifest.Merge(istioCR)
+	if err != nil {
+		return err
+	}
+	iopFileNames = append(iopFileNames, mergedIstioOperator)
 	installArgs := &istio.InstallArgs{SkipConfirmation: true, Verify: true, InFilenames: iopFileNames}
 	if err := istio.Install(&istio.RootArgs{}, installArgs, istioLogOptions, os.Stdout, consoleLogger, printer); err != nil {
 		return err

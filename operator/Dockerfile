@@ -15,7 +15,8 @@ RUN go mod download
 COPY main.go main.go
 COPY api/ api/
 COPY controllers/ controllers/
-
+COPY manifests/ manifests/
+COPY pkg/ pkg/
 
 # Build
 # the GOARCH has not a default value to allow the binary be built according to the host where the command
@@ -30,7 +31,8 @@ FROM gcr.io/distroless/static:nonroot
 WORKDIR /
 COPY istio-chart/ istio-chart/
 COPY --from=builder /workspace/manager .
-COPY default-istio-operator.yaml default-istio-operator.yaml
+COPY --from=builder /workspace/manifests/ .
+
 USER 65532:65532
 
 ENTRYPOINT ["/manager"]

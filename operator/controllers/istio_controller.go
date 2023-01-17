@@ -29,7 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/ratelimiter"
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
-	"github.com/kyma-project/istio/operator/pkg/install"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 
 	"github.com/kyma-project/module-manager/operator/pkg/declarative"
 	"github.com/kyma-project/module-manager/operator/pkg/types"
@@ -47,8 +47,9 @@ func TemplateRateLimiter(failureBaseDelay time.Duration, failureMaxDelay time.Du
 
 func NewReconciler(mgr manager.Manager) *IstioReconciler {
 	return &IstioReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Client:            mgr.GetClient(),
+		Scheme:            mgr.GetScheme(),
+		istioInstallation: istio.Installation{Client: istio.NewIstioClient()},
 	}
 }
 
@@ -62,7 +63,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		logger.Error(err, "Error during fetching Istio CR")
 	}
 
-	if err := install.ReconcileIstio(&istioCR); err != nil {
+	if err := r.istioInstallation.Reconcile(&istioCR); err != nil {
 		logger.Error(err, "Error occurred during reconciliation of Istio Operator")
 	}
 

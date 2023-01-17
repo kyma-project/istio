@@ -31,7 +31,7 @@ FROM gcr.io/distroless/static:nonroot
 WORKDIR /
 COPY istio-chart/ istio-chart/
 COPY --from=builder /workspace/manager .
-COPY --from=builder /workspace/manifests/ .
+COPY --from=builder /workspace/manifests/ manifests
 
 USER 65532:65532
 

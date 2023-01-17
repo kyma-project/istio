@@ -5,16 +5,16 @@ go 1.19
 require (
 	github.com/cucumber/godog v0.12.6
 	github.com/go-logr/logr v1.2.3
-	github.com/kyma-project/module-manager/operator v0.0.0-20221020113457-620af4f4b365
+	github.com/kyma-project/module-manager/operator v0.0.0-20221125150159-5e84c4855249
 	github.com/onsi/ginkgo/v2 v2.7.0
 	github.com/onsi/gomega v1.24.2
 	github.com/stretchr/testify v1.8.1
 	gitlab.com/rodrigoodhin/gocure v0.0.0-20220718065339-f14dfe79276a
 	golang.org/x/time v0.3.0
 	google.golang.org/protobuf v1.28.1
-	istio.io/api v0.0.0-20221021152446-f26e759dd372
-	istio.io/istio v0.0.0-20221023221338-9a6e009adc35
-	istio.io/pkg v0.0.0-20221021173746-562ca5333a70
+	istio.io/api v0.0.0-20221208070204-0528cb6ce63b
+	istio.io/istio v0.0.0-20221208112803-f6d7bf648e57
+	istio.io/pkg v0.0.0-20221107183613-574f8d141535
 	k8s.io/api v0.25.2
 	k8s.io/apiextensions-apiserver v0.25.2
 	k8s.io/apimachinery v0.25.2
@@ -69,7 +69,7 @@ require (
 	github.com/docker/go-metrics v0.0.1 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/emicklei/go-restful/v3 v3.9.0 // indirect
-	github.com/envoyproxy/go-control-plane v0.10.3-0.20221020170356-80b5caf4c752 // indirect
+	github.com/envoyproxy/go-control-plane v0.10.3-0.20220908185826-2b9739221838 // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.6.7 // indirect
 	github.com/evanphx/json-patch v5.6.0+incompatible // indirect
 	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
@@ -224,7 +224,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	helm.sh/helm/v3 v3.10.1 // indirect
-	istio.io/client-go v1.12.0-alpha.5.0.20221021152847-03a8836569d9 // indirect
+	istio.io/client-go v1.16.1-0.20221208071003-87bc3534a86b // indirect
 	k8s.io/apiserver v0.25.2 // indirect
 	k8s.io/cli-runtime v0.25.2 // indirect
 	k8s.io/component-base v0.25.2 // indirect

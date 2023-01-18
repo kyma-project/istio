@@ -35,21 +35,16 @@ import (
 	"github.com/kyma-project/module-manager/operator/pkg/types"
 )
 
-// TemplateRateLimiter implements a rate limiter for a client-go.workqueue.  It has
-// both an overall (token bucket) and per-item (exponential) rate limiting.
-func TemplateRateLimiter(failureBaseDelay time.Duration, failureMaxDelay time.Duration,
-	frequency int, burst int,
-) ratelimiter.RateLimiter {
-	return workqueue.NewMaxOfRateLimiter(
-		workqueue.NewItemExponentialFailureRateLimiter(failureBaseDelay, failureMaxDelay),
-		&workqueue.BucketRateLimiter{Limiter: rate.NewLimiter(rate.Limit(frequency), burst)})
-}
+var (
+	defaultIstioOperatorPath = "manifests/default-istio-operator-k3d.yaml"
+	workingDir               = "/tmp"
+)
 
 func NewReconciler(mgr manager.Manager) *IstioReconciler {
 	return &IstioReconciler{
 		Client:            mgr.GetClient(),
 		Scheme:            mgr.GetScheme(),
-		istioInstallation: istio.Installation{Client: istio.NewIstioClient()},
+		istioInstallation: istio.Installation{Client: istio.NewIstioClient(defaultIstioOperatorPath, workingDir)},
 	}
 }
 
@@ -104,4 +99,14 @@ func (r *IstioReconciler) initReconciler(mgr ctrl.Manager, chartPath string) err
 		declarative.WithResourcesReady(true),
 		declarative.WithFinalizer(istioFinalizer),
 	)
+}
+
+// TemplateRateLimiter implements a rate limiter for a client-go.workqueue.  It has
+// both an overall (token bucket) and per-item (exponential) rate limiting.
+func TemplateRateLimiter(failureBaseDelay time.Duration, failureMaxDelay time.Duration,
+	frequency int, burst int,
+) ratelimiter.RateLimiter {
+	return workqueue.NewMaxOfRateLimiter(
+		workqueue.NewItemExponentialFailureRateLimiter(failureBaseDelay, failureMaxDelay),
+		&workqueue.BucketRateLimiter{Limiter: rate.NewLimiter(rate.Limit(frequency), burst)})
 }

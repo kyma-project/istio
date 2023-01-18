@@ -8,26 +8,28 @@ import (
 	istiolog "istio.io/pkg/log"
 )
 
-//go:generate mockery --name=IstioClient --output=mocks --outpkg=mocks --case=underscore
 type IstioClient struct {
-	istioLogOptions *istiolog.Options
-	consoleLogger   *clog.ConsoleLogger
-	printer         istio.Printer
+	istioLogOptions          *istiolog.Options
+	consoleLogger            *clog.ConsoleLogger
+	printer                  istio.Printer
+	defaultIstioOperatorPath string
+	workingDir               string
 }
 
-func NewIstioClient() IstioClient {
+func NewIstioClient(defaultIstioOperatorPath string, workingDir string) IstioClient {
 	istioLogOptions := initializeLog()
 	installerScope := istiolog.RegisterScope("installer", "installer", 0)
 	consoleLogger := clog.NewConsoleLogger(os.Stdout, os.Stderr, installerScope)
 	printer := istio.NewPrinterForWriter(os.Stdout)
 
-	return IstioClient{istioLogOptions: istioLogOptions, consoleLogger: consoleLogger, printer: printer}
+	return IstioClient{istioLogOptions: istioLogOptions, consoleLogger: consoleLogger, printer: printer, defaultIstioOperatorPath: defaultIstioOperatorPath, workingDir: workingDir}
 }
 
-func (c *IstioClient) Install(istioOpertator string) error {
+func (c *IstioClient) Install(mergedIstioOperatorPath string) error {
 	iopFileNames := make([]string, 0, 1)
-	iopFileNames = append(iopFileNames, istioOpertator)
+	iopFileNames = append(iopFileNames, mergedIstioOperatorPath)
 	installArgs := &istio.InstallArgs{SkipConfirmation: true, Verify: true, InFilenames: iopFileNames}
+
 	if err := istio.Install(&istio.RootArgs{}, installArgs, c.istioLogOptions, os.Stdout, c.consoleLogger, c.printer); err != nil {
 		return err
 	}
@@ -46,5 +48,6 @@ func initializeLog() *istiolog.Options {
 	logoptions.SetOutputLevel("default", istiolog.WarnLevel)
 	logoptions.SetOutputLevel("klog", istiolog.WarnLevel)
 	logoptions.SetOutputLevel("kube", istiolog.ErrorLevel)
+
 	return logoptions
 }

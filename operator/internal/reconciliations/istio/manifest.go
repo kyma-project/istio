@@ -1,7 +1,6 @@
 package istio
 
 import (
-	"fmt"
 	"os"
 	"path"
 
@@ -11,12 +10,10 @@ import (
 )
 
 var (
-	defaultManifestDir       = "manifests"
-	defaultIstioOperatorFile = "default-istio-operator-k3d.yaml"
+	mergedIstioOperatorFile = "merged-istio-operator.yaml"
 )
 
-func merge(istioCR *operatorv1alpha1.Istio) (string, error) {
-	istioOperatorFilePath := path.Join(defaultManifestDir, defaultIstioOperatorFile)
+func merge(istioCR *operatorv1alpha1.Istio, istioOperatorFilePath string, workingDir string) (string, error) {
 	manifest, err := os.ReadFile(istioOperatorFilePath)
 	if err != nil {
 		return "", err
@@ -26,13 +23,14 @@ func merge(istioCR *operatorv1alpha1.Istio) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	mergedManifestFilePath := fmt.Sprintf("/tmp/%s", defaultIstioOperatorFile)
-	err = os.WriteFile(mergedManifestFilePath, mergedManifest, 0o644)
+
+	mergedIstioOperatorPath := path.Join(workingDir, mergedIstioOperatorFile)
+	err = os.WriteFile(mergedIstioOperatorPath, mergedManifest, 0o644)
 	if err != nil {
 		return "", err
 	}
 
-	return mergedManifestFilePath, nil
+	return mergedIstioOperatorPath, nil
 }
 
 func applyIstioCR(istioCR *operatorv1alpha1.Istio, operatorManifest []byte) ([]byte, error) {

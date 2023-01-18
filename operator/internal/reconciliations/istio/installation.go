@@ -10,9 +10,10 @@ type Installation struct {
 
 // Reconcile setup configuration and runs an Istio installation with merged Istio Operator manifest file.
 func (i *Installation) Reconcile(istioCR *operatorv1alpha1.Istio) error {
-	mergedIstioOperator, err := merge(istioCR)
+	mergedIstioOperatorPath, err := merge(istioCR, i.Client.defaultIstioOperatorPath, i.Client.workingDir)
 	if err != nil {
 		return err
 	}
-	return i.Client.Install(mergedIstioOperator)
+
+	return i.Client.Install(mergedIstioOperatorPath)
 }

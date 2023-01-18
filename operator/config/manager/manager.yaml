@@ -70,8 +70,7 @@ spec:
         - /manager
         args:
         - --leader-elect
-        image: istio-operator:latest
-        imagePullPolicy: Never
+        image: controller:latest
         name: manager
         securityContext:
           allowPrivilegeEscalation: false

@@ -1,0 +1,9 @@
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  name: test-operator
+  namespace: istio-system
+spec:
+  components:
+    base:
+      enabled: true

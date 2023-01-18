@@ -17,35 +17,58 @@ limitations under the License.
 package controllers
 
 import (
+	"context"
 	"time"
 
 	"golang.org/x/time/rate"
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/ratelimiter"
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 
 	"github.com/kyma-project/module-manager/operator/pkg/declarative"
 	"github.com/kyma-project/module-manager/operator/pkg/types"
 )
 
-// TemplateRateLimiter implements a rate limiter for a client-go.workqueue.  It has
-// both an overall (token bucket) and per-item (exponential) rate limiting.
-func TemplateRateLimiter(failureBaseDelay time.Duration, failureMaxDelay time.Duration,
-	frequency int, burst int,
-) ratelimiter.RateLimiter {
-	return workqueue.NewMaxOfRateLimiter(
-		workqueue.NewItemExponentialFailureRateLimiter(failureBaseDelay, failureMaxDelay),
-		&workqueue.BucketRateLimiter{Limiter: rate.NewLimiter(rate.Limit(frequency), burst)})
+var (
+	defaultIstioOperatorPath = "manifests/default-istio-operator-k3d.yaml"
+	workingDir               = "/tmp"
+)
+
+func NewReconciler(mgr manager.Manager) *IstioReconciler {
+	return &IstioReconciler{
+		Client:            mgr.GetClient(),
+		Scheme:            mgr.GetScheme(),
+		istioInstallation: istio.Installation{Client: istio.NewIstioClient(defaultIstioOperatorPath, workingDir)},
+	}
 }
 
-//+kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios/finalizers,verbs=update
-//+kubebuilder:rbac:groups="",resources=namespaces,verbs=get;create;update;patch
+func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	logger := log.FromContext(ctx)
 
+	logger.Info("Was called to reconcile Kyma Istio Service Mesh")
+
+	istioCR := operatorv1alpha1.Istio{}
+	if err := r.Client.Get(ctx, req.NamespacedName, &istioCR); err != nil {
+		logger.Error(err, "Error during fetching Istio CR")
+	}
+
+	if err := r.istioInstallation.Reconcile(&istioCR); err != nil {
+		logger.Error(err, "Error occurred during reconciliation of Istio Operator")
+	}
+
+	return ctrl.Result{RequeueAfter: time.Minute*5}, nil
+}
+
+// +kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios/finalizers,verbs=update
+// +kubebuilder:rbac:groups="",resources=namespaces,verbs=get;create;update;patch
 func (r *IstioReconciler) SetupWithManager(mgr ctrl.Manager, chartPath string, configFlags, setFlags types.Flags, rateLimiter RateLimiter) error {
 	ConfigFlags = configFlags
 	SetFlags = setFlags
@@ -76,4 +99,14 @@ func (r *IstioReconciler) initReconciler(mgr ctrl.Manager, chartPath string) err
 		declarative.WithResourcesReady(true),
 		declarative.WithFinalizer(istioFinalizer),
 	)
+}
+
+// TemplateRateLimiter implements a rate limiter for a client-go.workqueue.  It has
+// both an overall (token bucket) and per-item (exponential) rate limiting.
+func TemplateRateLimiter(failureBaseDelay time.Duration, failureMaxDelay time.Duration,
+	frequency int, burst int,
+) ratelimiter.RateLimiter {
+	return workqueue.NewMaxOfRateLimiter(
+		workqueue.NewItemExponentialFailureRateLimiter(failureBaseDelay, failureMaxDelay),
+		&workqueue.BucketRateLimiter{Limiter: rate.NewLimiter(rate.Limit(frequency), burst)})
 }

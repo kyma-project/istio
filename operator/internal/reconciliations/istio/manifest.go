@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	defaultManifestDir       = "manifests"
+	defaultManifestDir       = "../manifests"
 	defaultIstioOperatorFile = "default-istio-operator-k3d.yaml"
 )
 

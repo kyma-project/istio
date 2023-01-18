@@ -17,20 +17,31 @@ limitations under the License.
 package controllers
 
 import (
+	"context"
+	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	appsv1 "k8s.io/api/apps/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/yaml"
+
+	ctrl "sigs.k8s.io/controller-runtime"
+
+	tempalteTypes "github.com/kyma-project/module-manager/operator/pkg/types"
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
+	//reconciliation "github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -40,6 +51,8 @@ import (
 var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
+var ctx context.Context
+var cancel func()
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -47,13 +60,17 @@ func TestAPIs(t *testing.T) {
 	RunSpecs(t, "Controller Suite")
 }
 
-var _ = BeforeSuite(func() {
+var _ = BeforeSuite(func(specContext SpecContext) {
+	ctx, cancel = context.WithCancel(context.TODO())
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
 
+	useCluster := true
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
-		CRDDirectoryPaths:     []string{filepath.Join("..", "config", "crd", "bases")},
-		ErrorIfCRDPathMissing: true,
+		CRDDirectoryPaths:        []string{filepath.Join("..", "config", "crd", "bases")},
+		ErrorIfCRDPathMissing:    true,
+		UseExistingCluster:       &useCluster,
+		AttachControlPlaneOutput: true,
 	}
 
 	var err error
@@ -65,16 +82,76 @@ var _ = BeforeSuite(func() {
 	err = operatorv1alpha1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
+	k8sManager, err := ctrl.NewManager(cfg, ctrl.Options{
+		Scheme: scheme.Scheme,
+	})
+	Expect(err).ToNot(HaveOccurred())
+
+	ratelimiter := RateLimiter{}
+
+	err = (&IstioReconciler{
+		Client: k8sManager.GetClient(),
+		Scheme: k8sManager.GetScheme(),
+	}).SetupWithManager(k8sManager, filepath.Join("..", "istio-chart"), tempalteTypes.Flags{}, tempalteTypes.Flags{}, ratelimiter)
+	Expect(err).ToNot(HaveOccurred())
+
 	//+kubebuilder:scaffold:scheme
+	go func() {
+		defer GinkgoRecover()
+		err = k8sManager.Start(ctx)
+		Expect(err).ToNot(HaveOccurred(), "failed to run manager")
+	}()
 
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
 	Expect(err).NotTo(HaveOccurred())
 	Expect(k8sClient).NotTo(BeNil())
 
+}, NodeTimeout(30*time.Second))
+
+var _ = Describe("Istio installation", func() {
+	BeforeEach(func() {
+		list := &operatorv1alpha1.IstioList{}
+		err := k8sClient.List(ctx, list)
+		Expect(err).ShouldNot(HaveOccurred())
+		for _, v := range list.Items {
+			err := k8sClient.Delete(ctx, &v)
+			Expect(err).ShouldNot(HaveOccurred())
+		}
+	})
+
+	It("Should install Istio", func() {
+		// given: New resources
+		operatorSample, err := os.ReadFile(filepath.Join("..", "config", "samples", "operator_v1alpha1_istio.yaml"))
+		Expect(err).ShouldNot(HaveOccurred())
+
+		istioCR := operatorv1alpha1.Istio{}
+		yaml.Unmarshal(operatorSample, &istioCR)
+		istioCR.Namespace = "default"
+
+		// when
+		err = k8sClient.Create(ctx, &istioCR)
+
+		// then
+		Expect(err).ShouldNot(HaveOccurred())
+
+		deployKey := types.NamespacedName{Name: "istiod", Namespace: "istio-system"}
+		Eventually(func() error {
+			istiodDeployment := appsv1.Deployment{}
+			return k8sClient.Get(ctx, deployKey, &istiodDeployment)
+		}, time.Second*10, time.Millisecond*250).ShouldNot(HaveOccurred())
+	})
 })
 
 var _ = AfterSuite(func() {
+	cancel()
 	By("tearing down the test environment")
-	err := testEnv.Stop()
+	list := &operatorv1alpha1.IstioList{}
+	err := k8sClient.List(context.TODO(), list)
+	Expect(err).ShouldNot(HaveOccurred())
+	for _, v := range list.Items {
+		err := k8sClient.Delete(context.TODO(), &v)
+		Expect(err).ShouldNot(HaveOccurred())
+	}
+	err = testEnv.Stop()
 	Expect(err).NotTo(HaveOccurred())
 })

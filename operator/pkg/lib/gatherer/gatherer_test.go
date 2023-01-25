@@ -16,7 +16,6 @@ import (
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/scheme"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
@@ -142,13 +141,9 @@ func Test_ListInstalledIstioRevisions(t *testing.T) {
 				},
 			},
 		}
-		var istiodList appsv1.DeploymentList
 		client := createClientSet(t, &istioSystem, &istiod_defaultRevision, &istiod_otherRevision)
-		err := client.List(context.TODO(), &istiodList, ctrlclient.MatchingLabels(gatherer.IstiodAppLabel))
-		require.NoError(t, err)
 
-		istioVersions, err := gatherer.ListInstalledIstioRevisions(context.TODO(), client, istiodList)
-
+		istioVersions, err := gatherer.ListInstalledIstioRevisions(context.TODO(), client)
 		require.NoError(t, err)
 
 		require.Contains(t, istioVersions, "default")
@@ -156,5 +151,12 @@ func Test_ListInstalledIstioRevisions(t *testing.T) {
 
 		require.Contains(t, istioVersions, "stable")
 		require.Equal(t, istioVersions["stable"], semver.MustParse("1.15.4"))
+	})
+	t.Run("Should return empty map when there is no istio installed", func(t *testing.T) {
+		client := createClientSet(t)
+
+		istioVersions, err := gatherer.ListInstalledIstioRevisions(context.TODO(), client)
+		require.NoError(t, err)
+		require.Len(t, istioVersions, 0)
 	})
 }

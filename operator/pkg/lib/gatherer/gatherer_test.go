@@ -124,8 +124,8 @@ func Test_ListInstalledIstioRevisions(t *testing.T) {
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "istiod",
 				Labels: map[string]string{
-					"app":          "istiod",
-					"istio.io/rev": "default",
+					"app":                       "istiod",
+					"istio.io/rev":              "default",
 					"operator.istio.io/version": "1.16.1",
 				},
 			},
@@ -135,8 +135,8 @@ func Test_ListInstalledIstioRevisions(t *testing.T) {
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "istiod-stable",
 				Labels: map[string]string{
-					"app":          "istiod",
-					"istio.io/rev": "stable",
+					"app":                       "istiod",
+					"istio.io/rev":              "stable",
 					"operator.istio.io/version": "1.15.4",
 				},
 			},

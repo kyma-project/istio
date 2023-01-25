@@ -12,6 +12,11 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+var TestTemplateData TemplateData = TemplateData{
+	IstioVersion:   "1.16.1",
+	IstioImageBase: "distroless",
+}
+
 func Test_merge(t *testing.T) {
 	numTrustedProxies := 4
 	istioCR := &v1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
@@ -31,7 +36,7 @@ func Test_merge(t *testing.T) {
 		istioOperatorPath := "invalid/path.yaml"
 
 		// when
-		mergedIstioOperatorPath, err := merge(istioCR, istioOperatorPath, workingDir)
+		mergedIstioOperatorPath, err := merge(istioCR, istioOperatorPath, workingDir, TestTemplateData)
 
 		// then
 		require.Error(t, err)
@@ -43,7 +48,7 @@ func Test_merge(t *testing.T) {
 		istioOperatorPath := "test/wrong-operator.yaml"
 
 		// when
-		mergedIstioOperatorPath, err := merge(istioCR, istioOperatorPath, workingDir)
+		mergedIstioOperatorPath, err := merge(istioCR, istioOperatorPath, workingDir, TestTemplateData)
 
 		// then
 		require.Error(t, err)
@@ -55,7 +60,7 @@ func Test_merge(t *testing.T) {
 		istioOperatorPath := "test/test-operator.yaml"
 
 		// when
-		mergedIstioOperatorPath, err := merge(istioCR, istioOperatorPath, workingDir)
+		mergedIstioOperatorPath, err := merge(istioCR, istioOperatorPath, workingDir, TestTemplateData)
 
 		// then
 		require.NoError(t, err)
@@ -67,6 +72,22 @@ func Test_merge(t *testing.T) {
 		require.NoError(t, err)
 	})
 
+	t.Run("should return merged configuration, with IstioVersion and IstioImageBase coming from template", func(t *testing.T) {
+		// given
+		istioOperatorPath := "test/template-operator.yaml"
+
+		// when
+		mergedIstioOperatorPath, err := merge(istioCR, istioOperatorPath, workingDir, TestTemplateData)
+
+		// then
+		require.NoError(t, err)
+		require.Equal(t, path.Join(workingDir, mergedIstioOperatorFile), mergedIstioOperatorPath)
+
+		iop := readIOP(t, mergedIstioOperatorPath)
+		require.Equal(t, "1.16.1-distroless", iop.Spec.Tag.GetStringValue())
+		err = os.Remove(mergedIstioOperatorPath)
+		require.NoError(t, err)
+	})
 }
 
 func readIOP(t *testing.T, istioOperatorFilePath string) istioOperator.IstioOperator {

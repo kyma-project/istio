@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"golang.org/x/time/rate"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -60,10 +61,14 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 	istioCR := operatorv1alpha1.Istio{}
 	if err := r.Client.Get(ctx, req.NamespacedName, &istioCR); err != nil {
+		if errors.IsNotFound(err) {
+			return ctrl.Result{}, nil
+		}
 		logger.Error(err, "Error during fetching Istio CR")
+		return ctrl.Result{}, err
 	}
 
-	if err := r.istioInstallation.Reconcile(&istioCR); err != nil {
+	if err := r.istioInstallation.Reconcile(&istioCR, r.Client); err != nil {
 		logger.Error(err, "Error occurred during reconciliation of Istio Operator")
 	}
 

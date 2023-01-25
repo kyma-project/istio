@@ -57,14 +57,8 @@ func ListIstioCR(ctx context.Context, kubeclient client.Client, namespace ...str
 	return &list, nil
 }
 
-func ListInstalledIstioRevisions(ctx context.Context, kubeclient client.Client) (istioRevisionVersions map[string]*semver.Version, err error) {
+func ListInstalledIstioRevisions(ctx context.Context, kubeclient client.Client, istiodList appsv1.DeploymentList) (istioRevisionVersions map[string]*semver.Version, err error) {
 	istioRevisionVersions = make(map[string]*semver.Version)
-
-	var istiodList appsv1.DeploymentList
-	err = kubeclient.List(ctx, &istiodList, client.MatchingLabels(IstiodAppLabel))
-	if err != nil {
-		return nil, err
-	}
 
 	for _, istiodDeployment := range istiodList.Items {
 		version, ok := istiodDeployment.Labels[VersionLabelName]

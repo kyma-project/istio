@@ -8,6 +8,8 @@ import (
 	istiolog "istio.io/pkg/log"
 )
 
+const IstioVersion = "1.16.1"
+
 type IstioClient struct {
 	istioLogOptions          *istiolog.Options
 	consoleLogger            *clog.ConsoleLogger

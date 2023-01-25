@@ -162,7 +162,7 @@ spec:
       name: stdout-json
     trustDomain: cluster.local
   profile: default
-  tag: 1.16.1-distroless
+  tag: {{ .IstioVersion }}-distroless
   values:
     base:
       enableCRDTemplates: false

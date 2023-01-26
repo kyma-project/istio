@@ -68,9 +68,10 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, err
 	}
 
-	if err := r.istioInstallation.Reconcile(ctx, &istioCR, r.Client); err != nil {
+	result, err := r.istioInstallation.Reconcile(ctx, &istioCR, r.Client)
+	if err != nil {
 		logger.Error(err, "Error occurred during reconciliation of Istio Operator")
-		return ctrl.Result{}, err
+		return result, err
 	}
 
 	return ctrl.Result{RequeueAfter: time.Minute * 5}, nil

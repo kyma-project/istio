@@ -21,7 +21,7 @@ type Installation struct {
 }
 
 const (
-	LastAppliedConfiguration string = "lastAppliedConfiguration"
+	LastAppliedConfiguration string = "operator.kyma-project.io/lastAppliedConfiguration"
 )
 
 // Reconcile setup configuration and runs an Istio installation with merged Istio Operator manifest file.

@@ -4,7 +4,9 @@ import (
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	appsv1 "k8s.io/api/apps/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
 var _ = Describe("IstioInstallation", func() {
@@ -24,7 +26,7 @@ var _ = Describe("IstioInstallation", func() {
 		It("should return true if lastAppliedConfiguration has different number of numTrustedProxies than CR", func() {
 			// given
 			newNumTrustedProxies := 2
-			cr := operatorv1alpha1.Istio{ObjectMeta: v1.ObjectMeta{
+			cr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
 				Annotations: map[string]string{
 					LastAppliedConfiguration: `{"config":{"numTrustedProxies":1}}`,
 				},
@@ -47,7 +49,7 @@ var _ = Describe("IstioInstallation", func() {
 		It("should return true if lastAppliedConfiguration has \"nil\" number of numTrustedProxies and CR doesn'y", func() {
 			// given
 			newNumTrustedProxies := 2
-			cr := operatorv1alpha1.Istio{ObjectMeta: v1.ObjectMeta{
+			cr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
 				Annotations: map[string]string{
 					LastAppliedConfiguration: `{"config":{}}`,
 				},
@@ -69,7 +71,7 @@ var _ = Describe("IstioInstallation", func() {
 
 		It("should return true if lastAppliedConfiguration has any number of numTrustedProxies and CR has \"nil\"", func() {
 			// given
-			cr := operatorv1alpha1.Istio{ObjectMeta: v1.ObjectMeta{
+			cr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
 				Annotations: map[string]string{
 					LastAppliedConfiguration: `{"config":{"numTrustedProxies":1}}`,
 				},
@@ -91,7 +93,7 @@ var _ = Describe("IstioInstallation", func() {
 
 		It("should return false if both configurations have \"nil\" numTrustedProxies", func() {
 			// given
-			cr := operatorv1alpha1.Istio{ObjectMeta: v1.ObjectMeta{
+			cr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
 				Annotations: map[string]string{
 					LastAppliedConfiguration: `{"config":{}}`,
 				},
@@ -114,7 +116,7 @@ var _ = Describe("IstioInstallation", func() {
 		It("should return false if lastAppliedConfiguration has the same number of numTrustedProxies as CR", func() {
 			// given
 			newNumTrustedProxies := 1
-			cr := operatorv1alpha1.Istio{ObjectMeta: v1.ObjectMeta{
+			cr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
 				Annotations: map[string]string{
 					LastAppliedConfiguration: `{"config":{"numTrustedProxies":1}}`,
 				},
@@ -132,6 +134,38 @@ var _ = Describe("IstioInstallation", func() {
 			// then
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(changed).To(BeFalse())
+		})
+	})
+	Context("isIstioInstalled", func() {
+		It("should return true when istiod deployment is present on cluster", func() {
+
+			// given
+			istiodDeployment := appsv1.Deployment{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "istiod",
+					Namespace: "istio-system",
+					Labels:    map[string]string{"app": "istiod"},
+				},
+			}
+			fakeclient := fake.NewClientBuilder().WithObjects(&istiodDeployment).Build()
+
+			// when
+			isInstalled := isIstioInstalled(fakeclient)
+
+			// then
+			Expect(isInstalled).To(BeTrue())
+		})
+
+		It("should return false when there is no istiod deployment present on cluster", func() {
+
+			// given
+			fakeclient := fake.NewClientBuilder().Build()
+
+			// when
+			isInstalled := isIstioInstalled(fakeclient)
+
+			// then
+			Expect(isInstalled).To(BeFalse())
 		})
 	})
 })

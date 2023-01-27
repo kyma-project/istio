@@ -22,6 +22,8 @@ import (
 
 	"golang.org/x/time/rate"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -74,7 +76,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return result, err
 	}
 
-	return ctrl.Result{RequeueAfter: time.Minute * 5}, nil
+	return result, nil
 }
 
 // +kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios,verbs=get;list;watch;create;update;patch;delete
@@ -100,6 +102,20 @@ func (r *IstioReconciler) SetupWithManager(mgr ctrl.Manager, chartPath string, c
 			),
 		}).
 		Complete(r)
+}
+
+func (r *IstioReconciler) UpdateStatus(ctx context.Context, istioCR *operatorv1alpha1.Istio, state operatorv1alpha1.State, condition metav1.Condition) (ctrl.Result, error) {
+	istioCR.Status.State = state
+	meta.SetStatusCondition(istioCR.Status.Conditions, condition)
+
+	if err := r.Client.Status().Update(ctx, istioCR); err != nil {
+		r.log.Error(err, "Unable to update the status")
+		return ctrl.Result{
+			RequeueAfter: time.Minute * 5,
+		}, err
+	}
+
+	return ctrl.Result{}, nil
 }
 
 func (r *IstioReconciler) initReconciler(mgr ctrl.Manager, chartPath string) error {

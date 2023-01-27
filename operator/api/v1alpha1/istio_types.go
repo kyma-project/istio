@@ -60,7 +60,7 @@ type IstioList struct {
 // IstioStatus defines the observed state of IstioCR.
 type IstioStatus struct {
 	State      State               `json:"state"`
-	Conditions []*metav1.Condition `json:"conditions,omitempty"`
+	Conditions *[]metav1.Condition `json:"conditions,omitempty"`
 }
 
 func init() {

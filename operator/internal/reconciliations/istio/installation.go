@@ -3,6 +3,7 @@ package istio
 import (
 	"context"
 	"encoding/json"
+	"time"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 
@@ -39,7 +40,7 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha1.
 
 		if len(installedVersions) > 0 {
 			// compare versions with default revision
-			needsInstall = !semver.MustParse(i.IstioVersion).Equal(installedVersions["default"])
+			needsInstall = !semver.MustParse(i.IstioVersion).Equal(installedVersions[gatherer.DefaultIstioRevisionName])
 		} else {
 			needsInstall = true
 		}
@@ -65,7 +66,7 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha1.
 		return ctrl.Result{}, err
 	}
 
-	return ctrl.Result{}, nil
+	return ctrl.Result{RequeueAfter: time.Minute * 5}, nil
 }
 
 func updateLastAppliedConfiguration(ctx context.Context, kubeClient client.Client, cr operatorv1alpha1.Istio) error {

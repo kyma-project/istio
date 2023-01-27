@@ -3,6 +3,7 @@ package controllers
 import (
 	"time"
 
+	"github.com/go-logr/logr"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	"github.com/kyma-project/module-manager/operator/pkg/declarative"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -17,6 +18,7 @@ type IstioReconciler struct {
 	client.Client
 	Scheme            *runtime.Scheme
 	istioInstallation istio.Installation
+	log               logr.Logger
 }
 
 // ManifestResolver represents the chart information for the passed Istio resource.

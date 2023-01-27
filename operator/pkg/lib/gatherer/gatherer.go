@@ -14,9 +14,10 @@ import (
 )
 
 const (
-	IstioNamespace    string = "istio-system"
-	RevisionLabelName string = "istio.io/rev"
-	VersionLabelName  string = "operator.istio.io/version"
+	IstioNamespace           string = "istio-system"
+	RevisionLabelName        string = "istio.io/rev"
+	VersionLabelName         string = "operator.istio.io/version"
+	DefaultIstioRevisionName string = "default"
 )
 
 var IstiodAppLabel map[string]string = map[string]string{"app": "istiod"}

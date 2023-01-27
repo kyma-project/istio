@@ -100,7 +100,7 @@ func configurationChanged(istioCR operatorv1alpha1.Istio) (bool, error) {
 	}
 
 	if !lastAppliedNotNil {
-		return true, nil
+		return false, nil
 	}
 
 	return *lastAppliedIstioCRSpec.Config.NumTrustedProxies != *istioCR.Spec.Config.NumTrustedProxies, nil

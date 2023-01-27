@@ -59,7 +59,10 @@ type IstioList struct {
 
 // IstioStatus defines the observed state of IstioCR.
 type IstioStatus struct {
-	State      State               `json:"state"`
+	// State signifies current state of CustomObject. Value
+	// can be one of ("Ready", "Reconciling", "Error", "Deleting").
+	State State `json:"state"`
+	//  Conditions associated with IstioStatus.
 	Conditions *[]metav1.Condition `json:"conditions,omitempty"`
 }
 

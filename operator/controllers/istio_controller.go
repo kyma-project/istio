@@ -27,15 +27,11 @@ import (
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/ratelimiter"
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
-
-	"github.com/kyma-project/module-manager/operator/pkg/declarative"
-	"github.com/kyma-project/module-manager/operator/pkg/types"
 )
 
 var (
@@ -53,27 +49,26 @@ func NewReconciler(mgr manager.Manager) *IstioReconciler {
 		Client:            mgr.GetClient(),
 		Scheme:            mgr.GetScheme(),
 		istioInstallation: istio.Installation{Client: istio.NewIstioClient(defaultIstioOperatorPath, workingDir), IstioVersion: IstioVersion, IstioImageBase: IstioImageBase},
+		log:               mgr.GetLogger(),
 	}
 }
 
 func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	logger := log.FromContext(ctx)
-
-	logger.Info("Was called to reconcile Kyma Istio Service Mesh")
+	r.log.Info("Was called to reconcile Kyma Istio Service Mesh")
 
 	istioCR := operatorv1alpha1.Istio{}
 	if err := r.Client.Get(ctx, req.NamespacedName, &istioCR); err != nil {
 		if errors.IsNotFound(err) {
-			return ctrl.Result{}, nil
+			r.UpdateStatus(ctx, &istioCR, operatorv1alpha1.Error, metav1.Condition{})
 		}
-		logger.Error(err, "Error during fetching Istio CR")
-		return ctrl.Result{}, err
+		r.log.Error(err, "Error during fetching Istio CR")
+		return r.UpdateStatus(ctx, &istioCR, operatorv1alpha1.Error, metav1.Condition{})
 	}
 
 	result, err := r.istioInstallation.Reconcile(ctx, &istioCR, r.Client)
 	if err != nil {
-		logger.Error(err, "Error occurred during reconciliation of Istio Operator")
-		return result, err
+		r.log.Error(err, "Error occurred during reconciliation of Istio Operator")
+		return r.UpdateStatus(ctx, &istioCR, operatorv1alpha1.Error, metav1.Condition{})
 	}
 
 	return result, nil
@@ -83,13 +78,8 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 // +kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=namespaces,verbs=get;create;update;patch
-func (r *IstioReconciler) SetupWithManager(mgr ctrl.Manager, chartPath string, configFlags, setFlags types.Flags, rateLimiter RateLimiter) error {
-	ConfigFlags = configFlags
-	SetFlags = setFlags
+func (r *IstioReconciler) SetupWithManager(mgr ctrl.Manager, rateLimiter RateLimiter) error {
 	r.Config = mgr.GetConfig()
-	if err := r.initReconciler(mgr, chartPath); err != nil {
-		return err
-	}
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&operatorv1alpha1.Istio{}).
@@ -116,17 +106,6 @@ func (r *IstioReconciler) UpdateStatus(ctx context.Context, istioCR *operatorv1a
 	}
 
 	return ctrl.Result{}, nil
-}
-
-func (r *IstioReconciler) initReconciler(mgr ctrl.Manager, chartPath string) error {
-	manifestResolver := &ManifestResolver{chartPath: chartPath}
-	return r.Inject(mgr, &operatorv1alpha1.Istio{},
-		declarative.WithManifestResolver(manifestResolver),
-		declarative.WithCustomResourceLabels(map[string]string{istioAnnotationKey: istioAnnotationValue}),
-		declarative.WithPostRenderTransform(transform),
-		declarative.WithResourcesReady(true),
-		declarative.WithFinalizer(istioFinalizer),
-	)
 }
 
 // TemplateRateLimiter implements a rate limiter for a client-go.workqueue.  It has

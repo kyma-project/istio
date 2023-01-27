@@ -77,12 +77,14 @@ func ListInstalledIstioRevisions(ctx context.Context, kubeclient client.Client) 
 			return nil, fmt.Errorf("istiod deployment %s didn't have revision label", istiodDeployment.Name)
 		}
 
-		semverVersion, err := semver.NewVersion(version)
-		if err != nil {
-			return nil, err
-		}
+		if version != "unknown" {
+			semverVersion, err := semver.NewVersion(version)
+			if err != nil {
+				return nil, err
+			}
 
-		istioRevisionVersions[revision] = semverVersion
+			istioRevisionVersions[revision] = semverVersion
+		}
 	}
 
 	return istioRevisionVersions, nil

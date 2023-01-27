@@ -138,7 +138,6 @@ var _ = Describe("IstioInstallation", func() {
 	})
 	Context("isIstioInstalled", func() {
 		It("should return true when istiod deployment is present on cluster", func() {
-
 			// given
 			istiodDeployment := appsv1.Deployment{
 				ObjectMeta: metav1.ObjectMeta{
@@ -157,7 +156,6 @@ var _ = Describe("IstioInstallation", func() {
 		})
 
 		It("should return false when there is no istiod deployment present on cluster", func() {
-
 			// given
 			fakeclient := fake.NewClientBuilder().Build()
 

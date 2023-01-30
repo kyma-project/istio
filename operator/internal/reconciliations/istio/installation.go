@@ -2,15 +2,11 @@ package istio
 
 import (
 	"context"
-	"encoding/json"
 	"time"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
-	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
-	"github.com/masterminds/semver"
-	appsv1 "k8s.io/api/apps/v1"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -25,28 +21,9 @@ const (
 	LastAppliedConfiguration string = "operator.kyma-project.io/lastAppliedConfiguration"
 )
 
-// Reconcile setup configuration and runs an Istio installation with merged Istio Operator manifest file.
-func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha1.Istio, kubeClient client.Client) (ctrl.Result, error) {
-	needsInstall, err := configurationChanged(*istioCR)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
-	if !needsInstall {
-		installedVersions, err := gatherer.ListInstalledIstioRevisions(ctx, kubeClient)
-		if err != nil {
-			return ctrl.Result{}, err
-		}
-
-		if len(installedVersions) > 0 {
-			// compare versions with default revision
-			needsInstall = !semver.MustParse(i.IstioVersion).Equal(installedVersions[gatherer.DefaultIstioRevisionName])
-		} else {
-			needsInstall = true
-		}
-	}
-
-	if !needsInstall {
+// PerformInstall runs Istio installation with merged Istio Operator manifest file when the trigger requires an installation.
+func (i *Installation) PerformInstall(ctx context.Context, trigger IstioCRChange, istioCR *operatorv1alpha1.Istio, kubeClient client.Client) (ctrl.Result, error) {
+	if !trigger.NeedsIstioInstall() {
 		ctrl.Log.Info("Install of Istio was skipped")
 		return ctrl.Result{}, nil
 	}
@@ -61,58 +38,5 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha1.
 		return ctrl.Result{}, err
 	}
 
-	err = updateLastAppliedConfiguration(ctx, kubeClient, *istioCR)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
 	return ctrl.Result{RequeueAfter: time.Minute * 5}, nil
-}
-
-func updateLastAppliedConfiguration(ctx context.Context, kubeClient client.Client, cr operatorv1alpha1.Istio) error {
-	if cr.Annotations == nil {
-		cr.Annotations = make(map[string]string)
-	}
-
-	config, err := json.Marshal(cr.Spec)
-	if err != nil {
-		return err
-	}
-
-	cr.Annotations[LastAppliedConfiguration] = string(config)
-
-	return kubeClient.Update(ctx, &cr)
-}
-
-func configurationChanged(istioCR operatorv1alpha1.Istio) (bool, error) {
-	lastAppliedConfig, ok := istioCR.Annotations[LastAppliedConfiguration]
-	if !ok {
-		return true, nil
-	}
-
-	var lastAppliedIstioCRSpec operatorv1alpha1.IstioSpec
-	json.Unmarshal([]byte(lastAppliedConfig), &lastAppliedIstioCRSpec)
-
-	lastAppliedNotNil := lastAppliedIstioCRSpec.Config.NumTrustedProxies != nil
-	newNotNil := istioCR.Spec.Config.NumTrustedProxies != nil
-
-	if lastAppliedNotNil != newNotNil {
-		return true, nil
-	}
-
-	if !lastAppliedNotNil {
-		return false, nil
-	}
-
-	return *lastAppliedIstioCRSpec.Config.NumTrustedProxies != *istioCR.Spec.Config.NumTrustedProxies, nil
-}
-
-func isIstioInstalled(kubeClient client.Client) bool {
-	var istiodList appsv1.DeploymentList
-	err := kubeClient.List(context.Background(), &istiodList, client.MatchingLabels(gatherer.IstiodAppLabel))
-	if err != nil {
-		return false
-	}
-
-	return len(istiodList.Items) > 0
 }

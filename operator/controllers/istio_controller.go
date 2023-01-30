@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"golang.org/x/time/rate"
@@ -65,10 +66,27 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return r.UpdateStatus(ctx, &istioCR, operatorv1alpha1.Error, metav1.Condition{})
 	}
 
-	result, err := r.istioInstallation.Reconcile(ctx, &istioCR, r.Client)
+	istioTag := fmt.Sprintf("%s-%s", IstioVersion, IstioImageBase)
+
+	reconciliationTrigger, err := istio.EvaluateIstioCRChanges(istioCR, istioTag)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	result, err := r.istioInstallation.PerformInstall(ctx, reconciliationTrigger, &istioCR, r.Client)
 	if err != nil {
 		r.log.Error(err, "Error occurred during reconciliation of Istio Operator")
 		return r.UpdateStatus(ctx, &istioCR, operatorv1alpha1.Error, metav1.Condition{})
+	}
+
+	istioCR, err = istio.UpdateLastAppliedConfiguration(istioCR, IstioVersion)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	err = r.Client.Update(ctx, &istioCR)
+	if err != nil {
+		return ctrl.Result{}, err
 	}
 
 	return result, nil

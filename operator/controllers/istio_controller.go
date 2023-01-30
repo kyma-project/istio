@@ -68,7 +68,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 	istioTag := fmt.Sprintf("%s-%s", IstioVersion, IstioImageBase)
 
-	// Evaluate what changes since last reconciliation
+	// Evaluate what changed since last reconciliation
 	reconciliationTrigger, err := istio.EvaluateIstioCRChanges(istioCR, istioTag)
 	if err != nil {
 		r.log.Error(err, "Error evaluating IstioCR changes")

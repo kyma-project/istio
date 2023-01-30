@@ -78,6 +78,8 @@ func ListInstalledIstioRevisions(ctx context.Context, kubeclient client.Client) 
 			return nil, fmt.Errorf("istiod deployment %s didn't have revision label", istiodDeployment.Name)
 		}
 
+		// Istio version label sometimes is set to unknown for unknown reason. 
+		// TODO: Make the logic more resilient by e.g. using Istiod image tag
 		if version != "unknown" {
 			semverVersion, err := semver.NewVersion(version)
 			if err != nil {

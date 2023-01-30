@@ -68,18 +68,31 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 	istioTag := fmt.Sprintf("%s-%s", IstioVersion, IstioImageBase)
 
+	// Evaluate what changes since last reconciliation
 	reconciliationTrigger, err := istio.EvaluateIstioCRChanges(istioCR, istioTag)
 	if err != nil {
 		r.log.Error(err, "Error evaluating IstioCR changes")
 		return r.UpdateStatus(ctx, &istioCR, operatorv1alpha1.Error, metav1.Condition{})
 	}
 
-	err = r.istioInstallation.PerformInstall(ctx, reconciliationTrigger, &istioCR, r.Client)
-	if err != nil {
-		r.log.Error(err, "Error occurred during reconciliation of Istio Operator")
-		return r.UpdateStatus(ctx, &istioCR, operatorv1alpha1.Error, metav1.Condition{})
+	// Perform Istio installation only when needed
+	if reconciliationTrigger.NeedsIstioInstall() {
+		// Update status to reconciling when install is in progress
+		res, err := r.UpdateStatus(ctx, &istioCR, operatorv1alpha1.Reconciling, metav1.Condition{})
+		if err != nil {
+			return res, err
+		}
+
+		err = r.istioInstallation.Reconcile(ctx, &istioCR, r.Client)
+		if err != nil {
+			r.log.Error(err, "Error occurred during reconciliation of Istio Operator")
+			return r.UpdateStatus(ctx, &istioCR, operatorv1alpha1.Error, metav1.Condition{})
+		}
+	} else {
+		ctrl.Log.Info("Install of Istio was skipped")
 	}
 
+	// Put applied configuration in annotation
 	istioCR, err = istio.UpdateLastAppliedConfiguration(istioCR, istioTag)
 	if err != nil {
 		r.log.Error(err, "Error updating LastAppliedConfiguration")
@@ -92,6 +105,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return r.UpdateStatus(ctx, &istioCR, operatorv1alpha1.Error, metav1.Condition{})
 	}
 
+	// Update status to Ready
 	return r.UpdateStatus(ctx, &istioCR, operatorv1alpha1.Ready, metav1.Condition{})
 }
 

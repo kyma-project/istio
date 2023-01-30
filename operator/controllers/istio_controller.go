@@ -79,7 +79,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return r.UpdateStatus(ctx, &istioCR, operatorv1alpha1.Error, metav1.Condition{})
 	}
 
-	istioCR, err = istio.UpdateLastAppliedConfiguration(istioCR, IstioVersion)
+	istioCR, err = istio.UpdateLastAppliedConfiguration(istioCR, istioTag)
 	if err != nil {
 		return ctrl.Result{}, err
 	}

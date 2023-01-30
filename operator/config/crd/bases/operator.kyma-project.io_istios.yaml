@@ -15,7 +15,11 @@ spec:
     singular: istio
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .status.state
+      name: Component state
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: Contains Istio CR specification and current status.

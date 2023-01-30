@@ -70,10 +70,11 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 	reconciliationTrigger, err := istio.EvaluateIstioCRChanges(istioCR, istioTag)
 	if err != nil {
-		return ctrl.Result{}, err
+		r.log.Error(err, "Error evaluating IstioCR changes")
+		return r.UpdateStatus(ctx, &istioCR, operatorv1alpha1.Error, metav1.Condition{})
 	}
 
-	result, err := r.istioInstallation.PerformInstall(ctx, reconciliationTrigger, &istioCR, r.Client)
+	err = r.istioInstallation.PerformInstall(ctx, reconciliationTrigger, &istioCR, r.Client)
 	if err != nil {
 		r.log.Error(err, "Error occurred during reconciliation of Istio Operator")
 		return r.UpdateStatus(ctx, &istioCR, operatorv1alpha1.Error, metav1.Condition{})
@@ -81,15 +82,17 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 	istioCR, err = istio.UpdateLastAppliedConfiguration(istioCR, istioTag)
 	if err != nil {
-		return ctrl.Result{}, err
+		r.log.Error(err, "Error updating LastAppliedConfiguration")
+		return r.UpdateStatus(ctx, &istioCR, operatorv1alpha1.Error, metav1.Condition{})
 	}
 
 	err = r.Client.Update(ctx, &istioCR)
 	if err != nil {
-		return ctrl.Result{}, err
+		r.log.Error(err, "Error during update of IstioCR")
+		return r.UpdateStatus(ctx, &istioCR, operatorv1alpha1.Error, metav1.Condition{})
 	}
 
-	return result, nil
+	return r.UpdateStatus(ctx, &istioCR, operatorv1alpha1.Ready, metav1.Condition{})
 }
 
 // +kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios,verbs=get;list;watch;create;update;patch;delete

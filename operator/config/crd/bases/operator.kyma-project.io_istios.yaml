@@ -15,7 +15,11 @@ spec:
     singular: istio
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .status.state
+      name: State
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: Contains Istio CR specification and current status.
@@ -46,10 +50,10 @@ spec:
                 type: object
             type: object
           status:
-            description: Status defines the observed state of CustomObject.
+            description: IstioStatus defines the observed state of IstioCR.
             properties:
               conditions:
-                description: Conditions associated with CustomStatus.
+                description: Conditions associated with IstioStatus.
                 items:
                   description: "Condition contains details for one aspect of the current
                     state of this API Resource. --- This struct is intended for direct
@@ -119,12 +123,7 @@ spec:
                 type: array
               state:
                 description: State signifies current state of CustomObject. Value
-                  can be one of ("Ready", "Processing", "Error", "Deleting").
-                enum:
-                - Processing
-                - Deleting
-                - Ready
-                - Error
+                  can be one of ("Ready", "Reconciling", "Error", "Deleting").
                 type: string
             required:
             - state

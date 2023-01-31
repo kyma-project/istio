@@ -109,7 +109,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = controllers.NewReconciler(mgr).SetupWithManager(mgr, chartPath, ConfigFlags, SetFlags, ratelimiter); err != nil {
+	if err = controllers.NewReconciler(mgr).SetupWithManager(mgr, ratelimiter); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Istio")
 		os.Exit(1)
 	}

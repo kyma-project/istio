@@ -26,7 +26,8 @@ func createClientSet(t *testing.T, objects ...client.Object) client.Client {
 	fakeClient := fake.NewClientBuilder().
 		WithScheme(scheme.Scheme).
 		WithObjects(objects...).
-		WithIndex(&v1.Pod{}, "status.phase", helpers.FakePodStatusPhaseIndexer).
+		// TODO: WithIndex is not supported in current version of controller runtime, should be readded later on
+		// WithIndex(&v1.Pod{}, "status.phase", helpers.FakePodStatusPhaseIndexer).
 		Build()
 
 	return fakeClient

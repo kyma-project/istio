@@ -29,6 +29,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/ratelimiter"
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
@@ -118,6 +119,7 @@ func (r *IstioReconciler) SetupWithManager(mgr ctrl.Manager, rateLimiter RateLim
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&operatorv1alpha1.Istio{}).
+		WithEventFilter(predicate.GenerationChangedPredicate{}).
 		WithOptions(controller.Options{
 			RateLimiter: TemplateRateLimiter(
 				rateLimiter.BaseDelay,

@@ -20,15 +20,14 @@ const (
 	ProxyImageRepository string = "eu.gcr.io/kyma-project/external/istio/proxyv2"
 )
 
-// Reconcile runs Istio installation with merged Istio Operator manifest file when the trigger requires an installation.
-func (s *Sidecars) Reconcile(ctx context.Context, client client.Client, logger *logr.Logger) error {
+// Reconcile runs Proxy Reset action, which checks if any of sidecars need a restart and proceed with rollout.
+func (s *Sidecars) Reconcile(ctx context.Context, client client.Client, logger logr.Logger) error {
 	expectedImage := pods.SidecarImage{Repository: ProxyImageRepository, Tag: fmt.Sprintf("%s-%s", s.IstioVersion, s.IstioImageBase)}
 
-	warnings, err := sidecars.ProxyReset(ctx, client, expectedImage, s.CniEnabled, logger)
+	_, err := sidecars.ProxyReset(ctx, client, expectedImage, s.CniEnabled, &logger)
 	if err != nil {
 		return err
 	}
-	logger.Info("Proxy reset processed for:", warnings)
 
 	return nil
 }

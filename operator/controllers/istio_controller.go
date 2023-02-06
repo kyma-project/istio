@@ -103,7 +103,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return r.UpdateStatus(ctx, &istioCR, operatorv1alpha1.Error, metav1.Condition{})
 	}
 
-	err = r.sidecars.Reconcile(ctx, r.Client, &r.log)
+	err = r.sidecars.Reconcile(ctx, r.Client, r.log)
 	if err != nil {
 		r.log.Error(err, "Error occurred during reconciliation of Istio Sidecars")
 		return r.UpdateStatus(ctx, &istioCR, operatorv1alpha1.Error, metav1.Condition{})

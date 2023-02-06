@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/proxy"
 	"github.com/kyma-project/module-manager/operator/pkg/declarative"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
@@ -18,6 +19,7 @@ type IstioReconciler struct {
 	client.Client
 	Scheme            *runtime.Scheme
 	istioInstallation istio.Installation
+	sidecars          proxy.Sidecars
 	log               logr.Logger
 }
 

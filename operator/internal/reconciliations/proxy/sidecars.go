@@ -24,9 +24,14 @@ const (
 func (s *Sidecars) Reconcile(ctx context.Context, client client.Client, logger logr.Logger) error {
 	expectedImage := pods.SidecarImage{Repository: ProxyImageRepository, Tag: fmt.Sprintf("%s-%s", s.IstioVersion, s.IstioImageBase)}
 
-	_, err := sidecars.ProxyReset(ctx, client, expectedImage, s.CniEnabled, &logger)
+	warnings, err := sidecars.ProxyReset(ctx, client, expectedImage, s.CniEnabled, &logger)
 	if err != nil {
 		return err
+	}
+	if len(warnings) > 0 {
+		for _, w := range warnings {
+			logger.Info("Proxy reset warning: %v", w)
+		}
 	}
 
 	return nil

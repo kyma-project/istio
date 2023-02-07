@@ -53,7 +53,7 @@ func NewReconciler(mgr manager.Manager) *IstioReconciler {
 		Client:            mgr.GetClient(),
 		Scheme:            mgr.GetScheme(),
 		istioInstallation: istio.Installation{Client: istio.NewIstioClient(defaultIstioOperatorPath, workingDir), IstioVersion: IstioVersion, IstioImageBase: IstioImageBase},
-		sidecars:          proxy.Sidecars{IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, CniEnabled: true},
+		proxySidecars:     proxy.Sidecars{IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, CniEnabled: true},
 		log:               mgr.GetLogger(),
 	}
 }
@@ -92,6 +92,12 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			r.log.Error(err, "Error occurred during reconciliation of Istio Operator")
 			return r.UpdateStatus(ctx, &istioCR, operatorv1alpha1.Error, metav1.Condition{})
 		}
+
+		err = r.proxySidecars.Reconcile(ctx, r.Client, r.log)
+		if err != nil {
+			r.log.Error(err, "Error occurred during reconciliation of Istio Sidecars")
+			return r.UpdateStatus(ctx, &istioCR, operatorv1alpha1.Error, metav1.Condition{})
+		}
 	} else {
 		ctrl.Log.Info("Install of Istio was skipped")
 	}
@@ -100,12 +106,6 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	istioCR, err = istio.UpdateLastAppliedConfiguration(istioCR, istioTag)
 	if err != nil {
 		r.log.Error(err, "Error updating LastAppliedConfiguration")
-		return r.UpdateStatus(ctx, &istioCR, operatorv1alpha1.Error, metav1.Condition{})
-	}
-
-	err = r.sidecars.Reconcile(ctx, r.Client, r.log)
-	if err != nil {
-		r.log.Error(err, "Error occurred during reconciliation of Istio Sidecars")
 		return r.UpdateStatus(ctx, &istioCR, operatorv1alpha1.Error, metav1.Condition{})
 	}
 

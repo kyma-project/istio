@@ -19,7 +19,7 @@ type IstioReconciler struct {
 	client.Client
 	Scheme            *runtime.Scheme
 	istioInstallation istio.Installation
-	sidecars          proxy.Sidecars
+	proxySidecars     proxy.Sidecars
 	log               logr.Logger
 }
 

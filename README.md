@@ -1,6 +1,6 @@
 # Istio Manager
 
-<img src="https://istio.io/latest/img/istio-whitelogo-bluebackground-framed.svg" alt="Istio logo" style="height: 100px; width:100px;"/>
+<img src="./docs/istio-whitelogo-bluebackground-framed.svg" alt="Istio logo" style="height: 100px; width:100px;"/>
 
 ## Overview
 

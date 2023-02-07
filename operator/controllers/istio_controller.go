@@ -78,8 +78,8 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 	// Perform Istio installation only when needed
 	if reconciliationTrigger.NeedsIstioInstall() {
-		// Update status to reconciling when install is in progress
-		res, err := r.UpdateStatus(ctx, &istioCR, operatorv1alpha1.Reconciling, metav1.Condition{})
+		// Update status to Processing when install is in progress
+		res, err := r.UpdateStatus(ctx, &istioCR, operatorv1alpha1.Processing, metav1.Condition{})
 		if err != nil {
 			return res, err
 		}

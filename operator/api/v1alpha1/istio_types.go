@@ -24,10 +24,10 @@ type State string
 
 // Valid IstioCR States.
 const (
-	Ready       State = "Ready"
-	Reconciling State = "Reconciling"
-	Error       State = "Error"
-	Deleting    State = "Deleting"
+	Ready      State = "Ready"
+	Processing State = "Processing"
+	Error      State = "Error"
+	Deleting   State = "Deleting"
 )
 
 // Defines the desired specification for installing or updating Istio.
@@ -61,7 +61,9 @@ type IstioList struct {
 // IstioStatus defines the observed state of IstioCR.
 type IstioStatus struct {
 	// State signifies current state of CustomObject. Value
-	// can be one of ("Ready", "Reconciling", "Error", "Deleting").
+	// can be one of ("Ready", "Processing", "Error", "Deleting").
+	// +kubebuilder:validation:Required
+    // +kubebuilder:validation:Enum=Processing;Deleting;Ready;Error
 	State State `json:"state"`
 	//  Conditions associated with IstioStatus.
 	Conditions *[]metav1.Condition `json:"conditions,omitempty"`

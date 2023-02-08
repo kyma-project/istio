@@ -7,6 +7,7 @@ import (
 	"github.com/cucumber/godog"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
+	appsv1 "k8s.io/api/apps/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -45,10 +46,35 @@ func (s *scenario) allRequiredResourcesAreRestarted() error {
 		if err != nil {
 			return err
 		}
+		switch obj.GetObjectKind().GroupVersionKind().Kind {
+		case "DaemonSet":
+			ds := obj.(*appsv1.DaemonSet)
+			if _, ok := ds.Spec.Template.Annotations[restartAnnotationName]; !ok {
+				return fmt.Errorf("the annotation %s wasn't applied for %s %s/%s", restartAnnotationName, ds.GetObjectKind().GroupVersionKind().Kind, ds.GetNamespace(), ds.GetName())
+			}
 
-		if _, ok := obj.GetAnnotations()[restartAnnotationName]; !ok {
-			return fmt.Errorf("the annotation %s wasn't applied for %s %s/%s", restartAnnotationName, obj.GetObjectKind().GroupVersionKind().Kind, obj.GetNamespace(), obj.GetName())
+		case "Deployment":
+			dep := obj.(*appsv1.Deployment)
+			if _, ok := dep.Spec.Template.Annotations[restartAnnotationName]; !ok {
+				return fmt.Errorf("the annotation %s wasn't applied for %s %s/%s", restartAnnotationName, dep.GetObjectKind().GroupVersionKind().Kind, dep.GetNamespace(), dep.GetName())
+			}
+
+		case "ReplicaSet":
+			rs := obj.(*appsv1.ReplicaSet)
+			if _, ok := rs.Spec.Template.Annotations[restartAnnotationName]; !ok {
+				return fmt.Errorf("the annotation %s wasn't applied for %s %s/%s", restartAnnotationName, rs.GetObjectKind().GroupVersionKind().Kind, rs.GetNamespace(), rs.GetName())
+			}
+
+		case "StatefulSet":
+			ss := obj.(*appsv1.StatefulSet)
+			if _, ok := ss.Spec.Template.Annotations[restartAnnotationName]; !ok {
+				return fmt.Errorf("the annotation %s wasn't applied for %s %s/%s", restartAnnotationName, ss.GetObjectKind().GroupVersionKind().Kind, ss.GetNamespace(), ss.GetName())
+			}
+
+		default:
+			return fmt.Errorf("kind %s is not supported for rollout", obj.GetObjectKind().GroupVersionKind().Kind)
 		}
+
 	}
 	return nil
 }

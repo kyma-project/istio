@@ -21,19 +21,21 @@ import (
 	"fmt"
 	"time"
 
+	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/proxy"
 	"golang.org/x/time/rate"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/ratelimiter"
-
-	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
-	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 )
 
 var (
@@ -51,6 +53,7 @@ func NewReconciler(mgr manager.Manager) *IstioReconciler {
 		Client:            mgr.GetClient(),
 		Scheme:            mgr.GetScheme(),
 		istioInstallation: istio.Installation{Client: istio.NewIstioClient(defaultIstioOperatorPath, workingDir), IstioVersion: IstioVersion, IstioImageBase: IstioImageBase},
+		proxySidecars:     proxy.Sidecars{IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, CniEnabled: true},
 		log:               mgr.GetLogger(),
 	}
 }
@@ -84,9 +87,16 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			return res, err
 		}
 
-		err = r.istioInstallation.Reconcile(ctx, &istioCR, r.Client)
+		err = r.istioInstallation.Reconcile(&istioCR)
 		if err != nil {
 			r.log.Error(err, "Error occurred during reconciliation of Istio Operator")
+			return r.UpdateStatus(ctx, &istioCR, operatorv1alpha1.Error, metav1.Condition{})
+		}
+
+		// TODO: I think we need to decouple proxy reconciliation from IstioInstall, because we might want to trigger it continuously on reconciliation or have a guaranteed execution after install
+		err = r.proxySidecars.Reconcile(ctx, r.Client, r.log)
+		if err != nil {
+			r.log.Error(err, "Error occurred during reconciliation of Istio Sidecars")
 			return r.UpdateStatus(ctx, &istioCR, operatorv1alpha1.Error, metav1.Condition{})
 		}
 	} else {
@@ -116,6 +126,14 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 // +kubebuilder:rbac:groups="",resources=namespaces,verbs=get;create;update;patch
 func (r *IstioReconciler) SetupWithManager(mgr ctrl.Manager, rateLimiter RateLimiter) error {
 	r.Config = mgr.GetConfig()
+
+	// TODO Can we add a comment why we need this?
+	if err := mgr.GetFieldIndexer().IndexField(context.TODO(), &corev1.Pod{}, "status.phase", func(rawObj client.Object) []string {
+		pod := rawObj.(*corev1.Pod)
+		return []string{string(pod.Status.Phase)}
+	}); err != nil {
+		return err
+	}
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&operatorv1alpha1.Istio{}).

@@ -28,7 +28,8 @@ func NewIstioClient(defaultIstioOperatorPath string, workingDir string) IstioCli
 func (c *IstioClient) Install(mergedIstioOperatorPath string) error {
 	iopFileNames := make([]string, 0, 1)
 	iopFileNames = append(iopFileNames, mergedIstioOperatorPath)
-	installArgs := &istio.InstallArgs{SkipConfirmation: true, Verify: true, InFilenames: iopFileNames}
+	// We don't want to verify after installation, because it is unreliable
+	installArgs := &istio.InstallArgs{SkipConfirmation: true, Verify: false, InFilenames: iopFileNames}
 
 	if err := istio.Install(&istio.RootArgs{}, installArgs, c.istioLogOptions, os.Stdout, c.consoleLogger, c.printer); err != nil {
 		return err

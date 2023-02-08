@@ -2,8 +2,9 @@ package restart_test
 
 import (
 	"context"
-	"github.com/go-logr/logr"
 	"testing"
+
+	"github.com/go-logr/logr"
 
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/restart"
 	"github.com/stretchr/testify/require"
@@ -107,7 +108,7 @@ func TestRestart(t *testing.T) {
 		err = c.Get(context.TODO(), types.NamespacedName{Namespace: "test-ns", Name: "owner"}, &obj)
 		require.NoError(t, err)
 
-		require.NotEmpty(t, obj.Annotations[restartAnnotationName])
+		require.NotEmpty(t, obj.Spec.Template.Annotations[restartAnnotationName])
 	})
 
 	t.Run("should rollout restart one Deployment if two pods are owned by one", func(t *testing.T) {
@@ -132,7 +133,7 @@ func TestRestart(t *testing.T) {
 		err = c.Get(context.TODO(), types.NamespacedName{Namespace: "test-ns", Name: "owner"}, &obj)
 		require.NoError(t, err)
 
-		require.NotEmpty(t, obj.Annotations[restartAnnotationName])
+		require.NotEmpty(t, obj.Spec.Template.Annotations[restartAnnotationName])
 	})
 
 	t.Run("should rollout restart DaemonSet if the pod is owned by one", func(t *testing.T) {
@@ -156,7 +157,7 @@ func TestRestart(t *testing.T) {
 		err = c.Get(context.TODO(), types.NamespacedName{Namespace: "test-ns", Name: "owner"}, &obj)
 		require.NoError(t, err)
 
-		require.NotEmpty(t, obj.Annotations[restartAnnotationName])
+		require.NotEmpty(t, obj.Spec.Template.Annotations[restartAnnotationName])
 	})
 
 	t.Run("should delete a pod belonging to a ReplicaSet with no owner", func(t *testing.T) {
@@ -228,7 +229,7 @@ func TestRestart(t *testing.T) {
 		err = c.Get(context.TODO(), types.NamespacedName{Namespace: "test-ns", Name: "owner"}, &obj)
 		require.NoError(t, err)
 
-		require.NotEmpty(t, obj.Annotations[restartAnnotationName])
+		require.NotEmpty(t, obj.Spec.Template.Annotations[restartAnnotationName])
 	})
 
 	t.Run("should return a warning when Pod is owned by a ReplicaSet that is not found", func(t *testing.T) {
@@ -348,7 +349,7 @@ func TestRestart(t *testing.T) {
 		err = c.Get(context.TODO(), types.NamespacedName{Name: "rsOwner", Namespace: "test-ns"}, &replicaSet)
 
 		require.NoError(t, err)
-		require.NotEmpty(t, replicaSet.Annotations[restartAnnotationName])
+		require.NotEmpty(t, replicaSet.Spec.Template.Annotations[restartAnnotationName])
 	})
 }
 

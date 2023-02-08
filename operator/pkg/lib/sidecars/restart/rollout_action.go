@@ -37,13 +37,7 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 				return err
 			}
 			ds := obj.(*appsv1.DaemonSet)
-			annotations := ds.Spec.Template.Annotations
-			if len(annotations) == 0 {
-				annotations = map[string]string{}
-			}
-
-			annotations[restartAnnotationName] = time.Now().Format(time.RFC3339)
-			ds.Spec.Template.Annotations = annotations
+			ds.Spec.Template.Annotations = addRestartAnnotation(ds.Spec.Template.Annotations)
 
 			return k8sclient.Update(ctx, ds)
 		})
@@ -55,13 +49,7 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 				return err
 			}
 			dep := obj.(*appsv1.Deployment)
-			annotations := dep.Spec.Template.Annotations
-			if len(annotations) == 0 {
-				annotations = map[string]string{}
-			}
-
-			annotations[restartAnnotationName] = time.Now().Format(time.RFC3339)
-			dep.Spec.Template.Annotations = annotations
+			dep.Spec.Template.Annotations = addRestartAnnotation(dep.Spec.Template.Annotations)
 
 			return k8sclient.Update(ctx, dep)
 		})
@@ -73,13 +61,7 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 				return err
 			}
 			rs := obj.(*appsv1.ReplicaSet)
-			annotations := rs.Spec.Template.Annotations
-			if len(annotations) == 0 {
-				annotations = map[string]string{}
-			}
-
-			annotations[restartAnnotationName] = time.Now().Format(time.RFC3339)
-			rs.Spec.Template.Annotations = annotations
+			rs.Spec.Template.Annotations = addRestartAnnotation(rs.Spec.Template.Annotations)
 
 			return k8sclient.Update(ctx, rs)
 		})
@@ -91,13 +73,7 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 				return err
 			}
 			ss := obj.(*appsv1.StatefulSet)
-			annotations := ss.Spec.Template.Annotations
-			if len(annotations) == 0 {
-				annotations = map[string]string{}
-			}
-
-			annotations[restartAnnotationName] = time.Now().Format(time.RFC3339)
-			ss.Spec.Template.Annotations = annotations
+			ss.Spec.Template.Annotations = addRestartAnnotation(ss.Spec.Template.Annotations)
 
 			return k8sclient.Update(ctx, ss)
 		})
@@ -110,4 +86,13 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 	}
 
 	return nil, nil
+}
+
+func addRestartAnnotation(annotations map[string]string) map[string]string {
+	if len(annotations) == 0 {
+		annotations = map[string]string{}
+	}
+
+	annotations[restartAnnotationName] = time.Now().Format(time.RFC3339)
+	return annotations
 }

@@ -87,12 +87,13 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			return res, err
 		}
 
-		err = r.istioInstallation.Reconcile(ctx, &istioCR, r.Client)
+		err = r.istioInstallation.Reconcile(&istioCR)
 		if err != nil {
 			r.log.Error(err, "Error occurred during reconciliation of Istio Operator")
 			return r.UpdateStatus(ctx, &istioCR, operatorv1alpha1.Error, metav1.Condition{})
 		}
 
+		// TODO: I think we need to decouple proxy reconciliation from IstioInstall, because we might want to trigger it continuously on reconciliation or have a guaranteed execution after install
 		err = r.proxySidecars.Reconcile(ctx, r.Client, r.log)
 		if err != nil {
 			r.log.Error(err, "Error occurred during reconciliation of Istio Sidecars")
@@ -126,6 +127,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 func (r *IstioReconciler) SetupWithManager(mgr ctrl.Manager, rateLimiter RateLimiter) error {
 	r.Config = mgr.GetConfig()
 
+	// TODO Can we add a comment why we need this?
 	if err := mgr.GetFieldIndexer().IndexField(context.TODO(), &corev1.Pod{}, "status.phase", func(rawObj client.Object) []string {
 		pod := rawObj.(*corev1.Pod)
 		return []string{string(pod.Status.Phase)}

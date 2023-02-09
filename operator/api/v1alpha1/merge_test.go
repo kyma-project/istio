@@ -1,6 +1,8 @@
 package v1alpha1
 
 import (
+	"github.com/kyma-project/istio/operator/internal/tests"
+	"github.com/onsi/ginkgo/v2/types"
 	operatorv1alpha1 "istio.io/api/operator/v1alpha1"
 	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	"istio.io/istio/pkg/config/mesh"
@@ -19,6 +21,10 @@ func TestAPIs(t *testing.T) {
 
 	RunSpecs(t, "Merge Suite")
 }
+
+var _ = ReportAfterSuite("custom reporter", func(report types.Report) {
+	tests.GenerateGinkgoJunitReport("merge-api-suite", report)
+})
 
 var _ = Describe("Merge", func() {
 

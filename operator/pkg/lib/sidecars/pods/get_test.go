@@ -2,7 +2,9 @@ package pods_test
 
 import (
 	"context"
+	"github.com/kyma-project/istio/operator/internal/tests"
 	. "github.com/onsi/ginkgo/v2"
+	"github.com/onsi/ginkgo/v2/types"
 	. "github.com/onsi/gomega"
 	"testing"
 	"time"
@@ -38,6 +40,10 @@ func TestGetPods(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Pods Get Suite")
 }
+
+var _ = ReportAfterSuite("custom reporter", func(report types.Report) {
+	tests.GenerateGinkgoJunitReport("pods-get-suite", report)
+})
 
 var _ = Describe("Get Pods", func() {
 

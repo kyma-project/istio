@@ -17,6 +17,8 @@ limitations under the License.
 package controllers
 
 import (
+	"github.com/kyma-project/istio/operator/internal/tests"
+	"github.com/onsi/ginkgo/v2/types"
 	"path/filepath"
 	"testing"
 
@@ -46,6 +48,10 @@ func TestAPIs(t *testing.T) {
 
 	RunSpecs(t, "Controller Suite")
 }
+
+var _ = ReportAfterSuite("custom reporter", func(report types.Report) {
+	tests.GenerateGinkgoJunitReport("controller-suite", report)
+})
 
 var _ = BeforeSuite(func() {
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))

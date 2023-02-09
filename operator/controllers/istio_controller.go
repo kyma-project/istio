@@ -93,14 +93,17 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			return r.UpdateStatus(ctx, &istioCR, operatorv1alpha1.Error, metav1.Condition{})
 		}
 
-		// TODO: I think we need to decouple proxy reconciliation from IstioInstall, because we might want to trigger it continuously on reconciliation or have a guaranteed execution after install
-		err = r.proxySidecars.Reconcile(ctx, r.Client, r.log)
-		if err != nil {
-			r.log.Error(err, "Error occurred during reconciliation of Istio Sidecars")
-			return r.UpdateStatus(ctx, &istioCR, operatorv1alpha1.Error, metav1.Condition{})
-		}
 	} else {
 		ctrl.Log.Info("Install of Istio was skipped")
+	}
+
+	// We do not want to safeguard the Istio sidecar reconciliation by checking whether Istio has to be installed. The
+	// reason for this is that we want to guarantee the restart of the proxies during the next reconciliation even if an
+	// error occurs in the reconciliation of the Istio upgrade after the Istio upgrade.
+	err = r.proxySidecars.Reconcile(ctx, r.Client, r.log)
+	if err != nil {
+		r.log.Error(err, "Error occurred during reconciliation of Istio Sidecars")
+		return r.UpdateStatus(ctx, &istioCR, operatorv1alpha1.Error, metav1.Condition{})
 	}
 
 	// Put applied configuration in annotation
@@ -127,7 +130,6 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 func (r *IstioReconciler) SetupWithManager(mgr ctrl.Manager, rateLimiter RateLimiter) error {
 	r.Config = mgr.GetConfig()
 
-	// TODO Can we add a comment why we need this?
 	if err := mgr.GetFieldIndexer().IndexField(context.TODO(), &corev1.Pod{}, "status.phase", func(rawObj client.Object) []string {
 		pod := rawObj.(*corev1.Pod)
 		return []string{string(pod.Status.Phase)}

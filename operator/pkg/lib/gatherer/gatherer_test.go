@@ -4,11 +4,12 @@ import (
 	"context"
 	"testing"
 
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+
 	"github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 	"github.com/masterminds/semver"
-	"github.com/stretchr/testify/require"
-
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -28,135 +29,142 @@ const (
 	DefaultNamespace     string = "default"
 )
 
-func createClientSet(t *testing.T, objects ...client.Object) client.Client {
+func TestAPIs(t *testing.T) {
+	RegisterFailHandler(Fail)
+
+	RunSpecs(t, "Gatherer Suite")
+}
+
+var _ = Describe("Gatherer", func() {
+
+	It("GetIstioCR", func() {
+		kymaSystem := corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: IstioCRNamespace,
+			},
+		}
+
+		istioKymaSystem := v1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+			Name:      IstioResourceName,
+			Namespace: IstioCRNamespace,
+			Labels: map[string]string{
+				TestLabelKey: TestLabelVal,
+			},
+		}}
+
+		client := createClientSet(&kymaSystem, &istioKymaSystem)
+
+		istioCr, err := gatherer.GetIstioCR(context.TODO(), client, IstioResourceName, IstioCRNamespace)
+
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(istioCr.ObjectMeta.Labels[TestLabelKey]).To(Equal(istioKymaSystem.ObjectMeta.Labels[TestLabelKey]))
+
+		noObjectClient := createClientSet(&kymaSystem)
+		istioCrNoObject, err := gatherer.GetIstioCR(context.TODO(), noObjectClient, IstioResourceName, IstioCRNamespace)
+
+		Expect(err).Should(HaveOccurred())
+		Expect(istioCrNoObject).To(BeNil())
+	})
+
+	It("ListIstioCR", func() {
+		kymaSystem := corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: IstioCRNamespace,
+			},
+		}
+
+		istioKymaSystem := v1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+			Name:      IstioResourceName,
+			Namespace: IstioCRNamespace,
+			Labels: map[string]string{
+				TestLabelKey: TestLabelVal,
+			},
+		}}
+
+		istioDefault := v1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+			Name:      IstioResourceName,
+			Namespace: DefaultNamespace,
+			Labels: map[string]string{
+				TestLabelKey: TestLabelVal,
+			},
+		}}
+
+		client := createClientSet(&kymaSystem, &istioKymaSystem, &istioDefault)
+
+		istioCrNoNamespace, err := gatherer.ListIstioCR(context.TODO(), client)
+
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(istioCrNoNamespace.Items).To(HaveLen(2))
+
+		istioCrKymaSystem, err := gatherer.ListIstioCR(context.TODO(), client, IstioCRNamespace)
+
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(istioCrKymaSystem.Items).To(HaveLen(1))
+
+		istioBothNamespaces, err := gatherer.ListIstioCR(context.TODO(), client, IstioCRNamespace, "default")
+
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(istioBothNamespaces.Items).To(HaveLen(2))
+	})
+
+	Context("ListInstalledIstioRevisions", func() {
+		It("Should list all istio versions with revisions", func() {
+
+			istioSystem := corev1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: IstioSystemNamespace,
+				},
+			}
+
+			istiodDefaultRevision := appsv1.Deployment{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "istiod",
+					Labels: map[string]string{
+						"app":                       "istiod",
+						"istio.io/rev":              "default",
+						"operator.istio.io/version": "1.16.1",
+					},
+				},
+			}
+
+			istiodOtherRevision := appsv1.Deployment{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "istiod-stable",
+					Labels: map[string]string{
+						"app":                       "istiod",
+						"istio.io/rev":              "stable",
+						"operator.istio.io/version": "1.15.4",
+					},
+				},
+			}
+			client := createClientSet(&istioSystem, &istiodDefaultRevision, &istiodOtherRevision)
+
+			istioVersions, err := gatherer.ListInstalledIstioRevisions(context.TODO(), client)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			Expect(istioVersions).To(HaveKey("default"))
+			Expect(istioVersions["default"]).To(Equal(semver.MustParse("1.16.1")))
+
+			Expect(istioVersions).To(HaveKey("stable"))
+			Expect(istioVersions["stable"]).To(Equal(semver.MustParse("1.15.4")))
+		})
+		It("Should return empty map when there is no istio installed", func() {
+			client := createClientSet()
+
+			istioVersions, err := gatherer.ListInstalledIstioRevisions(context.TODO(), client)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(istioVersions).To(BeEmpty())
+		})
+	})
+})
+
+func createClientSet(objects ...client.Object) client.Client {
 	err := v1alpha1.AddToScheme(scheme.Scheme)
-	require.NoError(t, err)
+	Expect(err).ShouldNot(HaveOccurred())
 	err = corev1.AddToScheme(scheme.Scheme)
-	require.NoError(t, err)
+	Expect(err).ShouldNot(HaveOccurred())
 	err = appsv1.AddToScheme(scheme.Scheme)
-	require.NoError(t, err)
+	Expect(err).ShouldNot(HaveOccurred())
 
-	client := fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build()
-
-	return client
-}
-
-func Test_GetIstioCR(t *testing.T) {
-	kymaSystem := corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: IstioCRNamespace,
-		},
-	}
-
-	istio_kymaSystem := v1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
-		Name:      IstioResourceName,
-		Namespace: IstioCRNamespace,
-		Labels: map[string]string{
-			TestLabelKey: TestLabelVal,
-		},
-	}}
-
-	client := createClientSet(t, &kymaSystem, &istio_kymaSystem)
-
-	istioCr, err := gatherer.GetIstioCR(context.TODO(), client, IstioResourceName, IstioCRNamespace)
-
-	require.NoError(t, err)
-	require.Equal(t, istio_kymaSystem.ObjectMeta.Labels[TestLabelKey], istioCr.ObjectMeta.Labels[TestLabelKey])
-
-	noObjectClient := createClientSet(t, &kymaSystem)
-	istioCrNoObject, err := gatherer.GetIstioCR(context.TODO(), noObjectClient, IstioResourceName, IstioCRNamespace)
-
-	require.Error(t, err)
-	require.Nil(t, istioCrNoObject)
-}
-
-func Test_ListIstioCR(t *testing.T) {
-	kymaSystem := corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: IstioCRNamespace,
-		},
-	}
-
-	istio_kymaSystem := v1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
-		Name:      IstioResourceName,
-		Namespace: IstioCRNamespace,
-		Labels: map[string]string{
-			TestLabelKey: TestLabelVal,
-		},
-	}}
-
-	istio_default := v1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
-		Name:      IstioResourceName,
-		Namespace: DefaultNamespace,
-		Labels: map[string]string{
-			TestLabelKey: TestLabelVal,
-		},
-	}}
-
-	client := createClientSet(t, &kymaSystem, &istio_kymaSystem, &istio_default)
-
-	istioCrNoNamespace, err := gatherer.ListIstioCR(context.TODO(), client)
-
-	require.NoError(t, err)
-	require.Len(t, istioCrNoNamespace.Items, 2)
-
-	istioCrKymaSystem, err := gatherer.ListIstioCR(context.TODO(), client, IstioCRNamespace)
-
-	require.NoError(t, err)
-	require.Len(t, istioCrKymaSystem.Items, 1)
-
-	istioBothNamespaces, err := gatherer.ListIstioCR(context.TODO(), client, IstioCRNamespace, "default")
-
-	require.NoError(t, err)
-	require.Len(t, istioBothNamespaces.Items, 2)
-}
-
-func Test_ListInstalledIstioRevisions(t *testing.T) {
-	t.Run("Should list all istio versions with revisions", func(t *testing.T) {
-
-		istioSystem := corev1.Namespace{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: IstioSystemNamespace,
-			},
-		}
-
-		istiod_defaultRevision := appsv1.Deployment{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "istiod",
-				Labels: map[string]string{
-					"app":                       "istiod",
-					"istio.io/rev":              "default",
-					"operator.istio.io/version": "1.16.1",
-				},
-			},
-		}
-
-		istiod_otherRevision := appsv1.Deployment{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "istiod-stable",
-				Labels: map[string]string{
-					"app":                       "istiod",
-					"istio.io/rev":              "stable",
-					"operator.istio.io/version": "1.15.4",
-				},
-			},
-		}
-		client := createClientSet(t, &istioSystem, &istiod_defaultRevision, &istiod_otherRevision)
-
-		istioVersions, err := gatherer.ListInstalledIstioRevisions(context.TODO(), client)
-		require.NoError(t, err)
-
-		require.Contains(t, istioVersions, "default")
-		require.Equal(t, istioVersions["default"], semver.MustParse("1.16.1"))
-
-		require.Contains(t, istioVersions, "stable")
-		require.Equal(t, istioVersions["stable"], semver.MustParse("1.15.4"))
-	})
-	t.Run("Should return empty map when there is no istio installed", func(t *testing.T) {
-		client := createClientSet(t)
-
-		istioVersions, err := gatherer.ListInstalledIstioRevisions(context.TODO(), client)
-		require.NoError(t, err)
-		require.Len(t, istioVersions, 0)
-	})
+	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build()
 }

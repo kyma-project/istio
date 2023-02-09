@@ -63,7 +63,7 @@ type IstioStatus struct {
 	// State signifies current state of CustomObject. Value
 	// can be one of ("Ready", "Processing", "Error", "Deleting").
 	// +kubebuilder:validation:Required
-    // +kubebuilder:validation:Enum=Processing;Deleting;Ready;Error
+	// +kubebuilder:validation:Enum=Processing;Deleting;Ready;Error
 	State State `json:"state"`
 	//  Conditions associated with IstioStatus.
 	Conditions *[]metav1.Condition `json:"conditions,omitempty"`

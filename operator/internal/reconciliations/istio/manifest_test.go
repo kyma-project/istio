@@ -1,23 +1,24 @@
 package istio
 
 import (
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 	"os"
 	"path"
-	"testing"
 
 	"github.com/kyma-project/istio/operator/api/v1alpha1"
-	"github.com/stretchr/testify/require"
 	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
 )
 
-var TestTemplateData TemplateData = TemplateData{
+var TestTemplateData = TemplateData{
 	IstioVersion:   "1.16.1",
 	IstioImageBase: "distroless",
 }
 
-func Test_merge(t *testing.T) {
+var _ = Describe("Manifest merge", func() {
+
 	numTrustedProxies := 4
 	istioCR := &v1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
 		Name:      "istio-test",
@@ -31,7 +32,7 @@ func Test_merge(t *testing.T) {
 	}
 	workingDir := "test"
 
-	t.Run("should return error when provided invalid path to default Istio Operator", func(t *testing.T) {
+	It("should return error when provided invalid path to default Istio Operator", func() {
 		// given
 		istioOperatorPath := "invalid/path.yaml"
 
@@ -39,11 +40,11 @@ func Test_merge(t *testing.T) {
 		mergedIstioOperatorPath, err := merge(istioCR, istioOperatorPath, workingDir, TestTemplateData)
 
 		// then
-		require.Error(t, err)
-		require.Equal(t, "", mergedIstioOperatorPath)
+		Expect(err).Should(HaveOccurred())
+		Expect(mergedIstioOperatorPath).To(BeEmpty())
 	})
 
-	t.Run("should return error when provided misconfigured default Istio Operator", func(t *testing.T) {
+	It("should return error when provided misconfigured default Istio Operator", func() {
 		// given
 		istioOperatorPath := "test/wrong-operator.yaml"
 
@@ -51,11 +52,11 @@ func Test_merge(t *testing.T) {
 		mergedIstioOperatorPath, err := merge(istioCR, istioOperatorPath, workingDir, TestTemplateData)
 
 		// then
-		require.Error(t, err)
-		require.Equal(t, "", mergedIstioOperatorPath)
+		Expect(err).Should(HaveOccurred())
+		Expect(mergedIstioOperatorPath).To(BeEmpty())
 	})
 
-	t.Run("should return merged configuration, when there is a Istio CR with valid configuration and a correct Istio Operator manifest", func(t *testing.T) {
+	It("should return merged configuration, when there is a Istio CR with valid configuration and a correct Istio Operator manifest", func() {
 		// given
 		istioOperatorPath := "test/test-operator.yaml"
 
@@ -63,16 +64,20 @@ func Test_merge(t *testing.T) {
 		mergedIstioOperatorPath, err := merge(istioCR, istioOperatorPath, workingDir, TestTemplateData)
 
 		// then
-		require.NoError(t, err)
-		require.Equal(t, path.Join(workingDir, mergedIstioOperatorFile), mergedIstioOperatorPath)
-		iop := readIOP(t, mergedIstioOperatorPath)
-		require.Equal(t, float64(4), iop.Spec.MeshConfig.Fields["defaultConfig"].
-			GetStructValue().Fields["gatewayTopology"].GetStructValue().Fields["numTrustedProxies"].GetNumberValue())
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(mergedIstioOperatorPath).To(Equal(path.Join(workingDir, mergedIstioOperatorFile)))
+
+		iop := readIOP(mergedIstioOperatorPath)
+
+		numTrustedProxies := iop.Spec.MeshConfig.Fields["defaultConfig"].
+			GetStructValue().Fields["gatewayTopology"].GetStructValue().Fields["numTrustedProxies"].GetNumberValue()
+
+		Expect(numTrustedProxies).To(Equal(float64(4)))
 		err = os.Remove(mergedIstioOperatorPath)
-		require.NoError(t, err)
+		Expect(err).ShouldNot(HaveOccurred())
 	})
 
-	t.Run("should return merged configuration, with IstioVersion and IstioImageBase coming from template", func(t *testing.T) {
+	It("should return merged configuration, with IstioVersion and IstioImageBase coming from template", func() {
 		// given
 		istioOperatorPath := "test/template-operator.yaml"
 
@@ -80,22 +85,22 @@ func Test_merge(t *testing.T) {
 		mergedIstioOperatorPath, err := merge(istioCR, istioOperatorPath, workingDir, TestTemplateData)
 
 		// then
-		require.NoError(t, err)
-		require.Equal(t, path.Join(workingDir, mergedIstioOperatorFile), mergedIstioOperatorPath)
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(mergedIstioOperatorPath).To(Equal(path.Join(workingDir, mergedIstioOperatorFile)))
 
-		iop := readIOP(t, mergedIstioOperatorPath)
-		require.Equal(t, "1.16.1-distroless", iop.Spec.Tag.GetStringValue())
+		iop := readIOP(mergedIstioOperatorPath)
+		Expect(iop.Spec.Tag.GetStringValue()).To(Equal("1.16.1-distroless"))
 		err = os.Remove(mergedIstioOperatorPath)
-		require.NoError(t, err)
+		Expect(err).ShouldNot(HaveOccurred())
 	})
-}
+})
 
-func readIOP(t *testing.T, istioOperatorFilePath string) istioOperator.IstioOperator {
+func readIOP(istioOperatorFilePath string) istioOperator.IstioOperator {
 	iop := istioOperator.IstioOperator{}
 	manifest, err := os.ReadFile(istioOperatorFilePath)
-	require.NoError(t, err)
+	Expect(err).ShouldNot(HaveOccurred())
 	err = yaml.Unmarshal(manifest, &iop)
-	require.NoError(t, err)
+	Expect(err).ShouldNot(HaveOccurred())
 
 	return iop
 }

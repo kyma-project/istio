@@ -94,6 +94,7 @@ rules:
   - deployments
   - deployments/finalizers
   - replicasets
+  - statefulsets
   verbs:
   - '*'
 - apiGroups:

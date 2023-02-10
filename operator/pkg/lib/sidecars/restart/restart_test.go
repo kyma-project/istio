@@ -3,7 +3,9 @@ package restart_test
 import (
 	"context"
 	"github.com/go-logr/logr"
+	"github.com/kyma-project/istio/operator/internal/tests"
 	. "github.com/onsi/ginkgo/v2"
+	ginkgotypes "github.com/onsi/ginkgo/v2/types"
 	. "github.com/onsi/gomega"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -22,8 +24,12 @@ const restartAnnotationName = "istio-operator.kyma-project.io/restartedAt"
 
 func TestRestartPods(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Pods Get Suite")
+	RunSpecs(t, "Pods Restart Suite")
 }
+
+var _ = ReportAfterSuite("custom reporter", func(report ginkgotypes.Report) {
+	tests.GenerateGinkgoJunitReport("pods-restart-suite", report)
+})
 
 var _ = Describe("Restart Pods", func() {
 	ctx := context.TODO()

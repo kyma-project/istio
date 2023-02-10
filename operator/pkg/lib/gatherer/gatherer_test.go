@@ -2,6 +2,8 @@ package gatherer_test
 
 import (
 	"context"
+	"github.com/kyma-project/istio/operator/internal/tests"
+	"github.com/onsi/ginkgo/v2/types"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -34,6 +36,10 @@ func TestAPIs(t *testing.T) {
 
 	RunSpecs(t, "Gatherer Suite")
 }
+
+var _ = ReportAfterSuite("custom reporter", func(report types.Report) {
+	tests.GenerateGinkgoJunitReport("gatherer-suite", report)
+})
 
 var _ = Describe("Gatherer", func() {
 

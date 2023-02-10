@@ -37,9 +37,10 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 				return err
 			}
 			ds := obj.(*appsv1.DaemonSet)
+			patch := client.StrategicMergeFrom(ds.DeepCopy())
 			ds.Spec.Template.Annotations = addRestartAnnotation(ds.Spec.Template.Annotations)
 
-			return k8sclient.Update(ctx, ds)
+			return k8sclient.Patch(ctx, ds, patch)
 		})
 	case "Deployment":
 		obj = &appsv1.Deployment{}
@@ -49,9 +50,10 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 				return err
 			}
 			dep := obj.(*appsv1.Deployment)
+			patch := client.StrategicMergeFrom(dep.DeepCopy())
 			dep.Spec.Template.Annotations = addRestartAnnotation(dep.Spec.Template.Annotations)
 
-			return k8sclient.Update(ctx, dep)
+			return k8sclient.Patch(ctx, dep, patch)
 		})
 	case "ReplicaSet":
 		obj = &appsv1.ReplicaSet{}
@@ -61,9 +63,10 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 				return err
 			}
 			rs := obj.(*appsv1.ReplicaSet)
+			patch := client.StrategicMergeFrom(rs.DeepCopy())
 			rs.Spec.Template.Annotations = addRestartAnnotation(rs.Spec.Template.Annotations)
 
-			return k8sclient.Update(ctx, rs)
+			return k8sclient.Patch(ctx, rs, patch)
 		})
 	case "StatefulSet":
 		obj = &appsv1.StatefulSet{}
@@ -73,9 +76,10 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 				return err
 			}
 			ss := obj.(*appsv1.StatefulSet)
+			patch := client.StrategicMergeFrom(ss.DeepCopy())
 			ss.Spec.Template.Annotations = addRestartAnnotation(ss.Spec.Template.Annotations)
 
-			return k8sclient.Update(ctx, ss)
+			return k8sclient.Patch(ctx, ss, patch)
 		})
 	default:
 		return nil, fmt.Errorf("kind %s is not supported for rollout", object.Kind)

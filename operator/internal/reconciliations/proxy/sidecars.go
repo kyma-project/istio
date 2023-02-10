@@ -31,7 +31,7 @@ func (s *Sidecars) Reconcile(ctx context.Context, client client.Client, logger l
 	}
 	if len(warnings) > 0 {
 		for _, w := range warnings {
-			logger.Info("Proxy reset warning", w)
+			logger.Info("Proxy reset warning:", "name", w.Name, "namespace", w.Namespace, "kind", w.Kind, "message", w.Message)
 		}
 	}
 

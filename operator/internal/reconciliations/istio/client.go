@@ -3,6 +3,7 @@ package istio
 import (
 	"os"
 
+	"github.com/kyma-project/istio/operator/pkg/lib/uninstall"
 	istio "istio.io/istio/operator/cmd/mesh"
 	"istio.io/istio/operator/pkg/util/clog"
 	istiolog "istio.io/pkg/log"
@@ -39,7 +40,11 @@ func (c *IstioClient) Install(mergedIstioOperatorPath string) error {
 }
 
 func (c *IstioClient) Uninstall() error {
-	//istio.UninstallCmd(c.istioLogOptions)
+	uiArgs := &uninstall.UninstallArgs{Purge: true}
+	if err := uninstall.Uninstall(&istio.RootArgs{}, uiArgs, c.istioLogOptions, c.consoleLogger); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -49,6 +54,7 @@ func initializeLog() *istiolog.Options {
 	logoptions.SetOutputLevel("processing", istiolog.ErrorLevel)
 	logoptions.SetOutputLevel("analysis", istiolog.WarnLevel)
 	logoptions.SetOutputLevel("installer", istiolog.WarnLevel)
+	logoptions.SetOutputLevel("uninstaller", istiolog.WarnLevel)
 	logoptions.SetOutputLevel("translator", istiolog.WarnLevel)
 	logoptions.SetOutputLevel("adsc", istiolog.WarnLevel)
 	logoptions.SetOutputLevel("default", istiolog.WarnLevel)

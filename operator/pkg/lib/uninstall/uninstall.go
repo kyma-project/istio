@@ -118,7 +118,6 @@ func preCheckWarnings(uiArgs *UninstallArgs, rev string, resourcesList []*unstru
 		}
 	}
 	l.LogAndPrint(message)
-	return
 }
 
 func constructResourceListOutput(resourcesList []*unstructured.UnstructuredList, objectsList object.K8sObjects) (string, string) {

@@ -16,9 +16,9 @@ type IstioClient struct {
 	workingDir               string
 }
 
-func NewIstioClient(defaultIstioOperatorPath string, workingDir string) IstioClient {
+func NewIstioClient(defaultIstioOperatorPath string, workingDir string, istioLogScope string) IstioClient {
 	istioLogOptions := initializeLog()
-	installerScope := istiolog.RegisterScope("installer", "installer", 0)
+	installerScope := istiolog.RegisterScope(istioLogScope, istioLogScope, 0)
 	consoleLogger := clog.NewConsoleLogger(os.Stdout, os.Stderr, installerScope)
 	printer := istio.NewPrinterForWriter(os.Stdout)
 
@@ -35,6 +35,11 @@ func (c *IstioClient) Install(mergedIstioOperatorPath string) error {
 		return err
 	}
 
+	return nil
+}
+
+func (c *IstioClient) Uninstall() error {
+	//istio.UninstallCmd(c.istioLogOptions)
 	return nil
 }
 

@@ -50,11 +50,12 @@ const (
 
 func NewReconciler(mgr manager.Manager) *IstioReconciler {
 	return &IstioReconciler{
-		Client:            mgr.GetClient(),
-		Scheme:            mgr.GetScheme(),
-		istioInstallation: istio.Installation{Client: istio.NewIstioClient(defaultIstioOperatorPath, workingDir), IstioVersion: IstioVersion, IstioImageBase: IstioImageBase},
-		proxySidecars:     proxy.Sidecars{IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, CniEnabled: true},
-		log:               mgr.GetLogger(),
+		Client:              mgr.GetClient(),
+		Scheme:              mgr.GetScheme(),
+		istioInstallation:   istio.Installation{Client: istio.NewIstioClient(defaultIstioOperatorPath, workingDir, "installer"), IstioVersion: IstioVersion, IstioImageBase: IstioImageBase},
+		istioUninstallation: istio.Uninstallation{Client: istio.NewIstioClient(defaultIstioOperatorPath, workingDir, "uninstaller"), IstioVersion: IstioVersion, IstioImageBase: IstioImageBase},
+		proxySidecars:       proxy.Sidecars{IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, CniEnabled: true},
+		log:                 mgr.GetLogger(),
 	}
 }
 
@@ -64,7 +65,12 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	istioCR := operatorv1alpha1.Istio{}
 	if err := r.Client.Get(ctx, req.NamespacedName, &istioCR); err != nil {
 		if errors.IsNotFound(err) {
-			r.UpdateStatus(ctx, &istioCR, operatorv1alpha1.Error, metav1.Condition{})
+			// Deletion
+			err = r.istioUninstallation.Reconcile(&istioCR)
+			if err != nil {
+				r.log.Error(err, "Error occurred during reconciliation of Istio Operator")
+			}
+			return ctrl.Result{}, nil
 		}
 		r.log.Error(err, "Error during fetching Istio CR")
 		return r.UpdateStatus(ctx, &istioCR, operatorv1alpha1.Error, metav1.Condition{})

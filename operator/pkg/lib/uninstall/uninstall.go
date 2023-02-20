@@ -56,8 +56,6 @@ func Uninstall(rootArgs *RootArgs, uiArgs *UninstallArgs, logOpts *log.Options, 
 	}
 
 	cache.FlushObjectCaches()
-	opts := &helmreconciler.Options{DryRun: rootArgs.DryRun, Log: l, ProgressLog: progress.NewLog()}
-	var h *helmreconciler.HelmReconciler
 
 	if uiArgs.Purge && uiArgs.Revision != "" {
 		l.LogAndPrint(PurgeWithRevisionOrOperatorSpecifiedWarning)
@@ -68,7 +66,8 @@ func Uninstall(rootArgs *RootArgs, uiArgs *UninstallArgs, logOpts *log.Options, 
 	if err != nil {
 		return err
 	}
-	h, err = helmreconciler.NewHelmReconciler(client, kubeClient, iop, opts)
+	opts := &helmreconciler.Options{DryRun: rootArgs.DryRun, Log: l, ProgressLog: progress.NewLog()}
+	h, err := helmreconciler.NewHelmReconciler(client, kubeClient, iop, opts)
 	if err != nil {
 		return fmt.Errorf("failed to create reconciler: %v", err)
 	}

@@ -17,6 +17,9 @@ const (
 	Delete              IstioCRChange = 8
 )
 
+type Status struct{}
+
+// TODO rename to shouldIstioReconcile, add delete handling
 func (r IstioCRChange) NeedsIstioInstall() bool {
 	return r == Create || r&VersionUpdate > 0 || r&ConfigurationUpdate > 0
 }
@@ -26,7 +29,7 @@ type appliedConfig struct {
 	IstioTag string
 }
 
-// EvaluateIstioCRChanges returns IstioCRChange that hapened since LastAppliedConfiguration
+// EvaluateIstioCRChanges returns IstioCRChange that happened since LastAppliedConfiguration
 func EvaluateIstioCRChanges(istioCR operatorv1alpha1.Istio, istioTag string) (trigger IstioCRChange, err error) {
 	if !istioCR.DeletionTimestamp.IsZero() {
 		return Delete, nil

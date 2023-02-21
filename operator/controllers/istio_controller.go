@@ -66,6 +66,8 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	if err := r.Client.Get(ctx, req.NamespacedName, &istioCR); err != nil {
 		if errors.IsNotFound(err) {
 			// Deletion
+			// TODO I think we should use the result of the reconciliationTrigger and move the
+			//  uninstall inside the IstioInstallation Reconcile, to have it better encapsulated
 			err = r.istioUninstallation.Reconcile(&istioCR)
 			if err != nil {
 				r.log.Error(err, "Error occurred during reconciliation of Istio Operator")

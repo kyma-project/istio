@@ -1,9 +1,16 @@
 package istio
 
 import (
+	"fmt"
+	"istio.io/api/operator/v1alpha1"
+	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
+	"istio.io/istio/operator/pkg/cache"
+	"istio.io/istio/operator/pkg/helmreconciler"
+	"istio.io/istio/operator/pkg/translate"
+	"istio.io/istio/operator/pkg/util/progress"
 	"os"
+	"sync"
 
-	"github.com/kyma-project/istio/operator/pkg/lib/uninstall"
 	istio "istio.io/istio/operator/cmd/mesh"
 	"istio.io/istio/operator/pkg/util/clog"
 	istiolog "istio.io/pkg/log"
@@ -40,10 +47,49 @@ func (c *IstioClient) Install(mergedIstioOperatorPath string) error {
 }
 
 func (c *IstioClient) Uninstall() error {
-	uiArgs := &uninstall.UninstallArgs{Purge: true}
-	if err := uninstall.Uninstall(&istio.RootArgs{}, uiArgs, c.istioLogOptions, c.consoleLogger); err != nil {
+
+	// We don't use any revision capabilities yet
+	defaultRevision := ""
+
+	// Since we copied the internal uninstall function, we also need to make sure that Istio's internal logging is correctly configured
+	if err := initializeIstioLogSubsystem(c.istioLogOptions); err != nil {
+		return fmt.Errorf("could not configure logs: %s", err)
+	}
+
+	// We can use the default client and don't want to override it, so we can pass empty strings for kubeConfigPath and context.
+	kubeClient, client, err := istio.KubernetesClients("", "", c.consoleLogger)
+	if err != nil {
+		return fmt.Errorf("could not construct k8s clients logs: %s", err)
+	}
+
+	cache.FlushObjectCaches()
+
+	emptyiops := &v1alpha1.IstioOperatorSpec{Profile: "empty", Revision: defaultRevision}
+	iop, err := translate.IOPStoIOP(emptyiops, "empty", iopv1alpha1.Namespace(emptyiops))
+	if err != nil {
 		return err
 	}
+
+	opts := &helmreconciler.Options{DryRun: false, Log: c.consoleLogger, ProgressLog: progress.NewLog()}
+	h, err := helmreconciler.NewHelmReconciler(client, kubeClient, iop, opts)
+	if err != nil {
+		return fmt.Errorf("failed to create reconciler: %v", err)
+	}
+
+	objectsList, err := h.GetPrunedResources(defaultRevision, true, "")
+	if err != nil {
+		return err
+	}
+
+	c.consoleLogger.LogAndPrint(istio.AllResourcesRemovedWarning)
+
+	if err := h.DeleteObjectsList(objectsList, ""); err != nil {
+		return fmt.Errorf("failed to delete control plane resources by revision: %v", err)
+	}
+
+	// TODO Delete istio-system namespace as it is not deleted.
+
+	opts.ProgressLog.SetState(progress.StateUninstallComplete)
 
 	return nil
 }
@@ -62,4 +108,17 @@ func initializeLog() *istiolog.Options {
 	logoptions.SetOutputLevel("kube", istiolog.ErrorLevel)
 
 	return logoptions
+}
+
+var istioLogMutex = sync.Mutex{}
+
+func initializeIstioLogSubsystem(opt *istiolog.Options) error {
+	istioLogMutex.Lock()
+	defer istioLogMutex.Unlock()
+	op := []string{"stderr"}
+	opt2 := *opt
+	opt2.OutputPaths = op
+	opt2.ErrorOutputPaths = op
+
+	return istiolog.Configure(&opt2)
 }

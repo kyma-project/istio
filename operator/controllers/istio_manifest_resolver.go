@@ -15,7 +15,6 @@ var (
 const (
 	istioAnnotationKey   = "owner"
 	istioAnnotationValue = "istio-operator"
-	istioFinalizer       = "istio-finalizer"
 )
 
 // Get returns the chart information to be processed.

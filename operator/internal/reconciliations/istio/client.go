@@ -1,6 +1,7 @@
 package istio
 
 import (
+	"context"
 	"fmt"
 	"istio.io/api/operator/v1alpha1"
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
@@ -8,7 +9,11 @@ import (
 	"istio.io/istio/operator/pkg/helmreconciler"
 	"istio.io/istio/operator/pkg/translate"
 	"istio.io/istio/operator/pkg/util/progress"
+	"istio.io/istio/pkg/config/constants"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sync"
 
 	istio "istio.io/istio/operator/cmd/mesh"
@@ -26,8 +31,8 @@ type IstioClient struct {
 
 func NewIstioClient(defaultIstioOperatorPath string, workingDir string, istioLogScope string) IstioClient {
 	istioLogOptions := initializeLog()
-	installerScope := istiolog.RegisterScope(istioLogScope, istioLogScope, 0)
-	consoleLogger := clog.NewConsoleLogger(os.Stdout, os.Stderr, installerScope)
+	registeredScope := istiolog.RegisterScope(istioLogScope, istioLogScope, 0)
+	consoleLogger := clog.NewConsoleLogger(os.Stdout, os.Stderr, registeredScope)
 	printer := istio.NewPrinterForWriter(os.Stdout)
 
 	return IstioClient{istioLogOptions: istioLogOptions, consoleLogger: consoleLogger, printer: printer, defaultIstioOperatorPath: defaultIstioOperatorPath, workingDir: workingDir}
@@ -46,7 +51,7 @@ func (c *IstioClient) Install(mergedIstioOperatorPath string) error {
 	return nil
 }
 
-func (c *IstioClient) Uninstall() error {
+func (c *IstioClient) Uninstall(ctx context.Context) error {
 
 	// We don't use any revision capabilities yet
 	defaultRevision := ""
@@ -81,13 +86,23 @@ func (c *IstioClient) Uninstall() error {
 		return err
 	}
 
-	c.consoleLogger.LogAndPrint(istio.AllResourcesRemovedWarning)
+	ctrl.Log.Info(istio.AllResourcesRemovedWarning)
 
 	if err := h.DeleteObjectsList(objectsList, ""); err != nil {
 		return fmt.Errorf("failed to delete control plane resources by revision: %v", err)
 	}
+	ctrl.Log.Info("Deletion of istio resources completed")
 
-	// TODO Delete istio-system namespace as it is not deleted.
+	// We need to manually delete the control plane namespace from Istio because the namespace is not removed by default.
+	err = client.Delete(ctx, &v1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: constants.IstioSystemNamespace,
+		},
+	})
+	if err != nil {
+		return err
+	}
+	ctrl.Log.Info("Deleted istio control plane namespace", "namespace", constants.IstioSystemNamespace)
 
 	opts.ProgressLog.SetState(progress.StateUninstallComplete)
 

@@ -187,7 +187,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(returnedIstioCr.Status.State).To(Equal(operatorv1alpha1.Processing))
 	})
 
-	It("should not install when Istio CR has changed, but has deletion timestamp", func() {
+	It("should not install or uninstall when Istio CR has changed, but has deletion timestamp", func() {
 		// given
 		now := metav1.NewTime(time.Now())
 		newNumTrustedProxies := 3
@@ -213,12 +213,11 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 		}
 		// when
-		returnedIstioCr, err := installation.Reconcile(context.TODO(), createFakeClient(istioCr), istioCr, defaultIstioOperatorPath, workingDir)
+		_, err := installation.Reconcile(context.TODO(), createFakeClient(istioCr), istioCr, defaultIstioOperatorPath, workingDir)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(mockClient.installCalled).To(BeFalse())
-		Expect(returnedIstioCr.Status.State).NotTo(Equal(operatorv1alpha1.Processing))
 	})
 
 	It("should uninstall when Istio CR has deletion timestamp and installation finalizer", func() {

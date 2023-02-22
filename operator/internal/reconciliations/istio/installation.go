@@ -48,13 +48,13 @@ func (i *Installation) Reconcile(ctx context.Context, client client.Client, isti
 
 	ctrl.Log.Info("Reconcile Istio installation")
 
-	if istioCRChanges.requireInstall() {
+	// To have a better visibility of the manager state during install, update and deletion, we update the status to Processing
+	_, err = status.Update(ctx, client, &istioCR, operatorv1alpha1.Processing, metav1.Condition{})
+	if err != nil {
+		return istioCR, err
+	}
 
-		// To have a better visibility of the manager state during install and update, we update the status to Processing
-		_, err = status.Update(ctx, client, &istioCR, operatorv1alpha1.Processing, metav1.Condition{})
-		if err != nil {
-			return istioCR, err
-		}
+	if istioCRChanges.requireInstall() {
 
 		ctrl.Log.Info("Starting istio install", "istio version", i.IstioVersion, "istio image", i.IstioImageBase)
 

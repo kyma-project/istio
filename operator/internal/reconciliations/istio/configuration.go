@@ -35,8 +35,8 @@ type appliedConfig struct {
 }
 
 // EvaluateIstioCRChanges returns IstioCRChange that happened since LastAppliedConfiguration
-func EvaluateIstioCRChanges(istioCR *operatorv1alpha1.Istio, istioTag string) (trigger IstioCRChange, err error) {
-	if istioCR == nil || !istioCR.DeletionTimestamp.IsZero() {
+func EvaluateIstioCRChanges(istioCR operatorv1alpha1.Istio, istioTag string) (trigger IstioCRChange, err error) {
+	if !istioCR.DeletionTimestamp.IsZero() {
 		return Delete, nil
 	}
 

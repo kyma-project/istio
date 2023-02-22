@@ -39,7 +39,7 @@ var _ = Describe("CR configuration", func() {
 				cr := operatorv1alpha1.Istio{}
 
 				// when
-				changed, err := istio.EvaluateIstioCRChanges(&cr, mockIstioTag)
+				changed, err := istio.EvaluateIstioCRChanges(cr, mockIstioTag)
 
 				// then
 				Expect(err).ShouldNot(HaveOccurred())
@@ -62,7 +62,7 @@ var _ = Describe("CR configuration", func() {
 				}
 
 				// when
-				changed, err := istio.EvaluateIstioCRChanges(&cr, mockIstioTag)
+				changed, err := istio.EvaluateIstioCRChanges(cr, mockIstioTag)
 
 				// then
 				Expect(err).ShouldNot(HaveOccurred())
@@ -85,7 +85,7 @@ var _ = Describe("CR configuration", func() {
 				}
 
 				// when
-				changed, err := istio.EvaluateIstioCRChanges(&cr, mockIstioTag)
+				changed, err := istio.EvaluateIstioCRChanges(cr, mockIstioTag)
 
 				// then
 				Expect(err).ShouldNot(HaveOccurred())
@@ -107,7 +107,7 @@ var _ = Describe("CR configuration", func() {
 				}
 
 				// when
-				changed, err := istio.EvaluateIstioCRChanges(&cr, mockIstioTag)
+				changed, err := istio.EvaluateIstioCRChanges(cr, mockIstioTag)
 
 				// then
 				Expect(err).ShouldNot(HaveOccurred())
@@ -129,7 +129,7 @@ var _ = Describe("CR configuration", func() {
 				}
 
 				// when
-				changed, err := istio.EvaluateIstioCRChanges(&cr, mockIstioTag)
+				changed, err := istio.EvaluateIstioCRChanges(cr, mockIstioTag)
 
 				// then
 				Expect(err).ShouldNot(HaveOccurred())
@@ -152,7 +152,7 @@ var _ = Describe("CR configuration", func() {
 				}
 
 				// when
-				changed, err := istio.EvaluateIstioCRChanges(&cr, mockIstioTag)
+				changed, err := istio.EvaluateIstioCRChanges(cr, mockIstioTag)
 
 				// then
 				Expect(err).ShouldNot(HaveOccurred())
@@ -169,7 +169,7 @@ var _ = Describe("CR configuration", func() {
 				}}
 
 				// when
-				changed, err := istio.EvaluateIstioCRChanges(&cr, "1.16.3-distroless")
+				changed, err := istio.EvaluateIstioCRChanges(cr, "1.16.3-distroless")
 
 				// then
 				Expect(err).ShouldNot(HaveOccurred())
@@ -185,7 +185,7 @@ var _ = Describe("CR configuration", func() {
 				}}
 
 				// when
-				changed, err := istio.EvaluateIstioCRChanges(&cr, "1.16.3-distroless")
+				changed, err := istio.EvaluateIstioCRChanges(cr, "1.16.3-distroless")
 
 				// then
 				Expect(err).ShouldNot(HaveOccurred())

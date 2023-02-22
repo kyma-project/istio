@@ -44,7 +44,7 @@ var (
 )
 
 const (
-	IstioVersion   string = "1.16.1"
+	IstioVersion   string = "1.17.0"
 	IstioImageBase string = "distroless"
 )
 
@@ -66,21 +66,24 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	istioCR := operatorv1alpha1.Istio{}
 	if err := r.Client.Get(ctx, req.NamespacedName, &istioCR); err != nil {
 		if errors.IsNotFound(err) {
-			// TODO  Handle deletion of IstioCR in a more resilient way
-			err := r.istioInstallation.Reconcile(ctx, r.Client, nil, defaultIstioOperatorPath, workingDir)
-			if err != nil {
-				r.log.Error(err, "Error occurred during Istio CR deletion reconciliation")
-			}
+			r.log.Info("Skipped reconciliation, because Istio CR was not found", "request object", req.NamespacedName)
 			return ctrl.Result{}, nil
 		}
 		r.log.Error(err, "Error during fetching Istio CR")
 		return status.Update(ctx, r.Client, &istioCR, operatorv1alpha1.Error, metav1.Condition{})
 	}
 
-	err := r.istioInstallation.Reconcile(ctx, r.Client, &istioCR, defaultIstioOperatorPath, workingDir)
+	istioCR, err := r.istioInstallation.Reconcile(ctx, r.Client, istioCR, defaultIstioOperatorPath, workingDir)
 	if err != nil {
 		r.log.Error(err, "Error occurred during reconciliation of Istio installation")
 		return status.Update(ctx, r.Client, &istioCR, operatorv1alpha1.Error, metav1.Condition{})
+	}
+
+	// If there are no finalizers left, we must assume that the resource is deleted and therefore must stop the reconciliation
+	// to prevent accidental read or write to the resource.
+	if !istioCR.HasFinalizer() {
+		r.log.Info("Finish reconciliation as all finalizers have been removed")
+		return ctrl.Result{}, nil
 	}
 
 	// We do not want to safeguard the Istio sidecar reconciliation by checking whether Istio has to be installed. The

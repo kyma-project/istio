@@ -54,7 +54,7 @@ func NewReconciler(mgr manager.Manager) *IstioReconciler {
 	return &IstioReconciler{
 		Client:            mgr.GetClient(),
 		Scheme:            mgr.GetScheme(),
-		istioInstallation: istio.Installation{Client: istio.NewIstioClient(defaultIstioOperatorPath, workingDir, "installation"), IstioVersion: IstioVersion, IstioImageBase: IstioImageBase},
+		istioInstallation: istio.Installation{Client: istio.NewIstioClient(), IstioVersion: IstioVersion, IstioImageBase: IstioImageBase},
 		proxySidecars:     proxy.Sidecars{IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, CniEnabled: true},
 		log:               mgr.GetLogger(),
 	}
@@ -67,7 +67,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	if err := r.Client.Get(ctx, req.NamespacedName, &istioCR); err != nil {
 		if errors.IsNotFound(err) {
 			// TODO  Handle deletion of IstioCR in a more resilient way
-			err := r.istioInstallation.Reconcile(ctx, r.Client, nil, IstioTag)
+			err := r.istioInstallation.Reconcile(ctx, r.Client, nil, defaultIstioOperatorPath, workingDir)
 			if err != nil {
 				r.log.Error(err, "Error occurred during Istio CR deletion reconciliation")
 			}
@@ -77,7 +77,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return status.Update(ctx, r.Client, &istioCR, operatorv1alpha1.Error, metav1.Condition{})
 	}
 
-	err := r.istioInstallation.Reconcile(ctx, r.Client, &istioCR, IstioTag)
+	err := r.istioInstallation.Reconcile(ctx, r.Client, &istioCR, defaultIstioOperatorPath, workingDir)
 	if err != nil {
 		r.log.Error(err, "Error occurred during reconciliation of Istio installation")
 		return status.Update(ctx, r.Client, &istioCR, operatorv1alpha1.Error, metav1.Condition{})
@@ -106,7 +106,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 
 	r.log.Info("Reconcile completed")
-	// Update status to Ready
+
 	return status.Update(ctx, r.Client, &istioCR, operatorv1alpha1.Ready, metav1.Condition{})
 }
 

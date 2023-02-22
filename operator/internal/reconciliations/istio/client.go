@@ -21,21 +21,24 @@ import (
 	istiolog "istio.io/pkg/log"
 )
 
-type IstioClient struct {
-	istioLogOptions          *istiolog.Options
-	consoleLogger            *clog.ConsoleLogger
-	printer                  istio.Printer
-	defaultIstioOperatorPath string
-	workingDir               string
+type LibraryClient interface {
+	Install(mergedIstioOperatorPath string) error
+	Uninstall(ctx context.Context) error
 }
 
-func NewIstioClient(defaultIstioOperatorPath string, workingDir string, istioLogScope string) IstioClient {
+type IstioClient struct {
+	istioLogOptions *istiolog.Options
+	consoleLogger   *clog.ConsoleLogger
+	printer         istio.Printer
+}
+
+func NewIstioClient() *IstioClient {
 	istioLogOptions := initializeLog()
-	registeredScope := istiolog.RegisterScope(istioLogScope, istioLogScope, 0)
+	registeredScope := istiolog.RegisterScope("installation", "installation", 0)
 	consoleLogger := clog.NewConsoleLogger(os.Stdout, os.Stderr, registeredScope)
 	printer := istio.NewPrinterForWriter(os.Stdout)
 
-	return IstioClient{istioLogOptions: istioLogOptions, consoleLogger: consoleLogger, printer: printer, defaultIstioOperatorPath: defaultIstioOperatorPath, workingDir: workingDir}
+	return &IstioClient{istioLogOptions: istioLogOptions, consoleLogger: consoleLogger, printer: printer}
 }
 
 func (c *IstioClient) Install(mergedIstioOperatorPath string) error {

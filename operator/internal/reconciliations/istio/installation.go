@@ -2,6 +2,7 @@ package istio
 
 import (
 	"context"
+	"fmt"
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/status"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -10,7 +11,7 @@ import (
 )
 
 type Installation struct {
-	Client         IstioClient
+	Client         LibraryClient
 	IstioVersion   string
 	IstioImageBase string
 }
@@ -19,8 +20,10 @@ const (
 	LastAppliedConfiguration string = "operator.kyma-project.io/lastAppliedConfiguration"
 )
 
-// Reconcile runs Istio installation with merged Istio Operator manifest file when the trigger requires an installation.
-func (i *Installation) Reconcile(ctx context.Context, client client.Client, istioCR *operatorv1alpha1.Istio, istioTag string) error {
+// Reconcile runs Istio reconciliation to install, upgrade or uninstall Istio.
+func (i *Installation) Reconcile(ctx context.Context, client client.Client, istioCR *operatorv1alpha1.Istio, defaultIstioOperatorPath, workingDir string) error {
+
+	istioTag := fmt.Sprintf("%s-%s", i.IstioVersion, i.IstioImageBase)
 
 	// We need to evaluate what changed since last reconciliation, to make sure we run Istio reconciliation only if it's necessary
 	istioCRChanges, err := EvaluateIstioCRChanges(istioCR, istioTag)
@@ -48,7 +51,7 @@ func (i *Installation) Reconcile(ctx context.Context, client client.Client, isti
 
 		// As we define default IstioOperator values in a templated manifest, we need to apply the istio version and values from
 		// Istio CR to this default configuration to get the final IstoOperator that is used for installing and updating Istio.
-		mergedIstioOperatorPath, err := merge(istioCR, i.Client.defaultIstioOperatorPath, i.Client.workingDir, TemplateData{IstioVersion: i.IstioVersion, IstioImageBase: i.IstioImageBase})
+		mergedIstioOperatorPath, err := merge(istioCR, defaultIstioOperatorPath, workingDir, TemplateData{IstioVersion: i.IstioVersion, IstioImageBase: i.IstioImageBase})
 		if err != nil {
 			return err
 		}

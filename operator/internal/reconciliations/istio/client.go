@@ -3,6 +3,9 @@ package istio
 import (
 	"context"
 	"fmt"
+	"os"
+	"sync"
+
 	"istio.io/api/operator/v1alpha1"
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	"istio.io/istio/operator/pkg/cache"
@@ -12,9 +15,7 @@ import (
 	"istio.io/istio/pkg/config/constants"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"os"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sync"
 
 	istio "istio.io/istio/operator/cmd/mesh"
 	"istio.io/istio/operator/pkg/util/clog"
@@ -117,8 +118,7 @@ func initializeLog() *istiolog.Options {
 	logoptions.SetOutputLevel("validation", istiolog.ErrorLevel)
 	logoptions.SetOutputLevel("processing", istiolog.ErrorLevel)
 	logoptions.SetOutputLevel("analysis", istiolog.WarnLevel)
-	logoptions.SetOutputLevel("installer", istiolog.WarnLevel)
-	logoptions.SetOutputLevel("uninstaller", istiolog.WarnLevel)
+	logoptions.SetOutputLevel("installation", istiolog.WarnLevel)
 	logoptions.SetOutputLevel("translator", istiolog.WarnLevel)
 	logoptions.SetOutputLevel("adsc", istiolog.WarnLevel)
 	logoptions.SetOutputLevel("default", istiolog.WarnLevel)

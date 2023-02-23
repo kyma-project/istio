@@ -17,8 +17,12 @@ const (
 	Delete              IstioCRChange = 8
 )
 
-func (r IstioCRChange) NeedsIstioInstall() bool {
+func (r IstioCRChange) requireInstall() bool {
 	return r == Create || r&VersionUpdate > 0 || r&ConfigurationUpdate > 0
+}
+
+func (r IstioCRChange) requireIstioDeletion() bool {
+	return r == Delete
 }
 
 type appliedConfig struct {
@@ -26,7 +30,7 @@ type appliedConfig struct {
 	IstioTag string
 }
 
-// EvaluateIstioCRChanges returns IstioCRChange that hapened since LastAppliedConfiguration
+// EvaluateIstioCRChanges returns IstioCRChange that happened since LastAppliedConfiguration
 func EvaluateIstioCRChanges(istioCR operatorv1alpha1.Istio, istioTag string) (trigger IstioCRChange, err error) {
 	if !istioCR.DeletionTimestamp.IsZero() {
 		return Delete, nil
@@ -37,10 +41,14 @@ func EvaluateIstioCRChanges(istioCR operatorv1alpha1.Istio, istioTag string) (tr
 		return Create, nil
 	}
 
-	var lastAppliedConfig appliedConfig
-	json.Unmarshal([]byte(lastAppliedConfigAnnotation), &lastAppliedConfig)
-
 	trigger = NoChange
+
+	var lastAppliedConfig appliedConfig
+	err = json.Unmarshal([]byte(lastAppliedConfigAnnotation), &lastAppliedConfig)
+	if err != nil {
+		return trigger, err
+	}
+
 	if lastAppliedConfig.IstioTag != istioTag {
 		trigger = trigger | VersionUpdate
 	}

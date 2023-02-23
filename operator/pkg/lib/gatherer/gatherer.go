@@ -14,13 +14,11 @@ import (
 )
 
 const (
-	IstioNamespace           string = "istio-system"
-	RevisionLabelName        string = "istio.io/rev"
-	VersionLabelName         string = "operator.istio.io/version"
-	DefaultIstioRevisionName string = "default"
+	RevisionLabelName string = "istio.io/rev"
+	VersionLabelName  string = "operator.istio.io/version"
 )
 
-var IstiodAppLabel map[string]string = map[string]string{"app": "istiod"}
+var IstiodAppLabel = map[string]string{"app": "istiod"}
 
 // GetIstioCR fetches the Istio CR from the cluster using client with supplied name and namespace
 func GetIstioCR(ctx context.Context, client client.Client, name string, namespace string) (*v1alpha1.Istio, error) {

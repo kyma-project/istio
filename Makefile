@@ -66,6 +66,7 @@ operator/manifests: ## Call Manifest Generation
 .PHONY: operator/docker-build
 operator/docker-build:
 	IMG=$(IMG) $(MAKE) -C operator/ docker-build
+
 .PHONY: operator/docker-push
 operator/docker-push:
 	IMG=$(IMG) $(MAKE) -C operator/ docker-push

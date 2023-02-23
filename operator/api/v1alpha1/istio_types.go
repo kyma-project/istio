@@ -84,3 +84,7 @@ func (i *Istio) SetStatus(status IstioStatus) {
 func (i *Istio) ComponentName() string {
 	return "istio"
 }
+
+func (i *Istio) HasFinalizer() bool {
+	return len(i.Finalizers) > 0
+}

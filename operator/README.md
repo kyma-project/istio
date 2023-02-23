@@ -19,10 +19,11 @@ Applying this custom resource triggers the installation of Istio and deleting it
 
 ## Status codes
 
-|       Code       | Description                                      |
-|:----------------:|:-------------------------------------------------|
-|    **Ready**     | Controller finished reconciliation               |
-|  **Processing**  | Controller is reconciling the Istio installation |
-|    **Error**     | An error happened during reconciliation          |
+|      Code      | Description                                 |
+|:--------------:|:--------------------------------------------|
+|   **Ready**    | Controller finished reconciliation          |
+| **Processing** | Controller is installing or upgrading Istio |
+|  **Deleting**  | Controller is uninstalling Istio            |
+|   **Error**    | An error happened during reconciliation     |
 
 

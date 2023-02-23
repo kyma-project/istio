@@ -17,10 +17,6 @@ const (
 	Delete              IstioCRChange = 8
 )
 
-func (r IstioCRChange) MustBeReconciled() bool {
-	return r == Create || r == Delete || r&VersionUpdate > 0 || r&ConfigurationUpdate > 0
-}
-
 func (r IstioCRChange) requireInstall() bool {
 	return r == Create || r&VersionUpdate > 0 || r&ConfigurationUpdate > 0
 }

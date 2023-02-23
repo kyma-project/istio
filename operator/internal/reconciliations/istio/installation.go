@@ -34,11 +34,6 @@ func (i *Installation) Reconcile(ctx context.Context, client client.Client, isti
 		return istioCR, err
 	}
 
-	if !istioCRChanges.MustBeReconciled() {
-		ctrl.Log.Info("Reconciliation of Istio installation was skipped")
-		return istioCR, nil
-	}
-
 	if !istioCRChanges.requireIstioDeletion() && !hasInstallationFinalizer(istioCR) {
 		controllerutil.AddFinalizer(&istioCR, installationFinalizer)
 		if err := client.Update(ctx, &istioCR); err != nil {
@@ -46,17 +41,17 @@ func (i *Installation) Reconcile(ctx context.Context, client client.Client, isti
 		}
 	}
 
-	ctrl.Log.Info("Reconcile Istio installation")
-
-	// To have a better visibility of the manager state during install, update and deletion, we update the status to Processing
-	_, err = status.Update(ctx, client, &istioCR, operatorv1alpha1.Processing, metav1.Condition{})
-	if err != nil {
-		return istioCR, err
-	}
+	ctrl.Log.Info("Reconcile Istio installation", "Istio CR change evaluation", istioCRChanges)
 
 	if istioCRChanges.requireInstall() {
 
 		ctrl.Log.Info("Starting istio install", "istio version", i.IstioVersion, "istio image", i.IstioImageBase)
+
+		// To have a better visibility of the manager state during install, update and deletion, we update the status to Processing
+		_, err = status.Update(ctx, client, &istioCR, operatorv1alpha1.Processing, metav1.Condition{})
+		if err != nil {
+			return istioCR, err
+		}
 
 		// As we define default IstioOperator values in a templated manifest, we need to apply the istio version and values from
 		// Istio CR to this default configuration to get the final IstoOperator that is used for installing and updating Istio.
@@ -70,12 +65,17 @@ func (i *Installation) Reconcile(ctx context.Context, client client.Client, isti
 			return istioCR, err
 		}
 		ctrl.Log.Info("Istio install completed")
-	}
 
-	// We use the installation finalizer to track if the deletion was already executed so can make the uninstall process
-	// more reliable.
-	if istioCRChanges.requireIstioDeletion() && hasInstallationFinalizer(istioCR) {
+		// We use the installation finalizer to track if the deletion was already executed so can make the uninstall process more reliable.
+	} else if istioCRChanges.requireIstioDeletion() && hasInstallationFinalizer(istioCR) {
+
 		ctrl.Log.Info("Starting istio uninstall")
+
+		_, err = status.Update(ctx, client, &istioCR, operatorv1alpha1.Deleting, metav1.Condition{})
+		if err != nil {
+			return istioCR, err
+		}
+
 		err := i.Client.Uninstall(ctx)
 		if err != nil {
 			return istioCR, err

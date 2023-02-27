@@ -94,3 +94,7 @@ mod
 kyma.yaml
 default.yaml
 template.yaml
+
+# performance tests generated files
+k6_script_auth_gen.js
+summary.html

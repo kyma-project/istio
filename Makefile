@@ -130,3 +130,8 @@ $(KUSTOMIZE): $(LOCALBIN)
 .PHONY: grafana-dashboard
 grafana-dashboard: ## Generating Grafana manifests to visualize controller status.
 	cd operator && kubebuilder edit --plugins grafana.kubebuilder.io/v1-alpha
+
+########## Performance Tests ###########
+.PHONY: perf-test
+perf-test:
+	cd operator/performance_tests && ./test.sh

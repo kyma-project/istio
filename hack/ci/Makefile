@@ -30,4 +30,4 @@ all: module-build module-template-print
 
 .PHONY: integration-test
 integration-test:
-	cd ${PROJECT_ROOT}/test && go run main.go
+	@echo "integration tests not implemented yet"

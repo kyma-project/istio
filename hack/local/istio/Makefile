@@ -103,5 +103,5 @@ stop: delete-k3d
 
 .PHONY: verify
 verify:
-	@echo "upgrade tests not implemented yet"
+	@${PROJECT_ROOT}/hack/verify_kyma_status.sh
 

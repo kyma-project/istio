@@ -34,8 +34,8 @@ delete-k3d: delete-k3d-cluster delete-k3d-registry
 create-kyma-system-ns:
 	kubectl create ns kyma-system
 
-.PHONY: module-image
-module-image:
+.PHONY: install-crd
+install-crd:
 	@make -C ${PROJECT_ROOT} install
 
 .PHONY: module-image

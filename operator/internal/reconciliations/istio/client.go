@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sync"
 
 	"istio.io/api/operator/v1alpha1"
@@ -97,11 +98,14 @@ func (c *IstioClient) Uninstall(ctx context.Context) error {
 	}
 	ctrl.Log.Info("Deletion of istio resources completed")
 
+	deletePolicy := metav1.DeletePropagationForeground
 	// We need to manually delete the control plane namespace from Istio because the namespace is not removed by default.
 	err = client.Delete(ctx, &v1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: constants.IstioSystemNamespace,
 		},
+	}, &ctrlclient.DeleteOptions{
+		PropagationPolicy: &deletePolicy,
 	})
 	if err != nil {
 		return err

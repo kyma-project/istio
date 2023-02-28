@@ -256,3 +256,8 @@ grafana-dashboard: ## Generating Grafana manifests to visualize controller statu
 
 .PHONY: all
 all: module-build
+
+########## Performance Tests ###########
+.PHONY: perf-test
+perf-test:
+	cd operator/performance_tests && ./test.sh

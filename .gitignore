@@ -112,3 +112,7 @@ template-k3d.yaml
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+# performance tests generated files
+k6_script_auth_gen.js
+summary.html

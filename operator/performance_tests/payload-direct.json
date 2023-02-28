@@ -1,5 +1,5 @@
 { 
-    "starttime": STARTTIME,
+    "starttime": "STARTTIME",
     "testid": "TESTID",
-    "access_token": "oEQgk7DD17fhJv03YQU3FbfeP1W5s61-_gxUCNCQr0w.-mnFE1EQQFO0ecT46g0hUGpSZWfWCVLI1SVrqLBUr-g" 
+    "access_token": "ACCESS_TOKEN"
 }

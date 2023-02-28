@@ -13,8 +13,8 @@ export DOMAIN=<YOUR_CLUSTER_DOMAIN>
 - Deploy helm chart to start load-testing
 
 ```sh
-helm dependency update load-testing/.
-helm install --create-namespace goat-test -n load-test load-testing/.
+helm dependency update operator/performance_tests/load-testing/.
+helm install --create-namespace goat-test -n load-test operator/performance_tests/load-testing/.
 ```
 
 - Run from main directory:

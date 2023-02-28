@@ -5,29 +5,6 @@ export ENCODED_CREDENTIALS=$(echo -n "$CLIENT_ID:$CLIENT_SECRET" | base64)
 export TOKEN=$(curl -s -X POST "https://oauth2.$DOMAIN/oauth2/token" -H "Authorization: Basic $ENCODED_CREDENTIALS" -F "grant_type=client_credentials" -F "scope=read" | jq -r '.access_token')
 export K6POD="$(kubectl get pods --selector=app=k6 -o jsonpath='{.items[0].metadata.name}')"
 
-cat > load-testing/values.yaml <<EOF
-domain: "ps-perf.goatz.shoot.canary.k8s-hana.ondemand.com"
-
-istioJWT:
-  enabled: true
-
-influxdb:
-  initScripts:
-    enabled: true
-    scripts:
-      init.iql: |+
-        CREATE DATABASE "k6"
-
-grafana:
-  sidecar:
-    dashboards:
-      enabled: true
-      label: load_test
-    datasources:
-      enabled: true
-      label: load_test
-EOF
-
 cat > k6_script_auth_gen.js <<EOF
 import http from 'k6/http';
 import { check } from 'k6';
@@ -100,4 +77,4 @@ kubectl cp k6_script_auth_gen.js $K6POD:. -c k6-alpine
 kubectl cp payload-direct.json $K6POD:. -c k6-alpine
 
 kubectl exec -it deployment/goat-test-k6 -- k6 run k6_script_auth_gen.js -d 5m --rps 100 --out influxdb=http://goat-test-influxdb:8086/k6 --system-tags=method,name,status,tag
-kubectl exec -it deployment/goat-test-k6 -- sh -c 'cat /k6/summary.html' > summary.html
+kubectl cp "$K6POD":summary.html summary.html

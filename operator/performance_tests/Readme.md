@@ -14,7 +14,7 @@ export DOMAIN=<YOUR_CLUSTER_DOMAIN>
 
 ```sh
 helm dependency update operator/performance_tests/load-testing/.
-helm install --create-namespace goat-test -n load-test operator/performance_tests/load-testing/.
+helm install goat-test --set domain="$DOMAIN" --create-namespace -n load-test operator/performance_tests/load-testing/.
 ```
 
 - Run from main directory:

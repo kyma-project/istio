@@ -14,7 +14,7 @@ spec:
         app: k6
     spec:
       containers:
-      - image: harisrini99/k6-alpine:v1
+      - image: grafana/k6:0.43.1
         name: k6-alpine
         resources: {}
         command:

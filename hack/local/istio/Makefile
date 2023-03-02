@@ -81,9 +81,8 @@ patch-mod-mgr-role:
 
 .PHONY: install-module
 install-module:
-	${KYMA} alpha deploy \
-		--ci \
-		--template=${PROJECT_ROOT}/template-k3d.yaml
+	${KYMA} alpha deploy --ci
+	kubectl apply -f ${PROJECT_ROOT}/template-k3d.yaml
 
 .PHONY: run
 run: kyma \
@@ -96,7 +95,8 @@ run: kyma \
 	fix-template \
 	install-module \
 	patch-mod-mgr-role \
-	enable-module verify
+	enable-module \
+	verify
 
 .PHONY: stop
 stop: delete-k3d

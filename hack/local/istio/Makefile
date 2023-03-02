@@ -62,7 +62,8 @@ fix-template:
 	@cat ${PROJECT_ROOT}/template.yaml \
 	| sed -e 's/remote/control-plane/g' \
 		-e 's/${REGISTRY_PORT}/5000/g' \
-	      	-e 's/localhost/k3d-${REGISTRY_NAME}.localhost/g' \
+	    -e 's/localhost/k3d-${REGISTRY_NAME}.localhost/g' \
+		-e 's/\/unsigned//g' \
 	> ${PROJECT_ROOT}/template-k3d.yaml
 
 .PHONY: enable-module

@@ -260,4 +260,4 @@ all: module-build
 ########## Performance Tests ###########
 .PHONY: perf-test
 perf-test:
-	cd operator/performance_tests && ./test.sh
+	cd performance_tests && ./test.sh

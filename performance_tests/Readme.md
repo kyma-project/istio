@@ -5,7 +5,7 @@ This directory contains the scripts for running kyma performance tests.
 
 ## Test Setup
 
-- Deploy Kubernetes cluster with Kyma
+- Deploy a Kubernetes cluster with Kyma on a production profile
 - Export the following variable:
 ```
 export DOMAIN=<YOUR_CLUSTER_DOMAIN>

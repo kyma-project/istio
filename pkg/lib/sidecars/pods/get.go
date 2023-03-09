@@ -12,8 +12,9 @@ import (
 )
 
 const (
-	istioValidationContainerName = "istio-validation"
-	istioInitContainerName       = "istio-init"
+	istioValidationContainerName string = "istio-validation"
+	istioInitContainerName       string = "istio-init"
+	istioSidecarContainerName    string = "istio-proxy"
 )
 
 type SidecarImage struct {
@@ -127,4 +128,32 @@ func GetPodsForCNIChange(ctx context.Context, c client.Client, isCNIEnabled bool
 	logger.Info("Pods that need to adapt to CNI change", "number of pods", len(outputPodsList.Items))
 
 	return outputPodsList, nil
+}
+
+func containsSidecar(pod v1.Pod) bool {
+	for _, container := range pod.Spec.Containers {
+		if container.Name == istioSidecarContainerName {
+			return true
+		}
+	}
+	return false
+}
+
+func GetAllInjectedPods(ctx context.Context, k8sclient client.Client) (outputPodList *v1.PodList, err error) {
+	podList := &v1.PodList{}
+
+	err = retry.RetryOnError(retry.DefaultRetry, func() error {
+		return k8sclient.List(ctx, podList, &client.ListOptions{})
+	})
+	if err != nil {
+		return podList, err
+	}
+
+	for _, pod := range podList.Items {
+		if containsSidecar(pod) {
+			podList.Items = append(podList.Items, pod)
+		}
+	}
+
+	return podList, nil
 }

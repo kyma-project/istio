@@ -131,6 +131,11 @@ func GetPodsForCNIChange(ctx context.Context, c client.Client, isCNIEnabled bool
 }
 
 func containsSidecar(pod v1.Pod) bool {
+	// If the pod has one container it is not injected
+	// This skips IngressGateway pods, as those only have istio-proxy
+	if len(pod.Spec.Containers) == 1 {
+		return false
+	}
 	for _, container := range pod.Spec.Containers {
 		if container.Name == istioSidecarContainerName {
 			return true
@@ -141,6 +146,7 @@ func containsSidecar(pod v1.Pod) bool {
 
 func GetAllInjectedPods(ctx context.Context, k8sclient client.Client) (outputPodList *v1.PodList, err error) {
 	podList := &v1.PodList{}
+	outputPodList = &v1.PodList{}
 
 	err = retry.RetryOnError(retry.DefaultRetry, func() error {
 		return k8sclient.List(ctx, podList, &client.ListOptions{})
@@ -151,9 +157,9 @@ func GetAllInjectedPods(ctx context.Context, k8sclient client.Client) (outputPod
 
 	for _, pod := range podList.Items {
 		if containsSidecar(pod) {
-			podList.Items = append(podList.Items, pod)
+			outputPodList.Items = append(outputPodList.Items, pod)
 		}
 	}
 
-	return podList, nil
+	return outputPodList, nil
 }

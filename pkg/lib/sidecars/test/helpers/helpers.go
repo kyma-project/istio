@@ -19,6 +19,7 @@ type SidecarPodFixtureBuilder struct {
 	conditionStatus                                               v1.ConditionStatus
 	deletionTimestamp                                             *metav1.Time
 	hostNetwork                                                   bool
+	ownerReference                                                metav1.OwnerReference
 }
 
 func NewSidecarPodBuilder() *SidecarPodFixtureBuilder {
@@ -34,6 +35,7 @@ func NewSidecarPodBuilder() *SidecarPodFixtureBuilder {
 		podStatusPhase:         "Running",
 		conditionStatus:        "True",
 		hostNetwork:            false,
+		ownerReference:         metav1.OwnerReference{Kind: "ReplicaSet"},
 	}
 }
 
@@ -87,6 +89,11 @@ func (r *SidecarPodFixtureBuilder) SetSidecarContainerName(value string) *Sideca
 	return r
 }
 
+func (r *SidecarPodFixtureBuilder) SetOwnerReference(or metav1.OwnerReference) *SidecarPodFixtureBuilder {
+	r.ownerReference = or
+	return r
+}
+
 func (r *SidecarPodFixtureBuilder) DisableSidecar() *SidecarPodFixtureBuilder {
 	r.sidecarContainerName = "workload"
 	r.sidecarImageRepository = "image"
@@ -112,7 +119,7 @@ func (r *SidecarPodFixtureBuilder) Build() *v1.Pod {
 			Name:      r.name,
 			Namespace: r.namespace,
 			OwnerReferences: []metav1.OwnerReference{
-				{Kind: "ReplicaSet"},
+				r.ownerReference,
 			},
 			Annotations:       r.podAnnotations,
 			Labels:            r.podLabels,
@@ -145,7 +152,8 @@ func (r *SidecarPodFixtureBuilder) Build() *v1.Pod {
 				},
 				{
 					Name:  r.sidecarContainerName,
-					Image: fmt.Sprintf(`%s:%s`, r.sidecarImageRepository, r.sidecarImageTag)},
+					Image: fmt.Sprintf(`%s:%s`, r.sidecarImageRepository, r.sidecarImageTag),
+				},
 			},
 			HostNetwork: r.hostNetwork,
 		},
@@ -173,6 +181,33 @@ func FixPodWithoutSidecar(name, namespace string) *v1.Pod {
 				{
 					Name:  "workload-container",
 					Image: "workload-image:1.0",
+				},
+			},
+		},
+	}
+}
+
+func FixPodWithOnlySidecar(name, namespace string) *v1.Pod {
+	return &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			OwnerReferences: []metav1.OwnerReference{
+				{Kind: "ReplicaSet"},
+			},
+		},
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Pod",
+			APIVersion: "v1",
+		},
+		Status: v1.PodStatus{
+			Phase: "Running",
+		},
+		Spec: v1.PodSpec{
+			Containers: []v1.Container{
+				{
+					Name:  "istio-proxy",
+					Image: "istio/istio-proxy:1.0.0",
 				},
 			},
 		},

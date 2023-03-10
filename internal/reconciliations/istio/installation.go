@@ -6,7 +6,7 @@ import (
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/status"
-	remover "github.com/kyma-project/istio/operator/pkg/lib/sidecars/remove"
+	sidecarRemover "github.com/kyma-project/istio/operator/pkg/lib/sidecars/remove"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -83,9 +83,7 @@ func (i *Installation) Reconcile(ctx context.Context, client client.Client, isti
 			return istioCR, err
 		}
 
-		sidecarRemover := remover.NewSidecarRemover(ctx, client, &ctrl.Log)
-
-		warnings, err := sidecarRemover.RemoveSidecars()
+		warnings, err := sidecarRemover.RemoveSidecars(ctx, client, &ctrl.Log)
 		if err != nil {
 			return istioCR, err
 		}

@@ -10,7 +10,7 @@ import (
 	ginkgotypes "github.com/onsi/ginkgo/v2/types"
 	. "github.com/onsi/gomega"
 
-	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/remove"
+	sidecarRemover "github.com/kyma-project/istio/operator/pkg/lib/sidecars/remove"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/test/helpers"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -36,7 +36,7 @@ var _ = Describe("Remove Sidecar", func() {
 	ctx := context.TODO()
 	logger := logr.Discard()
 
-	It("should rollout restart Deployment if the pod with sidecar is owned by one", func() {
+	It("should rollout restart Deployment if the pod has sidecar", func() {
 		// given
 		c := fakeClient(&appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Name: "owner", Namespace: "test-ns"}})
 		err := c.Create(ctx, helpers.NewSidecarPodBuilder().
@@ -47,8 +47,7 @@ var _ = Describe("Remove Sidecar", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		// when
-		remover := remove.NewSidecarRemover(ctx, c, &logger)
-		warnings, err := remover.RemoveSidecars()
+		warnings, err := sidecarRemover.RemoveSidecars(ctx, c, &logger)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -72,8 +71,7 @@ var _ = Describe("Remove Sidecar", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		// when
-		remover := remove.NewSidecarRemover(ctx, c, &logger)
-		warnings, err := remover.RemoveSidecars()
+		warnings, err := sidecarRemover.RemoveSidecars(ctx, c, &logger)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())

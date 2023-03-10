@@ -39,10 +39,12 @@ var _ = Describe("Remove Sidecar", func() {
 	It("should rollout restart Deployment if the pod with sidecar is owned by one", func() {
 		// given
 		c := fakeClient(&appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Name: "owner", Namespace: "test-ns"}})
-		c.Create(ctx, helpers.NewSidecarPodBuilder().
+		err := c.Create(ctx, helpers.NewSidecarPodBuilder().
 			SetOwnerReference(metav1.OwnerReference{Kind: "Deployment", Name: "owner"}).
 			SetNamespace("test-ns").
 			Build())
+
+		Expect(err).NotTo(HaveOccurred())
 
 		// when
 		remover := remove.NewSidecarRemover(ctx, c, &logger)
@@ -62,10 +64,12 @@ var _ = Describe("Remove Sidecar", func() {
 	It("should not rollout restart Deployment if the pod doesn't have sidecar", func() {
 		// given
 		c := fakeClient(&appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Name: "owner", Namespace: "test-ns"}})
-		c.Create(ctx, helpers.NewSidecarPodBuilder().DisableSidecar().
+		err := c.Create(ctx, helpers.NewSidecarPodBuilder().DisableSidecar().
 			SetOwnerReference(metav1.OwnerReference{Kind: "Deployment", Name: "owner"}).
 			SetNamespace("test-ns").
 			Build())
+
+		Expect(err).NotTo(HaveOccurred())
 
 		// when
 		remover := remove.NewSidecarRemover(ctx, c, &logger)

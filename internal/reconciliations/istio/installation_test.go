@@ -7,6 +7,7 @@ import (
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/scheme"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -343,6 +344,8 @@ func (c *mockLibraryClient) Uninstall(_ context.Context) error {
 
 func createFakeClient(istioCr operatorv1alpha1.Istio) client.Client {
 	err := operatorv1alpha1.AddToScheme(scheme.Scheme)
+	Expect(err).ShouldNot(HaveOccurred())
+	err = v1.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
 
 	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(&istioCr).Build()

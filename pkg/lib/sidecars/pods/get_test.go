@@ -2,12 +2,13 @@ package pods_test
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/kyma-project/istio/operator/internal/tests"
 	. "github.com/onsi/ginkgo/v2"
 	"github.com/onsi/ginkgo/v2/types"
 	. "github.com/onsi/gomega"
-	"testing"
-	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/istio/operator/api/v1alpha1"
@@ -284,4 +285,44 @@ var _ = Describe("Get Pods", func() {
 			})
 		}
 	})
+})
+
+var _ = Describe("GetAllInjectedPods", func() {
+
+	ctx := context.Background()
+
+	tests := []struct {
+		name       string
+		c          client.Client
+		assertFunc func(val interface{})
+	}{
+		{
+			name:       "should not return pods without istio sidecar",
+			c:          createClientSet(helpers.FixPodWithoutSidecar("app", "custom")),
+			assertFunc: func(val interface{}) { Expect(val).To(BeEmpty()) },
+		},
+		{
+			name: "should return pod with istio sidecar",
+			c: createClientSet(
+				helpers.NewSidecarPodBuilder().Build(),
+			),
+			assertFunc: func(val interface{}) { Expect(val).To(HaveLen(1)) },
+		},
+		{
+			name: "should not return pod with only istio sidecar",
+			c: createClientSet(
+				helpers.FixPodWithOnlySidecar("app", "custom"),
+			),
+			assertFunc: func(val interface{}) { Expect(val).To(HaveLen(0)) },
+		},
+	}
+
+	for _, tt := range tests {
+		It(tt.name, func() {
+			podList, err := pods.GetAllInjectedPods(ctx, tt.c)
+
+			Expect(err).NotTo(HaveOccurred())
+			tt.assertFunc(podList.Items)
+		})
+	}
 })

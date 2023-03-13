@@ -40,7 +40,7 @@ var _ = Describe("Sidecars reconciliation", func() {
 				},
 			},
 		}
-		istiod := createIstioPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.0")
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.0")
 		sidecars := proxy.Sidecars{
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
@@ -64,11 +64,11 @@ func createFakeClient(objects ...client.Object) client.Client {
 	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build()
 }
 
-func createIstioPod(name, namespace, containerName, imageVersion string) *corev1.Pod {
+func createPod(name, namespace, containerName, imageVersion string) *corev1.Pod {
 	return &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
-			Namespace: gatherer.IstioNamespace,
+			Namespace: namespace,
 		},
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Pod",

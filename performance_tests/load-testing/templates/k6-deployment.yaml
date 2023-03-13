@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   labels:
     app: k6
-  name: {{ .Release.Name }}-k6
+  name: k6
 spec:
   selector:
     matchLabels:

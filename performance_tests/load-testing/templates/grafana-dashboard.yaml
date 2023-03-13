@@ -1264,6 +1264,105 @@ data:
           "type": "timeseries"
         },
         {
+          "id": 23763572028,
+          "gridPos": {
+            "x": 0,
+            "y": 32,
+            "h": 7,
+            "w": 24
+          },
+          "type": "timeseries",
+          "title": "Istio pod number",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "refId": "A",
+              "editorMode": "code",
+              "expr": "kube_deployment_status_replicas{deployment=~\"istio-ingressgateway|istiod\",namespace=\"istio-system\"}",
+              "legendFormat": "{{printf "{{deployment}}" }}",
+              "range": true
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            },
+            "legend": {
+              "showLegend": true,
+              "displayMode": "table",
+              "placement": "right",
+              "calcs": [
+                "last",
+                "min",
+                "max"
+              ]
+            }
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "stepBefore",
+                "barAlignment": 0,
+                "lineWidth": 1,
+                "fillOpacity": 25,
+                "gradientMode": "none",
+                "spanNulls": false,
+                "showPoints": "never",
+                "pointSize": 5,
+                "stacking": {
+                  "mode": "none",
+                  "group": "A"
+                },
+                "axisPlacement": "auto",
+                "axisLabel": "",
+                "axisColorMode": "text",
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "axisCenteredZero": false,
+                "hideFrom": {
+                  "tooltip": false,
+                  "viz": false,
+                  "legend": false
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                },
+                "lineStyle": {
+                  "fill": "solid"
+                }
+              },
+              "color": {
+                "mode": "palette-classic"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "value": null,
+                    "color": "green"
+                  },
+                  {
+                    "value": 80,
+                    "color": "red"
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "datasource": {
+            "uid": "PBFA97CFB590B2093",
+            "type": "prometheus"
+          }
+        },
+        {
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1482,27 +1581,24 @@ data:
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"kyma-system\",pod !=\"\"}[5m])) by (container)",
+              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"istio-system\",pod !=\"\"}[5m])) by (container)",
               "interval": "",
-              "legendFormat": "{{"{{"}} container }}",
+              "legendFormat": "{{printf "{{container}}" }}",
               "refId": "A"
             }
           ],
-          "title": "Container CPU",
+          "title": "Control Plane Container CPU",
           "transformations": [
             {
               "id": "filterFieldsByName",
               "options": {
                 "include": {
                   "names": [
-                    "hydra",
-                    "hydra-maester",
-                    "oathkeeper",
-                    "oathkeeper-maester",
-                    "ory-postgresql",
+                    "discovery",
+                    "istio-proxy",
+                    "install-cni",
                     "Time"
-                  ],
-                  "pattern": "(ory-|hydra|oath).*"
+                  ]
                 }
               }
             }
@@ -1592,109 +1688,28 @@ data:
                 "uid": "PBFA97CFB590B2093"
               },
               "exemplar": true,
-              "expr": "sum(container_memory_usage_bytes{namespace=\"kyma-system\",pod !=\"\"}) by (container)",
+              "expr": "sum(container_memory_usage_bytes{namespace=\"istio-system\",pod !=\"\"}) by (container)",
               "interval": "",
-              "legendFormat": "{{"{{"}} container }}",
+              "legendFormat": "{{printf "{{container}}" }}",
               "refId": "A"
             }
           ],
-          "title": "Container Memory",
+          "title": "Control Plane Container Memory",
           "transformations": [
             {
               "id": "filterFieldsByName",
               "options": {
                 "include": {
                   "names": [
-                    "hydra",
-                    "hydra-maester",
-                    "oathkeeper",
-                    "oathkeeper-maester",
-                    "ory-postgresql",
+                    "istio-proxy",
+                    "discovery",
+                    "install-cni",
                     "Time"
-                  ],
-                  "pattern": "(ory-|hydra|oath).*"
+                  ]
                 }
               }
             }
           ],
-          "type": "timeseries"
-        },
-        {
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "points",
-                "fillOpacity": 0,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 2,
-            "w": 24,
-            "x": 0,
-            "y": 46
-          },
-          "id": 23763572002,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom"
-            },
-            "tooltip": {
-              "mode": "single"
-            }
-          },
-          "pluginVersion": "8.0.5",
-          "targets": [
-            {
-              "hide": true,
-              "refId": "A"
-            }
-          ],
-          "title": " ",
           "type": "timeseries"
         }
       ],
@@ -1707,8 +1722,8 @@ data:
           {
             "current": {
               "selected": false,
-              "text": "hello-world.load-test.svc.cluster.local",
-              "value": "hello-world.load-test.svc.cluster.local"
+              "text": "hello.default.svc.cluster.local",
+              "value": "hello.default.svc.cluster.local"
             },
             "datasource": {
               "type": "prometheus",
@@ -1733,12 +1748,12 @@ data:
         ]
       },
       "time": {
-        "from": "now-3h",
+        "from": "now-5m",
         "to": "now"
       },
       "timepicker": {},
       "timezone": "",
-      "title": "Kyma-wout-mesh",
+      "title": "Istio-performance",
       "uid": "XwO4kRSnz",
       "version": 1,
       "weekStart": ""

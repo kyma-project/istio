@@ -1,23 +1,19 @@
-
 # Istio performance tests
 
 This directory contains the scripts for running kyma performance tests.
 
 ## Test Setup
 
-- Deploy a Kubernetes cluster with Kyma on a production profile
-- Export the following variable:
-```
-export DOMAIN=<YOUR_CLUSTER_DOMAIN>
-```
-- Deploy helm chart to start load-testing
+1. Deploy a Kubernetes cluster with Kyma on a production profile
+2. Run `make test-performance`
 
-```sh
-helm dependency update operator/performance_tests/load-testing/.
-helm install goat-test --set domain="$DOMAIN" --create-namespace -n load-test operator/performance_tests/load-testing/.
-```
+## Test results
 
-- Run from main directory:
-```
-make perf-test
-```
+Running the test will result in two reports:
+
+- `summary-no-sidecar` for workload with no Istio proxy
+- `summary-sidecar` for workload with Istio proxy injected
+
+## Access grafana
+
+Grafana is available under <https://grafana.KYMA_DOMAIN>. Password is stored in `default/load-testing-grafana` secret.

@@ -24,6 +24,7 @@ metadata:
     app.kubernetes.io/created-by: istio
     app.kubernetes.io/part-of: istio
     app.kubernetes.io/managed-by: kustomize
+    sidecar.istio.io/inject: "false"
 spec:
   selector:
     matchLabels:

@@ -2,9 +2,11 @@ package gatherer_test
 
 import (
 	"context"
+	"fmt"
+	"testing"
+
 	"github.com/kyma-project/istio/operator/internal/tests"
 	"github.com/onsi/ginkgo/v2/types"
-	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -23,12 +25,12 @@ import (
 )
 
 const (
-	IstioResourceName    string = "some-istio"
-	IstioCRNamespace     string = "kyma-system"
-	IstioSystemNamespace string = "istio-system"
-	TestLabelKey         string = "test-key"
-	TestLabelVal         string = "test-val"
-	DefaultNamespace     string = "default"
+	IstioResourceName string = "some-istio"
+	IstioCRNamespace  string = "kyma-system"
+	TestLabelKey      string = "test-key"
+	TestLabelVal      string = "test-val"
+	DefaultNamespace  string = "default"
+	ImageVersion      string = "1.10.0"
 )
 
 func TestAPIs(t *testing.T) {
@@ -113,12 +115,48 @@ var _ = Describe("Gatherer", func() {
 		Expect(istioBothNamespaces.Items).To(HaveLen(2))
 	})
 
+	Context("ListIstioCPPods", func() {
+		istiodPod := createPodWith("istiod", gatherer.IstioNamespace, "discovery", "istio/pilot", ImageVersion, false)
+		istiogwPod := createPodWith("istio-ingressgateway", gatherer.IstioNamespace, "istio-proxy", "istio/proxyv2", ImageVersion, false)
+		appPod := createPodWith("application", "app-namespace", "istio-proxy", "istio/proxyv2", ImageVersion, false)
+
+		It("should not get any pods in istio-system namespace if there are none", func() {
+			istioSystem := corev1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: gatherer.IstioNamespace,
+				},
+			}
+
+			client := createClientSet(&istioSystem)
+
+			istioNamespace, err := gatherer.ListIstioCPPods(context.TODO(), client)
+
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(istioNamespace.Items).To(BeEmpty())
+		})
+
+		It("should get all pods in istio-system namespace", func() {
+			istioSystem := corev1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: gatherer.IstioNamespace,
+				},
+			}
+
+			client := createClientSet(&istioSystem, istiodPod, istiogwPod, appPod)
+
+			istioNamespace, err := gatherer.ListIstioCPPods(context.TODO(), client)
+
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(istioNamespace.Items).To(HaveLen(2))
+		})
+	})
+
 	Context("ListInstalledIstioRevisions", func() {
-		It("Should list all istio versions with revisions", func() {
+		It("should list all istio versions with revisions", func() {
 
 			istioSystem := corev1.Namespace{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: IstioSystemNamespace,
+					Name: gatherer.IstioNamespace,
 				},
 			}
 
@@ -154,12 +192,131 @@ var _ = Describe("Gatherer", func() {
 			Expect(istioVersions).To(HaveKey("stable"))
 			Expect(istioVersions["stable"]).To(Equal(semver.MustParse("1.15.4")))
 		})
-		It("Should return empty map when there is no istio installed", func() {
+
+		It("should return empty map when there is no istio installed", func() {
 			client := createClientSet()
 
 			istioVersions, err := gatherer.ListInstalledIstioRevisions(context.TODO(), client)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(istioVersions).To(BeEmpty())
+		})
+	})
+
+	Context("GetIstioPodsVersion", func() {
+		istiodPod := createPodWith("istiod", gatherer.IstioNamespace, "discovery", "istio/pilot", ImageVersion, false)
+		istiogwPod := createPodWith("istio-ingressgateway", gatherer.IstioNamespace, "istio-proxy", "istio/proxyv2", ImageVersion, false)
+		istiogwPodTerm := createPodWith("istio-ingressgateway-old", gatherer.IstioNamespace, "istio-proxy", "istio/proxyv2", ImageVersion, true)
+		istiocniPod := createPodWith("istio-cni-node", gatherer.IstioNamespace, "install-cni", "istio/install-cni", ImageVersion, false)
+		appPod := createPodWith("application", "app-namespace", "istio-proxy", "istio/proxyv2", ImageVersion, false)
+
+		It("should get Istio installed version based on pods in istio-system namespace", func() {
+			istioSystem := corev1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: gatherer.IstioNamespace,
+				},
+			}
+
+			client := createClientSet(&istioSystem, istiodPod, istiogwPod, istiocniPod, appPod)
+
+			version, err := gatherer.GetIstioPodsVersion(context.TODO(), client)
+
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(version).To(Equal(ImageVersion))
+		})
+
+		It("should get Istio installed version based on pods in istio-system namespace when some pods are terminating", func() {
+			istioSystem := corev1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: gatherer.IstioNamespace,
+				},
+			}
+
+			client := createClientSet(&istioSystem, istiodPod, istiogwPod, istiocniPod, istiogwPodTerm, appPod)
+
+			version, err := gatherer.GetIstioPodsVersion(context.TODO(), client)
+
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(version).To(Equal(ImageVersion))
+		})
+
+		It("should get Istio installed version when there is a pod with image prerelease version", func() {
+			istioSystem := corev1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: gatherer.IstioNamespace,
+				},
+			}
+			istiocniPodDistroless := createPodWith("istio-cni-node", "istio-system", "install-cni", "istio/install-cni", ImageVersion+"-distorelss", false)
+
+			client := createClientSet(&istioSystem, istiodPod, istiogwPod, istiocniPodDistroless, appPod)
+
+			version, err := gatherer.GetIstioPodsVersion(context.TODO(), client)
+
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(version).To(Equal(ImageVersion))
+		})
+
+		It("should return error when there are no pods in istio-namespace", func() {
+			istioSystem := corev1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: gatherer.IstioNamespace,
+				},
+			}
+
+			client := createClientSet(&istioSystem, appPod)
+
+			version, err := gatherer.GetIstioPodsVersion(context.TODO(), client)
+
+			Expect(err).Should(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("Unable to obtain installed Istio image version"))
+			Expect(version).To(Equal(""))
+		})
+
+		It("should return error when there is an inconsistent version state in istio-system namespace", func() {
+			istioSystem := corev1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: gatherer.IstioNamespace,
+				},
+			}
+			istiocniPodOld := createPodWith("istio-cni-node", "istio-system", "install-cni", "istio/install-cni", "1.0.0", false)
+			client := createClientSet(&istioSystem, istiodPod, istiogwPod, istiocniPodOld, appPod)
+
+			version, err := gatherer.GetIstioPodsVersion(context.TODO(), client)
+
+			Expect(err).Should(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("Image version of pod istio-ingressgateway: 1.10.0 do not match version: 1.0.0"))
+			Expect(version).To(Equal(""))
+		})
+
+		It("should return error when there is a pod with wrong image", func() {
+			istioSystem := corev1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: gatherer.IstioNamespace,
+				},
+			}
+			istiocniPodWrong := createPodWith("istio-cni-node", "istio-system", "install-cni", "istio/install-cni", "wrong", false)
+			client := createClientSet(&istioSystem, istiodPod, istiogwPod, istiocniPodWrong, appPod)
+
+			version, err := gatherer.GetIstioPodsVersion(context.TODO(), client)
+
+			Expect(err).Should(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("Invalid Semantic Version"))
+			Expect(version).To(Equal(""))
+		})
+
+		It("should return error when there is a pod with latest versioned image", func() {
+			istioSystem := corev1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: gatherer.IstioNamespace,
+				},
+			}
+			istiocniPodLatest := createPodWith("istio-cni-node", "istio-system", "install-cni", "istio/install-cni", "latest", false)
+			client := createClientSet(&istioSystem, istiodPod, istiogwPod, istiocniPodLatest, appPod)
+
+			version, err := gatherer.GetIstioPodsVersion(context.TODO(), client)
+
+			Expect(err).Should(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("Invalid Semantic Version"))
+			Expect(version).To(Equal(""))
 		})
 	})
 })
@@ -173,4 +330,37 @@ func createClientSet(objects ...client.Object) client.Client {
 	Expect(err).ShouldNot(HaveOccurred())
 
 	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build()
+}
+
+func createPodWith(name, namespace, containerName, image, imageVersion string, terminating bool) *corev1.Pod {
+	pod := corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			OwnerReferences: []metav1.OwnerReference{
+				{Kind: "ReplicaSet"},
+			},
+			Annotations: map[string]string{"sidecar.istio.io/status": fmt.Sprintf(`{"containers":["%s"]}`, name+"-container")},
+		},
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Pod",
+			APIVersion: "v1",
+		},
+		Status: corev1.PodStatus{
+			Phase: corev1.PodPhase(corev1.PodRunning),
+		},
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{
+				{
+					Name:  containerName,
+					Image: image + ":" + imageVersion,
+				},
+			},
+		},
+	}
+	if terminating {
+		timestamp := metav1.Now()
+		pod.ObjectMeta.DeletionTimestamp = &timestamp
+	}
+	return &pod
 }

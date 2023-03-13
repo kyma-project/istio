@@ -19,8 +19,9 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/istio/operator/internal/status"
 	"time"
+
+	"github.com/kyma-project/istio/operator/internal/status"
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
@@ -39,7 +40,7 @@ import (
 )
 
 var (
-	defaultIstioOperatorPath = "manifests/default-istio-operator-k3d.yaml"
+	defaultIstioOperatorPath = "manifests/default-istio-operator-cluster.yaml"
 	workingDir               = "/tmp"
 )
 

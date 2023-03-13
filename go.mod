@@ -4,12 +4,14 @@ go 1.19
 
 require (
 	github.com/cucumber/godog v0.12.6
+	github.com/docker/distribution v2.8.1+incompatible
 	github.com/go-logr/logr v1.2.3
 	github.com/kyma-project/module-manager/operator v0.0.0-20221125150159-5e84c4855249
 	github.com/masterminds/semver v1.5.0
 	github.com/onsi/ginkgo/v2 v2.8.4
 	github.com/onsi/gomega v1.27.2
 	gitlab.com/rodrigoodhin/gocure v0.0.0-20220718065339-f14dfe79276a
+	golang.org/x/exp v0.0.0-20221023144134-a1e5550cf13e
 	golang.org/x/time v0.3.0
 	google.golang.org/protobuf v1.28.1
 	istio.io/api v0.0.0-20221208070204-0528cb6ce63b
@@ -19,6 +21,7 @@ require (
 	k8s.io/apiextensions-apiserver v0.25.2
 	k8s.io/apimachinery v0.25.2
 	k8s.io/client-go v0.25.2
+	k8s.io/kubectl v0.25.2
 	sigs.k8s.io/controller-runtime v0.13.0
 	sigs.k8s.io/yaml v1.3.0
 )
@@ -62,7 +65,6 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.0-20210816181553-5444fa50b93d // indirect
 	github.com/docker/cli v20.10.20+incompatible // indirect
-	github.com/docker/distribution v2.8.1+incompatible // indirect
 	github.com/docker/docker v20.10.20+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.7.0 // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
@@ -204,7 +206,6 @@ require (
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
 	golang.org/x/crypto v0.1.0 // indirect
-	golang.org/x/exp v0.0.0-20221023144134-a1e5550cf13e // indirect
 	golang.org/x/mod v0.8.0 // indirect
 	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/oauth2 v0.1.0 // indirect
@@ -232,7 +233,6 @@ require (
 	k8s.io/component-base v0.25.2 // indirect
 	k8s.io/klog/v2 v2.80.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20221012153701-172d655c2280 // indirect
-	k8s.io/kubectl v0.25.2 // indirect
 	k8s.io/utils v0.0.0-20221128185143-99ec85e7a448 // indirect
 	oras.land/oras-go v1.2.0 // indirect
 	sigs.k8s.io/gateway-api v0.5.1-0.20220921185115-ee7a83814203 // indirect

@@ -3,22 +3,25 @@ package istio_test
 import (
 	"context"
 	"fmt"
+	"time"
+
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
+	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/scheme"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	"time"
 )
 
 const (
-	istioVersion             string = "1.16.1"
-	istioImageBase           string = "distroless"
-	defaultIstioOperatorPath        = "test/test-operator.yaml"
-	workingDir                      = "/tmp"
+	istioVersion             = "1.16.1"
+	istioImageBase           = "distroless"
+	defaultIstioOperatorPath = "test/test-operator.yaml"
+	workingDir               = "/tmp"
 )
 
 var istioTag = fmt.Sprintf("%s-%s", istioVersion, istioImageBase)
@@ -51,7 +54,7 @@ var _ = Describe("Installation reconciliation", func() {
 		}
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), createFakeClient(istioCr), istioCr, defaultIstioOperatorPath, workingDir)
+		_, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr), istioCr, defaultIstioOperatorPath, workingDir)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -74,6 +77,7 @@ var _ = Describe("Installation reconciliation", func() {
 				},
 			},
 		}
+		istiod := createIstioPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
 			Client:         &mockClient,
@@ -81,10 +85,43 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 		}
 		// when
-		returnedIstioCr, err := installation.Reconcile(context.TODO(), createFakeClient(istioCr), istioCr, defaultIstioOperatorPath, workingDir)
+		returnedIstioCr, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod), istioCr, defaultIstioOperatorPath, workingDir)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
+		Expect(mockClient.installCalled).To(BeTrue())
+		Expect(mockClient.uninstallCalled).To(BeFalse())
+		Expect(returnedIstioCr.Status.State).To(Equal(operatorv1alpha1.Processing))
+	})
+
+	It("should fail if after install and update Istio pods do not match target version", func() {
+		// given
+
+		numTrustedProxies := 1
+		istioCr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+			Name:            "default",
+			ResourceVersion: "1",
+			Annotations:     map[string]string{},
+		},
+			Spec: operatorv1alpha1.IstioSpec{
+				Config: operatorv1alpha1.Config{
+					NumTrustedProxies: &numTrustedProxies,
+				},
+			},
+		}
+		istiod := createIstioPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.0")
+		mockClient := mockLibraryClient{}
+		installation := istio.Installation{
+			Client:         &mockClient,
+			IstioVersion:   istioVersion,
+			IstioImageBase: istioImageBase,
+		}
+		// when
+		returnedIstioCr, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod), istioCr, defaultIstioOperatorPath, workingDir)
+
+		// then
+		Expect(err).Should(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("istio-system pods version: 1.16.0 do not match target version: 1.16.1"))
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 		Expect(returnedIstioCr.Status.State).To(Equal(operatorv1alpha1.Processing))
@@ -105,6 +142,7 @@ var _ = Describe("Installation reconciliation", func() {
 				},
 			},
 		}
+		istiod := createIstioPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
 			Client:         &mockClient,
@@ -112,7 +150,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 		}
 		// when
-		returnedIstioCr, err := installation.Reconcile(context.TODO(), createFakeClient(istioCr), istioCr, defaultIstioOperatorPath, workingDir)
+		returnedIstioCr, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod), istioCr, defaultIstioOperatorPath, workingDir)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -137,6 +175,7 @@ var _ = Describe("Installation reconciliation", func() {
 				},
 			},
 		}
+		istiod := createIstioPod("istiod", gatherer.IstioNamespace, "discovery", "1.17.0")
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
 			Client:         &mockClient,
@@ -144,7 +183,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 		}
 		// when
-		returnedIstioCr, err := installation.Reconcile(context.TODO(), createFakeClient(istioCr), istioCr, defaultIstioOperatorPath, workingDir)
+		returnedIstioCr, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod), istioCr, defaultIstioOperatorPath, workingDir)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -171,6 +210,7 @@ var _ = Describe("Installation reconciliation", func() {
 				},
 			},
 		}
+		istiod := createIstioPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
 			Client:         &mockClient,
@@ -178,7 +218,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 		}
 		// when
-		returnedIstioCr, err := installation.Reconcile(context.TODO(), createFakeClient(istioCr), istioCr, defaultIstioOperatorPath, workingDir)
+		returnedIstioCr, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod), istioCr, defaultIstioOperatorPath, workingDir)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -213,7 +253,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 		}
 		// when
-		_, err := installation.Reconcile(context.TODO(), createFakeClient(istioCr), istioCr, defaultIstioOperatorPath, workingDir)
+		_, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr), istioCr, defaultIstioOperatorPath, workingDir)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -248,7 +288,7 @@ var _ = Describe("Installation reconciliation", func() {
 		}
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), createFakeClient(istioCr), istioCr, defaultIstioOperatorPath, workingDir)
+		_, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr), istioCr, defaultIstioOperatorPath, workingDir)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -281,7 +321,7 @@ var _ = Describe("Installation reconciliation", func() {
 		}
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), createFakeClient(istioCr), istioCr, defaultIstioOperatorPath, workingDir)
+		_, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr), istioCr, defaultIstioOperatorPath, workingDir)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -316,7 +356,7 @@ var _ = Describe("Installation reconciliation", func() {
 		}
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), createFakeClient(istioCr), istioCr, defaultIstioOperatorPath, workingDir)
+		_, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr), istioCr, defaultIstioOperatorPath, workingDir)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -341,9 +381,35 @@ func (c *mockLibraryClient) Uninstall(_ context.Context) error {
 	return nil
 }
 
-func createFakeClient(istioCr operatorv1alpha1.Istio) client.Client {
+func createFakeClient(objects ...client.Object) client.Client {
 	err := operatorv1alpha1.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
+	err = corev1.AddToScheme(scheme.Scheme)
+	Expect(err).ShouldNot(HaveOccurred())
 
-	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(&istioCr).Build()
+	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build()
+}
+
+func createIstioPod(name, namespace, containerName, imageVersion string) *corev1.Pod {
+	return &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: gatherer.IstioNamespace,
+		},
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Pod",
+			APIVersion: "v1",
+		},
+		Status: corev1.PodStatus{
+			Phase: corev1.PodPhase(corev1.PodRunning),
+		},
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{
+				{
+					Name:  containerName,
+					Image: "image:" + imageVersion,
+				},
+			},
+		},
+	}
 }

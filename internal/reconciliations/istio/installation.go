@@ -7,6 +7,7 @@ import (
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
+	sidecarRemover "github.com/kyma-project/istio/operator/pkg/lib/sidecars/remove"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -91,6 +92,17 @@ func (i *Installation) Reconcile(ctx context.Context, client client.Client, isti
 		err := i.Client.Uninstall(ctx)
 		if err != nil {
 			return istioCR, err
+		}
+
+		warnings, err := sidecarRemover.RemoveSidecars(ctx, client, &ctrl.Log)
+		if err != nil {
+			return istioCR, err
+		}
+
+		if len(warnings) > 0 {
+			for _, w := range warnings {
+				ctrl.Log.Info("Removing sidecar warning:", "name", w.Name, "namespace", w.Namespace, "kind", w.Kind, "message", w.Message)
+			}
 		}
 
 		controllerutil.RemoveFinalizer(&istioCR, installationFinalizer)

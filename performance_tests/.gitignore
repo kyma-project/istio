@@ -1,5 +1,4 @@
 deploy
 deploy-helm
 test-deploy
-testkube
 summary*

@@ -348,7 +348,7 @@ data:
                   "type": "fill"
                 }
               ],
-              "measurement": "err",
+              "measurement": "http_req_failed",
               "orderByTime": "ASC",
               "policy": "default",
               "query": "SELECT count(\"value\") FROM \"errors\" WHERE $timeFilter",

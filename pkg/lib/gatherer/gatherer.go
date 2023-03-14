@@ -150,6 +150,9 @@ func getImageVersion(image string) (*semver.Version, error) {
 	if err != nil {
 		return &NoVersion, err
 	}
-	version.SetPrerelease("")
-	return version, nil
+	noPreleaseVersion, err := version.SetPrerelease("")
+	if err != nil {
+		return &NoVersion, err
+	}
+	return &noPreleaseVersion, nil
 }

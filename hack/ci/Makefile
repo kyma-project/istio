@@ -18,6 +18,10 @@ module-build:
 		MODULE_REGISTRY=${MODULE_REGISTRY} \
 		MODULE_VERSION=${MODULE_VERSION}-${MODULE_SHA} \
 
+.PHONY: module-template-arifact
+module-template-artifact:
+	@cp ${PROJECT_ROOT}/template.yaml ${ARTIFACTS}
+
 .PHONY: module-template-print
 module-template-print:
 	@echo "\n~~~~~~~~~~~~BEGINING OF MODULE TEMPLATE~~~~~~~~~~~~~~"
@@ -26,7 +30,7 @@ module-template-print:
 
 # rename it from 'all' to something more accurate like 'module-build-and-print'
 .PHONY: all
-all: module-build module-template-print
+all: module-build module-template-artifact module-template-print
 
 .PHONY: integration-test
 integration-test:

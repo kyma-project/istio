@@ -11,8 +11,8 @@ This directory contains the scripts for running kyma performance tests.
 
 Running the test will result in two reports:
 
-- `summary-no-sidecar` for workload with no Istio proxy
-- `summary-sidecar` for workload with Istio proxy injected
+- `summary-no-sidecar` for running requests with 500 virtual users to a workload with no Istio proxy
+- `summary-sidecar` for running requests with 500 virtual users to a workload with Istio proxy injected
 
 ## Access grafana
 

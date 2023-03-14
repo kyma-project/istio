@@ -31,6 +31,7 @@ const (
 	TestLabelVal      string = "test-val"
 	DefaultNamespace  string = "default"
 	ImageVersion      string = "1.10.0"
+	ImageVersionOld   string = "1.09.0"
 )
 
 func TestAPIs(t *testing.T) {
@@ -205,7 +206,7 @@ var _ = Describe("Gatherer", func() {
 	Context("GetIstioPodsVersion", func() {
 		istiodPod := createPodWith("istiod", gatherer.IstioNamespace, "discovery", "istio/pilot", ImageVersion, false)
 		istiogwPod := createPodWith("istio-ingressgateway", gatherer.IstioNamespace, "istio-proxy", "istio/proxyv2", ImageVersion, false)
-		istiogwPodTerm := createPodWith("istio-ingressgateway-old", gatherer.IstioNamespace, "istio-proxy", "istio/proxyv2", ImageVersion, true)
+		istiogwPodTerm := createPodWith("istio-ingressgateway-old", gatherer.IstioNamespace, "istio-proxy", "istio/proxyv2", ImageVersionOld, true)
 		istiocniPod := createPodWith("istio-cni-node", gatherer.IstioNamespace, "install-cni", "istio/install-cni", ImageVersion, false)
 		appPod := createPodWith("application", "app-namespace", "istio-proxy", "istio/proxyv2", ImageVersion, false)
 
@@ -224,7 +225,7 @@ var _ = Describe("Gatherer", func() {
 			Expect(version).To(Equal(ImageVersion))
 		})
 
-		It("should get Istio installed version based on pods in istio-system namespace when some pods are terminating", func() {
+		It("should not consider terminating pods in istio-system namespace when getting Istio version", func() {
 			istioSystem := corev1.Namespace{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: gatherer.IstioNamespace,
@@ -245,7 +246,7 @@ var _ = Describe("Gatherer", func() {
 					Name: gatherer.IstioNamespace,
 				},
 			}
-			istiocniPodDistroless := createPodWith("istio-cni-node", "istio-system", "install-cni", "istio/install-cni", ImageVersion+"-distorelss", false)
+			istiocniPodDistroless := createPodWith("istio-cni-node", "istio-system", "install-cni", "istio/install-cni", ImageVersion+"-distroless", false)
 
 			client := createClientSet(&istioSystem, istiodPod, istiogwPod, istiocniPodDistroless, appPod)
 

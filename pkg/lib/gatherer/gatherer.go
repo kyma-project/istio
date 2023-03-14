@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/docker/distribution/reference"
 	"github.com/masterminds/semver"
@@ -147,13 +146,10 @@ func getImageVersion(image string) (*semver.Version, error) {
 	if matches == nil || len(matches) < 3 {
 		return &NoVersion, fmt.Errorf("Unable to parse container image reference: %s", image)
 	}
-	imageTag := matches[2]
-	if strings.Contains(imageTag, "-") {
-		imageTag = imageTag[:strings.IndexRune(imageTag, '-')]
-	}
-	version, err := semver.NewVersion(imageTag)
+	version, err := semver.NewVersion(matches[2])
 	if err != nil {
 		return &NoVersion, err
 	}
+	version.SetPrerelease("")
 	return version, nil
 }

@@ -19,6 +19,6 @@ data:
       - name: Prometheus
         type: prometheus
         access: proxy
-        url: http://monitoring-prometheus.kyma-system:9090
+        url: http://{{ .Release.Name }}-prometheus-server:80
         version: 1
         editable: true

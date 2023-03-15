@@ -1,108 +1,76 @@
 import http from 'k6/http';
-import { check, group } from 'k6';
-import encoding from 'k6/encoding';
-import { Trend,Counter } from 'k6/metrics';
+import { check, group } from 'k6'
+import { Trend } from 'k6/metrics';
+import { htmlReport } from "https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js";
+
+export const options = {
+    scenarios: {
+        get_scenario: {
+            executor: 'constant-vus',
+
+            gracefulStop: '30s',
+            env: { REQUEST_TYPE: 'get' },
+
+            vus: 100,
+            duration: '60s',
+        },
+        post_scenario: {
+            executor: 'constant-vus',
+
+            gracefulStop: '30s',
+            env: { REQUEST_TYPE: 'post' },
+
+            vus: 100,
+            duration: '60s',
+        },
+    },
+};
 
 let getRequestTrend = new Trend('get_request_duration', true);
 let postRequestTrend = new Trend('post_request_duration', true);
-let refreshTokenCount = new Counter('refresh-tokens');
-let newTokenCounter = new Counter('initial-token');
-let tokenData = {};
 
-export function postFlow(url) {
-    group('get-initial-token', function () {
-        tokenData = getNewOrRefreshToken(tokenData);
-    });
-    group('post-request', function () {
-        post(API_URL, tokenData);
-    })
+let DOMAIN = __ENV.DOMAIN
+
+export default function run() {
+    if (__ENV.REQUEST_TYPE === "get") {
+        group('get-request', function () {
+            get();
+        })
+    } else {
+        group('post-request', function () {
+            post();
+        })
+    }
 }
 
-export function get(url, tokenData) {
-    let params = {
-        headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${tokenData.auth.access_token}`,
-        },
-    };
-
-    let resp = http.get(url, params);
+export function get() {
+    let resp = http.get(`https://hello.${DOMAIN}/headers`);
     getRequestTrend.add(resp.timings.duration);
     if (!check(resp, {
         'is status 200': (r) => r.status === 200,
-    })){
+    })) {
         console.log(`status: ${resp.status}`);
         console.log(JSON.stringify(resp));
     }
-
-    //check refresh token 
-    getNewOrRefreshToken(tokenData);
 }
 
-export function post(url, tokenData) {
+export function post() {
     const payload = JSON.stringify({
         'x': 'y'
     });
-    const params = {
-        headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${tokenData.auth.access_token}`,
-        },
-    };
-    let resp = http.post(url, payload, params);
+
+    let resp = http.post(`https://hello.${DOMAIN}/post`, payload);
     postRequestTrend.add(resp.timings.duration);
     if (!check(resp, {
         'is status 200': (r) => r.status === 200,
-    })){
+    })) {
         console.log(`status: ${resp.status}`);
         console.log(JSON.stringify(resp));
     }
-
-    //check refresh token 
-    getNewOrRefreshToken(tokenData);
 }
 
-export function getNewOrRefreshToken(tokenData) {
-    var t = new Date();
-    t.setSeconds(t.getSeconds() + 30);
-
-    if(tokenData.auth === undefined){
-        tokenData.auth = getToken(CLIENT_ID, CLIENT_SECRET, REQUEST_BODY, AUTH_URL, false);
-    } else if (t.getTime() >= tokenData.auth.expiresAt) {
-        tokenData.auth = getToken(CLIENT_ID, CLIENT_SECRET, REQUEST_BODY, AUTH_URL, true);
-    }
-
-    return tokenData;
-}
-
-export function getToken(clientId, clientSecret, requestBody, url, isTokenRefresh) {
-
-    var t = new Date();
-
-    const encodedCredentials = encoding.b64encode(
-        `${clientId}:${clientSecret}`,
-    );
-
-    const params = {
-        headers: {
-            Authorization: `Basic ${encodedCredentials}`,
-        },
+export function handleSummary(data) {
+    return {
+        "summary.html": htmlReport(data),
     };
-
-    const resp = http.post(url, requestBody, params);
-    if (isTokenRefresh) {
-        refreshTokenCount.add(1);
-    } else {
-        newTokenCounter.add(1);
-    }
-    if(!check(resp, {
-        'successfully got token': (r) => r.status === 200,
-    })){
-        console.log(`status: ${resp.status}`);
-        console.log(JSON.stringify(resp));
-    }
-
-    let response = resp.json();
-    response.expiresAt = t.setSeconds(t.getSeconds() + response.expires_in);
-    return response;
 }

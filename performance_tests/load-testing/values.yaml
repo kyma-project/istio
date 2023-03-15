@@ -1,5 +1,3 @@
-domain: "<YOUR_CLUSTER_DOMAIN>"
-
 istioJWT:
   enabled: true
 

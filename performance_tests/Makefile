@@ -11,6 +11,7 @@ deploy: bin/kyma
 	touch deploy
 
 deploy-helm:
+	helm dependency update load-testing
 	helm upgrade --install load-testing load-testing --set Domain=${KYMA_DOMAIN}
 	touch deploy-helm
 

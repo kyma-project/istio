@@ -1,5 +1,5 @@
 OS_ARCH ?= $(shell uname | awk '{print tolower($0)}')
-KYMA_DOMAIN ?= $(k config view -o json | jq '.clusters[0].cluster.server' | sed -e "s/https:\/\/api.//" -e 's/"//g')
+KYMA_DOMAIN ?= $(kubectl config view -o json | jq '.clusters[0].cluster.server' | sed -e "s/https:\/\/api.//" -e 's/"//g')
 
 bin/kyma:
 	mkdir bin

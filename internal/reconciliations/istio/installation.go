@@ -6,6 +6,7 @@ import (
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/status"
+	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 	sidecarRemover "github.com/kyma-project/istio/operator/pkg/lib/sidecars/remove"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -66,6 +67,16 @@ func (i *Installation) Reconcile(ctx context.Context, client client.Client, isti
 		if err != nil {
 			return istioCR, err
 		}
+
+		version, err := gatherer.GetIstioPodsVersion(ctx, client)
+		if err != nil {
+			return istioCR, err
+		}
+
+		if i.IstioVersion != version {
+			return istioCR, fmt.Errorf("istio-system pods version: %s do not match target version: %s", version, i.IstioVersion)
+		}
+
 		ctrl.Log.Info("Istio install completed")
 
 		// We use the installation finalizer to track if the deletion was already executed so can make the uninstall process more reliable.

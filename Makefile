@@ -122,7 +122,7 @@ run: manifests generate fmt vet ## Run a controller from your host.
 
 .PHONY: docker-build
 docker-build: ## Build docker image with the manager.
-	IMG=$(IMG) docker build -t ${IMG} .
+	IMG=$(IMG) docker build -t ${IMG} --build-arg TARGETOS=${TARGETOS} --build-arg TARGETARCH=${TARGETARCH} .
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.

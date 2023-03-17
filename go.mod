@@ -6,6 +6,7 @@ require (
 	github.com/cucumber/godog v0.12.6
 	github.com/docker/distribution v2.8.1+incompatible
 	github.com/go-logr/logr v1.2.3
+	github.com/imdario/mergo v0.3.13
 	github.com/kyma-project/module-manager/operator v0.0.0-20221125150159-5e84c4855249
 	github.com/masterminds/semver v1.5.0
 	github.com/onsi/ginkgo/v2 v2.8.4
@@ -122,7 +123,6 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/iancoleman/orderedmap v0.2.0 // indirect
-	github.com/imdario/mergo v0.3.13 // indirect
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/invopop/jsonschema v0.5.0 // indirect
 	github.com/jmoiron/sqlx v1.3.5 // indirect

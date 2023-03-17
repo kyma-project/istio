@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
+
+	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 	sidecarRemover "github.com/kyma-project/istio/operator/pkg/lib/sidecars/remove"
@@ -56,9 +58,14 @@ func (i *Installation) Reconcile(ctx context.Context, client client.Client, isti
 			return istioCR, err
 		}
 
+		clusterConfiguration, err := clusterconfig.EvaluateClusterConfiguration(ctx, client)
+		if err != nil {
+			return istioCR, err
+		}
+
 		// As we define default IstioOperator values in a templated manifest, we need to apply the istio version and values from
 		// Istio CR to this default configuration to get the final IstoOperator that is used for installing and updating Istio.
-		mergedIstioOperatorPath, err := merge(&istioCR, defaultIstioOperatorPath, workingDir, TemplateData{IstioVersion: i.IstioVersion, IstioImageBase: i.IstioImageBase})
+		mergedIstioOperatorPath, err := merge(&istioCR, defaultIstioOperatorPath, workingDir, TemplateData{IstioVersion: i.IstioVersion, IstioImageBase: i.IstioImageBase}, clusterConfiguration)
 		if err != nil {
 			return istioCR, err
 		}

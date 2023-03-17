@@ -40,7 +40,7 @@ import (
 )
 
 var (
-	defaultIstioOperatorPath = "manifests/default-istio-operator-k3d.yaml"
+	defaultIstioOperatorPath = "manifests/istio-operator-template.yaml"
 	workingDir               = "/tmp"
 )
 

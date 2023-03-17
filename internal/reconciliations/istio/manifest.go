@@ -7,6 +7,7 @@ import (
 	"path"
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	"sigs.k8s.io/yaml"
 
@@ -22,7 +23,7 @@ type TemplateData struct {
 	IstioImageBase string
 }
 
-func merge(istioCR *operatorv1alpha1.Istio, istioOperatorFilePath string, workingDir string, data TemplateData) (string, error) {
+func merge(istioCR *operatorv1alpha1.Istio, istioOperatorFilePath string, workingDir string, data TemplateData, overrides clusterconfig.ClusterConfiguration) (string, error) {
 	manifest, err := os.ReadFile(istioOperatorFilePath)
 	if err != nil {
 		return "", err
@@ -38,8 +39,13 @@ func merge(istioCR *operatorv1alpha1.Istio, istioOperatorFilePath string, workin
 		return "", err
 	}
 
+	manifestWithOverrides, err := clusterconfig.MergeOverrides(templatedManifest, overrides)
+	if err != nil {
+		return "", err
+	}
+
 	mergedIstioOperatorPath := path.Join(workingDir, mergedIstioOperatorFile)
-	err = os.WriteFile(mergedIstioOperatorPath, templatedManifest, 0o644)
+	err = os.WriteFile(mergedIstioOperatorPath, manifestWithOverrides, 0o644)
 	if err != nil {
 		return "", err
 	}

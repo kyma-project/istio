@@ -21,13 +21,13 @@ assignees: ''
 <!-- Explain why we should add this feature. Provide use cases to illustrate its benefits. -->
 
 **DoD:**
--[] provide documentation
--[] release notes and What's New updates for Kyma customers
--[] provide unit tests
--[] provide integration tests
--[] test on production-like environment
--[] verify resource limits
--[] followup issue
+- [ ] provide documentation
+- [ ] release notes and What's New updates for Kyma customers
+- [ ] provide unit tests
+- [ ] provide integration tests
+- [ ] test on production-like environment
+- [ ] verify resource limits
+- [ ] followup issue
 
 **Attachments**
 

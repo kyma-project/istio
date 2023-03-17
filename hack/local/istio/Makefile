@@ -68,11 +68,7 @@ fix-template:
 
 .PHONY: enable-module
 enable-module:
-	kubectl patch kymas.operator.kyma-project.io \
-		default-kyma \
-		-n kyma-system \
-		--type=merge \
-		--patch-file ./k3d-patches/patch-kyma.yaml
+	kyma alpha enable module istio -c alpha
 
 .PHONY: patch-mod-mgr-role
 patch-mod-mgr-role:

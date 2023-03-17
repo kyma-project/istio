@@ -1,4 +1,0 @@
-spec:
-  modules:
-    - name: istio
-      channel: alpha

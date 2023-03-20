@@ -40,12 +40,12 @@ import (
 )
 
 var (
-	defaultIstioOperatorPath = "manifests/default-istio-operator-k3d.yaml"
+	defaultIstioOperatorPath = "manifests/default-istio-operator-cluster.yaml"
 	workingDir               = "/tmp"
 )
 
 const (
-	IstioVersion   string = "1.16.1"
+	IstioVersion   string = "1.17.1"
 	IstioImageBase string = "distroless"
 )
 

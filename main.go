@@ -34,7 +34,6 @@ import (
 
 	componentv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/controllers"
-	"github.com/kyma-project/module-manager/operator/pkg/types"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -43,23 +42,11 @@ const (
 	rateLimiterFrequencyDefault = 30
 	failureBaseDelayDefault     = 1 * time.Second
 	failureMaxDelayDefault      = 1000 * time.Second
-
-	chartPath    = "./istio-chart"
-	chartNs      = "kyma-system"
-	nameOverride = "istio-operator"
 )
 
 var (
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
-
-	ConfigFlags = types.Flags{
-		"Namespace":       chartNs,
-		"CreateNamespace": true,
-	}
-	SetFlags = types.Flags{
-		"nameOverride": nameOverride,
-	}
 )
 
 type FlagVar struct {

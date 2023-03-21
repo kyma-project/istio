@@ -40,7 +40,7 @@ import (
 )
 
 var (
-	defaultIstioOperatorPath = "manifests/default-istio-operator-k3d.yaml"
+	defaultIstioOperatorPath = "manifests/istio-operator-template.yaml"
 	workingDir               = "/tmp"
 )
 
@@ -118,6 +118,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 // +kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=namespaces,verbs=get;create;update;patch
+// +kubebuilder:rbac:groups="",resources=nodes,verbs=get;list
 func (r *IstioReconciler) SetupWithManager(mgr ctrl.Manager, rateLimiter RateLimiter) error {
 	r.Config = mgr.GetConfig()
 

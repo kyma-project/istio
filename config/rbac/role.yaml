@@ -15,6 +15,13 @@ rules:
   - patch
   - update
 - apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - get
+  - list
+- apiGroups:
   - operator.kyma-project.io
   resources:
   - istios

@@ -6,6 +6,7 @@ require (
 	github.com/cucumber/godog v0.12.6
 	github.com/docker/distribution v2.8.1+incompatible
 	github.com/go-logr/logr v1.2.3
+	github.com/imdario/mergo v0.3.13
 	github.com/masterminds/semver v1.5.0
 	github.com/onsi/ginkgo/v2 v2.8.4
 	github.com/onsi/gomega v1.27.2
@@ -103,7 +104,6 @@ require (
 	github.com/hashicorp/golang-lru/v2 v2.0.1 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/huandu/xstrings v1.4.0 // indirect
-	github.com/imdario/mergo v0.3.13 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jonboulle/clockwork v0.3.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect

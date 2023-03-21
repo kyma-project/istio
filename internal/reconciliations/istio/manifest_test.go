@@ -1,12 +1,14 @@
 package istio
 
 import (
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
 	"os"
 	"path"
 
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+
 	"github.com/kyma-project/istio/operator/api/v1alpha1"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
@@ -37,7 +39,7 @@ var _ = Describe("Manifest merge", func() {
 		istioOperatorPath := "invalid/path.yaml"
 
 		// when
-		mergedIstioOperatorPath, err := merge(istioCR, istioOperatorPath, workingDir, TestTemplateData)
+		mergedIstioOperatorPath, err := NewDefaultIstioMerger(istioCR, istioOperatorPath, workingDir, TestTemplateData, clusterconfig.ClusterConfiguration{}).Merge()
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -49,7 +51,7 @@ var _ = Describe("Manifest merge", func() {
 		istioOperatorPath := "test/wrong-operator.yaml"
 
 		// when
-		mergedIstioOperatorPath, err := merge(istioCR, istioOperatorPath, workingDir, TestTemplateData)
+		mergedIstioOperatorPath, err := NewDefaultIstioMerger(istioCR, istioOperatorPath, workingDir, TestTemplateData, clusterconfig.ClusterConfiguration{}).Merge()
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -61,7 +63,7 @@ var _ = Describe("Manifest merge", func() {
 		istioOperatorPath := "test/test-operator.yaml"
 
 		// when
-		mergedIstioOperatorPath, err := merge(istioCR, istioOperatorPath, workingDir, TestTemplateData)
+		mergedIstioOperatorPath, err := NewDefaultIstioMerger(istioCR, istioOperatorPath, workingDir, TestTemplateData, clusterconfig.ClusterConfiguration{}).Merge()
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -82,7 +84,7 @@ var _ = Describe("Manifest merge", func() {
 		istioOperatorPath := "test/template-operator.yaml"
 
 		// when
-		mergedIstioOperatorPath, err := merge(istioCR, istioOperatorPath, workingDir, TestTemplateData)
+		mergedIstioOperatorPath, err := NewDefaultIstioMerger(istioCR, istioOperatorPath, workingDir, TestTemplateData, clusterconfig.ClusterConfiguration{}).Merge()
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -90,6 +92,53 @@ var _ = Describe("Manifest merge", func() {
 
 		iop := readIOP(mergedIstioOperatorPath)
 		Expect(iop.Spec.Tag.GetStringValue()).To(Equal("1.16.1-distroless"))
+		err = os.Remove(mergedIstioOperatorPath)
+		Expect(err).ShouldNot(HaveOccurred())
+	})
+
+	It("should return merged configuration with overrides when provided", func() {
+		// given
+		istioOperatorPath := "test/test-operator.yaml"
+
+		newCniBinDirPath := "overriden/path"
+
+		clusterconfig := map[string]interface{}{
+			"spec": map[string]interface{}{
+				"components": map[string]interface{}{
+					"base": map[string]bool{
+						"enabled": false,
+					},
+				},
+				"values": map[string]interface{}{
+					"cni": map[string]string{
+						"cniBinDir": newCniBinDirPath,
+					},
+				},
+			},
+		}
+
+		// when
+		mergedIstioOperatorPath, err := NewDefaultIstioMerger(istioCR, istioOperatorPath, workingDir, TestTemplateData, clusterconfig).Merge()
+
+		// then
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(mergedIstioOperatorPath).To(Equal(path.Join(workingDir, mergedIstioOperatorFile)))
+
+		iop := readIOP(mergedIstioOperatorPath)
+
+		numTrustedProxies := iop.Spec.MeshConfig.Fields["defaultConfig"].
+			GetStructValue().Fields["gatewayTopology"].GetStructValue().Fields["numTrustedProxies"].GetNumberValue()
+
+		Expect(numTrustedProxies).To(Equal(float64(4)))
+
+		baseEnabled := iop.Spec.Components.Base.Enabled.Value
+		Expect(baseEnabled).To(BeFalse())
+
+		Expect(iop.Spec.Values.Fields["cni"]).NotTo(BeNil())
+		Expect(iop.Spec.Values.Fields["cni"].GetStructValue().Fields["cniBinDir"]).NotTo(BeNil())
+		cniBinDir := iop.Spec.Values.Fields["cni"].GetStructValue().Fields["cniBinDir"].GetStringValue()
+		Expect(cniBinDir).To(Equal(newCniBinDirPath))
+
 		err = os.Remove(mergedIstioOperatorPath)
 		Expect(err).ShouldNot(HaveOccurred())
 	})

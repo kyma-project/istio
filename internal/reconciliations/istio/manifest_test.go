@@ -39,7 +39,7 @@ var _ = Describe("Manifest merge", func() {
 		istioOperatorPath := "invalid/path.yaml"
 
 		// when
-		mergedIstioOperatorPath, err := merge(istioCR, istioOperatorPath, workingDir, TestTemplateData, clusterconfig.ClusterConfiguration{})
+		mergedIstioOperatorPath, err := NewDefaultIstioMerger(istioCR, istioOperatorPath, workingDir, TestTemplateData, clusterconfig.ClusterConfiguration{}).Merge()
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -51,7 +51,7 @@ var _ = Describe("Manifest merge", func() {
 		istioOperatorPath := "test/wrong-operator.yaml"
 
 		// when
-		mergedIstioOperatorPath, err := merge(istioCR, istioOperatorPath, workingDir, TestTemplateData, clusterconfig.ClusterConfiguration{})
+		mergedIstioOperatorPath, err := NewDefaultIstioMerger(istioCR, istioOperatorPath, workingDir, TestTemplateData, clusterconfig.ClusterConfiguration{}).Merge()
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -63,7 +63,7 @@ var _ = Describe("Manifest merge", func() {
 		istioOperatorPath := "test/test-operator.yaml"
 
 		// when
-		mergedIstioOperatorPath, err := merge(istioCR, istioOperatorPath, workingDir, TestTemplateData, clusterconfig.ClusterConfiguration{})
+		mergedIstioOperatorPath, err := NewDefaultIstioMerger(istioCR, istioOperatorPath, workingDir, TestTemplateData, clusterconfig.ClusterConfiguration{}).Merge()
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -84,7 +84,7 @@ var _ = Describe("Manifest merge", func() {
 		istioOperatorPath := "test/template-operator.yaml"
 
 		// when
-		mergedIstioOperatorPath, err := merge(istioCR, istioOperatorPath, workingDir, TestTemplateData, clusterconfig.ClusterConfiguration{})
+		mergedIstioOperatorPath, err := NewDefaultIstioMerger(istioCR, istioOperatorPath, workingDir, TestTemplateData, clusterconfig.ClusterConfiguration{}).Merge()
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -118,7 +118,7 @@ var _ = Describe("Manifest merge", func() {
 		}
 
 		// when
-		mergedIstioOperatorPath, err := merge(istioCR, istioOperatorPath, workingDir, TestTemplateData, clusterconfig)
+		mergedIstioOperatorPath, err := NewDefaultIstioMerger(istioCR, istioOperatorPath, workingDir, TestTemplateData, clusterconfig).Merge()
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())

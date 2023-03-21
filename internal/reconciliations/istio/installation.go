@@ -65,7 +65,11 @@ func (i *Installation) Reconcile(ctx context.Context, client client.Client, isti
 
 		// As we define default IstioOperator values in a templated manifest, we need to apply the istio version and values from
 		// Istio CR to this default configuration to get the final IstoOperator that is used for installing and updating Istio.
-		mergedIstioOperatorPath, err := merge(&istioCR, defaultIstioOperatorPath, workingDir, TemplateData{IstioVersion: i.IstioVersion, IstioImageBase: i.IstioImageBase}, clusterConfiguration)
+		templateData := TemplateData{IstioVersion: i.IstioVersion, IstioImageBase: i.IstioImageBase}
+
+		merger := NewDefaultIstioMerger(&istioCR, defaultIstioOperatorPath, workingDir, templateData, clusterConfiguration)
+
+		mergedIstioOperatorPath, err := merger.Merge()
 		if err != nil {
 			return istioCR, err
 		}

@@ -13,7 +13,7 @@ import (
 
 // IstioReconciler reconciles a Istio object
 type IstioReconciler struct {
-	*rest.Config                   // required to pass rest config to the declarative library
+	*rest.Config // required to pass rest config to the declarative library
 	client.Client
 	Scheme            *runtime.Scheme
 	istioInstallation istio.Installation

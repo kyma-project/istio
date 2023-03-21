@@ -16,6 +16,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
+const (
+	k3sMockKubeProxyVersion string = "v1.25.6+k3s1"
+	gkeMockKubeProxyVersion string = "v1.24.9-gke.3200"
+)
+
 var _ = Describe("EvaluateClusterConfiguration", func() {
 	Context("k3d", func() {
 		It("should set cni values and serviceAnnotations to k3d configuration", func() {
@@ -26,7 +31,7 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 				},
 				Status: corev1.NodeStatus{
 					NodeInfo: corev1.NodeSystemInfo{
-						KubeProxyVersion: "v1.25.6+k3s1",
+						KubeProxyVersion: k3sMockKubeProxyVersion,
 					},
 				},
 			}
@@ -67,7 +72,7 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 				},
 				Status: corev1.NodeStatus{
 					NodeInfo: corev1.NodeSystemInfo{
-						KubeProxyVersion: "v1.24.9-gke.3200",
+						KubeProxyVersion: gkeMockKubeProxyVersion,
 					},
 				},
 			}

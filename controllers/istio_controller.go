@@ -45,7 +45,7 @@ var (
 )
 
 const (
-	IstioVersion   string = "1.16.1"
+	IstioVersion   string = "1.17.2"
 	IstioImageBase string = "distroless"
 )
 

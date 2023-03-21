@@ -62,8 +62,7 @@ func newScenario() (*scenario, error) {
 				helpers.FixNamespaceWith(sidecarEnabledNamespace, map[string]string{"istio-injection": "enabled"}),
 				helpers.FixNamespaceWith(sidecarDisabledNamespace, map[string]string{"istio-injection": "disabled"}),
 			).
-			// TODO: WithIndex is not supported in current version of controller runtime, should be readded later on
-			// WithIndex(&corev1.Pod{}, "status.phase", helpers.FakePodStatusPhaseIndexer).
+			WithIndex(&corev1.Pod{}, "status.phase", helpers.FakePodStatusPhaseIndexer).
 			Build(),
 		logger:                     logr.Discard(),
 		injectionNamespaceSelector: SidecarEnabled,

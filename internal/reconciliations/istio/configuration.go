@@ -2,6 +2,8 @@ package istio
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/coreos/go-semver/semver"
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 )
@@ -49,6 +51,11 @@ func EvaluateIstioCRChanges(istioCR operatorv1alpha1.Istio, istioTag string) (tr
 		return trigger, err
 	}
 
+	err = CheckIstioVersion(lastAppliedConfig.IstioTag, istioTag)
+	if err != nil {
+		return trigger, err
+	}
+
 	if lastAppliedConfig.IstioTag != istioTag {
 		trigger = trigger | VersionUpdate
 	}
@@ -91,4 +98,74 @@ func UpdateLastAppliedConfiguration(cr operatorv1alpha1.Istio, istioTag string) 
 	cr.Annotations[LastAppliedConfiguration] = string(config)
 
 	return cr, nil
+}
+
+func CheckIstioVersion(currentIstioVersionString, targetIstioVersionString string) error {
+	currentIstioVersion, err := newHelperVersionFrom(currentIstioVersionString)
+	if err != nil {
+		return err
+	}
+	targetIstioVersion, err := newHelperVersionFrom(targetIstioVersionString)
+	if err != nil {
+		return err
+	}
+
+	if isDowngrade(currentIstioVersion, targetIstioVersion) {
+		return fmt.Errorf("target Istio version (%s) is lower than current version (%s) - downgrade not supported",
+			targetIstioVersion.ver.String(), currentIstioVersion.ver.String())
+	}
+	if !amongOneMajor(currentIstioVersion, targetIstioVersion) {
+		return fmt.Errorf("target Istio version (%s) is higher than current Istio version (%s) - major version upgrade is not supported", targetIstioVersion.ver.String(), currentIstioVersion.ver.String())
+	}
+	if !amongOneMinor(currentIstioVersion, targetIstioVersion) {
+		return fmt.Errorf("target Istio version (%s) is higher than current Istio version (%s) - the difference between versions exceed one minor version", targetIstioVersion.ver.String(), currentIstioVersion.ver.String())
+	}
+
+	return nil
+}
+
+type helperVersion struct {
+	ver semver.Version
+}
+
+func (h helperVersion) compare(second helperVersion) int {
+	if h.ver.Major > second.ver.Major {
+		return 1
+	} else if h.ver.Major == second.ver.Major {
+		if h.ver.Minor > second.ver.Minor {
+			return 1
+		} else if h.ver.Minor == second.ver.Minor {
+			if h.ver.Patch > second.ver.Patch {
+				return 1
+			} else if h.ver.Patch == second.ver.Patch {
+				return 0
+			} else {
+				return -1
+			}
+		} else {
+			return -1
+		}
+	} else {
+		return -1
+	}
+}
+
+func newHelperVersionFrom(versionInString string) (helperVersion, error) {
+	version, err := semver.NewVersion(versionInString)
+	if err != nil {
+		return helperVersion{}, err
+	}
+	return helperVersion{ver: *version}, err
+}
+
+func isDowngrade(current, target helperVersion) bool {
+	return current.ver.Major >= target.ver.Major && current.ver.Minor >= target.ver.Minor && current.ver.Patch > target.ver.Patch
+}
+
+func amongOneMajor(first, second helperVersion) bool {
+	return first.ver.Major == second.ver.Major
+}
+
+func amongOneMinor(first, second helperVersion) bool {
+	return first.ver.Minor == second.ver.Minor || first.ver.Minor-second.ver.Minor == -1 || first.ver.Minor-second.ver.Minor == 1
 }

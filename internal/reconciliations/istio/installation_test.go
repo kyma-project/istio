@@ -192,6 +192,111 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(returnedIstioCr.Status.State).To(Equal(operatorv1alpha1.Processing))
 	})
 
+	It("should not execute install to downgrade istio", func() {
+		// given
+
+		istioVersionDowngrade := "1.16.0"
+		numTrustedProxies := 1
+		istioCr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+			Name:            "default",
+			ResourceVersion: "1",
+			Annotations: map[string]string{
+				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
+			},
+		},
+			Spec: operatorv1alpha1.IstioSpec{
+				Config: operatorv1alpha1.Config{
+					NumTrustedProxies: &numTrustedProxies,
+				},
+			},
+		}
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
+		mockClient := mockLibraryClient{}
+		installation := istio.Installation{
+			Client:         &mockClient,
+			IstioVersion:   istioVersionDowngrade,
+			IstioImageBase: istioImageBase,
+		}
+		// when
+		_, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod), istioCr, defaultIstioOperatorPath, workingDir)
+
+		// then
+		Expect(err).Should(HaveOccurred())
+		Expect(err.Error()).To(Equal("target Istio version (1.16.0-distroless) is lower than current version (1.16.1-distroless) - downgrade not supported"))
+		Expect(mockClient.installCalled).To(BeFalse())
+		Expect(mockClient.uninstallCalled).To(BeFalse())
+	})
+
+	It("should not execute install to upgrade istio from 1.16.1 to 1.18.0", func() {
+		// given
+
+		istioVersionTwoMinor := "1.18.0"
+		numTrustedProxies := 1
+		istioCr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+			Name:            "default",
+			ResourceVersion: "1",
+			Annotations: map[string]string{
+				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
+			},
+		},
+			Spec: operatorv1alpha1.IstioSpec{
+				Config: operatorv1alpha1.Config{
+					NumTrustedProxies: &numTrustedProxies,
+				},
+			},
+		}
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
+		mockClient := mockLibraryClient{}
+		installation := istio.Installation{
+			Client:         &mockClient,
+			IstioVersion:   istioVersionTwoMinor,
+			IstioImageBase: istioImageBase,
+		}
+		// when
+		_, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod), istioCr, defaultIstioOperatorPath, workingDir)
+
+		// then
+		Expect(err).Should(HaveOccurred())
+		Expect(err.Error()).To(Equal("target Istio version (1.18.0-distroless) is higher than current Istio version (1.16.1-distroless) - the difference between versions exceed one minor version"))
+		Expect(mockClient.installCalled).To(BeFalse())
+		Expect(mockClient.uninstallCalled).To(BeFalse())
+	})
+
+	It("should not execute install to upgrade istio from 1.16.1 to 2.0.0", func() {
+		// given
+
+		istioVersionOneMajor := "2.0.0"
+		numTrustedProxies := 1
+		istioCr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+			Name:            "default",
+			ResourceVersion: "1",
+			Annotations: map[string]string{
+				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
+			},
+		},
+			Spec: operatorv1alpha1.IstioSpec{
+				Config: operatorv1alpha1.Config{
+					NumTrustedProxies: &numTrustedProxies,
+				},
+			},
+		}
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
+		mockClient := mockLibraryClient{}
+		installation := istio.Installation{
+			Client:         &mockClient,
+			IstioVersion:   istioVersionOneMajor,
+			IstioImageBase: istioImageBase,
+		}
+		// when
+		_, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod), istioCr, defaultIstioOperatorPath, workingDir)
+
+		// then
+		Expect(err).Should(HaveOccurred())
+		Expect(err.Error()).To(Equal("target Istio version (2.0.0-distroless) is higher than current Istio version (1.16.1-distroless) - major version upgrade is not supported"))
+		Expect(mockClient.installCalled).To(BeFalse())
+		Expect(mockClient.uninstallCalled).To(BeFalse())
+	})
+
 	It("should execute install to upgrade istio and update Istio CR status when Istio CR has changed", func() {
 		// given
 

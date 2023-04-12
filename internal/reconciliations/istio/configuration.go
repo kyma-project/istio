@@ -114,8 +114,8 @@ func CheckIstioVersion(currentIstioVersionString, targetIstioVersionString strin
 		return fmt.Errorf("target Istio version (%s) is lower than current version (%s) - downgrade not supported",
 			targetIstioVersion.ver.String(), currentIstioVersion.ver.String())
 	}
-	if !amongOneMajor(currentIstioVersion, targetIstioVersion) {
-		return fmt.Errorf("target Istio version (%s) is higher than current Istio version (%s) - major version upgrade is not supported", targetIstioVersion.ver.String(), currentIstioVersion.ver.String())
+	if !sameMajorVersion(currentIstioVersion, targetIstioVersion) {
+		return fmt.Errorf("target Istio version (%s) is different than current Istio version (%s) - major version upgrade is not supported", targetIstioVersion.ver.String(), currentIstioVersion.ver.String())
 	}
 	if !amongOneMinor(currentIstioVersion, targetIstioVersion) {
 		return fmt.Errorf("target Istio version (%s) is higher than current Istio version (%s) - the difference between versions exceed one minor version", targetIstioVersion.ver.String(), currentIstioVersion.ver.String())
@@ -124,21 +124,27 @@ func CheckIstioVersion(currentIstioVersionString, targetIstioVersionString strin
 	return nil
 }
 
-type helperVersion semver.Version
+type helperVersion struct {
+	ver semver.Version
+}
 
 func newHelperVersionFrom(versionInString string) (helperVersion, error) {
 	version, err := semver.NewVersion(versionInString)
 	if err != nil {
 		return helperVersion{}, err
 	}
-	return helperVersion{ver: *version}, err
+	if version == nil {
+		return helperVersion{}, fmt.Errorf("version is nil")
+	}
+
+	return helperVersion{ver: *version}, nil
 }
 
 func isDowngrade(current, target helperVersion) bool {
-	return current.ver.Major >= target.ver.Major && current.ver.Minor >= target.ver.Minor && current.ver.Patch > target.ver.Patch
+	return !current.ver.LessThan(target.ver)
 }
 
-func amongOneMajor(first, second helperVersion) bool {
+func sameMajorVersion(first, second helperVersion) bool {
 	return first.ver.Major == second.ver.Major
 }
 

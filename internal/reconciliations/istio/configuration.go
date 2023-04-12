@@ -124,9 +124,7 @@ func CheckIstioVersion(currentIstioVersionString, targetIstioVersionString strin
 	return nil
 }
 
-type helperVersion struct {
-	ver semver.Version
-}
+type helperVersion semver.Version
 
 func newHelperVersionFrom(versionInString string) (helperVersion, error) {
 	version, err := semver.NewVersion(versionInString)

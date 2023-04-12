@@ -292,7 +292,7 @@ var _ = Describe("Installation reconciliation", func() {
 
 		// then
 		Expect(err).Should(HaveOccurred())
-		Expect(err.Error()).To(Equal("target Istio version (2.0.0-distroless) is higher than current Istio version (1.16.1-distroless) - major version upgrade is not supported"))
+		Expect(err.Error()).To(Equal("target Istio version (2.0.0-distroless) is different than current Istio version (1.16.1-distroless) - major version upgrade is not supported"))
 		Expect(mockClient.installCalled).To(BeFalse())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 	})

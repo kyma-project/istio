@@ -128,28 +128,6 @@ type helperVersion struct {
 	ver semver.Version
 }
 
-func (h helperVersion) compare(second helperVersion) int {
-	if h.ver.Major > second.ver.Major {
-		return 1
-	} else if h.ver.Major == second.ver.Major {
-		if h.ver.Minor > second.ver.Minor {
-			return 1
-		} else if h.ver.Minor == second.ver.Minor {
-			if h.ver.Patch > second.ver.Patch {
-				return 1
-			} else if h.ver.Patch == second.ver.Patch {
-				return 0
-			} else {
-				return -1
-			}
-		} else {
-			return -1
-		}
-	} else {
-		return -1
-	}
-}
-
 func newHelperVersionFrom(versionInString string) (helperVersion, error) {
 	version, err := semver.NewVersion(versionInString)
 	if err != nil {

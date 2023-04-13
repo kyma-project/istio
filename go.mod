@@ -3,6 +3,7 @@ module github.com/kyma-project/istio/operator
 go 1.20
 
 require (
+	github.com/coreos/go-semver v0.3.0
 	github.com/cucumber/godog v0.12.6
 	github.com/docker/distribution v2.8.1+incompatible
 	github.com/go-logr/logr v1.2.3

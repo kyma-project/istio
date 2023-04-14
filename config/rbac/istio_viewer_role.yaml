@@ -25,3 +25,53 @@ rules:
   - istios/status
   verbs:
   - get
+- apiGroups:
+  - networking.istio.io
+  verbs:
+    - get
+    - list
+    - watch
+  resources:
+    - DestinationRule
+    - EnvoyFilter
+    - Gateway
+    - ProxyConfig
+    - ServiceEntry
+    - Sidecar
+    - VirtualService
+    - WorkloadEntry
+    - WorkloadGroup
+- apiGroups:
+    - security.istio.io
+  verbs:
+    - get
+    - list
+    - watch
+  resources:
+    - AuthorizationPolicy
+    - PeerAuthentication
+    - RequestAuthentication
+- apiGroups:
+    - install.istio.io
+  verbs:
+    - get
+    - list
+    - watch
+  resources:
+    - IstioOperator
+- apiGroups:
+    - telemetry.istio.io
+  verbs:
+    - get
+    - list
+    - watch
+  resources:
+    - Telemetry
+- apiGroups:
+    - extensions.istio.io
+  verbs:
+    - get
+    - list
+    - watch
+  resources:
+    - WasmPlugin

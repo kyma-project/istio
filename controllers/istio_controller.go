@@ -119,11 +119,6 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 // +kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=namespaces,verbs=get;create;update;patch
 // +kubebuilder:rbac:groups="",resources=nodes,verbs=get;list
-// +kubebuilder:rbac:groups="networking.istio.io",resources=destinationrules;envoyfilters;gateways;proxyconfigs;serviceentrys;sidecars;virtualservices;workloadentrys;workloadgroups,verbs=get;list;watch
-// +kubebuilder:rbac:groups="security.istio.io",resources=authorizationpolicys;peerauthentications;requestauthentications,verbs=get;list;watch
-// +kubebuilder:rbac:groups="install.istio.io",resources=istiooperators,verbs=get;list;watch
-// +kubebuilder:rbac:groups="telemetry.istio.io",resources=telemetrys,verbs=get;list;watch
-// +kubebuilder:rbac:groups="extensions.istio.io",resources=wasmplugins,verbs=get;list;watch
 func (r *IstioReconciler) SetupWithManager(mgr ctrl.Manager, rateLimiter RateLimiter) error {
 	r.Config = mgr.GetConfig()
 

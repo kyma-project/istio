@@ -11,8 +11,8 @@ import (
 )
 
 type ResourceMeta struct {
-	Name      string `yaml:"name"`
-	Namespace string `yaml:"namespace"`
+	Name      string
+	Namespace string
 }
 
 type Resource struct {
@@ -21,12 +21,12 @@ type Resource struct {
 }
 
 type ResourceConfiguration struct {
-	GroupVersionKind schema.GroupVersionKind `yaml:"GroupVersionKind"`
-	ControlledList   []ResourceMeta          `yaml:"ControlledList"`
+	GroupVersionKind schema.GroupVersionKind
+	ControlledList   []ResourceMeta
 }
 
 type resourceFinderConfiguration struct {
-	Resources []ResourceConfiguration `yaml:"resources"`
+	Resources []ResourceConfiguration
 }
 
 type IstioResourcesFinder struct {

@@ -12,17 +12,7 @@ resources:
       version: v1alpha3
       kind: EnvoyFilter
     ControlledList:
-      - name: "stats-filter-1.16"
-        namespace: "istio-system"
-      - name: "stats-filter-1.17"
-        namespace: "istio-system"
-      - name: "stats-filter-1.18"
-        namespace: "istio-system"
-      - name: "tcp-stats-filter-1.16"
-        namespace: "istio-system"
-      - name: "tcp-stats-filter-1.17"
-        namespace: "istio-system"
-      - name: "tcp-stats-filter-1.18"
+      - name: "some-default-resource"
         namespace: "istio-system"
   - GroupVersionKind:
       group: networking.istio.io
@@ -32,9 +22,6 @@ resources:
       group: install.istio.io
       version: v1alpha1
       kind: IstioOperator
-    ControlledList:
-      - name: "installed-state-default-operator"
-        namespace: "istio-system"
   - GroupVersionKind:
       group: security.istio.io
       version: v1beta1

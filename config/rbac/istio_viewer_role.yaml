@@ -12,10 +12,16 @@ metadata:
   name: istio-viewer-role
 rules:
 - apiGroups:
-    - operator.kyma-project.io
+  - operator.kyma-project.io
   resources:
-    - istios
+  - istios
   verbs:
-    - get
-    - list
-    - watch
+  - get
+  - list
+  - watch
+- apiGroups:
+  - operator.kyma-project.io
+  resources:
+  - istios/status
+  verbs:
+  - get

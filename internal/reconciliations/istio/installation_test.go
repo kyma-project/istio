@@ -472,6 +472,47 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 	})
 
+	It("should uninstall if there are only default Istio resources present", func() {
+		// given
+		now := metav1.NewTime(time.Now())
+		numTrustedProxies := 1
+		istioCr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+			Name:            "default",
+			ResourceVersion: "1",
+			Annotations: map[string]string{
+				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
+			},
+			DeletionTimestamp: &now,
+			Finalizers:        []string{"istios.operator.kyma-project.io/istio-installation"},
+		},
+			Spec: operatorv1alpha1.IstioSpec{
+				Config: operatorv1alpha1.Config{
+					NumTrustedProxies: &numTrustedProxies,
+				},
+			},
+		}
+
+		mockClient := mockLibraryClient{}
+		installation := istio.Installation{
+			Client:         &mockClient,
+			IstioVersion:   istioVersion,
+			IstioImageBase: istioImageBase,
+		}
+
+		// when
+		_, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, &networkingv1alpha3.EnvoyFilter{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "some-default-resource",
+				Namespace: "istio-system",
+			},
+		}), istioCr, defaultIstioOperatorPath, workingDir, resourceListPath)
+
+		// then
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(mockClient.installCalled).To(BeFalse())
+		Expect(mockClient.uninstallCalled).To(BeTrue())
+	})
+
 	It("should not uninstall if there are not default Istio resources present", func() {
 		// given
 		now := metav1.NewTime(time.Now())

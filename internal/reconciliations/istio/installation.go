@@ -2,7 +2,9 @@ package istio
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/kyma-project/istio/operator/internal/resources"
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 
@@ -25,6 +27,7 @@ type Installation struct {
 const (
 	LastAppliedConfiguration string = "operator.kyma-project.io/lastAppliedConfiguration"
 	installationFinalizer    string = "istios.operator.kyma-project.io/istio-installation"
+	defaultResourceListPath  string = "manifests/controlled_resources_list.yaml"
 )
 
 // Reconcile runs Istio reconciliation to install, upgrade or uninstall Istio and returns the updated Istio CR.
@@ -100,7 +103,23 @@ func (i *Installation) Reconcile(ctx context.Context, client client.Client, isti
 			return istioCR, err
 		}
 
-		err := i.Client.Uninstall(ctx)
+		istioResourceFinder, err := resources.NewIstioResourcesFinderFromConfigYaml(ctx, client, ctrl.Log, defaultResourceListPath)
+		if err != nil {
+			return istioCR, err
+		}
+
+		clientResources, err := istioResourceFinder.FindUserCreatedIstioResources()
+		if err != nil {
+			return istioCR, err
+		}
+		if len(clientResources) > 0 {
+			errorTemplate := "Could not delete Istio module instance since there are customer created resources present:"
+			for _, resource := range clientResources {
+				errorTemplate += fmt.Sprintf("\n%s:%s/%s", resource.GVK.Kind, resource.Namespace, resource.Name)
+			}
+			return istioCR, errors.New(errorTemplate)
+		}
+		err = i.Client.Uninstall(ctx)
 		if err != nil {
 			return istioCR, err
 		}

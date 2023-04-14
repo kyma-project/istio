@@ -49,35 +49,61 @@ rules:
   - update
 # istio groups
 - apiGroups:
-  - authentication.istio.io
+    - operator.kyma-project.io
   resources:
-  - '*'
+    - istios/status
   verbs:
-  - '*'
+    - get
 - apiGroups:
-  - config.istio.io
-  resources:
-  - '*'
+    - networking.istio.io
   verbs:
-  - '*'
+    - get
+    - list
+    - watch
+  resources:
+    - DestinationRule
+    - EnvoyFilter
+    - Gateway
+    - ProxyConfig
+    - ServiceEntry
+    - Sidecar
+    - VirtualService
+    - WorkloadEntry
+    - WorkloadGroup
 - apiGroups:
-  - install.istio.io
-  resources:
-  - '*'
+    - security.istio.io
   verbs:
-  - '*'
+    - get
+    - list
+    - watch
+  resources:
+    - AuthorizationPolicy
+    - PeerAuthentication
+    - RequestAuthentication
 - apiGroups:
-  - networking.istio.io
-  resources:
-  - '*'
+    - install.istio.io
   verbs:
-  - '*'
+    - get
+    - list
+    - watch
+  resources:
+    - IstioOperator
 - apiGroups:
-  - security.istio.io
-  resources:
-  - '*'
+    - telemetry.istio.io
   verbs:
-  - '*'
+    - get
+    - list
+    - watch
+  resources:
+    - Telemetry
+- apiGroups:
+    - extensions.istio.io
+  verbs:
+    - get
+    - list
+    - watch
+  resources:
+    - WasmPlugin
 # k8s groups
 - apiGroups:
   - admissionregistration.k8s.io

@@ -45,9 +45,10 @@ var (
 )
 
 const (
-	IstioVersion   string        = "1.17.1"
-	IstioImageBase string        = "distroless"
-	ErrorRetryTime time.Duration = time.Minute
+	IstioVersion                 string        = "1.17.1"
+	IstioImageBase               string        = "distroless"
+	IstioResourceListDefaultPath               = "manifests/controlled_resources_list.yaml"
+	ErrorRetryTime               time.Duration = time.Minute * 10
 )
 
 var IstioTag = fmt.Sprintf("%s-%s", IstioVersion, IstioImageBase)
@@ -75,7 +76,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return status.Update(ctx, r.Client, &istioCR, operatorv1alpha1.Error, metav1.Condition{}, ErrorRetryTime)
 	}
 
-	istioCR, err := r.istioInstallation.Reconcile(ctx, r.Client, istioCR, defaultIstioOperatorPath, workingDir)
+	istioCR, err := r.istioInstallation.Reconcile(ctx, r.Client, istioCR, defaultIstioOperatorPath, workingDir, IstioResourceListDefaultPath)
 	if err != nil {
 		r.log.Error(err, "Error occurred during reconciliation of Istio installation")
 		return status.Update(ctx, r.Client, &istioCR, operatorv1alpha1.Error, metav1.Condition{}, ErrorRetryTime)

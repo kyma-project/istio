@@ -27,11 +27,10 @@ type Installation struct {
 const (
 	LastAppliedConfiguration string = "operator.kyma-project.io/lastAppliedConfiguration"
 	installationFinalizer    string = "istios.operator.kyma-project.io/istio-installation"
-	defaultResourceListPath  string = "manifests/controlled_resources_list.yaml"
 )
 
 // Reconcile runs Istio reconciliation to install, upgrade or uninstall Istio and returns the updated Istio CR.
-func (i *Installation) Reconcile(ctx context.Context, client client.Client, istioCR operatorv1alpha1.Istio, defaultIstioOperatorPath, workingDir string) (operatorv1alpha1.Istio, error) {
+func (i *Installation) Reconcile(ctx context.Context, client client.Client, istioCR operatorv1alpha1.Istio, defaultIstioOperatorPath, workingDir, istioResourceListPath string) (operatorv1alpha1.Istio, error) {
 
 	istioTag := fmt.Sprintf("%s-%s", i.IstioVersion, i.IstioImageBase)
 
@@ -93,7 +92,7 @@ func (i *Installation) Reconcile(ctx context.Context, client client.Client, isti
 
 		ctrl.Log.Info("Istio install completed")
 
-		// We use the installation finalizer to track if the deletion was already executed so can make the uninstall process more reliable.
+		// We use the installation finalizer to track if the deletion was already executed so can make the uninstallation process more reliable.
 	} else if istioCRChanges.requireIstioDeletion() && hasInstallationFinalizer(istioCR) {
 
 		ctrl.Log.Info("Starting istio uninstall")
@@ -103,7 +102,7 @@ func (i *Installation) Reconcile(ctx context.Context, client client.Client, isti
 			return istioCR, err
 		}
 
-		istioResourceFinder, err := resources.NewIstioResourcesFinderFromConfigYaml(ctx, client, ctrl.Log, defaultResourceListPath)
+		istioResourceFinder, err := resources.NewIstioResourcesFinderFromConfigYaml(ctx, client, ctrl.Log, istioResourceListPath)
 		if err != nil {
 			return istioCR, err
 		}

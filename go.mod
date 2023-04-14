@@ -9,13 +9,14 @@ require (
 	github.com/go-logr/logr v1.2.3
 	github.com/imdario/mergo v0.3.13
 	github.com/masterminds/semver v1.5.0
-	github.com/onsi/ginkgo/v2 v2.8.4
-	github.com/onsi/gomega v1.27.2
+	github.com/onsi/ginkgo/v2 v2.9.2
+	github.com/onsi/gomega v1.27.4
 	gitlab.com/rodrigoodhin/gocure v0.0.0-20220718065339-f14dfe79276a
 	golang.org/x/exp v0.0.0-20230202163644-54bba9f4231b
 	golang.org/x/time v0.3.0
 	google.golang.org/protobuf v1.28.1
 	istio.io/api v0.0.0-20230316205359-5a61675c5ca0
+	istio.io/client-go v1.17.1
 	istio.io/istio v0.0.0-20230210164309-ff2bbfdd4299
 	istio.io/pkg v0.0.0-20230203225929-102620a3ea67
 	k8s.io/api v0.26.1
@@ -75,13 +76,13 @@ require (
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect
 	github.com/go-openapi/jsonreference v0.20.1 // indirect
 	github.com/go-openapi/swag v0.22.3 // indirect
-	github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0 // indirect
+	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/goccy/go-json v0.10.0 // indirect
 	github.com/gofrs/uuid v4.2.0+incompatible // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/cel-go v0.13.0 // indirect
 	github.com/google/gnostic v0.6.9 // indirect
@@ -176,14 +177,14 @@ require (
 	go.uber.org/multierr v1.9.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
 	golang.org/x/crypto v0.5.0 // indirect
-	golang.org/x/mod v0.8.0 // indirect
-	golang.org/x/net v0.7.0 // indirect
+	golang.org/x/mod v0.9.0 // indirect
+	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/oauth2 v0.4.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.5.0 // indirect
-	golang.org/x/term v0.5.0 // indirect
-	golang.org/x/text v0.7.0 // indirect
-	golang.org/x/tools v0.6.0 // indirect
+	golang.org/x/sys v0.6.0 // indirect
+	golang.org/x/term v0.6.0 // indirect
+	golang.org/x/text v0.8.0 // indirect
+	golang.org/x/tools v0.7.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.2.0 // indirect
 	gomodules.xyz/jsonpatch/v3 v3.0.1 // indirect
 	gomodules.xyz/orderedmap v0.1.0 // indirect
@@ -198,7 +199,6 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	helm.sh/helm/v3 v3.11.1 // indirect
-	istio.io/client-go v1.17.1 // indirect
 	k8s.io/apiserver v0.26.1 // indirect
 	k8s.io/cli-runtime v0.26.1 // indirect
 	k8s.io/component-base v0.26.1 // indirect

@@ -132,6 +132,11 @@ For now, the following scenarios must be covered by this component:
 The PeerAuthenticationReconcilation component applies the PeerAuthentication that configures default mTLS mode in a cluster.
 The PeerAuthenticationReconcilation must only be applied if Istio is installed and PeerAuthentication does not already exist or the generation is changed, as we want to ensure that it is always our expected configuration.
 
+## Istio component uninstallation
+
+The default behaviour triggered on deletion of Istio Custom Resource is to uninstall all of Istio components only if there are none customer created resources present on the cluster. This behaviour is called `blocking` deletion strategy and will take place unless the intent to delete all resources, including non default Istio ones, is explicitly defined by selecting `cascading` deletion strategy.
+
+> TODO: At this moment only `blocking` strategy is implemented and triggered by default. Implement `cascading` strategy as described in https://github.com/kyma-project/istio/issues/130
 
 ## Scenario: Users bring their own Istio installation
 In this scenario, API Gateway supports the defined Istio versions. The user can then install one of the supported Istio versions.

@@ -58,7 +58,7 @@ The following diagram shows the reconciliation process for installing, uninstall
 ![Istio Installation Reconciliation](./istio-installation-reconciliation.svg)
 
 ### Istio upgrade version checking
-Istio upgrade allows updates of only one minor version (1.2.3 -> 1.3.0), reconciliation will fail if minor version difference is higher than 1 (1.2.3 -> 1.4.0).
+You can upgrade Istio only by one minor version (1.2.3 -> 1.3.0). Reconciliation fails if the difference between current and target minor versions is greater than one (1.2.3 -> 1.4.0).
 Upgrade of one major version will fail (1.2.3 -> 2.0.0), as well as any kind of downgrade (1.2.3 -> 1.2.2).
 
 ### Reconciliation of Istio

@@ -2,10 +2,12 @@ package resources
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"os"
+	"regexp"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 )
@@ -41,16 +43,31 @@ func NewIstioResourcesFinderFromConfigYaml(ctx context.Context, client client.Cl
 	if err != nil {
 		return nil, err
 	}
-	var finder resourceFinderConfiguration
-	err = yaml.Unmarshal(configYaml, &finder)
+	var finderConfiguration resourceFinderConfiguration
+	err = yaml.Unmarshal(configYaml, &finderConfiguration)
 	if err != nil {
 		return nil, err
 	}
+
+	for _, resource := range finderConfiguration.Resources {
+		for _, meta := range resource.ControlledList {
+			_, err := regexp.Compile(meta.Name)
+			if err != nil {
+				return nil, fmt.Errorf("configuration yaml regex check failed for \"%s\": %s", meta.Name, err)
+			}
+
+			_, err = regexp.Compile(meta.Namespace)
+			if err != nil {
+				return nil, fmt.Errorf("configuration yaml regex check failed for \"%s\": %s", meta.Namespace, err)
+			}
+		}
+	}
+
 	return &IstioResourcesFinder{
 		ctx:           ctx,
 		logger:        logger,
 		client:        client,
-		configuration: finder,
+		configuration: finderConfiguration,
 	}, nil
 }
 
@@ -71,18 +88,32 @@ func (i *IstioResourcesFinder) FindUserCreatedIstioResources() ([]Resource, erro
 					Namespace: item.GetNamespace(),
 				},
 			}
-			if !contains(resource.ControlledList, res.ResourceMeta) {
+
+			managed, err := contains(resource.ControlledList, res.ResourceMeta)
+			if err != nil {
+				return nil, err
+			}
+
+			if !managed {
 				userResources = append(userResources, res)
 			}
 		}
 	}
 	return userResources, nil
 }
-func contains(s []ResourceMeta, e ResourceMeta) bool {
+func contains(s []ResourceMeta, e ResourceMeta) (bool, error) {
 	for _, r := range s {
-		if r.Name == e.Name && r.Namespace == e.Namespace {
-			return true
+		matchName, err := regexp.MatchString(r.Name, e.Name)
+		if err != nil {
+			return false, err
+		}
+		matchNamespace, err := regexp.MatchString(r.Namespace, e.Namespace)
+		if err != nil {
+			return false, err
+		}
+		if matchNamespace && matchName {
+			return true, nil
 		}
 	}
-	return false
+	return false, nil
 }

@@ -4,5 +4,5 @@ resources:
       version: v1alpha3
       kind: EnvoyFilter
     ControlledList:
-      - name: "stats-filter-\\d\\.\\d\\d"
+      - name: "stats-filter-["
         namespace: "istio-system"

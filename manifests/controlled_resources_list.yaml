@@ -12,17 +12,9 @@ resources:
       version: v1alpha3
       kind: EnvoyFilter
     ControlledList:
-      - name: "stats-filter-1.16"
+      - name: "stats-filter-\\d\\.\\d\\d"
         namespace: "istio-system"
-      - name: "stats-filter-1.17"
-        namespace: "istio-system"
-      - name: "stats-filter-1.18"
-        namespace: "istio-system"
-      - name: "tcp-stats-filter-1.16"
-        namespace: "istio-system"
-      - name: "tcp-stats-filter-1.17"
-        namespace: "istio-system"
-      - name: "tcp-stats-filter-1.18"
+      - name: "tcp-stats-filter-\\d\\.\\d\\d"
         namespace: "istio-system"
   - GroupVersionKind:
       group: networking.istio.io

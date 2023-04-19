@@ -57,6 +57,48 @@ var _ = Describe("Resources", func() {
 			},
 			nil,
 			false,
+		), Entry("Should get resource if there is a customer resource present", context.TODO(),
+			logr.Discard(),
+			fake.NewClientBuilder().WithScheme(sc).WithObjects(&networkingv1alpha3.EnvoyFilter{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "istio-system",
+					Name:      "stats-filter-1.16",
+				},
+			}, &networkingv1alpha3.EnvoyFilter{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "other-system",
+					Name:      "route-to-something",
+				},
+			}).Build(),
+			resourceFinderConfiguration{Resources: []ResourceConfiguration{
+				{
+					GroupVersionKind: schema.GroupVersionKind{
+						Group:   "networking.istio.io",
+						Version: "v1alpha3",
+						Kind:    "EnvoyFilter",
+					},
+					ControlledList: []ResourceMeta{
+						{
+							Name:      "stats-filter-1.16",
+							Namespace: "istio-system",
+						},
+					},
+				},
+			},
+			},
+			[]Resource{
+				{
+					ResourceMeta: ResourceMeta{
+						Namespace: "other-system",
+						Name:      "route-to-something",
+					}, GVK: schema.GroupVersionKind{
+						Group:   "networking.istio.io",
+						Version: "v1alpha3",
+						Kind:    "EnvoyFilter",
+					},
+				},
+			},
+			false,
 		))
 })
 
@@ -78,7 +120,7 @@ var _ = Describe("NewIstioResourcesFinderFromConfigYaml", func() {
 						},
 						ControlledList: []ResourceMeta{
 							{
-								Name:      "stats-filter-1.16",
+								Name:      "stats-filter-\\d\\.\\d\\d",
 								Namespace: "istio-system",
 							},
 						},
@@ -87,6 +129,10 @@ var _ = Describe("NewIstioResourcesFinderFromConfigYaml", func() {
 			},
 		},
 		))
+	})
+	It("Should fail if the configuration contains invalid regex", func() {
+		_, err := NewIstioResourcesFinderFromConfigYaml(context.TODO(), nil, logr.Logger{}, "test_wrong_resources_list.yaml")
+		Expect(err).To(HaveOccurred())
 	})
 })
 
@@ -110,9 +156,10 @@ func Test_contains(t *testing.T) {
 		e Resource
 	}
 	tests := []struct {
-		name string
-		args args
-		want bool
+		name    string
+		args    args
+		want    bool
+		wantErr bool
 	}{
 		{
 			name: "basic",
@@ -125,13 +172,18 @@ func Test_contains(t *testing.T) {
 					Namespace: "test-ns",
 				}},
 			},
-			want: true,
+			want:    true,
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := contains(tt.args.s, tt.args.e.ResourceMeta); got != tt.want {
+			got, err := contains(tt.args.s, tt.args.e.ResourceMeta)
+			if got != tt.want {
 				t.Errorf("contains() = %v, want %v", got, tt.want)
+			}
+			if err != nil != tt.wantErr {
+				t.Errorf("error happened = %v, wanted %v", err != nil, tt.wantErr)
 			}
 		})
 	}

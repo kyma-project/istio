@@ -2,7 +2,6 @@ package istio
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/kyma-project/istio/operator/internal/resources"
 
@@ -112,11 +111,7 @@ func (i *Installation) Reconcile(ctx context.Context, client client.Client, isti
 			return istioCR, err
 		}
 		if len(clientResources) > 0 {
-			errorTemplate := "Could not delete Istio module instance since there are customer created resources present:"
-			for _, resource := range clientResources {
-				errorTemplate += fmt.Sprintf("\n%s:%s/%s", resource.GVK.Kind, resource.Namespace, resource.Name)
-			}
-			return istioCR, errors.New(errorTemplate)
+			return istioCR, fmt.Errorf("could not delete Istio module instance since there are %d customer created resources present", len(clientResources))
 		}
 		err = i.Client.Uninstall(ctx)
 		if err != nil {

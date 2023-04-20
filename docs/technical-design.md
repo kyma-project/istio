@@ -57,6 +57,10 @@ The following diagram shows the reconciliation process for installing, uninstall
 
 ![Istio Installation Reconciliation](./istio-installation-reconciliation.svg)
 
+### Istio upgrade version checking
+You can upgrade Istio only by one minor version (1.2.3 -> 1.3.0). Reconciliation fails if the difference between current and target minor versions is greater than one (1.2.3 -> 1.4.0).
+An upgrade of a major version fails (1.2.3 -> 2.0.0), as well as any downgrade (1.2.3 -> 1.2.2).
+
 ### Reconciliation of Istio
 The reconciliation loop of Istio is based on the [Istio CR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md) custom resource and is controlled by `IstioController`. This controller contains several self-contained components, which we have suffixed with reconciliation.   
 We decided to split the logic in these reconciliation components to have a better extensibility and maintainability. This means each of this components must have its clearly separated responsibility

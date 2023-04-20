@@ -15,13 +15,16 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+
+	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 )
 
 const (
-	istioVersion             = "1.16.1"
-	istioImageBase           = "distroless"
-	defaultIstioOperatorPath = "test/test-operator.yaml"
-	workingDir               = "/tmp"
+	istioVersion             string = "1.16.1"
+	istioImageBase           string = "distroless"
+	defaultIstioOperatorPath string = "test/test-operator.yaml"
+	resourceListPath         string = "test/test_controlled_resource_list.yaml"
+	workingDir               string = "/tmp"
 )
 
 var istioTag = fmt.Sprintf("%s-%s", istioVersion, istioImageBase)
@@ -54,7 +57,7 @@ var _ = Describe("Installation reconciliation", func() {
 		}
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr), istioCr, defaultIstioOperatorPath, workingDir)
+		_, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr), istioCr, defaultIstioOperatorPath, workingDir, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -85,7 +88,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 		}
 		// when
-		returnedIstioCr, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod), istioCr, defaultIstioOperatorPath, workingDir)
+		returnedIstioCr, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod), istioCr, defaultIstioOperatorPath, workingDir, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -117,7 +120,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 		}
 		// when
-		returnedIstioCr, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod), istioCr, defaultIstioOperatorPath, workingDir)
+		returnedIstioCr, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod), istioCr, defaultIstioOperatorPath, workingDir, resourceListPath)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -150,7 +153,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 		}
 		// when
-		returnedIstioCr, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod), istioCr, defaultIstioOperatorPath, workingDir)
+		returnedIstioCr, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod), istioCr, defaultIstioOperatorPath, workingDir, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -183,7 +186,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 		}
 		// when
-		returnedIstioCr, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod), istioCr, defaultIstioOperatorPath, workingDir)
+		returnedIstioCr, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod), istioCr, defaultIstioOperatorPath, workingDir, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -218,7 +221,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 		}
 		// when
-		_, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod), istioCr, defaultIstioOperatorPath, workingDir)
+		_, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod), istioCr, defaultIstioOperatorPath, workingDir, resourceListPath)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -253,7 +256,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 		}
 		// when
-		_, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod), istioCr, defaultIstioOperatorPath, workingDir)
+		_, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod), istioCr, defaultIstioOperatorPath, workingDir, resourceListPath)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -288,7 +291,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 		}
 		// when
-		_, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod), istioCr, defaultIstioOperatorPath, workingDir)
+		_, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod), istioCr, defaultIstioOperatorPath, workingDir, resourceListPath)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -323,7 +326,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 		}
 		// when
-		returnedIstioCr, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod), istioCr, defaultIstioOperatorPath, workingDir)
+		returnedIstioCr, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod), istioCr, defaultIstioOperatorPath, workingDir, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -358,7 +361,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 		}
 		// when
-		_, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr), istioCr, defaultIstioOperatorPath, workingDir)
+		_, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr), istioCr, defaultIstioOperatorPath, workingDir, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -393,7 +396,7 @@ var _ = Describe("Installation reconciliation", func() {
 		}
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr), istioCr, defaultIstioOperatorPath, workingDir)
+		_, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr), istioCr, defaultIstioOperatorPath, workingDir, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -426,7 +429,7 @@ var _ = Describe("Installation reconciliation", func() {
 		}
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr), istioCr, defaultIstioOperatorPath, workingDir)
+		_, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr), istioCr, defaultIstioOperatorPath, workingDir, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -461,10 +464,93 @@ var _ = Describe("Installation reconciliation", func() {
 		}
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr), istioCr, defaultIstioOperatorPath, workingDir)
+		_, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr), istioCr, defaultIstioOperatorPath, workingDir, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
+		Expect(mockClient.installCalled).To(BeFalse())
+		Expect(mockClient.uninstallCalled).To(BeFalse())
+	})
+
+	It("should uninstall if there are only default Istio resources present", func() {
+		// given
+		now := metav1.NewTime(time.Now())
+		numTrustedProxies := 1
+		istioCr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+			Name:            "default",
+			ResourceVersion: "1",
+			Annotations: map[string]string{
+				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
+			},
+			DeletionTimestamp: &now,
+			Finalizers:        []string{"istios.operator.kyma-project.io/istio-installation"},
+		},
+			Spec: operatorv1alpha1.IstioSpec{
+				Config: operatorv1alpha1.Config{
+					NumTrustedProxies: &numTrustedProxies,
+				},
+			},
+		}
+
+		mockClient := mockLibraryClient{}
+		installation := istio.Installation{
+			Client:         &mockClient,
+			IstioVersion:   istioVersion,
+			IstioImageBase: istioImageBase,
+		}
+
+		// when
+		_, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, &networkingv1alpha3.EnvoyFilter{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "some-default-resource",
+				Namespace: "istio-system",
+			},
+		}), istioCr, defaultIstioOperatorPath, workingDir, resourceListPath)
+
+		// then
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(mockClient.installCalled).To(BeFalse())
+		Expect(mockClient.uninstallCalled).To(BeTrue())
+	})
+
+	It("should not uninstall if there are not default Istio resources present", func() {
+		// given
+		now := metav1.NewTime(time.Now())
+		numTrustedProxies := 1
+		istioCr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+			Name:            "default",
+			ResourceVersion: "1",
+			Annotations: map[string]string{
+				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
+			},
+			DeletionTimestamp: &now,
+			Finalizers:        []string{"istios.operator.kyma-project.io/istio-installation"},
+		},
+			Spec: operatorv1alpha1.IstioSpec{
+				Config: operatorv1alpha1.Config{
+					NumTrustedProxies: &numTrustedProxies,
+				},
+			},
+		}
+
+		mockClient := mockLibraryClient{}
+		installation := istio.Installation{
+			Client:         &mockClient,
+			IstioVersion:   istioVersion,
+			IstioImageBase: istioImageBase,
+		}
+
+		// when
+		_, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, &networkingv1alpha3.VirtualService{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "mock-vs",
+				Namespace: "mock-ns",
+			},
+		}), istioCr, defaultIstioOperatorPath, workingDir, resourceListPath)
+
+		// then
+		Expect(err).Should(HaveOccurred())
+		Expect(err.Error()).To(Equal("could not delete Istio module instance since there are 1 customer created resources present"))
 		Expect(mockClient.installCalled).To(BeFalse())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 	})
@@ -490,6 +576,8 @@ func createFakeClient(objects ...client.Object) client.Client {
 	err := operatorv1alpha1.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
 	err = corev1.AddToScheme(scheme.Scheme)
+	Expect(err).ShouldNot(HaveOccurred())
+	err = networkingv1alpha3.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
 
 	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build()

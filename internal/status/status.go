@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func Update(ctx context.Context, client client.Client, istioCR *operatorv1alpha1.Istio, state operatorv1alpha1.State, condition metav1.Condition) (ctrl.Result, error) {
+func Update(ctx context.Context, client client.Client, istioCR *operatorv1alpha1.Istio, state operatorv1alpha1.State, condition metav1.Condition, retryTime ...time.Duration) (ctrl.Result, error) {
 	istioCR.Status.State = state
 	meta.SetStatusCondition(istioCR.Status.Conditions, condition)
 
@@ -20,6 +20,8 @@ func Update(ctx context.Context, client client.Client, istioCR *operatorv1alpha1
 			RequeueAfter: time.Minute * 5,
 		}, err
 	}
-
+	if len(retryTime) > 0 {
+		return ctrl.Result{RequeueAfter: retryTime[0]}, nil
+	}
 	return ctrl.Result{}, nil
 }

@@ -21,6 +21,7 @@ rules:
   verbs:
   - get
   - list
+  - watch
 - apiGroups:
   - operator.kyma-project.io
   resources:
@@ -74,6 +75,18 @@ rules:
   - '*'
 - apiGroups:
   - security.istio.io
+  resources:
+  - '*'
+  verbs:
+  - '*'
+- apiGroups:
+  - telemetry.istio.io
+  resources:
+  - '*'
+  verbs:
+  - '*'
+- apiGroups:
+  - extensions.istio.io
   resources:
   - '*'
   verbs:

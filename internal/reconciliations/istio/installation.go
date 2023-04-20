@@ -3,6 +3,7 @@ package istio
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/istio/operator/internal/resources"
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 
@@ -28,7 +29,7 @@ const (
 )
 
 // Reconcile runs Istio reconciliation to install, upgrade or uninstall Istio and returns the updated Istio CR.
-func (i *Installation) Reconcile(ctx context.Context, client client.Client, istioCR operatorv1alpha1.Istio, defaultIstioOperatorPath, workingDir string) (operatorv1alpha1.Istio, error) {
+func (i *Installation) Reconcile(ctx context.Context, client client.Client, istioCR operatorv1alpha1.Istio, defaultIstioOperatorPath, workingDir, istioResourceListPath string) (operatorv1alpha1.Istio, error) {
 
 	istioTag := fmt.Sprintf("%s-%s", i.IstioVersion, i.IstioImageBase)
 
@@ -90,7 +91,7 @@ func (i *Installation) Reconcile(ctx context.Context, client client.Client, isti
 
 		ctrl.Log.Info("Istio install completed")
 
-		// We use the installation finalizer to track if the deletion was already executed so can make the uninstall process more reliable.
+		// We use the installation finalizer to track if the deletion was already executed so can make the uninstallation process more reliable.
 	} else if istioCRChanges.requireIstioDeletion() && hasInstallationFinalizer(istioCR) {
 
 		ctrl.Log.Info("Starting istio uninstall")
@@ -100,7 +101,19 @@ func (i *Installation) Reconcile(ctx context.Context, client client.Client, isti
 			return istioCR, err
 		}
 
-		err := i.Client.Uninstall(ctx)
+		istioResourceFinder, err := resources.NewIstioResourcesFinderFromConfigYaml(ctx, client, ctrl.Log, istioResourceListPath)
+		if err != nil {
+			return istioCR, err
+		}
+
+		clientResources, err := istioResourceFinder.FindUserCreatedIstioResources()
+		if err != nil {
+			return istioCR, err
+		}
+		if len(clientResources) > 0 {
+			return istioCR, fmt.Errorf("could not delete Istio module instance since there are %d customer created resources present", len(clientResources))
+		}
+		err = i.Client.Uninstall(ctx)
 		if err != nil {
 			return istioCR, err
 		}

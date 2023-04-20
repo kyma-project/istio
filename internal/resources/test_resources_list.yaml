@@ -1,0 +1,8 @@
+resources:
+  - GroupVersionKind:
+      group: networking.istio.io
+      version: v1alpha3
+      kind: EnvoyFilter
+    ControlledList:
+      - name: "stats-filter-\\d\\.\\d\\d"
+        namespace: "istio-system"

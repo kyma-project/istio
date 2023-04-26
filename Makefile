@@ -261,3 +261,10 @@ all: module-build
 .PHONY: perf-test
 perf-test:
 	cd performance_tests && ./test.sh
+
+########## Integration Tests ###########
+.PHONY: istio-integration-test
+istio-integration-test:
+	#make install
+	#make deploy
+	cd tests/integration && go test

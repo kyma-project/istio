@@ -3,6 +3,7 @@ module github.com/kyma-project/istio/operator
 go 1.20
 
 require (
+	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/coreos/go-semver v0.3.0
 	github.com/cucumber/godog v0.12.6
 	github.com/docker/distribution v2.8.1+incompatible
@@ -11,6 +12,8 @@ require (
 	github.com/masterminds/semver v1.5.0
 	github.com/onsi/ginkgo/v2 v2.9.2
 	github.com/onsi/gomega v1.27.4
+	github.com/spf13/pflag v1.0.5
+	github.com/vrischmann/envconfig v1.3.0
 	gitlab.com/rodrigoodhin/gocure v0.0.0-20220718065339-f14dfe79276a
 	golang.org/x/exp v0.0.0-20230202163644-54bba9f4231b
 	golang.org/x/time v0.3.0
@@ -159,7 +162,6 @@ require (
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/cobra v1.6.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.15.0 // indirect
 	github.com/stoewer/go-strcase v1.2.1 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect

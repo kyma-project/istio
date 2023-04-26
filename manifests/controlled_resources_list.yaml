@@ -1,3 +1,4 @@
+#List based on  https://github.com/istio/api/blob/master/kubernetes/customresourcedefinitions.gen.yaml
 resources:
   - GroupVersionKind:
       group: security.istio.io

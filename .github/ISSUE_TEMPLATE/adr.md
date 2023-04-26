@@ -1,3 +1,12 @@
+---
+name: [ADR] Architecture Decision Record
+about: Create architecture decision record
+title: '[ADR] Title'
+labels: decision
+assignees: ''
+
+---
+
 # <!--- Provide title --> 
 
 ## Status

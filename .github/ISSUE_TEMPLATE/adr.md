@@ -1,5 +1,5 @@
 ---
-name: [ADR] Architecture Decision Record
+name: ADR
 about: Create architecture decision record
 title: '[ADR] Title'
 labels: decision

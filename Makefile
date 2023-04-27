@@ -265,6 +265,6 @@ perf-test:
 ########## Integration Tests ###########
 .PHONY: istio-integration-test
 istio-integration-test:
-	#make install
-	#make deploy
+	make install
+	make deploy
 	cd tests/integration && go test

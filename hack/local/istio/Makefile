@@ -65,7 +65,6 @@ fix-template:
 	    -e 's/localhost/k3d-${REGISTRY_NAME}.localhost/g' \
 		-e 's/\/unsigned//g' \
 	> ${PROJECT_ROOT}/template-k3d.yaml
-	kubectl label ModuleTemplate moduletemplate-istio -n kcp-system operator.kyma-project.io/module-name=istio
 
 .PHONY: enable-module
 enable-module:
@@ -81,6 +80,7 @@ patch-mod-mgr-role:
 install-module:
 	${KYMA} alpha deploy --ci
 	kubectl apply -f ${PROJECT_ROOT}/template-k3d.yaml
+	kubectl label ModuleTemplate moduletemplate-istio -n kcp-system operator.kyma-project.io/module-name=istio
 
 .PHONY: run
 run: kyma \

@@ -65,6 +65,7 @@ fix-template:
 	    -e 's/localhost/k3d-${REGISTRY_NAME}.localhost/g' \
 		-e 's/\/unsigned//g' \
 	> ${PROJECT_ROOT}/template-k3d.yaml
+	${PROJECT_ROOT}/bin/yq -i 'select(.metadata.labels | . += {"operator.kyma-project.io/use-local-template": "true"})' ${PROJECT_ROOT}/template-k3d.yaml
 
 .PHONY: enable-module
 enable-module:

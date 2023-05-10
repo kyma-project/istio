@@ -11,12 +11,6 @@ TEMPLATE_PATH ?= ${PROJECT_ROOT}/template.yaml
 
 KYMA ?= ${PROJECT_ROOT}/bin/kyma-unstable
 
-ifeq (,$(shell go env GOBIN))
-GOBIN=$(shell go env GOPATH)/bin
-else
-GOBIN=$(shell go env GOBIN)
-endif
-
 .PHONY: kyma
 kyma:
 	@make -C ${PROJECT_ROOT} kyma

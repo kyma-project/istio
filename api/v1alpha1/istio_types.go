@@ -34,6 +34,8 @@ const (
 type IstioSpec struct {
 	// +kubebuilder:validation:Optional
 	Config Config `json:"config,omitempty"`
+	// +kubebuilder:validation:Optional
+	Components *Components `json:"components,omitempty"`
 }
 
 //+kubebuilder:object:root=true

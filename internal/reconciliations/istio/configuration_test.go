@@ -1,7 +1,9 @@
 package istio_test
 
 import (
+	"encoding/json"
 	"fmt"
+	"k8s.io/apimachinery/pkg/util/intstr"
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
@@ -192,5 +194,167 @@ var _ = Describe("CR configuration", func() {
 				Expect(changed).To(Equal(istio.VersionUpdate | istio.ConfigurationUpdate))
 			})
 		})
+		Context("Istio component configuration changes", func() {
+			DescribeTable("Component configuration table", func(a, b operatorv1alpha1.Istio, expectedChange istio.IstioCRChange) {
+				type appliedConfig struct {
+					operatorv1alpha1.IstioSpec
+					IstioTag string
+				}
+
+				if b.Annotations == nil {
+					b.Annotations = make(map[string]string)
+				}
+
+				newAppliedConfig := appliedConfig{
+					IstioSpec: a.Spec,
+					IstioTag:  mockIstioTag,
+				}
+
+				config, err := json.Marshal(newAppliedConfig)
+				Expect(err).ToNot(HaveOccurred())
+
+				b.Annotations[lastAppliedConfiguration] = string(config)
+
+				change, err := istio.EvaluateIstioCRChanges(b, mockIstioTag)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(change).To(Equal(expectedChange))
+			},
+				Entry("When a field changes value should return ConfigurationChanged", operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
+					Components: &operatorv1alpha1.Components{
+						Pilot: &operatorv1alpha1.IstioComponent{K8s: operatorv1alpha1.KubernetesResourcesConfig{
+							HPASpec: &operatorv1alpha1.HPASpec{
+								MaxReplicas: newInt32WithValue(5),
+							},
+						}},
+					},
+				}}, operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
+					Components: &operatorv1alpha1.Components{
+						Pilot: &operatorv1alpha1.IstioComponent{K8s: operatorv1alpha1.KubernetesResourcesConfig{
+							HPASpec: &operatorv1alpha1.HPASpec{
+								MaxReplicas: newInt32WithValue(21),
+							},
+						}},
+					},
+				}}, istio.ConfigurationUpdate),
+
+				Entry("When a field changes from nil to not nil should return ConfigurationChanged", operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
+					Components: &operatorv1alpha1.Components{
+						Pilot: &operatorv1alpha1.IstioComponent{K8s: operatorv1alpha1.KubernetesResourcesConfig{
+							HPASpec: &operatorv1alpha1.HPASpec{
+								MaxReplicas: nil,
+							},
+						}},
+					},
+				}}, operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
+					Components: &operatorv1alpha1.Components{
+						Pilot: &operatorv1alpha1.IstioComponent{K8s: operatorv1alpha1.KubernetesResourcesConfig{
+							HPASpec: &operatorv1alpha1.HPASpec{
+								MaxReplicas: newInt32WithValue(21),
+							},
+						}},
+					},
+				}}, istio.ConfigurationUpdate),
+
+				Entry("When a field changes from not nil to nil should return ConfigurationChanged", operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
+					Components: &operatorv1alpha1.Components{
+						Pilot: &operatorv1alpha1.IstioComponent{K8s: operatorv1alpha1.KubernetesResourcesConfig{
+							HPASpec: &operatorv1alpha1.HPASpec{
+								MaxReplicas: newInt32WithValue(21),
+							},
+						}},
+					},
+				}}, operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
+					Components: &operatorv1alpha1.Components{
+						Pilot: &operatorv1alpha1.IstioComponent{K8s: operatorv1alpha1.KubernetesResourcesConfig{
+							HPASpec: &operatorv1alpha1.HPASpec{
+								MaxReplicas: nil,
+							},
+						}},
+					},
+				}}, istio.ConfigurationUpdate),
+
+				Entry("When resources config changes should return ConfigurationChanged", operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
+					Components: &operatorv1alpha1.Components{
+						Pilot: &operatorv1alpha1.IstioComponent{K8s: operatorv1alpha1.KubernetesResourcesConfig{
+							Resources: &operatorv1alpha1.Resources{
+								Requests: &operatorv1alpha1.ResourceClaims{
+									Cpu: newStringWithValue("100m"),
+								},
+							},
+						}},
+					},
+				}}, operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
+					Components: &operatorv1alpha1.Components{
+						Pilot: &operatorv1alpha1.IstioComponent{K8s: operatorv1alpha1.KubernetesResourcesConfig{
+							Resources: &operatorv1alpha1.Resources{
+								Requests: &operatorv1alpha1.ResourceClaims{
+									Cpu: newStringWithValue("10m"),
+								},
+							},
+						}},
+					},
+				}}, istio.ConfigurationUpdate),
+
+				Entry("When strategy config changes should return ConfigurationChanged", operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
+					Components: &operatorv1alpha1.Components{
+						Pilot: &operatorv1alpha1.IstioComponent{K8s: operatorv1alpha1.KubernetesResourcesConfig{
+							Strategy: &operatorv1alpha1.Strategy{RollingUpdate: operatorv1alpha1.RollingUpdate{
+								MaxSurge: &intstr.IntOrString{
+									Type:   intstr.Int,
+									IntVal: 1,
+								},
+								MaxUnavailable: &intstr.IntOrString{
+									Type:   intstr.String,
+									StrVal: "50%",
+								},
+							}},
+						}},
+					},
+				}}, operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
+					Components: &operatorv1alpha1.Components{
+						Pilot: &operatorv1alpha1.IstioComponent{K8s: operatorv1alpha1.KubernetesResourcesConfig{
+							Strategy: &operatorv1alpha1.Strategy{RollingUpdate: operatorv1alpha1.RollingUpdate{
+								MaxSurge: &intstr.IntOrString{
+									Type:   intstr.Int,
+									IntVal: 12,
+								},
+								MaxUnavailable: &intstr.IntOrString{
+									Type:   intstr.Int,
+									IntVal: 20,
+								},
+							}},
+						}},
+					},
+				}}, istio.ConfigurationUpdate),
+
+				Entry("If no change occurred should return NoChange", operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
+					Components: &operatorv1alpha1.Components{
+						Pilot: &operatorv1alpha1.IstioComponent{K8s: operatorv1alpha1.KubernetesResourcesConfig{
+							HPASpec: &operatorv1alpha1.HPASpec{
+								MaxReplicas: newInt32WithValue(21),
+							},
+						}},
+					},
+				}}, operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
+					Components: &operatorv1alpha1.Components{
+						Pilot: &operatorv1alpha1.IstioComponent{K8s: operatorv1alpha1.KubernetesResourcesConfig{
+							HPASpec: &operatorv1alpha1.HPASpec{
+								MaxReplicas: newInt32WithValue(21),
+							},
+						}},
+					},
+				}}, istio.NoChange),
+			)
+		})
 	})
 })
+
+func newInt32WithValue(value int) *int32 {
+	ret := int32(value)
+	return &ret
+}
+
+func newStringWithValue(value string) *string {
+	ret := value
+	return &ret
+}

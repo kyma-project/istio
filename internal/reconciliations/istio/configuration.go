@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/coreos/go-semver/semver"
-
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
+	"reflect"
 )
 
 // IstioCRChange represents difference since last reconciliation of IstioCR
@@ -60,14 +60,19 @@ func EvaluateIstioCRChanges(istioCR operatorv1alpha1.Istio, istioTag string) (tr
 		trigger = trigger | VersionUpdate
 	}
 
-	lastAppliedNotNil := lastAppliedConfig.Config.NumTrustedProxies != nil
-	newNotNil := istioCR.Spec.Config.NumTrustedProxies != nil
-
-	if lastAppliedNotNil != newNotNil {
+	if nilChange(lastAppliedConfig.Components, istioCR.Spec.Components) {
 		return trigger | ConfigurationUpdate, nil
 	}
 
-	if !lastAppliedNotNil {
+	if lastAppliedConfig.Components != nil {
+		trigger |= checkComponentsConfigChange(lastAppliedConfig.Components, istioCR.Spec.Components)
+	}
+
+	if nilChange(lastAppliedConfig.Config.NumTrustedProxies, istioCR.Spec.Config.NumTrustedProxies) {
+		return trigger | ConfigurationUpdate, nil
+	}
+
+	if lastAppliedConfig.Config.NumTrustedProxies == nil {
 		return trigger, nil
 	}
 
@@ -76,6 +81,102 @@ func EvaluateIstioCRChanges(istioCR operatorv1alpha1.Istio, istioTag string) (tr
 	}
 
 	return trigger, nil
+}
+
+func checkComponentsConfigChange(components *operatorv1alpha1.Components, components2 *operatorv1alpha1.Components) IstioCRChange {
+	if nilChange(components.Pilot, components2.Pilot) || nilChange(components.IngressGateway, components2.IngressGateway) {
+		return ConfigurationUpdate
+	}
+
+	if components.Pilot != nil {
+		if checkK8SConfigChange(components.Pilot.K8s, components2.Pilot.K8s) {
+			return ConfigurationUpdate
+		}
+	}
+
+	if components.IngressGateway != nil {
+		if checkK8SConfigChange(components.IngressGateway.K8s, components2.IngressGateway.K8s) {
+			return ConfigurationUpdate
+		}
+	}
+
+	return NoChange
+}
+
+func checkK8SConfigChange(config operatorv1alpha1.KubernetesResourcesConfig, config2 operatorv1alpha1.KubernetesResourcesConfig) bool {
+	if nilChange(config.Resources, config2.Resources) || nilChange(config.HPASpec, config2.HPASpec) || nilChange(config.Strategy, config2.Strategy) {
+		return true
+	}
+
+	if config.Resources != nil {
+		if nilChange(config.Resources.Requests, config2.Resources.Requests) || nilChange(config.Resources.Limits, config2.Resources.Limits) {
+			return true
+		}
+
+		if config.Resources.Limits != nil {
+			if !resourceClaimsEqual(config.Resources.Limits, config2.Resources.Limits) {
+				return true
+			}
+		}
+
+		if config.Resources.Requests != nil {
+			if !resourceClaimsEqual(config.Resources.Requests, config2.Resources.Requests) {
+				return true
+			}
+		}
+	}
+
+	if config.HPASpec != nil {
+		if nilChange(config.HPASpec.MinReplicas, config2.HPASpec.MinReplicas) || nilChange(config.HPASpec.MaxReplicas, config2.HPASpec.MaxReplicas) {
+			return true
+		}
+
+		if config.HPASpec.MinReplicas != nil && *config.HPASpec.MinReplicas != *config2.HPASpec.MinReplicas {
+			return true
+		}
+
+		if config.HPASpec.MaxReplicas != nil && *config.HPASpec.MaxReplicas != *config2.HPASpec.MaxReplicas {
+			return true
+		}
+	}
+
+	if config.Strategy != nil {
+		if nilChange(config.Strategy.RollingUpdate.MaxSurge, config2.Strategy.RollingUpdate.MaxSurge) || nilChange(config.Strategy.RollingUpdate.MaxUnavailable, config2.Strategy.RollingUpdate.MaxUnavailable) {
+			return true
+		}
+
+		if *config.Strategy.RollingUpdate.MaxSurge != *config2.Strategy.RollingUpdate.MaxSurge {
+			return true
+		}
+
+		if *config.Strategy.RollingUpdate.MaxUnavailable != *config2.Strategy.RollingUpdate.MaxUnavailable {
+			return true
+		}
+	}
+
+	return false
+}
+
+func resourceClaimsEqual(a, b *operatorv1alpha1.ResourceClaims) bool {
+	if nilChange(a.Memory, b.Memory) || nilChange(a.Cpu, b.Cpu) {
+		return false
+	}
+
+	if a.Memory != nil && *a.Memory != *b.Memory {
+		return false
+	}
+
+	if a.Cpu != nil && *a.Cpu != *b.Cpu {
+		return false
+	}
+
+	return true
+}
+
+func nilChange(a, b interface{}) bool {
+	aNil := a == nil || reflect.ValueOf(a).IsNil()
+	bNil := b == nil || reflect.ValueOf(b).IsNil()
+	return (aNil) != (bNil)
 }
 
 // UpdateLastAppliedConfiguration annotates the passed CR with LastAppliedConfiguration, which holds information about last applied

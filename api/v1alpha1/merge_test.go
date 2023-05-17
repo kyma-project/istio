@@ -6,6 +6,7 @@ import (
 	operatorv1alpha1 "istio.io/api/operator/v1alpha1"
 	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	"istio.io/istio/pkg/config/mesh"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -174,6 +175,210 @@ var _ = Describe("Merge", func() {
 			GetStructValue().Fields["gatewayTopology"].GetStructValue().Fields["numTrustedProxies"].GetNumberValue()
 		Expect(numTrustedProxies).To(Equal(float64(5)))
 	})
+
+	Context("Pilot", func() {
+		Context("When Istio CR has 500m configured for CPU limits", func() {
+			It("Should set CPU limits to 500m in IOP", func() {
+				//given
+				iop := istioOperator.IstioOperator{
+					Spec: &operatorv1alpha1.IstioOperatorSpec{},
+				}
+				cpuLimit := "500m"
+
+				istioCR := Istio{Spec: IstioSpec{Components: &Components{
+					Pilot: &IstioComponent{K8s: KubernetesResourcesConfig{
+						Resources: &Resources{
+							Limits: &ResourceClaims{
+								Cpu: &cpuLimit,
+							},
+						},
+					}},
+				}}}
+
+				// when
+				out, err := istioCR.MergeInto(iop)
+
+				// then
+				Expect(err).ShouldNot(HaveOccurred())
+
+				iopCpuLimit := out.Spec.Components.Pilot.K8S.Resources.Limits["cpu"]
+				Expect(iopCpuLimit).To(Equal(cpuLimit))
+			})
+		})
+
+		Context("When Istio CR has 500m configured for CPU requests", func() {
+			It("Should set CPU requests to 500m in IOP", func() {
+				//given
+				iop := istioOperator.IstioOperator{
+					Spec: &operatorv1alpha1.IstioOperatorSpec{},
+				}
+				cpuLimit := "500m"
+
+				istioCR := Istio{Spec: IstioSpec{Components: &Components{
+					Pilot: &IstioComponent{K8s: KubernetesResourcesConfig{
+						Resources: &Resources{
+							Requests: &ResourceClaims{
+								Cpu: &cpuLimit,
+							},
+						},
+					}},
+				}}}
+
+				// when
+				out, err := istioCR.MergeInto(iop)
+
+				// then
+				Expect(err).ShouldNot(HaveOccurred())
+
+				iopCpuLimit := out.Spec.Components.Pilot.K8S.Resources.Requests["cpu"]
+				Expect(iopCpuLimit).To(Equal(cpuLimit))
+			})
+		})
+	})
+	Context("IngressGateway", func() {
+		Context("When Istio CR has 500m configured for CPU limits", func() {
+			It("Should set CPU limits to 500m in IOP", func() {
+				//given
+				iop := istioOperator.IstioOperator{
+					Spec: &operatorv1alpha1.IstioOperatorSpec{},
+				}
+				cpuLimit := "500m"
+				memoryLimit := "500Mi"
+
+				istioCR := Istio{Spec: IstioSpec{Components: &Components{
+					IngressGateway: &IstioComponent{K8s: KubernetesResourcesConfig{
+						Resources: &Resources{
+							Limits: &ResourceClaims{
+								Cpu:    &cpuLimit,
+								Memory: &memoryLimit,
+							},
+						},
+					}},
+				}}}
+
+				// when
+				out, err := istioCR.MergeInto(iop)
+
+				// then
+				Expect(err).ShouldNot(HaveOccurred())
+
+				iopCpuLimit := out.Spec.Components.IngressGateways[0].K8S.Resources.Limits["cpu"]
+				Expect(iopCpuLimit).To(Equal(cpuLimit))
+
+				iopMemoryLimit := out.Spec.Components.IngressGateways[0].K8S.Resources.Limits["memory"]
+				Expect(iopMemoryLimit).To(Equal(iopMemoryLimit))
+			})
+		})
+
+		Context("When Istio CR has 500m configured for CPU and 500Mi for memory requests", func() {
+			It("Should set CPU requests to 500m and 500Mi for memory in IOP", func() {
+				//given
+				iop := istioOperator.IstioOperator{
+					Spec: &operatorv1alpha1.IstioOperatorSpec{},
+				}
+				cpuRequests := "500m"
+				memoryRequests := "500Mi"
+
+				istioCR := Istio{Spec: IstioSpec{Components: &Components{
+					IngressGateway: &IstioComponent{K8s: KubernetesResourcesConfig{
+						Resources: &Resources{
+							Requests: &ResourceClaims{
+								Cpu:    &cpuRequests,
+								Memory: &memoryRequests,
+							},
+						},
+					}},
+				}}}
+
+				// when
+				out, err := istioCR.MergeInto(iop)
+
+				// then
+				Expect(err).ShouldNot(HaveOccurred())
+
+				iopCpuRequests := out.Spec.Components.IngressGateways[0].K8S.Resources.Requests["cpu"]
+				Expect(iopCpuRequests).To(Equal(cpuRequests))
+
+				iopMemoryRequests := out.Spec.Components.IngressGateways[0].K8S.Resources.Requests["memory"]
+				Expect(iopMemoryRequests).To(Equal(memoryRequests))
+			})
+		})
+	})
+
+	Context("Strategy", func() {
+		It("Should update RollingUpdate when it is present in Istio CR", func() {
+			//given
+			iop := istioOperator.IstioOperator{
+				Spec: &operatorv1alpha1.IstioOperatorSpec{},
+			}
+
+			maxUnavailable := intstr.IntOrString{
+				Type:   intstr.String,
+				StrVal: "50%",
+			}
+
+			maxSurge := intstr.IntOrString{
+				Type:   intstr.Int,
+				IntVal: 5,
+			}
+
+			istioCR := Istio{Spec: IstioSpec{Components: &Components{
+				IngressGateway: &IstioComponent{K8s: KubernetesResourcesConfig{
+					Strategy: &Strategy{
+						RollingUpdate: RollingUpdate{
+							MaxUnavailable: &maxUnavailable,
+							MaxSurge:       &maxSurge,
+						},
+					},
+				}},
+			}}}
+
+			// when
+			out, err := istioCR.MergeInto(iop)
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+
+			unavailable := out.Spec.Components.IngressGateways[0].K8S.Strategy.RollingUpdate.MaxUnavailable
+			Expect(unavailable.StrVal.GetValue()).To(Equal(maxUnavailable.StrVal))
+
+			surge := out.Spec.Components.IngressGateways[0].K8S.Strategy.RollingUpdate.MaxSurge
+			Expect(surge.IntVal.GetValue()).To(Equal(maxSurge.IntVal))
+		})
+	})
+
+	Context("HPASpec", func() {
+		It("Should update HPASpec when it is present in Istio CR", func() {
+			//given
+			iop := istioOperator.IstioOperator{
+				Spec: &operatorv1alpha1.IstioOperatorSpec{},
+			}
+			maxReplicas := int32(5)
+			minReplicas := int32(4)
+
+			istioCR := Istio{Spec: IstioSpec{Components: &Components{
+				IngressGateway: &IstioComponent{K8s: KubernetesResourcesConfig{
+					HPASpec: &HPASpec{
+						MaxReplicas: &maxReplicas,
+						MinReplicas: &minReplicas,
+					},
+				}},
+			}}}
+
+			// when
+			out, err := istioCR.MergeInto(iop)
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+
+			replicas := out.Spec.Components.IngressGateways[0].K8S.HpaSpec.MaxReplicas
+			Expect(replicas).To(Equal(maxReplicas))
+
+			replicas = out.Spec.Components.IngressGateways[0].K8S.HpaSpec.MinReplicas
+			Expect(replicas).To(Equal(minReplicas))
+		})
+	})
+
 })
 
 func convert(a *v1alpha1.MeshConfig) *structpb.Struct {

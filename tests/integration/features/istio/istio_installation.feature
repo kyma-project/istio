@@ -2,7 +2,7 @@ Feature: Installing and uninstalling Istio module
 
   Scenario: Installation of Istio module
     Given Istio CRD is installed
-    #And "Deployment" "istio-controller-manager" in namespace "kyma-system" is ready
+    And "Deployment" "istio-controller-manager" in namespace "kyma-system" is ready
     And Template value "PilotCPULimit" is set to "1000m"
     And Template value "PilotMemoryLimit" is set to "1024Mi"
     When Istio CR "istio-sample" is applied in namespace "default"

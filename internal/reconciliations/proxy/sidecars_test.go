@@ -2,6 +2,9 @@ package proxy_test
 
 import (
 	"context"
+	"github.com/kyma-project/istio/operator/internal/tests"
+	"github.com/onsi/ginkgo/v2/types"
+	"testing"
 
 	"github.com/go-logr/logr"
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
@@ -22,6 +25,16 @@ const (
 	defaultIstioOperatorPath = "test/test-operator.yaml"
 	workingDir               = "/tmp"
 )
+
+func TestProxies(t *testing.T) {
+	RegisterFailHandler(Fail)
+
+	RunSpecs(t, "Merge Suite")
+}
+
+var _ = ReportAfterSuite("custom reporter", func(report types.Report) {
+	tests.GenerateGinkgoJunitReport("merge-api-suite", report)
+})
 
 var _ = Describe("Sidecars reconciliation", func() {
 

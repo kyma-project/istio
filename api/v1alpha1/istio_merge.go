@@ -74,21 +74,25 @@ func (i *Istio) mergeResources(op istioOperator.IstioOperator) (istioOperator.Is
 	if i.Spec.Components == nil {
 		return op, nil
 	}
-	if i.Spec.Components.IngressGateway != nil {
+	if len(i.Spec.Components.IngressGateways) > 0 {
 		if op.Spec.Components == nil {
 			op.Spec.Components = &v1alpha1.IstioComponentSetSpec{}
 		}
 		if len(op.Spec.Components.IngressGateways) == 0 {
-			op.Spec.Components.IngressGateways = []*v1alpha1.GatewaySpec{{}}
+			op.Spec.Components.IngressGateways = []*v1alpha1.GatewaySpec{}
 		}
-		if op.Spec.Components.IngressGateways[0].K8S == nil {
-			op.Spec.Components.IngressGateways[0].K8S = &v1alpha1.KubernetesResourcesSpec{}
-		}
+		for i, gateway := range i.Spec.Components.IngressGateways {
+			if len(op.Spec.Components.IngressGateways) <= i {
+				op.Spec.Components.IngressGateways = append(op.Spec.Components.IngressGateways, &v1alpha1.GatewaySpec{})
+			}
+			if op.Spec.Components.IngressGateways[i].K8S == nil {
+				op.Spec.Components.IngressGateways[i].K8S = &v1alpha1.KubernetesResourcesSpec{}
+			}
 
-		//TODiscuss: The proposed CR configures only one ingress gateway. Should we apply the overrides to all present, or skip other than the first?
-		err := mergeK8sConfig(op.Spec.Components.IngressGateways[0].K8S, i.Spec.Components.IngressGateway.K8s)
-		if err != nil {
-			return op, err
+			err := mergeK8sConfig(op.Spec.Components.IngressGateways[i].K8S, gateway.K8s)
+			if err != nil {
+				return op, err
+			}
 		}
 	}
 	if i.Spec.Components.Pilot != nil {

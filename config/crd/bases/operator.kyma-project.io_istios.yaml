@@ -43,58 +43,60 @@ spec:
               components:
                 properties:
                   ingressGateway:
-                    properties:
-                      k8s:
-                        description: KubernetesResourcesConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec
-                        properties:
-                          hpaSpec:
-                            properties:
-                              maxReplicas:
-                                format: int32
-                                type: integer
-                              minReplicas:
-                                format: int32
-                                type: integer
-                            type: object
-                          resources:
-                            properties:
-                              limits:
-                                properties:
-                                  cpu:
-                                    type: string
-                                  memory:
-                                    type: string
-                                type: object
-                              requests:
-                                properties:
-                                  cpu:
-                                    type: string
-                                  memory:
-                                    type: string
-                                type: object
-                            type: object
-                          strategy:
-                            properties:
-                              rollingUpdate:
-                                properties:
-                                  maxSurge:
-                                    anyOf:
-                                    - type: integer
-                                    - type: string
-                                    x-kubernetes-int-or-string: true
-                                  maxUnavailable:
-                                    anyOf:
-                                    - type: integer
-                                    - type: string
-                                    x-kubernetes-int-or-string: true
-                                type: object
-                            required:
-                            - rollingUpdate
-                            type: object
-                        type: object
-                    required:
-                    - k8s
-                    type: object
+                    items:
+                      properties:
+                        k8s:
+                          description: KubernetesResourcesConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec
+                          properties:
+                            hpaSpec:
+                              properties:
+                                maxReplicas:
+                                  format: int32
+                                  type: integer
+                                minReplicas:
+                                  format: int32
+                                  type: integer
+                              type: object
+                            resources:
+                              properties:
+                                limits:
+                                  properties:
+                                    cpu:
+                                      type: string
+                                    memory:
+                                      type: string
+                                  type: object
+                                requests:
+                                  properties:
+                                    cpu:
+                                      type: string
+                                    memory:
+                                      type: string
+                                  type: object
+                              type: object
+                            strategy:
+                              properties:
+                                rollingUpdate:
+                                  properties:
+                                    maxSurge:
+                                      anyOf:
+                                      - type: integer
+                                      - type: string
+                                      x-kubernetes-int-or-string: true
+                                    maxUnavailable:
+                                      anyOf:
+                                      - type: integer
+                                      - type: string
+                                      x-kubernetes-int-or-string: true
+                                  type: object
+                              required:
+                              - rollingUpdate
+                              type: object
+                          type: object
+                      required:
+                      - k8s
+                      type: object
+                    type: array
                   pilot:
                     properties:
                       k8s:

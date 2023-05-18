@@ -84,7 +84,7 @@ func EvaluateIstioCRChanges(istioCR operatorv1alpha1.Istio, istioTag string) (tr
 }
 
 func checkComponentsConfigChange(components *operatorv1alpha1.Components, components2 *operatorv1alpha1.Components) IstioCRChange {
-	if nilChange(components.Pilot, components2.Pilot) || nilChange(components.IngressGateway, components2.IngressGateway) {
+	if nilChange(components.Pilot, components2.Pilot) || (len(components.IngressGateways) != len(components2.IngressGateways)) {
 		return ConfigurationUpdate
 	}
 
@@ -94,9 +94,11 @@ func checkComponentsConfigChange(components *operatorv1alpha1.Components, compon
 		}
 	}
 
-	if components.IngressGateway != nil {
-		if checkK8SConfigChange(components.IngressGateway.K8s, components2.IngressGateway.K8s) {
-			return ConfigurationUpdate
+	if len(components.IngressGateways) > 0 {
+		for i, ingressGateway := range components.IngressGateways {
+			if checkK8SConfigChange(ingressGateway.K8s, components2.IngressGateways[i].K8s) {
+				return ConfigurationUpdate
+			}
 		}
 	}
 

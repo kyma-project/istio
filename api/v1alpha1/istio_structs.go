@@ -10,8 +10,8 @@ type Config struct {
 }
 
 type Components struct {
-	Pilot          *IstioComponent `json:"pilot,omitempty"`
-	IngressGateway *IstioComponent `json:"ingressGateway,omitempty"`
+	Pilot           *IstioComponent   `json:"pilot,omitempty"`
+	IngressGateways []*IstioComponent `json:"ingressGateway,omitempty"`
 }
 
 // KubernetesResourcesConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec

@@ -2,8 +2,8 @@ package integration
 
 import (
 	istioCR "github.com/kyma-project/istio/operator/api/v1alpha1"
-
 	"github.com/spf13/pflag"
+	iop "istio.io/istio/operator/pkg/apis"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 
@@ -14,7 +14,6 @@ import (
 	"testing"
 
 	"github.com/vrischmann/envconfig"
-
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
 
@@ -25,11 +24,13 @@ func TestIstioJwt(t *testing.T) {
 	opts.Paths = []string{"features/istio"}
 	opts.Concurrency = conf.TestConcurrency
 
+	test := TestWithTemplatedManifest{}
+
 	suite := godog.TestSuite{
 		Name: "istio-jwt",
 		// We are not using ScenarioInitializer, as this function only needs to set up global resources
 		TestSuiteInitializer: func(ctx *godog.TestSuiteContext) {
-			initIstioScenarios(ctx.ScenarioContext())
+			test.initIstioScenarios(ctx.ScenarioContext())
 		},
 		Options: &opts,
 	}
@@ -59,6 +60,11 @@ func InitTestSuite() {
 	}
 
 	c, err := client.New(config.GetConfigOrDie(), client.Options{})
+	if err != nil {
+		panic(err)
+	}
+
+	err = iop.AddToScheme(c.Scheme())
 	if err != nil {
 		panic(err)
 	}

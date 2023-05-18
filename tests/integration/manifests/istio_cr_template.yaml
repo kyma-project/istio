@@ -1,0 +1,43 @@
+apiVersion: operator.kyma-project.io/v1alpha1
+kind: Istio
+metadata:
+  name: istio-sample
+  namespace: default
+  labels:
+    app.kubernetes.io/name: istio-sample
+spec:
+  components:
+    pilot:
+      k8s:
+        resources:
+          limits:
+            cpu: {{ .PilotCPULimit }}
+            memory: {{ .PilotMemoryLimit }}
+          requests:
+            cpu: {{ .PilotCPUResources }}
+            memory: {{ .PilotMemoryResources }}
+        strategy:
+          rollingUpdate:
+            maxSurge: {{ .PilotMaxSurge }}
+            maxUnavailable: {{ .PilotMaxUnavailable }}
+        hpaSpec:
+          maxReplicas: {{ .PilotMaxReplicas }}
+          minReplicas: {{ .PilotMinReplicas }}
+    ingressGateways:
+      - k8s:
+          resources:
+            limits:
+              cpu: {{ .IGCPULimit }}
+              memory: {{ .IGMemoryLimit }}
+            requests:
+              cpu: {{ .IGCPURequests }}
+              memory: {{ .IGMemoryRequests }}
+          strategy:
+            rollingUpdate:
+              maxSurge: {{ .IGMaxSurge }}
+              maxUnavailable: {{ .IGMaxUnavailable }}
+          hpaSpec:
+            maxReplicas: {{ .IGMaxReplicas }}
+            minReplicas: {{ .IGMinReplicas }}
+  config:
+    numTrustedProxies: {{ .NumTrustedProxies }}

@@ -42,7 +42,7 @@ spec:
             properties:
               components:
                 properties:
-                  ingressGateway:
+                  ingressGateways:
                     items:
                       properties:
                         k8s:

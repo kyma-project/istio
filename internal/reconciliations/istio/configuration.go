@@ -147,12 +147,16 @@ func checkK8SConfigChange(config operatorv1alpha1.KubernetesResourcesConfig, con
 			return true
 		}
 
-		if *config.Strategy.RollingUpdate.MaxSurge != *config2.Strategy.RollingUpdate.MaxSurge {
-			return true
+		if config.Strategy.RollingUpdate.MaxSurge != nil {
+			if *config.Strategy.RollingUpdate.MaxSurge != *config2.Strategy.RollingUpdate.MaxSurge {
+				return true
+			}
 		}
 
-		if *config.Strategy.RollingUpdate.MaxUnavailable != *config2.Strategy.RollingUpdate.MaxUnavailable {
-			return true
+		if config.Strategy.RollingUpdate.MaxUnavailable != nil {
+			if *config.Strategy.RollingUpdate.MaxUnavailable != *config2.Strategy.RollingUpdate.MaxUnavailable {
+				return true
+			}
 		}
 	}
 

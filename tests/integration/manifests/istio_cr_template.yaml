@@ -14,8 +14,8 @@ spec:
             cpu: {{ .PilotCPULimit }}
             memory: {{ .PilotMemoryLimit }}
           requests:
-            cpu: {{ .PilotCPUResources }}
-            memory: {{ .PilotMemoryResources }}
+            cpu: {{ .PilotCPURequests }}
+            memory: {{ .PilotMemoryRequests }}
         strategy:
           rollingUpdate:
             maxSurge: {{ .PilotMaxSurge }}

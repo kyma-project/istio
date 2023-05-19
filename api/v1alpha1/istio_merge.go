@@ -136,7 +136,7 @@ func mergeK8sConfig(base *v1alpha1.KubernetesResourcesSpec, newConfig Kubernetes
 			if base.Resources.Requests == nil {
 				base.Resources.Requests = map[string]string{}
 			}
-			if newConfig.Resources.Requests.Memory != nil {
+			if newConfig.Resources.Requests.Cpu != nil {
 				base.Resources.Requests[cpu] = *newConfig.Resources.Requests.Cpu
 			}
 			if newConfig.Resources.Requests.Memory != nil {

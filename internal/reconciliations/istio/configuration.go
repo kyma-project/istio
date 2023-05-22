@@ -105,7 +105,7 @@ func checkComponentsConfigChange(components *operatorv1alpha1.Components, compon
 	return NoChange
 }
 
-func checkK8SConfigChange(config operatorv1alpha1.KubernetesResourcesConfig, config2 operatorv1alpha1.KubernetesResourcesConfig) bool {
+func hasK8SConfigChange(config operatorv1alpha1.KubernetesResourcesConfig, config2 operatorv1alpha1.KubernetesResourcesConfig) bool {
 	if nilChange(config.Resources, config2.Resources) || nilChange(config.HPASpec, config2.HPASpec) || nilChange(config.Strategy, config2.Strategy) {
 		return true
 	}

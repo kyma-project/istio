@@ -236,8 +236,8 @@ var _ = Describe("Merge", func() {
 		})
 	})
 	Context("IngressGateway", func() {
-		Context("When Istio CR has 500m configured for CPU limits", func() {
-			It("Should set CPU limits to 500m in IOP", func() {
+		Context("When Istio CR has 500m configured for CPU and 500Mi for memory limits", func() {
+			It("Should set CPU limits to 500m and 500Mi for memory in IOP", func() {
 				//given
 				iop := istioOperator.IstioOperator{
 					Spec: &operatorv1alpha1.IstioOperatorSpec{},

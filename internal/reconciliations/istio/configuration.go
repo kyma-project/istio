@@ -64,8 +64,8 @@ func EvaluateIstioCRChanges(istioCR operatorv1alpha1.Istio, istioTag string) (tr
 		return trigger | ConfigurationUpdate, nil
 	}
 
-	if lastAppliedConfig.Components != nil {
-		trigger |= checkComponentsConfigChange(lastAppliedConfig.Components, istioCR.Spec.Components)
+	if lastAppliedConfig.Components != nil && hasComponentsConfigChange(lastAppliedConfig.Components, istioCR.Spec.Components) {
+		return trigger | ConfigurationUpdate, nil
 	}
 
 	if nilChange(lastAppliedConfig.Config.NumTrustedProxies, istioCR.Spec.Config.NumTrustedProxies) {
@@ -83,26 +83,26 @@ func EvaluateIstioCRChanges(istioCR operatorv1alpha1.Istio, istioTag string) (tr
 	return trigger, nil
 }
 
-func checkComponentsConfigChange(components *operatorv1alpha1.Components, components2 *operatorv1alpha1.Components) IstioCRChange {
+func hasComponentsConfigChange(components *operatorv1alpha1.Components, components2 *operatorv1alpha1.Components) bool {
 	if nilChange(components.Pilot, components2.Pilot) || (len(components.IngressGateways) != len(components2.IngressGateways)) {
-		return ConfigurationUpdate
+		return true
 	}
 
 	if components.Pilot != nil {
-		if checkK8SConfigChange(components.Pilot.K8s, components2.Pilot.K8s) {
-			return ConfigurationUpdate
+		if hasK8SConfigChange(components.Pilot.K8s, components2.Pilot.K8s) {
+			return true
 		}
 	}
 
 	if len(components.IngressGateways) > 0 {
 		for i, ingressGateway := range components.IngressGateways {
-			if checkK8SConfigChange(ingressGateway.K8s, components2.IngressGateways[i].K8s) {
-				return ConfigurationUpdate
+			if hasK8SConfigChange(ingressGateway.K8s, components2.IngressGateways[i].K8s) {
+				return true
 			}
 		}
 	}
 
-	return NoChange
+	return false
 }
 
 func hasK8SConfigChange(config operatorv1alpha1.KubernetesResourcesConfig, config2 operatorv1alpha1.KubernetesResourcesConfig) bool {

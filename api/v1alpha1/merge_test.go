@@ -619,6 +619,10 @@ var _ = Describe("Merge", func() {
 							Cpu:    &cpuRequests,
 							Memory: &memoryRequests,
 						},
+						Limits: &ResourceClaims{
+							Cpu:    &cpuLimits,
+							Memory: &memoryLimits,
+						},
 					},
 				}},
 			}}}

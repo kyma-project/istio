@@ -129,7 +129,13 @@ func (i *Istio) mergeResources(op istioOperator.IstioOperator) (istioOperator.Is
 		}
 
 		if i.Spec.Components.Cni.K8S.Affinity != nil {
+			if op.Spec.Components.Cni.K8S.Affinity == nil {
+				op.Spec.Components.Cni.K8S.Affinity = &v1alpha1.Affinity{}
+			}
 			if i.Spec.Components.Cni.K8S.Affinity.PodAffinity != nil {
+				if op.Spec.Components.Cni.K8S.Affinity.PodAffinity == nil {
+					op.Spec.Components.Cni.K8S.Affinity.PodAffinity = &v1alpha1.PodAffinity{}
+				}
 				op.Spec.Components.Cni.K8S.Affinity.PodAffinity.PreferredDuringSchedulingIgnoredDuringExecution = []*v1alpha1.WeightedPodAffinityTerm{}
 				for _, term := range i.Spec.Components.Cni.K8S.Affinity.PodAffinity.PreferredDuringSchedulingIgnoredDuringExecution {
 					var w v1alpha1.WeightedPodAffinityTerm
@@ -157,6 +163,9 @@ func (i *Istio) mergeResources(op istioOperator.IstioOperator) (istioOperator.Is
 			}
 
 			if i.Spec.Components.Cni.K8S.Affinity.PodAntiAffinity != nil {
+				if op.Spec.Components.Cni.K8S.Affinity.PodAntiAffinity == nil {
+					op.Spec.Components.Cni.K8S.Affinity.PodAntiAffinity = &v1alpha1.PodAntiAffinity{}
+				}
 				op.Spec.Components.Cni.K8S.Affinity.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution = []*v1alpha1.WeightedPodAffinityTerm{}
 				for _, term := range i.Spec.Components.Cni.K8S.Affinity.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution {
 					var w v1alpha1.WeightedPodAffinityTerm
@@ -184,6 +193,9 @@ func (i *Istio) mergeResources(op istioOperator.IstioOperator) (istioOperator.Is
 			}
 
 			if i.Spec.Components.Cni.K8S.Affinity.NodeAffinity != nil {
+				if op.Spec.Components.Cni.K8S.Affinity.NodeAffinity == nil {
+					op.Spec.Components.Cni.K8S.Affinity.NodeAffinity = &v1alpha1.NodeAffinity{}
+				}
 				op.Spec.Components.Cni.K8S.Affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution = []*v1alpha1.PreferredSchedulingTerm{}
 				for _, term := range i.Spec.Components.Cni.K8S.Affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution {
 					var w v1alpha1.PreferredSchedulingTerm

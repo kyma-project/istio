@@ -6,6 +6,8 @@ import (
 	operatorv1alpha1 "istio.io/api/operator/v1alpha1"
 	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	"istio.io/istio/pkg/config/mesh"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"testing"
 
@@ -395,6 +397,176 @@ var _ = Describe("Merge", func() {
 
 			replicas = out.Spec.Components.IngressGateways[0].K8S.HpaSpec.MinReplicas
 			Expect(replicas).To(Equal(minReplicas))
+		})
+	})
+
+	Context("CNI", func() {
+		Context("Affinity", func() {
+			Context("PodAffinity", func() {
+				It("Should update CNI affinity when it is present in Istio CR", func() {
+					//given
+					iop := istioOperator.IstioOperator{
+						Spec: &operatorv1alpha1.IstioOperatorSpec{},
+					}
+
+					istioCR := Istio{Spec: IstioSpec{Components: &Components{
+						Cni: &CNIComponent{K8S: CniK8sConfig{
+							Affinity: &v1.Affinity{
+								PodAffinity: &v1.PodAffinity{
+									RequiredDuringSchedulingIgnoredDuringExecution: []v1.PodAffinityTerm{
+										{
+											LabelSelector: &metav1.LabelSelector{
+												MatchExpressions: []metav1.LabelSelectorRequirement{
+													{
+														Key:      "app-new",
+														Operator: "In",
+														Values:   Label("istio-cni-node1"),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						}},
+					}}}
+
+					// when
+					out, err := istioCR.MergeInto(iop)
+
+					// then
+					Expect(err).ShouldNot(HaveOccurred())
+
+					Expect(out.Spec.Components.Cni.K8S.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution).To(HaveLen(1))
+					Expect(out.Spec.Components.Cni.K8S.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions).To(HaveLen(1))
+					Expect(out.Spec.Components.Cni.K8S.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Key).To(Equal("app-new"))
+					Expect(out.Spec.Components.Cni.K8S.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Operator).To(BeEquivalentTo("In"))
+					Expect(out.Spec.Components.Cni.K8S.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Values).To(HaveLen(1))
+					Expect(out.Spec.Components.Cni.K8S.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Values[0]).To(BeEquivalentTo("istio-cni-node1"))
+				})
+			})
+
+			Context("PodAntiAffinity", func() {
+				It("Should update CNI PodAntiAffinity when it is present in Istio CR", func() {
+					//given
+					iop := istioOperator.IstioOperator{
+						Spec: &operatorv1alpha1.IstioOperatorSpec{},
+					}
+
+					istioCR := Istio{Spec: IstioSpec{Components: &Components{
+						Cni: &CNIComponent{K8S: CniK8sConfig{
+							Affinity: &v1.Affinity{
+								PodAntiAffinity: &v1.PodAntiAffinity{
+									RequiredDuringSchedulingIgnoredDuringExecution: []v1.PodAffinityTerm{
+										{
+											LabelSelector: &metav1.LabelSelector{
+												MatchExpressions: []metav1.LabelSelectorRequirement{
+													{
+														Key:      "app-new",
+														Operator: "In",
+														Values:   Label("istio-cni-node1"),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						}},
+					}}}
+
+					// when
+					out, err := istioCR.MergeInto(iop)
+
+					// then
+					Expect(err).ShouldNot(HaveOccurred())
+
+					Expect(out.Spec.Components.Cni.K8S.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution).To(HaveLen(1))
+					Expect(out.Spec.Components.Cni.K8S.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions).To(HaveLen(1))
+					Expect(out.Spec.Components.Cni.K8S.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Key).To(Equal("app-new"))
+					Expect(out.Spec.Components.Cni.K8S.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Operator).To(BeEquivalentTo("In"))
+					Expect(out.Spec.Components.Cni.K8S.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Values).To(HaveLen(1))
+					Expect(out.Spec.Components.Cni.K8S.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Values[0]).To(BeEquivalentTo("istio-cni-node1"))
+				})
+			})
+
+			Context("NodeAffinity", func() {
+				It("Should update CNI NodeAffinity when it is present in Istio CR", func() {
+					//given
+					iop := istioOperator.IstioOperator{
+						Spec: &operatorv1alpha1.IstioOperatorSpec{},
+					}
+
+					istioCR := Istio{Spec: IstioSpec{Components: &Components{
+						Cni: &CNIComponent{K8S: CniK8sConfig{
+							Affinity: &v1.Affinity{
+								NodeAffinity: &v1.NodeAffinity{
+									RequiredDuringSchedulingIgnoredDuringExecution: &v1.NodeSelector{
+										NodeSelectorTerms: []v1.NodeSelectorTerm{
+											{
+												MatchExpressions: []v1.NodeSelectorRequirement{
+													{
+														Key:      "app-new",
+														Operator: "In",
+														Values:   Label("istio-cni-node1"),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						}},
+					}}}
+
+					// when
+					out, err := istioCR.MergeInto(iop)
+
+					// then
+					Expect(err).ShouldNot(HaveOccurred())
+
+					Expect(out.Spec.Components.Cni.K8S.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms).To(HaveLen(1))
+					Expect(out.Spec.Components.Cni.K8S.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions).To(HaveLen(1))
+					Expect(out.Spec.Components.Cni.K8S.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions[0].Key).To(Equal("app-new"))
+					Expect(out.Spec.Components.Cni.K8S.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions[0].Operator).To(BeEquivalentTo("In"))
+					Expect(out.Spec.Components.Cni.K8S.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions[0].Values).To(HaveLen(1))
+					Expect(out.Spec.Components.Cni.K8S.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions[0].Values[0]).To(BeEquivalentTo("istio-cni-node1"))
+				})
+			})
+		})
+
+		Context("Resources", func() {
+			It("Should update CNI resources when those are present in Istio CR", func() {
+				//given
+				iop := istioOperator.IstioOperator{
+					Spec: &operatorv1alpha1.IstioOperatorSpec{},
+				}
+				cpuRequests := "500m"
+				memoryRequests := "500Mi"
+
+				istioCR := Istio{Spec: IstioSpec{Components: &Components{
+					Cni: &CNIComponent{K8S: CniK8sConfig{
+						Resources: &Resources{
+							Requests: &ResourceClaims{
+								Cpu:    &cpuRequests,
+								Memory: &memoryRequests,
+							},
+						},
+					}},
+				}}}
+
+				// when
+				out, err := istioCR.MergeInto(iop)
+
+				// then
+				Expect(err).ShouldNot(HaveOccurred())
+
+				iopCpuRequests := out.Spec.Components.Cni.K8S.Resources.Requests["cpu"]
+				Expect(iopCpuRequests).To(Equal(cpuRequests))
+
+				iopMemoryRequests := out.Spec.Components.Cni.K8S.Resources.Requests["memory"]
+				Expect(iopMemoryRequests).To(Equal(memoryRequests))
+			})
 		})
 	})
 

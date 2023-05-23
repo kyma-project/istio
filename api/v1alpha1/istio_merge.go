@@ -111,6 +111,172 @@ func (i *Istio) mergeResources(op istioOperator.IstioOperator) (istioOperator.Is
 		}
 	}
 
+	if i.Spec.Components.Cni != nil {
+		if op.Spec.Components == nil {
+			op.Spec.Components = &v1alpha1.IstioComponentSetSpec{}
+		}
+
+		if op.Spec.Components.Cni == nil {
+			op.Spec.Components.Cni = &v1alpha1.ComponentSpec{}
+		}
+
+		if op.Spec.Components.Cni.K8S == nil {
+			op.Spec.Components.Cni.K8S = &v1alpha1.KubernetesResourcesSpec{}
+		}
+
+		if op.Spec.Components.Cni.K8S.Affinity == nil {
+			op.Spec.Components.Cni.K8S.Affinity = &v1alpha1.Affinity{}
+		}
+
+		if i.Spec.Components.Cni.K8S.Affinity != nil {
+			if i.Spec.Components.Cni.K8S.Affinity.PodAffinity != nil {
+				op.Spec.Components.Cni.K8S.Affinity.PodAffinity.PreferredDuringSchedulingIgnoredDuringExecution = []*v1alpha1.WeightedPodAffinityTerm{}
+				for _, term := range i.Spec.Components.Cni.K8S.Affinity.PodAffinity.PreferredDuringSchedulingIgnoredDuringExecution {
+					var w v1alpha1.WeightedPodAffinityTerm
+					w.Weight = term.Weight
+
+					var v v1alpha1.PodAffinityTerm
+					v.TopologyKey = term.PodAffinityTerm.TopologyKey
+					v.Namespaces = term.PodAffinityTerm.Namespaces
+					v.LabelSelector = term.PodAffinityTerm.LabelSelector
+
+					w.PodAffinityTerm = &v
+
+					op.Spec.Components.Cni.K8S.Affinity.PodAffinity.PreferredDuringSchedulingIgnoredDuringExecution = append(op.Spec.Components.Cni.K8S.Affinity.PodAffinity.PreferredDuringSchedulingIgnoredDuringExecution, &w)
+				}
+
+				op.Spec.Components.Cni.K8S.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution = []*v1alpha1.PodAffinityTerm{}
+				for _, term := range i.Spec.Components.Cni.K8S.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution {
+					var v v1alpha1.PodAffinityTerm
+					v.TopologyKey = term.TopologyKey
+					v.Namespaces = term.Namespaces
+					v.LabelSelector = term.LabelSelector
+
+					op.Spec.Components.Cni.K8S.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution = append(op.Spec.Components.Cni.K8S.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution, &v)
+				}
+			}
+
+			if i.Spec.Components.Cni.K8S.Affinity.PodAntiAffinity != nil {
+				op.Spec.Components.Cni.K8S.Affinity.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution = []*v1alpha1.WeightedPodAffinityTerm{}
+				for _, term := range i.Spec.Components.Cni.K8S.Affinity.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution {
+					var w v1alpha1.WeightedPodAffinityTerm
+					w.Weight = term.Weight
+
+					var v v1alpha1.PodAffinityTerm
+					v.TopologyKey = term.PodAffinityTerm.TopologyKey
+					v.Namespaces = term.PodAffinityTerm.Namespaces
+					v.LabelSelector = term.PodAffinityTerm.LabelSelector
+
+					w.PodAffinityTerm = &v
+
+					op.Spec.Components.Cni.K8S.Affinity.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution = append(op.Spec.Components.Cni.K8S.Affinity.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution, &w)
+				}
+
+				op.Spec.Components.Cni.K8S.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution = []*v1alpha1.PodAffinityTerm{}
+				for _, term := range i.Spec.Components.Cni.K8S.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution {
+					var v v1alpha1.PodAffinityTerm
+					v.TopologyKey = term.TopologyKey
+					v.Namespaces = term.Namespaces
+					v.LabelSelector = term.LabelSelector
+
+					op.Spec.Components.Cni.K8S.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution = append(op.Spec.Components.Cni.K8S.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution, &v)
+				}
+			}
+
+			if i.Spec.Components.Cni.K8S.Affinity.NodeAffinity != nil {
+				op.Spec.Components.Cni.K8S.Affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution = []*v1alpha1.PreferredSchedulingTerm{}
+				for _, term := range i.Spec.Components.Cni.K8S.Affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution {
+					var w v1alpha1.PreferredSchedulingTerm
+					w.Weight = term.Weight
+
+					var v v1alpha1.NodeSelectorTerm
+					v.MatchExpressions = []*v1alpha1.NodeSelectorRequirement{}
+					for _, expression := range term.Preference.MatchExpressions {
+						n := v1alpha1.NodeSelectorRequirement{
+							Key:      expression.Key,
+							Operator: string(expression.Operator),
+							Values:   expression.Values,
+						}
+						v.MatchExpressions = append(v.MatchExpressions, &n)
+					}
+
+					v.MatchFields = []*v1alpha1.NodeSelectorRequirement{}
+					for _, expression := range term.Preference.MatchFields {
+						n := v1alpha1.NodeSelectorRequirement{
+							Key:      expression.Key,
+							Operator: string(expression.Operator),
+							Values:   expression.Values,
+						}
+						v.MatchFields = append(v.MatchFields, &n)
+					}
+
+					w.Preference = &v
+
+					op.Spec.Components.Cni.K8S.Affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution = append(op.Spec.Components.Cni.K8S.Affinity.NodeAffinity.PreferredDuringSchedulingIgnoredDuringExecution, &w)
+				}
+
+				op.Spec.Components.Cni.K8S.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution = &v1alpha1.NodeSelector{}
+				if i.Spec.Components.Cni.K8S.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution != nil {
+					for _, term := range i.Spec.Components.Cni.K8S.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms {
+						var t v1alpha1.NodeSelectorTerm
+						t.MatchExpressions = []*v1alpha1.NodeSelectorRequirement{}
+						for _, expression := range term.MatchExpressions {
+							n := v1alpha1.NodeSelectorRequirement{
+								Key:      expression.Key,
+								Operator: string(expression.Operator),
+								Values:   expression.Values,
+							}
+							t.MatchExpressions = append(t.MatchExpressions, &n)
+						}
+
+						t.MatchFields = []*v1alpha1.NodeSelectorRequirement{}
+						for _, expression := range term.MatchFields {
+							n := v1alpha1.NodeSelectorRequirement{
+								Key:      expression.Key,
+								Operator: string(expression.Operator),
+								Values:   expression.Values,
+							}
+							t.MatchFields = append(t.MatchFields, &n)
+						}
+
+						op.Spec.Components.Cni.K8S.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms =
+							append(op.Spec.Components.Cni.K8S.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms, &t)
+					}
+				}
+			}
+		}
+
+		if i.Spec.Components.Cni.K8S.Resources != nil {
+			if op.Spec.Components.Cni.K8S.Resources == nil {
+				op.Spec.Components.Cni.K8S.Resources = &v1alpha1.Resources{}
+			}
+
+			if i.Spec.Components.Cni.K8S.Resources.Limits != nil {
+				if op.Spec.Components.Cni.K8S.Resources.Limits == nil {
+					op.Spec.Components.Cni.K8S.Resources.Limits = map[string]string{}
+				}
+				if i.Spec.Components.Cni.K8S.Resources.Limits.Cpu != nil {
+					op.Spec.Components.Cni.K8S.Resources.Limits[cpu] = *i.Spec.Components.Cni.K8S.Resources.Limits.Cpu
+				}
+				if i.Spec.Components.Cni.K8S.Resources.Limits.Memory != nil {
+					op.Spec.Components.Cni.K8S.Resources.Limits[memory] = *i.Spec.Components.Cni.K8S.Resources.Limits.Memory
+				}
+			}
+
+			if i.Spec.Components.Cni.K8S.Resources.Requests != nil {
+				if op.Spec.Components.Cni.K8S.Resources.Requests == nil {
+					op.Spec.Components.Cni.K8S.Resources.Requests = map[string]string{}
+				}
+				if i.Spec.Components.Cni.K8S.Resources.Requests.Cpu != nil {
+					op.Spec.Components.Cni.K8S.Resources.Requests[cpu] = *i.Spec.Components.Cni.K8S.Resources.Requests.Cpu
+				}
+				if i.Spec.Components.Cni.K8S.Resources.Requests.Memory != nil {
+					op.Spec.Components.Cni.K8S.Resources.Requests[memory] = *i.Spec.Components.Cni.K8S.Resources.Requests.Memory
+				}
+			}
+		}
+	}
+
 	return op, nil
 }
 

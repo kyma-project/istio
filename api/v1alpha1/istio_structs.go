@@ -1,7 +1,10 @@
 // +kubebuilder:validation:Optional
 package v1alpha1
 
-import "k8s.io/apimachinery/pkg/util/intstr"
+import (
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
+)
 
 // Config is the configuration for the Istio installation.
 type Config struct {
@@ -12,6 +15,7 @@ type Config struct {
 type Components struct {
 	Pilot           *IstioComponent   `json:"pilot,omitempty"`
 	IngressGateways []*IstioComponent `json:"ingressGateways,omitempty"`
+	Cni             *CNIComponent     `json:"cni"`
 }
 
 // KubernetesResourcesConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec
@@ -19,6 +23,16 @@ type KubernetesResourcesConfig struct {
 	HPASpec   *HPASpec   `json:"hpaSpec,omitempty"`
 	Strategy  *Strategy  `json:"strategy,omitempty"`
 	Resources *Resources `json:"resources,omitempty"`
+}
+
+type CNIComponent struct {
+	// +kubebuilder:validation:Required
+	K8S CniK8sConfig `json:"k8s"`
+}
+
+type CniK8sConfig struct {
+	Affinity  *v1.Affinity `json:"affinity,omitempty"`
+	Resources *Resources   `json:"resources,omitempty"`
 }
 
 type HPASpec struct {

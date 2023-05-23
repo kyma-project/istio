@@ -327,7 +327,7 @@ var _ = Describe("Merge", func() {
 	})
 
 	Context("Strategy", func() {
-		It("Should update &RollingUpdate when it is present in Istio CR", func() {
+		It("Should update RollingUpdate when it is present in Istio CR", func() {
 			//given
 			iop := istioOperator.IstioOperator{
 				Spec: &operatorv1alpha1.IstioOperatorSpec{},

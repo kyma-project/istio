@@ -15,7 +15,8 @@ type Config struct {
 type Components struct {
 	Pilot           *IstioComponent   `json:"pilot,omitempty"`
 	IngressGateways []*IstioComponent `json:"ingressGateways,omitempty"`
-	Cni             *CNIComponent     `json:"cni"`
+	Cni             *CniComponent     `json:"cni,omitempty"`
+	Proxy           *ProxyComponent   `json:"proxy,omitempty"`
 }
 
 // KubernetesResourcesConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec
@@ -25,9 +26,18 @@ type KubernetesResourcesConfig struct {
 	Resources *Resources `json:"resources,omitempty"`
 }
 
-type CNIComponent struct {
+type ProxyComponent struct {
 	// +kubebuilder:validation:Required
-	K8S CniK8sConfig `json:"k8s"`
+	K8S *ProxyK8sConfig `json:"k8s"`
+}
+
+type ProxyK8sConfig struct {
+	Resources *Resources `json:"resources,omitempty"`
+}
+
+type CniComponent struct {
+	// +kubebuilder:validation:Required
+	K8S *CniK8sConfig `json:"k8s"`
 }
 
 type CniK8sConfig struct {
@@ -42,12 +52,12 @@ type HPASpec struct {
 
 type IstioComponent struct {
 	// +kubebuilder:validation:Required
-	K8s KubernetesResourcesConfig `json:"k8s"`
+	K8s *KubernetesResourcesConfig `json:"k8s"`
 }
 
 type Strategy struct {
 	// +kubebuilder:validation:Required
-	RollingUpdate RollingUpdate `json:"rollingUpdate"`
+	RollingUpdate *RollingUpdate `json:"rollingUpdate"`
 }
 
 type RollingUpdate struct {

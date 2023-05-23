@@ -221,7 +221,7 @@ var _ = Describe("CR configuration", func() {
 			},
 				Entry("When a field changes value should return ConfigurationChanged", operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
 					Components: &operatorv1alpha1.Components{
-						Pilot: &operatorv1alpha1.IstioComponent{K8s: operatorv1alpha1.KubernetesResourcesConfig{
+						Pilot: &operatorv1alpha1.IstioComponent{K8s: &operatorv1alpha1.KubernetesResourcesConfig{
 							HPASpec: &operatorv1alpha1.HPASpec{
 								MaxReplicas: newInt32WithValue(5),
 							},
@@ -229,7 +229,7 @@ var _ = Describe("CR configuration", func() {
 					},
 				}}, operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
 					Components: &operatorv1alpha1.Components{
-						Pilot: &operatorv1alpha1.IstioComponent{K8s: operatorv1alpha1.KubernetesResourcesConfig{
+						Pilot: &operatorv1alpha1.IstioComponent{K8s: &operatorv1alpha1.KubernetesResourcesConfig{
 							HPASpec: &operatorv1alpha1.HPASpec{
 								MaxReplicas: newInt32WithValue(21),
 							},
@@ -239,7 +239,7 @@ var _ = Describe("CR configuration", func() {
 
 				Entry("When a field changes from nil to not nil should return ConfigurationChanged", operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
 					Components: &operatorv1alpha1.Components{
-						Pilot: &operatorv1alpha1.IstioComponent{K8s: operatorv1alpha1.KubernetesResourcesConfig{
+						Pilot: &operatorv1alpha1.IstioComponent{K8s: &operatorv1alpha1.KubernetesResourcesConfig{
 							HPASpec: &operatorv1alpha1.HPASpec{
 								MaxReplicas: nil,
 							},
@@ -247,7 +247,7 @@ var _ = Describe("CR configuration", func() {
 					},
 				}}, operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
 					Components: &operatorv1alpha1.Components{
-						Pilot: &operatorv1alpha1.IstioComponent{K8s: operatorv1alpha1.KubernetesResourcesConfig{
+						Pilot: &operatorv1alpha1.IstioComponent{K8s: &operatorv1alpha1.KubernetesResourcesConfig{
 							HPASpec: &operatorv1alpha1.HPASpec{
 								MaxReplicas: newInt32WithValue(21),
 							},
@@ -257,7 +257,7 @@ var _ = Describe("CR configuration", func() {
 
 				Entry("When a field changes from not nil to nil should return ConfigurationChanged", operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
 					Components: &operatorv1alpha1.Components{
-						Pilot: &operatorv1alpha1.IstioComponent{K8s: operatorv1alpha1.KubernetesResourcesConfig{
+						Pilot: &operatorv1alpha1.IstioComponent{K8s: &operatorv1alpha1.KubernetesResourcesConfig{
 							HPASpec: &operatorv1alpha1.HPASpec{
 								MaxReplicas: newInt32WithValue(21),
 							},
@@ -265,7 +265,7 @@ var _ = Describe("CR configuration", func() {
 					},
 				}}, operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
 					Components: &operatorv1alpha1.Components{
-						Pilot: &operatorv1alpha1.IstioComponent{K8s: operatorv1alpha1.KubernetesResourcesConfig{
+						Pilot: &operatorv1alpha1.IstioComponent{K8s: &operatorv1alpha1.KubernetesResourcesConfig{
 							HPASpec: &operatorv1alpha1.HPASpec{
 								MaxReplicas: nil,
 							},
@@ -275,7 +275,7 @@ var _ = Describe("CR configuration", func() {
 
 				Entry("When resources config changes should return ConfigurationChanged", operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
 					Components: &operatorv1alpha1.Components{
-						Pilot: &operatorv1alpha1.IstioComponent{K8s: operatorv1alpha1.KubernetesResourcesConfig{
+						Pilot: &operatorv1alpha1.IstioComponent{K8s: &operatorv1alpha1.KubernetesResourcesConfig{
 							Resources: &operatorv1alpha1.Resources{
 								Requests: &operatorv1alpha1.ResourceClaims{
 									Cpu: newStringWithValue("100m"),
@@ -285,7 +285,7 @@ var _ = Describe("CR configuration", func() {
 					},
 				}}, operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
 					Components: &operatorv1alpha1.Components{
-						Pilot: &operatorv1alpha1.IstioComponent{K8s: operatorv1alpha1.KubernetesResourcesConfig{
+						Pilot: &operatorv1alpha1.IstioComponent{K8s: &operatorv1alpha1.KubernetesResourcesConfig{
 							Resources: &operatorv1alpha1.Resources{
 								Requests: &operatorv1alpha1.ResourceClaims{
 									Cpu: newStringWithValue("10m"),
@@ -297,8 +297,8 @@ var _ = Describe("CR configuration", func() {
 
 				Entry("When strategy config changes should return ConfigurationChanged", operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
 					Components: &operatorv1alpha1.Components{
-						Pilot: &operatorv1alpha1.IstioComponent{K8s: operatorv1alpha1.KubernetesResourcesConfig{
-							Strategy: &operatorv1alpha1.Strategy{RollingUpdate: operatorv1alpha1.RollingUpdate{
+						Pilot: &operatorv1alpha1.IstioComponent{K8s: &operatorv1alpha1.KubernetesResourcesConfig{
+							Strategy: &operatorv1alpha1.Strategy{RollingUpdate: &operatorv1alpha1.RollingUpdate{
 								MaxSurge: &intstr.IntOrString{
 									Type:   intstr.Int,
 									IntVal: 1,
@@ -312,8 +312,8 @@ var _ = Describe("CR configuration", func() {
 					},
 				}}, operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
 					Components: &operatorv1alpha1.Components{
-						Pilot: &operatorv1alpha1.IstioComponent{K8s: operatorv1alpha1.KubernetesResourcesConfig{
-							Strategy: &operatorv1alpha1.Strategy{RollingUpdate: operatorv1alpha1.RollingUpdate{
+						Pilot: &operatorv1alpha1.IstioComponent{K8s: &operatorv1alpha1.KubernetesResourcesConfig{
+							Strategy: &operatorv1alpha1.Strategy{RollingUpdate: &operatorv1alpha1.RollingUpdate{
 								MaxSurge: &intstr.IntOrString{
 									Type:   intstr.Int,
 									IntVal: 1,
@@ -346,7 +346,7 @@ var _ = Describe("CR configuration", func() {
 					Components: &operatorv1alpha1.Components{
 						IngressGateways: []*operatorv1alpha1.IstioComponent{
 							{
-								K8s: operatorv1alpha1.KubernetesResourcesConfig{
+								K8s: &operatorv1alpha1.KubernetesResourcesConfig{
 									HPASpec: &operatorv1alpha1.HPASpec{
 										MaxReplicas: newInt32WithValue(1),
 									},
@@ -358,7 +358,7 @@ var _ = Describe("CR configuration", func() {
 					Components: &operatorv1alpha1.Components{
 						IngressGateways: []*operatorv1alpha1.IstioComponent{
 							{
-								K8s: operatorv1alpha1.KubernetesResourcesConfig{
+								K8s: &operatorv1alpha1.KubernetesResourcesConfig{
 									HPASpec: &operatorv1alpha1.HPASpec{
 										MaxReplicas: newInt32WithValue(2),
 									},
@@ -370,7 +370,7 @@ var _ = Describe("CR configuration", func() {
 
 				Entry("If no change occurred should return NoChange", operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
 					Components: &operatorv1alpha1.Components{
-						Pilot: &operatorv1alpha1.IstioComponent{K8s: operatorv1alpha1.KubernetesResourcesConfig{
+						Pilot: &operatorv1alpha1.IstioComponent{K8s: &operatorv1alpha1.KubernetesResourcesConfig{
 							HPASpec: &operatorv1alpha1.HPASpec{
 								MaxReplicas: newInt32WithValue(21),
 							},
@@ -378,7 +378,7 @@ var _ = Describe("CR configuration", func() {
 					},
 				}}, operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
 					Components: &operatorv1alpha1.Components{
-						Pilot: &operatorv1alpha1.IstioComponent{K8s: operatorv1alpha1.KubernetesResourcesConfig{
+						Pilot: &operatorv1alpha1.IstioComponent{K8s: &operatorv1alpha1.KubernetesResourcesConfig{
 							HPASpec: &operatorv1alpha1.HPASpec{
 								MaxReplicas: newInt32WithValue(21),
 							},

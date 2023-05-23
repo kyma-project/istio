@@ -89,7 +89,7 @@ func (i *Istio) mergeResources(op istioOperator.IstioOperator) (istioOperator.Is
 				op.Spec.Components.IngressGateways[i].K8S = &v1alpha1.KubernetesResourcesSpec{}
 			}
 
-			err := mergeK8sConfig(op.Spec.Components.IngressGateways[i].K8S, gateway.K8s)
+			err := mergeK8sConfig(op.Spec.Components.IngressGateways[i].K8S, *gateway.K8s)
 			if err != nil {
 				return op, err
 			}
@@ -105,10 +105,94 @@ func (i *Istio) mergeResources(op istioOperator.IstioOperator) (istioOperator.Is
 		if op.Spec.Components.Pilot.K8S == nil {
 			op.Spec.Components.Pilot.K8S = &v1alpha1.KubernetesResourcesSpec{}
 		}
-		err := mergeK8sConfig(op.Spec.Components.Pilot.K8S, i.Spec.Components.Pilot.K8s)
+		err := mergeK8sConfig(op.Spec.Components.Pilot.K8S, *i.Spec.Components.Pilot.K8s)
 		if err != nil {
 			return op, err
 		}
+	}
+
+	if i.Spec.Components.Proxy != nil && i.Spec.Components.Proxy.K8S.Resources != nil {
+		if op.Spec.Values == nil {
+			op.Spec.Values = &structpb.Struct{}
+			op.Spec.Values.Fields = make(map[string]*structpb.Value)
+		}
+		global := op.Spec.Values.Fields["global"].GetStructValue()
+		if global == nil {
+			global = &structpb.Struct{}
+			global.Fields = make(map[string]*structpb.Value)
+		}
+
+		proxy := global.Fields["proxy"].GetStructValue()
+		if proxy == nil {
+			proxy = &structpb.Struct{}
+			proxy.Fields = make(map[string]*structpb.Value)
+		}
+
+		resources := proxy.Fields["resources"].GetStructValue()
+		if resources == nil {
+			resources = &structpb.Struct{}
+			resources.Fields = make(map[string]*structpb.Value)
+		}
+
+		if i.Spec.Components.Proxy.K8S.Resources.Limits != nil {
+			limits := resources.Fields["limits"].GetStructValue()
+			if limits == nil {
+				limits = &structpb.Struct{}
+				limits.Fields = make(map[string]*structpb.Value)
+			}
+			if i.Spec.Components.Proxy.K8S.Resources.Limits.Cpu != nil {
+				limits.Fields["cpu"] = structpb.NewStringValue(*i.Spec.Components.Proxy.K8S.Resources.Limits.Cpu)
+			}
+
+			if i.Spec.Components.Proxy.K8S.Resources.Limits.Memory != nil {
+				limits.Fields["memory"] = structpb.NewStringValue(*i.Spec.Components.Proxy.K8S.Resources.Limits.Memory)
+			}
+
+			l, err := structpb.NewValue(limits.AsMap())
+			if err != nil {
+				return op, err
+			}
+			resources.Fields["limits"] = l
+		}
+
+		if i.Spec.Components.Proxy.K8S.Resources.Requests != nil {
+			requests := resources.Fields["requests"].GetStructValue()
+			if requests == nil {
+				requests = &structpb.Struct{}
+				requests.Fields = make(map[string]*structpb.Value)
+			}
+			if i.Spec.Components.Proxy.K8S.Resources.Requests.Cpu != nil {
+				requests.Fields["cpu"] = structpb.NewStringValue(*i.Spec.Components.Proxy.K8S.Resources.Requests.Cpu)
+			}
+
+			if i.Spec.Components.Proxy.K8S.Resources.Requests.Memory != nil {
+				requests.Fields["memory"] = structpb.NewStringValue(*i.Spec.Components.Proxy.K8S.Resources.Requests.Memory)
+			}
+
+			r, err := structpb.NewValue(requests.AsMap())
+			if err != nil {
+				return op, err
+			}
+			resources.Fields["requests"] = r
+		}
+
+		r, err := structpb.NewValue(resources.AsMap())
+		if err != nil {
+			return op, err
+		}
+		proxy.Fields["resources"] = r
+
+		p, err := structpb.NewValue(proxy.AsMap())
+		if err != nil {
+			return op, err
+		}
+		global.Fields["proxy"] = p
+
+		g, err := structpb.NewValue(global.AsMap())
+		if err != nil {
+			return op, err
+		}
+		op.Spec.Values.Fields["global"] = g
 	}
 
 	if i.Spec.Components.Cni != nil {

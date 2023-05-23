@@ -188,7 +188,7 @@ var _ = Describe("Merge", func() {
 				cpuLimit := "500m"
 
 				istioCR := Istio{Spec: IstioSpec{Components: &Components{
-					Pilot: &IstioComponent{K8s: KubernetesResourcesConfig{
+					Pilot: &IstioComponent{K8s: &KubernetesResourcesConfig{
 						Resources: &Resources{
 							Limits: &ResourceClaims{
 								Cpu: &cpuLimit,
@@ -217,7 +217,7 @@ var _ = Describe("Merge", func() {
 				cpuLimit := "500m"
 
 				istioCR := Istio{Spec: IstioSpec{Components: &Components{
-					Pilot: &IstioComponent{K8s: KubernetesResourcesConfig{
+					Pilot: &IstioComponent{K8s: &KubernetesResourcesConfig{
 						Resources: &Resources{
 							Requests: &ResourceClaims{
 								Cpu: &cpuLimit,
@@ -250,7 +250,7 @@ var _ = Describe("Merge", func() {
 				istioCR := Istio{Spec: IstioSpec{Components: &Components{
 					IngressGateways: []*IstioComponent{
 						{
-							K8s: KubernetesResourcesConfig{
+							K8s: &KubernetesResourcesConfig{
 								Resources: &Resources{
 									Limits: &ResourceClaims{
 										Cpu:    &cpuLimit,
@@ -260,7 +260,7 @@ var _ = Describe("Merge", func() {
 							},
 						},
 						{
-							K8s: KubernetesResourcesConfig{
+							K8s: &KubernetesResourcesConfig{
 								Resources: &Resources{
 									Limits: &ResourceClaims{
 										Cpu:    &cpuLimit,
@@ -301,7 +301,7 @@ var _ = Describe("Merge", func() {
 				memoryRequests := "500Mi"
 
 				istioCR := Istio{Spec: IstioSpec{Components: &Components{
-					IngressGateways: []*IstioComponent{{K8s: KubernetesResourcesConfig{
+					IngressGateways: []*IstioComponent{{K8s: &KubernetesResourcesConfig{
 						Resources: &Resources{
 							Requests: &ResourceClaims{
 								Cpu:    &cpuRequests,
@@ -327,7 +327,7 @@ var _ = Describe("Merge", func() {
 	})
 
 	Context("Strategy", func() {
-		It("Should update RollingUpdate when it is present in Istio CR", func() {
+		It("Should update &RollingUpdate when it is present in Istio CR", func() {
 			//given
 			iop := istioOperator.IstioOperator{
 				Spec: &operatorv1alpha1.IstioOperatorSpec{},
@@ -344,9 +344,9 @@ var _ = Describe("Merge", func() {
 			}
 
 			istioCR := Istio{Spec: IstioSpec{Components: &Components{
-				IngressGateways: []*IstioComponent{{K8s: KubernetesResourcesConfig{
+				IngressGateways: []*IstioComponent{{K8s: &KubernetesResourcesConfig{
 					Strategy: &Strategy{
-						RollingUpdate: RollingUpdate{
+						RollingUpdate: &RollingUpdate{
 							MaxUnavailable: &maxUnavailable,
 							MaxSurge:       &maxSurge,
 						},
@@ -378,7 +378,7 @@ var _ = Describe("Merge", func() {
 			minReplicas := int32(4)
 
 			istioCR := Istio{Spec: IstioSpec{Components: &Components{
-				IngressGateways: []*IstioComponent{{K8s: KubernetesResourcesConfig{
+				IngressGateways: []*IstioComponent{{K8s: &KubernetesResourcesConfig{
 					HPASpec: &HPASpec{
 						MaxReplicas: &maxReplicas,
 						MinReplicas: &minReplicas,
@@ -410,7 +410,7 @@ var _ = Describe("Merge", func() {
 					}
 
 					istioCR := Istio{Spec: IstioSpec{Components: &Components{
-						Cni: &CNIComponent{K8S: CniK8sConfig{
+						Cni: &CniComponent{K8S: &CniK8sConfig{
 							Affinity: &v1.Affinity{
 								PodAffinity: &v1.PodAffinity{
 									RequiredDuringSchedulingIgnoredDuringExecution: []v1.PodAffinityTerm{
@@ -454,7 +454,7 @@ var _ = Describe("Merge", func() {
 					}
 
 					istioCR := Istio{Spec: IstioSpec{Components: &Components{
-						Cni: &CNIComponent{K8S: CniK8sConfig{
+						Cni: &CniComponent{K8S: &CniK8sConfig{
 							Affinity: &v1.Affinity{
 								PodAntiAffinity: &v1.PodAntiAffinity{
 									RequiredDuringSchedulingIgnoredDuringExecution: []v1.PodAffinityTerm{
@@ -498,7 +498,7 @@ var _ = Describe("Merge", func() {
 					}
 
 					istioCR := Istio{Spec: IstioSpec{Components: &Components{
-						Cni: &CNIComponent{K8S: CniK8sConfig{
+						Cni: &CniComponent{K8S: &CniK8sConfig{
 							Affinity: &v1.Affinity{
 								NodeAffinity: &v1.NodeAffinity{
 									RequiredDuringSchedulingIgnoredDuringExecution: &v1.NodeSelector{
@@ -545,7 +545,7 @@ var _ = Describe("Merge", func() {
 				memoryRequests := "500Mi"
 
 				istioCR := Istio{Spec: IstioSpec{Components: &Components{
-					Cni: &CNIComponent{K8S: CniK8sConfig{
+					Cni: &CniComponent{K8S: &CniK8sConfig{
 						Resources: &Resources{
 							Requests: &ResourceClaims{
 								Cpu:    &cpuRequests,
@@ -567,6 +567,38 @@ var _ = Describe("Merge", func() {
 				iopMemoryRequests := out.Spec.Components.Cni.K8S.Resources.Requests["memory"]
 				Expect(iopMemoryRequests).To(Equal(memoryRequests))
 			})
+		})
+	})
+
+	Context("Proxy", func() {
+		It("Should update Proxy resources configuration if they are present in Istio CR", func() {
+			//given
+			iop := istioOperator.IstioOperator{
+				Spec: &operatorv1alpha1.IstioOperatorSpec{},
+			}
+
+			cpuRequests := "500m"
+			memoryRequests := "500Mi"
+			istioCR := Istio{Spec: IstioSpec{Components: &Components{
+				Proxy: &ProxyComponent{K8S: &ProxyK8sConfig{
+					Resources: &Resources{
+						Requests: &ResourceClaims{
+							Cpu:    &cpuRequests,
+							Memory: &memoryRequests,
+						},
+					},
+				}},
+			}}}
+
+			// when
+			out, err := istioCR.MergeInto(iop)
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+
+			resources := out.Spec.Values.Fields["global"].GetStructValue().Fields["proxy"].GetStructValue().Fields["resources"].GetStructValue()
+			Expect(resources.Fields["requests"].GetStructValue().Fields["cpu"].GetStringValue()).To(Equal(cpuRequests))
+			Expect(resources.Fields["requests"].GetStructValue().Fields["memory"].GetStringValue()).To(Equal(memoryRequests))
 		})
 	})
 

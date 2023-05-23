@@ -579,36 +579,6 @@ var _ = Describe("Merge", func() {
 
 			cpuRequests := "500m"
 			memoryRequests := "500Mi"
-			istioCR := Istio{Spec: IstioSpec{Components: &Components{
-				Proxy: &ProxyComponent{K8S: &ProxyK8sConfig{
-					Resources: &Resources{
-						Requests: &ResourceClaims{
-							Cpu:    &cpuRequests,
-							Memory: &memoryRequests,
-						},
-					},
-				}},
-			}}}
-
-			// when
-			out, err := istioCR.MergeInto(iop)
-
-			// then
-			Expect(err).ShouldNot(HaveOccurred())
-
-			resources := out.Spec.Values.Fields["global"].GetStructValue().Fields["proxy"].GetStructValue().Fields["resources"].GetStructValue()
-			Expect(resources.Fields["requests"].GetStructValue().Fields["cpu"].GetStringValue()).To(Equal(cpuRequests))
-			Expect(resources.Fields["requests"].GetStructValue().Fields["memory"].GetStringValue()).To(Equal(memoryRequests))
-		})
-
-		It("Should update Proxy resources configuration if they are present in Istio CR", func() {
-			//given
-			iop := istioOperator.IstioOperator{
-				Spec: &operatorv1alpha1.IstioOperatorSpec{},
-			}
-
-			cpuRequests := "500m"
-			memoryRequests := "500Mi"
 
 			cpuLimits := "800m"
 			memoryLimits := "800Mi"

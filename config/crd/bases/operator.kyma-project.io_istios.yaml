@@ -43,8 +43,11 @@ spec:
               components:
                 properties:
                   cni:
+                    description: Cni defines component configuration for Istio CNI
+                      DaemonSet
                     properties:
                       k8s:
+                        description: CniK8sConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec
                         properties:
                           affinity:
                             description: Affinity is a group of affinity scheduling
@@ -1010,6 +1013,8 @@ spec:
                                 type: object
                             type: object
                           resources:
+                            description: 'Resources define Kubernetes resources configuration:
+                              https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                             properties:
                               limits:
                                 properties:
@@ -1031,12 +1036,17 @@ spec:
                     - k8s
                     type: object
                   ingressGateways:
+                    description: IngressGateways defines component configurations
+                      for Istio Ingress Gateways
                     items:
+                      description: IstioComponent defines configuration for generic
+                        Istio component (ingress gateway, istiod)
                       properties:
                         k8s:
                           description: KubernetesResourcesConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec
                           properties:
                             hpaSpec:
+                              description: HPASpec defines configuration for HorizontalPodAutoscaler
                               properties:
                                 maxReplicas:
                                   format: int32
@@ -1046,6 +1056,8 @@ spec:
                                   type: integer
                               type: object
                             resources:
+                              description: 'Resources define Kubernetes resources
+                                configuration: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                               properties:
                                 limits:
                                   properties:
@@ -1063,8 +1075,11 @@ spec:
                                   type: object
                               type: object
                             strategy:
+                              description: Strategy defines rolling update strategy
                               properties:
                                 rollingUpdate:
+                                  description: 'RollingUpdate defines configuration
+                                    for rolling updates: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#rolling-update-deployment'
                                   properties:
                                     maxSurge:
                                       anyOf:
@@ -1086,11 +1101,13 @@ spec:
                       type: object
                     type: array
                   pilot:
+                    description: Pilot defines component configuration for Istiod
                     properties:
                       k8s:
                         description: KubernetesResourcesConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec
                         properties:
                           hpaSpec:
+                            description: HPASpec defines configuration for HorizontalPodAutoscaler
                             properties:
                               maxReplicas:
                                 format: int32
@@ -1100,6 +1117,8 @@ spec:
                                 type: integer
                             type: object
                           resources:
+                            description: 'Resources define Kubernetes resources configuration:
+                              https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                             properties:
                               limits:
                                 properties:
@@ -1117,8 +1136,11 @@ spec:
                                 type: object
                             type: object
                           strategy:
+                            description: Strategy defines rolling update strategy
                             properties:
                               rollingUpdate:
+                                description: 'RollingUpdate defines configuration
+                                  for rolling updates: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#rolling-update-deployment'
                                 properties:
                                   maxSurge:
                                     anyOf:
@@ -1139,10 +1161,15 @@ spec:
                     - k8s
                     type: object
                   proxy:
+                    description: Proxy defines component configuration for Istio proxy
+                      sidecar
                     properties:
                       k8s:
+                        description: ProxyK8sConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec
                         properties:
                           resources:
+                            description: 'Resources define Kubernetes resources configuration:
+                              https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                             properties:
                               limits:
                                 properties:

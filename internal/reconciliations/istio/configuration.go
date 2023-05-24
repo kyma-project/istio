@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/coreos/go-semver/semver"
-
+	"github.com/google/go-cmp/cmp"
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 )
 
@@ -60,18 +60,11 @@ func EvaluateIstioCRChanges(istioCR operatorv1alpha1.Istio, istioTag string) (tr
 		trigger = trigger | VersionUpdate
 	}
 
-	lastAppliedNotNil := lastAppliedConfig.Config.NumTrustedProxies != nil
-	newNotNil := istioCR.Spec.Config.NumTrustedProxies != nil
-
-	if lastAppliedNotNil != newNotNil {
+	if !cmp.Equal(lastAppliedConfig.Components, istioCR.Spec.Components) {
 		return trigger | ConfigurationUpdate, nil
 	}
 
-	if !lastAppliedNotNil {
-		return trigger, nil
-	}
-
-	if *lastAppliedConfig.Config.NumTrustedProxies != *istioCR.Spec.Config.NumTrustedProxies {
+	if !cmp.Equal(lastAppliedConfig.Config.NumTrustedProxies, istioCR.Spec.Config.NumTrustedProxies) {
 		return trigger | ConfigurationUpdate, nil
 	}
 

@@ -10,60 +10,159 @@ API specification on root level was split into `components` and `config`. `compo
 
 Status will be implemented per `kyma-operator` requirements.
 
-## Istio CR example
+## Istio CRD documentation
 
-```
-apiVersion: operator.kyma-project.io/v1alpha1
-kind: Istio
-metadata:
-spec:
-  components: -> subset of k8s component spec
-    pilot:
-      k8s:
-        hpaSpec: 
-          maxReplicas: 5
-          minReplicas: 2
-        strategy:
-          rollingUpdate:
-            maxSurge: 50%
-            maxUnavailable: "0"
-        resources:
-          limits:
-            cpu: 250m
-            memory: 384Mi
-          requests:
-            cpu: 10m
-            memory: 128Mi
-    ingressGateway:
-      k8s:
-        hpaSpec: 
-          maxReplicas: 5
-          minReplicas: 2
-        strategy:
-          rollingUpdate:
-            maxSurge: 50%
-            maxUnavailable: "0"
-        resources:
-          limits:
-            cpu: 2000m
-            memory: 1024Mi
-          requests:
-            cpu: 100m
-            memory: 128Mi
-  config: -> abstraction
-    profile: evaluation | production
-    xffHops/numTrustedProxies: ...
-    gardenerDnsNames:
-    - "*.mydomain.com"
-    - ...
-    tracing:
-      ...
-    dnsProxying:
-      enabled: true | false
-      autoAllocate: true | false
-status:
-  state: Ready | Processing | Error | Deleting
-```
+<!-- TABLE-START -->
+<!-- Istio v1alpha1 operator.kyma-project.io -->
+| Parameter         | Description                                   |
+| ---------------------------------------- | ---------|
+| **spec.components** |  |
+| **spec.components.cni** | Cni defines component configuration for Istio CNI DaemonSet |
+| **spec.components.cni.k8s** | CniK8sConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec |
+| **spec.components.cni.k8s.affinity** | Affinity is a group of affinity scheduling rules. |
+| **spec.components.cni.k8s.affinity.nodeAffinity** | Describes node affinity scheduling rules for the pod. |
+| **spec.components.cni.k8s.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution** | The scheduler will prefer to schedule pods to nodes that satisfy the affinity expressions specified by this field, but it may choose a node that violates one or more of the expressions. The node that is most preferred is the one with the greatest sum of weights, i.e. for each node that meets all of the scheduling requirements (resource request, requiredDuringScheduling affinity expressions, etc.), compute a sum by iterating through the elements of this field and adding "weight" to the sum if the node matches the corresponding matchExpressions; the node(s) with the highest sum are the most preferred. |
+| **spec.components.cni.k8s.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution.preference** | A node selector term, associated with the corresponding weight. |
+| **spec.components.cni.k8s.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution.preference.matchExpressions** | A list of node selector requirements by node's labels. |
+| **spec.components.cni.k8s.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution.preference.matchExpressions.key** | The label key that the selector applies to. |
+| **spec.components.cni.k8s.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution.preference.matchExpressions.operator** | Represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists, DoesNotExist. Gt, and Lt. |
+| **spec.components.cni.k8s.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution.preference.matchExpressions.values** | An array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. If the operator is Gt or Lt, the values array must have a single element, which will be interpreted as an integer. This array is replaced during a strategic merge patch. |
+| **spec.components.cni.k8s.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution.preference.matchFields** | A list of node selector requirements by node's fields. |
+| **spec.components.cni.k8s.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution.preference.matchFields.key** | The label key that the selector applies to. |
+| **spec.components.cni.k8s.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution.preference.matchFields.operator** | Represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists, DoesNotExist. Gt, and Lt. |
+| **spec.components.cni.k8s.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution.preference.matchFields.values** | An array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. If the operator is Gt or Lt, the values array must have a single element, which will be interpreted as an integer. This array is replaced during a strategic merge patch. |
+| **spec.components.cni.k8s.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution.weight** | Weight associated with matching the corresponding nodeSelectorTerm, in the range 1-100. |
+| **spec.components.cni.k8s.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution** | If the affinity requirements specified by this field are not met at scheduling time, the pod will not be scheduled onto the node. If the affinity requirements specified by this field cease to be met at some point during pod execution (e.g. due to an update), the system may or may not try to eventually evict the pod from its node. |
+| **spec.components.cni.k8s.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms** | Required. A list of node selector terms. The terms are ORed. |
+| **spec.components.cni.k8s.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms.matchExpressions** | A list of node selector requirements by node's labels. |
+| **spec.components.cni.k8s.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms.matchExpressions.key** | The label key that the selector applies to. |
+| **spec.components.cni.k8s.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms.matchExpressions.operator** | Represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists, DoesNotExist. Gt, and Lt. |
+| **spec.components.cni.k8s.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms.matchExpressions.values** | An array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. If the operator is Gt or Lt, the values array must have a single element, which will be interpreted as an integer. This array is replaced during a strategic merge patch. |
+| **spec.components.cni.k8s.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms.matchFields** | A list of node selector requirements by node's fields. |
+| **spec.components.cni.k8s.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms.matchFields.key** | The label key that the selector applies to. |
+| **spec.components.cni.k8s.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms.matchFields.operator** | Represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists, DoesNotExist. Gt, and Lt. |
+| **spec.components.cni.k8s.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms.matchFields.values** | An array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. If the operator is Gt or Lt, the values array must have a single element, which will be interpreted as an integer. This array is replaced during a strategic merge patch. |
+| **spec.components.cni.k8s.affinity.podAffinity** | Describes pod affinity scheduling rules (e.g. co-locate this pod in the same node, zone, etc. as some other pod(s)). |
+| **spec.components.cni.k8s.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution** | The scheduler will prefer to schedule pods to nodes that satisfy the affinity expressions specified by this field, but it may choose a node that violates one or more of the expressions. The node that is most preferred is the one with the greatest sum of weights, i.e. for each node that meets all of the scheduling requirements (resource request, requiredDuringScheduling affinity expressions, etc.), compute a sum by iterating through the elements of this field and adding "weight" to the sum if the node has pods which matches the corresponding podAffinityTerm; the node(s) with the highest sum are the most preferred. |
+| **spec.components.cni.k8s.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm** | Required. A pod affinity term, associated with the corresponding weight. |
+| **spec.components.cni.k8s.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.labelSelector** | A label query over a set of resources, in this case pods. |
+| **spec.components.cni.k8s.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.labelSelector.matchExpressions** | matchExpressions is a list of label selector requirements. The requirements are ANDed. |
+| **spec.components.cni.k8s.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.labelSelector.matchExpressions.key** | key is the label key that the selector applies to. |
+| **spec.components.cni.k8s.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.labelSelector.matchExpressions.operator** | operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist. |
+| **spec.components.cni.k8s.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.labelSelector.matchExpressions.values** | values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch. |
+| **spec.components.cni.k8s.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.labelSelector.matchLabels** | matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed. |
+| **spec.components.cni.k8s.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.namespaceSelector** | A label query over the set of namespaces that the term applies to. The term is applied to the union of the namespaces selected by this field and the ones listed in the namespaces field. null selector and null or empty namespaces list means "this pod's namespace". An empty selector ({}) matches all namespaces. |
+| **spec.components.cni.k8s.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.namespaceSelector.matchExpressions** | matchExpressions is a list of label selector requirements. The requirements are ANDed. |
+| **spec.components.cni.k8s.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.namespaceSelector.matchExpressions.key** | key is the label key that the selector applies to. |
+| **spec.components.cni.k8s.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.namespaceSelector.matchExpressions.operator** | operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist. |
+| **spec.components.cni.k8s.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.namespaceSelector.matchExpressions.values** | values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch. |
+| **spec.components.cni.k8s.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.namespaceSelector.matchLabels** | matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed. |
+| **spec.components.cni.k8s.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.namespaces** | namespaces specifies a static list of namespace names that the term applies to. The term is applied to the union of the namespaces listed in this field and the ones selected by namespaceSelector. null or empty namespaces list and null namespaceSelector means "this pod's namespace". |
+| **spec.components.cni.k8s.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.topologyKey** | This pod should be co-located (affinity) or not co-located (anti-affinity) with the pods matching the labelSelector in the specified namespaces, where co-located is defined as running on a node whose value of the label with key topologyKey matches that of any node on which any of the selected pods is running. Empty topologyKey is not allowed. |
+| **spec.components.cni.k8s.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution.weight** | weight associated with matching the corresponding podAffinityTerm, in the range 1-100. |
+| **spec.components.cni.k8s.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution** | If the affinity requirements specified by this field are not met at scheduling time, the pod will not be scheduled onto the node. If the affinity requirements specified by this field cease to be met at some point during pod execution (e.g. due to a pod label update), the system may or may not try to eventually evict the pod from its node. When there are multiple elements, the lists of nodes corresponding to each podAffinityTerm are intersected, i.e. all terms must be satisfied. |
+| **spec.components.cni.k8s.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector** | A label query over a set of resources, in this case pods. |
+| **spec.components.cni.k8s.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchExpressions** | matchExpressions is a list of label selector requirements. The requirements are ANDed. |
+| **spec.components.cni.k8s.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchExpressions.key** | key is the label key that the selector applies to. |
+| **spec.components.cni.k8s.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchExpressions.operator** | operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist. |
+| **spec.components.cni.k8s.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchExpressions.values** | values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch. |
+| **spec.components.cni.k8s.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels** | matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed. |
+| **spec.components.cni.k8s.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution.namespaceSelector** | A label query over the set of namespaces that the term applies to. The term is applied to the union of the namespaces selected by this field and the ones listed in the namespaces field. null selector and null or empty namespaces list means "this pod's namespace". An empty selector ({}) matches all namespaces. |
+| **spec.components.cni.k8s.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution.namespaceSelector.matchExpressions** | matchExpressions is a list of label selector requirements. The requirements are ANDed. |
+| **spec.components.cni.k8s.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution.namespaceSelector.matchExpressions.key** | key is the label key that the selector applies to. |
+| **spec.components.cni.k8s.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution.namespaceSelector.matchExpressions.operator** | operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist. |
+| **spec.components.cni.k8s.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution.namespaceSelector.matchExpressions.values** | values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch. |
+| **spec.components.cni.k8s.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution.namespaceSelector.matchLabels** | matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed. |
+| **spec.components.cni.k8s.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution.namespaces** | namespaces specifies a static list of namespace names that the term applies to. The term is applied to the union of the namespaces listed in this field and the ones selected by namespaceSelector. null or empty namespaces list and null namespaceSelector means "this pod's namespace". |
+| **spec.components.cni.k8s.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution.topologyKey** | This pod should be co-located (affinity) or not co-located (anti-affinity) with the pods matching the labelSelector in the specified namespaces, where co-located is defined as running on a node whose value of the label with key topologyKey matches that of any node on which any of the selected pods is running. Empty topologyKey is not allowed. |
+| **spec.components.cni.k8s.affinity.podAntiAffinity** | Describes pod anti-affinity scheduling rules (e.g. avoid putting this pod in the same node, zone, etc. as some other pod(s)). |
+| **spec.components.cni.k8s.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution** | The scheduler will prefer to schedule pods to nodes that satisfy the anti-affinity expressions specified by this field, but it may choose a node that violates one or more of the expressions. The node that is most preferred is the one with the greatest sum of weights, i.e. for each node that meets all of the scheduling requirements (resource request, requiredDuringScheduling anti-affinity expressions, etc.), compute a sum by iterating through the elements of this field and adding "weight" to the sum if the node has pods which matches the corresponding podAffinityTerm; the node(s) with the highest sum are the most preferred. |
+| **spec.components.cni.k8s.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm** | Required. A pod affinity term, associated with the corresponding weight. |
+| **spec.components.cni.k8s.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.labelSelector** | A label query over a set of resources, in this case pods. |
+| **spec.components.cni.k8s.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.labelSelector.matchExpressions** | matchExpressions is a list of label selector requirements. The requirements are ANDed. |
+| **spec.components.cni.k8s.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.labelSelector.matchExpressions.key** | key is the label key that the selector applies to. |
+| **spec.components.cni.k8s.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.labelSelector.matchExpressions.operator** | operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist. |
+| **spec.components.cni.k8s.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.labelSelector.matchExpressions.values** | values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch. |
+| **spec.components.cni.k8s.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.labelSelector.matchLabels** | matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed. |
+| **spec.components.cni.k8s.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.namespaceSelector** | A label query over the set of namespaces that the term applies to. The term is applied to the union of the namespaces selected by this field and the ones listed in the namespaces field. null selector and null or empty namespaces list means "this pod's namespace". An empty selector ({}) matches all namespaces. |
+| **spec.components.cni.k8s.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.namespaceSelector.matchExpressions** | matchExpressions is a list of label selector requirements. The requirements are ANDed. |
+| **spec.components.cni.k8s.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.namespaceSelector.matchExpressions.key** | key is the label key that the selector applies to. |
+| **spec.components.cni.k8s.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.namespaceSelector.matchExpressions.operator** | operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist. |
+| **spec.components.cni.k8s.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.namespaceSelector.matchExpressions.values** | values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch. |
+| **spec.components.cni.k8s.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.namespaceSelector.matchLabels** | matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed. |
+| **spec.components.cni.k8s.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.namespaces** | namespaces specifies a static list of namespace names that the term applies to. The term is applied to the union of the namespaces listed in this field and the ones selected by namespaceSelector. null or empty namespaces list and null namespaceSelector means "this pod's namespace". |
+| **spec.components.cni.k8s.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution.podAffinityTerm.topologyKey** | This pod should be co-located (affinity) or not co-located (anti-affinity) with the pods matching the labelSelector in the specified namespaces, where co-located is defined as running on a node whose value of the label with key topologyKey matches that of any node on which any of the selected pods is running. Empty topologyKey is not allowed. |
+| **spec.components.cni.k8s.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution.weight** | weight associated with matching the corresponding podAffinityTerm, in the range 1-100. |
+| **spec.components.cni.k8s.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution** | If the anti-affinity requirements specified by this field are not met at scheduling time, the pod will not be scheduled onto the node. If the anti-affinity requirements specified by this field cease to be met at some point during pod execution (e.g. due to a pod label update), the system may or may not try to eventually evict the pod from its node. When there are multiple elements, the lists of nodes corresponding to each podAffinityTerm are intersected, i.e. all terms must be satisfied. |
+| **spec.components.cni.k8s.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector** | A label query over a set of resources, in this case pods. |
+| **spec.components.cni.k8s.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchExpressions** | matchExpressions is a list of label selector requirements. The requirements are ANDed. |
+| **spec.components.cni.k8s.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchExpressions.key** | key is the label key that the selector applies to. |
+| **spec.components.cni.k8s.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchExpressions.operator** | operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist. |
+| **spec.components.cni.k8s.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchExpressions.values** | values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch. |
+| **spec.components.cni.k8s.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels** | matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed. |
+| **spec.components.cni.k8s.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.namespaceSelector** | A label query over the set of namespaces that the term applies to. The term is applied to the union of the namespaces selected by this field and the ones listed in the namespaces field. null selector and null or empty namespaces list means "this pod's namespace". An empty selector ({}) matches all namespaces. |
+| **spec.components.cni.k8s.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.namespaceSelector.matchExpressions** | matchExpressions is a list of label selector requirements. The requirements are ANDed. |
+| **spec.components.cni.k8s.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.namespaceSelector.matchExpressions.key** | key is the label key that the selector applies to. |
+| **spec.components.cni.k8s.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.namespaceSelector.matchExpressions.operator** | operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist. |
+| **spec.components.cni.k8s.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.namespaceSelector.matchExpressions.values** | values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch. |
+| **spec.components.cni.k8s.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.namespaceSelector.matchLabels** | matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed. |
+| **spec.components.cni.k8s.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.namespaces** | namespaces specifies a static list of namespace names that the term applies to. The term is applied to the union of the namespaces listed in this field and the ones selected by namespaceSelector. null or empty namespaces list and null namespaceSelector means "this pod's namespace". |
+| **spec.components.cni.k8s.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.topologyKey** | This pod should be co-located (affinity) or not co-located (anti-affinity) with the pods matching the labelSelector in the specified namespaces, where co-located is defined as running on a node whose value of the label with key topologyKey matches that of any node on which any of the selected pods is running. Empty topologyKey is not allowed. |
+| **spec.components.cni.k8s.resources** | Resources define Kubernetes resources configuration: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/ |
+| **spec.components.cni.k8s.resources.limits** |  |
+| **spec.components.cni.k8s.resources.limits.cpu** |  |
+| **spec.components.cni.k8s.resources.limits.memory** |  |
+| **spec.components.cni.k8s.resources.requests** |  |
+| **spec.components.cni.k8s.resources.requests.cpu** |  |
+| **spec.components.cni.k8s.resources.requests.memory** |  |
+| **spec.components.ingressGateways** | IngressGateways defines component configurations for Istio Ingress Gateways |
+| **spec.components.ingressGateways.k8s** | KubernetesResourcesConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec |
+| **spec.components.ingressGateways.k8s.hpaSpec** | HPASpec defines configuration for HorizontalPodAutoscaler |
+| **spec.components.ingressGateways.k8s.hpaSpec.maxReplicas** |  |
+| **spec.components.ingressGateways.k8s.hpaSpec.minReplicas** |  |
+| **spec.components.ingressGateways.k8s.resources** | Resources define Kubernetes resources configuration: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/ |
+| **spec.components.ingressGateways.k8s.resources.limits** |  |
+| **spec.components.ingressGateways.k8s.resources.limits.cpu** |  |
+| **spec.components.ingressGateways.k8s.resources.limits.memory** |  |
+| **spec.components.ingressGateways.k8s.resources.requests** |  |
+| **spec.components.ingressGateways.k8s.resources.requests.cpu** |  |
+| **spec.components.ingressGateways.k8s.resources.requests.memory** |  |
+| **spec.components.ingressGateways.k8s.strategy** | Strategy defines rolling update strategy |
+| **spec.components.ingressGateways.k8s.strategy.rollingUpdate** | RollingUpdate defines configuration for rolling updates: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#rolling-update-deployment |
+| **spec.components.pilot** | Pilot defines component configuration for Istiod |
+| **spec.components.pilot.k8s** | KubernetesResourcesConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec |
+| **spec.components.pilot.k8s.hpaSpec** | HPASpec defines configuration for HorizontalPodAutoscaler |
+| **spec.components.pilot.k8s.hpaSpec.maxReplicas** |  |
+| **spec.components.pilot.k8s.hpaSpec.minReplicas** |  |
+| **spec.components.pilot.k8s.resources** | Resources define Kubernetes resources configuration: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/ |
+| **spec.components.pilot.k8s.resources.limits** |  |
+| **spec.components.pilot.k8s.resources.limits.cpu** |  |
+| **spec.components.pilot.k8s.resources.limits.memory** |  |
+| **spec.components.pilot.k8s.resources.requests** |  |
+| **spec.components.pilot.k8s.resources.requests.cpu** |  |
+| **spec.components.pilot.k8s.resources.requests.memory** |  |
+| **spec.components.pilot.k8s.strategy** | Strategy defines rolling update strategy |
+| **spec.components.pilot.k8s.strategy.rollingUpdate** | RollingUpdate defines configuration for rolling updates: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#rolling-update-deployment |
+| **spec.components.proxy** | Proxy defines component configuration for Istio proxy sidecar |
+| **spec.components.proxy.k8s** | ProxyK8sConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec |
+| **spec.components.proxy.k8s.resources** | Resources define Kubernetes resources configuration: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/ |
+| **spec.components.proxy.k8s.resources.limits** |  |
+| **spec.components.proxy.k8s.resources.limits.cpu** |  |
+| **spec.components.proxy.k8s.resources.limits.memory** |  |
+| **spec.components.proxy.k8s.resources.requests** |  |
+| **spec.components.proxy.k8s.resources.requests.cpu** |  |
+| **spec.components.proxy.k8s.resources.requests.memory** |  |
+| **spec.config** | Config is the configuration for the Istio installation. |
+| **spec.config.numTrustedProxies** | Defines the number of trusted proxies deployed in front of the Istio gateway proxy. |
+| **status.conditions** | Conditions associated with IstioStatus. |
+| **status.conditions.lastTransitionTime** | lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable. |
+| **status.conditions.message** | message is a human readable message indicating details about the transition. This may be an empty string. |
+| **status.conditions.observedGeneration** | observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance. |
+| **status.conditions.reason** | reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty. |
+| **status.conditions.status** | status of the condition, one of True, False, Unknown. |
+| **status.conditions.type** | type of condition in CamelCase or in foo.example.com/CamelCase. --- Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be useful (see .node.status.conditions), the ability to deconflict is important. The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt) |
+| **status.state** | State signifies current state of CustomObject. Value can be one of ("Ready", "Processing", "Error", "Deleting"). |<!-- TABLE-END -->
+<!-- TABLE-END -->
 
 ## Future plans
 

@@ -18,8 +18,8 @@ require (
 	golang.org/x/exp v0.0.0-20230202163644-54bba9f4231b
 	golang.org/x/time v0.3.0
 	google.golang.org/protobuf v1.28.1
-	istio.io/api v0.0.0-20230316205359-5a61675c5ca0
-	istio.io/client-go v1.17.1
+	istio.io/api v0.0.0-20230322183722-d5ba2da6d5a0
+	istio.io/client-go v1.17.2-0.20230322184722-9a3ad952dcd3
 	istio.io/istio v0.0.0-20230210164309-ff2bbfdd4299
 	istio.io/pkg v0.0.0-20230203225929-102620a3ea67
 	k8s.io/api v0.26.1

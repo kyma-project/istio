@@ -45,7 +45,7 @@ var (
 )
 
 const (
-	IstioVersion                 string        = "1.17.1"
+	IstioVersion                 string        = "1.17.2"
 	IstioImageBase               string        = "distroless"
 	IstioResourceListDefaultPath               = "manifests/controlled_resources_list.yaml"
 	ErrorRetryTime               time.Duration = time.Minute * 10

@@ -18,7 +18,7 @@ type Sidecars struct {
 }
 
 const (
-	imageRepository string = "eu.gcr.io/kyma-project/external/istio/proxyv2"
+	imageRepository string = "europe-docker.pkg.dev/kyma-project/prod/external/istio/proxyv2"
 )
 
 // Reconcile runs Proxy Reset action, which checks if any of sidecars need a restart and proceed with rollout.

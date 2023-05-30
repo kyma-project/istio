@@ -1,0 +1,6 @@
+apiVersion: operator.kyma-project.io/v1alpha1
+kind: Istio
+metadata:
+  name: default
+  labels:
+    app.kubernetes.io/name: default

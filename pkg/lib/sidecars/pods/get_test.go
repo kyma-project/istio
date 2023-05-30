@@ -277,7 +277,93 @@ var _ = Describe("Get Pods", func() {
 
 		for _, tt := range tests {
 			It(tt.name, func() {
-				podList, err := pods.GetPodsWithDifferentSidecarImage(ctx, tt.c, expectedImage, &logger)
+				podList, err := pods.GetPodsToRestart(ctx, tt.c, expectedImage, helpers.DefaultSidecarResources, &logger)
+
+				Expect(err).NotTo(HaveOccurred())
+				tt.assertFunc(podList.Items)
+			})
+		}
+	})
+
+	When("Sidecar Resources changed", func() {
+
+		tests := []struct {
+			name       string
+			c          client.Client
+			assertFunc func(val interface{})
+		}{
+			{
+				name: "should not return any pod when pods have same resources",
+				c: createClientSet(
+					helpers.NewSidecarPodBuilder().Build(),
+				),
+				assertFunc: func(val interface{}) { Expect(val).To(BeEmpty()) },
+			},
+			{
+				name: "should return pod with different sidecar resources",
+				c: createClientSet(
+					helpers.NewSidecarPodBuilder().Build(),
+					helpers.NewSidecarPodBuilder().
+						SetName("changedSidecarPod").
+						SetCpuRequest("400m").
+						Build(),
+				),
+				assertFunc: func(val interface{}) {
+					Expect(val).NotTo(BeEmpty())
+					resultPods := val.([]v1.Pod)
+					Expect(resultPods[0].Name).To(Equal("changedSidecarPod"))
+				},
+			},
+			{
+				name: "should ignore pod that has different resources when it has not all condition status as True",
+				c: createClientSet(
+					helpers.NewSidecarPodBuilder().
+						SetConditionStatus("False").
+						SetCpuRequest("400m").
+						Build(),
+				),
+				assertFunc: func(val interface{}) { Expect(val).To(BeEmpty()) },
+			},
+			{
+				name: "should ignore pod that has different resources when phase is not running",
+				c: createClientSet(
+					helpers.NewSidecarPodBuilder().
+						SetPodStatusPhase("Pending").
+						SetCpuRequest("400m").
+						Build(),
+				),
+				assertFunc: func(val interface{}) { Expect(val).To(BeEmpty()) },
+			},
+			{
+				name: "should ignore pod that has different resources when it has a deletion timestamp",
+				c: createClientSet(
+					helpers.NewSidecarPodBuilder().
+						SetDeletionTimestamp(time.Now()).
+						SetCpuRequest("400m").
+						Build(),
+				),
+				assertFunc: func(val interface{}) { Expect(val).To(BeEmpty()) },
+			},
+			{
+				name: "should ignore pod that with different resources when proxy container name is not in istio annotation",
+				c: createClientSet(
+					helpers.NewSidecarPodBuilder().
+						SetSidecarContainerName("custom-sidecar-proxy-container-name").
+						SetCpuRequest("400m").
+						Build(),
+				),
+				assertFunc: func(val interface{}) { Expect(val).To(BeEmpty()) },
+			},
+		}
+
+		for _, tt := range tests {
+			It(tt.name, func() {
+				expectedImage := pods.SidecarImage{
+					Repository: "istio/proxyv2",
+					Tag:        "1.10.0",
+				}
+
+				podList, err := pods.GetPodsToRestart(ctx, tt.c, expectedImage, helpers.DefaultSidecarResources, &logger)
 
 				Expect(err).NotTo(HaveOccurred())
 				tt.assertFunc(podList.Items)

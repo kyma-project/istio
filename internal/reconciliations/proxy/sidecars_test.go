@@ -20,10 +20,8 @@ import (
 )
 
 const (
-	istioVersion             = "1.16.1"
-	istioImageBase           = "distroless"
-	defaultIstioOperatorPath = "test/test-operator.yaml"
-	workingDir               = "/tmp"
+	istioVersion   = "1.16.1"
+	istioImageBase = "distroless"
 )
 
 func TestProxies(t *testing.T) {
@@ -88,7 +86,7 @@ func createPod(name, namespace, containerName, imageVersion string) *corev1.Pod 
 			APIVersion: "v1",
 		},
 		Status: corev1.PodStatus{
-			Phase: corev1.PodPhase(corev1.PodRunning),
+			Phase: corev1.PodRunning,
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{

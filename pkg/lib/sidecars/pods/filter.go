@@ -1,12 +1,19 @@
 package pods
 
 import (
+	"github.com/kyma-project/istio/operator/api/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 )
 
 const (
 	istioSidecarName = "istio-proxy"
 )
+
+func needsRestart(pod v1.Pod, expectedImage SidecarImage, expectedResources v1alpha1.Resources) bool {
+	return hasIstioSidecarStatusAnnotation(pod) &&
+		isPodReady(pod) &&
+		(hasSidecarContainerWithWithDifferentImage(pod, expectedImage) || hasDifferentSidecarResources(pod, expectedResources))
+}
 
 func hasIstioSidecarStatusAnnotation(pod v1.Pod) bool {
 	_, exists := pod.Annotations["sidecar.istio.io/status"]
@@ -35,6 +42,16 @@ func hasSidecarContainerWithWithDifferentImage(pod v1.Pod, expectedImage Sidecar
 
 	for _, container := range pod.Spec.Containers {
 		if isContainerIstioSidecar(container) && !expectedImage.matchesImageIn(container) {
+			return true
+		}
+	}
+	return false
+}
+
+func hasDifferentSidecarResources(pod v1.Pod, expectedResources v1alpha1.Resources) bool {
+
+	for _, container := range pod.Spec.Containers {
+		if isContainerIstioSidecar(container) && !expectedResources.IsEqual(container.Resources) {
 			return true
 		}
 	}

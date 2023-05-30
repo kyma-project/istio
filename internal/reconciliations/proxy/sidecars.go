@@ -3,6 +3,7 @@ package proxy
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/istio/operator/api/v1alpha1"
 
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
@@ -15,6 +16,7 @@ type Sidecars struct {
 	IstioVersion   string
 	IstioImageBase string
 	CniEnabled     bool
+	resources      *v1alpha1.Resources
 }
 
 const (
@@ -35,7 +37,7 @@ func (s *Sidecars) Reconcile(ctx context.Context, client client.Client, logger l
 		return fmt.Errorf("istio-system pods version: %s do not match target version: %s", version, s.IstioVersion)
 	}
 
-	warnings, err := sidecars.ProxyReset(ctx, client, expectedImage, s.CniEnabled, &logger)
+	warnings, err := sidecars.ProxyReset(ctx, client, expectedImage, *s.resources, s.CniEnabled, &logger)
 	if err != nil {
 		return err
 	}

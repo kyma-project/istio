@@ -1,0 +1,12 @@
+apiVersion: operator.kyma-project.io/v1alpha2
+kind: Istio
+metadata:
+  labels:
+    app.kubernetes.io/name: istio
+    app.kubernetes.io/instance: istio-sample
+    app.kubernetes.io/part-of: istio
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: istio
+  name: istio-sample
+spec:
+  # TODO(user): Add fields here

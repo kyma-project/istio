@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package v1alpha2
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -22,7 +22,6 @@ import (
 
 type State string
 
-// Valid IstioCR States.
 const (
 	Ready      State = "Ready"
 	Processing State = "Processing"
@@ -74,20 +73,4 @@ type IstioStatus struct {
 
 func init() {
 	SchemeBuilder.Register(&Istio{}, &IstioList{})
-}
-
-func (i *Istio) GetStatus() IstioStatus {
-	return i.Status
-}
-
-func (i *Istio) SetStatus(status IstioStatus) {
-	i.Status = status
-}
-
-func (i *Istio) ComponentName() string {
-	return "istio"
-}
-
-func (i *Istio) HasFinalizer() bool {
-	return len(i.Finalizers) > 0
 }

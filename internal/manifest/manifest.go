@@ -1,4 +1,4 @@
-package istio
+package manifest
 
 import (
 	"bytes"
@@ -46,12 +46,7 @@ func NewDefaultIstioMerger(istioCR *operatorv1alpha1.Istio, istioOperatorFilePat
 }
 
 func (m DefaultIstioMerger) Merge() (string, error) {
-	manifest, err := os.ReadFile(m.istioOperatorFilePath)
-	if err != nil {
-		return "", err
-	}
-
-	mergedManifest, err := applyIstioCR(m.istioCR, manifest)
+	mergedManifest, err := createOperatorManifest(m.istioCR, m.istioOperatorFilePath)
 	if err != nil {
 		return "", err
 	}
@@ -75,9 +70,8 @@ func (m DefaultIstioMerger) Merge() (string, error) {
 	return mergedIstioOperatorPath, nil
 }
 
-func applyIstioCR(istioCR *operatorv1alpha1.Istio, operatorManifest []byte) ([]byte, error) {
-	toBeInstalledIop := istioOperator.IstioOperator{}
-	err := yaml.Unmarshal(operatorManifest, &toBeInstalledIop)
+func createOperatorManifest(istioCR *operatorv1alpha1.Istio, istioOperatorManifestPath string) ([]byte, error) {
+	toBeInstalledIop, err := GetIstioOperator(istioOperatorManifestPath)
 	if err != nil {
 		return nil, err
 	}
@@ -115,4 +109,18 @@ func parseManifestWithTemplate(templateRaw string, data TemplateData) ([]byte, e
 		return nil, err
 	}
 	return resource.Bytes(), nil
+}
+
+func GetIstioOperator(istioOperatorManifestPath string) (istioOperator.IstioOperator, error) {
+	manifest, err := os.ReadFile(istioOperatorManifestPath)
+	if err != nil {
+		return istioOperator.IstioOperator{}, err
+	}
+
+	toBeInstalledIop := istioOperator.IstioOperator{}
+	err = yaml.Unmarshal(manifest, &toBeInstalledIop)
+	if err != nil {
+		return istioOperator.IstioOperator{}, err
+	}
+	return toBeInstalledIop, nil
 }

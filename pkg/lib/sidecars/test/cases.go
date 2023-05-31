@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/test/helpers"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/cucumber/godog"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars"
@@ -32,11 +34,11 @@ func (s *scenario) aRestartHappensWithUpdatedResources(sidecarImage string, reso
 
 	switch resourceType {
 	case "requests":
-		resources.Requests.Cpu = &cpu
-		resources.Requests.Memory = &memory
+		resources.Requests[v1.ResourceCPU] = resource.MustParse(cpu)
+		resources.Requests[v1.ResourceMemory] = resource.MustParse(memory)
 	case "limits":
-		resources.Limits.Cpu = &cpu
-		resources.Limits.Memory = &memory
+		resources.Limits[v1.ResourceCPU] = resource.MustParse(cpu)
+		resources.Limits[v1.ResourceMemory] = resource.MustParse(memory)
 	default:
 		return fmt.Errorf("unknown resource type %s", resourceType)
 	}

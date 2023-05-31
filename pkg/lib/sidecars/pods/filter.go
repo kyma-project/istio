@@ -1,7 +1,6 @@
 package pods
 
 import (
-	"github.com/kyma-project/istio/operator/api/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -9,7 +8,7 @@ const (
 	istioSidecarName = "istio-proxy"
 )
 
-func needsRestart(pod v1.Pod, expectedImage SidecarImage, expectedResources v1alpha1.Resources) bool {
+func needsRestart(pod v1.Pod, expectedImage SidecarImage, expectedResources v1.ResourceRequirements) bool {
 	return hasIstioSidecarStatusAnnotation(pod) &&
 		isPodReady(pod) &&
 		(hasSidecarContainerWithWithDifferentImage(pod, expectedImage) || hasDifferentSidecarResources(pod, expectedResources))
@@ -48,14 +47,23 @@ func hasSidecarContainerWithWithDifferentImage(pod v1.Pod, expectedImage Sidecar
 	return false
 }
 
-func hasDifferentSidecarResources(pod v1.Pod, expectedResources v1alpha1.Resources) bool {
+func hasDifferentSidecarResources(pod v1.Pod, expectedResources v1.ResourceRequirements) bool {
 
 	for _, container := range pod.Spec.Containers {
-		if isContainerIstioSidecar(container) && !expectedResources.IsEqual(container.Resources) {
+		if isContainerIstioSidecar(container) && !containerHasResources(container, expectedResources) {
 			return true
 		}
 	}
 	return false
+}
+
+func containerHasResources(container v1.Container, expectedResources v1.ResourceRequirements) bool {
+	equalCpuRequests := container.Resources.Requests.Cpu().Equal(*expectedResources.Requests.Cpu())
+	equalMemoryRequests := container.Resources.Requests.Memory().Equal(*expectedResources.Requests.Memory())
+	equalCpuLimits := container.Resources.Limits.Cpu().Equal(*expectedResources.Limits.Cpu())
+	equalMemoryLimits := container.Resources.Limits.Memory().Equal(*expectedResources.Limits.Memory())
+
+	return equalCpuRequests && equalMemoryRequests && equalCpuLimits && equalMemoryLimits
 }
 
 func hasInitContainer(containers []v1.Container, initContainerName string) bool {

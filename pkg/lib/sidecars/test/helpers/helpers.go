@@ -2,9 +2,7 @@ package helpers
 
 import (
 	"fmt"
-	"github.com/kyma-project/istio/operator/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/resource"
-	"k8s.io/utils/pointer"
 	"reflect"
 	"time"
 
@@ -23,17 +21,17 @@ type SidecarPodFixtureBuilder struct {
 	deletionTimestamp                                             *metav1.Time
 	hostNetwork                                                   bool
 	ownerReference                                                metav1.OwnerReference
-	resources                                                     v1alpha1.Resources
+	resources                                                     v1.ResourceRequirements
 }
 
-var DefaultSidecarResources = v1alpha1.Resources{
-	Limits: &v1alpha1.ResourceClaims{
-		Cpu:    pointer.String("100m"),
-		Memory: pointer.String("200Mi"),
+var DefaultSidecarResources = v1.ResourceRequirements{
+	Limits: v1.ResourceList{
+		v1.ResourceCPU:    resource.MustParse("100m"),
+		v1.ResourceMemory: resource.MustParse("200Mi"),
 	},
-	Requests: &v1alpha1.ResourceClaims{
-		Cpu:    pointer.String("200m"),
-		Memory: pointer.String("400Mi"),
+	Requests: v1.ResourceList{
+		v1.ResourceCPU:    resource.MustParse("200m"),
+		v1.ResourceMemory: resource.MustParse("400Mi"),
 	},
 }
 
@@ -130,22 +128,22 @@ func (r *SidecarPodFixtureBuilder) SetDeletionTimestamp(value time.Time) *Sideca
 }
 
 func (r *SidecarPodFixtureBuilder) SetCpuRequest(value string) *SidecarPodFixtureBuilder {
-	r.resources.Requests.Cpu = &value
+	r.resources.Requests[v1.ResourceCPU] = resource.MustParse(value)
 	return r
 }
 
 func (r *SidecarPodFixtureBuilder) SetMemoryRequest(value string) *SidecarPodFixtureBuilder {
-	r.resources.Requests.Memory = &value
+	r.resources.Requests[v1.ResourceMemory] = resource.MustParse(value)
 	return r
 }
 
 func (r *SidecarPodFixtureBuilder) SetCpuLimit(value string) *SidecarPodFixtureBuilder {
-	r.resources.Limits.Cpu = &value
+	r.resources.Limits[v1.ResourceCPU] = resource.MustParse(value)
 	return r
 }
 
 func (r *SidecarPodFixtureBuilder) SetMemoryLimit(value string) *SidecarPodFixtureBuilder {
-	r.resources.Limits.Memory = &value
+	r.resources.Limits[v1.ResourceMemory] = resource.MustParse(value)
 	return r
 }
 
@@ -187,18 +185,9 @@ func (r *SidecarPodFixtureBuilder) Build() *v1.Pod {
 					Image: "workload-image:1.0",
 				},
 				{
-					Name:  r.sidecarContainerName,
-					Image: fmt.Sprintf(`%s:%s`, r.sidecarImageRepository, r.sidecarImageTag),
-					Resources: v1.ResourceRequirements{
-						Requests: v1.ResourceList{
-							v1.ResourceCPU:    resource.MustParse(*r.resources.Requests.Cpu),
-							v1.ResourceMemory: resource.MustParse(*r.resources.Requests.Memory),
-						},
-						Limits: v1.ResourceList{
-							v1.ResourceCPU:    resource.MustParse(*r.resources.Limits.Cpu),
-							v1.ResourceMemory: resource.MustParse(*r.resources.Limits.Memory),
-						},
-					},
+					Name:      r.sidecarContainerName,
+					Image:     fmt.Sprintf(`%s:%s`, r.sidecarImageRepository, r.sidecarImageTag),
+					Resources: r.resources,
 				},
 			},
 			HostNetwork: r.hostNetwork,
@@ -252,18 +241,9 @@ func FixPodWithOnlySidecar(name, namespace string) *v1.Pod {
 		Spec: v1.PodSpec{
 			Containers: []v1.Container{
 				{
-					Name:  "istio-proxy",
-					Image: "istio/istio-proxy:1.0.0",
-					Resources: v1.ResourceRequirements{
-						Requests: v1.ResourceList{
-							v1.ResourceCPU:    resource.MustParse(*DefaultSidecarResources.Requests.Cpu),
-							v1.ResourceMemory: resource.MustParse(*DefaultSidecarResources.Requests.Memory),
-						},
-						Limits: v1.ResourceList{
-							v1.ResourceCPU:    resource.MustParse(*DefaultSidecarResources.Limits.Cpu),
-							v1.ResourceMemory: resource.MustParse(*DefaultSidecarResources.Limits.Memory),
-						},
-					},
+					Name:      "istio-proxy",
+					Image:     "istio/istio-proxy:1.0.0",
+					Resources: DefaultSidecarResources,
 				},
 			},
 		},

@@ -3,8 +3,6 @@ package pods
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/istio/operator/api/v1alpha1"
-
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
 	v1 "k8s.io/api/core/v1"
@@ -76,7 +74,7 @@ func getNamespacesWithIstioLabelsAndInjectionDisabled(ctx context.Context, c cli
 	return labeledList, disabledList, err
 }
 
-func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage SidecarImage, expectedResources v1alpha1.Resources, logger *logr.Logger) (outputPodsList v1.PodList, err error) {
+func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage SidecarImage, expectedResources v1.ResourceRequirements, logger *logr.Logger) (outputPodsList v1.PodList, err error) {
 	podList, err := getAllRunningPods(ctx, c)
 	if err != nil {
 		return outputPodsList, err

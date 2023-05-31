@@ -2,8 +2,6 @@ package sidecars
 
 import (
 	"context"
-	"github.com/kyma-project/istio/operator/api/v1alpha1"
-
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/restart"
@@ -11,7 +9,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func ProxyReset(ctx context.Context, c client.Client, expectedImage pods.SidecarImage, expectedResources v1alpha1.Resources, cniEnabled bool, logger *logr.Logger) ([]restart.RestartWarning, error) {
+func ProxyReset(ctx context.Context, c client.Client, expectedImage pods.SidecarImage, expectedResources v1.ResourceRequirements, cniEnabled bool, logger *logr.Logger) ([]restart.RestartWarning, error) {
 	differentImagePodList, err := pods.GetPodsToRestart(ctx, c, expectedImage, expectedResources, logger)
 	if err != nil {
 		return nil, err

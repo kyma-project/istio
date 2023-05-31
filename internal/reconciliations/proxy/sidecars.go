@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/kyma-project/istio/operator/api/v1alpha1"
+	"github.com/kyma-project/istio/operator/internal/manifest"
+	v1 "k8s.io/api/core/v1"
 
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
@@ -16,19 +18,21 @@ type Sidecars struct {
 	IstioVersion   string
 	IstioImageBase string
 	CniEnabled     bool
-	resources      *v1alpha1.Resources
+	Log            logr.Logger
+	Client         client.Client
 }
 
 const (
+	// TODO Update image repository to new one
 	imageRepository string = "eu.gcr.io/kyma-project/external/istio/proxyv2"
 )
 
 // Reconcile runs Proxy Reset action, which checks if any of sidecars need a restart and proceed with rollout.
-func (s *Sidecars) Reconcile(ctx context.Context, client client.Client, logger logr.Logger) error {
+func (s *Sidecars) Reconcile(ctx context.Context, istioCr v1alpha1.Istio, istioOperatorManifestPath string) error {
 	expectedImage := pods.SidecarImage{Repository: imageRepository, Tag: fmt.Sprintf("%s-%s", s.IstioVersion, s.IstioImageBase)}
-	logger.Info("Running proxy sidecar reset", "expected image", expectedImage)
+	s.Log.Info("Running proxy sidecar reset", "expected image", expectedImage)
 
-	version, err := gatherer.GetIstioPodsVersion(ctx, client)
+	version, err := gatherer.GetIstioPodsVersion(ctx, s.Client)
 	if err != nil {
 		return err
 	}
@@ -37,15 +41,29 @@ func (s *Sidecars) Reconcile(ctx context.Context, client client.Client, logger l
 		return fmt.Errorf("istio-system pods version: %s do not match target version: %s", version, s.IstioVersion)
 	}
 
-	warnings, err := sidecars.ProxyReset(ctx, client, expectedImage, *s.resources, s.CniEnabled, &logger)
+	resources, err := getExpectedResources(istioCr, istioOperatorManifestPath)
+	if err != nil {
+		return err
+	}
+
+	warnings, err := sidecars.ProxyReset(ctx, s.Client, expectedImage, resources, s.CniEnabled, &s.Log)
 	if err != nil {
 		return err
 	}
 	if len(warnings) > 0 {
 		for _, w := range warnings {
-			logger.Info("Proxy reset warning:", "name", w.Name, "namespace", w.Namespace, "kind", w.Kind, "message", w.Message)
+			s.Log.Info("Proxy reset warning:", "name", w.Name, "namespace", w.Namespace, "kind", w.Kind, "message", w.Message)
 		}
 	}
 
 	return nil
+}
+
+func getExpectedResources(istioCr v1alpha1.Istio, istioOperatorManifestPath string) (v1.ResourceRequirements, error) {
+	iop, err := manifest.GetIstioOperator(istioOperatorManifestPath)
+	if err != nil {
+		return v1.ResourceRequirements{}, err
+	}
+
+	return istioCr.GetProxyResources(iop)
 }

@@ -53,12 +53,14 @@ var _ = Describe("Sidecars reconciliation", func() {
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.0")
 		sidecars := proxy.Sidecars{
+			Log:            logr.Discard(),
+			Client:         createFakeClient(&istioCr, istiod),
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
 			CniEnabled:     true,
 		}
 		// when
-		err := sidecars.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod), logr.Discard())
+		err := sidecars.Reconcile(context.TODO(), istioCr, "test/test-operator.yaml")
 
 		// then
 		Expect(err).Should(HaveOccurred())

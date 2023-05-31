@@ -57,8 +57,8 @@ func NewReconciler(mgr manager.Manager) *IstioReconciler {
 	return &IstioReconciler{
 		Client:            mgr.GetClient(),
 		Scheme:            mgr.GetScheme(),
-		istioInstallation: istio.Installation{Client: istio.NewIstioClient(), IstioVersion: IstioVersion, IstioImageBase: IstioImageBase},
-		proxySidecars:     proxy.Sidecars{IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, CniEnabled: true},
+		istioInstallation: istio.Installation{Client: mgr.GetClient(), IstioClient: istio.NewIstioClient(), IstioVersion: IstioVersion, IstioImageBase: IstioImageBase},
+		proxySidecars:     proxy.Sidecars{IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, CniEnabled: true, Log: mgr.GetLogger(), Client: mgr.GetClient()},
 		log:               mgr.GetLogger(),
 	}
 }
@@ -76,7 +76,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return status.Update(ctx, r.Client, &istioCR, operatorv1alpha1.Error, metav1.Condition{}, ErrorRetryTime)
 	}
 
-	istioCR, err := r.istioInstallation.Reconcile(ctx, r.Client, istioCR, defaultIstioOperatorPath, workingDir, IstioResourceListDefaultPath)
+	istioCR, err := r.istioInstallation.Reconcile(ctx, istioCR, defaultIstioOperatorPath, workingDir, IstioResourceListDefaultPath)
 	if err != nil {
 		r.log.Error(err, "Error occurred during reconciliation of Istio installation")
 		return status.Update(ctx, r.Client, &istioCR, operatorv1alpha1.Error, metav1.Condition{}, ErrorRetryTime)
@@ -92,7 +92,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	// We do not want to safeguard the Istio sidecar reconciliation by checking whether Istio has to be installed. The
 	// reason for this is that we want to guarantee the restart of the proxies during the next reconciliation even if an
 	// error occurs in the reconciliation of the Istio upgrade after the Istio upgrade.
-	err = r.proxySidecars.Reconcile(ctx, r.Client, r.log)
+	err = r.proxySidecars.Reconcile(ctx, istioCR, defaultIstioOperatorPath)
 	if err != nil {
 		r.log.Error(err, "Error occurred during reconciliation of Istio Sidecars")
 		return status.Update(ctx, r.Client, &istioCR, operatorv1alpha1.Error, metav1.Condition{}, ErrorRetryTime)

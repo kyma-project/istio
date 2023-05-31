@@ -1,4 +1,4 @@
-package istio
+package manifest
 
 import (
 	"os"

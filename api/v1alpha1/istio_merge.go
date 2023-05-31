@@ -13,8 +13,13 @@ import (
 )
 
 const (
-	cpu    string = "cpu"
-	memory string = "memory"
+	cpu            string = "cpu"
+	memory         string = "memory"
+	globalField           = "global"
+	proxyField            = "proxy"
+	resourcesField        = "resources"
+	limitsField           = "limits"
+	requestsField         = "requests"
 )
 
 func (i *Istio) MergeInto(op istioOperator.IstioOperator) (istioOperator.IstioOperator, error) {
@@ -116,83 +121,83 @@ func (i *Istio) mergeResources(op istioOperator.IstioOperator) (istioOperator.Is
 			op.Spec.Values = &structpb.Struct{}
 			op.Spec.Values.Fields = make(map[string]*structpb.Value)
 		}
-		global := op.Spec.Values.Fields["global"].GetStructValue()
+		global := op.Spec.Values.Fields[globalField].GetStructValue()
 		if global == nil {
 			global = &structpb.Struct{}
 			global.Fields = make(map[string]*structpb.Value)
 		}
 
-		proxy := global.Fields["proxy"].GetStructValue()
+		proxy := global.Fields[proxyField].GetStructValue()
 		if proxy == nil {
 			proxy = &structpb.Struct{}
 			proxy.Fields = make(map[string]*structpb.Value)
 		}
 
-		resources := proxy.Fields["resources"].GetStructValue()
+		resources := proxy.Fields[resourcesField].GetStructValue()
 		if resources == nil {
 			resources = &structpb.Struct{}
 			resources.Fields = make(map[string]*structpb.Value)
 		}
 
 		if i.Spec.Components.Proxy.K8S.Resources.Limits != nil {
-			limits := resources.Fields["limits"].GetStructValue()
+			limits := resources.Fields[limitsField].GetStructValue()
 			if limits == nil {
 				limits = &structpb.Struct{}
 				limits.Fields = make(map[string]*structpb.Value)
 			}
 			if i.Spec.Components.Proxy.K8S.Resources.Limits.Cpu != nil {
-				limits.Fields["cpu"] = structpb.NewStringValue(*i.Spec.Components.Proxy.K8S.Resources.Limits.Cpu)
+				limits.Fields[cpu] = structpb.NewStringValue(*i.Spec.Components.Proxy.K8S.Resources.Limits.Cpu)
 			}
 
 			if i.Spec.Components.Proxy.K8S.Resources.Limits.Memory != nil {
-				limits.Fields["memory"] = structpb.NewStringValue(*i.Spec.Components.Proxy.K8S.Resources.Limits.Memory)
+				limits.Fields[memory] = structpb.NewStringValue(*i.Spec.Components.Proxy.K8S.Resources.Limits.Memory)
 			}
 
 			l, err := structpb.NewValue(limits.AsMap())
 			if err != nil {
 				return op, err
 			}
-			resources.Fields["limits"] = l
+			resources.Fields[limitsField] = l
 		}
 
 		if i.Spec.Components.Proxy.K8S.Resources.Requests != nil {
-			requests := resources.Fields["requests"].GetStructValue()
+			requests := resources.Fields[requestsField].GetStructValue()
 			if requests == nil {
 				requests = &structpb.Struct{}
 				requests.Fields = make(map[string]*structpb.Value)
 			}
 			if i.Spec.Components.Proxy.K8S.Resources.Requests.Cpu != nil {
-				requests.Fields["cpu"] = structpb.NewStringValue(*i.Spec.Components.Proxy.K8S.Resources.Requests.Cpu)
+				requests.Fields[cpu] = structpb.NewStringValue(*i.Spec.Components.Proxy.K8S.Resources.Requests.Cpu)
 			}
 
 			if i.Spec.Components.Proxy.K8S.Resources.Requests.Memory != nil {
-				requests.Fields["memory"] = structpb.NewStringValue(*i.Spec.Components.Proxy.K8S.Resources.Requests.Memory)
+				requests.Fields[memory] = structpb.NewStringValue(*i.Spec.Components.Proxy.K8S.Resources.Requests.Memory)
 			}
 
 			r, err := structpb.NewValue(requests.AsMap())
 			if err != nil {
 				return op, err
 			}
-			resources.Fields["requests"] = r
+			resources.Fields[requestsField] = r
 		}
 
 		r, err := structpb.NewValue(resources.AsMap())
 		if err != nil {
 			return op, err
 		}
-		proxy.Fields["resources"] = r
+		proxy.Fields[resourcesField] = r
 
 		p, err := structpb.NewValue(proxy.AsMap())
 		if err != nil {
 			return op, err
 		}
-		global.Fields["proxy"] = p
+		global.Fields[proxyField] = p
 
 		g, err := structpb.NewValue(global.AsMap())
 		if err != nil {
 			return op, err
 		}
-		op.Spec.Values.Fields["global"] = g
+		op.Spec.Values.Fields[globalField] = g
 	}
 
 	if i.Spec.Components.Cni != nil {

@@ -3,11 +3,9 @@ package proxy
 import (
 	"context"
 	"fmt"
+	"github.com/go-logr/logr"
 	"github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/manifest"
-	v1 "k8s.io/api/core/v1"
-
-	"github.com/go-logr/logr"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
@@ -20,6 +18,7 @@ type Sidecars struct {
 	CniEnabled     bool
 	Log            logr.Logger
 	Client         client.Client
+	Merger         manifest.Merger
 }
 
 const (
@@ -28,7 +27,7 @@ const (
 )
 
 // Reconcile runs Proxy Reset action, which checks if any of sidecars need a restart and proceed with rollout.
-func (s *Sidecars) Reconcile(ctx context.Context, istioCr v1alpha1.Istio, istioOperatorManifestPath string) error {
+func (s *Sidecars) Reconcile(ctx context.Context, istioCr v1alpha1.Istio) error {
 	expectedImage := pods.SidecarImage{Repository: imageRepository, Tag: fmt.Sprintf("%s-%s", s.IstioVersion, s.IstioImageBase)}
 	s.Log.Info("Running proxy sidecar reset", "expected image", expectedImage)
 
@@ -41,12 +40,17 @@ func (s *Sidecars) Reconcile(ctx context.Context, istioCr v1alpha1.Istio, istioO
 		return fmt.Errorf("istio-system pods version: %s do not match target version: %s", version, s.IstioVersion)
 	}
 
-	resources, err := getExpectedResources(istioCr, istioOperatorManifestPath)
+	iop, err := s.Merger.GetIstioOperator()
 	if err != nil {
 		return err
 	}
 
-	warnings, err := sidecars.ProxyReset(ctx, s.Client, expectedImage, resources, s.CniEnabled, &s.Log)
+	expectedResources, err := istioCr.GetProxyResources(iop)
+	if err != nil {
+		return err
+	}
+
+	warnings, err := sidecars.ProxyReset(ctx, s.Client, expectedImage, expectedResources, s.CniEnabled, &s.Log)
 	if err != nil {
 		return err
 	}
@@ -57,13 +61,4 @@ func (s *Sidecars) Reconcile(ctx context.Context, istioCr v1alpha1.Istio, istioO
 	}
 
 	return nil
-}
-
-func getExpectedResources(istioCr v1alpha1.Istio, istioOperatorManifestPath string) (v1.ResourceRequirements, error) {
-	iop, err := manifest.GetIstioOperator(istioOperatorManifestPath)
-	if err != nil {
-		return v1.ResourceRequirements{}, err
-	}
-
-	return istioCr.GetProxyResources(iop)
 }

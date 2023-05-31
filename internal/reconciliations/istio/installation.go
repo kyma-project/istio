@@ -23,6 +23,7 @@ type Installation struct {
 	IstioVersion   string
 	IstioImageBase string
 	Client         client.Client
+	Merger         manifest.Merger
 }
 
 const (
@@ -31,7 +32,7 @@ const (
 )
 
 // Reconcile runs Istio reconciliation to install, upgrade or uninstall Istio and returns the updated Istio CR.
-func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.Istio, defaultIstioOperatorPath, workingDir, istioResourceListPath string) (operatorv1alpha1.Istio, error) {
+func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.Istio, istioResourceListPath string) (operatorv1alpha1.Istio, error) {
 
 	istioTag := fmt.Sprintf("%s-%s", i.IstioVersion, i.IstioImageBase)
 
@@ -70,9 +71,7 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 		// Istio CR to this default configuration to get the final IstoOperator that is used for installing and updating Istio.
 		templateData := manifest.TemplateData{IstioVersion: i.IstioVersion, IstioImageBase: i.IstioImageBase}
 
-		merger := manifest.NewDefaultIstioMerger(&istioCR, defaultIstioOperatorPath, workingDir, templateData, clusterConfiguration)
-
-		mergedIstioOperatorPath, err := merger.Merge()
+		mergedIstioOperatorPath, err := i.Merger.Merge(&istioCR, templateData, clusterConfiguration)
 		if err != nil {
 			return istioCR, err
 		}

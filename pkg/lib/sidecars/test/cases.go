@@ -22,7 +22,6 @@ func (s *scenario) aRestartHappens(sidecarImage string) error {
 		s.Client,
 		pods.SidecarImage{Repository: "istio/proxyv2", Tag: sidecarImage},
 		helpers.DefaultSidecarResources,
-		s.cniEnabled,
 		&s.logger)
 	s.restartWarnings = warnings
 	return err
@@ -47,7 +46,6 @@ func (s *scenario) aRestartHappensWithUpdatedResources(sidecarImage string, reso
 		s.Client,
 		pods.SidecarImage{Repository: "istio/proxyv2", Tag: sidecarImage},
 		resources,
-		s.cniEnabled,
 		&s.logger)
 	s.restartWarnings = warnings
 	return err
@@ -134,9 +132,8 @@ func (s *scenario) onlyRequiredresourcesAreRestarted() error {
 	return nil
 }
 
-func (s *scenario) WithConfig(istioVersion, injection, cni string) error {
+func (s *scenario) WithConfig(istioVersion, injection string) error {
 	s.istioVersion = istioVersion
-	s.cniEnabled = cni == "true"
 	if injection == "true" {
 		s.injectionNamespaceSelector = SidecarEnabledAndDefault
 	}
@@ -152,7 +149,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 		return ctx, err
 	})
 
-	ctx.Step(`^there is a cluster with Istio "([^"]*)", default injection == "([^"]*)" and CNI enabled == "([^"]*)"$`, s.WithConfig)
+	ctx.Step(`^there is a cluster with Istio "([^"]*)", default injection == "([^"]*)"$`, s.WithConfig)
 	ctx.Step(`^a restart happens with target Istio "([^"]*)"`, s.aRestartHappens)
 	ctx.Step(`^a restart happens with with target Istio "([^"]*)" and sidecar resource "([^"]*)" set to cpu "([^"]*)" and memory "([^"]*)"`, s.aRestartHappensWithUpdatedResources)
 	ctx.Step(`^all required resources are deleted$`, s.allRequiredResourcesAreDeleted)

@@ -15,7 +15,6 @@ import (
 type Sidecars struct {
 	IstioVersion   string
 	IstioImageBase string
-	CniEnabled     bool
 	Log            logr.Logger
 	Client         client.Client
 	Merger         manifest.Merger
@@ -50,7 +49,7 @@ func (s *Sidecars) Reconcile(ctx context.Context, istioCr v1alpha1.Istio) error 
 		return err
 	}
 
-	warnings, err := sidecars.ProxyReset(ctx, s.Client, expectedImage, expectedResources, s.CniEnabled, &s.Log)
+	warnings, err := sidecars.ProxyReset(ctx, s.Client, expectedImage, expectedResources, &s.Log)
 	if err != nil {
 		return err
 	}

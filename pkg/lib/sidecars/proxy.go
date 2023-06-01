@@ -9,21 +9,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func ProxyReset(ctx context.Context, c client.Client, expectedImage pods.SidecarImage, expectedResources v1.ResourceRequirements, cniEnabled bool, logger *logr.Logger) ([]restart.RestartWarning, error) {
-	differentImagePodList, err := pods.GetPodsToRestart(ctx, c, expectedImage, expectedResources, logger)
+func ProxyReset(ctx context.Context, c client.Client, expectedImage pods.SidecarImage, expectedResources v1.ResourceRequirements, logger *logr.Logger) ([]restart.RestartWarning, error) {
+	podListToRestart, err := pods.GetPodsToRestart(ctx, c, expectedImage, expectedResources, logger)
 	if err != nil {
 		return nil, err
 	}
-
-	cniPodList, err := pods.GetPodsForCNIChange(ctx, c, cniEnabled, logger)
-	if err != nil {
-		return nil, err
-	}
-
-	var podListToRestart v1.PodList
-	podListToRestart.Items = []v1.Pod{}
-	differentImagePodList.DeepCopyInto(&podListToRestart)
-	podListToRestart.Items = append(podListToRestart.Items, cniPodList.DeepCopy().Items...)
 
 	warnings, err := restart.Restart(ctx, c, podListToRestart, logger)
 	if err != nil {

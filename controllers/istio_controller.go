@@ -56,7 +56,7 @@ func NewReconciler(mgr manager.Manager) *IstioReconciler {
 		Client:            mgr.GetClient(),
 		Scheme:            mgr.GetScheme(),
 		istioInstallation: istio.Installation{Client: mgr.GetClient(), IstioClient: istio.NewIstioClient(), IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Merger: merger},
-		proxySidecars:     proxy.Sidecars{IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, CniEnabled: true, Log: mgr.GetLogger(), Client: mgr.GetClient(), Merger: merger},
+		proxySidecars:     proxy.Sidecars{IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Log: mgr.GetLogger(), Client: mgr.GetClient(), Merger: merger},
 		log:               mgr.GetLogger(),
 	}
 }

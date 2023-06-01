@@ -60,7 +60,6 @@ var _ = Describe("Sidecars reconciliation", func() {
 			Client:         createFakeClient(&istioCr, istiod),
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
-			CniEnabled:     true,
 			Merger:         MergerMock{},
 		}
 		// when

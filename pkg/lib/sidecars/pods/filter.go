@@ -66,37 +66,6 @@ func containerHasResources(container v1.Container, expectedResources v1.Resource
 	return equalCpuRequests && equalMemoryRequests && equalCpuLimits && equalMemoryLimits
 }
 
-func hasInitContainer(containers []v1.Container, initContainerName string) bool {
-	proxyImage := ""
-	for _, container := range containers {
-		if container.Name == initContainerName {
-			proxyImage = container.Image
-		}
-	}
-	return proxyImage != ""
-}
-
 func isContainerIstioSidecar(container v1.Container) bool {
 	return istioSidecarName == container.Name
-}
-
-func isPodInNamespaceList(pod v1.Pod, namespaceList []v1.Namespace) bool {
-	for _, namespace := range namespaceList {
-		if pod.ObjectMeta.Namespace == namespace.Name {
-			return true
-		}
-	}
-	return false
-}
-
-func isSystemNamespace(name string) bool {
-	switch name {
-	case "kube-system":
-		return true
-	case "kube-public":
-		return true
-	case "istio-system":
-		return true
-	}
-	return false
 }

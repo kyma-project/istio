@@ -27,7 +27,7 @@ func TestIstioJwt(t *testing.T) {
 	test := TestWithTemplatedManifest{}
 
 	suite := godog.TestSuite{
-		Name: "istio-jwt",
+		Name: "istio",
 		// We are not using ScenarioInitializer, as this function only needs to set up global resources
 		TestSuiteInitializer: func(ctx *godog.TestSuiteContext) {
 			test.initIstioScenarios(ctx.ScenarioContext())

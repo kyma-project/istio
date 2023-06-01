@@ -14,8 +14,11 @@ import (
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/pointer"
 	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
@@ -40,11 +43,15 @@ func (t *TestWithTemplatedManifest) initIstioScenarios(ctx *godog.ScenarioContex
 	ctx.Step(`^Istio CR "([^"]*)" in namespace "([^"]*)" has status "([^"]*)"$`, istioCRInNamespaceHasStatus)
 	ctx.Step(`^Template value "([^"]*)" is set to "([^"]*)"$`, t.setTemplateValue)
 	ctx.Step(`^Istio CR "([^"]*)" is applied in namespace "([^"]*)"$`, t.istioCRIsAppliedInNamespace)
+	ctx.Step(`^Istio CR "([^"]*)" is updated in namespace "([^"]*)"$`, t.istioCrIsUpdatedInNamespace)
 	ctx.Step(`^Namespace "([^"]*)" is "([^"]*)"$`, namespaceIsPresent)
 	ctx.Step(`^Istio CRDs "([^"]*)" be present on cluster$`, istioCRDsBePresentOnCluster)
 	ctx.Step(`^"([^"]*)" has "([^"]*)" set to cpu - "([^"]*)" and memory - "([^"]*)"$`, componentHasResourcesSetToCpuAndMemory)
 	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" is deleted$`, resourceInNamespaceIsDeleted)
 	ctx.Step(`^"([^"]*)" is not present on cluster$`, resourceNotPresent)
+	ctx.Step(`^Istio injection is enabled in namespace "([^"]*)"$`, enableIstioInjection)
+	ctx.Step(`^Application "([^"]*)" is running in namespace "([^"]*)"$`, createApplicationDeployment)
+	ctx.Step(`^Application "([^"]*)" in namespace "([^"]*)" has proxy with "([^"]*)" set to cpu - "([^"]*)" and memory - "([^"]*)"$`, applicationHasProxyResourcesSetToCpuAndMemory)
 }
 
 func (t *TestWithTemplatedManifest) setTemplateValue(name, value string) {
@@ -142,7 +149,54 @@ func (t *TestWithTemplatedManifest) istioCRIsAppliedInNamespace(name, namespace 
 	istio.Name = name
 
 	return retry.Do(func() error {
-		return k8sClient.Create(context.TODO(), &istio)
+		err := k8sClient.Create(context.TODO(), &istio)
+		if k8serrors.IsAlreadyExists(err) {
+			var existingIstio istioCR.Istio
+			if err := k8sClient.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, &existingIstio); err != nil {
+				return err
+			}
+			istio.Spec.DeepCopyInto(&existingIstio.Spec)
+
+			return k8sClient.Update(context.TODO(), &existingIstio)
+		}
+		return err
+	}, retryOpts...)
+}
+
+func (t *TestWithTemplatedManifest) istioCrIsUpdatedInNamespace(name, namespace string) error {
+	istioCRYaml, err := os.ReadFile(templateFileName)
+	if err != nil {
+		return err
+	}
+
+	crTemplate, err := template.New("tmpl").Option("missingkey=zero").Parse(string(istioCRYaml))
+	if err != nil {
+		return err
+	}
+
+	var resource bytes.Buffer
+	err = crTemplate.Execute(&resource, t.TemplateValues)
+	if err != nil {
+		return err
+	}
+
+	var istio istioCR.Istio
+	err = yaml.Unmarshal(resource.Bytes(), &istio)
+	if err != nil {
+		return err
+	}
+
+	istio.Namespace = namespace
+	istio.Name = name
+
+	return retry.Do(func() error {
+		var existingIstio istioCR.Istio
+		if err := k8sClient.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, &existingIstio); err != nil {
+			return err
+		}
+		istio.Spec.DeepCopyInto(&existingIstio.Spec)
+
+		return k8sClient.Update(context.TODO(), &existingIstio)
 	}, retryOpts...)
 }
 
@@ -317,4 +371,101 @@ func getResourcesForComponent(operator *istioOperator.IstioOperator, component, 
 	default:
 		return nil, godog.ErrPending
 	}
+}
+
+func enableIstioInjection(namespace string) error {
+	var ns corev1.Namespace
+	return retry.Do(func() error {
+		err := k8sClient.Get(context.TODO(), types.NamespacedName{Name: namespace}, &ns)
+		if err != nil {
+			return err
+		}
+		ns.Labels["istio-injection"] = "enabled"
+		return k8sClient.Update(context.TODO(), &ns)
+	}, retryOpts...)
+}
+
+func createApplicationDeployment(appName, namespace string) error {
+	dep := v1.Deployment{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "apps/v1",
+			Kind:       "Deployment",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      appName,
+			Namespace: namespace,
+		},
+		Spec: v1.DeploymentSpec{
+			Replicas: pointer.Int32(1),
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"app": appName,
+				},
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{"app": appName},
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:  appName,
+							Image: "europe-docker.pkg.dev/kyma-project/prod/external/kennethreitz/httpbin",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	return retry.Do(func() error {
+		return k8sClient.Create(context.TODO(), &dep)
+	}, retryOpts...)
+}
+
+func applicationHasProxyResourcesSetToCpuAndMemory(appName, appNamespace, resourceType, cpu, memory string) error {
+	var podList corev1.PodList
+	return retry.Do(func() error {
+		err := k8sClient.List(context.TODO(), &podList, &client.ListOptions{
+			Namespace: appNamespace,
+			LabelSelector: labels.SelectorFromSet(map[string]string{
+				"app": appName,
+			}),
+		})
+		if err != nil {
+			return err
+		}
+
+		if len(podList.Items) == 0 {
+			return fmt.Errorf("no pods found for app %s in namespace %s", appName, appNamespace)
+		}
+
+		hasResources := false
+		for _, pod := range podList.Items {
+			for _, container := range pod.Spec.Containers {
+				if container.Name != "istio-proxy" {
+					continue
+				}
+
+				switch resourceType {
+				case "limits":
+					hasResources = container.Resources.Limits.Cpu().String() == cpu &&
+						container.Resources.Limits.Memory().String() == memory
+				case "requests":
+					hasResources = container.Resources.Requests.Cpu().String() == cpu &&
+						container.Resources.Requests.Memory().String() == memory
+				default:
+					return fmt.Errorf("resource type %s is not supported", resourceType)
+
+				}
+			}
+		}
+
+		if !hasResources {
+			return fmt.Errorf("the resources of proxy of app %s in namespace %s does not match %s cpu %s memory %s",
+				appName, appNamespace, resourceType, cpu, memory)
+		}
+
+		return nil
+	}, retryOpts...)
 }

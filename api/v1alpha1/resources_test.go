@@ -6,6 +6,9 @@ import (
 	. "github.com/onsi/gomega"
 	operatorv1alpha1 "istio.io/api/operator/v1alpha1"
 	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
+	"k8s.io/utils/pointer"
+	"os"
+	"sigs.k8s.io/yaml"
 )
 
 var _ = Describe("GetProxyResources", func() {
@@ -45,5 +48,52 @@ var _ = Describe("GetProxyResources", func() {
 		Expect(result.Requests.Memory().String()).To(Equal(memoryRequests))
 		Expect(result.Limits.Cpu().String()).To(Equal(cpuLimits))
 		Expect(result.Limits.Memory().String()).To(Equal(memoryLimits))
+	})
+
+	It("should validate that resources can be returned", func() {
+		//given
+		iop := istioOperator.IstioOperator{
+			Spec: &operatorv1alpha1.IstioOperatorSpec{},
+		}
+
+		istioCR := v1alpha1.Istio{Spec: v1alpha1.IstioSpec{Components: &v1alpha1.Components{
+			Proxy: &v1alpha1.ProxyComponent{K8S: &v1alpha1.ProxyK8sConfig{
+				Resources: &v1alpha1.Resources{
+					Requests: &v1alpha1.ResourceClaims{
+						Cpu:    pointer.String("500m"),
+						Memory: pointer.String("500Mi"),
+					},
+				},
+			}},
+		}}}
+
+		// when
+		_, err := istioCR.GetProxyResources(iop)
+
+		// then
+		Expect(err).Should(HaveOccurred())
+		Expect(err.Error()).To(Equal("proxy resources missing in merged IstioOperator"))
+	})
+
+	It("should be able to get resources from real istio operator template when IstioCR has no overrides", func() {
+		//given
+		manifest, err := os.ReadFile("../../manifests/istio-operator-template.yaml")
+		Expect(err).ShouldNot(HaveOccurred())
+
+		iop := istioOperator.IstioOperator{}
+		err = yaml.Unmarshal(manifest, &iop)
+
+		istioCR := v1alpha1.Istio{}
+
+		// when
+		result, err := istioCR.GetProxyResources(iop)
+
+		// then
+		Expect(err).ShouldNot(HaveOccurred())
+
+		Expect(result.Requests.Cpu().String()).ToNot(BeEmpty())
+		Expect(result.Requests.Memory().String()).ToNot(BeEmpty())
+		Expect(result.Limits.Cpu().String()).ToNot(BeEmpty())
+		Expect(result.Limits.Memory().String()).ToNot(BeEmpty())
 	})
 })

@@ -38,6 +38,10 @@ type TestWithTemplatedManifest struct {
 }
 
 func (t *TestWithTemplatedManifest) initIstioScenarios(ctx *godog.ScenarioContext) {
+
+	ctx.After(istioCrTearDown)
+	ctx.After(testAppTearDown)
+
 	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" is ready`, resourceIsReady)
 	ctx.Step(`^Istio CRD is installed$`, istioCRDIsInstalled)
 	ctx.Step(`^Istio CR "([^"]*)" in namespace "([^"]*)" has status "([^"]*)"$`, istioCRInNamespaceHasStatus)
@@ -122,72 +126,29 @@ func istioCRInNamespaceHasStatus(name, namespace, status string) error {
 	}, retryOpts...)
 }
 
-func (t *TestWithTemplatedManifest) istioCRIsAppliedInNamespace(name, namespace string) error {
-	istioCRYaml, err := os.ReadFile(templateFileName)
+func (t *TestWithTemplatedManifest) istioCRIsAppliedInNamespace(ctx context.Context, name, namespace string) (context.Context, error) {
+	istio, err := createIstioCrFromTemplate(name, namespace, t.TemplateValues)
 	if err != nil {
-		return err
+		return ctx, err
 	}
 
-	crTemplate, err := template.New("tmpl").Option("missingkey=zero").Parse(string(istioCRYaml))
-	if err != nil {
-		return err
-	}
-
-	var resource bytes.Buffer
-	err = crTemplate.Execute(&resource, t.TemplateValues)
-	if err != nil {
-		return err
-	}
-
-	var istio istioCR.Istio
-	err = yaml.Unmarshal(resource.Bytes(), &istio)
-	if err != nil {
-		return err
-	}
-
-	istio.Namespace = namespace
-	istio.Name = name
-
-	return retry.Do(func() error {
+	err = retry.Do(func() error {
 		err := k8sClient.Create(context.TODO(), &istio)
-		if k8serrors.IsAlreadyExists(err) {
-			var existingIstio istioCR.Istio
-			if err := k8sClient.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, &existingIstio); err != nil {
-				return err
-			}
-			istio.Spec.DeepCopyInto(&existingIstio.Spec)
-
-			return k8sClient.Update(context.TODO(), &existingIstio)
+		if err != nil {
+			return err
 		}
-		return err
+		ctx = setIstioCrInContext(ctx, &istio)
+		return nil
 	}, retryOpts...)
+
+	return ctx, err
 }
 
 func (t *TestWithTemplatedManifest) istioCrIsUpdatedInNamespace(name, namespace string) error {
-	istioCRYaml, err := os.ReadFile(templateFileName)
+	istio, err := createIstioCrFromTemplate(name, namespace, t.TemplateValues)
 	if err != nil {
 		return err
 	}
-
-	crTemplate, err := template.New("tmpl").Option("missingkey=zero").Parse(string(istioCRYaml))
-	if err != nil {
-		return err
-	}
-
-	var resource bytes.Buffer
-	err = crTemplate.Execute(&resource, t.TemplateValues)
-	if err != nil {
-		return err
-	}
-
-	var istio istioCR.Istio
-	err = yaml.Unmarshal(resource.Bytes(), &istio)
-	if err != nil {
-		return err
-	}
-
-	istio.Namespace = namespace
-	istio.Name = name
 
 	return retry.Do(func() error {
 		var existingIstio istioCR.Istio
@@ -198,6 +159,34 @@ func (t *TestWithTemplatedManifest) istioCrIsUpdatedInNamespace(name, namespace 
 
 		return k8sClient.Update(context.TODO(), &existingIstio)
 	}, retryOpts...)
+}
+
+func createIstioCrFromTemplate(name string, namespace string, templateValues map[string]string) (istioCR.Istio, error) {
+	istioCRYaml, err := os.ReadFile(templateFileName)
+	if err != nil {
+		return istioCR.Istio{}, err
+	}
+
+	crTemplate, err := template.New("tmpl").Option("missingkey=zero").Parse(string(istioCRYaml))
+	if err != nil {
+		return istioCR.Istio{}, err
+	}
+
+	var resource bytes.Buffer
+	err = crTemplate.Execute(&resource, templateValues)
+	if err != nil {
+		return istioCR.Istio{}, err
+	}
+
+	var istio istioCR.Istio
+	err = yaml.Unmarshal(resource.Bytes(), &istio)
+	if err != nil {
+		return istioCR.Istio{}, err
+	}
+
+	istio.Namespace = namespace
+	istio.Name = name
+	return istio, nil
 }
 
 func namespaceIsPresent(name, shouldBePresent string) error {
@@ -385,7 +374,7 @@ func enableIstioInjection(namespace string) error {
 	}, retryOpts...)
 }
 
-func createApplicationDeployment(appName, namespace string) error {
+func createApplicationDeployment(ctx context.Context, appName, namespace string) (context.Context, error) {
 	dep := v1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "apps/v1",
@@ -418,9 +407,16 @@ func createApplicationDeployment(appName, namespace string) error {
 		},
 	}
 
-	return retry.Do(func() error {
-		return k8sClient.Create(context.TODO(), &dep)
+	err := retry.Do(func() error {
+		err := k8sClient.Create(context.TODO(), &dep)
+		if err != nil {
+			return err
+		}
+		ctx = setTestAppInContext(ctx, &dep)
+		return nil
 	}, retryOpts...)
+
+	return ctx, err
 }
 
 func applicationHasProxyResourcesSetToCpuAndMemory(appName, appNamespace, resourceType, cpu, memory string) error {

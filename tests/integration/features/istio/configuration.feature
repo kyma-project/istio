@@ -1,4 +1,4 @@
-Feature: Updating configuration of Istio module
+Feature: Configuration of Istio module
 
   Scenario: Updating proxy resource configuration
     Given Istio CRD is installed

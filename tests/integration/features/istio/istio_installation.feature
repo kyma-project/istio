@@ -24,7 +24,10 @@ Feature: Installing and uninstalling Istio module
     And "ingress-gateway" has "requests" set to cpu - "80m" and memory - "200Mi"
 
   Scenario: Uninstallation of Istio module
-    Given Istio CR "istio-sample" in namespace "default" has status "Ready"
+    Given Istio CRD is installed
+    And "Deployment" "istio-controller-manager" in namespace "kyma-system" is ready
+    And Istio CR "istio-sample" is applied in namespace "default"
+    And Istio CR "istio-sample" in namespace "default" has status "Ready"
     When "Istio CR" "istio-sample" in namespace "default" is deleted
     Then "Istio CR" is not present on cluster
     And Istio CRDs "should not" be present on cluster

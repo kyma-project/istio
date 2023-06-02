@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/avast/retry-go"
 	"github.com/cucumber/godog"
+	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"log"
@@ -13,10 +14,10 @@ import (
 )
 
 var testAppTearDown = func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
-	if testApp, ok := getTestAppFromContext(ctx); ok {
+	if testApp, ok := testcontext.GetTestAppFromContext(ctx); ok {
 		err := retry.Do(func() error {
 			return removeObjectFromCluster(ctx, testApp)
-		}, retryOpts...)
+		}, testcontext.GetRetryOpts()...)
 
 		return ctx, err
 	}
@@ -24,10 +25,10 @@ var testAppTearDown = func(ctx context.Context, sc *godog.Scenario, err error) (
 }
 
 var istioCrTearDown = func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
-	if istio, ok := getIstioCrFromContext(ctx); ok {
+	if istio, ok := testcontext.GetIstioCrFromContext(ctx); ok {
 		err := retry.Do(func() error {
 			return removeObjectFromCluster(ctx, istio)
-		}, retryOpts...)
+		}, testcontext.GetRetryOpts()...)
 		// TODO: This is added to workaround that Istio deletion needs some time to remove all resources. If we don't wait, we might
 		//  try to install a new Istio version while the old version is still uninstalling.
 		time.Sleep(10 * time.Second)
@@ -39,7 +40,7 @@ var istioCrTearDown = func(ctx context.Context, sc *godog.Scenario, err error) (
 func removeObjectFromCluster(ctx context.Context, object client.Object) error {
 	log.Println(fmt.Sprintf("Teardown %s", object.GetName()))
 
-	k8sClient, err := getK8sClientFromContext(ctx)
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
 	}

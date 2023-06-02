@@ -2,31 +2,34 @@ package integration
 
 import (
 	"context"
+	"github.com/cucumber/godog"
+	"github.com/cucumber/godog/colors"
 	istioCR "github.com/kyma-project/istio/operator/api/v1alpha1"
-	"github.com/spf13/pflag"
+	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	iop "istio.io/istio/operator/pkg/apis"
+	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
-
-	"github.com/avast/retry-go"
-	"github.com/cucumber/godog"
-	"log"
-	"os"
 	"testing"
 
-	"github.com/vrischmann/envconfig"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
 
 func TestIstio(t *testing.T) {
-	k8sClient := InitTestSuite()
+	defaultContext := testcontext.SetK8sClientInContext(context.Background(), createK8sClient())
 
-	defaultContext := setK8sClientInContext(context.Background(), k8sClient)
-	opts := goDogOpts
-	opts.Paths = []string{"features/istio"}
-	// Concurrency must be set to 1, as the tests modify the global cluster state and can't be isolated.
-	opts.Concurrency = 1
-	opts.DefaultContext = defaultContext
+	goDogOpts := godog.Options{
+		Output: colors.Colored(os.Stdout),
+		Format: "pretty",
+		Paths:  []string{"features/istio"},
+		// Concurrency must be set to 1, as the tests modify the global cluster state and can't be isolated.
+		Concurrency:    1,
+		DefaultContext: defaultContext,
+	}
+
+	if os.Getenv("EXPORT_RESULT") == "true" {
+		goDogOpts.Format = "pretty,junit:junit-report.xml,cucumber:cucumber-report.json"
+	}
 
 	suite := godog.TestSuite{
 		Name: "istio",
@@ -34,7 +37,7 @@ func TestIstio(t *testing.T) {
 		TestSuiteInitializer: func(ctx *godog.TestSuiteContext) {
 			initScenarios(ctx.ScenarioContext())
 		},
-		Options: &opts,
+		Options: &goDogOpts,
 	}
 
 	testExitCode := suite.Run()
@@ -43,24 +46,7 @@ func TestIstio(t *testing.T) {
 	}
 }
 
-func InitTestSuite() client.Client {
-	pflag.Parse()
-	goDogOpts.Paths = pflag.Args()
-
-	if os.Getenv(exportResultVar) == "true" {
-		goDogOpts.Format = "pretty,junit:junit-report.xml,cucumber:cucumber-report.json"
-	}
-
-	if err := envconfig.Init(&conf); err != nil {
-		log.Fatalf("Unable to setup config: %v", err)
-	}
-
-	retryOpts = []retry.Option{
-		retry.Delay(conf.ReqDelay),
-		retry.Attempts(uint(conf.ReqTimeout / conf.ReqDelay)),
-		retry.DelayType(retry.FixedDelay),
-	}
-
+func createK8sClient() client.Client {
 	c, err := client.New(config.GetConfigOrDie(), client.Options{})
 	if err != nil {
 		panic(err)

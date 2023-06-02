@@ -2,7 +2,6 @@ package integration
 
 import (
 	"context"
-	"fmt"
 	"github.com/avast/retry-go"
 	"github.com/cucumber/godog"
 	"github.com/kyma-project/istio/operator/api/v1alpha1"
@@ -14,7 +13,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var testAppTearDown = func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
+var testAppTearDown = func(ctx context.Context, sc *godog.Scenario, _ error) (context.Context, error) {
 	if testApp, ok := testcontext.GetTestAppFromContext(ctx); ok {
 		err := retry.Do(func() error {
 			return removeObjectFromCluster(ctx, testApp)
@@ -25,7 +24,7 @@ var testAppTearDown = func(ctx context.Context, sc *godog.Scenario, err error) (
 	return ctx, nil
 }
 
-var istioCrTearDown = func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
+var istioCrTearDown = func(ctx context.Context, sc *godog.Scenario, _ error) (context.Context, error) {
 	// In case the scenario is an uninstall scenario, the istio CR deletion should be part of the scenario
 	if testcontext.HasUninstallTag(sc) {
 		return ctx, nil
@@ -36,7 +35,7 @@ var istioCrTearDown = func(ctx context.Context, sc *godog.Scenario, err error) (
 		_ = retry.Do(func() error {
 			return removeObjectFromCluster(ctx, istio)
 		}, testcontext.GetRetryOpts()...)
-		err = forceIstioCrRemoval(ctx, istio)
+		err := forceIstioCrRemoval(ctx, istio)
 		if err != nil {
 			return ctx, err
 		}
@@ -76,7 +75,7 @@ func forceIstioCrRemoval(ctx context.Context, istio *v1alpha1.Istio) error {
 }
 
 func removeObjectFromCluster(ctx context.Context, object client.Object) error {
-	log.Println(fmt.Sprintf("Teardown %s", object.GetName()))
+	log.Printf("Teardown %s", object.GetName())
 
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
@@ -90,7 +89,7 @@ func removeObjectFromCluster(ctx context.Context, object client.Object) error {
 	if err != nil && !k8serrors.IsNotFound(err) {
 		return err
 	}
-	log.Println(fmt.Sprintf("Deleted %s", object.GetName()))
+	log.Printf("Deleted %s", object.GetName())
 
 	return nil
 }

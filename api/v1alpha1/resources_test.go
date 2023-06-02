@@ -82,6 +82,7 @@ var _ = Describe("GetProxyResources", func() {
 
 		iop := istioOperator.IstioOperator{}
 		err = yaml.Unmarshal(manifest, &iop)
+		Expect(err).ShouldNot(HaveOccurred())
 
 		istioCR := v1alpha1.Istio{}
 

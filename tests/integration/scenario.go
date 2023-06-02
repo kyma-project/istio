@@ -29,15 +29,16 @@ import (
 const (
 	defaultIopName      string = "installed-state-default-operator"
 	defaultIopNamespace string = "istio-system"
-
-	templateFileName string = "manifests/istio_cr_template.yaml"
+	templateFileName    string = "manifests/istio_cr_template.yaml"
 )
 
 type TestWithTemplatedManifest struct {
 	TemplateValues map[string]string
 }
 
-func (t *TestWithTemplatedManifest) initIstioScenarios(ctx *godog.ScenarioContext) {
+func initScenarios(ctx *godog.ScenarioContext) {
+
+	t := TestWithTemplatedManifest{}
 
 	ctx.After(istioCrTearDown)
 	ctx.After(testAppTearDown)
@@ -65,7 +66,13 @@ func (t *TestWithTemplatedManifest) setTemplateValue(name, value string) {
 	t.TemplateValues[name] = value
 }
 
-func resourceIsReady(kind, name, namespace string) error {
+func resourceIsReady(ctx context.Context, kind, name, namespace string) error {
+
+	k8sClient, err := getK8sClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
 	return retry.Do(func() error {
 		var object client.Object
 		switch kind {
@@ -104,7 +111,12 @@ func resourceIsReady(kind, name, namespace string) error {
 	}, retryOpts...)
 }
 
-func istioCRDIsInstalled() error {
+func istioCRDIsInstalled(ctx context.Context) error {
+	k8sClient, err := getK8sClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
 	var crd unstructured.Unstructured
 	crd.SetGroupVersionKind(CRDGroupVersionKind)
 	return retry.Do(func() error {
@@ -112,7 +124,12 @@ func istioCRDIsInstalled() error {
 	}, retryOpts...)
 }
 
-func istioCRInNamespaceHasStatus(name, namespace, status string) error {
+func istioCRInNamespaceHasStatus(ctx context.Context, name, namespace, status string) error {
+	k8sClient, err := getK8sClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
 	var cr istioCR.Istio
 	return retry.Do(func() error {
 		err := k8sClient.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, &cr)
@@ -127,6 +144,11 @@ func istioCRInNamespaceHasStatus(name, namespace, status string) error {
 }
 
 func (t *TestWithTemplatedManifest) istioCRIsAppliedInNamespace(ctx context.Context, name, namespace string) (context.Context, error) {
+	k8sClient, err := getK8sClientFromContext(ctx)
+	if err != nil {
+		return ctx, err
+	}
+
 	istio, err := createIstioCrFromTemplate(name, namespace, t.TemplateValues)
 	if err != nil {
 		return ctx, err
@@ -144,7 +166,12 @@ func (t *TestWithTemplatedManifest) istioCRIsAppliedInNamespace(ctx context.Cont
 	return ctx, err
 }
 
-func (t *TestWithTemplatedManifest) istioCrIsUpdatedInNamespace(name, namespace string) error {
+func (t *TestWithTemplatedManifest) istioCrIsUpdatedInNamespace(ctx context.Context, name, namespace string) error {
+	k8sClient, err := getK8sClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
 	istio, err := createIstioCrFromTemplate(name, namespace, t.TemplateValues)
 	if err != nil {
 		return err
@@ -189,7 +216,12 @@ func createIstioCrFromTemplate(name string, namespace string, templateValues map
 	return istio, nil
 }
 
-func namespaceIsPresent(name, shouldBePresent string) error {
+func namespaceIsPresent(ctx context.Context, name, shouldBePresent string) error {
+	k8sClient, err := getK8sClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
 	var ns corev1.Namespace
 	return retry.Do(func() error {
 		err := k8sClient.Get(context.TODO(), types.NamespacedName{Name: name}, &ns)
@@ -203,7 +235,12 @@ func namespaceIsPresent(name, shouldBePresent string) error {
 	}, retryOpts...)
 }
 
-func istioCRDsBePresentOnCluster(should string) error {
+func istioCRDsBePresentOnCluster(ctx context.Context, should string) error {
+	k8sClient, err := getK8sClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
 	shouldHave := true
 	if should != "should" {
 		shouldHave = false
@@ -228,7 +265,12 @@ func istioCRDsBePresentOnCluster(should string) error {
 	}, retryOpts...)
 }
 
-func resourceInNamespaceIsDeleted(kind, name, namespace string) error {
+func resourceInNamespaceIsDeleted(ctx context.Context, kind, name, namespace string) error {
+	k8sClient, err := getK8sClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
 	switch kind {
 	case IstioCR.String():
 		return retry.Do(func() error {
@@ -245,7 +287,12 @@ func resourceInNamespaceIsDeleted(kind, name, namespace string) error {
 	}
 }
 
-func resourceNotPresent(kind string) error {
+func resourceNotPresent(ctx context.Context, kind string) error {
+	k8sClient, err := getK8sClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
 	return retry.Do(func() error {
 		switch kind {
 		case IstioCR.String():
@@ -262,8 +309,13 @@ func resourceNotPresent(kind string) error {
 	}, retryOpts...)
 }
 
-func componentHasResourcesSetToCpuAndMemory(component, resourceType, cpu, memory string) error {
-	operator, err := getIstioOperatorFromCluster()
+func componentHasResourcesSetToCpuAndMemory(ctx context.Context, component, resourceType, cpu, memory string) error {
+	k8sClient, err := getK8sClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	operator, err := getIstioOperatorFromCluster(k8sClient)
 	if err != nil {
 		return err
 	}
@@ -283,7 +335,8 @@ func componentHasResourcesSetToCpuAndMemory(component, resourceType, cpu, memory
 	return nil
 }
 
-func getIstioOperatorFromCluster() (*istioOperator.IstioOperator, error) {
+func getIstioOperatorFromCluster(k8sClient client.Client) (*istioOperator.IstioOperator, error) {
+
 	iop := istioOperator.IstioOperator{}
 
 	err := k8sClient.Get(context.TODO(), types.NamespacedName{Name: defaultIopName, Namespace: defaultIopNamespace}, &iop)
@@ -362,7 +415,12 @@ func getResourcesForComponent(operator *istioOperator.IstioOperator, component, 
 	}
 }
 
-func enableIstioInjection(namespace string) error {
+func enableIstioInjection(ctx context.Context, namespace string) error {
+	k8sClient, err := getK8sClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
 	var ns corev1.Namespace
 	return retry.Do(func() error {
 		err := k8sClient.Get(context.TODO(), types.NamespacedName{Name: namespace}, &ns)
@@ -375,6 +433,11 @@ func enableIstioInjection(namespace string) error {
 }
 
 func createApplicationDeployment(ctx context.Context, appName, namespace string) (context.Context, error) {
+	k8sClient, err := getK8sClientFromContext(ctx)
+	if err != nil {
+		return ctx, err
+	}
+
 	dep := v1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "apps/v1",
@@ -407,7 +470,7 @@ func createApplicationDeployment(ctx context.Context, appName, namespace string)
 		},
 	}
 
-	err := retry.Do(func() error {
+	err = retry.Do(func() error {
 		err := k8sClient.Create(context.TODO(), &dep)
 		if err != nil {
 			return err
@@ -419,7 +482,12 @@ func createApplicationDeployment(ctx context.Context, appName, namespace string)
 	return ctx, err
 }
 
-func applicationHasProxyResourcesSetToCpuAndMemory(appName, appNamespace, resourceType, cpu, memory string) error {
+func applicationHasProxyResourcesSetToCpuAndMemory(ctx context.Context, appName, appNamespace, resourceType, cpu, memory string) error {
+	k8sClient, err := getK8sClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
 	var podList corev1.PodList
 	return retry.Do(func() error {
 		err := k8sClient.List(context.TODO(), &podList, &client.ListOptions{

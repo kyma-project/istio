@@ -3,15 +3,17 @@ package integration
 import (
 	"context"
 	"github.com/kyma-project/istio/operator/api/v1alpha1"
+	"github.com/pkg/errors"
 	v1 "k8s.io/api/apps/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // istioCrCtxKey is the key used to store the IstioCR used by a scenario in the context.Context.
 type istioCrCtxKey struct{}
 
 func getIstioCrFromContext(ctx context.Context) (*v1alpha1.Istio, bool) {
-	istio, ok := ctx.Value(istioCrCtxKey{}).(*v1alpha1.Istio)
-	return istio, ok
+	v, ok := ctx.Value(istioCrCtxKey{}).(*v1alpha1.Istio)
+	return v, ok
 }
 
 func setIstioCrInContext(ctx context.Context, istio *v1alpha1.Istio) context.Context {
@@ -22,10 +24,25 @@ func setIstioCrInContext(ctx context.Context, istio *v1alpha1.Istio) context.Con
 type testAppCtxKey struct{}
 
 func getTestAppFromContext(ctx context.Context) (*v1.Deployment, bool) {
-	istio, ok := ctx.Value(testAppCtxKey{}).(*v1.Deployment)
-	return istio, ok
+	v, ok := ctx.Value(testAppCtxKey{}).(*v1.Deployment)
+	return v, ok
 }
 
 func setTestAppInContext(ctx context.Context, istio *v1.Deployment) context.Context {
 	return context.WithValue(ctx, testAppCtxKey{}, istio)
+}
+
+// k8sClientCtxKey is the key used to store the k8sClient used during tests in the context.Context.
+type k8sClientCtxKey struct{}
+
+func getK8sClientFromContext(ctx context.Context) (client.Client, error) {
+	v, ok := ctx.Value(k8sClientCtxKey{}).(client.Client)
+	if !ok {
+		return v, errors.New("k8sClient not found in context")
+	}
+	return v, nil
+}
+
+func setK8sClientInContext(ctx context.Context, k8sClient client.Client) context.Context {
+	return context.WithValue(ctx, k8sClientCtxKey{}, k8sClient)
 }

@@ -7,22 +7,19 @@ import (
 	"github.com/cucumber/godog/colors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"os"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"time"
 )
 
 type Config struct {
-	ClientTimeout   time.Duration `envconfig:"TEST_CLIENT_TIMEOUT,default=10s"`
-	ReqTimeout      time.Duration `envconfig:"TEST_REQUEST_TIMEOUT,default=180s"`
-	ReqDelay        time.Duration `envconfig:"TEST_REQUEST_DELAY,default=5s"`
-	TestConcurrency int           `envconfig:"TEST_CONCURRENCY,default=1"`
+	ClientTimeout time.Duration `envconfig:"TEST_CLIENT_TIMEOUT,default=10s"`
+	ReqTimeout    time.Duration `envconfig:"TEST_REQUEST_TIMEOUT,default=180s"`
+	ReqDelay      time.Duration `envconfig:"TEST_REQUEST_DELAY,default=5s"`
 }
 
 const exportResultVar string = "EXPORT_RESULT"
 
 var (
 	retryOpts []retry.Option
-	k8sClient client.Client
 	conf      Config
 )
 

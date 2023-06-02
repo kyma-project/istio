@@ -1,6 +1,7 @@
 package integration
 
 import (
+	"context"
 	istioCR "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/spf13/pflag"
 	iop "istio.io/istio/operator/pkg/apis"
@@ -17,20 +18,21 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
 
-func TestIstioJwt(t *testing.T) {
-	InitTestSuite()
+func TestIstio(t *testing.T) {
+	k8sClient := InitTestSuite()
 
+	defaultContext := setK8sClientInContext(context.Background(), k8sClient)
 	opts := goDogOpts
 	opts.Paths = []string{"features/istio"}
-	opts.Concurrency = conf.TestConcurrency
-
-	test := TestWithTemplatedManifest{}
+	// Concurrency must be set to 1, as the tests modify the global cluster state and can't be isolated.
+	opts.Concurrency = 1
+	opts.DefaultContext = defaultContext
 
 	suite := godog.TestSuite{
 		Name: "istio",
 		// We are not using ScenarioInitializer, as this function only needs to set up global resources
 		TestSuiteInitializer: func(ctx *godog.TestSuiteContext) {
-			test.initIstioScenarios(ctx.ScenarioContext())
+			initScenarios(ctx.ScenarioContext())
 		},
 		Options: &opts,
 	}
@@ -41,7 +43,7 @@ func TestIstioJwt(t *testing.T) {
 	}
 }
 
-func InitTestSuite() {
+func InitTestSuite() client.Client {
 	pflag.Parse()
 	goDogOpts.Paths = pflag.Args()
 
@@ -73,5 +75,5 @@ func InitTestSuite() {
 	if err != nil {
 		panic(err)
 	}
-	k8sClient = c
+	return c
 }

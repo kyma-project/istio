@@ -32,12 +32,9 @@ func TestIstio(t *testing.T) {
 	}
 
 	suite := godog.TestSuite{
-		Name: "istio",
-		// We are not using ScenarioInitializer, as this function only needs to set up global resources
-		TestSuiteInitializer: func(ctx *godog.TestSuiteContext) {
-			initScenarios(ctx.ScenarioContext())
-		},
-		Options: &goDogOpts,
+		Name:                "istio",
+		ScenarioInitializer: initScenario,
+		Options:             &goDogOpts,
 	}
 
 	testExitCode := suite.Run()

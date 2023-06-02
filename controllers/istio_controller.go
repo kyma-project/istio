@@ -44,7 +44,7 @@ const (
 	IstioVersion                 string = "1.17.1"
 	IstioImageBase               string = "distroless"
 	IstioResourceListDefaultPath        = "manifests/controlled_resources_list.yaml"
-	ErrorRetryTime                      = time.Minute * 10
+	ErrorRetryTime                      = time.Minute * 1
 )
 
 var IstioTag = fmt.Sprintf("%s-%s", IstioVersion, IstioImageBase)

@@ -5,10 +5,10 @@ import (
 	"github.com/kyma-project/istio/operator/tests/integration/steps"
 )
 
-func initScenarios(ctx *godog.ScenarioContext) {
+func initScenario(ctx *godog.ScenarioContext) {
 
-	ctx.After(istioCrTearDown)
 	ctx.After(testAppTearDown)
+	ctx.After(istioCrTearDown)
 
 	t := steps.TemplatedIstioCr{}
 	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" is ready`, steps.ResourceIsReady)

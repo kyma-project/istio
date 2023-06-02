@@ -1,7 +1,8 @@
 Feature: Configuration of Istio module
 
   Scenario: Updating proxy resource configuration
-    Given Istio CRD is installed
+    Given "Istio CR" is not present on cluster
+    And Istio CRD is installed
     And "Deployment" "istio-controller-manager" in namespace "kyma-system" is ready
     And Template value "ProxyCPURequest" is set to "30m"
     And Template value "ProxyMemoryRequest" is set to "190Mi"

@@ -3,6 +3,7 @@ package istio
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/istio/operator/internal/manifest"
 	"github.com/kyma-project/istio/operator/internal/resources"
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
@@ -18,9 +19,11 @@ import (
 )
 
 type Installation struct {
-	Client         LibraryClient
+	IstioClient    LibraryClient
 	IstioVersion   string
 	IstioImageBase string
+	Client         client.Client
+	Merger         manifest.Merger
 }
 
 const (
@@ -29,7 +32,7 @@ const (
 )
 
 // Reconcile runs Istio reconciliation to install, upgrade or uninstall Istio and returns the updated Istio CR.
-func (i *Installation) Reconcile(ctx context.Context, client client.Client, istioCR operatorv1alpha1.Istio, defaultIstioOperatorPath, workingDir, istioResourceListPath string) (operatorv1alpha1.Istio, error) {
+func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.Istio, istioResourceListPath string) (operatorv1alpha1.Istio, error) {
 
 	istioTag := fmt.Sprintf("%s-%s", i.IstioVersion, i.IstioImageBase)
 
@@ -42,7 +45,7 @@ func (i *Installation) Reconcile(ctx context.Context, client client.Client, isti
 
 	if !istioCRChanges.requireIstioDeletion() && !hasInstallationFinalizer(istioCR) {
 		controllerutil.AddFinalizer(&istioCR, installationFinalizer)
-		if err := client.Update(ctx, &istioCR); err != nil {
+		if err := i.Client.Update(ctx, &istioCR); err != nil {
 			return istioCR, err
 		}
 	}
@@ -54,33 +57,31 @@ func (i *Installation) Reconcile(ctx context.Context, client client.Client, isti
 		ctrl.Log.Info("Starting istio install", "istio version", i.IstioVersion, "istio image", i.IstioImageBase)
 
 		// To have a better visibility of the manager state during install and upgrade, we update the status to Processing
-		_, err = status.Update(ctx, client, &istioCR, operatorv1alpha1.Processing, metav1.Condition{})
+		_, err = status.Update(ctx, i.Client, &istioCR, operatorv1alpha1.Processing, metav1.Condition{})
 		if err != nil {
 			return istioCR, err
 		}
 
-		clusterConfiguration, err := clusterconfig.EvaluateClusterConfiguration(ctx, client)
+		clusterConfiguration, err := clusterconfig.EvaluateClusterConfiguration(ctx, i.Client)
 		if err != nil {
 			return istioCR, err
 		}
 
 		// As we define default IstioOperator values in a templated manifest, we need to apply the istio version and values from
 		// Istio CR to this default configuration to get the final IstoOperator that is used for installing and updating Istio.
-		templateData := TemplateData{IstioVersion: i.IstioVersion, IstioImageBase: i.IstioImageBase}
+		templateData := manifest.TemplateData{IstioVersion: i.IstioVersion, IstioImageBase: i.IstioImageBase}
 
-		merger := NewDefaultIstioMerger(&istioCR, defaultIstioOperatorPath, workingDir, templateData, clusterConfiguration)
-
-		mergedIstioOperatorPath, err := merger.Merge()
+		mergedIstioOperatorPath, err := i.Merger.Merge(&istioCR, templateData, clusterConfiguration)
 		if err != nil {
 			return istioCR, err
 		}
 
-		err = i.Client.Install(mergedIstioOperatorPath)
+		err = i.IstioClient.Install(mergedIstioOperatorPath)
 		if err != nil {
 			return istioCR, err
 		}
 
-		version, err := gatherer.GetIstioPodsVersion(ctx, client)
+		version, err := gatherer.GetIstioPodsVersion(ctx, i.Client)
 		if err != nil {
 			return istioCR, err
 		}
@@ -96,12 +97,12 @@ func (i *Installation) Reconcile(ctx context.Context, client client.Client, isti
 
 		ctrl.Log.Info("Starting istio uninstall")
 
-		_, err = status.Update(ctx, client, &istioCR, operatorv1alpha1.Deleting, metav1.Condition{})
+		_, err = status.Update(ctx, i.Client, &istioCR, operatorv1alpha1.Deleting, metav1.Condition{})
 		if err != nil {
 			return istioCR, err
 		}
 
-		istioResourceFinder, err := resources.NewIstioResourcesFinderFromConfigYaml(ctx, client, ctrl.Log, istioResourceListPath)
+		istioResourceFinder, err := resources.NewIstioResourcesFinderFromConfigYaml(ctx, i.Client, ctrl.Log, istioResourceListPath)
 		if err != nil {
 			return istioCR, err
 		}
@@ -113,12 +114,12 @@ func (i *Installation) Reconcile(ctx context.Context, client client.Client, isti
 		if len(clientResources) > 0 {
 			return istioCR, fmt.Errorf("could not delete Istio module instance since there are %d customer created resources present", len(clientResources))
 		}
-		err = i.Client.Uninstall(ctx)
+		err = i.IstioClient.Uninstall(ctx)
 		if err != nil {
 			return istioCR, err
 		}
 
-		warnings, err := sidecarRemover.RemoveSidecars(ctx, client, &ctrl.Log)
+		warnings, err := sidecarRemover.RemoveSidecars(ctx, i.Client, &ctrl.Log)
 		if err != nil {
 			return istioCR, err
 		}
@@ -130,7 +131,7 @@ func (i *Installation) Reconcile(ctx context.Context, client client.Client, isti
 		}
 
 		controllerutil.RemoveFinalizer(&istioCR, installationFinalizer)
-		if err := client.Update(ctx, &istioCR); err != nil {
+		if err := i.Client.Update(ctx, &istioCR); err != nil {
 			ctrl.Log.Error(err, "Error happened during istio installation finalizer removal")
 			return istioCR, err
 		}

@@ -38,7 +38,6 @@ type scenario struct {
 	NotToBeRestartedObjects    []client.Object
 	logger                     logr.Logger
 	istioVersion               string
-	cniEnabled                 bool
 	injectionNamespaceSelector NamespaceSelector
 	restartWarnings            []restart.RestartWarning
 }

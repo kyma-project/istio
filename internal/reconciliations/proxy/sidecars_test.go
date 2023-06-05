@@ -2,8 +2,11 @@ package proxy_test
 
 import (
 	"context"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig"
+	"github.com/kyma-project/istio/operator/internal/manifest"
 	"github.com/kyma-project/istio/operator/internal/tests"
 	"github.com/onsi/ginkgo/v2/types"
+	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	"testing"
 
 	"github.com/go-logr/logr"
@@ -20,10 +23,8 @@ import (
 )
 
 const (
-	istioVersion             = "1.16.1"
-	istioImageBase           = "distroless"
-	defaultIstioOperatorPath = "test/test-operator.yaml"
-	workingDir               = "/tmp"
+	istioVersion   = "1.16.1"
+	istioImageBase = "distroless"
 )
 
 func TestProxies(t *testing.T) {
@@ -55,12 +56,14 @@ var _ = Describe("Sidecars reconciliation", func() {
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.0")
 		sidecars := proxy.Sidecars{
+			Log:            logr.Discard(),
+			Client:         createFakeClient(&istioCr, istiod),
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
-			CniEnabled:     true,
+			Merger:         MergerMock{},
 		}
 		// when
-		err := sidecars.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod), logr.Discard())
+		err := sidecars.Reconcile(context.TODO(), istioCr)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -88,7 +91,7 @@ func createPod(name, namespace, containerName, imageVersion string) *corev1.Pod 
 			APIVersion: "v1",
 		},
 		Status: corev1.PodStatus{
-			Phase: corev1.PodPhase(corev1.PodRunning),
+			Phase: corev1.PodRunning,
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
@@ -99,4 +102,15 @@ func createPod(name, namespace, containerName, imageVersion string) *corev1.Pod 
 			},
 		},
 	}
+}
+
+type MergerMock struct {
+}
+
+func (m MergerMock) Merge(_ *operatorv1alpha1.Istio, _ manifest.TemplateData, _ clusterconfig.ClusterConfiguration) (string, error) {
+	return "mocked istio operator merge result", nil
+}
+
+func (m MergerMock) GetIstioOperator() (istioOperator.IstioOperator, error) {
+	return istioOperator.IstioOperator{}, nil
 }

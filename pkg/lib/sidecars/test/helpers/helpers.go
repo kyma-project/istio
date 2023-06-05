@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"fmt"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"reflect"
 	"time"
 
@@ -20,6 +21,18 @@ type SidecarPodFixtureBuilder struct {
 	deletionTimestamp                                             *metav1.Time
 	hostNetwork                                                   bool
 	ownerReference                                                metav1.OwnerReference
+	resources                                                     v1.ResourceRequirements
+}
+
+var DefaultSidecarResources = v1.ResourceRequirements{
+	Limits: v1.ResourceList{
+		v1.ResourceCPU:    resource.MustParse("100m"),
+		v1.ResourceMemory: resource.MustParse("200Mi"),
+	},
+	Requests: v1.ResourceList{
+		v1.ResourceCPU:    resource.MustParse("200m"),
+		v1.ResourceMemory: resource.MustParse("400Mi"),
+	},
 }
 
 func NewSidecarPodBuilder() *SidecarPodFixtureBuilder {
@@ -36,6 +49,7 @@ func NewSidecarPodBuilder() *SidecarPodFixtureBuilder {
 		conditionStatus:        "True",
 		hostNetwork:            false,
 		ownerReference:         metav1.OwnerReference{Kind: "ReplicaSet"},
+		resources:              DefaultSidecarResources,
 	}
 }
 
@@ -113,6 +127,26 @@ func (r *SidecarPodFixtureBuilder) SetDeletionTimestamp(value time.Time) *Sideca
 	return r
 }
 
+func (r *SidecarPodFixtureBuilder) SetCpuRequest(value string) *SidecarPodFixtureBuilder {
+	r.resources.Requests[v1.ResourceCPU] = resource.MustParse(value)
+	return r
+}
+
+func (r *SidecarPodFixtureBuilder) SetMemoryRequest(value string) *SidecarPodFixtureBuilder {
+	r.resources.Requests[v1.ResourceMemory] = resource.MustParse(value)
+	return r
+}
+
+func (r *SidecarPodFixtureBuilder) SetCpuLimit(value string) *SidecarPodFixtureBuilder {
+	r.resources.Limits[v1.ResourceCPU] = resource.MustParse(value)
+	return r
+}
+
+func (r *SidecarPodFixtureBuilder) SetMemoryLimit(value string) *SidecarPodFixtureBuilder {
+	r.resources.Limits[v1.ResourceMemory] = resource.MustParse(value)
+	return r
+}
+
 func (r *SidecarPodFixtureBuilder) Build() *v1.Pod {
 	return &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -151,8 +185,9 @@ func (r *SidecarPodFixtureBuilder) Build() *v1.Pod {
 					Image: "workload-image:1.0",
 				},
 				{
-					Name:  r.sidecarContainerName,
-					Image: fmt.Sprintf(`%s:%s`, r.sidecarImageRepository, r.sidecarImageTag),
+					Name:      r.sidecarContainerName,
+					Image:     fmt.Sprintf(`%s:%s`, r.sidecarImageRepository, r.sidecarImageTag),
+					Resources: r.resources,
 				},
 			},
 			HostNetwork: r.hostNetwork,
@@ -206,8 +241,9 @@ func FixPodWithOnlySidecar(name, namespace string) *v1.Pod {
 		Spec: v1.PodSpec{
 			Containers: []v1.Container{
 				{
-					Name:  "istio-proxy",
-					Image: "istio/istio-proxy:1.0.0",
+					Name:      "istio-proxy",
+					Image:     "istio/istio-proxy:1.0.0",
+					Resources: DefaultSidecarResources,
 				},
 			},
 		},

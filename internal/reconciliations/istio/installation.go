@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/kyma-project/istio/operator/internal/resources"
+	"github.com/kyma-project/istio/operator/pkg/lib/label"
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 
@@ -76,6 +77,11 @@ func (i *Installation) Reconcile(ctx context.Context, client client.Client, isti
 		}
 
 		err = i.Client.Install(mergedIstioOperatorPath)
+		if err != nil {
+			return istioCR, err
+		}
+
+		err = label.AddIstioNamespaceLabel(ctx, client)
 		if err != nil {
 			return istioCR, err
 		}

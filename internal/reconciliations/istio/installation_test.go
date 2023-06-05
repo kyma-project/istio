@@ -81,6 +81,7 @@ var _ = Describe("Installation reconciliation", func() {
 			},
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
+		istioNamespace := createNamespace("istio-system")
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
 			Client:         &mockClient,
@@ -88,7 +89,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 		}
 		// when
-		returnedIstioCr, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod), istioCr, defaultIstioOperatorPath, workingDir, resourceListPath)
+		returnedIstioCr, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod, istioNamespace), istioCr, defaultIstioOperatorPath, workingDir, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -113,6 +114,7 @@ var _ = Describe("Installation reconciliation", func() {
 			},
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.0")
+		istioNamespace := createNamespace("istio-system")
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
 			Client:         &mockClient,
@@ -120,7 +122,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 		}
 		// when
-		returnedIstioCr, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod), istioCr, defaultIstioOperatorPath, workingDir, resourceListPath)
+		returnedIstioCr, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod, istioNamespace), istioCr, defaultIstioOperatorPath, workingDir, resourceListPath)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -146,6 +148,7 @@ var _ = Describe("Installation reconciliation", func() {
 			},
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
+		istioNamespace := createNamespace("istio-system")
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
 			Client:         &mockClient,
@@ -153,7 +156,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 		}
 		// when
-		returnedIstioCr, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod), istioCr, defaultIstioOperatorPath, workingDir, resourceListPath)
+		returnedIstioCr, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod, istioNamespace), istioCr, defaultIstioOperatorPath, workingDir, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -179,6 +182,7 @@ var _ = Describe("Installation reconciliation", func() {
 			},
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.17.0")
+		istioNamespace := createNamespace("istio-system")
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
 			Client:         &mockClient,
@@ -186,7 +190,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 		}
 		// when
-		returnedIstioCr, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod), istioCr, defaultIstioOperatorPath, workingDir, resourceListPath)
+		returnedIstioCr, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod, istioNamespace), istioCr, defaultIstioOperatorPath, workingDir, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -319,6 +323,7 @@ var _ = Describe("Installation reconciliation", func() {
 			},
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
+		istioNamespace := createNamespace("istio-system")
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
 			Client:         &mockClient,
@@ -326,7 +331,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 		}
 		// when
-		returnedIstioCr, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod), istioCr, defaultIstioOperatorPath, workingDir, resourceListPath)
+		returnedIstioCr, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod, istioNamespace), istioCr, defaultIstioOperatorPath, workingDir, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -603,6 +608,14 @@ func createPod(name, namespace, containerName, imageVersion string) *corev1.Pod 
 					Image: "image:" + imageVersion,
 				},
 			},
+		},
+	}
+}
+
+func createNamespace(name string) *corev1.Namespace {
+	return &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
 		},
 	}
 }

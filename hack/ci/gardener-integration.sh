@@ -80,4 +80,6 @@ kyma provision gardener ${GARDENER_PROVIDER} \
         --attempts 3 \
         --verbose
 
+./hack/ci/jobguard.sh
+
 make install deploy istio-integration-test

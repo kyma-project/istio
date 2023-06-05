@@ -263,10 +263,19 @@ perf-test:
 	cd performance_tests && ./test.sh
 
 ########## Integration Tests ###########
+PULL_IMAGE_VERSION=PR-${PULL_NUMBER}
+POST_IMAGE_VERSION=v$(shell date '+%Y%m%d')-$(shell printf %.8s ${PULL_BASE_SHA})
+
 .PHONY: istio-integration-test
 istio-integration-test:
 	make install
+ifndef JOB_TYPE
 	make deploy
+else ifeq ($(JOB_TYPE), presubmit)
+	make deploy IMG=${PULL_IMAGE_VERSION}
+else ifeq ($(JOB_TYPE), postsubmit)
+	make deploy IMG=${POST_IMAGE_VERSION}
+endif
 	cd tests/integration && go test
 
 .PHONY: gardener-istio-integration-test

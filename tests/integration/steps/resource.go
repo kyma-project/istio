@@ -7,6 +7,7 @@ import (
 	"github.com/cucumber/godog"
 	istioCR "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
+	v1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -24,6 +25,8 @@ func (k godogResourceMapping) String() string {
 		return "Deployment"
 	case IstioCR:
 		return "Istio CR"
+	case DestinationRule:
+		return "DestinationRule"
 	}
 	panic(fmt.Errorf("%#v has unimplemented String() method", k))
 }
@@ -32,6 +35,7 @@ const (
 	DaemonSet godogResourceMapping = iota
 	Deployment
 	IstioCR
+	DestinationRule
 )
 
 func ResourceIsReady(ctx context.Context, kind, name, namespace string) error {
@@ -115,8 +119,18 @@ func ResourceInNamespaceIsDeleted(ctx context.Context, kind, name, namespace str
 
 			return k8sClient.Delete(context.TODO(), &istioCr)
 		})
+	case DestinationRule.String():
+		return retry.Do(func() error {
+			var dr v1beta1.DestinationRule
+			err := k8sClient.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, &dr)
+			if err != nil {
+				return err
+			}
+
+			return k8sClient.Delete(context.TODO(), &dr)
+		})
 	default:
-		return godog.ErrUndefined
+		return fmt.Errorf("can't delete resource for undefined kind %s", kind)
 	}
 }
 
@@ -137,6 +151,18 @@ func ResourceNotPresent(ctx context.Context, kind string) error {
 			if len(istioList.Items) > 0 {
 				return fmt.Errorf("there are %d %s present but shouldn't", len(istioList.Items), kind)
 			}
+
+		case DestinationRule.String():
+			var drList v1beta1.DestinationRuleList
+			err := k8sClient.List(context.TODO(), &drList)
+			if err != nil {
+				return err
+			}
+			if len(drList.Items) > 0 {
+				return fmt.Errorf("there are %d %s present but shouldn't", len(drList.Items), kind)
+			}
+		default:
+			return fmt.Errorf("can't check if resource is present for undefined kind %s", kind)
 		}
 		return nil
 	}, testcontext.GetRetryOpts()...)

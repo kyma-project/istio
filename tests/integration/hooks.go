@@ -13,22 +13,22 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var testAppTearDown = func(ctx context.Context, sc *godog.Scenario, _ error) (context.Context, error) {
-	if testApp, ok := testcontext.GetTestAppFromContext(ctx); ok {
-		err := retry.Do(func() error {
-			return removeObjectFromCluster(ctx, testApp)
-		}, testcontext.GetRetryOpts()...)
+var testObjectsTearDown = func(ctx context.Context, sc *godog.Scenario, _ error) (context.Context, error) {
+	if objects, ok := testcontext.GetCreatedTestObjectsFromContext(ctx); ok {
+		for _, o := range objects {
+			err := retry.Do(func() error {
+				return removeObjectFromCluster(ctx, o)
+			}, testcontext.GetRetryOpts()...)
 
-		return ctx, err
+			if err != nil {
+				return ctx, err
+			}
+		}
 	}
 	return ctx, nil
 }
 
 var istioCrTearDown = func(ctx context.Context, sc *godog.Scenario, _ error) (context.Context, error) {
-	// In case the scenario is an uninstall scenario, the istio CR deletion should be part of the scenario
-	if testcontext.HasUninstallTag(sc) {
-		return ctx, nil
-	}
 
 	if istio, ok := testcontext.GetIstioCrFromContext(ctx); ok {
 		// We can ignore a failed removal of the Istio CR, because we need to run force remove in any case to make sure no resource is left before the next scenario

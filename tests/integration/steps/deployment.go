@@ -58,7 +58,7 @@ func CreateApplicationDeployment(ctx context.Context, appName, namespace string)
 		if err != nil {
 			return err
 		}
-		ctx = testcontext.SetTestAppInContext(ctx, &dep)
+		ctx = testcontext.AddCreatedTestObjectInContext(ctx, &dep)
 		return nil
 	}, testcontext.GetRetryOpts()...)
 

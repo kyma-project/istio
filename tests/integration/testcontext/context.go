@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/pkg/errors"
-	v1 "k8s.io/api/apps/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -20,16 +19,22 @@ func SetIstioCrInContext(ctx context.Context, istio *v1alpha1.Istio) context.Con
 	return context.WithValue(ctx, istioCrCtxKey{}, istio)
 }
 
-// testAppCtxKey is the key used to store the test app used by a scenario in the context.Context.
-type testAppCtxKey struct{}
+// createdTestObjectsCtxKey is the key used to store the test resources created during tests in the context.Context.
+type createdTestObjectsCtxKey struct{}
 
-func GetTestAppFromContext(ctx context.Context) (*v1.Deployment, bool) {
-	v, ok := ctx.Value(testAppCtxKey{}).(*v1.Deployment)
+func GetCreatedTestObjectsFromContext(ctx context.Context) ([]client.Object, bool) {
+	v, ok := ctx.Value(createdTestObjectsCtxKey{}).([]client.Object)
 	return v, ok
 }
 
-func SetTestAppInContext(ctx context.Context, istio *v1.Deployment) context.Context {
-	return context.WithValue(ctx, testAppCtxKey{}, istio)
+func AddCreatedTestObjectInContext(ctx context.Context, object client.Object) context.Context {
+	objects, ok := GetCreatedTestObjectsFromContext(ctx)
+	if !ok {
+		objects = []client.Object{}
+	}
+
+	objects = append(objects, object)
+	return context.WithValue(ctx, createdTestObjectsCtxKey{}, objects)
 }
 
 // k8sClientCtxKey is the key used to store the k8sClient used during tests in the context.Context.

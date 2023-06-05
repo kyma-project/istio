@@ -25,12 +25,25 @@ Feature: Installing and uninstalling Istio module
     And "ingress-gateway" has "limits" set to cpu - "1500m" and memory - "1200Mi"
     And "ingress-gateway" has "requests" set to cpu - "80m" and memory - "200Mi"
 
-  @uninstall
   Scenario: Uninstallation of Istio module
     Given Istio CR "istio-sample" is applied in namespace "default"
     And Istio CR "istio-sample" in namespace "default" has status "Ready"
     And Namespace "istio-system" is "present"
     When "Istio CR" "istio-sample" in namespace "default" is deleted
+    Then "Istio CR" is not present on cluster
+    And Istio CRDs "should not" be present on cluster
+    And Namespace "istio-system" is "not present"
+
+  Scenario: Uninstallation respects the Istio resources created by the user
+    Given Istio CR "istio-sample" is applied in namespace "default"
+    And Istio CR "istio-sample" in namespace "default" has status "Ready"
+    And Namespace "istio-system" is "present"
+    And Destination rule "customer-destination-rule" in namespace "default" with host "testing-svc.default.svc.cluster.local" exists
+    When "Istio CR" "istio-sample" in namespace "default" is deleted
+    Then Istio CR "istio-sample" in namespace "default" has status "Error"
+    And Istio CRDs "should" be present on cluster
+    And Namespace "istio-system" is "present"
+    When "DestinationRule" "customer-destination-rule" in namespace "default" is deleted
     Then "Istio CR" is not present on cluster
     And Istio CRDs "should not" be present on cluster
     And Namespace "istio-system" is "not present"

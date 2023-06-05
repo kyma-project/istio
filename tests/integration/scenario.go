@@ -7,7 +7,7 @@ import (
 
 func initScenario(ctx *godog.ScenarioContext) {
 
-	ctx.After(testAppTearDown)
+	ctx.After(testObjectsTearDown)
 	ctx.After(istioCrTearDown)
 
 	t := steps.TemplatedIstioCr{}
@@ -25,4 +25,5 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^Istio injection is enabled in namespace "([^"]*)"$`, steps.EnableIstioInjection)
 	ctx.Step(`^Application "([^"]*)" is running in namespace "([^"]*)"$`, steps.CreateApplicationDeployment)
 	ctx.Step(`^Application "([^"]*)" in namespace "([^"]*)" has proxy with "([^"]*)" set to cpu - "([^"]*)" and memory - "([^"]*)"$`, steps.ApplicationHasProxyResourcesSetToCpuAndMemory)
+	ctx.Step(`^Destination rule "([^"]*)" in namespace "([^"]*)" with host "([^"]*)" exists$`, steps.CreateDestinationRule)
 }

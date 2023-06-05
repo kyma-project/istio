@@ -6,6 +6,7 @@ import (
 	"github.com/cucumber/godog/colors"
 	istioCR "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
+	"istio.io/client-go/pkg/apis/networking/v1beta1"
 	iop "istio.io/istio/operator/pkg/apis"
 	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -55,6 +56,11 @@ func createK8sClient() client.Client {
 	}
 
 	err = istioCR.AddToScheme(c.Scheme())
+	if err != nil {
+		panic(err)
+	}
+
+	err = v1beta1.AddToScheme(c.Scheme())
 	if err != nil {
 		panic(err)
 	}

@@ -13,6 +13,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const applicationImage = "europe-docker.pkg.dev/kyma-project/prod/external/kennethreitz/httpbin"
+
 func CreateApplicationDeployment(ctx context.Context, appName, namespace string) (context.Context, error) {
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
@@ -43,7 +45,7 @@ func CreateApplicationDeployment(ctx context.Context, appName, namespace string)
 					Containers: []corev1.Container{
 						{
 							Name:  appName,
-							Image: "europe-docker.pkg.dev/kyma-project/prod/external/kennethreitz/httpbin",
+							Image: applicationImage,
 						},
 					},
 				},

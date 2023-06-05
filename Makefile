@@ -268,3 +268,7 @@ istio-integration-test:
 	make install
 	make deploy
 	cd tests/integration && go test
+
+.PHONY: gardener-istio-integration-test
+gardener-istio-integration-test:
+	./hack/ci/gardener-integration.sh

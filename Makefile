@@ -272,9 +272,9 @@ istio-integration-test:
 ifndef JOB_TYPE
 	make deploy
 else ifeq ($(JOB_TYPE), presubmit)
-	make deploy IMG=${PULL_IMAGE_VERSION}
+	make deploy IMG=europe-docker.pkg.dev/kyma-project/dev/istio-manager:${PULL_IMAGE_VERSION}
 else ifeq ($(JOB_TYPE), postsubmit)
-	make deploy IMG=${POST_IMAGE_VERSION}
+	make deploy IMG=europe-docker.pkg.dev/kyma-project/prod/istio-manager:${POST_IMAGE_VERSION}
 endif
 	cd tests/integration && go test
 

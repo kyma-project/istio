@@ -94,10 +94,10 @@ spec:
         # More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
         resources:
           limits:
-            cpu: 4000m
-            memory: 1280Mi
+            cpu: 1000m
+            memory: 2048Mi
           requests:
-            cpu: 10m
-            memory: 64Mi
+            cpu: 100m
+            memory: 200Mi
       serviceAccountName: controller-manager
       terminationGracePeriodSeconds: 10

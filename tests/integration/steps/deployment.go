@@ -58,7 +58,7 @@ func CreateApplicationDeployment(ctx context.Context, appName, namespace string)
 		if err != nil {
 			return err
 		}
-		ctx = testcontext.SetTestAppInContext(ctx, &dep)
+		ctx = testcontext.AddCreatedTestObjectInContext(ctx, &dep)
 		return nil
 	}, testcontext.GetRetryOpts()...)
 
@@ -115,4 +115,57 @@ func ApplicationHasProxyResourcesSetToCpuAndMemory(ctx context.Context, appName,
 
 		return nil
 	}, testcontext.GetRetryOpts()...)
+}
+
+// ApplicationPodShouldHaveIstioProxy checks depending on the shouldBePresent parameter if the pod has an istio-proxy container.
+// If shouldBePresent is "present", it checks if the pod has istio-proxy container, any other string checks if the pod does not have istio-proxy container.
+func ApplicationPodShouldHaveIstioProxy(ctx context.Context, appName, namespace, shouldBePresent string) error {
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	shouldHaveProxy := shouldBePresent == "present"
+
+	var podList corev1.PodList
+	return retry.Do(func() error {
+		err := k8sClient.List(context.TODO(), &podList, &client.ListOptions{
+			Namespace: namespace,
+			LabelSelector: labels.SelectorFromSet(map[string]string{
+				"app": appName,
+			}),
+		})
+		if err != nil {
+			return err
+		}
+
+		if len(podList.Items) == 0 {
+			return fmt.Errorf("no pods found for app %s in namespace %s", appName, namespace)
+		}
+
+		hasProxy := false
+		for _, pod := range podList.Items {
+			for _, container := range pod.Spec.Containers {
+				if container.Name == "istio-proxy" {
+					hasProxy = true
+				}
+			}
+
+			switch {
+			case shouldHaveProxy && hasProxy:
+				return nil
+			case !shouldHaveProxy && !hasProxy:
+				return nil
+			case shouldHaveProxy && !hasProxy:
+				return fmt.Errorf("the pod %s in namespace %s does not have istio-proxy", pod.Name, pod.Namespace)
+			case !shouldHaveProxy && hasProxy:
+				return fmt.Errorf("the pod %s in namespace %s has istio-proxy", pod.Name, pod.Namespace)
+			default:
+				return fmt.Errorf("the pod %s in namespace %s has unexpected istio-proxy state", pod.Name, pod.Namespace)
+			}
+		}
+
+		return fmt.Errorf("checking the istio-proxy for app %s in namespace %s failed", appName, namespace)
+	}, testcontext.GetRetryOpts()...)
+
 }

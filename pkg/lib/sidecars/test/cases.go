@@ -3,6 +3,9 @@ package test
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/test/helpers"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/cucumber/godog"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars"
@@ -18,7 +21,31 @@ func (s *scenario) aRestartHappens(sidecarImage string) error {
 	warnings, err := sidecars.ProxyReset(context.TODO(),
 		s.Client,
 		pods.SidecarImage{Repository: "istio/proxyv2", Tag: sidecarImage},
-		s.cniEnabled,
+		helpers.DefaultSidecarResources,
+		&s.logger)
+	s.restartWarnings = warnings
+	return err
+}
+
+func (s *scenario) aRestartHappensWithUpdatedResources(sidecarImage string, resourceType string, cpu string, memory string) error {
+
+	resources := helpers.DefaultSidecarResources
+
+	switch resourceType {
+	case "requests":
+		resources.Requests[v1.ResourceCPU] = resource.MustParse(cpu)
+		resources.Requests[v1.ResourceMemory] = resource.MustParse(memory)
+	case "limits":
+		resources.Limits[v1.ResourceCPU] = resource.MustParse(cpu)
+		resources.Limits[v1.ResourceMemory] = resource.MustParse(memory)
+	default:
+		return fmt.Errorf("unknown resource type %s", resourceType)
+	}
+
+	warnings, err := sidecars.ProxyReset(context.TODO(),
+		s.Client,
+		pods.SidecarImage{Repository: "istio/proxyv2", Tag: sidecarImage},
+		resources,
 		&s.logger)
 	s.restartWarnings = warnings
 	return err
@@ -105,9 +132,8 @@ func (s *scenario) onlyRequiredresourcesAreRestarted() error {
 	return nil
 }
 
-func (s *scenario) WithConfig(istioVersion, injection, cni string) error {
+func (s *scenario) WithConfig(istioVersion, injection string) error {
 	s.istioVersion = istioVersion
-	s.cniEnabled = cni == "true"
 	if injection == "true" {
 		s.injectionNamespaceSelector = SidecarEnabledAndDefault
 	}
@@ -123,13 +149,15 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 		return ctx, err
 	})
 
-	ctx.Step(`^there is a cluster with Istio "([^"]*)", default injection == "([^"]*)" and CNI enabled == "([^"]*)"$`, s.WithConfig)
+	ctx.Step(`^there is a cluster with Istio "([^"]*)", default injection == "([^"]*)"$`, s.WithConfig)
 	ctx.Step(`^a restart happens with target Istio "([^"]*)"`, s.aRestartHappens)
+	ctx.Step(`^a restart happens with with target Istio "([^"]*)" and sidecar resource "([^"]*)" set to cpu "([^"]*)" and memory "([^"]*)"`, s.aRestartHappensWithUpdatedResources)
 	ctx.Step(`^all required resources are deleted$`, s.allRequiredResourcesAreDeleted)
 	ctx.Step(`^all required resources are restarted$`, s.allRequiredResourcesAreRestarted)
 	ctx.Step(`^there are Pods missing sidecar`, s.WithPodsMissingSidecar)
 	ctx.Step(`^there are not ready Pods$`, s.WithNotReadyPods)
 	ctx.Step(`^there are Pods with Istio "([^"]*)" sidecar$`, s.WithSidecarInVersionXPods)
+	ctx.Step(`^there are Pods with Istio "([^"]*)" sidecar and resource "([^"]*)" cpu "([^"]*)" and memory "([^"]*)"$`, s.WithSidecarWithResources)
 	ctx.Step(`^no resource that is not supposed to be deleted is deleted$`, s.onlyRequiredResourcesAreDeleted)
 	ctx.Step(`^no resource that is not supposed to be restarted is restarted$`, s.onlyRequiredresourcesAreRestarted)
 }

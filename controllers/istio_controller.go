@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/istio/operator/internal/manifest"
 	"time"
 
 	"github.com/kyma-project/istio/operator/internal/status"
@@ -39,26 +40,23 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/ratelimiter"
 )
 
-var (
-	defaultIstioOperatorPath = "manifests/istio-operator-template.yaml"
-	workingDir               = "/tmp"
-)
-
 const (
-	IstioVersion                 string        = "1.17.1"
-	IstioImageBase               string        = "distroless"
-	IstioResourceListDefaultPath               = "manifests/controlled_resources_list.yaml"
-	ErrorRetryTime               time.Duration = time.Minute * 10
+	IstioVersion                 string = "1.17.1"
+	IstioImageBase               string = "distroless"
+	IstioResourceListDefaultPath        = "manifests/controlled_resources_list.yaml"
+	ErrorRetryTime                      = time.Minute * 1
 )
 
 var IstioTag = fmt.Sprintf("%s-%s", IstioVersion, IstioImageBase)
 
 func NewReconciler(mgr manager.Manager) *IstioReconciler {
+	merger := manifest.NewDefaultIstioMerger()
+
 	return &IstioReconciler{
 		Client:            mgr.GetClient(),
 		Scheme:            mgr.GetScheme(),
-		istioInstallation: istio.Installation{Client: istio.NewIstioClient(), IstioVersion: IstioVersion, IstioImageBase: IstioImageBase},
-		proxySidecars:     proxy.Sidecars{IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, CniEnabled: true},
+		istioInstallation: istio.Installation{Client: mgr.GetClient(), IstioClient: istio.NewIstioClient(), IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Merger: merger},
+		proxySidecars:     proxy.Sidecars{IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Log: mgr.GetLogger(), Client: mgr.GetClient(), Merger: merger},
 		log:               mgr.GetLogger(),
 	}
 }
@@ -76,7 +74,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return status.Update(ctx, r.Client, &istioCR, operatorv1alpha1.Error, metav1.Condition{}, ErrorRetryTime)
 	}
 
-	istioCR, err := r.istioInstallation.Reconcile(ctx, r.Client, istioCR, defaultIstioOperatorPath, workingDir, IstioResourceListDefaultPath)
+	istioCR, err := r.istioInstallation.Reconcile(ctx, istioCR, IstioResourceListDefaultPath)
 	if err != nil {
 		r.log.Error(err, "Error occurred during reconciliation of Istio installation")
 		return status.Update(ctx, r.Client, &istioCR, operatorv1alpha1.Error, metav1.Condition{}, ErrorRetryTime)
@@ -92,7 +90,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	// We do not want to safeguard the Istio sidecar reconciliation by checking whether Istio has to be installed. The
 	// reason for this is that we want to guarantee the restart of the proxies during the next reconciliation even if an
 	// error occurs in the reconciliation of the Istio upgrade after the Istio upgrade.
-	err = r.proxySidecars.Reconcile(ctx, r.Client, r.log)
+	err = r.proxySidecars.Reconcile(ctx, istioCR)
 	if err != nil {
 		r.log.Error(err, "Error occurred during reconciliation of Istio Sidecars")
 		return status.Update(ctx, r.Client, &istioCR, operatorv1alpha1.Error, metav1.Condition{}, ErrorRetryTime)

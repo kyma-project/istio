@@ -1,8 +1,11 @@
-package istio
+package manifest
 
 import (
+	"github.com/kyma-project/istio/operator/internal/tests"
+	"github.com/onsi/ginkgo/v2/types"
 	"os"
 	"path"
+	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -18,6 +21,16 @@ var TestTemplateData = TemplateData{
 	IstioVersion:   "1.16.1",
 	IstioImageBase: "distroless",
 }
+
+func TestManifest(t *testing.T) {
+	RegisterFailHandler(Fail)
+
+	RunSpecs(t, "Manifest Suite")
+}
+
+var _ = ReportAfterSuite("custom reporter", func(report types.Report) {
+	tests.GenerateGinkgoJunitReport("manifest-suite", report)
+})
 
 var _ = Describe("Manifest merge", func() {
 
@@ -36,10 +49,13 @@ var _ = Describe("Manifest merge", func() {
 
 	It("should return error when provided invalid path to default Istio Operator", func() {
 		// given
-		istioOperatorPath := "invalid/path.yaml"
+		sut := IstioMerger{
+			istioOperatorFilePath: "invalid/path.yaml",
+			workingDir:            workingDir,
+		}
 
 		// when
-		mergedIstioOperatorPath, err := NewDefaultIstioMerger(istioCR, istioOperatorPath, workingDir, TestTemplateData, clusterconfig.ClusterConfiguration{}).Merge()
+		mergedIstioOperatorPath, err := sut.Merge(istioCR, TestTemplateData, clusterconfig.ClusterConfiguration{})
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -48,10 +64,13 @@ var _ = Describe("Manifest merge", func() {
 
 	It("should return error when provided misconfigured default Istio Operator", func() {
 		// given
-		istioOperatorPath := "test/wrong-operator.yaml"
+		sut := IstioMerger{
+			istioOperatorFilePath: "test/wrong-operator.yaml",
+			workingDir:            workingDir,
+		}
 
 		// when
-		mergedIstioOperatorPath, err := NewDefaultIstioMerger(istioCR, istioOperatorPath, workingDir, TestTemplateData, clusterconfig.ClusterConfiguration{}).Merge()
+		mergedIstioOperatorPath, err := sut.Merge(istioCR, TestTemplateData, clusterconfig.ClusterConfiguration{})
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -60,10 +79,13 @@ var _ = Describe("Manifest merge", func() {
 
 	It("should return merged configuration, when there is a Istio CR with valid configuration and a correct Istio Operator manifest", func() {
 		// given
-		istioOperatorPath := "test/test-operator.yaml"
+		sut := IstioMerger{
+			istioOperatorFilePath: "test/test-operator.yaml",
+			workingDir:            workingDir,
+		}
 
 		// when
-		mergedIstioOperatorPath, err := NewDefaultIstioMerger(istioCR, istioOperatorPath, workingDir, TestTemplateData, clusterconfig.ClusterConfiguration{}).Merge()
+		mergedIstioOperatorPath, err := sut.Merge(istioCR, TestTemplateData, clusterconfig.ClusterConfiguration{})
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -81,10 +103,13 @@ var _ = Describe("Manifest merge", func() {
 
 	It("should return merged configuration, with IstioVersion and IstioImageBase coming from template", func() {
 		// given
-		istioOperatorPath := "test/template-operator.yaml"
+		sut := IstioMerger{
+			istioOperatorFilePath: "test/template-operator.yaml",
+			workingDir:            workingDir,
+		}
 
 		// when
-		mergedIstioOperatorPath, err := NewDefaultIstioMerger(istioCR, istioOperatorPath, workingDir, TestTemplateData, clusterconfig.ClusterConfiguration{}).Merge()
+		mergedIstioOperatorPath, err := sut.Merge(istioCR, TestTemplateData, clusterconfig.ClusterConfiguration{})
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -98,8 +123,6 @@ var _ = Describe("Manifest merge", func() {
 
 	It("should return merged configuration with overrides when provided", func() {
 		// given
-		istioOperatorPath := "test/test-operator.yaml"
-
 		newCniBinDirPath := "overriden/path"
 
 		clusterconfig := map[string]interface{}{
@@ -117,8 +140,13 @@ var _ = Describe("Manifest merge", func() {
 			},
 		}
 
+		sut := IstioMerger{
+			istioOperatorFilePath: "test/test-operator.yaml",
+			workingDir:            workingDir,
+		}
+
 		// when
-		mergedIstioOperatorPath, err := NewDefaultIstioMerger(istioCR, istioOperatorPath, workingDir, TestTemplateData, clusterconfig).Merge()
+		mergedIstioOperatorPath, err := sut.Merge(istioCR, TestTemplateData, clusterconfig)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())

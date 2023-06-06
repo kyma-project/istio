@@ -100,6 +100,49 @@ func (s *scenario) WithSidecarInVersionXPods(sidecarTag string) error {
 	return s.createObjectInAllNamespaces(&deployment, NoNamespace, selector)
 }
 
+func (s *scenario) WithSidecarWithResources(sidecarTag string, resourceType string, cpu string, memory string) error {
+	builder := helpers.NewSidecarPodBuilder().
+		SetSidecarImageTag(sidecarTag).
+		SetName(fmt.Sprintf("injected-%s", sidecarTag))
+
+	switch resourceType {
+	case "requests":
+		builder.SetCpuRequest(cpu).SetMemoryRequest(memory)
+	case "limits":
+		builder.SetCpuLimit(cpu).SetMemoryLimit(memory)
+	default:
+		return fmt.Errorf("unknown resource type %s", resourceType)
+	}
+
+	injectedIstioPod := builder.Build()
+
+	injectedIstioPod.OwnerReferences = []metav1.OwnerReference{
+		{
+			Kind: "Deployment",
+			Name: fmt.Sprintf("owner-injected-%s", sidecarTag),
+		},
+	}
+
+	deployment := appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: fmt.Sprintf("owner-injected-%s", sidecarTag),
+		},
+	}
+
+	err := s.createObjectInAllNamespaces(injectedIstioPod, NoNamespace, NoNamespace)
+	if err != nil {
+		return err
+	}
+
+	selector := AllNamespaces
+	if sidecarTag == s.istioVersion {
+		// We don't support restart in any other case than Istio version change
+		selector = NoNamespace
+	}
+
+	return s.createObjectInAllNamespaces(&deployment, NoNamespace, selector)
+}
+
 func (s *scenario) WithPodsMissingSidecar() error {
 	notInjected := helpers.NewSidecarPodBuilder().DisableSidecar().SetName("not-injected").Build()
 	notInjected.OwnerReferences = []metav1.OwnerReference{

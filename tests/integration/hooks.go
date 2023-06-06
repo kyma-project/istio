@@ -9,7 +9,6 @@ import (
 	"github.com/pkg/errors"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"log"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -44,11 +43,18 @@ var istioCrTearDown = func(ctx context.Context, sc *godog.Scenario, _ error) (co
 }
 
 func forceIstioCrRemoval(ctx context.Context, istio *v1alpha1.Istio) error {
+	c, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	t, err := testcontext.GetTestingFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
 	return retry.Do(func() error {
-		c, err := testcontext.GetK8sClientFromContext(ctx)
-		if err != nil {
-			return err
-		}
+
 		err = c.Get(ctx, client.ObjectKey{Namespace: istio.GetNamespace(), Name: istio.GetName()}, istio)
 
 		if k8serrors.IsNotFound(err) {
@@ -60,7 +66,7 @@ func forceIstioCrRemoval(ctx context.Context, istio *v1alpha1.Istio) error {
 		}
 
 		if istio.Status.State == v1alpha1.Error {
-			log.Println("Istio CR in error state, force removal")
+			t.Log("Istio CR in error state, force removal")
 			istio.Finalizers = nil
 			err = c.Update(ctx, istio)
 			if err != nil {
@@ -75,7 +81,12 @@ func forceIstioCrRemoval(ctx context.Context, istio *v1alpha1.Istio) error {
 }
 
 func removeObjectFromCluster(ctx context.Context, object client.Object) error {
-	log.Printf("Teardown %s", object.GetName())
+	t, err := testcontext.GetTestingFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	t.Logf("Teardown %s", object.GetName())
 
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
@@ -89,7 +100,7 @@ func removeObjectFromCluster(ctx context.Context, object client.Object) error {
 	if err != nil && !k8serrors.IsNotFound(err) {
 		return err
 	}
-	log.Printf("Deleted %s", object.GetName())
+	t.Logf("Deleted %s", object.GetName())
 
 	return nil
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"testing"
 )
 
 // istioCrCtxKey is the key used to store the IstioCR used by a scenario in the context.Context.
@@ -50,4 +51,19 @@ func GetK8sClientFromContext(ctx context.Context) (client.Client, error) {
 
 func SetK8sClientInContext(ctx context.Context, k8sClient client.Client) context.Context {
 	return context.WithValue(ctx, k8sClientCtxKey{}, k8sClient)
+}
+
+type testingContextKey struct{}
+
+func GetTestingFromContext(ctx context.Context) (*testing.T, error) {
+	v, ok := ctx.Value(testingContextKey{}).(*testing.T)
+	if !ok {
+		return v, errors.New("testing.T not found in context")
+	}
+	return v, nil
+
+}
+
+func SetTestingInContext(ctx context.Context, testing *testing.T) context.Context {
+	return context.WithValue(ctx, testingContextKey{}, testing)
 }

@@ -12,20 +12,22 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"testing"
+	"time"
 
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
 
 func TestIstio(t *testing.T) {
-	defaultContext := testcontext.SetK8sClientInContext(context.Background(), createK8sClient())
 
 	goDogOpts := godog.Options{
 		Output: colors.Colored(os.Stdout),
 		Format: "pretty",
 		Paths:  []string{"features/istio"},
 		// Concurrency must be set to 1, as the tests modify the global cluster state and can't be isolated.
-		Concurrency:    1,
-		DefaultContext: defaultContext,
+		Concurrency: 1,
+		// We want to randomize the scenario order to avoid any implicit dependencies between scenarios.
+		Randomize:      time.Now().UTC().UnixNano(),
+		DefaultContext: createDefaultContext(t),
 	}
 
 	if os.Getenv("EXPORT_RESULT") == "true" {
@@ -42,6 +44,11 @@ func TestIstio(t *testing.T) {
 	if testExitCode != 0 {
 		t.Fatalf("non-zero status returned, failed to run feature tests")
 	}
+}
+
+func createDefaultContext(t *testing.T) context.Context {
+	ctx := testcontext.SetK8sClientInContext(context.Background(), createK8sClient())
+	return testcontext.SetTestingInContext(ctx, t)
 }
 
 func createK8sClient() client.Client {

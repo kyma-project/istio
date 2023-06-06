@@ -18,12 +18,15 @@ package main
 
 import (
 	"flag"
+	"log"
+	"net/http"
 	"os"
 	"time"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	_ "net/http/pprof"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -67,6 +70,10 @@ func init() { //nolint:gochecknoinits
 }
 
 func main() {
+	go func() {
+		log.Println(http.ListenAndServe("localhost:6060", nil))
+	}()
+
 	flagVar := defineFlagVar()
 	opts := zap.Options{
 		Development: true,

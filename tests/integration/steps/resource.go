@@ -98,7 +98,7 @@ func NamespaceIsPresent(ctx context.Context, name, shouldBePresent string) error
 	}, testcontext.GetRetryOpts()...)
 }
 
-func NamespaceHasLabelsAndAnnotations(ctx context.Context, name, shouldBePresent string) error {
+func NamespaceHasLabelAndAnnotation(ctx context.Context, name, label, annotation string) error {
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
@@ -107,11 +107,11 @@ func NamespaceHasLabelsAndAnnotations(ctx context.Context, name, shouldBePresent
 	var ns corev1.Namespace
 	return retry.Do(func() error {
 		err := k8sClient.Get(context.TODO(), types.NamespacedName{Name: name}, &ns)
-		if shouldBePresent != "present" {
-			if !k8serrors.IsNotFound(err) {
-				return fmt.Errorf("namespace %s is present but shouldn't", name)
-			}
-			return nil
+		if _, ok := ns.Labels[label]; !ok {
+			return fmt.Errorf("namespace %s does not contain %s label", name, label)
+		}
+		if _, ok := ns.Annotations[annotation]; !ok {
+			return fmt.Errorf("namespace %s does not contain %s annotation", name, annotation)
 		}
 		return err
 	}, testcontext.GetRetryOpts()...)

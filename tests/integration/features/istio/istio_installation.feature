@@ -30,6 +30,7 @@ Feature: Installing and uninstalling Istio module
     Given Istio CR "istio-sample" is applied in namespace "default"
     And Istio CR "istio-sample" in namespace "default" has status "Ready"
     And Namespace "istio-system" is "present"
+    And Namespace "istio-system" has "namespaces.warden.kyma-project.io/validate" label and "istios.operator.kyma-project.io/managed-by-disclaimer" annotation
     When "Istio CR" "istio-sample" in namespace "default" is deleted
     Then "Istio CR" is not present on cluster
     And Istio CRDs "should not" be present on cluster

@@ -267,4 +267,4 @@ perf-test:
 istio-integration-test:
 	make install
 	make deploy
-	cd tests/integration && go test
+	cd tests/integration && EXPORT_RESULT=true go test

@@ -108,7 +108,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(returnedIstioCr.Status.State).To(Equal(operatorv1alpha1.Processing))
 
 		ns := corev1.Namespace{}
-		err = c.Get(context.TODO(), types.NamespacedName{Name: "istio-system"}, &ns)
+		_ = c.Get(context.TODO(), types.NamespacedName{Name: "istio-system"}, &ns)
 		Expect(ns.Labels).To(HaveKeyWithValue(testKey, testValue))
 		Expect(ns.Annotations).To(HaveKeyWithValue(testKey, testValue))
 		Expect(ns.Labels).To(HaveKeyWithValue("namespaces.warden.kyma-project.io/validate", "enabled"))
@@ -226,7 +226,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(returnedIstioCr.Status.State).To(Equal(operatorv1alpha1.Processing))
 
 		ns := corev1.Namespace{}
-		err = c.Get(context.TODO(), types.NamespacedName{Name: "istio-system"}, &ns)
+		_ = c.Get(context.TODO(), types.NamespacedName{Name: "istio-system"}, &ns)
 		Expect(ns.Labels).To(HaveKeyWithValue(testKey, testValue))
 		Expect(ns.Annotations).To(HaveKeyWithValue(testKey, testValue))
 		Expect(ns.Labels).To(HaveKeyWithValue("namespaces.warden.kyma-project.io/validate", "enabled"))
@@ -387,7 +387,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(returnedIstioCr.Status.State).To(Equal(operatorv1alpha1.Processing))
 
 		ns := corev1.Namespace{}
-		err = c.Get(context.TODO(), types.NamespacedName{Name: "istio-system"}, &ns)
+		_ = c.Get(context.TODO(), types.NamespacedName{Name: "istio-system"}, &ns)
 		Expect(ns.Labels).To(HaveKeyWithValue(testKey, testValue))
 		Expect(ns.Annotations).To(HaveKeyWithValue(testKey, testValue))
 		Expect(ns.Labels).To(HaveKeyWithValue("namespaces.warden.kyma-project.io/validate", "enabled"))

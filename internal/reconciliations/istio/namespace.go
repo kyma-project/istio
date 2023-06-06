@@ -17,8 +17,7 @@ const (
 
 // addWardenValidationAndDisclaimer updates the Istio namespace
 func addWardenValidationAndDisclaimer(ctx context.Context, kubeClient client.Client) error {
-	var obj client.Object
-	obj = &v1.Namespace{}
+	var obj client.Object = &v1.Namespace{}
 
 	err := kubeClient.Get(ctx, types.NamespacedName{Name: istioNamespace}, obj)
 	if err != nil {

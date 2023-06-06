@@ -2,7 +2,7 @@
 
 set -e
 
-JOB_NAME_PATTERN=${JOB_NAME_PATTERN:-"(pre-main-kyma-components-.*)|(pre-main-kyma-tests-.*)|(pre-kyma-components-.*)|(pre-kyma-tests-.*)|(pull-.*-build)"}
+JOB_NAME_PATTERN=${JOB_NAME_PATTERN:-"(pull-.*-build)"}
 TIMEOUT=${JOBGUARD_TIMEOUT:-"15m"}
 
 if [[ "${BUILD_TYPE}" == "pr" ]]; then

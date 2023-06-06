@@ -11,8 +11,8 @@ const (
 	istioNamespace   = "istio-system"
 	wardenLabelKey   = "namespaces.warden.kyma-project.io/validate"
 	wardenLabelValue = "enabled"
-	disclaimerKey    = "istio.kyma-project.io/managed-by-istio-module-disclaimer"
-	disclaimerValue  = "DO NOT EDIT - This resource is managed by Kyma"
+	disclaimerKey    = "istios.operator.kyma-project.io/managed-by-disclaimer"
+	disclaimerValue  = "DO NOT EDIT - This resource is managed by Kyma.\nAny modifications are discarded and the resource is reverted to the original state."
 )
 
 // addWardenValidationAndDisclaimer updates the Istio namespace

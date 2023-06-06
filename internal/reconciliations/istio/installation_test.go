@@ -24,11 +24,13 @@ import (
 )
 
 const (
-	istioVersion     string = "1.16.1"
-	istioImageBase   string = "distroless"
-	resourceListPath string = "test/test_controlled_resource_list.yaml"
-	testKey          string = "key"
-	testValue        string = "value"
+	istioVersion         string = "1.16.1"
+	istioImageBase       string = "distroless"
+	resourceListPath     string = "test/test_controlled_resource_list.yaml"
+	testKey              string = "key"
+	testValue            string = "value"
+	istioDisclaimerKey   string = "istios.operator.kyma-project.io/managed-by-disclaimer"
+	istioDisclaimerValue string = "DO NOT EDIT - This resource is managed by Kyma.\nAny modifications are discarded and the resource is reverted to the original state."
 )
 
 var istioTag = fmt.Sprintf("%s-%s", istioVersion, istioImageBase)
@@ -112,7 +114,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(ns.Labels).To(HaveKeyWithValue(testKey, testValue))
 		Expect(ns.Annotations).To(HaveKeyWithValue(testKey, testValue))
 		Expect(ns.Labels).To(HaveKeyWithValue("namespaces.warden.kyma-project.io/validate", "enabled"))
-		Expect(ns.Annotations).To(HaveKeyWithValue("istio.kyma-project.io/managed-by-istio-module-disclaimer", "DO NOT EDIT - This resource is managed by Kyma"))
+		Expect(ns.Annotations).To(HaveKeyWithValue(istioDisclaimerKey, istioDisclaimerValue))
 	})
 
 	It("should fail if after install and update Istio pods do not match target version", func() {
@@ -230,7 +232,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(ns.Labels).To(HaveKeyWithValue(testKey, testValue))
 		Expect(ns.Annotations).To(HaveKeyWithValue(testKey, testValue))
 		Expect(ns.Labels).To(HaveKeyWithValue("namespaces.warden.kyma-project.io/validate", "enabled"))
-		Expect(ns.Annotations).To(HaveKeyWithValue("istio.kyma-project.io/managed-by-istio-module-disclaimer", "DO NOT EDIT - This resource is managed by Kyma"))
+		Expect(ns.Annotations).To(HaveKeyWithValue(istioDisclaimerKey, istioDisclaimerValue))
 	})
 
 	It("should not execute install to downgrade istio", func() {
@@ -391,7 +393,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(ns.Labels).To(HaveKeyWithValue(testKey, testValue))
 		Expect(ns.Annotations).To(HaveKeyWithValue(testKey, testValue))
 		Expect(ns.Labels).To(HaveKeyWithValue("namespaces.warden.kyma-project.io/validate", "enabled"))
-		Expect(ns.Annotations).To(HaveKeyWithValue("istio.kyma-project.io/managed-by-istio-module-disclaimer", "DO NOT EDIT - This resource is managed by Kyma"))
+		Expect(ns.Annotations).To(HaveKeyWithValue(istioDisclaimerKey, istioDisclaimerValue))
 	})
 
 	It("should not install or uninstall when Istio CR has changed, but has deletion timestamp", func() {

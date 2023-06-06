@@ -98,6 +98,25 @@ func NamespaceIsPresent(ctx context.Context, name, shouldBePresent string) error
 	}, testcontext.GetRetryOpts()...)
 }
 
+func NamespaceHasLabelsAndAnnotations(ctx context.Context, name, shouldBePresent string) error {
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	var ns corev1.Namespace
+	return retry.Do(func() error {
+		err := k8sClient.Get(context.TODO(), types.NamespacedName{Name: name}, &ns)
+		if shouldBePresent != "present" {
+			if !k8serrors.IsNotFound(err) {
+				return fmt.Errorf("namespace %s is present but shouldn't", name)
+			}
+			return nil
+		}
+		return err
+	}, testcontext.GetRetryOpts()...)
+}
+
 func ResourceInNamespaceIsDeleted(ctx context.Context, kind, name, namespace string) error {
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {

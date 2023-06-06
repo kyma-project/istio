@@ -29,10 +29,14 @@ Feature: Installing and uninstalling Istio module
     Given Istio CR "istio-sample" is applied in namespace "default"
     And Istio CR "istio-sample" in namespace "default" has status "Ready"
     And Namespace "istio-system" is "present"
+    And Istio injection is enabled in namespace "default"
+    And Application "test-app" is running in namespace "default"
+    And Application pod "test-app" in namespace "default" has Istio proxy "present"
     When "Istio CR" "istio-sample" in namespace "default" is deleted
     Then "Istio CR" is not present on cluster
     And Istio CRDs "should not" be present on cluster
     And Namespace "istio-system" is "not present"
+    And Application pod "test-app" in namespace "default" has Istio proxy "not present"
 
   Scenario: Uninstallation respects the Istio resources created by the user
     Given Istio CR "istio-sample" is applied in namespace "default"

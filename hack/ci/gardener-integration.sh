@@ -3,7 +3,7 @@
 #
 ##Description: This script provisions a Gardener cluster with config specified in environmental variables and runs Istio module integration tests
 
-set -euxo pipefail
+set -euo pipefail
 
 function check_required_vars() {
   local requiredVarMissing=false

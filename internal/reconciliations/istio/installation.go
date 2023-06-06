@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/kyma-project/istio/operator/internal/resources"
-	"github.com/kyma-project/istio/operator/pkg/lib/label"
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 
@@ -81,7 +80,7 @@ func (i *Installation) Reconcile(ctx context.Context, client client.Client, isti
 			return istioCR, err
 		}
 
-		err = label.AddIstioNamespaceLabel(ctx, client)
+		err = addWardenValidationAndDisclaimer(ctx, client)
 		if err != nil {
 			return istioCR, err
 		}

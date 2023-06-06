@@ -13,6 +13,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/scheme"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -25,6 +26,8 @@ const (
 	defaultIstioOperatorPath string = "test/test-operator.yaml"
 	resourceListPath         string = "test/test_controlled_resource_list.yaml"
 	workingDir               string = "/tmp"
+	testKey                  string = "key"
+	testValue                string = "value"
 )
 
 var istioTag = fmt.Sprintf("%s-%s", istioVersion, istioImageBase)
@@ -82,6 +85,8 @@ var _ = Describe("Installation reconciliation", func() {
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
 		istioNamespace := createNamespace("istio-system")
+		c := createFakeClient(&istioCr, istiod, istioNamespace)
+
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
 			Client:         &mockClient,
@@ -89,13 +94,20 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 		}
 		// when
-		returnedIstioCr, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod, istioNamespace), istioCr, defaultIstioOperatorPath, workingDir, resourceListPath)
+		returnedIstioCr, err := installation.Reconcile(context.TODO(), c, istioCr, defaultIstioOperatorPath, workingDir, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 		Expect(returnedIstioCr.Status.State).To(Equal(operatorv1alpha1.Processing))
+
+		ns := corev1.Namespace{}
+		err = c.Get(context.TODO(), types.NamespacedName{Name: "istio-system"}, &ns)
+		Expect(ns.Labels).To(HaveKeyWithValue(testKey, testValue))
+		Expect(ns.Annotations).To(HaveKeyWithValue(testKey, testValue))
+		Expect(ns.Labels).To(HaveKeyWithValue("namespaces.warden.kyma-project.io/validate", "enabled"))
+		Expect(ns.Annotations).To(HaveKeyWithValue("istio.kyma-project.io/managed-by-istio-module-disclaimer", "DO NOT EDIT - This resource is managed by Kyma"))
 	})
 
 	It("should fail if after install and update Istio pods do not match target version", func() {
@@ -183,6 +195,8 @@ var _ = Describe("Installation reconciliation", func() {
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.17.0")
 		istioNamespace := createNamespace("istio-system")
+		c := createFakeClient(&istioCr, istiod, istioNamespace)
+
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
 			Client:         &mockClient,
@@ -190,13 +204,20 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 		}
 		// when
-		returnedIstioCr, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod, istioNamespace), istioCr, defaultIstioOperatorPath, workingDir, resourceListPath)
+		returnedIstioCr, err := installation.Reconcile(context.TODO(), c, istioCr, defaultIstioOperatorPath, workingDir, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 		Expect(returnedIstioCr.Status.State).To(Equal(operatorv1alpha1.Processing))
+
+		ns := corev1.Namespace{}
+		err = c.Get(context.TODO(), types.NamespacedName{Name: "istio-system"}, &ns)
+		Expect(ns.Labels).To(HaveKeyWithValue(testKey, testValue))
+		Expect(ns.Annotations).To(HaveKeyWithValue(testKey, testValue))
+		Expect(ns.Labels).To(HaveKeyWithValue("namespaces.warden.kyma-project.io/validate", "enabled"))
+		Expect(ns.Annotations).To(HaveKeyWithValue("istio.kyma-project.io/managed-by-istio-module-disclaimer", "DO NOT EDIT - This resource is managed by Kyma"))
 	})
 
 	It("should not execute install to downgrade istio", func() {
@@ -324,6 +345,8 @@ var _ = Describe("Installation reconciliation", func() {
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
 		istioNamespace := createNamespace("istio-system")
+		c := createFakeClient(&istioCr, istiod, istioNamespace)
+
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
 			Client:         &mockClient,
@@ -331,13 +354,20 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 		}
 		// when
-		returnedIstioCr, err := installation.Reconcile(context.TODO(), createFakeClient(&istioCr, istiod, istioNamespace), istioCr, defaultIstioOperatorPath, workingDir, resourceListPath)
+		returnedIstioCr, err := installation.Reconcile(context.TODO(), c, istioCr, defaultIstioOperatorPath, workingDir, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 		Expect(returnedIstioCr.Status.State).To(Equal(operatorv1alpha1.Processing))
+
+		ns := corev1.Namespace{}
+		err = c.Get(context.TODO(), types.NamespacedName{Name: "istio-system"}, &ns)
+		Expect(ns.Labels).To(HaveKeyWithValue(testKey, testValue))
+		Expect(ns.Annotations).To(HaveKeyWithValue(testKey, testValue))
+		Expect(ns.Labels).To(HaveKeyWithValue("namespaces.warden.kyma-project.io/validate", "enabled"))
+		Expect(ns.Annotations).To(HaveKeyWithValue("istio.kyma-project.io/managed-by-istio-module-disclaimer", "DO NOT EDIT - This resource is managed by Kyma"))
 	})
 
 	It("should not install or uninstall when Istio CR has changed, but has deletion timestamp", func() {
@@ -581,6 +611,8 @@ func createFakeClient(objects ...client.Object) client.Client {
 	err := operatorv1alpha1.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
 	err = corev1.AddToScheme(scheme.Scheme)
+	Expect(err).NotTo(HaveOccurred())
+	err = corev1.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
 	err = networkingv1alpha3.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
@@ -615,7 +647,13 @@ func createPod(name, namespace, containerName, imageVersion string) *corev1.Pod 
 func createNamespace(name string) *corev1.Namespace {
 	return &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
+			Name:        name,
+			Labels:      map[string]string{testKey: testValue},
+			Annotations: map[string]string{testKey: testValue},
+		},
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Namespace",
+			APIVersion: "v1",
 		},
 	}
 }

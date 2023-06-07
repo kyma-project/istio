@@ -22,4 +22,4 @@ jobs:
         uses: golangci/golangci-lint-action@5f1fec7010f6ae3b84ea4f7b2129beb8639b564f
         with:
           version: 'latest'
-          args: --timeout=10m
+          args: --timeout=10m --verbose

@@ -1,8 +1,8 @@
 # Technical Design
 
-## Kyma Istio operator
+## Kyma Istio Operator
 
-![Kyma IstioOperator Overview](./istio-operator-overview.svg)
+![Kyma IstioOperator Overview](./../assets/istio-operator-overview.svg)
 
 We want to keep the Kyma Istio operator as simple as possible. That's why we decided to start with one controller that consists of several self-contained components
 executing reconciliation logic. The resource used by this controller is [Istio CR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md).
@@ -55,7 +55,7 @@ Therefore, we have agreed that it is okay to block the reconciliation loop durin
  
 The following diagram shows the reconciliation process for installing, uninstalling, and canary upgrading (using revisions) Istio.
 
-![Istio Installation Reconciliation](./istio-installation-reconciliation.svg)
+![Istio Installation Reconciliation](../assets/istio-controller-reconciliation-loop.svg)
 
 ### Istio upgrade version checking
 You can upgrade Istio only by one minor version (1.2.3 -> 1.3.0). Reconciliation fails if the difference between current and target minor versions is greater than one (1.2.3 -> 1.4.0).
@@ -68,7 +68,7 @@ and must work in isolation when assessing whether reconciliation is required, ap
 The execution of the reconciliation must be fast, and we must avoid many blocking calls. Long-running tasks must be executed asynchronously, and the status must be evaluated in the next reconciliation cycle.
 
  The following diagram shows the reconciliation loop of `IstioController`:
-![Reconciliation Loop Diagram](./istio-controller-reconciliation-loop.svg)
+![Reconciliation Loop Diagram](../assets/istio-controller-reconciliation-loop.svg)
 
 #### Interval
 
@@ -98,7 +98,7 @@ We need to make sure that each reconciliation component is completely independen
 The reason for this is that, for the sake of simplicity, we want to start with just one controller that handles all the logic to reconcile Istio. Since we have independent components, we can move them into new controllers if 
 improving the performance of `IstioController` is necessary.
 
-![Controller Component Diagram](./controller-component-diagram.svg)
+![Controller Component Diagram](../assets/controller-component-diagram.svg)
 
 #### IstioController
 IstioController takes care of the entire Istio reconciliation process and is bound to [Istio CR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md).

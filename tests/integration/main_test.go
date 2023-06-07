@@ -39,8 +39,15 @@ func TestIstio(t *testing.T) {
 		ScenarioInitializer: initScenario,
 		Options:             &goDogOpts,
 	}
-
 	testExitCode := suite.Run()
+
+	if os.Getenv("EXPORT_RESULT") == "true" {
+		err := generateReport("istio-installation")
+		if err != nil {
+			t.Errorf("error while generating report: %s", err)
+		}
+	}
+
 	if testExitCode != 0 {
 		t.Fatalf("non-zero status returned, failed to run feature tests")
 	}

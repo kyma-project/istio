@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/manifest"
 	"time"
 
@@ -55,16 +56,26 @@ func NewReconciler(mgr manager.Manager) *IstioReconciler {
 	return &IstioReconciler{
 		Client:            mgr.GetClient(),
 		Scheme:            mgr.GetScheme(),
-		istioInstallation: istio.Installation{Client: mgr.GetClient(), IstioClient: istio.NewIstioClient(), IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Merger: merger},
-		proxySidecars:     proxy.Sidecars{IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Log: mgr.GetLogger(), Client: mgr.GetClient(), Merger: merger},
+		istioInstallation: istio.Installation{Client: mgr.GetClient(), IstioClient: istio.NewIstioClient(), IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Merger: &merger},
+		proxySidecars:     proxy.Sidecars{IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Log: mgr.GetLogger(), Client: mgr.GetClient(), Merger: &merger},
 		log:               mgr.GetLogger(),
 	}
 }
 
 func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	r.log.Info("Was called to reconcile Kyma Istio Service Mesh")
-
 	istioCR := operatorv1alpha1.Istio{}
+
+	cSize, err := clusterconfig.EvaluateClusterSize(context.Background(), r.Client)
+	if err != nil {
+		r.log.Error(err, "Error occurred during evaluation of cluster size")
+		return status.Update(ctx, r.Client, &istioCR, operatorv1alpha1.Error, metav1.Condition{}, ErrorRetryTime)
+	}
+
+	r.proxySidecars.Merger.SetIstioInstallFlavor(cSize)
+	r.istioInstallation.Merger.SetIstioInstallFlavor(cSize)
+	ctrl.Log.Info("Installing istio with", "profile", cSize.String())
+
 	if err := r.Client.Get(ctx, req.NamespacedName, &istioCR); err != nil {
 		if errors.IsNotFound(err) {
 			r.log.Info("Skipped reconciliation, because Istio CR was not found", "request object", req.NamespacedName)
@@ -74,7 +85,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return status.Update(ctx, r.Client, &istioCR, operatorv1alpha1.Error, metav1.Condition{}, ErrorRetryTime)
 	}
 
-	istioCR, err := r.istioInstallation.Reconcile(ctx, istioCR, IstioResourceListDefaultPath)
+	istioCR, err = r.istioInstallation.Reconcile(ctx, istioCR, IstioResourceListDefaultPath)
 	if err != nil {
 		r.log.Error(err, "Error occurred during reconciliation of Istio installation")
 		return status.Update(ctx, r.Client, &istioCR, operatorv1alpha1.Error, metav1.Condition{}, ErrorRetryTime)

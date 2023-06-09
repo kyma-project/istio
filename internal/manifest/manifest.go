@@ -15,9 +15,10 @@ import (
 )
 
 const (
-	mergedIstioOperatorFile          = "merged-istio-operator.yaml"
-	workingDir                       = "/tmp"
-	defaultIstioOperatorManifestPath = "manifests/istio-operator-template.yaml"
+	mergedIstioOperatorFile             = "merged-istio-operator.yaml"
+	workingDir                          = "/tmp"
+	productionIstioOperatorManifestPath = "manifests/istio-operator-template.yaml"
+	evaluationIstioOperatorManifestPath = "manifests/istio-operator-template-light.yaml"
 )
 
 type TemplateData struct {
@@ -28,6 +29,7 @@ type TemplateData struct {
 type Merger interface {
 	Merge(istioCR *operatorv1alpha1.Istio, templateData TemplateData, overrides clusterconfig.ClusterConfiguration) (string, error)
 	GetIstioOperator() (istioOperator.IstioOperator, error)
+	SetIstioInstallFlavor(size clusterconfig.ClusterSize)
 }
 
 type IstioMerger struct {
@@ -37,12 +39,21 @@ type IstioMerger struct {
 
 func NewDefaultIstioMerger() IstioMerger {
 	return IstioMerger{
-		istioOperatorFilePath: defaultIstioOperatorManifestPath,
+		istioOperatorFilePath: productionIstioOperatorManifestPath,
 		workingDir:            workingDir,
 	}
 }
 
-func (m IstioMerger) Merge(istioCR *operatorv1alpha1.Istio, templateData TemplateData, overrides clusterconfig.ClusterConfiguration) (string, error) {
+func (m *IstioMerger) SetIstioInstallFlavor(size clusterconfig.ClusterSize) {
+	switch size {
+	case clusterconfig.Evaluation:
+		m.istioOperatorFilePath = evaluationIstioOperatorManifestPath
+	case clusterconfig.Production:
+		m.istioOperatorFilePath = productionIstioOperatorManifestPath
+	}
+}
+
+func (m *IstioMerger) Merge(istioCR *operatorv1alpha1.Istio, templateData TemplateData, overrides clusterconfig.ClusterConfiguration) (string, error) {
 	toBeInstalledIop, err := m.GetIstioOperator()
 	if err != nil {
 		return "", err
@@ -71,7 +82,7 @@ func (m IstioMerger) Merge(istioCR *operatorv1alpha1.Istio, templateData Templat
 	return mergedIstioOperatorPath, nil
 }
 
-func (m IstioMerger) GetIstioOperator() (istioOperator.IstioOperator, error) {
+func (m *IstioMerger) GetIstioOperator() (istioOperator.IstioOperator, error) {
 	manifest, err := os.ReadFile(m.istioOperatorFilePath)
 	if err != nil {
 		return istioOperator.IstioOperator{}, err

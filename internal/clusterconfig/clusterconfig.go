@@ -2,6 +2,7 @@ package clusterconfig
 
 import (
 	"context"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"regexp"
 
 	"github.com/imdario/mergo"
@@ -9,6 +10,51 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 )
+
+type ClusterSize int
+
+const (
+	UnknownSize ClusterSize = iota
+	Evaluation
+	Production
+)
+
+func (s ClusterSize) String() string {
+	switch s {
+	case Evaluation:
+		return "Evaluation"
+	case Production:
+		return "Production"
+	default:
+		return "Unknown"
+	}
+}
+
+func EvaluateClusterSize(ctx context.Context, k8sclient client.Client) (ClusterSize, error) {
+	nodeList := corev1.NodeList{}
+	err := k8sclient.List(ctx, &nodeList)
+	if err != nil {
+		return UnknownSize, err
+	}
+
+	var cpuCapacity resource.Quantity
+	var memoryCapacity resource.Quantity
+	for _, node := range nodeList.Items {
+		nodeCpuCap := node.Status.Capacity.Cpu()
+		if nodeCpuCap != nil {
+			cpuCapacity.Add(*nodeCpuCap)
+		}
+		nodeMemoryCap := node.Status.Capacity.Memory()
+		if nodeMemoryCap != nil {
+			memoryCapacity.Add(*nodeMemoryCap)
+		}
+	}
+	if cpuCapacity.Cmp(*resource.NewMilliQuantity(8000, resource.DecimalSI)) == -1 ||
+		memoryCapacity.Cmp(*resource.NewScaledQuantity(32, resource.Giga)) == -1 {
+		return Evaluation, nil
+	}
+	return Production, nil
+}
 
 type ClusterFlavour int
 

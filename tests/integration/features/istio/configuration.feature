@@ -14,10 +14,12 @@ Feature: Configuration of Istio module
     And Application "test-app" is running in namespace "default"
     And Application "test-app" in namespace "default" has proxy with "requests" set to cpu - "30m" and memory - "190Mi"
     And Application "test-app" in namespace "default" has proxy with "limits" set to cpu - "700m" and memory - "700Mi"
+    And "Deployment" "test-app" in namespace "default" is ready
     And Template value "ProxyCPURequest" is set to "80m"
     And Template value "ProxyMemoryRequest" is set to "230Mi"
     And Template value "ProxyCPULimit" is set to "900m"
     And Template value "ProxyMemoryLimit" is set to "900Mi"
     When Istio CR "istio-sample" is updated in namespace "default"
-    Then Application "test-app" in namespace "default" has proxy with "requests" set to cpu - "80m" and memory - "230Mi"
+    Then "Deployment" "test-app" in namespace "default" is ready
+    And Application "test-app" in namespace "default" has proxy with "requests" set to cpu - "80m" and memory - "230Mi"
     And Application "test-app" in namespace "default" has proxy with "limits" set to cpu - "900m" and memory - "900Mi"

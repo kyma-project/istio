@@ -649,6 +649,4 @@ func (m MergerMock) GetIstioOperator() (istioOperator.IstioOperator, error) {
 	return istioOperator.IstioOperator{}, nil
 }
 
-func (m MergerMock) SetIstioInstallFlavor(_ clusterconfig.ClusterSize) {
-	return
-}
+func (m MergerMock) SetIstioInstallFlavor(_ clusterconfig.ClusterSize) {}

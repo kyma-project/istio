@@ -113,7 +113,7 @@ spec:
           maxReplicas: 5
           minReplicas: 2
         podAnnotations:
-          reconciler.kyma-project.io/managed-by-reconciler-disclaimer: |
+          istios.operator.kyma-project.io/managed-by-disclaimer: |
             DO NOT EDIT - This resource is managed by Kyma.
             Any modifications are discarded and the resource is reverted to the original state.
         resources:
@@ -130,7 +130,7 @@ spec:
           seccompProfile:
             type: RuntimeDefault
         serviceAnnotations:
-          reconciler.kyma-project.io/managed-by-reconciler-disclaimer: |
+          istios.operator.kyma-project.io/managed-by-disclaimer: |
             DO NOT EDIT - This resource is managed by Kyma.
             Any modifications are discarded and the resource is reverted to the original state.
   hub: eu.gcr.io/kyma-project/external/istio
@@ -190,7 +190,7 @@ spec:
         env: {}
         name: istio-ingressgateway
         podAnnotations:
-          reconciler.kyma-project.io/managed-by-reconciler-disclaimer: |
+          istios.operator.kyma-project.io/managed-by-disclaimer: |
             DO NOT EDIT - This resource is managed by Kyma.
             Any modifications are discarded and the resource is reverted to the original state.
         secretVolumes:
@@ -203,7 +203,7 @@ spec:
         serviceAnnotations:
           dns.gardener.cloud/class: garden
           service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: "4000"
-          reconciler.kyma-project.io/managed-by-reconciler-disclaimer: |
+          istios.operator.kyma-project.io/managed-by-disclaimer: |
             DO NOT EDIT - This resource is managed by Kyma.
             Any modifications are discarded and the resource is reverted to the original state.
         type: LoadBalancer

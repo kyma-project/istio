@@ -276,7 +276,7 @@ else ifeq ($(JOB_TYPE), presubmit)
 else ifeq ($(JOB_TYPE), postsubmit)
 	make deploy IMG=europe-docker.pkg.dev/kyma-project/prod/istio-manager:${POST_IMAGE_VERSION}
 endif
-	cd tests/integration && EXPORT_RESULT=true go test
+	cd tests/integration && EXPORT_RESULT=true go test -timeout 25m
 
 .PHONY: gardener-istio-integration-test
 gardener-istio-integration-test:

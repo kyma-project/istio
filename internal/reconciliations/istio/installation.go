@@ -79,6 +79,11 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 			return istioCR, err
 		}
 
+		err = addWardenValidationAndDisclaimer(ctx, i.Client)
+		if err != nil {
+			return istioCR, err
+		}
+
 		version, err := gatherer.GetIstioPodsVersion(ctx, i.Client)
 		if err != nil {
 			return istioCR, err

@@ -18,6 +18,7 @@ Feature: Installing and uninstalling Istio module
     When Istio CR "istio-sample" is applied in namespace "default"
     Then Istio CR "istio-sample" in namespace "default" has status "Ready"
     And Istio CRDs "should" be present on cluster
+    And Namespace "istio-system" has "namespaces.warden.kyma-project.io/validate" label and "istios.operator.kyma-project.io/managed-by-disclaimer" annotation
     And "Deployment" "istiod" in namespace "istio-system" is ready
     And "Deployment" "istio-ingressgateway" in namespace "istio-system" is ready
     And "DaemonSet" "istio-cni-node" in namespace "istio-system" is ready

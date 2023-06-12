@@ -108,6 +108,42 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 		Expect(returnedIstioCr.Status.State).To(Equal(operatorv1alpha1.Processing))
+	})
+
+	It("should label and annotate istio-system namespace after Istio installation without overriding existing labels and annotations", func() {
+		// given
+
+		numTrustedProxies := 1
+		istioCr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+			Name:            "default",
+			ResourceVersion: "1",
+			Annotations:     map[string]string{},
+		},
+			Spec: operatorv1alpha1.IstioSpec{
+				Config: operatorv1alpha1.Config{
+					NumTrustedProxies: &numTrustedProxies,
+				},
+			},
+		}
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
+		istioNamespace := createNamespace("istio-system")
+		c := createFakeClient(&istioCr, istiod, istioNamespace)
+
+		mockClient := mockLibraryClient{}
+		installation := istio.Installation{
+			Client:         c,
+			IstioClient:    &mockClient,
+			IstioVersion:   istioVersion,
+			IstioImageBase: istioImageBase,
+			Merger:         MergerMock{},
+		}
+		// when
+		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+
+		// then
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(mockClient.installCalled).To(BeTrue())
+		Expect(mockClient.uninstallCalled).To(BeFalse())
 
 		ns := corev1.Namespace{}
 		_ = c.Get(context.TODO(), types.NamespacedName{Name: "istio-system"}, &ns)
@@ -226,13 +262,6 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 		Expect(returnedIstioCr.Status.State).To(Equal(operatorv1alpha1.Processing))
-
-		ns := corev1.Namespace{}
-		_ = c.Get(context.TODO(), types.NamespacedName{Name: "istio-system"}, &ns)
-		Expect(ns.Labels).To(HaveKeyWithValue(testKey, testValue))
-		Expect(ns.Annotations).To(HaveKeyWithValue(testKey, testValue))
-		Expect(ns.Labels).To(HaveKeyWithValue("namespaces.warden.kyma-project.io/validate", "enabled"))
-		Expect(ns.Annotations).To(HaveKeyWithValue(istioDisclaimerKey, istioDisclaimerValue))
 	})
 
 	It("should not execute install to downgrade istio", func() {
@@ -387,13 +416,6 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 		Expect(returnedIstioCr.Status.State).To(Equal(operatorv1alpha1.Processing))
-
-		ns := corev1.Namespace{}
-		_ = c.Get(context.TODO(), types.NamespacedName{Name: "istio-system"}, &ns)
-		Expect(ns.Labels).To(HaveKeyWithValue(testKey, testValue))
-		Expect(ns.Annotations).To(HaveKeyWithValue(testKey, testValue))
-		Expect(ns.Labels).To(HaveKeyWithValue("namespaces.warden.kyma-project.io/validate", "enabled"))
-		Expect(ns.Annotations).To(HaveKeyWithValue(istioDisclaimerKey, istioDisclaimerValue))
 	})
 
 	It("should not install or uninstall when Istio CR has changed, but has deletion timestamp", func() {

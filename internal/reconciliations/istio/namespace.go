@@ -17,18 +17,17 @@ const (
 
 // addWardenValidationAndDisclaimer updates the Istio namespace
 func addWardenValidationAndDisclaimer(ctx context.Context, kubeClient client.Client) error {
-	var obj client.Object = &v1.Namespace{}
+	ns := &v1.Namespace{}
 
-	err := kubeClient.Get(ctx, types.NamespacedName{Name: istioNamespace}, obj)
+	err := kubeClient.Get(ctx, types.NamespacedName{Name: istioNamespace}, ns)
 	if err != nil {
 		return err
 	}
-	ns := obj.(*v1.Namespace)
 	patch := client.StrategicMergeFrom(ns.DeepCopy())
 	ns.Annotations = addToMap(ns.Annotations, disclaimerKey, disclaimerValue)
 	ns.Labels = addToMap(ns.Labels, wardenLabelKey, wardenLabelValue)
 
-	err = kubeClient.Patch(ctx, obj, patch)
+	err = kubeClient.Patch(ctx, ns, patch)
 	if err != nil {
 		return err
 	}

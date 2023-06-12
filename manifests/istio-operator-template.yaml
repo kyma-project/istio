@@ -118,7 +118,7 @@ spec:
             Any modifications are discarded and the resource is reverted to the original state.
         resources:
           limits:
-            cpu: 500m
+            cpu: 4000m
             memory: 1024Mi
           requests:
             cpu: 100m

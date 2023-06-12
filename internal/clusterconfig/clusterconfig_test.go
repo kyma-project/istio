@@ -122,7 +122,7 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 })
 
 var _ = Describe("EvaluateClusterSize", func() {
-	It("should return Evaluation when cpu capacity is less than 8", func() {
+	It("should return Evaluation when cpu capacity is less than ProductionClusterCpuThreshold", func() {
 		//given
 		k3dNode := corev1.Node{
 			ObjectMeta: v1.ObjectMeta{
@@ -130,7 +130,7 @@ var _ = Describe("EvaluateClusterSize", func() {
 			},
 			Status: corev1.NodeStatus{
 				Capacity: map[corev1.ResourceName]resource.Quantity{
-					"cpu":    *resource.NewMilliQuantity(int64(4000), resource.DecimalSI),
+					"cpu":    *resource.NewMilliQuantity(clusterconfig.ProductionClusterCpuThreshold-1, resource.DecimalSI),
 					"memory": *resource.NewScaledQuantity(int64(32), resource.Giga),
 				},
 			},
@@ -146,7 +146,7 @@ var _ = Describe("EvaluateClusterSize", func() {
 		Expect(size).To(Equal(clusterconfig.Evaluation))
 	})
 
-	It("should return Evaluation when memory capacity is less than 32 Gi", func() {
+	It("should return Evaluation when memory capacity is less than ProductionClusterMemoryThresholdGi", func() {
 		//given
 		k3dNode := corev1.Node{
 			ObjectMeta: v1.ObjectMeta{
@@ -155,7 +155,7 @@ var _ = Describe("EvaluateClusterSize", func() {
 			Status: corev1.NodeStatus{
 				Capacity: map[corev1.ResourceName]resource.Quantity{
 					"cpu":    *resource.NewMilliQuantity(int64(12000), resource.DecimalSI),
-					"memory": *resource.NewScaledQuantity(int64(26), resource.Giga),
+					"memory": *resource.NewScaledQuantity(clusterconfig.ProductionClusterMemoryThresholdGi-1, resource.Giga),
 				},
 			},
 		}
@@ -170,7 +170,7 @@ var _ = Describe("EvaluateClusterSize", func() {
 		Expect(size).To(Equal(clusterconfig.Evaluation))
 	})
 
-	It("should return Production when memory capacity is bigger or equal to 32 Gi and CPU capacity is bigger or equal to 8", func() {
+	It("should return Production when memory capacity is bigger then ProductionClusterMemoryThresholdGi and CPU capacity is bigger then ProductionClusterCpuThreshold", func() {
 		//given
 		k3dNode := corev1.Node{
 			ObjectMeta: v1.ObjectMeta{
@@ -178,8 +178,8 @@ var _ = Describe("EvaluateClusterSize", func() {
 			},
 			Status: corev1.NodeStatus{
 				Capacity: map[corev1.ResourceName]resource.Quantity{
-					"cpu":    *resource.NewMilliQuantity(int64(4000), resource.DecimalSI),
-					"memory": *resource.NewScaledQuantity(int64(26), resource.Giga),
+					"cpu":    *resource.NewMilliQuantity(clusterconfig.ProductionClusterCpuThreshold, resource.DecimalSI),
+					"memory": *resource.NewScaledQuantity(clusterconfig.ProductionClusterMemoryThresholdGi, resource.Giga),
 				},
 			},
 		}
@@ -190,8 +190,8 @@ var _ = Describe("EvaluateClusterSize", func() {
 			},
 			Status: corev1.NodeStatus{
 				Capacity: map[corev1.ResourceName]resource.Quantity{
-					"cpu":    *resource.NewMilliQuantity(int64(4000), resource.DecimalSI),
-					"memory": *resource.NewScaledQuantity(int64(16), resource.Giga),
+					"cpu":    *resource.NewMilliQuantity(clusterconfig.ProductionClusterCpuThreshold, resource.DecimalSI),
+					"memory": *resource.NewScaledQuantity(clusterconfig.ProductionClusterMemoryThresholdGi, resource.Giga),
 				},
 			},
 		}

@@ -13,7 +13,13 @@ The version of Istio is coupled with the version of the controller. That means t
 The `istios.operator.kyma-project.io` CustomResourceDefinition (CRD) describes the Istio custom resource that is used to manage the Istio installation. You can find a sample custom resource [here](config/samples/operator_v1alpha1_istio.yaml).  
 Applying this custom resource triggers the installation of Istio, and deleting it triggers the uninstallation of Istio.
 
-### Supported use-cases
+### Restart of workloads with enabled sidecar injection
+
+When the Istio version is upgraded or the resource configuration of the proxies changes, the pods with enabled Istio injection are restarted.
+It's done automatically for all resources that allow the rolling restart.
+If a resource is a job, a ReplicaSet that is not managed by a deployment, or a pod that is not managed by any other resource, the restart cannot be performed automatically. In these cases, a warning is logged, and you must manually restart the resources.
+
+### Supported use cases
 
 - Install, upgrade, and uninstall Istio.
 - Restart workloads that have a proxy sidecar to ensure that these workloads are using the correct Istio version.

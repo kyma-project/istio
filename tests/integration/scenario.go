@@ -11,7 +11,7 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.After(istioCrTearDown)
 
 	t := steps.TemplatedIstioCr{}
-	ctx.Step(`^Evaluated cluster size is "([^"]*)""`, steps.EvaluatedClusterSizeIs)
+	ctx.Step(`^Evaluated cluster size is "([^"]*)"$`, steps.EvaluatedClusterSizeIs)
 	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" is ready`, steps.ResourceIsReady)
 	ctx.Step(`^Istio CRD is installed$`, steps.IstioCRDIsInstalled)
 	ctx.Step(`^Istio CR "([^"]*)" in namespace "([^"]*)" has status "([^"]*)"$`, steps.IstioCRInNamespaceHasStatus)

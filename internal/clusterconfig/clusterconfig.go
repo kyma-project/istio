@@ -17,6 +17,9 @@ const (
 	UnknownSize ClusterSize = iota
 	Evaluation
 	Production
+
+	ProductionClusterCpuThreshold      int64 = 4
+	ProductionClusterMemoryThresholdGi int64 = 10
 )
 
 func (s ClusterSize) String() string {
@@ -49,8 +52,8 @@ func EvaluateClusterSize(ctx context.Context, k8sclient client.Client) (ClusterS
 			memoryCapacity.Add(*nodeMemoryCap)
 		}
 	}
-	if cpuCapacity.Cmp(*resource.NewMilliQuantity(8000, resource.DecimalSI)) == -1 ||
-		memoryCapacity.Cmp(*resource.NewScaledQuantity(32, resource.Giga)) == -1 {
+	if cpuCapacity.Cmp(*resource.NewQuantity(ProductionClusterCpuThreshold, resource.DecimalSI)) == -1 ||
+		memoryCapacity.Cmp(*resource.NewScaledQuantity(ProductionClusterMemoryThresholdGi, resource.Giga)) == -1 {
 		return Evaluation, nil
 	}
 	return Production, nil

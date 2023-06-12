@@ -2,6 +2,7 @@ Feature: Installing and uninstalling Istio module
 
   Background:
     Given "Istio CR" is not present on cluster
+    And Evaluated cluster size is "Production"
     And Istio CRD is installed
     And "Deployment" "istio-controller-manager" in namespace "kyma-system" is ready
 

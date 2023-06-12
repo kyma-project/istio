@@ -6,6 +6,7 @@ import (
 	"github.com/avast/retry-go"
 	"github.com/cucumber/godog"
 	istioCR "github.com/kyma-project/istio/operator/api/v1alpha1"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	v1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
 	v1 "k8s.io/api/apps/v1"
@@ -81,6 +82,24 @@ func ResourceIsReady(ctx context.Context, kind, name, namespace string) error {
 
 		return nil
 	}, testcontext.GetRetryOpts()...)
+}
+
+func EvaluatedClusterSizeIs(ctx context.Context, size string) error {
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	clusterSize, err := clusterconfig.EvaluateClusterSize(ctx, k8sClient)
+	if err != nil {
+		return err
+	}
+
+	if clusterSize.String() != size {
+		return fmt.Errorf("evaluated cluster size %s is not %s", clusterSize.String(), size)
+	}
+
+	return nil
 }
 
 func NamespaceIsPresent(ctx context.Context, name, shouldBePresent string) error {

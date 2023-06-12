@@ -102,6 +102,25 @@ func NamespaceIsPresent(ctx context.Context, name, shouldBePresent string) error
 	}, testcontext.GetRetryOpts()...)
 }
 
+func NamespaceHasLabelAndAnnotation(ctx context.Context, name, label, annotation string) error {
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	var ns corev1.Namespace
+	return retry.Do(func() error {
+		err := k8sClient.Get(context.TODO(), types.NamespacedName{Name: name}, &ns)
+		if _, ok := ns.Labels[label]; !ok {
+			return fmt.Errorf("namespace %s does not contain %s label", name, label)
+		}
+		if _, ok := ns.Annotations[annotation]; !ok {
+			return fmt.Errorf("namespace %s does not contain %s annotation", name, annotation)
+		}
+		return err
+	}, testcontext.GetRetryOpts()...)
+}
+
 func ResourceInNamespaceIsDeleted(ctx context.Context, kind, name, namespace string) error {
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {

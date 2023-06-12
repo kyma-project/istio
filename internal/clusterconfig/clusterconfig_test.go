@@ -178,7 +178,7 @@ var _ = Describe("EvaluateClusterSize", func() {
 			},
 			Status: corev1.NodeStatus{
 				Capacity: map[corev1.ResourceName]resource.Quantity{
-					"cpu":    *resource.NewMilliQuantity(clusterconfig.ProductionClusterCpuThreshold, resource.DecimalSI),
+					"cpu":    *resource.NewQuantity(clusterconfig.ProductionClusterCpuThreshold, resource.DecimalSI),
 					"memory": *resource.NewScaledQuantity(clusterconfig.ProductionClusterMemoryThresholdGi, resource.Giga),
 				},
 			},
@@ -190,7 +190,7 @@ var _ = Describe("EvaluateClusterSize", func() {
 			},
 			Status: corev1.NodeStatus{
 				Capacity: map[corev1.ResourceName]resource.Quantity{
-					"cpu":    *resource.NewMilliQuantity(clusterconfig.ProductionClusterCpuThreshold, resource.DecimalSI),
+					"cpu":    *resource.NewQuantity(clusterconfig.ProductionClusterCpuThreshold, resource.DecimalSI),
 					"memory": *resource.NewScaledQuantity(clusterconfig.ProductionClusterMemoryThresholdGi, resource.Giga),
 				},
 			},

@@ -4,7 +4,7 @@
 
 ## Overview
 
-Istio Manager is a module compatible with [Lifecycle Manager](https://github.com/kyma-project/lifecycle-manager) that allows you to add Kyma Istio Operator to the Kyma runtime. Istio Operator is responsible for installing, uninstalling, and upgrading [Istio](https://https://istio.io/latest/). {to be checked}
+Istio Manager is a module compatible with [Lifecycle Manager](https://github.com/kyma-project/lifecycle-manager) that allows you to add Kyma Istio Operator to the Kyma runtime. Istio Operator is responsible for installing, uninstalling, and upgrading [Istio](https://https://istio.io/latest/).
 
 ## Installation
 

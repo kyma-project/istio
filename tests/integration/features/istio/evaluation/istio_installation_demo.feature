@@ -3,7 +3,7 @@ Feature: Installing Istio module with evaluation profile
     Given "Istio CR" is not present on cluster
     And Evaluated cluster size is "Evaluation"
     And Istio CRD is installed
-    #And "Deployment" "istio-controller-manager" in namespace "kyma-system" is ready
+    And "Deployment" "istio-controller-manager" in namespace "kyma-system" is ready
 
   Scenario:
     When Istio CR "istio-sample" is applied in namespace "default"

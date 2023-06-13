@@ -248,24 +248,12 @@ var _ = Describe("Merge", func() {
 				memoryLimit := "500Mi"
 
 				istioCR := Istio{Spec: IstioSpec{Components: &Components{
-					IngressGateways: []*IstioComponent{
-						{
-							K8s: &KubernetesResourcesConfig{
-								Resources: &Resources{
-									Limits: &ResourceClaims{
-										Cpu:    &cpuLimit,
-										Memory: &memoryLimit,
-									},
-								},
-							},
-						},
-						{
-							K8s: &KubernetesResourcesConfig{
-								Resources: &Resources{
-									Limits: &ResourceClaims{
-										Cpu:    &cpuLimit,
-										Memory: &memoryLimit,
-									},
+					IngressGateways: &IstioComponent{
+						K8s: &KubernetesResourcesConfig{
+							Resources: &Resources{
+								Limits: &ResourceClaims{
+									Cpu:    &cpuLimit,
+									Memory: &memoryLimit,
 								},
 							},
 						},
@@ -282,12 +270,6 @@ var _ = Describe("Merge", func() {
 
 				iopMemoryLimit := out.Spec.Components.IngressGateways[0].K8S.Resources.Limits["memory"]
 				Expect(iopMemoryLimit).To(Equal(iopMemoryLimit))
-
-				iop1CpuLimit := out.Spec.Components.IngressGateways[1].K8S.Resources.Limits["cpu"]
-				Expect(iop1CpuLimit).To(Equal(cpuLimit))
-
-				iop1MemoryLimit := out.Spec.Components.IngressGateways[1].K8S.Resources.Limits["memory"]
-				Expect(iop1MemoryLimit).To(Equal(iop1MemoryLimit))
 			})
 		})
 
@@ -301,14 +283,14 @@ var _ = Describe("Merge", func() {
 				memoryRequests := "500Mi"
 
 				istioCR := Istio{Spec: IstioSpec{Components: &Components{
-					IngressGateways: []*IstioComponent{{K8s: &KubernetesResourcesConfig{
+					IngressGateways: &IstioComponent{K8s: &KubernetesResourcesConfig{
 						Resources: &Resources{
 							Requests: &ResourceClaims{
 								Cpu:    &cpuRequests,
 								Memory: &memoryRequests,
 							},
 						},
-					}},
+					},
 					}}}}
 
 				// when
@@ -344,14 +326,14 @@ var _ = Describe("Merge", func() {
 			}
 
 			istioCR := Istio{Spec: IstioSpec{Components: &Components{
-				IngressGateways: []*IstioComponent{{K8s: &KubernetesResourcesConfig{
+				IngressGateways: &IstioComponent{K8s: &KubernetesResourcesConfig{
 					Strategy: &Strategy{
 						RollingUpdate: &RollingUpdate{
 							MaxUnavailable: &maxUnavailable,
 							MaxSurge:       &maxSurge,
 						},
 					},
-				}},
+				},
 				}}}}
 
 			// when
@@ -378,12 +360,12 @@ var _ = Describe("Merge", func() {
 			minReplicas := int32(4)
 
 			istioCR := Istio{Spec: IstioSpec{Components: &Components{
-				IngressGateways: []*IstioComponent{{K8s: &KubernetesResourcesConfig{
+				IngressGateways: &IstioComponent{K8s: &KubernetesResourcesConfig{
 					HPASpec: &HPASpec{
 						MaxReplicas: &maxReplicas,
 						MinReplicas: &minReplicas,
 					},
-				}},
+				},
 				}}}}
 
 			// when

@@ -79,25 +79,23 @@ func (i *Istio) mergeResources(op istioOperator.IstioOperator) (istioOperator.Is
 	if i.Spec.Components == nil {
 		return op, nil
 	}
-	if len(i.Spec.Components.IngressGateways) > 0 {
+	if i.Spec.Components.IngressGateways != nil {
 		if op.Spec.Components == nil {
 			op.Spec.Components = &v1alpha1.IstioComponentSetSpec{}
 		}
 		if len(op.Spec.Components.IngressGateways) == 0 {
 			op.Spec.Components.IngressGateways = []*v1alpha1.GatewaySpec{}
 		}
-		for i, gateway := range i.Spec.Components.IngressGateways {
-			if len(op.Spec.Components.IngressGateways) <= i {
-				op.Spec.Components.IngressGateways = append(op.Spec.Components.IngressGateways, &v1alpha1.GatewaySpec{})
-			}
-			if op.Spec.Components.IngressGateways[i].K8S == nil {
-				op.Spec.Components.IngressGateways[i].K8S = &v1alpha1.KubernetesResourcesSpec{}
-			}
+		if len(op.Spec.Components.IngressGateways) <= 1 {
+			op.Spec.Components.IngressGateways = append(op.Spec.Components.IngressGateways, &v1alpha1.GatewaySpec{})
+		}
+		if op.Spec.Components.IngressGateways[0].K8S == nil {
+			op.Spec.Components.IngressGateways[0].K8S = &v1alpha1.KubernetesResourcesSpec{}
+		}
 
-			err := mergeK8sConfig(op.Spec.Components.IngressGateways[i].K8S, *gateway.K8s)
-			if err != nil {
-				return op, err
-			}
+		err := mergeK8sConfig(op.Spec.Components.IngressGateways[0].K8S, *i.Spec.Components.IngressGateways.K8s)
+		if err != nil {
+			return op, err
 		}
 	}
 	if i.Spec.Components.Pilot != nil {

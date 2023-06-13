@@ -33,6 +33,8 @@ func (s ClusterSize) String() string {
 	}
 }
 
+// EvaluateClusterSize counts the entire capacity of cpu and memory in the cluster and returns Evaluation
+// if the total capacity of any of the resources is lower than ProductionClusterCpuThreshold or ProductionClusterMemoryThresholdGi
 func EvaluateClusterSize(ctx context.Context, k8sclient client.Client) (ClusterSize, error) {
 	nodeList := corev1.NodeList{}
 	err := k8sclient.List(ctx, &nodeList)

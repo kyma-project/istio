@@ -170,7 +170,7 @@ var _ = Describe("EvaluateClusterSize", func() {
 		Expect(size).To(Equal(clusterconfig.Evaluation))
 	})
 
-	It("should return Production when memory capacity is bigger then ProductionClusterMemoryThresholdGi and CPU capacity is bigger then ProductionClusterCpuThreshold", func() {
+	It("should return Production when memory capacity is bigger than ProductionClusterMemoryThresholdGi and CPU capacity is bigger than ProductionClusterCpuThreshold", func() {
 		//given
 		k3dNode := corev1.Node{
 			ObjectMeta: v1.ObjectMeta{

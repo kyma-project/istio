@@ -5,7 +5,7 @@ Feature: Installing Istio module with evaluation profile
     And Istio CRD is installed
     And "Deployment" "istio-controller-manager" in namespace "kyma-system" is ready
 
-  Scenario:
+  Scenario: Installation of istio module with evaluation profile
     When Istio CR "istio-sample" is applied in namespace "default"
     Then Istio CR "istio-sample" in namespace "default" has status "Ready"
     Then "proxy" has "requests" set to cpu - "10m" and memory - "32Mi"

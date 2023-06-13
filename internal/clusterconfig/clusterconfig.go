@@ -33,6 +33,22 @@ func (s ClusterSize) String() string {
 	}
 }
 
+const (
+	productionDefaultPath string = "manifests/istio-operator-template.yaml"
+	evaluationDefaultPath string = "manifests/istio-operator-template-light.yaml"
+)
+
+func (s ClusterSize) DefaultManifestPath() string {
+	switch s {
+	case Evaluation:
+		return evaluationDefaultPath
+	case Production:
+		return productionDefaultPath
+	default:
+		return "Unknown"
+	}
+}
+
 // EvaluateClusterSize counts the entire capacity of cpu and memory in the cluster and returns Evaluation
 // if the total capacity of any of the resources is lower than ProductionClusterCpuThreshold or ProductionClusterMemoryThresholdGi
 func EvaluateClusterSize(ctx context.Context, k8sclient client.Client) (ClusterSize, error) {

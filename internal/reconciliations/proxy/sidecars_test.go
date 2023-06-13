@@ -107,11 +107,11 @@ func createPod(name, namespace, containerName, imageVersion string) *corev1.Pod 
 type MergerMock struct {
 }
 
-func (m MergerMock) Merge(_ *operatorv1alpha1.Istio, _ manifest.TemplateData, _ clusterconfig.ClusterConfiguration) (string, error) {
+func (m MergerMock) Merge(_ string, _ *operatorv1alpha1.Istio, _ manifest.TemplateData, _ clusterconfig.ClusterConfiguration) (string, error) {
 	return "mocked istio operator merge result", nil
 }
 
-func (m MergerMock) GetIstioOperator() (istioOperator.IstioOperator, error) {
+func (m MergerMock) GetIstioOperator(_ string) (istioOperator.IstioOperator, error) {
 	return istioOperator.IstioOperator{}, nil
 }
 

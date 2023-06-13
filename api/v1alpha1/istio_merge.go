@@ -84,10 +84,8 @@ func (i *Istio) mergeResources(op istioOperator.IstioOperator) (istioOperator.Is
 			op.Spec.Components = &v1alpha1.IstioComponentSetSpec{}
 		}
 		if len(op.Spec.Components.IngressGateways) == 0 {
-			op.Spec.Components.IngressGateways = []*v1alpha1.GatewaySpec{}
-		}
-		if len(op.Spec.Components.IngressGateways) <= 1 {
 			op.Spec.Components.IngressGateways = append(op.Spec.Components.IngressGateways, &v1alpha1.GatewaySpec{})
+
 		}
 		if op.Spec.Components.IngressGateways[0].K8S == nil {
 			op.Spec.Components.IngressGateways[0].K8S = &v1alpha1.KubernetesResourcesSpec{}

@@ -2,6 +2,8 @@ package resources
 
 import (
 	"context"
+	"testing"
+
 	"github.com/go-logr/logr"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -11,7 +13,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	"testing"
 )
 
 var sc *runtime.Scheme
@@ -130,6 +131,7 @@ var _ = Describe("NewIstioResourcesFinderFromConfigYaml", func() {
 		},
 		))
 	})
+
 	It("Should fail if the configuration contains invalid regex", func() {
 		_, err := NewIstioResourcesFinderFromConfigYaml(context.TODO(), nil, logr.Logger{}, "test_wrong_resources_list.yaml")
 		Expect(err).To(HaveOccurred())

@@ -3,11 +3,12 @@ package resources
 import (
 	"context"
 	"fmt"
+	"os"
+	"regexp"
+
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"os"
-	"regexp"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 )
@@ -78,7 +79,7 @@ func (i *IstioResourcesFinder) FindUserCreatedIstioResources() ([]Resource, erro
 		u.SetGroupVersionKind(resource.GroupVersionKind)
 		err := i.client.List(i.ctx, &u)
 		if err != nil {
-			return nil, err
+			continue
 		}
 		for _, item := range u.Items {
 			res := Resource{
@@ -88,12 +89,10 @@ func (i *IstioResourcesFinder) FindUserCreatedIstioResources() ([]Resource, erro
 					Namespace: item.GetNamespace(),
 				},
 			}
-
 			managed, err := contains(resource.ControlledList, res.ResourceMeta)
 			if err != nil {
 				return nil, err
 			}
-
 			if !managed {
 				userResources = append(userResources, res)
 			}

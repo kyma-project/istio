@@ -15,9 +15,8 @@ import (
 )
 
 const (
-	mergedIstioOperatorFile          = "merged-istio-operator.yaml"
-	workingDir                       = "/tmp"
-	defaultIstioOperatorManifestPath = "manifests/istio-operator-template.yaml"
+	mergedIstioOperatorFile = "merged-istio-operator.yaml"
+	workingDir              = "/tmp"
 )
 
 type TemplateData struct {
@@ -26,24 +25,22 @@ type TemplateData struct {
 }
 
 type Merger interface {
-	Merge(istioCR *operatorv1alpha1.Istio, templateData TemplateData, overrides clusterconfig.ClusterConfiguration) (string, error)
-	GetIstioOperator() (istioOperator.IstioOperator, error)
+	Merge(baseManifestPath string, istioCR *operatorv1alpha1.Istio, templateData TemplateData, overrides clusterconfig.ClusterConfiguration) (string, error)
+	GetIstioOperator(baseManifestPath string) (istioOperator.IstioOperator, error)
 }
 
 type IstioMerger struct {
-	istioOperatorFilePath string
-	workingDir            string
+	workingDir string
 }
 
 func NewDefaultIstioMerger() IstioMerger {
 	return IstioMerger{
-		istioOperatorFilePath: defaultIstioOperatorManifestPath,
-		workingDir:            workingDir,
+		workingDir: workingDir,
 	}
 }
 
-func (m IstioMerger) Merge(istioCR *operatorv1alpha1.Istio, templateData TemplateData, overrides clusterconfig.ClusterConfiguration) (string, error) {
-	toBeInstalledIop, err := m.GetIstioOperator()
+func (m *IstioMerger) Merge(baseManifestPath string, istioCR *operatorv1alpha1.Istio, templateData TemplateData, overrides clusterconfig.ClusterConfiguration) (string, error) {
+	toBeInstalledIop, err := m.GetIstioOperator(baseManifestPath)
 	if err != nil {
 		return "", err
 	}
@@ -71,8 +68,8 @@ func (m IstioMerger) Merge(istioCR *operatorv1alpha1.Istio, templateData Templat
 	return mergedIstioOperatorPath, nil
 }
 
-func (m IstioMerger) GetIstioOperator() (istioOperator.IstioOperator, error) {
-	manifest, err := os.ReadFile(m.istioOperatorFilePath)
+func (m *IstioMerger) GetIstioOperator(baseManifestPath string) (istioOperator.IstioOperator, error) {
+	manifest, err := os.ReadFile(baseManifestPath)
 	if err != nil {
 		return istioOperator.IstioOperator{}, err
 	}

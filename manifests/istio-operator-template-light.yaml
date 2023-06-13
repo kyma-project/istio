@@ -13,22 +13,22 @@ spec:
         affinity:
           podAntiAffinity:
             preferredDuringSchedulingIgnoredDuringExecution:
-            - podAffinityTerm:
-                labelSelector:
-                  matchExpressions:
-                  - key: app
-                    operator: In
-                    values:
-                    - istio-cni-node
-                topologyKey: kubernetes.io/hostname
-              weight: 100
+              - podAffinityTerm:
+                  labelSelector:
+                    matchExpressions:
+                      - key: app
+                        operator: In
+                        values:
+                          - istio-cni-node
+                  topologyKey: kubernetes.io/hostname
+                weight: 100
         resources:
           limits:
-            cpu: 500m
-            memory: 1024Mi
+            cpu: 250m
+            memory: 384Mi
           requests:
-            cpu: 100m
-            memory: 512Mi
+            cpu: 10m
+            memory: 128Mi
     egressGateways:
     - enabled: false
       k8s:
@@ -46,38 +46,25 @@ spec:
         affinity:
           podAntiAffinity:
             preferredDuringSchedulingIgnoredDuringExecution:
-            - podAffinityTerm:
-                labelSelector:
-                  matchExpressions:
-                  - key: app
-                    operator: In
-                    values:
-                    - istio-ingressgateway
-                topologyKey: kubernetes.io/hostname
-              weight: 100
+              - podAffinityTerm:
+                  labelSelector:
+                    matchExpressions:
+                      - key: app
+                        operator: In
+                        values:
+                          - istio-ingressgateway
+                  topologyKey: kubernetes.io/hostname
+                weight: 100
         hpaSpec:
-          maxReplicas: 10
-          metrics:
-          - resource:
-              name: cpu
-              target:
-                type: Utilization
-                averageUtilization: 80
-            type: Resource
-          - resource:
-              name: memory
-              target:
-                type: Utilization
-                averageUtilization: 80
-            type: Resource
-          minReplicas: 3
+          maxReplicas: 3
+          minReplicas: 1
         resources:
           limits:
-            cpu: 2000m
+            cpu: 1000m
             memory: 1024Mi
           requests:
-            cpu: 100m
-            memory: 128Mi
+            cpu: 10m
+            memory: 32Mi
         securityContext:
           runAsGroup: "65534"
           runAsNonRoot: true
@@ -110,19 +97,19 @@ spec:
         - name: PILOT_HTTP10
           value: "1"
         hpaSpec:
-          maxReplicas: 5
-          minReplicas: 2
+          maxReplicas: 1
+          minReplicas: 1
         podAnnotations:
-          istios.operator.kyma-project.io/managed-by-disclaimer: |
+          reconciler.kyma-project.io/managed-by-reconciler-disclaimer: |
             DO NOT EDIT - This resource is managed by Kyma.
             Any modifications are discarded and the resource is reverted to the original state.
         resources:
           limits:
-            cpu: 4000m
-            memory: 2Gi
+            cpu: 1000m
+            memory: 1024Mi
           requests:
-            cpu: 100m
-            memory: 512Mi
+            cpu: 50m
+            memory: 128Mi
         securityContext:
           runAsGroup: "65534"
           runAsNonRoot: true
@@ -130,7 +117,7 @@ spec:
           seccompProfile:
             type: RuntimeDefault
         serviceAnnotations:
-          istios.operator.kyma-project.io/managed-by-disclaimer: |
+          reconciler.kyma-project.io/managed-by-reconciler-disclaimer: |
             DO NOT EDIT - This resource is managed by Kyma.
             Any modifications are discarded and the resource is reverted to the original state.
   hub: eu.gcr.io/kyma-project/external/istio
@@ -186,11 +173,11 @@ spec:
           secretName: istio-egressgateway-ca-certs
         type: ClusterIP
       istio-ingressgateway:
-        autoscaleEnabled: true
+        autoscaleEnabled: false
         env: {}
         name: istio-ingressgateway
         podAnnotations:
-          istios.operator.kyma-project.io/managed-by-disclaimer: |
+          reconciler.kyma-project.io/managed-by-reconciler-disclaimer: |
             DO NOT EDIT - This resource is managed by Kyma.
             Any modifications are discarded and the resource is reverted to the original state.
         secretVolumes:
@@ -203,7 +190,7 @@ spec:
         serviceAnnotations:
           dns.gardener.cloud/class: garden
           service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: "4000"
-          istios.operator.kyma-project.io/managed-by-disclaimer: |
+          reconciler.kyma-project.io/managed-by-reconciler-disclaimer: |
             DO NOT EDIT - This resource is managed by Kyma.
             Any modifications are discarded and the resource is reverted to the original state.
         type: LoadBalancer
@@ -211,7 +198,7 @@ spec:
       configValidation: true
       defaultNodeSelector: {}
       defaultPodDisruptionBudget:
-        enabled: true
+        enabled: false
       defaultResources:
         requests:
           cpu: 10m
@@ -252,11 +239,11 @@ spec:
         readinessPeriodSeconds: 5
         resources:
           limits:
-            cpu: 1000m
-            memory: 1024Mi
+            cpu: 250m
+            memory: 254Mi
           requests:
             cpu: 10m
-            memory: 192Mi
+            memory: 32Mi
         statusPort: 15020
         tracer: zipkin
       proxy_init:
@@ -282,7 +269,7 @@ spec:
     istiodRemote:
       injectionURL: ""
     pilot:
-      autoscaleEnabled: true
+      autoscaleEnabled: false
       autoscaleMax: 5
       autoscaleMin: 1
       configMap: true

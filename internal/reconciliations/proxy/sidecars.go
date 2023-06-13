@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/istio/operator/api/v1alpha1"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/manifest"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -39,7 +41,15 @@ func (s *Sidecars) Reconcile(ctx context.Context, istioCr v1alpha1.Istio) error 
 		return fmt.Errorf("istio-system pods version: %s do not match target version: %s", version, s.IstioVersion)
 	}
 
-	iop, err := s.Merger.GetIstioOperator()
+	cSize, err := clusterconfig.EvaluateClusterSize(context.Background(), s.Client)
+	if err != nil {
+		s.Log.Error(err, "Error occurred during evaluation of cluster size")
+		return err
+	}
+
+	ctrl.Log.Info("Installing istio with", "profile", cSize.String())
+
+	iop, err := s.Merger.GetIstioOperator(cSize.DefaultManifestPath())
 	if err != nil {
 		return err
 	}

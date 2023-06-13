@@ -3,12 +3,10 @@ package istio
 import (
 	"context"
 	"fmt"
+	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/manifest"
 	"github.com/kyma-project/istio/operator/internal/resources"
-
-	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
-
-	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 	sidecarRemover "github.com/kyma-project/istio/operator/pkg/lib/sidecars/remove"
@@ -71,7 +69,15 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 		// Istio CR to this default configuration to get the final IstoOperator that is used for installing and updating Istio.
 		templateData := manifest.TemplateData{IstioVersion: i.IstioVersion, IstioImageBase: i.IstioImageBase}
 
-		mergedIstioOperatorPath, err := i.Merger.Merge(&istioCR, templateData, clusterConfiguration)
+		cSize, err := clusterconfig.EvaluateClusterSize(context.Background(), i.Client)
+		if err != nil {
+			ctrl.Log.Error(err, "Error occurred during evaluation of cluster size")
+			return istioCR, err
+		}
+
+		ctrl.Log.Info("Installing istio with", "profile", cSize.String())
+
+		mergedIstioOperatorPath, err := i.Merger.Merge(cSize.DefaultManifestPath(), &istioCR, templateData, clusterConfiguration)
 		if err != nil {
 			return istioCR, err
 		}

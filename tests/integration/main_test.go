@@ -17,12 +17,26 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
 
+const (
+	evaluationEnv string = "TEST_EVALUATION"
+
+	productionPath string = "features/istio/production"
+	evaluationPath string = "features/istio/evaluation"
+)
+
 func TestIstio(t *testing.T) {
+	featurePath := productionPath
+	ev, ok := os.LookupEnv(evaluationEnv)
+	if ok {
+		if ev == "TRUE" {
+			featurePath = evaluationPath
+		}
+	}
 
 	goDogOpts := godog.Options{
 		Output: colors.Colored(os.Stdout),
 		Format: "pretty",
-		Paths:  []string{"features/istio"},
+		Paths:  []string{featurePath},
 		// Concurrency must be set to 1, as the tests modify the global cluster state and can't be isolated.
 		Concurrency: 1,
 		// We want to randomize the scenario order to avoid any implicit dependencies between scenarios.

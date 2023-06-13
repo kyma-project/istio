@@ -2,6 +2,7 @@ package clusterconfig_test
 
 import (
 	"context"
+	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	. "github.com/onsi/ginkgo/v2"
@@ -117,6 +118,92 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(config).To(Equal(clusterconfig.ClusterConfiguration{}))
 		})
+	})
+})
+
+var _ = Describe("EvaluateClusterSize", func() {
+	It("should return Evaluation when cpu capacity is less than ProductionClusterCpuThreshold", func() {
+		//given
+		k3dNode := corev1.Node{
+			ObjectMeta: v1.ObjectMeta{
+				Name: "k3d-node-1",
+			},
+			Status: corev1.NodeStatus{
+				Capacity: map[corev1.ResourceName]resource.Quantity{
+					"cpu":    *resource.NewMilliQuantity(clusterconfig.ProductionClusterCpuThreshold-1, resource.DecimalSI),
+					"memory": *resource.NewScaledQuantity(int64(32), resource.Giga),
+				},
+			},
+		}
+
+		client := createFakeClient(&k3dNode)
+
+		//when
+		size, err := clusterconfig.EvaluateClusterSize(context.TODO(), client)
+
+		//then
+		Expect(err).To(Not(HaveOccurred()))
+		Expect(size).To(Equal(clusterconfig.Evaluation))
+	})
+
+	It("should return Evaluation when memory capacity is less than ProductionClusterMemoryThresholdGi", func() {
+		//given
+		k3dNode := corev1.Node{
+			ObjectMeta: v1.ObjectMeta{
+				Name: "k3d-node-1",
+			},
+			Status: corev1.NodeStatus{
+				Capacity: map[corev1.ResourceName]resource.Quantity{
+					"cpu":    *resource.NewMilliQuantity(int64(12000), resource.DecimalSI),
+					"memory": *resource.NewScaledQuantity(clusterconfig.ProductionClusterMemoryThresholdGi-1, resource.Giga),
+				},
+			},
+		}
+
+		client := createFakeClient(&k3dNode)
+
+		//when
+		size, err := clusterconfig.EvaluateClusterSize(context.TODO(), client)
+
+		//then
+		Expect(err).To(Not(HaveOccurred()))
+		Expect(size).To(Equal(clusterconfig.Evaluation))
+	})
+
+	It("should return Production when memory capacity is bigger than ProductionClusterMemoryThresholdGi and CPU capacity is bigger than ProductionClusterCpuThreshold", func() {
+		//given
+		k3dNode := corev1.Node{
+			ObjectMeta: v1.ObjectMeta{
+				Name: "k3d-node-1",
+			},
+			Status: corev1.NodeStatus{
+				Capacity: map[corev1.ResourceName]resource.Quantity{
+					"cpu":    *resource.NewQuantity(clusterconfig.ProductionClusterCpuThreshold, resource.DecimalSI),
+					"memory": *resource.NewScaledQuantity(clusterconfig.ProductionClusterMemoryThresholdGi, resource.Giga),
+				},
+			},
+		}
+
+		k3dNode2 := corev1.Node{
+			ObjectMeta: v1.ObjectMeta{
+				Name: "k3d-node-2",
+			},
+			Status: corev1.NodeStatus{
+				Capacity: map[corev1.ResourceName]resource.Quantity{
+					"cpu":    *resource.NewQuantity(clusterconfig.ProductionClusterCpuThreshold, resource.DecimalSI),
+					"memory": *resource.NewScaledQuantity(clusterconfig.ProductionClusterMemoryThresholdGi, resource.Giga),
+				},
+			},
+		}
+
+		client := createFakeClient(&k3dNode, &k3dNode2)
+
+		//when
+		size, err := clusterconfig.EvaluateClusterSize(context.TODO(), client)
+
+		//then
+		Expect(err).To(Not(HaveOccurred()))
+		Expect(size).To(Equal(clusterconfig.Production))
 	})
 })
 

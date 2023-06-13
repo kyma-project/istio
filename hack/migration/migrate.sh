@@ -23,11 +23,23 @@ fi
 
 # Check if Istio CR is already present on Kubernetes cluster
 istio_crs=$(kubectl get istios -n kyma-system --output json | jq '.items | length')
+
+if [ "$istio_crs" -gt 1 ]; then
+  echo "Multiple Istio CRs found, canceling migration"
+  exit 1
+fi
+
+kyma_cr_modules=$(kubectl get kyma "$kyma_cr_name" -n kyma-system -o json | jq '.spec.modules')
+if [ "$kyma_cr_modules" == "null" ]; then
+  echo "No modules defined on Kyma CR yet, initializing modules array"
+  kubectl patch kyma "$kyma_cr_name" -n kyma-system --type='json' -p='[{"op": "add", "path": "/spec/modules", "value": [] }]'
+fi
+
 if [ "$istio_crs" -gt 0 ]; then
-  echo "Istio CR found, proceeding with migration by adding Istio module to Kyma CR and setting customResourcePolicy to Ignore"
+  echo "Istio CR found, proceeding with migration by adding Istio module to Kyma CR $kyma_cr_name and setting customResourcePolicy to Ignore"
   kubectl patch kyma "$kyma_cr_name" -n kyma-system --type='json' -p='[{"op": "add", "path": "/spec/modules/-", "value": {"name": "istio", "customResourcePolicy": "Ignore"} }]'
 else
-  echo "No Istio CR found, proceeding with migration by adding Istio module to Kyma CR"
+  echo "No Istio CR found, proceeding with migration by adding Istio module to Kyma CR $kyma_cr_name"
   kubectl patch kyma "$kyma_cr_name" -n kyma-system --type='json' -p='[{"op": "add", "path": "/spec/modules/-", "value": {"name": "istio"} }]'
 fi
 

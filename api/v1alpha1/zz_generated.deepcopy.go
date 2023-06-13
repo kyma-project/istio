@@ -81,8 +81,8 @@ func (in *Components) DeepCopyInto(out *Components) {
 		*out = new(IstioComponent)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.IngressGateways != nil {
-		in, out := &in.IngressGateways, &out.IngressGateways
+	if in.IngressGateway != nil {
+		in, out := &in.IngressGateway, &out.IngressGateway
 		*out = new(IstioComponent)
 		(*in).DeepCopyInto(*out)
 	}

@@ -329,7 +329,7 @@ var _ = Describe("CR configuration", func() {
 
 				Entry("When ingress gateway configuration changed should return ConfigurationUpdate", operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
 					Components: &operatorv1alpha1.Components{
-						IngressGateways: &operatorv1alpha1.IstioComponent{
+						IngressGateway: &operatorv1alpha1.IstioComponent{
 							K8s: &operatorv1alpha1.KubernetesResourcesConfig{
 								HPASpec: &operatorv1alpha1.HPASpec{
 									MaxReplicas: newInt32WithValue(1),
@@ -339,7 +339,7 @@ var _ = Describe("CR configuration", func() {
 					},
 				}}, operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
 					Components: &operatorv1alpha1.Components{
-						IngressGateways: &operatorv1alpha1.IstioComponent{
+						IngressGateway: &operatorv1alpha1.IstioComponent{
 							K8s: &operatorv1alpha1.KubernetesResourcesConfig{
 								HPASpec: &operatorv1alpha1.HPASpec{
 									MaxReplicas: newInt32WithValue(2),

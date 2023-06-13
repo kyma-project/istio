@@ -248,7 +248,7 @@ var _ = Describe("Merge", func() {
 				memoryLimit := "500Mi"
 
 				istioCR := Istio{Spec: IstioSpec{Components: &Components{
-					IngressGateways: &IstioComponent{
+					IngressGateway: &IstioComponent{
 						K8s: &KubernetesResourcesConfig{
 							Resources: &Resources{
 								Limits: &ResourceClaims{
@@ -283,7 +283,7 @@ var _ = Describe("Merge", func() {
 				memoryRequests := "500Mi"
 
 				istioCR := Istio{Spec: IstioSpec{Components: &Components{
-					IngressGateways: &IstioComponent{K8s: &KubernetesResourcesConfig{
+					IngressGateway: &IstioComponent{K8s: &KubernetesResourcesConfig{
 						Resources: &Resources{
 							Requests: &ResourceClaims{
 								Cpu:    &cpuRequests,
@@ -326,7 +326,7 @@ var _ = Describe("Merge", func() {
 			}
 
 			istioCR := Istio{Spec: IstioSpec{Components: &Components{
-				IngressGateways: &IstioComponent{K8s: &KubernetesResourcesConfig{
+				IngressGateway: &IstioComponent{K8s: &KubernetesResourcesConfig{
 					Strategy: &Strategy{
 						RollingUpdate: &RollingUpdate{
 							MaxUnavailable: &maxUnavailable,
@@ -360,7 +360,7 @@ var _ = Describe("Merge", func() {
 			minReplicas := int32(4)
 
 			istioCR := Istio{Spec: IstioSpec{Components: &Components{
-				IngressGateways: &IstioComponent{K8s: &KubernetesResourcesConfig{
+				IngressGateway: &IstioComponent{K8s: &KubernetesResourcesConfig{
 					HPASpec: &HPASpec{
 						MaxReplicas: &maxReplicas,
 						MinReplicas: &minReplicas,

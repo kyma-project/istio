@@ -1035,7 +1035,7 @@ spec:
                     required:
                     - k8s
                     type: object
-                  ingressGateways:
+                  ingressGateway:
                     description: IngressGateways defines component configurations
                       for Istio Ingress Gateways
                     properties:

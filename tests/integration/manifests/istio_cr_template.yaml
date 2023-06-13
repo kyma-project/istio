@@ -23,7 +23,7 @@ spec:
         hpaSpec:
           maxReplicas: {{ .PilotMaxReplicas }}
           minReplicas: {{ .PilotMinReplicas }}
-    ingressGateways:
+    ingressGateway:
       k8s:
         resources:
           limits:

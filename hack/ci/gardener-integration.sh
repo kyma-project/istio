@@ -82,4 +82,11 @@ kyma provision gardener ${GARDENER_PROVIDER} \
 
 ./hack/ci/jobguard.sh
 
+if [ "$JOB_TYPE" == "presubmit" ]; then
+  export IMG=europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${PULL_NUMBER}
+elif [ "$JOB_TYPE" == "postsubmit" ]; then
+  POST_IMAGE_VERSION=v$(shell date '+%Y%m%d')-$(shell printf %.8s ${PULL_BASE_SHA})
+  export IMG=europe-docker.pkg.dev/kyma-project/prod/istio-manager:${POST_IMAGE_VERSION}
+fi
+
 make install deploy istio-integration-test

@@ -269,13 +269,7 @@ POST_IMAGE_VERSION=v$(shell date '+%Y%m%d')-$(shell printf %.8s ${PULL_BASE_SHA}
 .PHONY: istio-integration-test
 istio-integration-test:
 	make install
-ifndef JOB_TYPE
 	make deploy
-else ifeq ($(JOB_TYPE), presubmit)
-	make deploy IMG=europe-docker.pkg.dev/kyma-project/dev/istio-manager:${PULL_IMAGE_VERSION}
-else ifeq ($(JOB_TYPE), postsubmit)
-	make deploy IMG=europe-docker.pkg.dev/kyma-project/prod/istio-manager:${POST_IMAGE_VERSION}
-endif
 	cd tests/integration && EXPORT_RESULT=true go test -timeout 25m
 
 .PHONY: gardener-istio-integration-test

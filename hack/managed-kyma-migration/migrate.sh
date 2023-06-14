@@ -22,9 +22,9 @@ if [  "$istio_module_count" -gt 0 ]; then
 fi
 
 # Check if Istio CR is already present on Kubernetes cluster
-istio_crs=$(kubectl get istios -n kyma-system --output json | jq '.items | length')
+istio_crs_count=$(kubectl get istios -n kyma-system --output json | jq '.items | length')
 
-if [ "$istio_crs" -gt 1 ]; then
+if [ "$istio_crs_count" -gt 1 ]; then
   echo "Multiple Istio CRs found, canceling migration"
   exit 1
 fi
@@ -35,7 +35,7 @@ if [ "$kyma_cr_modules" == "null" ]; then
   kubectl patch kyma "$kyma_cr_name" -n kyma-system --type='json' -p='[{"op": "add", "path": "/spec/modules", "value": [] }]'
 fi
 
-if [ "$istio_crs" -gt 0 ]; then
+if [ "$istio_crs_count" -gt 0 ]; then
   echo "Istio CR found, proceeding with migration by adding Istio module to Kyma CR $kyma_cr_name and setting customResourcePolicy to Ignore"
   kubectl patch kyma "$kyma_cr_name" -n kyma-system --type='json' -p='[{"op": "add", "path": "/spec/modules/-", "value": {"name": "istio", "customResourcePolicy": "Ignore"} }]'
 else

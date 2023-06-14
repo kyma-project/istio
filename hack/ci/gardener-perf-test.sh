@@ -89,12 +89,9 @@ number=1
 		echo ">--> checking kyma status #$number"
 		STATUS=$(kubectl get istio istio-sample -o jsonpath='{.status.state}')
 		echo "kyma status: ${STATUS:='UNKNOWN'}"
-		[[ "$STATUS" == "Ready" ]] && return 0
+		[[ "$STATUS" == "Ready" ]] && break
 		sleep 5
         	((number = number + 1))
 	done
-
-	kubectl get all --all-namespaces
-exit 1
 
 cd performance_tests && make test-performance

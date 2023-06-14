@@ -2,7 +2,6 @@ OS_ARCH ?= $(shell uname | awk '{print tolower($0)}')
 KYMA_DOMAIN ?= $(shell kubectl config view -o json | jq '.clusters[0].cluster.server' | sed -e "s/https:\/\/api.//" -e 's/"//g')
 
 deploy-helm:
-	kubectl rollout status -n istio-system deployment/istiod
 	helm dependency update load-testing
 	helm upgrade --install load-testing load-testing --set Domain=${KYMA_DOMAIN} --create-namespace --wait
 

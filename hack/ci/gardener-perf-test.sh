@@ -61,7 +61,7 @@ chmod +x kyma
 export PATH="${PATH}:${PWD}"
 
 # Provision gardener cluster
-CLUSTER_NAME=bc-auto-perf
+CLUSTER_NAME=ag-$(echo $RANDOM | md5sum | head -c 7)
 
 kyma version --client
 kyma provision gardener ${GARDENER_PROVIDER} \
@@ -83,4 +83,18 @@ kyma provision gardener ${GARDENER_PROVIDER} \
 tag=$(gcloud container images list-tags europe-docker.pkg.dev/kyma-project/prod/istio-manager --limit 1 --format json | jq '.[0].tags[1]')
 IMG=europe-docker.pkg.dev/kyma-project/prod/istio-manager:${tag} make install deploy
 kubectl apply -f config/samples/operator_v1alpha1_istio.yaml
+
+number=1
+	while [[ $number -le 100 ]] ; do
+		echo ">--> checking kyma status #$number"
+		STATUS=$(kubectl get istio istio-sample -o jsonpath='{.status.state}')
+		echo "kyma status: ${STATUS:='UNKNOWN'}"
+		[[ "$STATUS" == "Ready" ]] && return 0
+		sleep 5
+        	((number = number + 1))
+	done
+
+	kubectl get all --all-namespaces
+exit 1
+
 cd performance_tests && make test-performance

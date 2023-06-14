@@ -7,6 +7,7 @@ import (
 	"regexp"
 
 	"github.com/go-logr/logr"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -38,6 +39,8 @@ type IstioResourcesFinder struct {
 	client        client.Client
 	configuration resourceFinderConfiguration
 }
+
+var noMatchesForKind = regexp.MustCompile("no matches for kind")
 
 func NewIstioResourcesFinderFromConfigYaml(ctx context.Context, client client.Client, logger logr.Logger, path string) (*IstioResourcesFinder, error) {
 	configYaml, err := os.ReadFile(path)
@@ -79,7 +82,10 @@ func (i *IstioResourcesFinder) FindUserCreatedIstioResources() ([]Resource, erro
 		u.SetGroupVersionKind(resource.GroupVersionKind)
 		err := i.client.List(i.ctx, &u)
 		if err != nil {
-			continue
+			if errors.IsNotFound(err) || errors.IsInvalid(err) || noMatchesForKind.MatchString(err.Error()) {
+				continue
+			}
+			return nil, err
 		}
 		for _, item := range u.Items {
 			res := Resource{
@@ -100,6 +106,7 @@ func (i *IstioResourcesFinder) FindUserCreatedIstioResources() ([]Resource, erro
 	}
 	return userResources, nil
 }
+
 func contains(s []ResourceMeta, e ResourceMeta) (bool, error) {
 	for _, r := range s {
 		matchName, err := regexp.MatchString(r.Name, e.Name)

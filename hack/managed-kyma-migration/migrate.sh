@@ -11,7 +11,7 @@ if [ "$istio_module_template_count" -eq 0 ]; then
 fi
 
 # Fetch Kyma CR name managed by lifecycle-manager
-kyma_cr_name=$(kubectl get kyma -n kyma-system -l operator.kyma-project.io/watched-by=lifecycle-manager --no-headers -o custom-columns=":metadata.name")
+kyma_cr_name=$(kubectl get kyma -n kyma-system --no-headers -o custom-columns=":metadata.name")
 
 # Fetch all modules, if modules is not defined, fallback to an empty array and count the number modules that have the name "istio"
 istio_module_count=$(kubectl get kyma "$kyma_cr_name" -n kyma-system -o json | jq '.spec.modules | if . == null then [] else . end | map(. | select(.name=="istio")) | length')

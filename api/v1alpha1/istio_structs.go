@@ -15,7 +15,7 @@ type Config struct {
 type Components struct {
 	// Pilot defines component configuration for Istiod
 	Pilot *IstioComponent `json:"pilot,omitempty"`
-	// IngressGateways defines component configurations for Istio Ingress Gateways
+	// IngressGateway defines component configurations for Istio Ingress Gateway
 	IngressGateway *IstioComponent `json:"ingressGateway,omitempty"`
 	// Cni defines component configuration for Istio CNI DaemonSet
 	Cni *CniComponent `json:"cni,omitempty"`

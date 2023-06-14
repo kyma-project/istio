@@ -81,16 +81,10 @@ func (in *Components) DeepCopyInto(out *Components) {
 		*out = new(IstioComponent)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.IngressGateways != nil {
-		in, out := &in.IngressGateways, &out.IngressGateways
-		*out = make([]*IstioComponent, len(*in))
-		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = new(IstioComponent)
-				(*in).DeepCopyInto(*out)
-			}
-		}
+	if in.IngressGateway != nil {
+		in, out := &in.IngressGateway, &out.IngressGateway
+		*out = new(IstioComponent)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.Cni != nil {
 		in, out := &in.Cni, &out.Cni

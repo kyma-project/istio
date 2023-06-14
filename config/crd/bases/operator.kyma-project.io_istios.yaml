@@ -1036,8 +1036,8 @@ spec:
                     - k8s
                     type: object
                   ingressGateway:
-                    description: IngressGateways defines component configurations
-                      for Istio Ingress Gateways
+                    description: IngressGateway defines component configurations for
+                      Istio Ingress Gateway
                     properties:
                       k8s:
                         description: KubernetesResourcesConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec
@@ -2305,71 +2305,67 @@ spec:
                     required:
                     - k8s
                     type: object
-                  ingressGateways:
-                    description: IngressGateways defines component configurations
-                      for Istio Ingress Gateways
-                    items:
-                      description: IstioComponent defines configuration for generic
-                        Istio component (ingress gateway, istiod)
-                      properties:
-                        k8s:
-                          description: KubernetesResourcesConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec
-                          properties:
-                            hpaSpec:
-                              description: HPASpec defines configuration for HorizontalPodAutoscaler
-                              properties:
-                                maxReplicas:
-                                  format: int32
-                                  type: integer
-                                minReplicas:
-                                  format: int32
-                                  type: integer
-                              type: object
-                            resources:
-                              description: 'Resources define Kubernetes resources
-                                configuration: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
-                              properties:
-                                limits:
-                                  properties:
-                                    cpu:
-                                      type: string
-                                    memory:
-                                      type: string
-                                  type: object
-                                requests:
-                                  properties:
-                                    cpu:
-                                      type: string
-                                    memory:
-                                      type: string
-                                  type: object
-                              type: object
-                            strategy:
-                              description: Strategy defines rolling update strategy
-                              properties:
-                                rollingUpdate:
-                                  description: 'RollingUpdate defines configuration
-                                    for rolling updates: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#rolling-update-deployment'
-                                  properties:
-                                    maxSurge:
-                                      anyOf:
-                                      - type: integer
-                                      - type: string
-                                      x-kubernetes-int-or-string: true
-                                    maxUnavailable:
-                                      anyOf:
-                                      - type: integer
-                                      - type: string
-                                      x-kubernetes-int-or-string: true
-                                  type: object
-                              required:
-                              - rollingUpdate
-                              type: object
-                          type: object
-                      required:
-                      - k8s
-                      type: object
-                    type: array
+                  ingressGateway:
+                    description: IngressGateway defines component configurations for
+                      Istio Ingress Gateway
+                    properties:
+                      k8s:
+                        description: KubernetesResourcesConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec
+                        properties:
+                          hpaSpec:
+                            description: HPASpec defines configuration for HorizontalPodAutoscaler
+                            properties:
+                              maxReplicas:
+                                format: int32
+                                type: integer
+                              minReplicas:
+                                format: int32
+                                type: integer
+                            type: object
+                          resources:
+                            description: 'Resources define Kubernetes resources configuration:
+                              https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                            properties:
+                              limits:
+                                properties:
+                                  cpu:
+                                    type: string
+                                  memory:
+                                    type: string
+                                type: object
+                              requests:
+                                properties:
+                                  cpu:
+                                    type: string
+                                  memory:
+                                    type: string
+                                type: object
+                            type: object
+                          strategy:
+                            description: Strategy defines rolling update strategy
+                            properties:
+                              rollingUpdate:
+                                description: 'RollingUpdate defines configuration
+                                  for rolling updates: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#rolling-update-deployment'
+                                properties:
+                                  maxSurge:
+                                    anyOf:
+                                    - type: integer
+                                    - type: string
+                                    x-kubernetes-int-or-string: true
+                                  maxUnavailable:
+                                    anyOf:
+                                    - type: integer
+                                    - type: string
+                                    x-kubernetes-int-or-string: true
+                                type: object
+                            required:
+                            - rollingUpdate
+                            type: object
+                        type: object
+                    required:
+                    - k8s
+                    type: object
                   pilot:
                     description: Pilot defines component configuration for Istiod
                     properties:

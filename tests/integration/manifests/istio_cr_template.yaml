@@ -23,22 +23,22 @@ spec:
         hpaSpec:
           maxReplicas: {{ .PilotMaxReplicas }}
           minReplicas: {{ .PilotMinReplicas }}
-    ingressGateways:
-      - k8s:
-          resources:
-            limits:
-              cpu: {{ .IGCPULimit }}
-              memory: {{ .IGMemoryLimit }}
-            requests:
-              cpu: {{ .IGCPURequests }}
-              memory: {{ .IGMemoryRequests }}
-          strategy:
-            rollingUpdate:
-              maxSurge: {{ .IGMaxSurge }}
-              maxUnavailable: {{ .IGMaxUnavailable }}
-          hpaSpec:
-            maxReplicas: {{ .IGMaxReplicas }}
-            minReplicas: {{ .IGMinReplicas }}
+    ingressGateway:
+      k8s:
+        resources:
+          limits:
+            cpu: {{ .IGCPULimit }}
+            memory: {{ .IGMemoryLimit }}
+          requests:
+            cpu: {{ .IGCPURequests }}
+            memory: {{ .IGMemoryRequests }}
+        strategy:
+          rollingUpdate:
+            maxSurge: {{ .IGMaxSurge }}
+            maxUnavailable: {{ .IGMaxUnavailable }}
+        hpaSpec:
+          maxReplicas: {{ .IGMaxReplicas }}
+          minReplicas: {{ .IGMinReplicas }}
     proxy:
       k8s:
         resources:

@@ -327,41 +327,22 @@ var _ = Describe("CR configuration", func() {
 					},
 				}}, istio.ConfigurationUpdate),
 
-				Entry("When ingress gateways number change should return configuration update", operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
-					Components: &operatorv1alpha1.Components{
-						IngressGateways: []*operatorv1alpha1.IstioComponent{
-							{},
-						},
-					},
-				}}, operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
-					Components: &operatorv1alpha1.Components{
-						IngressGateways: []*operatorv1alpha1.IstioComponent{
-							{},
-							{},
-						},
-					},
-				}}, istio.ConfigurationUpdate),
-
 				Entry("When ingress gateway configuration changed should return ConfigurationUpdate", operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
 					Components: &operatorv1alpha1.Components{
-						IngressGateways: []*operatorv1alpha1.IstioComponent{
-							{
-								K8s: &operatorv1alpha1.KubernetesResourcesConfig{
-									HPASpec: &operatorv1alpha1.HPASpec{
-										MaxReplicas: newInt32WithValue(1),
-									},
+						IngressGateway: &operatorv1alpha1.IstioComponent{
+							K8s: &operatorv1alpha1.KubernetesResourcesConfig{
+								HPASpec: &operatorv1alpha1.HPASpec{
+									MaxReplicas: newInt32WithValue(1),
 								},
 							},
 						},
 					},
 				}}, operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
 					Components: &operatorv1alpha1.Components{
-						IngressGateways: []*operatorv1alpha1.IstioComponent{
-							{
-								K8s: &operatorv1alpha1.KubernetesResourcesConfig{
-									HPASpec: &operatorv1alpha1.HPASpec{
-										MaxReplicas: newInt32WithValue(2),
-									},
+						IngressGateway: &operatorv1alpha1.IstioComponent{
+							K8s: &operatorv1alpha1.KubernetesResourcesConfig{
+								HPASpec: &operatorv1alpha1.HPASpec{
+									MaxReplicas: newInt32WithValue(2),
 								},
 							},
 						},

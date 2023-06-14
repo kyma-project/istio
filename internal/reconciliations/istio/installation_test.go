@@ -16,6 +16,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/scheme"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -23,9 +24,13 @@ import (
 )
 
 const (
-	istioVersion     string = "1.16.1"
-	istioImageBase   string = "distroless"
-	resourceListPath string = "test/test_controlled_resource_list.yaml"
+	istioVersion         string = "1.16.1"
+	istioImageBase       string = "distroless"
+	resourceListPath     string = "test/test_controlled_resource_list.yaml"
+	testKey              string = "key"
+	testValue            string = "value"
+	istioDisclaimerKey   string = "istios.operator.kyma-project.io/managed-by-disclaimer"
+	istioDisclaimerValue string = "DO NOT EDIT - This resource is managed by Kyma.\nAny modifications are discarded and the resource is reverted to the original state."
 )
 
 var istioTag = fmt.Sprintf("%s-%s", istioVersion, istioImageBase)
@@ -84,9 +89,12 @@ var _ = Describe("Installation reconciliation", func() {
 			},
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
+		istioNamespace := createNamespace("istio-system")
+		c := createFakeClient(&istioCr, istiod, istioNamespace)
+
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
-			Client:         createFakeClient(&istioCr, istiod),
+			Client:         c,
 			IstioClient:    &mockClient,
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
@@ -100,6 +108,49 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 		Expect(returnedIstioCr.Status.State).To(Equal(operatorv1alpha1.Processing))
+	})
+
+	It("should label and annotate istio-system namespace after Istio installation without overriding existing labels and annotations", func() {
+		// given
+
+		numTrustedProxies := 1
+		istioCr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+			Name:            "default",
+			ResourceVersion: "1",
+			Annotations:     map[string]string{},
+		},
+			Spec: operatorv1alpha1.IstioSpec{
+				Config: operatorv1alpha1.Config{
+					NumTrustedProxies: &numTrustedProxies,
+				},
+			},
+		}
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
+		istioNamespace := createNamespace("istio-system")
+		c := createFakeClient(&istioCr, istiod, istioNamespace)
+
+		mockClient := mockLibraryClient{}
+		installation := istio.Installation{
+			Client:         c,
+			IstioClient:    &mockClient,
+			IstioVersion:   istioVersion,
+			IstioImageBase: istioImageBase,
+			Merger:         MergerMock{},
+		}
+		// when
+		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+
+		// then
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(mockClient.installCalled).To(BeTrue())
+		Expect(mockClient.uninstallCalled).To(BeFalse())
+
+		ns := corev1.Namespace{}
+		_ = c.Get(context.TODO(), types.NamespacedName{Name: "istio-system"}, &ns)
+		Expect(ns.Labels).To(HaveKeyWithValue(testKey, testValue))
+		Expect(ns.Annotations).To(HaveKeyWithValue(testKey, testValue))
+		Expect(ns.Labels).To(HaveKeyWithValue("namespaces.warden.kyma-project.io/validate", "enabled"))
+		Expect(ns.Annotations).To(HaveKeyWithValue(istioDisclaimerKey, istioDisclaimerValue))
 	})
 
 	It("should fail if after install and update Istio pods do not match target version", func() {
@@ -117,10 +168,12 @@ var _ = Describe("Installation reconciliation", func() {
 				},
 			},
 		}
+
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.0")
+		istioNamespace := createNamespace("istio-system")
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
-			Client:         createFakeClient(&istioCr, istiod),
+			Client:         createFakeClient(&istioCr, istiod, istioNamespace),
 			IstioClient:    &mockClient,
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
@@ -152,10 +205,12 @@ var _ = Describe("Installation reconciliation", func() {
 				},
 			},
 		}
+
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
+		istioNamespace := createNamespace("istio-system")
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
-			Client:         createFakeClient(&istioCr, istiod),
+			Client:         createFakeClient(&istioCr, istiod, istioNamespace),
 			IstioClient:    &mockClient,
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
@@ -188,9 +243,12 @@ var _ = Describe("Installation reconciliation", func() {
 			},
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.17.0")
+		istioNamespace := createNamespace("istio-system")
+		c := createFakeClient(&istioCr, istiod, istioNamespace)
+
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
-			Client:         createFakeClient(&istioCr, istiod),
+			Client:         c,
 			IstioClient:    &mockClient,
 			IstioVersion:   "1.17.0",
 			IstioImageBase: istioImageBase,
@@ -224,6 +282,7 @@ var _ = Describe("Installation reconciliation", func() {
 				},
 			},
 		}
+
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
@@ -261,6 +320,7 @@ var _ = Describe("Installation reconciliation", func() {
 				},
 			},
 		}
+
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
@@ -298,6 +358,7 @@ var _ = Describe("Installation reconciliation", func() {
 				},
 			},
 		}
+
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
@@ -336,9 +397,12 @@ var _ = Describe("Installation reconciliation", func() {
 			},
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
+		istioNamespace := createNamespace("istio-system")
+		c := createFakeClient(&istioCr, istiod, istioNamespace)
+
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
-			Client:         createFakeClient(&istioCr, istiod),
+			Client:         c,
 			IstioClient:    &mockClient,
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
@@ -373,6 +437,7 @@ var _ = Describe("Installation reconciliation", func() {
 				},
 			},
 		}
+
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
 			Client:         createFakeClient(&istioCr),
@@ -607,6 +672,8 @@ func createFakeClient(objects ...client.Object) client.Client {
 	err := operatorv1alpha1.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
 	err = corev1.AddToScheme(scheme.Scheme)
+	Expect(err).NotTo(HaveOccurred())
+	err = corev1.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
 	err = networkingv1alpha3.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
@@ -625,7 +692,7 @@ func createPod(name, namespace, containerName, imageVersion string) *corev1.Pod 
 			APIVersion: "v1",
 		},
 		Status: corev1.PodStatus{
-			Phase: corev1.PodPhase(corev1.PodRunning),
+			Phase: corev1.PodRunning,
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
@@ -638,13 +705,29 @@ func createPod(name, namespace, containerName, imageVersion string) *corev1.Pod 
 	}
 }
 
+func createNamespace(name string) *corev1.Namespace {
+	return &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        name,
+			Labels:      map[string]string{testKey: testValue},
+			Annotations: map[string]string{testKey: testValue},
+		},
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Namespace",
+			APIVersion: "v1",
+		},
+	}
+}
+
 type MergerMock struct {
 }
 
-func (m MergerMock) Merge(_ *operatorv1alpha1.Istio, _ manifest.TemplateData, _ clusterconfig.ClusterConfiguration) (string, error) {
+func (m MergerMock) Merge(_ string, _ *operatorv1alpha1.Istio, _ manifest.TemplateData, _ clusterconfig.ClusterConfiguration) (string, error) {
 	return "mocked istio operator merge result", nil
 }
 
-func (m MergerMock) GetIstioOperator() (istioOperator.IstioOperator, error) {
+func (m MergerMock) GetIstioOperator(_ string) (istioOperator.IstioOperator, error) {
 	return istioOperator.IstioOperator{}, nil
 }
+
+func (m MergerMock) SetIstioInstallFlavor(_ clusterconfig.ClusterSize) {}

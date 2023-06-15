@@ -3,10 +3,10 @@
 1. Set up a local k3d cluster and a local Docker registry.
 
 ```bash
-k3d cluster create kyma --registry-create registry.localhost:0.0.0.0:5001
+k3d cluster create kyma --registry-create k3d-kyma-registry:0.0.0.0:5001
 ```
 
-2. Add the `etc/hosts` entry to register the local Docker registry under the name `registry.localhost`.
+2. Add the `etc/hosts` entry to register the local Docker registry under the name `k3d-kyma-registry`.
 
 ```bash
 127.0.0.1 registry.localhost
@@ -145,12 +145,12 @@ add
 1. Enable Istio in Kyma
 
 ```bash
-kyma alpha enable module istio
+kyma alpha enable module istio -c alpha
 ```
 
 ## Installation with artifacts built for the `main` branch of Istio repository
 
-You can install Istio module using the artificats that are created by `post-istio-module-build` job. To do sa, follow this steps:
+You can install Istio module using the artificats that are created by `post-istio-module-build` job. To do so, follow these steps:
 
 1. Install Lifecycle Manager in a target cluster.
    

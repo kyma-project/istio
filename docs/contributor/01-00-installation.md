@@ -35,7 +35,7 @@ make module-image
 
 This command builds a Docker image for Istio Manager and pushes it to the registry and path, as defined in `IMG_REGISTRY`.
 
-1. Verify if the Istio module's image and Istio Manager's image are pushed to the local registry.
+6. Verify if the Istio module's image and Istio Manager's image are pushed to the local registry.
 
 ```bash
 curl registry.localhost:5001/v2/_catalog
@@ -142,7 +142,7 @@ add
   - "*"
 ```
 
-1. Enable Istio in Kyma
+4. Enable Istio in Kyma
 
 ```bash
 kyma alpha enable module istio -c alpha

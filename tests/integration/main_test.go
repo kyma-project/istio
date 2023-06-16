@@ -42,6 +42,7 @@ func TestIstio(t *testing.T) {
 		// We want to randomize the scenario order to avoid any implicit dependencies between scenarios.
 		Randomize:      time.Now().UTC().UnixNano(),
 		DefaultContext: createDefaultContext(t),
+		Strict:         true,
 	}
 
 	if os.Getenv("EXPORT_RESULT") == "true" {
@@ -62,6 +63,7 @@ func TestIstio(t *testing.T) {
 		}
 	}
 
+	println("Test exit code: ", testExitCode)
 	if testExitCode != 0 {
 		t.Fatalf("non-zero status returned, failed to run feature tests")
 	}

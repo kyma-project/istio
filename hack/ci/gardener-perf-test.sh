@@ -94,6 +94,9 @@ number=1
         	((number = number + 1))
 	done
 
+domain=$(kubectl config view -o json | jq '.clusters[0].cluster.server' | sed -e "s/https:\/\/api.//" -e 's/"//g')
+kubectl annotate service -n istio-system istio-ingressgateway "dns.gardener.cloud/dnsnames=*.${domain}"
+
 cd performance_tests
 
 n=0

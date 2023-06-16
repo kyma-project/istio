@@ -82,7 +82,7 @@ func (i *IstioResourcesFinder) FindUserCreatedIstioResources() ([]Resource, erro
 		u.SetGroupVersionKind(resource.GroupVersionKind)
 		err := i.client.List(i.ctx, &u)
 		if err != nil {
-			if errors.IsNotFound(err) || errors.IsInvalid(err) || noMatchesForKind.MatchString(err.Error()) {
+			if errors.IsNotFound(err) || noMatchesForKind.MatchString(err.Error()) {
 				continue
 			}
 			return nil, err

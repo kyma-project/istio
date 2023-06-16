@@ -29,5 +29,5 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^Application "([^"]*)" in namespace "([^"]*)" has proxy with "([^"]*)" set to cpu - "([^"]*)" and memory - "([^"]*)"$`, steps.ApplicationHasProxyResourcesSetToCpuAndMemory)
 	ctx.Step(`^Application pod "([^"]*)" in namespace "([^"]*)" has Istio proxy "([^"]*)"$`, steps.ApplicationPodShouldHaveIstioProxy)
 	ctx.Step(`^Destination rule "([^"]*)" in namespace "([^"]*)" with host "([^"]*)" exists$`, steps.CreateDestinationRule)
-	ctx.Step(`^And Istio is manually uninstalled$`, steps.UninstallIstio)
+	ctx.Step(`^Istio is manually uninstalled$`, steps.UninstallIstio)
 }

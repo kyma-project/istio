@@ -6,7 +6,7 @@ metadata:
   name: {{ .Release.Name }}
 spec:
   gateways:
-  - kyma-system/kyma-gateway
+  - {{ .Values.gateway.name }}
   hosts:
   - hello.{{ .Values.Domain }}
   http:

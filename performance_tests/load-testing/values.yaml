@@ -16,3 +16,6 @@ grafana:
     datasources:
       enabled: true
       label: load_test
+
+gateway:
+  name: istio-system/istio-gateway

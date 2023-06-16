@@ -4,8 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
+
 	"github.com/avast/retry-go"
 	"github.com/cucumber/godog"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	"github.com/kyma-project/istio/operator/tests/integration/manifests"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	"github.com/mitchellh/mapstructure"
@@ -13,7 +16,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
 )
 
 const (
@@ -93,6 +95,11 @@ func IstioComponentHasResourcesSetToCpuAndMemory(ctx context.Context, component,
 	}
 
 	return nil
+}
+
+func UninstallIstio(ctx context.Context) error {
+	istioClient := istio.NewIstioClient()
+	return istioClient.Uninstall(ctx)
 }
 
 func getIstioOperatorFromCluster(k8sClient client.Client) (*istioOperator.IstioOperator, error) {

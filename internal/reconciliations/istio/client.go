@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 	"os"
-	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sync"
+
+	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	"istio.io/api/operator/v1alpha1"
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
@@ -15,6 +16,7 @@ import (
 	"istio.io/istio/operator/pkg/util/progress"
 	"istio.io/istio/pkg/config/constants"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 
@@ -107,7 +109,7 @@ func (c *IstioClient) Uninstall(ctx context.Context) error {
 	}, &ctrlclient.DeleteOptions{
 		PropagationPolicy: &deletePolicy,
 	})
-	if err != nil {
+	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
 	ctrl.Log.Info("Deleted istio control plane namespace", "namespace", constants.IstioSystemNamespace)

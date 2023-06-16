@@ -3,8 +3,10 @@ package istio
 import (
 	"context"
 	"fmt"
+
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
+
 	"github.com/kyma-project/istio/operator/internal/manifest"
 	"github.com/kyma-project/istio/operator/internal/resources"
 	"github.com/kyma-project/istio/operator/internal/status"
@@ -37,7 +39,7 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 	// We need to evaluate what changed since last reconciliation, to make sure we run Istio reconciliation only if it's necessary
 	istioCRChanges, err := EvaluateIstioCRChanges(istioCR, istioTag)
 	if err != nil {
-		ctrl.Log.Error(err, "Error evaluating IstioCR changes")
+		ctrl.Log.Error(err, "Error evaluating Istio CR changes")
 		return istioCR, err
 	}
 
@@ -125,6 +127,7 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 		if len(clientResources) > 0 {
 			return istioCR, fmt.Errorf("could not delete Istio module instance since there are %d customer created resources present", len(clientResources))
 		}
+
 		err = i.IstioClient.Uninstall(ctx)
 		if err != nil {
 			return istioCR, err

@@ -67,3 +67,15 @@ Feature: Installing and uninstalling Istio module
     Then "Istio CR" is not present on cluster
     And Istio CRDs "should not" be present on cluster
     And Namespace "istio-system" is "not present"
+
+Scenario: Uninstallation of Istio module if Istio was manually deleted
+    Given Istio CR "istio-sample" is applied in namespace "default"
+    And Istio CR "istio-sample" in namespace "default" has status "Ready"
+    And Namespace "istio-system" is "present"
+    And Istio is manually uninstalled
+    And Namespace "istio-system" is "not present"
+    And Istio CRDs "should not" be present on cluster
+    When "Istio CR" "istio-sample" in namespace "default" is deleted
+    Then "Istio CR" is not present on cluster
+    And Istio CRDs "should not" be present on cluster
+    And Namespace "istio-system" is "not present"

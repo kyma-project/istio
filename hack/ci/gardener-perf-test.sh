@@ -48,7 +48,7 @@ function cleanup() {
 }
 
 # Cleanup on exit, be it successful or on fail
-trap cleanup EXIT INT
+#trap cleanup EXIT INT
 
 # Install Kyma CLI in latest version
 echo "--> Install kyma CLI locally to /tmp/bin"
@@ -61,7 +61,7 @@ chmod +x kyma
 export PATH="${PATH}:${PWD}"
 
 # Provision gardener cluster
-CLUSTER_NAME=ag-$(echo $RANDOM | md5sum | head -c 7)
+CLUSTER_NAME=bc-auto-perf
 
 kyma version --client
 kyma provision gardener ${GARDENER_PROVIDER} \
@@ -94,4 +94,13 @@ number=1
         	((number = number + 1))
 	done
 
-cd performance_tests && make test-performance
+cd performance_tests
+
+n=0
+until [ "$n" -ge 5 ]
+do
+   make test-performance && break  # substitute your command here
+   n=$((n+1))
+   sleep 15
+done
+

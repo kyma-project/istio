@@ -50,12 +50,11 @@ var _ = Describe("Manifest merge", func() {
 	It("should return error when provided invalid path to default Istio Operator", func() {
 		// given
 		sut := IstioMerger{
-			istioOperatorFilePath: "invalid/path.yaml",
-			workingDir:            workingDir,
+			workingDir: workingDir,
 		}
 
 		// when
-		mergedIstioOperatorPath, err := sut.Merge(istioCR, TestTemplateData, clusterconfig.ClusterConfiguration{})
+		mergedIstioOperatorPath, err := sut.Merge("invalid/path.yaml", istioCR, TestTemplateData, clusterconfig.ClusterConfiguration{})
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -65,12 +64,11 @@ var _ = Describe("Manifest merge", func() {
 	It("should return error when provided misconfigured default Istio Operator", func() {
 		// given
 		sut := IstioMerger{
-			istioOperatorFilePath: "test/wrong-operator.yaml",
-			workingDir:            workingDir,
+			workingDir: workingDir,
 		}
 
 		// when
-		mergedIstioOperatorPath, err := sut.Merge(istioCR, TestTemplateData, clusterconfig.ClusterConfiguration{})
+		mergedIstioOperatorPath, err := sut.Merge("test/wrong-operator.yaml", istioCR, TestTemplateData, clusterconfig.ClusterConfiguration{})
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -80,12 +78,11 @@ var _ = Describe("Manifest merge", func() {
 	It("should return merged configuration, when there is a Istio CR with valid configuration and a correct Istio Operator manifest", func() {
 		// given
 		sut := IstioMerger{
-			istioOperatorFilePath: "test/test-operator.yaml",
-			workingDir:            workingDir,
+			workingDir: workingDir,
 		}
 
 		// when
-		mergedIstioOperatorPath, err := sut.Merge(istioCR, TestTemplateData, clusterconfig.ClusterConfiguration{})
+		mergedIstioOperatorPath, err := sut.Merge("test/test-operator.yaml", istioCR, TestTemplateData, clusterconfig.ClusterConfiguration{})
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -104,12 +101,11 @@ var _ = Describe("Manifest merge", func() {
 	It("should return merged configuration, with IstioVersion and IstioImageBase coming from template", func() {
 		// given
 		sut := IstioMerger{
-			istioOperatorFilePath: "test/template-operator.yaml",
-			workingDir:            workingDir,
+			workingDir: workingDir,
 		}
 
 		// when
-		mergedIstioOperatorPath, err := sut.Merge(istioCR, TestTemplateData, clusterconfig.ClusterConfiguration{})
+		mergedIstioOperatorPath, err := sut.Merge("test/template-operator.yaml", istioCR, TestTemplateData, clusterconfig.ClusterConfiguration{})
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -141,12 +137,11 @@ var _ = Describe("Manifest merge", func() {
 		}
 
 		sut := IstioMerger{
-			istioOperatorFilePath: "test/test-operator.yaml",
-			workingDir:            workingDir,
+			workingDir: workingDir,
 		}
 
 		// when
-		mergedIstioOperatorPath, err := sut.Merge(istioCR, TestTemplateData, clusterconfig)
+		mergedIstioOperatorPath, err := sut.Merge("test/test-operator.yaml", istioCR, TestTemplateData, clusterconfig)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())

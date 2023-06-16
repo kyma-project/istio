@@ -2,6 +2,7 @@ package sidecars
 
 import (
 	"context"
+
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/restart"
@@ -23,5 +24,4 @@ func ProxyReset(ctx context.Context, c client.Client, expectedImage pods.Sidecar
 	logger.Info("Proxy reset done")
 
 	return warnings, nil
-
 }

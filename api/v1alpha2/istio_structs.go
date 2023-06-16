@@ -1,5 +1,5 @@
 // +kubebuilder:validation:Optional
-package v1alpha1
+package v1alpha2
 
 import (
 	v1 "k8s.io/api/core/v1"

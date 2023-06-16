@@ -3,12 +3,12 @@ package istio
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/istio/operator/internal/manifest"
-	"github.com/kyma-project/istio/operator/internal/resources"
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
-
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
+
+	"github.com/kyma-project/istio/operator/internal/manifest"
+	"github.com/kyma-project/istio/operator/internal/resources"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 	sidecarRemover "github.com/kyma-project/istio/operator/pkg/lib/sidecars/remove"
@@ -39,7 +39,7 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 	// We need to evaluate what changed since last reconciliation, to make sure we run Istio reconciliation only if it's necessary
 	istioCRChanges, err := EvaluateIstioCRChanges(istioCR, istioTag)
 	if err != nil {
-		ctrl.Log.Error(err, "Error evaluating IstioCR changes")
+		ctrl.Log.Error(err, "Error evaluating Istio CR changes")
 		return istioCR, err
 	}
 
@@ -71,12 +71,25 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 		// Istio CR to this default configuration to get the final IstoOperator that is used for installing and updating Istio.
 		templateData := manifest.TemplateData{IstioVersion: i.IstioVersion, IstioImageBase: i.IstioImageBase}
 
-		mergedIstioOperatorPath, err := i.Merger.Merge(&istioCR, templateData, clusterConfiguration)
+		cSize, err := clusterconfig.EvaluateClusterSize(context.Background(), i.Client)
+		if err != nil {
+			ctrl.Log.Error(err, "Error occurred during evaluation of cluster size")
+			return istioCR, err
+		}
+
+		ctrl.Log.Info("Installing istio with", "profile", cSize.String())
+
+		mergedIstioOperatorPath, err := i.Merger.Merge(cSize.DefaultManifestPath(), &istioCR, templateData, clusterConfiguration)
 		if err != nil {
 			return istioCR, err
 		}
 
 		err = i.IstioClient.Install(mergedIstioOperatorPath)
+		if err != nil {
+			return istioCR, err
+		}
+
+		err = addWardenValidationAndDisclaimer(ctx, i.Client)
 		if err != nil {
 			return istioCR, err
 		}
@@ -114,6 +127,7 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 		if len(clientResources) > 0 {
 			return istioCR, fmt.Errorf("could not delete Istio module instance since there are %d customer created resources present", len(clientResources))
 		}
+
 		err = i.IstioClient.Uninstall(ctx)
 		if err != nil {
 			return istioCR, err

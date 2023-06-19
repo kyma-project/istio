@@ -19,8 +19,9 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/istio/operator/internal/manifest"
 	"time"
+
+	"github.com/kyma-project/istio/operator/internal/manifest"
 
 	"github.com/kyma-project/istio/operator/internal/status"
 
@@ -41,7 +42,7 @@ import (
 )
 
 const (
-	IstioVersion                 string = "1.17.1"
+	IstioVersion                 string = "1.18.0"
 	IstioImageBase               string = "distroless"
 	IstioResourceListDefaultPath        = "manifests/controlled_resources_list.yaml"
 	ErrorRetryTime                      = time.Minute * 1

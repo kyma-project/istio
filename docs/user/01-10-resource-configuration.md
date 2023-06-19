@@ -1,12 +1,12 @@
-# Istio module default resources and autoscaling configuration
+# Default resources and autoscaling configuration for the Istio module
 
-Istio module provides baseline values for installation of Istio. Those values can be overridden with configuration in your Istio Custom Resource.
+The Istio module provides baseline values for the Istio installation. Those values can be overridden with configuration in the Istio custom resource (CR).
 
 ## Cluster based default configuration
 
-Istio module will install istio with configuration that depends on the cluster capabilities. If your cluster total virtual CPU cores number is less than `4` or total memory capability of the cluster is less than `10` Gigabytes, the default setup for resources and autoscaling will be lighter. If your cluster exceeds both thresholds Istio will install with higher resource configuration.
+The Istio module installs Istio with configuration that depends on the cluster capabilities. If your cluster has less then 4 total virtual CPU cores or its total memory capability is less than 10 Gigabytes, the default setup for resources and autoscaling is lighter. If your cluster exceeds both of these thresholds, Istio is installed with the higher resource configuration.
 
-### Bigger clusters default resource configuration
+### Default resource configuration for bigger clusters
 
 | Component       |          | CPU   | Memory |
 |-----------------|----------|-------|--------|
@@ -19,16 +19,14 @@ Istio module will install istio with configuration that depends on the cluster c
 | CNI             | Limits   | 500m  | 1024Mi |
 | CNI             | Requests | 100m  | 512Mi  |
 
-### Bigger clusters default autoscaling configuration
-
-The autoscaling configuration of the Istio components is as follows:
+### Default autoscaling configuration for bigger clusters
 
 | Component       | Min replicas | Max replicas |
 |-----------------|--------------|--------------|
 | Pilot           | 2            | 5            |
 | Ingress Gateway | 3            | 10           |
 
-### Smaller clusters default resource configuration
+### Default resource configuration for smaller clusters
 
 | Component       |          | CPU   | Memory |
 |-----------------|----------|-------|--------|
@@ -41,9 +39,7 @@ The autoscaling configuration of the Istio components is as follows:
 | CNI             | Limits   | 250m  | 384Mi  |
 | CNI             | Requests | 10m   | 128Mi  |
 
-### Smaller clusters default autoscaling configuration
-
-The autoscaling configuration of the Istio components is as follows:
+### Default autoscaling configuration for smaller clusters
 
 | Component       | Min replicas | Max replicas |
 |-----------------|--------------|--------------|

@@ -1,4 +1,99 @@
-## Install in modular Kyma on the local k3d cluster
+
+## Install the Istio module
+
+  - [Prerequisites](#prerequisites)
+  - [Install Istio Operator manually](#install-istio-operator-manually)
+    - [Use Istio Operator to install or uninstall Istio](#use-istio-operator-to-install-or-uninstall-istio)
+  - [Install Istio in modular Kyma on a local k3d cluster](#install-istio-in-modular-kyma-on-a-local-k3d-cluster)
+  - [Use Lifecycle Manager to install Istio in modular Kyma on k3d](#use-lifecycle-manager-to-install-istio-in-modular-kyma-on-k3d)
+  - [Install with artifacts built for the `main` branch of the Istio repository](#install-with-artifacts-built-for-the-main-branch-of-the-istio-repository)
+
+
+### Prerequisites
+
+- Access to a Kubernetes cluster
+- [kubectl](https://kubernetes.io/docs/tasks/tools/)
+- [kubebuilder](https://book.kubebuilder.io/)
+  
+### Install Istio Operator manually
+
+1. Clone the project.
+
+```bash
+git clone https://github.com/kyma-project/istio.git && cd istio
+```
+
+2. Set Istio Operator image name.
+
+```bash
+export IMG=istio-operator:0.0.1
+export K3D_CLUSTER_NAME=kyma
+```
+
+3. Provision k3d cluster.
+
+```bash
+kyma provision k3d
+```
+
+4. Build the project.
+
+```bash
+make build
+```
+
+5. Build the image.
+
+```bash
+make docker-build
+```
+
+6. Push the image to the registry.
+
+<div tabs name="Push image" group="istio-operator-installation">
+  <details>
+  <summary label="k3d">
+  k3d
+  </summary>
+
+   ```bash
+   k3d image import $IMG -c $K3D_CLUSTER_NAME
+   ```
+
+  </details>
+  <details>
+  <summary label="Docker registry">
+  Globally available Docker registry
+  </summary>
+
+   ```bash
+   make docker-push
+   ```
+
+  </details>
+</div>
+
+7. Deploy.
+
+```bash
+make deploy
+```
+
+#### Use Istio Operator to install or uninstall Istio
+
+- Install Istio in your cluster.
+
+```bash
+kubectl apply -f config/samples/operator_v1alpha1_istio.yaml
+```
+
+- Delete Istio from your cluster.
+
+```bash
+kubectl delete -f config/samples/operator_v1alpha1_istio.yaml
+```
+
+### Install Istio in modular Kyma on a local k3d cluster
 
 1. Set up a local k3d cluster and a local Docker registry.
 
@@ -12,7 +107,7 @@ k3d cluster create kyma --registry-create k3d-kyma-registry:0.0.0.0:5001
 127.0.0.1 registry.localhost
 ```
 
-3. Export environment variables (ENVs) pointing to the module and the module's image registries.
+3. Export environment variables pointing to the module and the module's image registries.
 
 ```bash
 export IMG_REGISTRY=registry.localhost:5001/unsigned/operator-images
@@ -35,7 +130,7 @@ make module-image
 
 This command builds a Docker image for Istio Manager and pushes it to the registry and path, as defined in `IMG_REGISTRY`.
 
-6. Verify if the Istio module's image and Istio Manager's image are pushed to the local registry.
+6. Verify that the Istio module's image and Istio Manager's image are pushed to the local registry. Run:
 
 ```bash
 curl registry.localhost:5001/v2/_catalog
@@ -51,22 +146,7 @@ If the images were pushed successfully, you get the following output:
 }
 ```
 
-7. Inspect the generated module template.
-
->**NOTE:** The following instructions are temporary workarounds.
-
-Edit the `template.yaml` file.
-
-- Change `target` to `control-plane`.
-
-```yaml
-spec:
-  target: control-plane
-```
-
->**NOTE:** This is only required in the single cluster mode
-
-- Change the existing repository context in `spec.descriptor.component`:
+7. Inspect the generated module template. Change the existing repository context in `spec.descriptor.component`:
 
 ```yaml
 repositoryContexts:                                                                           
@@ -74,11 +154,11 @@ repositoryContexts:
   componentNameMapping: urlPath                                                               
   type: ociRegistry
 ```
->**NOTE:** Because Pods inside the k3d cluster use the docker-internal port of the registry, it tries to resolve the registry against port 5000 instead of 5001. K3d has registry aliases but module-manager is not part of k3d and thus does not know how to properly alias `registry.localhost:5001`
+>**NOTE:** Because Pods inside the k3d cluster use the docker-internal port of the registry, it tries to resolve the registry against port 5000 instead of 5001. k3d has registry aliases but module-manager is not part of k3d and thus does not know how to properly alias `registry.localhost:5001`
 
->**NOTE** Apply `"operator.kyma-project.io/use-local-template": "true"` to make sure that Lifecycle Manager will use the registry URL present in the ModuleTemplate.
+>**NOTE** Apply `"operator.kyma-project.io/use-local-template": "true"` to make sure that Lifecycle Manager uses the registry URL present in the ModuleTemplate.
 
-## Install modular Kyma on the k3d cluster
+### Use Lifecycle Manager to install Istio in modular Kyma on k3d
 
 1. Install the latest version `lifecycle-manager`.
 
@@ -148,7 +228,7 @@ add
 kyma alpha enable module istio -c alpha
 ```
 
-## Installation with artifacts built for the `main` branch of Istio repository
+### Install with artifacts built for the `main` branch of the Istio repository
 
 You can install Istio module using the artificats that are created by `post-istio-module-build` job. To do so, follow these steps:
 

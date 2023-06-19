@@ -3,6 +3,7 @@ package proxy
 import (
 	"context"
 	"fmt"
+
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
@@ -23,8 +24,7 @@ type Sidecars struct {
 }
 
 const (
-	// TODO Update image repository to new one
-	imageRepository string = "eu.gcr.io/kyma-project/external/istio/proxyv2"
+	imageRepository string = "europe-docker.pkg.dev/kyma-project/prod/external/istio/proxyv2"
 )
 
 // Reconcile runs Proxy Reset action, which checks if any of sidecars need a restart and proceed with rollout.

@@ -1,6 +1,6 @@
 ## Istio Controller
 
-### Controller overview
+### Overview
 
 Istio Controller is part of Istio Manager. Its role is to manage the installation of Istio as defined by the Istio custom resource (CR). The controller is responsible for tasks such as installing, updating, and uninstalling Istio.
 

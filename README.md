@@ -8,9 +8,9 @@ Istio Manager is a module compatible with [Lifecycle Manager](https://github.com
 
 ## Documentation
 
-To learn how to use the Istio module, see the [user](./docs/user) directory. 
+To learn how to use the Istio module, read the documentation in the [user](./docs/user) directory. 
 
-If you want to contribute to the project, see the [contributor](./docs/contributor/) directory. It contains documentation and guidelines specifically designed for developers.
+If you are interested in the detailed documentation of the module's design and technical details, check the [contributor](./docs/contributor/) directory.
 
 ## Contributing
 

@@ -3,6 +3,8 @@ kind: Deployment
 metadata:
   name: controller-manager
   namespace: system
+  labels:
+    sidecar.istio.io/inject: "false"
 spec:
   template:
     spec:

@@ -261,8 +261,8 @@ all: module-build
 .PHONY: gardener-perf-test
 gardener-perf-test:
 	./hack/ci/gardener-perf-test.sh
-	cp performance_tests/summary-no-sidecar.html ${ARTIFACTS}/report-no-sidecar.html
-	cp performance_tests/summary-sidecar.html ${ARTIFACTS}/report-sidecar.html
+	cp tests/performance/summary-no-sidecar.html ${ARTIFACTS}/report-no-sidecar.html
+	cp tests/performance/summary-sidecar.html ${ARTIFACTS}/report-sidecar.html
 
 ########## Integration Tests ###########
 PULL_IMAGE_VERSION=PR-${PULL_NUMBER}

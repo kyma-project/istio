@@ -258,9 +258,11 @@ grafana-dashboard: ## Generating Grafana manifests to visualize controller statu
 all: module-build
 
 ########## Performance Tests ###########
-.PHONY: perf-test
-perf-test:
-	cd performance_tests && ./test.sh
+.PHONY: gardener-perf-test
+gardener-perf-test:
+	./hack/ci/gardener-perf-test.sh
+	cp tests/performance/summary-no-sidecar.html ${ARTIFACTS}/report-no-sidecar.html
+	cp tests/performance/summary-sidecar.html ${ARTIFACTS}/report-sidecar.html
 
 ########## Integration Tests ###########
 PULL_IMAGE_VERSION=PR-${PULL_NUMBER}

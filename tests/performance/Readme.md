@@ -6,7 +6,7 @@ This directory contains the scripts for running kyma performance tests.
 
 You can set up your custom KYMA_DOMAIN exporting `KYMA_DOMAIN` environment variable. By default the variable will be set with your current Kubeconfig domain.
 
-1. Deploy a Kubernetes cluster with Kyma on a production profile
+1. Deploy a Kubernetes cluster with Istio module
 2. Run `make test-performance`
 
 ## Test results

@@ -3,12 +3,12 @@ kind: VirtualService
 metadata:
   labels:
     {{- include "load-testing.labels" . | nindent 4 }}
-  name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-grafana
 spec:
   gateways:
-  - kyma-system/kyma-gateway
+  - {{ .Values.gateway.namespace }}/{{ .Values.gateway.name }}
   hosts:
-  - hello.{{ .Values.Domain }}
+  - grafana.{{ .Values.Domain }}
   http:
   - corsPolicy:
       allowHeaders:
@@ -26,13 +26,13 @@ spec:
     headers:
       request:
         set:
-          x-forwarded-host: hello.{{ .Values.Domain }}
+          x-forwarded-host: grafana.{{ .Values.Domain }}
     match:
     - uri:
         regex: /.*
     route:
     - destination:
-        host: {{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local
+        host: {{ .Release.Name }}-grafana.{{ .Release.Namespace }}.svc.cluster.local
         port:
           number: 80
       weight: 100

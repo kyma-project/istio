@@ -12,7 +12,7 @@ kyma:
 	@make -C ${PROJECT_ROOT} kyma
 
 .PHONY: module-build
-module-build: 
+module-build:
 	@make -C ${PROJECT_ROOT} module-build \
 		IMG=${IMG} \
 		MODULE_REGISTRY=${MODULE_REGISTRY} \

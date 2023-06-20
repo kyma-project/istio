@@ -10,7 +10,7 @@ executing reconciliation logic. The controller uses [Istio CR](https://github.co
 ### Ownership of current resources in Kyma repository
 
 In order to transition to a more modularised architecture, the [IstioOperator resource](https://github.com/kyma-project/kyma/tree/main/resources/istio), 
-the [additional istio-resources](https://github.com/kyma-project/kyma/tree/main/resources/istio-resources) and 
+the [additional istio-resources](https://github.com/kyma-project/kyma/tree/main/resources/istio-resources), and 
 the [certificates](https://github.com/kyma-project/kyma/tree/main/resources/certificates) must be moved to the new modules.
 
 #### Istio Operator resource
@@ -45,7 +45,7 @@ that it gives us full control of the versioning and enables us to hide this comp
 If we want to release a new Istio version, we have to release a new version of the operator as well.
 
 ### Installation of Istio
-The Istio installation, upgrade and uninstallation is performed using the [Istio Go module](https://github.com/istio/istio).
+The Istio installation, upgrade and uninstallation are performed using the [Istio Go module](https://github.com/istio/istio).
 The evaluation of Istio's installation options in an operator was done in this [PR](https://github.tools.sap/xf-goat/kyma-istio-operator). The result was that the best way for our use case is to utilize the
 [Istio Go module](https://github.com/istio/istio) directly.  
 In the sample implementation, the [istio.Install function](https://github.tools.sap/xf-goat/kyma-istio-operator/blob/ec0f99786408407b4a6d8b79abe3af6c389cd35d/controllers/servicemesh_controller.go#L73) is used for installation.

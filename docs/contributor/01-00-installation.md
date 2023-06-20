@@ -1,6 +1,7 @@
 
 ## Install the Istio module
 
+- [Install the Istio module](#install-the-istio-module)
   - [Prerequisites](#prerequisites)
   - [Install Istio Operator manually](#install-istio-operator-manually)
     - [Use Istio Operator to install or uninstall Istio](#use-istio-operator-to-install-or-uninstall-istio)
@@ -122,15 +123,15 @@ make module-build
 
 This command builds an OCI image for the Istio module and pushes it to the registry and path, as defined in `MODULE_REGISTRY`.
 
-5. Build Istio Manager's image.
+5. Build Istio Operator's image.
 
 ```bash
 make module-image
 ```
 
-This command builds a Docker image for Istio Manager and pushes it to the registry and path, as defined in `IMG_REGISTRY`.
+This command builds a Docker image for Istio Operator and pushes it to the registry and path, as defined in `IMG_REGISTRY`.
 
-6. Verify that the Istio module's image and Istio Manager's image are pushed to the local registry. Run:
+1. Verify that the Istio module's image and Istio Operator's image are pushed to the local registry. Run:
 
 ```bash
 curl registry.localhost:5001/v2/_catalog

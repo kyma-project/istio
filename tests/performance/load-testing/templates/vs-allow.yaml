@@ -6,7 +6,7 @@ metadata:
   name: {{ .Release.Name }}
 spec:
   gateways:
-  - {{ .Values.gateway.name }}
+  - {{ .Values.gateway.namespace }}/{{ .Values.gateway.name }}
   hosts:
   - hello.{{ .Values.Domain }}
   http:

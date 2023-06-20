@@ -18,4 +18,5 @@ grafana:
       label: load_test
 
 gateway:
-  name: istio-system/istio-gateway
+  namespace: istio-system
+  name: istio-gateway

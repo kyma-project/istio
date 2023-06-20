@@ -6,7 +6,7 @@ metadata:
   name: {{ .Release.Name }}-grafana
 spec:
   gateways:
-  - {{ .Values.gateway.name }}
+  - {{ .Values.gateway.namespace }}/{{ .Values.gateway.name }}
   hosts:
   - grafana.{{ .Values.Domain }}
   http:

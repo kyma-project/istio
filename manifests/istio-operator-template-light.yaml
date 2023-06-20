@@ -120,7 +120,7 @@ spec:
           reconciler.kyma-project.io/managed-by-reconciler-disclaimer: |
             DO NOT EDIT - This resource is managed by Kyma.
             Any modifications are discarded and the resource is reverted to the original state.
-  hub: eu.gcr.io/kyma-project/external/istio
+  hub: europe-docker.pkg.dev/kyma-project/prod/external/istio
   meshConfig:
     accessLogEncoding: JSON
     accessLogFile: ""

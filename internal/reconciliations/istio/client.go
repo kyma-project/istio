@@ -22,7 +22,7 @@ import (
 
 	istio "istio.io/istio/operator/cmd/mesh"
 	"istio.io/istio/operator/pkg/util/clog"
-	istiolog "istio.io/pkg/log"
+	istiolog "istio.io/istio/pkg/log"
 )
 
 type LibraryClient interface {
@@ -38,7 +38,7 @@ type IstioClient struct {
 
 func NewIstioClient() *IstioClient {
 	istioLogOptions := initializeLog()
-	registeredScope := istiolog.RegisterScope("installation", "installation", 0)
+	registeredScope := istiolog.RegisterScope("installation", "installation")
 	consoleLogger := clog.NewConsoleLogger(os.Stdout, os.Stderr, registeredScope)
 	printer := istio.NewPrinterForWriter(os.Stdout)
 

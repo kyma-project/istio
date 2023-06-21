@@ -22,7 +22,6 @@ type SidecarPodFixtureBuilder struct {
 	hostNetwork                                                   bool
 	ownerReference                                                metav1.OwnerReference
 	resources                                                     v1.ResourceRequirements
-	finalizers                                                    []string
 }
 
 var DefaultSidecarResources = v1.ResourceRequirements{
@@ -125,7 +124,6 @@ func (r *SidecarPodFixtureBuilder) SetConditionStatus(value v1.ConditionStatus) 
 
 func (r *SidecarPodFixtureBuilder) SetDeletionTimestamp(value time.Time) *SidecarPodFixtureBuilder {
 	r.deletionTimestamp = &metav1.Time{Time: value}
-	r.finalizers = []string{"istios.operator.kyma-project.io/test-mock"}
 	return r
 }
 
@@ -160,7 +158,6 @@ func (r *SidecarPodFixtureBuilder) Build() *v1.Pod {
 			Annotations:       r.podAnnotations,
 			Labels:            r.podLabels,
 			DeletionTimestamp: r.deletionTimestamp,
-			Finalizers:        r.finalizers,
 		},
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Pod",

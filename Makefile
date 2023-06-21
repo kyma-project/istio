@@ -108,6 +108,7 @@ vet: ## Run go vet against code.
 
 .PHONY: test
 test: manifests generate fmt vet envtest ## Run tests.
+	go version
 	KUBEBUILDER_CONTROLPLANE_START_TIMEOUT=2m KUBEBUILDER_CONTROLPLANE_STOP_TIMEOUT=2m KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test $(shell go list ./... | grep -v controllers | grep -v /tests/integration) -coverprofile cover.out
 
 ##@ Build
@@ -272,6 +273,7 @@ POST_IMAGE_VERSION=v$(shell date '+%Y%m%d')-$(shell printf %.8s ${PULL_BASE_SHA}
 istio-integration-test:
 	make install
 	make deploy
+	go version
 	cd tests/integration && EXPORT_RESULT=true go test -timeout 25m
 
 .PHONY: gardener-istio-integration-test

@@ -24,8 +24,8 @@ args=(
 )
 
 if [ -x "/prow-tools/jobguard" ]; then
-  /prow-tools/jobguard "${args[@]}"
+  jobguard "${args[@]}"
 else
-  echo "Can not find jobguard in /prow-tools"
+  echo "Can not find jobguard in PATH"
   exit 1
 fi

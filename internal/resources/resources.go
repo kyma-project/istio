@@ -41,6 +41,7 @@ type IstioResourcesFinder struct {
 }
 
 var noMatchesForKind = regexp.MustCompile("no matches for kind")
+var couldNotFindReqResource = regexp.MustCompile("could not find the requested resource")
 
 func NewIstioResourcesFinderFromConfigYaml(ctx context.Context, client client.Client, logger logr.Logger, path string) (*IstioResourcesFinder, error) {
 	configYaml, err := os.ReadFile(path)
@@ -82,7 +83,7 @@ func (i *IstioResourcesFinder) FindUserCreatedIstioResources() ([]Resource, erro
 		u.SetGroupVersionKind(resource.GroupVersionKind)
 		err := i.client.List(i.ctx, &u)
 		if err != nil {
-			if errors.IsNotFound(err) || noMatchesForKind.MatchString(err.Error()) {
+			if errors.IsNotFound(err) || noMatchesForKind.MatchString(err.Error()) || couldNotFindReqResource.MatchString(err.Error()) {
 				continue
 			}
 			return nil, err

@@ -9,13 +9,14 @@
   - [Use Lifecycle Manager to install Istio in modular Kyma on k3d](#use-lifecycle-manager-to-install-istio-in-modular-kyma-on-k3d)
   - [Install with artifacts built for the `main` branch of the Istio repository](#install-with-artifacts-built-for-the-main-branch-of-the-istio-repository)
 
-
 ### Prerequisites
 
-- Access to a Kubernetes cluster
+- Access to a Kubernetes cluster (you can use [k3d](https://k3d.io/v5.5.1/))
 - [kubectl](https://kubernetes.io/docs/tasks/tools/)
 - [kubebuilder](https://book.kubebuilder.io/)
-  
+- [Docker](https://www.docker.com)
+- [Kyma CLI](https://kyma-project.io/docs/kyma/latest/04-operation-guides/operations/01-install-kyma-CLI)
+
 ### Install Istio Operator manually
 
 1. Clone the project.
@@ -36,20 +37,15 @@ export K3D_CLUSTER_NAME=kyma
 ```bash
 kyma provision k3d
 ```
+>**TIP:** To verify that the previous steps were completed successfully, build the project using `make build`.
 
-4. Build the project.
-
-```bash
-make build
-```
-
-5. Build the image.
+4. Build the image.
 
 ```bash
 make docker-build
 ```
 
-6. Push the image to the registry.
+5. Push the image to the registry.
 
 <div tabs name="Push image" group="istio-operator-installation">
   <details>
@@ -74,7 +70,7 @@ make docker-build
   </details>
 </div>
 
-7. Deploy.
+6. Deploy.
 
 ```bash
 make deploy
@@ -131,7 +127,7 @@ make module-image
 
 This command builds a Docker image for Istio Operator and pushes it to the registry and path, as defined in `IMG_REGISTRY`.
 
-1. Verify that the Istio module's image and Istio Operator's image are pushed to the local registry. Run:
+6. Verify that the Istio module's image and Istio Operator's image are pushed to the local registry. Run:
 
 ```bash
 curl registry.localhost:5001/v2/_catalog
@@ -157,7 +153,7 @@ repositoryContexts:
 ```
 >**NOTE:** Because Pods inside the k3d cluster use the docker-internal port of the registry, it tries to resolve the registry against port 5000 instead of 5001. k3d has registry aliases but module-manager is not part of k3d and thus does not know how to properly alias `registry.localhost:5001`
 
->**NOTE** Apply `"operator.kyma-project.io/use-local-template": "true"` to make sure that Lifecycle Manager uses the registry URL present in the ModuleTemplate.
+>**TIP:** Apply `"operator.kyma-project.io/use-local-template": "true"` to make sure that Lifecycle Manager uses the registry URL present in the ModuleTemplate.
 
 ### Use Lifecycle Manager to install Istio in modular Kyma on k3d
 
@@ -202,17 +198,17 @@ kcp-system   moduletemplate-istio   2m24s
 
 3. Give Lifecycle Manager permission to install CustomResourceDefinition (CRD) cluster-wide.
 
->**NOTE:** This is a temporary workaround only required in the single-cluster mode
+>**NOTE:** This is a temporary workaround only required in the single-cluster mode.
 
-Module-manager must be able to apply CRDs to install modules. In the remote mode (with control-plane managing remote clusters) it gets an administrative kubeconfig, targeting the remote cluster to do so. But in local mode (single-cluster mode), it uses Service Account and does not have permission to create CRDs by default.
+Module-manager must be able to apply CRDs to install modules. When it operates in remote mode, where the control-plane manages remote clusters, it receives an administrative kubeconfig that allows it to target the remote cluster and apply CRDs. However, when it operates in local mode (single-cluster mode), it uses Service Account and does not have permission to create CRDs by default.
 
-Run the following to make sure the module manager's Service Account is granted an administrative role:
+Run the following command to make sure the module manager's Service Account is granted an administrative role:
 
 ```bash
 kubectl edit clusterrole lifecycle-manager-manager-role
 ```
 
-add
+Add the following configuration:
 
 ```yaml
 - apiGroups:                                                                                                                  
@@ -223,7 +219,7 @@ add
   - "*"
 ```
 
-4. Enable Istio in Kyma
+4. Enable the Istio module.
 
 ```bash
 kyma alpha enable module istio -c alpha
@@ -233,7 +229,7 @@ kyma alpha enable module istio -c alpha
 
 You can install Istio module using the artificats that are created by `post-istio-module-build` job. To do so, follow these steps:
 
-1. Install Lifecycle Manager in a target cluster.
+1. Install Lifecycle Manager in the target cluster.
    
 ```bash
 kyma alpha deploy

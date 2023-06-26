@@ -5,7 +5,7 @@
 ![Kyma IstioOperator Overview](./../assets/istio-operator-overview.svg)
 
 We want to keep the Kyma Istio operator as simple as possible. That's why we decided to start with one controller that consists of several self-contained components
-executing reconciliation logic. The controller uses [Istio CR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md) as a resource.
+executing reconciliation logic. The controller uses [Istio CR](./04-20-xff-proposal.md) as a resource.
 
 ### Ownership of current resources in Kyma repository
 

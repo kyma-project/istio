@@ -19,7 +19,7 @@ Applying this CR triggers the installation of Istio, and deleting it triggers th
 | ---- | ----------- | ---- |
 | **components**  | object |  |
 | **components.&#x200b;cni**  | object | Cni defines component configuration for Istio CNI DaemonSet |
-| **components.&#x200b;cni.&#x200b;k8s** (required) | object | CniK8sConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec |
+| **components.&#x200b;cni.&#x200b;k8s** (required) | object | CniK8sConfig is a subset of [KubernetesResourcesSpec](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec) |
 | **components.&#x200b;cni.&#x200b;k8s.&#x200b;affinity**  | object | Affinity is a group of affinity scheduling rules. |
 | **components.&#x200b;cni.&#x200b;k8s.&#x200b;affinity.&#x200b;nodeAffinity**  | object | Describes node affinity scheduling rules for the Pod. |
 | **components.&#x200b;cni.&#x200b;k8s.&#x200b;affinity.&#x200b;nodeAffinity.&#x200b;preferredDuringSchedulingIgnoredDuringExecution**  | \[\]object | The scheduler has a preference for scheduling Pods to nodes that satisfy the affinity expressions specified in this field. However, it may still choose a node that does not meet one or more of the expressions. The node that is most preferred is the one with the highest sum of weights. This sum is calculated by iterating through the elements in this field and adding a `weight` to the sum if the node matches the corresponding matchExpressions (resource request, requiredDuringScheduling anti-affinity expressions, etc.). |
@@ -181,7 +181,7 @@ Applying this CR triggers the installation of Istio, and deleting it triggers th
 | ---- | ----------- | ---- |
 | **components**  | object |  |
 | **components.&#x200b;cni**  | object | Defines component configuration for Istio CNI DaemonSet. |
-| **components.&#x200b;cni.&#x200b;k8s** (required) | object | CniK8sConfig is a subset of [IstioOperator Options] (https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec). |
+| **components.&#x200b;cni.&#x200b;k8s** (required) | object | CniK8sConfig is a subset of [KubernetesResourcesSpec](https://istio.io/latest/docs /reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec). |
 | **components.&#x200b;cni.&#x200b;k8s.&#x200b;affinity**  | object | Represents a group of affinity scheduling rules. |
 | **components.&#x200b;cni.&#x200b;k8s.&#x200b;affinity.&#x200b;nodeAffinity**  | object | Describes node affinity scheduling rules for the Pod. |
 | **components.&#x200b;cni.&#x200b;k8s.&#x200b;affinity.&#x200b;nodeAffinity.&#x200b;preferredDuringSchedulingIgnoredDuringExecution**  | \[\]object | The scheduler has a preference for scheduling Pods to nodes that satisfy the affinity expressions specified in this field. However, it may still choose a node that does not meet one or more of the expressions. The node that is most preferred is the one with the highest sum of weights. This sum is calculated by iterating through the elements in this field and adding a `weight` to the sum if the node matches the corresponding matchExpressions (resource request, requiredDuringScheduling anti-affinity expressions, etc.). |

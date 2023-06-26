@@ -49,8 +49,7 @@ spec:
                       DaemonSet.
                     properties:
                       k8s:
-                        description: CniK8sConfig is a subset of [IstioOperator Options]
-                          (https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec).
+                        description: 'CniK8sConfig is a subset of [KubernetesResourcesSpec](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec).'
                         properties:
                           affinity:
                             description: Represents a group of affinity scheduling

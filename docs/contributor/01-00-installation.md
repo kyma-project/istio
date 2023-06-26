@@ -37,7 +37,7 @@ export K3D_CLUSTER_NAME=kyma
 ```bash
 kyma provision k3d
 ```
->**TIP:** To verify that the previous steps were completed successfully, build the project using `make build`.
+>**TIP:** To verify the correctness of the project, build it using the `make build` command.
 
 4. Build the image.
 

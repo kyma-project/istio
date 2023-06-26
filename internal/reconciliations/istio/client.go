@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"sync"
 
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -46,12 +47,13 @@ func NewIstioClient() *IstioClient {
 }
 
 func (c *IstioClient) Install(mergedIstioOperatorPath string) error {
-	iopFileNames := make([]string, 0, 1)
-	iopFileNames = append(iopFileNames, mergedIstioOperatorPath)
-	// We don't want to verify after installation, because it is unreliable
-	installArgs := &istio.InstallArgs{SkipConfirmation: true, Verify: false, InFilenames: iopFileNames}
 
-	if err := istio.Install(&istio.RootArgs{}, installArgs, c.istioLogOptions, os.Stdout, c.consoleLogger, c.printer); err != nil {
+	out, err := installIstioInExternalProcess(mergedIstioOperatorPath)
+
+	ctrl.Log.Info(out)
+
+	if err != nil {
+		ctrl.Log.Error(err, "Error occured during a call to istio instalation in external process")
 		return err
 	}
 
@@ -117,6 +119,17 @@ func (c *IstioClient) Uninstall(ctx context.Context) error {
 	opts.ProgressLog.SetState(progress.StateUninstallComplete)
 
 	return nil
+}
+
+func installIstioInExternalProcess(mergedIstioOperatorPath string) (string, error) {
+	b, err := exec.Command("./istio_install", mergedIstioOperatorPath).Output()
+	out := string(b)
+
+	if err != nil {
+		return out, err
+	}
+
+	return out, nil
 }
 
 func initializeLog() *istiolog.Options {

@@ -116,3 +116,6 @@ template-k3d.yaml
 # performance tests generated files
 k6_script_auth_gen.js
 summary.html
+
+# temp hack for memory leak istio
+istio_install

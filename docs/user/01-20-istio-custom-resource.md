@@ -21,7 +21,7 @@ This table lists all the possible parameters of the given resource together with
 | **components.cni.k8s.affinity**  | object | Affinity is a group of affinity scheduling rules. To learn more, read the [Istio documentation](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#Affinity).|
 | **components.cni.k8s.resources**  | object | Defines [Kubernetes resources configuration](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/). For more information, read about Resources in the [Istio documentation](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#Resources ). |
 | **components.ingressGateway**  | object | Defines component configurations for Istio Ingress Gateway. |
-| **components.ingressGateway.k8s** (required) | object | **KubernetesResourcesConfig** is a subset of [KubernetesResourcesSpec](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec). |
+| **components.ingressGateway.k8s** (required) | object | KubernetesResourcesConfig is a subset of [KubernetesResourcesSpec](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec). |
 | **components.ingressGateway.k8s.hpaSpec**  | object | Defines configuration for HorizontalPodAutoscaler. |
 | **components.ingressGateway.k8s.hpaSpec.maxReplicas**  | integer |  |
 | **components.ingressGateway.k8s.hpaSpec.minReplicas**  | integer |  |
@@ -44,4 +44,4 @@ This table lists all the possible parameters of the given resource together with
 
 | Parameter | Type | Description |
 | ---- | ----------- | ---- |
-| **state** (required) | string | Signifies the current state of **CustomObject**. Its value can be either `Ready`, `Processing", `Error`, or `Deleting`. |
+| **state** (required) | string | Signifies the current state of **CustomObject**. Its value can be either `Ready`, `Processing`, `Error`, or `Deleting`. |

@@ -21,20 +21,20 @@ This table lists all the possible parameters of the given resource together with
 | **components.cni.k8s.affinity**  | object | Affinity is a group of affinity scheduling rules. To learn more, read the [Istio documentation](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#Affinity).|
 | **components.cni.k8s.resources**  | object | Defines [Kubernetes resources configuration](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/). For more information, read about Resources in the [Istio documentation](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#Resources ). |
 | **components.ingressGateway**  | object | Defines component configurations for Istio Ingress Gateway. |
-| **components.ingressGateway.k8s** (required) | object | KubernetesResourcesConfig is a subset of [KubernetesResourcesSpec](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec). |
-| **components.ingressGateway.k8s.hpaSpec**  | object | Defines configuration for **HorizontalPodAutoscaler**. |
+| **components.ingressGateway.k8s** (required) | object | **KubernetesResourcesConfig** is a subset of [KubernetesResourcesSpec](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec). |
+| **components.ingressGateway.k8s.hpaSpec**  | object | Defines configuration for HorizontalPodAutoscaler. |
 | **components.ingressGateway.k8s.hpaSpec.maxReplicas**  | integer |  |
 | **components.ingressGateway.k8s.hpaSpec.minReplicas**  | integer |  |
 | **components.ingressGateway.k8s.resources**  | object | Defines [Kubernetes resources configuration](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/). To learn more, read the [Istio documentation](https://istio.io/latest/docs/reference/config/istio.operator.v1). |
 | **components.ingressGateway.k8s.strategy**  | object | Defines the rolling update strategy. To learn more, read about the [Istio Deployment Strategy](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#DeploymentStrategy). |
 | **components.pilot**  | object | Defines component configuration for Istiod. |
 | **components.pilot.k8s** (required) | object | Represents a subset of [KubernetesResourcesSpec](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec). |
-| **components.pilot.k8s.hpaSpec**  | object | Defines configuration for **HorizontalPodAutoscaler**. |
+| **components.pilot.k8s.hpaSpec**  | object | Defines configuration for HorizontalPodAutoscaler. |
 | **components.pilot.k8s.hpaSpec.maxReplicas**  | integer |  |
 | **components.pilot.k8s.hpaSpec.minReplicas**  | integer |  |
 | **components.pilot.k8s.resources**  | object | Defines [Kubernetes resources configuration](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/). For more information, read about Resources in the [Istio documentation](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#Resources). |
-| **components.pilot.k8s.strategy**  | object | Defines the rolling update strategy. To learn more, read the [Istio documentation](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#DeploymentStrategy). |
-| **components.proxy**  | object | Defines component configuration for Istio proxy sidecar. |
+| **components.pilot.k8s.strategy**  | object | Defines the rolling update strategy. To learn more, read about DeploymentStrategy in the [Istio documentation](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#DeploymentStrategy). |
+| **components.proxy**  | object | Defines component configuration for the Istio proxy sidecar. |
 | **components.proxy.k8s** (required) | object | Represents a subset of [KubernetesResourcesSpec](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec). |
 | **components.proxy.k8s.resources**  | object | Defines [Kubernetes resources configuration](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/). To learn more, read about Resources in the [Istio documnetation](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#Resources).|
 | **config**  | object | Specifies the configuration for the Istio installation. |
@@ -44,4 +44,4 @@ This table lists all the possible parameters of the given resource together with
 
 | Parameter | Type | Description |
 | ---- | ----------- | ---- |
-| **state** (required) | string | State signifies current state of CustomObject. Value can be one of ("Ready", "Processing", "Error", "Deleting"). |
+| **state** (required) | string | Signifies the current state of **CustomObject**. Its value can be either `Ready`, `Processing", `Error`, or `Deleting`. |

@@ -18,8 +18,8 @@ Applying this CR triggers the installation of Istio, and deleting it triggers th
 | Parameter | Type | Description |
 | ---- | ----------- | ---- |
 | **components**  | object |  |
-| **components.&#x200b;cni**  | object | Cni defines component configuration for Istio CNI DaemonSet |
-| **components.&#x200b;cni.&#x200b;k8s** (required) | object | CniK8sConfig is a subset of [KubernetesResourcesSpec](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec) |
+| **components.&#x200b;cni**  | object | Defines component configuration for Istio CNI DaemonSet. |
+| **components.&#x200b;cni.&#x200b;k8s** (required) | object | CniK8sConfig is a subset of [KubernetesResourcesSpec](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec).|
 | **components.&#x200b;cni.&#x200b;k8s.&#x200b;affinity**  | object | Affinity is a group of affinity scheduling rules. |
 | **components.&#x200b;cni.&#x200b;k8s.&#x200b;affinity.&#x200b;nodeAffinity**  | object | Describes node affinity scheduling rules for the Pod. |
 | **components.&#x200b;cni.&#x200b;k8s.&#x200b;affinity.&#x200b;nodeAffinity.&#x200b;preferredDuringSchedulingIgnoredDuringExecution**  | \[\]object | The scheduler has a preference for scheduling Pods to nodes that satisfy the affinity expressions specified in this field. However, it may still choose a node that does not meet one or more of the expressions. The node that is most preferred is the one with the highest sum of weights. This sum is calculated by iterating through the elements in this field and adding a `weight` to the sum if the node matches the corresponding matchExpressions (resource request, requiredDuringScheduling anti-affinity expressions, etc.). |
@@ -109,7 +109,7 @@ Applying this CR triggers the installation of Istio, and deleting it triggers th
 | **components.&#x200b;cni.&#x200b;k8s.&#x200b;affinity.&#x200b;podAntiAffinity.&#x200b;requiredDuringSchedulingIgnoredDuringExecution.&#x200b;namespaceSelector.&#x200b;matchLabels**  | map\[string\]string | Represents a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to the element of matchExpressions, whose key field is `key`, the operator is `In`, and the array of values only contains `value`. The requirements are combined using `AND`. |
 | **components.&#x200b;cni.&#x200b;k8s.&#x200b;affinity.&#x200b;podAntiAffinity.&#x200b;requiredDuringSchedulingIgnoredDuringExecution.&#x200b;namespaces**  | \[\]string | This field specifies a static list of Namespace names to which the term applies. The term is applied to the union of the Namespaces listed in this field and the ones selected in the **namespaceSelector** field. If the **namespaceSelector** is null and the list of Namespaces is null or empty, it means that the term applies to the Namespace of the current Pod. |
 | **components.&#x200b;cni.&#x200b;k8s.&#x200b;affinity.&#x200b;podAntiAffinity.&#x200b;requiredDuringSchedulingIgnoredDuringExecution.&#x200b;topologyKey** (required) | string | Indicates if the Pod should be co-located (affinity) or not co-located (anti-affinity) with the Pods matching the **labelSelector** in the specified Namespaces. "Co-located" means that a Pod runs on a node that has a label with a **topologyKey** key and a value that is identical as a value of any other node on which any of the selected Pods is running. The **topologyKey** field musn't be empty. |
-| **components.&#x200b;cni.&#x200b;k8s.&#x200b;resources**  | object | Resources define Kubernetes resources configuration. To learn more, read [Kubernetes documentation](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/.) |
+| **components.&#x200b;cni.&#x200b;k8s.&#x200b;resources**  | object | Resources define [Kubernetes resources configuration](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/) |
 | **components.&#x200b;cni.&#x200b;k8s.&#x200b;resources.&#x200b;limits**  | object |  |
 | **components.&#x200b;cni.&#x200b;k8s.&#x200b;resources.&#x200b;limits.&#x200b;cpu**  | string |  |
 | **components.&#x200b;cni.&#x200b;k8s.&#x200b;resources.&#x200b;limits.&#x200b;memory**  | string |  |
@@ -117,11 +117,11 @@ Applying this CR triggers the installation of Istio, and deleting it triggers th
 | **components.&#x200b;cni.&#x200b;k8s.&#x200b;resources.&#x200b;requests.&#x200b;cpu**  | string |  |
 | **components.&#x200b;cni.&#x200b;k8s.&#x200b;resources.&#x200b;requests.&#x200b;memory**  | string |  |
 | **components.&#x200b;ingressGateway**  | object | IngressGateway defines component configurations for Istio Ingress Gateway |
-| **components.&#x200b;ingressGateway.&#x200b;k8s** (required) | object | KubernetesResourcesConfig is a subset of [Kubernetes Resources](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec) |
+| **components.&#x200b;ingressGateway.&#x200b;k8s** (required) | object | KubernetesResourcesConfig is a subset of [KubernetesResourcesSpec](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec). |
 | **components.&#x200b;ingressGateway.&#x200b;k8s.&#x200b;hpaSpec**  | object | HPASpec defines configuration for HorizontalPodAutoscaler |
 | **components.&#x200b;ingressGateway.&#x200b;k8s.&#x200b;hpaSpec.&#x200b;maxReplicas**  | integer |  |
 | **components.&#x200b;ingressGateway.&#x200b;k8s.&#x200b;hpaSpec.&#x200b;minReplicas**  | integer |  |
-| **components.&#x200b;ingressGateway.&#x200b;k8s.&#x200b;resources**  | object | Resources define [Kubernetes resources configuration](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/). |
+| **components.&#x200b;ingressGateway.&#x200b;k8s.&#x200b;resources**  | object | Resources define [Kubernetes resources configuration](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/) |
 | **components.&#x200b;ingressGateway.&#x200b;k8s.&#x200b;resources.&#x200b;limits**  | object |  |
 | **components.&#x200b;ingressGateway.&#x200b;k8s.&#x200b;resources.&#x200b;limits.&#x200b;cpu**  | string |  |
 | **components.&#x200b;ingressGateway.&#x200b;k8s.&#x200b;resources.&#x200b;limits.&#x200b;memory**  | string |  |
@@ -149,8 +149,8 @@ Applying this CR triggers the installation of Istio, and deleting it triggers th
 | **components.&#x200b;pilot.&#x200b;k8s.&#x200b;strategy.&#x200b;rollingUpdate.&#x200b;maxSurge**  | \{integer or string\} |  |
 | **components.&#x200b;pilot.&#x200b;k8s.&#x200b;strategy.&#x200b;rollingUpdate.&#x200b;maxUnavailable**  | \{integer or string\} |  |
 | **components.&#x200b;proxy**  | object | Proxy defines component configuration for Istio proxy sidecar |
-| **components.&#x200b;proxy.&#x200b;k8s** (required) | object | ProxyK8sConfig is a subset of [Kubernetes Resources Spec](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec).|
-| **components.&#x200b;proxy.&#x200b;k8s.&#x200b;resources**  | object | Resources define [Kubernetes resources configuration](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/)|
+| **components.&#x200b;proxy.&#x200b;k8s** (required) | object | ProxyK8sConfig is a subset of [KubernetesResourcesSpec](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec).|
+| **components.&#x200b;proxy.&#x200b;k8s.&#x200b;resources**  | object | Resources define [Kubernetes resources configuration](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/). |
 | **components.&#x200b;proxy.&#x200b;k8s.&#x200b;resources.&#x200b;limits**  | object |  |
 | **components.&#x200b;proxy.&#x200b;k8s.&#x200b;resources.&#x200b;limits.&#x200b;cpu**  | string |  |
 | **components.&#x200b;proxy.&#x200b;k8s.&#x200b;resources.&#x200b;limits.&#x200b;memory**  | string |  |
@@ -164,14 +164,14 @@ Applying this CR triggers the installation of Istio, and deleting it triggers th
 
 | Parameter | Type | Description |
 | ---- | ----------- | ---- |
-| **conditions**  | \[\]object | Conditions associated with IstioStatus. |
-| **conditions.&#x200b;lastTransitionTime** (required) | string | lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable. |
-| **conditions.&#x200b;message** (required) | string | message is a human readable message indicating details about the transition. This may be an empty string. |
-| **conditions.&#x200b;observedGeneration**  | integer | observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance. |
-| **conditions.&#x200b;reason** (required) | string | reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty. |
+| **conditions**  | \[\]object | Includes the conditions associated with IstioStatus. |
+| **conditions.&#x200b;lastTransitionTime** (required) | string | Specifies the last time the condition transitioned from one status to another. It should be the time when the underlying condition changed. If that is not known, then it is acceptable to use the time when the API field changed. |
+| **conditions.&#x200b;message** (required) | string | Contains a human-readable message providing details about the transition. It can be an empty string. |
+| **conditions.&#x200b;observedGeneration**  | integer | Represents the **.metadata.generation** that was used to set the condition. For example, f **.metadata.generation** is currently 12, but the **.status.conditions[x].observedGeneration** is 9, the condition is not up-to-date with the current state of the instance. |
+| **conditions.&#x200b;reason** (required) | string | Contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field must not be empty. |
 | **conditions.&#x200b;status** (required) | string | status of the condition, one of True, False, Unknown. |
-| **conditions.&#x200b;type** (required) | string | type of condition in CamelCase or in foo.example.com/CamelCase. --- Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be useful (see .node.status.conditions), the ability to deconflict is important. The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt) |
-| **state** (required) | string | State signifies current state of CustomObject. Value is eather `Ready`, `Processing`, `Error`, or `Deleting`. |
+| **conditions.&#x200b;type** (required) | string | Specifies the type of condition in CamelCase or in foo.example.com/CamelCase. Many **.condition.type** values are consistent across all resources (for example, `Available`), but because arbitrary conditions can be useful (see **.node.status.conditions**), the ability to deconflict is important. The regex it matches is `(dns1123SubdomainFmt/)?(qualifiedNameFmt)`. |
+| **state** (required) | string | Signifies the current state of CustomObject. Its value is either `Ready`, `Processing`, `Error`, or `Deleting`. |
 
 ### Istio.operator.kyma-project.io/v1alpha1
 
@@ -181,7 +181,7 @@ Applying this CR triggers the installation of Istio, and deleting it triggers th
 | ---- | ----------- | ---- |
 | **components**  | object |  |
 | **components.&#x200b;cni**  | object | Defines component configuration for Istio CNI DaemonSet. |
-| **components.&#x200b;cni.&#x200b;k8s** (required) | object | CniK8sConfig is a subset of [KubernetesResourcesSpec](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec). |
+| **components.&#x200b;cni.&#x200b;k8s** (required) | object | CniK8sConfig is a subset of[KubernetesResourcesSpec](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec). |
 | **components.&#x200b;cni.&#x200b;k8s.&#x200b;affinity**  | object | Represents a group of affinity scheduling rules. |
 | **components.&#x200b;cni.&#x200b;k8s.&#x200b;affinity.&#x200b;nodeAffinity**  | object | Describes node affinity scheduling rules for the Pod. |
 | **components.&#x200b;cni.&#x200b;k8s.&#x200b;affinity.&#x200b;nodeAffinity.&#x200b;preferredDuringSchedulingIgnoredDuringExecution**  | \[\]object | The scheduler has a preference for scheduling Pods to nodes that satisfy the affinity expressions specified in this field. However, it may still choose a node that does not meet one or more of the expressions. The node that is most preferred is the one with the highest sum of weights. This sum is calculated by iterating through the elements in this field and adding a `weight` to the sum if the node matches the corresponding matchExpressions (resource request, requiredDuringScheduling anti-affinity expressions, etc.). |
@@ -271,7 +271,7 @@ Applying this CR triggers the installation of Istio, and deleting it triggers th
 | **components.&#x200b;cni.&#x200b;k8s.&#x200b;affinity.&#x200b;podAntiAffinity.&#x200b;requiredDuringSchedulingIgnoredDuringExecution.&#x200b;namespaceSelector.&#x200b;matchLabels**  | map\[string\]string | Represents a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to the element of matchExpressions, whose key field is `key`, the operator is `In`, and the array of values only contains `value`. The requirements are combined using `AND`. |
 | **components.&#x200b;cni.&#x200b;k8s.&#x200b;affinity.&#x200b;podAntiAffinity.&#x200b;requiredDuringSchedulingIgnoredDuringExecution.&#x200b;namespaces**  | \[\]string | This field specifies a static list of Namespace names to which the term applies. The term is applied to the union of the Namespaces listed in this field and the ones selected in the **namespaceSelector** field. If the **namespaceSelector** is null and the list of Namespaces is null or empty, it means that the term applies to the Namespace of the current Pod. |
 | **components.&#x200b;cni.&#x200b;k8s.&#x200b;affinity.&#x200b;podAntiAffinity.&#x200b;requiredDuringSchedulingIgnoredDuringExecution.&#x200b;topologyKey** (required) | string | Indicates if the Pod should be co-located (affinity) or not co-located (anti-affinity) with the Pods matching the **labelSelector** in the specified Namespaces. "Co-located" means that a Pod runs on a node that has a label with a **topologyKey** key and a value that is identical as a value of any other node on which any of the selected Pods is running. The **topologyKey** field musn't be empty. |
-| **components.&#x200b;cni.&#x200b;k8s.&#x200b;resources**  | object | Resources define Kubernetes resources configuration. To learn more, read [Kubernetes documentation](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/). |
+| **components.&#x200b;cni.&#x200b;k8s.&#x200b;resources**  | object | Resources define [Kubernetes resources configuration](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/). |
 | **components.&#x200b;cni.&#x200b;k8s.&#x200b;resources.&#x200b;limits**  | object |  |
 | **components.&#x200b;cni.&#x200b;k8s.&#x200b;resources.&#x200b;limits.&#x200b;cpu**  | string |  |
 | **components.&#x200b;cni.&#x200b;k8s.&#x200b;resources.&#x200b;limits.&#x200b;memory**  | string |  |
@@ -279,11 +279,11 @@ Applying this CR triggers the installation of Istio, and deleting it triggers th
 | **components.&#x200b;cni.&#x200b;k8s.&#x200b;resources.&#x200b;requests.&#x200b;cpu**  | string |  |
 | **components.&#x200b;cni.&#x200b;k8s.&#x200b;resources.&#x200b;requests.&#x200b;memory**  | string |  |
 | **components.&#x200b;ingressGateway**  | object | IngressGateway defines component configurations for Istio Ingress Gateway |
-| **components.&#x200b;ingressGateway.&#x200b;k8s** (required) | object | KubernetesResourcesConfig is a subset of [Kubernetes Resources Spec](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec). |
+| **components.&#x200b;ingressGateway.&#x200b;k8s** (required) | object | KubernetesResourcesConfig is a subset of [KubernetesResourcesSpec](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec). |
 | **components.&#x200b;ingressGateway.&#x200b;k8s.&#x200b;hpaSpec**  | object | HPASpec defines configuration for HorizontalPodAutoscaler |
 | **components.&#x200b;ingressGateway.&#x200b;k8s.&#x200b;hpaSpec.&#x200b;maxReplicas**  | integer |  |
 | **components.&#x200b;ingressGateway.&#x200b;k8s.&#x200b;hpaSpec.&#x200b;minReplicas**  | integer |  |
-| **components.&#x200b;ingressGateway.&#x200b;k8s.&#x200b;resources**  | object | Resources define Kubernetes resources configuration. To learn more, read [Kubernetes documentation](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/). |
+| **components.&#x200b;ingressGateway.&#x200b;k8s.&#x200b;resources**  | object | Resources define  [Kubernetes resources configuration](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/)/ |
 | **components.&#x200b;ingressGateway.&#x200b;k8s.&#x200b;resources.&#x200b;limits**  | object |  |
 | **components.&#x200b;ingressGateway.&#x200b;k8s.&#x200b;resources.&#x200b;limits.&#x200b;cpu**  | string |  |
 | **components.&#x200b;ingressGateway.&#x200b;k8s.&#x200b;resources.&#x200b;limits.&#x200b;memory**  | string |  |
@@ -295,11 +295,11 @@ Applying this CR triggers the installation of Istio, and deleting it triggers th
 | **components.&#x200b;ingressGateway.&#x200b;k8s.&#x200b;strategy.&#x200b;rollingUpdate.&#x200b;maxSurge**  | \{integer or string\} |  |
 | **components.&#x200b;ingressGateway.&#x200b;k8s.&#x200b;strategy.&#x200b;rollingUpdate.&#x200b;maxUnavailable**  | \{integer or string\} |  |
 | **components.&#x200b;pilot**  | object | Pilot defines component configuration for Istiod |
-| **components.&#x200b;pilot.&#x200b;k8s** (required) | object | KubernetesResourcesConfig is a subset of [Kubernetes Resources Spec](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec). |
+| **components.&#x200b;pilot.&#x200b;k8s** (required) | object | KubernetesResourcesConfig is a subset of [KubernetesResourcesSpec](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec). |
 | **components.&#x200b;pilot.&#x200b;k8s.&#x200b;hpaSpec**  | object | HPASpec defines configuration for HorizontalPodAutoscaler |
 | **components.&#x200b;pilot.&#x200b;k8s.&#x200b;hpaSpec.&#x200b;maxReplicas**  | integer |  |
 | **components.&#x200b;pilot.&#x200b;k8s.&#x200b;hpaSpec.&#x200b;minReplicas**  | integer |  |
-| **components.&#x200b;pilot.&#x200b;k8s.&#x200b;resources**  | object | Resources define Kubernetes resources configuration. To learn more, read [Kubernetes documentation](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/). |
+| **components.&#x200b;pilot.&#x200b;k8s.&#x200b;resources**  | object | Resources define [Kubernetes resources configuration](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/). |
 | **components.&#x200b;pilot.&#x200b;k8s.&#x200b;resources.&#x200b;limits**  | object |  |
 | **components.&#x200b;pilot.&#x200b;k8s.&#x200b;resources.&#x200b;limits.&#x200b;cpu**  | string |  |
 | **components.&#x200b;pilot.&#x200b;k8s.&#x200b;resources.&#x200b;limits.&#x200b;memory**  | string |  |
@@ -311,8 +311,8 @@ Applying this CR triggers the installation of Istio, and deleting it triggers th
 | **components.&#x200b;pilot.&#x200b;k8s.&#x200b;strategy.&#x200b;rollingUpdate.&#x200b;maxSurge**  | \{integer or string\} |  |
 | **components.&#x200b;pilot.&#x200b;k8s.&#x200b;strategy.&#x200b;rollingUpdate.&#x200b;maxUnavailable**  | \{integer or string\} |  |
 | **components.&#x200b;proxy**  | object | Proxy defines component configuration for Istio proxy sidecar |
-| **components.&#x200b;proxy.&#x200b;k8s** (required) | object | ProxyK8sConfig is a subset of [Kubernetes Resources Spec](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec). |
-| **components.&#x200b;proxy.&#x200b;k8s.&#x200b;resources**  | object | Resources define [Kubernetes resources configuration]( https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/). |
+| **components.&#x200b;proxy.&#x200b;k8s** (required) | object | ProxyK8sConfig is a subset of [KubernetesResourcesSpec](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec). |
+| **components.&#x200b;proxy.&#x200b;k8s.&#x200b;resources**  | object | Resources define [Kubernetes resources configuration](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/). |
 | **components.&#x200b;proxy.&#x200b;k8s.&#x200b;resources.&#x200b;limits**  | object |  |
 | **components.&#x200b;proxy.&#x200b;k8s.&#x200b;resources.&#x200b;limits.&#x200b;cpu**  | string |  |
 | **components.&#x200b;proxy.&#x200b;k8s.&#x200b;resources.&#x200b;limits.&#x200b;memory**  | string |  |
@@ -326,13 +326,13 @@ Applying this CR triggers the installation of Istio, and deleting it triggers th
 
 | Parameter | Type | Description |
 | ---- | ----------- | ---- |
-| **conditions**  | \[\]object | Conditions associated with IstioStatus. |
-| **conditions.&#x200b;lastTransitionTime** (required) | string | lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable. |
-| **conditions.&#x200b;message** (required) | string | message is a human readable message indicating details about the transition. This may be an empty string. |
-| **conditions.&#x200b;observedGeneration**  | integer | observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance. |
-| **conditions.&#x200b;reason** (required) | string | reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty. |
-| **conditions.&#x200b;status** (required) | string | status of the condition, one of True, False, Unknown. |
-| **conditions.&#x200b;type** (required) | string | type of condition in CamelCase or in foo.example.com/CamelCase. --- Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be useful (see .node.status.conditions), the ability to deconflict is important. The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt) |
-| **state** (required) | string | State signifies current state of CustomObject. Value can be one of ("Ready", "Processing", "Error", "Deleting"). |
+| **conditions**  | \[\]object | Includes the conditions associated with IstioStatus. |
+| **conditions.&#x200b;lastTransitionTime** (required) | string | Specifies the last time the condition transitioned from one status to another. It should be the time when the underlying condition changed. If that is not known, then it is acceptable to use the time when the API field changed. |
+| **conditions.&#x200b;message** (required) | string | Contains a human-readable message providing details about the transition. It can be an empty string. |
+| **conditions.&#x200b;observedGeneration**  | integer | Represents the **.metadata.generation** that was used to set the condition. For example, f **.metadata.generation** is currently 12, but the **.status.conditions[x].observedGeneration** is 9, the condition is not up-to-date with the current state of the instance. |
+| **conditions.&#x200b;reason** (required) | string | Contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field must not be empty. |
+| **conditions.&#x200b;status** (required) | string | Specifies the status of the condition. The stats is either `True`, `False`, or `Unknown`. |
+| **conditions.&#x200b;type** (required) | string | Specifies the type of condition in CamelCase or in foo.example.com/CamelCase. Many **.condition.type** values are consistent across all resources (for example, `Available`), but because arbitrary conditions can be useful (see **.node.status.conditions**), the ability to deconflict is important. The regex it matches is `(dns1123SubdomainFmt/)?(qualifiedNameFmt)`. |
+| **state** (required) | string | Signifies the current state of CustomObject. Its value is either `Ready`, `Processing`, `Error`, or `Deleting`. |
 
 <!-- TABLE-END -->

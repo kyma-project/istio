@@ -49,7 +49,8 @@ spec:
                       DaemonSet.
                     properties:
                       k8s:
-                        description: 'CniK8sConfig is a subset of [KubernetesResourcesSpec](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec).'
+                        description: 'CniK8sConfig is a subset of [KubernetesResourcesSpec](https://istio.io/latest/docs
+                          /reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec).'
                         properties:
                           affinity:
                             description: Represents a group of affinity scheduling
@@ -1212,7 +1213,7 @@ spec:
             description: IstioStatus defines the observed state of IstioCR.
             properties:
               conditions:
-                description: Conditions associated with IstioStatus.
+                description: Includes the conditions associated with IstioStatus.
                 items:
                   description: "Condition contains details for one aspect of the current
                     state of this API Resource. --- This struct is intended for direct
@@ -1225,50 +1226,56 @@ spec:
                     protobuf:\"bytes,1,rep,name=conditions\"` \n // other fields }"
                   properties:
                     lastTransitionTime:
-                      description: lastTransitionTime is the last time the condition
-                        transitioned from one status to another. This should be when
-                        the underlying condition changed.  If that is not known, then
-                        using the time when the API field changed is acceptable.
+                      description: Specifies the last time the condition
+                        transitioned from one status to another. It should 
+                        be the time when the underlying condition changed.  
+                        If that is not known, then it is acceptable to use
+                        the time when the API field changed.
                       format: date-time
                       type: string
                     message:
-                      description: message is a human readable message indicating
-                        details about the transition. This may be an empty string.
+                      description: Contains a human-readable message providing
+                        details about the transition. It can be an empty string.
                       maxLength: 32768
                       type: string
                     observedGeneration:
-                      description: observedGeneration represents the .metadata.generation
-                        that the condition was set based upon. For instance, if .metadata.generation
-                        is currently 12, but the .status.conditions[x].observedGeneration
-                        is 9, the condition is out of date with respect to the current
-                        state of the instance.
+                      description: Represents the **.metadata.generation**
+                        that was used to set the condition. For example, 
+                        f **.metadata.generation** is currently 12, but 
+                        the **.status.conditions[x].observedGeneration**
+                        is 9, the condition is not up-to-date with the 
+                        current state of the instance.
                       format: int64
                       minimum: 0
                       type: integer
                     reason:
-                      description: reason contains a programmatic identifier indicating
+                      description: Contains a programmatic identifier indicating
                         the reason for the condition's last transition. Producers
                         of specific condition types may define expected values and
                         meanings for this field, and whether the values are considered
                         a guaranteed API. The value should be a CamelCase string.
-                        This field may not be empty.
+                        This field must not be empty.
                       maxLength: 1024
                       minLength: 1
                       pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
                       type: string
                     status:
-                      description: status of the condition, one of True, False, Unknown.
+                      description: Specifies the status of the condition. 
+                        The stats is either `True`, `False`, or `Unknown`.
                       enum:
                       - "True"
                       - "False"
                       - Unknown
                       type: string
                     type:
-                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
-                        --- Many .condition.type values are consistent across resources
-                        like Available, but because arbitrary conditions can be useful
-                        (see .node.status.conditions), the ability to deconflict is
-                        important. The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
+                      description: Specifies the type of condition 
+                        in CamelCase or in foo.example.com/CamelCase.
+                        Many **.condition.type** values are consistent 
+                        across all resources (for example, `Available`), 
+                        but because arbitrary conditions can be useful
+                        (see **.node.status.conditions**), the ability 
+                        to deconflict is important. The regex it matches 
+                        is `(dns1123SubdomainFmt/)?(qualifiedNameFmt)`.
                       maxLength: 316
                       pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
                       type: string
@@ -1281,8 +1288,9 @@ spec:
                   type: object
                 type: array
               state:
-                description: State signifies current state of CustomObject. Value
-                  can be one of ("Ready", "Processing", "Error", "Deleting").
+                description: Signifies the current state of CustomObject. 
+                  Its value is either `Ready`, `Processing`, `Error`, 
+                  or `Deleting`.
                 enum:
                 - Processing
                 - Deleting
@@ -1325,8 +1333,8 @@ spec:
               components:
                 properties:
                   cni:
-                    description: Cni defines component configuration for Istio CNI
-                      DaemonSet
+                    description: Defines component configuration for Istio CNI
+                      DaemonSet.
                     properties:
                       k8s:
                         description: CniK8sConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec
@@ -2489,7 +2497,7 @@ spec:
             description: IstioStatus defines the observed state of IstioCR.
             properties:
               conditions:
-                description: Conditions associated with IstioStatus.
+                description: Includes the conditions associated with IstioStatus.
                 items:
                   description: "Condition contains details for one aspect of the current
                     state of this API Resource. --- This struct is intended for direct
@@ -2502,33 +2510,35 @@ spec:
                     protobuf:\"bytes,1,rep,name=conditions\"` \n // other fields }"
                   properties:
                     lastTransitionTime:
-                      description: lastTransitionTime is the last time the condition
-                        transitioned from one status to another. This should be when
-                        the underlying condition changed.  If that is not known, then
-                        using the time when the API field changed is acceptable.
+                      description: Specifies the last time the condition
+                        transitioned from one status to another. It should 
+                        be the time when the underlying condition changed.  
+                        If that is not known, then it is acceptable to use
+                        the time when the API field changed.
                       format: date-time
                       type: string
                     message:
-                      description: message is a human readable message indicating
-                        details about the transition. This may be an empty string.
+                      description: Contains a human-readable message providing
+                        details about the transition. It can be an empty string.
                       maxLength: 32768
                       type: string
                     observedGeneration:
-                      description: observedGeneration represents the .metadata.generation
-                        that the condition was set based upon. For instance, if .metadata.generation
-                        is currently 12, but the .status.conditions[x].observedGeneration
-                        is 9, the condition is out of date with respect to the current
-                        state of the instance.
+                      description: Represents the **.metadata.generation**
+                        that was used to set the condition. For example, 
+                        f **.metadata.generation** is currently 12, but 
+                        the **.status.conditions[x].observedGeneration**
+                        is 9, the condition is not up-to-date with the 
+                        current state of the instance.
                       format: int64
                       minimum: 0
                       type: integer
                     reason:
-                      description: reason contains a programmatic identifier indicating
+                      description: Contains a programmatic identifier indicating
                         the reason for the condition's last transition. Producers
                         of specific condition types may define expected values and
                         meanings for this field, and whether the values are considered
                         a guaranteed API. The value should be a CamelCase string.
-                        This field may not be empty.
+                        This field must not be empty.
                       maxLength: 1024
                       minLength: 1
                       pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
@@ -2541,11 +2551,14 @@ spec:
                       - Unknown
                       type: string
                     type:
-                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
-                        --- Many .condition.type values are consistent across resources
-                        like Available, but because arbitrary conditions can be useful
-                        (see .node.status.conditions), the ability to deconflict is
-                        important. The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
+                      description: Specifies the type of condition 
+                        in CamelCase or in foo.example.com/CamelCase.
+                        Many **.condition.type** values are consistent 
+                        across all resources (for example, `Available`), 
+                        but because arbitrary conditions can be useful
+                        (see **.node.status.conditions**), the ability 
+                        to deconflict is important. The regex it matches 
+                        is `(dns1123SubdomainFmt/)?(qualifiedNameFmt)`.
                       maxLength: 316
                       pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
                       type: string
@@ -2558,8 +2571,9 @@ spec:
                   type: object
                 type: array
               state:
-                description: State signifies current state of CustomObject.
-                  Value is eather `Ready`, `Processing`, `Error`, or `Deleting`.
+                description: Signifies the current state of CustomObject. 
+                  Its value is either `Ready`, `Processing`, `Error`, 
+                  or `Deleting`.
                 enum:
                 - Processing
                 - Deleting

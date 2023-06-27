@@ -2,14 +2,19 @@ package integration
 
 import (
 	"context"
+	"fmt"
 	"github.com/avast/retry-go"
 	"github.com/cucumber/godog"
 	"github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	"github.com/pkg/errors"
+	v1c "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metrics "k8s.io/metrics/pkg/client/clientset/versioned"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
 )
 
 var testObjectsTearDown = func(ctx context.Context, sc *godog.Scenario, _ error) (context.Context, error) {
@@ -38,6 +43,41 @@ var istioCrTearDown = func(ctx context.Context, sc *godog.Scenario, _ error) (co
 		if err != nil {
 			return ctx, err
 		}
+	}
+	return ctx, nil
+}
+
+var checkForMemoryUsage = func(ctx context.Context, sc *godog.Scenario, _ error) (context.Context, error) {
+	var memoryUsageLimit *resource.Quantity = resource.NewQuantity(128*1024*1024, resource.BinarySI)
+	c, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return ctx, err
+	}
+
+	podList := &v1c.PodList{}
+	err = c.List(ctx, podList, client.MatchingLabels{"app.kubernetes.io/component": "istio-operator.kyma-project.io"})
+	if err != nil {
+		return ctx, nil
+	}
+	if len(podList.Items) < 1 {
+		return ctx, errors.New("Controller not found")
+	}
+	cpod := podList.Items[0]
+
+	mc, err := metrics.NewForConfig(config.GetConfigOrDie())
+	if err != nil {
+		return ctx, err
+	}
+	pm, err := mc.MetricsV1beta1().PodMetricses(cpod.Namespace).Get(ctx, cpod.Name, metav1.GetOptions{})
+	if err != nil {
+		return ctx, err
+	}
+
+	mu := pm.Containers[0].Usage.Memory()
+	fmt.Printf("POD NAME############ %s ###########", cpod.Name)
+	fmt.Printf("MEM USAGE############# %s ###########", mu.String())
+	if mu.Cmp(*memoryUsageLimit) == -1 {
+		return ctx, errors.New("Memory usage over 128MB")
 	}
 	return ctx, nil
 }

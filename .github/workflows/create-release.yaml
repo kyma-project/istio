@@ -70,6 +70,11 @@ jobs:
 #          check-name: test
           wait-interval: 20
 
+      - name: Publish release assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./scripts/publish_assets.sh ${{ github.event.inputs.name }} ${{ needs.create-draft.outputs.release_id }}
+
       - name: Publish release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

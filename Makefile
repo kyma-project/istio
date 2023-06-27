@@ -229,6 +229,11 @@ module-build: kyma kustomize ## Build the Module and push it to a registry defin
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	@$(KYMA) alpha create module --channel=${MODULE_CHANNEL} --name kyma-project.io/module/$(MODULE_NAME) --version $(MODULE_VERSION) --path . $(MODULE_CREATION_FLAGS)
 
+.PHONY: generate-manifests
+generate-manifests: kustomize
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build config/default > manifests.yaml
+
 ##@ Tools
 
 ########## Kyma CLI ###########

@@ -1,4 +1,4 @@
-The `istios.operator.kyma-project.io` CustomResourceDefinition (CRD) describes the kind and the format of data that Istio Controller uses to configure and install Istio. To get the up-to-date CRD in the `yaml` format, run the following command:
+The `istios.operator.kyma-project.io` CustomResourceDefinition (CRD) describes the kind and the format of data that Istio Controller uses to configure, update, and manage the Istio installation. Applying the CR triggers the installation of Istio, and deleting it triggers the uninstallation of Istio. To get the up-to-date CRD in the `yaml` format, run the following command:
 
 ```shell
 kubectl get crd istios.operator.kyma-project.io -o yaml
@@ -7,8 +7,6 @@ kubectl get crd istios.operator.kyma-project.io -o yaml
 ## Specification
 
 This table lists all the possible parameters of the given resource together with their descriptions:
- 
-Applying this CR triggers the installation of Istio, and deleting it triggers the uninstallation of Istio.
 
 <!-- TABLE-START -->
 ### Istio.operator.kyma-project.io/v1alpha2

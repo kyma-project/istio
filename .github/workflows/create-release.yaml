@@ -4,9 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       name:
-        description: 'Create release'
+        description: "Create release"
         default: ""
         required: true
+  pull_request:
+    branches:
+      - main
 
 jobs:
   publish-release:

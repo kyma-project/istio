@@ -48,8 +48,15 @@ var istioCrTearDown = func(ctx context.Context, sc *godog.Scenario, _ error) (co
 }
 
 var checkForMemoryUsage = func(ctx context.Context, sc *godog.Scenario, _ error) (context.Context, error) {
-	var memoryUsageLimit *resource.Quantity = resource.NewQuantity(128*1024*1024, resource.BinarySI)
+	const MemoryLimit = 128 // Memory usage limit for controller above which tests will fail (in MB)
+	ml := resource.NewQuantity(MemoryLimit*1024*1024, resource.BinarySI)
+
 	c, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return ctx, err
+	}
+
+	mc, err := metrics.NewForConfig(config.GetConfigOrDie())
 	if err != nil {
 		return ctx, err
 	}
@@ -57,28 +64,29 @@ var checkForMemoryUsage = func(ctx context.Context, sc *godog.Scenario, _ error)
 	podList := &v1c.PodList{}
 	err = c.List(ctx, podList, client.MatchingLabels{"app.kubernetes.io/component": "istio-operator.kyma-project.io"})
 	if err != nil {
-		return ctx, nil
+		return ctx, err
 	}
 	if len(podList.Items) < 1 {
 		return ctx, errors.New("Controller not found")
 	}
-	cpod := podList.Items[0]
 
-	mc, err := metrics.NewForConfig(config.GetConfigOrDie())
-	if err != nil {
-		return ctx, err
-	}
-	pm, err := mc.MetricsV1beta1().PodMetricses(cpod.Namespace).Get(ctx, cpod.Name, metav1.GetOptions{})
-	if err != nil {
-		return ctx, err
+	for _, cpod := range podList.Items {
+		pm, err := mc.MetricsV1beta1().PodMetricses(cpod.Namespace).Get(ctx, cpod.Name, metav1.GetOptions{})
+		if err != nil {
+			return ctx, err
+		}
+
+		mu := pm.Containers[0].Usage.Memory()
+		if mu.Cmp(*ml) == 1 {
+			//conv from B to MB
+			limMB := ml.AsApproximateFloat64() / 1024 / 1024
+			currMB := mu.AsApproximateFloat64() / 1024 / 1024
+
+			errMsg := fmt.Sprintf("Controller memory usage over %.1fMB (%.1fMB) ", limMB, currMB)
+			return ctx, errors.New(errMsg)
+		}
 	}
 
-	mu := pm.Containers[0].Usage.Memory()
-	fmt.Printf("POD NAME############ %s ###########", cpod.Name)
-	fmt.Printf("MEM USAGE############# %s ###########", mu.String())
-	if mu.Cmp(*memoryUsageLimit) == -1 {
-		return ctx, errors.New("Memory usage over 128MB")
-	}
 	return ctx, nil
 }
 

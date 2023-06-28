@@ -15,7 +15,6 @@ This table lists all the possible parameters of the given resource together with
 
 | Parameter | Type | Description |
 | ---- | ----------- | ---- |
-| **components**  | object |  |
 | **components.cni**  | object | Defines component configuration for Istio CNI DaemonSet. |
 | **components.cni.k8s.affinity**  | object | Affinity is a group of affinity scheduling rules. To learn more, read about affininty in the [Istio documentation](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#Affinity).|
 | **components.cni.k8s.resources**  | object | Defines [Kubernetes resources configuration](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/). For more information, read about Resources in the [Istio documentation](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#Resources ). |

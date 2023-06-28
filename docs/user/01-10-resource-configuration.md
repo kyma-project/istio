@@ -2,11 +2,11 @@
 
 The Istio module provides baseline values for the Istio installation. Those values can be overridden with configuration in the Istio custom resource (CR).
 
-## Cluster based default configuration
+## Cluster-based default configuration
 
 The Istio module installs Istio with configuration that depends on the cluster capabilities. If your cluster has less than 4 total virtual CPU cores or its total memory capacity is less than 10 Gigabytes, the default setup for resources and autoscaling is lighter. If your cluster exceeds both of these thresholds, Istio is installed with the higher resource configuration.
 
-### Default resource configuration for bigger clusters
+### Default resource configuration for larger clusters
 
 | Component       |          | CPU   | Memory |
 |-----------------|----------|-------|--------|
@@ -19,7 +19,7 @@ The Istio module installs Istio with configuration that depends on the cluster c
 | CNI             | Limits   | 500m  | 1024Mi |
 | CNI             | Requests | 100m  | 512Mi  |
 
-### Default autoscaling configuration for bigger clusters
+### Default autoscaling configuration for larger clusters
 
 | Component       | Min replicas | Max replicas |
 |-----------------|--------------|--------------|

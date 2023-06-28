@@ -47,9 +47,9 @@ var istioCrTearDown = func(ctx context.Context, sc *godog.Scenario, _ error) (co
 	return ctx, nil
 }
 
-var checkForMemoryUsage = func(ctx context.Context, sc *godog.Scenario, _ error) (context.Context, error) {
-	const MemoryLimit = 128 // Memory usage limit for controller above which tests will fail (in MB)
-	ml := resource.NewQuantity(MemoryLimit*1024*1024, resource.BinarySI)
+var verifyControllerMemoryUsage = func(ctx context.Context, sc *godog.Scenario, _ error) (context.Context, error) {
+	const memoryLimitInMb = 128 // Memory usage limit for controller above which tests will fail (in MB)
+	ml := resource.NewScaledQuantity(memoryLimitInMb, resource.Mega)
 
 	c, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {

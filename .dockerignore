@@ -2,6 +2,3 @@
 # Ignore build and test binaries.
 bin/
 testbin/
-
-# temp hack for memory leak istio
-istio_install

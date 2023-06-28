@@ -7,7 +7,7 @@ import (
 
 func initScenario(ctx *godog.ScenarioContext) {
 
-	ctx.After(checkForMemoryUsage)
+	ctx.After(verifyControllerMemoryUsage)
 	ctx.After(testObjectsTearDown)
 	ctx.After(istioCrTearDown)
 

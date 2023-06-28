@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"sync"
+	"time"
 
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -48,9 +49,7 @@ func NewIstioClient() *IstioClient {
 
 func (c *IstioClient) Install(mergedIstioOperatorPath string) error {
 
-	out, err := installIstioInExternalProcess(mergedIstioOperatorPath)
-
-	ctrl.Log.Info(out)
+	err := installIstioInExternalProcess(mergedIstioOperatorPath)
 
 	if err != nil {
 		ctrl.Log.Error(err, "Error occured during a call to istio instalation in external process")
@@ -121,15 +120,25 @@ func (c *IstioClient) Uninstall(ctx context.Context) error {
 	return nil
 }
 
-func installIstioInExternalProcess(mergedIstioOperatorPath string) (string, error) {
-	b, err := exec.Command("./istio_install", mergedIstioOperatorPath).Output()
-	out := string(b)
-
-	if err != nil {
-		return out, err
+func installIstioInExternalProcess(mergedIstioOperatorPath string) error {
+	istioInstallPath, ok := os.LookupEnv("ISTIO_INSTALL_BIN_PATH")
+	if !ok {
+		istioInstallPath = "./istio_install"
 	}
 
-	return out, nil
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, istioInstallPath, mergedIstioOperatorPath)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func initializeLog() *istiolog.Options {

@@ -85,84 +85,102 @@ SHELL = /usr/bin/env bash -o pipefail
 
 .PHONY: help
 help: ## Display this help.
-    @awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+
 
 ##@ Development
 
 .PHONY: manifests
 manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
 	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
-	$(MAKE) crd-docs-gen
 
 .PHONY: generate
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
+
 .PHONY: fmt
 fmt: ## Run go fmt against code.
 	go fmt ./...
+
 .PHONY: vet
 vet: ## Run go vet against code.
 	go vet ./...
+
 .PHONY: test
 test: manifests generate fmt vet envtest ## Run tests.
 	KUBEBUILDER_CONTROLPLANE_START_TIMEOUT=2m KUBEBUILDER_CONTROLPLANE_STOP_TIMEOUT=2m KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test $(shell go list ./... | grep -v controllers | grep -v /tests/integration) -coverprofile cover.out
-
-.PHONY: crd-docs-gen
-crd-docs-gen: tablegen
-	${TABLE_GEN} --crd-filename ./config/crd/bases/operator.kyma-project.io_istios.yaml --md-filename ./docs/user/01-20-istio-custom-resource.md
 
 ##@ Build
 
 .PHONY: build
 build: generate fmt vet ## Build manager binary.
 	go build -o bin/manager main.go
+
 .PHONY: run
 run: manifests generate fmt vet ## Run a controller from your host.
 	go run ./main.go
+
 .PHONY: docker-build
 docker-build: ## Build docker image with the manager.
 	IMG=$(IMG) docker build -t ${IMG} --build-arg TARGETOS=${TARGETOS} --build-arg TARGETARCH=${TARGETARCH} .
+
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
 	docker push ${IMG}
+
 ##@ Local
+
 .PHONY: local-run
 local-run:
 	make -C hack/local run
+
 .PHONY: local-stop
 local-stop:
 	make -C hack/local stop
+
 ##@ CI
+
 .PHONY: ci-k3d-integration-test
 ci-k3d-integration-test: local-run
 	make -C hack/ci integration-test
+
 .PHONY: ci-k3d-upgrade-test
 ci-k3d-upgrade-test: 
 	@echo "upgrade tests not implemented yet"
+
 .PHONY: ci-k3d-k8s-compatibility-test
 ci-k3d-k8s-compatibility-test: 
 	@echo "k8s compatibility tests not implemented yet"
+
 .PHONY: ci-hyperscalers-compatibility-test
 ci-hyperscalers-compatibility-test: 
 	@echo "hyperscalers compatibility tests not implemented yet"
+
 ##@ Deployment
+
 ifndef ignore-not-found
   ignore-not-found = false
 endif
+
 .PHONY: install
 install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
 	$(KUSTOMIZE) build config/crd | kubectl apply -f -
+
 .PHONY: uninstall
 uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
 	$(KUSTOMIZE) build config/crd | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
+
 .PHONY: deploy
 deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
+
 .PHONY: undeploy
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
 	$(KUSTOMIZE) build config/default | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
+
 ##@ Build Dependencies
+
 ## Location to install dependencies to
 LOCALBIN ?= $(shell pwd)/bin
 $(LOCALBIN):
@@ -170,14 +188,12 @@ $(LOCALBIN):
 
 ## Tool Binaries
 KUSTOMIZE ?= $(LOCALBIN)/kustomize
-TABLE_GEN ?= $(LOCALBIN)/table-gen
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
 YQUERY ?= $(LOCALBIN)/yq
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v4.5.5
-TABLE_GEN_VERSION ?= v0.0.0-20230523174756-3dae9f177ffd
 CONTROLLER_TOOLS_VERSION ?= v0.10.0
 YQ_VERSION ?= v4
 
@@ -186,38 +202,78 @@ KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/k
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
 $(KUSTOMIZE): $(LOCALBIN)
 	test -s $(LOCALBIN)/kustomize || { curl -s $(KUSTOMIZE_INSTALL_SCRIPT) | bash -s -- $(subst v,,$(KUSTOMIZE_VERSION)) $(LOCALBIN); }
+
 .PHONY: controller-gen
 controller-gen: $(CONTROLLER_GEN) ## Download controller-gen locally if necessary.
 $(CONTROLLER_GEN): $(LOCALBIN)
 	test -s $(LOCALBIN)/controller-gen || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_TOOLS_VERSION)
+
 .PHONY: yq
 yq: $(YQUERY) ## Download yq locally if necessary.
 $(YQUERY): $(LOCALBIN)
 	test -s $(LOCALBIN)/yq || { go get github.com/mikefarah/yq/$(YQ_VERSION) ; GOBIN=$(LOCALBIN) go install github.com/mikefarah/yq/$(YQ_VERSION) ; }
+
 .PHONY: envtest
 envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
 $(ENVTEST): $(LOCALBIN)
 	test -s $(LOCALBIN)/setup-envtest || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
-
-.PHONY: tablegen
-tablegen: $(TABLE_GEN) ## Download table-gen locally if necessary.
-$(TABLE_GEN): $(LOCALBIN)
-	test -s $(TABLE_GEN) || GOBIN=$(LOCALBIN) go install github.com/kyma-project/kyma/hack/table-gen@$(TABLE_GEN_VERSION)
 
 ##@ Module
 
 .PHONY: module-image
 module-image: docker-build docker-push ## Build the Module Image and push it to a registry defined in IMG_REGISTRY
 	echo "built and pushed module image $(IMG)"
+
 .PHONY: module-build
 module-build: kyma kustomize ## Build the Module and push it to a registry defined in MODULE_REGISTRY
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	@$(KYMA) alpha create module --channel=${MODULE_CHANNEL} --name kyma-project.io/module/$(MODULE_NAME) --version $(MODULE_VERSION) --path . $(MODULE_CREATION_FLAGS)
+
 ##@ Tools
+
 ########## Kyma CLI ###########
 KYMA_STABILITY ?= unstable
+
 # $(call os_error, os-type, os-architecture)
 define os_error
 $(error Error: unsuported platform OS_TYPE:$1, OS_ARCH:$2; to mitigate this problem set variable KYMA with absolute path to kyma-cli binary compatible with your operating system and architecture)
 endef
+
 KYMA_FILE_NAME ?= $(shell ./hack/get_kyma_file_name.sh ${OS_TYPE} ${OS_ARCH})
+
+KYMA ?= $(LOCALBIN)/kyma-$(KYMA_STABILITY)
+kyma: $(LOCALBIN) $(KYMA) ## Download kyma locally if necessary.
+$(KYMA):
+	## Detect if operating system 
+	$(if $(KYMA_FILE_NAME),,$(call os_error, ${OS_TYPE}, ${OS_ARCH}))
+	test -f $@ || curl -s -Lo $(KYMA) https://storage.googleapis.com/kyma-cli-$(KYMA_STABILITY)/$(KYMA_FILE_NAME)
+	chmod 0100 $(KYMA)
+
+########## Grafana Dashboard ###########
+.PHONY: grafana-dashboard
+grafana-dashboard: ## Generating Grafana manifests to visualize controller status.
+	cd operator && kubebuilder edit --plugins grafana.kubebuilder.io/v1-alpha
+
+.PHONY: all
+all: module-build
+
+########## Performance Tests ###########
+.PHONY: gardener-perf-test
+gardener-perf-test:
+	./hack/ci/gardener-perf-test.sh
+	cp tests/performance/summary-no-sidecar.html ${ARTIFACTS}/report-no-sidecar.html
+	cp tests/performance/summary-sidecar.html ${ARTIFACTS}/report-sidecar.html
+
+########## Integration Tests ###########
+PULL_IMAGE_VERSION=PR-${PULL_NUMBER}
+POST_IMAGE_VERSION=v$(shell date '+%Y%m%d')-$(shell printf %.8s ${PULL_BASE_SHA})
+
+.PHONY: istio-integration-test
+istio-integration-test:
+	make install
+	make deploy
+	cd tests/integration && EXPORT_RESULT=true go test -timeout 25m
+
+.PHONY: gardener-istio-integration-test
+gardener-istio-integration-test:
+	./hack/ci/gardener-integration.sh

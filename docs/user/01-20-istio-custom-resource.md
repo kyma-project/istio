@@ -23,8 +23,8 @@ This table lists all the possible parameters of the given resource together with
 | **components.ingressGateway.k8s.hpaSpec**  | object | Defines configuration for HorizontalPodAutoscaler. |
 | **components.ingressGateway.k8s.hpaSpec.maxReplicas**  | integer |  |
 | **components.ingressGateway.k8s.hpaSpec.minReplicas**  | integer |  |
-| **components.ingressGateway.k8s.resources**  | object | Defines [Kubernetes resources configuration](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/). To learn more, read the [Istio documentation](https://istio.io/latest/docs/reference/config/istio.operator.v1). |
-| **components.ingressGateway.k8s.strategy**  | object | Defines the rolling update strategy. To learn more, read about DeploymentStrategy in the [Istio documnetation](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#DeploymentStrategy). |
+| **components.ingressGateway.k8s.resources**  | object | Defines [Kubernetes resources configuration](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/). To learn more, read the [Istio documentation](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#Resources). |
+| **components.ingressGateway.k8s.strategy**  | object | Defines the rolling update strategy. To learn more, read about DeploymentStrategy in the [Istio documentation](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#DeploymentStrategy). |
 | **components.pilot**  | object | Defines component configuration for Istiod. |
 | **components.pilot.k8s.hpaSpec**  | object | Defines configuration for HorizontalPodAutoscaler. |
 | **components.pilot.k8s.hpaSpec.maxReplicas**  | integer |  |

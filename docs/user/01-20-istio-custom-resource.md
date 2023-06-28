@@ -22,19 +22,19 @@ This table lists all the possible parameters of the given resource together with
 | **components.ingressGateway**  | object | Defines component configurations for Istio Ingress Gateway. |
 | **components.ingressGateway.k8s.hpaSpec**  | object | Defines configuration for HorizontalPodAutoscaler. |
 | **components.ingressGateway.k8s.hpaSpec.maxReplicas**  | integer | Specifies the upper limit for the number of Pods that can be set by the autoscaler. It cannot be smaller than **MinReplicas**. |
-| **components.ingressGateway.k8s.hpaSpec.minReplicas**  | integer | Specifies the lower limit for the number of replicas to which the autoscaler can scale down. By default, it is set to 1 Pod. The value can be set to be 0 if the alpha feature gate HPAScaleToZero is enabled and at least one Object or External metric is configured. Scaling is active as long as at least one metric value is available. |
+| **components.ingressGateway.k8s.hpaSpec.minReplicas**  | integer | Specifies the lower limit for the number of replicas to which the autoscaler can scale down. By default, it is set to 1 Pod. The value can be set to 0 if the alpha feature gate HPAScaleToZero is enabled and at least one Object or External metric is configured. Scaling is active as long as at least one metric value is available. |
 | **components.ingressGateway.k8s.resources**  | object | Defines [Kubernetes resources configuration](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/). To learn more, read the [Istio documentation](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#Resources). |
 | **components.ingressGateway.k8s.strategy**  | object | Defines the rolling update strategy. To learn more, read about DeploymentStrategy in the [Istio documentation](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#DeploymentStrategy). |
 | **components.pilot**  | object | Defines component configuration for Istiod. |
 | **components.pilot.k8s.hpaSpec**  | object | Defines configuration for HorizontalPodAutoscaler. |
 | **components.pilot.k8s.hpaSpec.maxReplicas**  | integer | Specifies the upper limit for the number of Pods that can be set by the autoscaler. It cannot be smaller than **MinReplicas**. |
-| **components.pilot.k8s.hpaSpec.minReplicas**  | integer | Specifies the lower limit for the number of replicas to which the autoscaler can scale down. By default, it is set to 1 Pod. The value can be set to be 0 if the alpha feature gate HPAScaleToZero is enabled and at least one Object or External metric is configured. Scaling is active as long as at least one metric value is available. |
+| **components.pilot.k8s.hpaSpec.minReplicas**  | integer | Specifies the lower limit for the number of replicas to which the autoscaler can scale down. By default, it is set to 1 Pod. The value can be set to 0 if the alpha feature gate HPAScaleToZero is enabled and at least one Object or External metric is configured. Scaling is active as long as at least one metric value is available. |
 | **components.pilot.k8s.resources**  | object | Defines [Kubernetes resources configuration](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/). For more information, read about Resources in the [Istio documentation](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#Resources). |
 | **components.pilot.k8s.strategy**  | object | Defines the rolling update strategy. To learn more, read about DeploymentStrategy in the [Istio documentation](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#DeploymentStrategy). |
 | **components.proxy**  | object | Defines component configuration for the Istio proxy sidecar. |
 | **components.proxy.k8s.resources**  | object | Defines [Kubernetes resources configuration](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/). To learn more, read about Resources in the [Istio documnetation](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#Resources).|
 | **config**  | object | Specifies the configuration for the Istio installation. |
-| **config.numTrustedProxies**  | integer | Defines the number of trusted proxies deployed in front of the Istio gateway proxy. |
+| **config.numTrustedProxies**  | integer | Specifies the number of trusted proxies deployed in front of the Istio gateway proxy. |
 
 **Status:**
 

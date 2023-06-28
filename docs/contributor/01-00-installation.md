@@ -1,15 +1,14 @@
-
-## Install the Istio module
+# Install the Istio module
 
 - [Install the Istio module](#install-the-istio-module)
   - [Prerequisites](#prerequisites)
   - [Install Istio Operator manually](#install-istio-operator-manually)
     - [Use Istio Operator to install or uninstall Istio](#use-istio-operator-to-install-or-uninstall-istio)
   - [Install Istio in modular Kyma on a local k3d cluster](#install-istio-in-modular-kyma-on-a-local-k3d-cluster)
-  - [Use Lifecycle Manager to install Istio in modular Kyma on k3d](#use-lifecycle-manager-to-install-istio-in-modular-kyma-on-k3d)
+    - [Use Lifecycle Manager to install Istio in modular Kyma on k3d](#use-lifecycle-manager-to-install-istio-in-modular-kyma-on-k3d)
   - [Install with artifacts built for the `main` branch of the Istio repository](#install-with-artifacts-built-for-the-main-branch-of-the-istio-repository)
 
-### Prerequisites
+## Prerequisites
 
 - Access to a Kubernetes cluster (you can use [k3d](https://k3d.io/v5.5.1/))
 - [kubectl](https://kubernetes.io/docs/tasks/tools/)
@@ -17,7 +16,7 @@
 - [Docker](https://www.docker.com)
 - [Kyma CLI](https://kyma-project.io/docs/kyma/latest/04-operation-guides/operations/01-install-kyma-CLI)
 
-### Install Istio Operator manually
+## Install Istio Operator manually
 
 1. Clone the project.
 
@@ -76,7 +75,7 @@ make docker-build
 make deploy
 ```
 
-#### Use Istio Operator to install or uninstall Istio
+### Use Istio Operator to install or uninstall Istio
 
 - Install Istio in your cluster.
 
@@ -90,7 +89,7 @@ kubectl apply -f config/samples/operator_v1alpha1_istio.yaml
 kubectl delete -f config/samples/operator_v1alpha1_istio.yaml
 ```
 
-### Install Istio in modular Kyma on a local k3d cluster
+## Install Istio in modular Kyma on a local k3d cluster
 
 1. Set up a local k3d cluster and a local Docker registry.
 
@@ -225,7 +224,7 @@ Add the following configuration:
 kyma alpha enable module istio -c alpha
 ```
 
-### Install with artifacts built for the `main` branch of the Istio repository
+## Install with artifacts built for the `main` branch of the Istio repository
 
 You can install Istio module using the artificats that are created by `post-istio-module-build` job. To do so, follow these steps:
 

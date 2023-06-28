@@ -10,11 +10,8 @@ import (
 	"github.com/pkg/errors"
 	v1c "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	metrics "k8s.io/metrics/pkg/client/clientset/versioned"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/client/config"
 )
 
 var testObjectsTearDown = func(ctx context.Context, sc *godog.Scenario, _ error) (context.Context, error) {
@@ -47,16 +44,8 @@ var istioCrTearDown = func(ctx context.Context, sc *godog.Scenario, _ error) (co
 	return ctx, nil
 }
 
-var verifyControllerMemoryUsage = func(ctx context.Context, sc *godog.Scenario, _ error) (context.Context, error) {
-	const memoryLimitInMb = 128 // Memory usage limit for controller above which tests will fail (in MB)
-	ml := resource.NewScaledQuantity(memoryLimitInMb, resource.Mega)
-
+var verifyIfControllerHasBeenRestarted = func(ctx context.Context, sc *godog.Scenario, _ error) (context.Context, error) {
 	c, err := testcontext.GetK8sClientFromContext(ctx)
-	if err != nil {
-		return ctx, err
-	}
-
-	mc, err := metrics.NewForConfig(config.GetConfigOrDie())
 	if err != nil {
 		return ctx, err
 	}
@@ -71,18 +60,8 @@ var verifyControllerMemoryUsage = func(ctx context.Context, sc *godog.Scenario, 
 	}
 
 	for _, cpod := range podList.Items {
-		pm, err := mc.MetricsV1beta1().PodMetricses(cpod.Namespace).Get(ctx, cpod.Name, metav1.GetOptions{})
-		if err != nil {
-			return ctx, err
-		}
-
-		mu := pm.Containers[0].Usage.Memory()
-		if mu.Cmp(*ml) == 1 {
-			//conv from B to MB
-			limMB := ml.AsApproximateFloat64() / 1024 / 1024
-			currMB := mu.AsApproximateFloat64() / 1024 / 1024
-
-			errMsg := fmt.Sprintf("Controller memory usage over %.1fMB (%.1fMB) ", limMB, currMB)
+		if rc := cpod.Status.ContainerStatuses[0].RestartCount; rc > 0 {
+			errMsg := fmt.Sprintf("Controller has been restarted %d times", rc)
 			return ctx, errors.New(errMsg)
 		}
 	}

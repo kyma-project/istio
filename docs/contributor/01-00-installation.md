@@ -24,7 +24,7 @@
 git clone https://github.com/kyma-project/istio.git && cd istio
 ```
 
-2. Set Istio Operator image name.
+2. Set the Istio Operator image name.
 
 ```bash
 export IMG=istio-operator:0.0.1
@@ -156,7 +156,7 @@ repositoryContexts:
 
 ### Use Lifecycle Manager to install Istio in modular Kyma on k3d
 
-1. Install the latest version `lifecycle-manager`.
+1. Install the latest version of `lifecycle-manager`.
 
 ```bash
 kyma alpha deploy
@@ -226,7 +226,7 @@ kyma alpha enable module istio -c alpha
 
 ## Install with artifacts built for the `main` branch of the Istio repository
 
-You can install Istio module using the artificats that are created by `post-istio-module-build` job. To do so, follow these steps:
+You can install the Istio module using the artifacts that are created by `post-istio-module-build` job. To do so, follow these steps:
 
 1. Install Lifecycle Manager in the target cluster.
    

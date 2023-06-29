@@ -24,3 +24,12 @@ curl -f -L \
   -H "Content-Type: application/octet-stream" \
   --data-binary @"manifests.yaml" \
   ${GITHUB_URL}/releases/${RELEASE_ID}/assets?name=manifests.yaml
+
+curl -f -L \
+  -X POST \
+  -H "Accept: application/vnd.github+json" \
+  -H "${GITHUB_AUTH_HEADER}" \
+  -H "X-GitHub-Api-Version: 2022-11-28" \
+  -H "Content-Type: application/octet-stream" \
+  --data-binary @"config/samples/operator_v1alpha1_istio.yaml" \
+  ${GITHUB_URL}/releases/${RELEASE_ID}/assets?name=default-cr.yaml

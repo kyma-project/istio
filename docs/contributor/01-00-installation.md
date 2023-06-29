@@ -237,5 +237,5 @@ kyma alpha deploy
 3. Install the Istio module. 
    
 ```bash
-`kyma alpha enable module istio -c alpha`
+kyma alpha enable module istio -c alpha
 ```

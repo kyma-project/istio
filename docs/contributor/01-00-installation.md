@@ -69,7 +69,7 @@ make docker-build
   </details>
 </div>
 
-6. Deploy.
+6. Deploy Isito Operator.
 
 ```bash
 make deploy

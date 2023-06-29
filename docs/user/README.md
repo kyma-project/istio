@@ -10,6 +10,6 @@ The Istio module allows you to add Istio Operator to the Kyma runtime. Within Is
 
 ## Documentation
 
-To learn how to use the Istio module, read the documentation in the [user](./docs/user) directory. 
+To learn how to use the Istio module, read the documentation in the [user](../user/) directory. 
 
-If you are interested in the detailed documentation of the module's design and technical aspects, check the [contributor](./docs/contributor/) directory.
+If you are interested in the detailed documentation of the module's design and technical aspects, check the [contributor](../contributor/) directory.

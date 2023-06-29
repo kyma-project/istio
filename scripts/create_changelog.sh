@@ -20,37 +20,4 @@ then
   LATEST_RELEASE=$(curl -H "${GITHUB_AUTH_HEADER}" -sS "${GITHUB_URL}/releases/latest" | jq -r '.tag_name')
 fi
 
-echo "## Full changelog since ${LATEST_RELEASE}" >> ${CHANGELOG_FILE}
-
-git log ${LATEST_RELEASE}..HEAD --pretty=tformat:"%h" --reverse | while read -r commit
-do
-    COMMIT_AUTHOR=$(curl -H "${GITHUB_AUTH_HEADER}" -sS "${GITHUB_URL}/commits/${commit}" | jq -r '.author.login')
-    if [ "${COMMIT_AUTHOR}" != "kyma-bot" ]; then
-      git show -s ${commit} --format="* %s by @${COMMIT_AUTHOR}" >> ${CHANGELOG_FILE}
-    fi
-done
-
-NEW_CONTRIB=$$.new
-
-join -v2 \
-<(curl -H "${GITHUB_AUTH_HEADER}" -sS "${GITHUB_URL}/compare/$(git rev-list --max-parents=0 HEAD)...${LATEST_RELEASE}" | jq -r '.commits[].author.login' | sort -u) \
-<(curl -H "${GITHUB_AUTH_HEADER}" -sS "${GITHUB_URL}/compare/${LATEST_RELEASE}...HEAD" | jq -r '.commits[].author.login' | sort -u) >${NEW_CONTRIB}
-
-if [ -s ${NEW_CONTRIB} ]
-then
-  echo -e "\n## New contributors" >> ${CHANGELOG_FILE}
-  while read -r user
-  do
-    REF_PR=$(grep "@${user}" ${CHANGELOG_FILE} | head -1 | grep -o " (#[0-9]\+)" || true)
-    if [ -n "${REF_PR}" ] #reference found
-    then
-      REF_PR=" in ${REF_PR}"
-    fi
-    echo "* @${user} made first contribution${REF_PR}" >> ${CHANGELOG_FILE}
-  done <${NEW_CONTRIB}
-fi
-
-echo -e "\n**Full changelog**: https://github.com/$REPOSITORY/compare/${LATEST_RELEASE}...${RELEASE_TAG}" >> ${CHANGELOG_FILE}
-
-# cleanup
-rm ${NEW_CONTRIB} || echo "cleaned up"
+echo -e "\n## Full changelog since ${LATEST_RELEASE}\nhttps://github.com/$REPOSITORY/compare/${LATEST_RELEASE}...${RELEASE_TAG}" >> ${CHANGELOG_FILE}

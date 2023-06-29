@@ -126,7 +126,7 @@ func installIstioInExternalProcess(mergedIstioOperatorPath string) error {
 		istioInstallPath = "./istio_install"
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*6)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, istioInstallPath, mergedIstioOperatorPath)

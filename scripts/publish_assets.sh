@@ -22,8 +22,8 @@ curl -f -L \
   -H "${GITHUB_AUTH_HEADER}" \
   -H "X-GitHub-Api-Version: 2022-11-28" \
   -H "Content-Type: application/octet-stream" \
-  --data-binary @"manifests.yaml" \
-  ${GITHUB_URL}/releases/${RELEASE_ID}/assets?name=manifests.yaml
+  --data-binary @"istio-manager.yaml" \
+  ${GITHUB_URL}/releases/${RELEASE_ID}/assets?name=istio-manager.yaml
 
 curl -f -L \
   -X POST \

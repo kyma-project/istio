@@ -232,7 +232,7 @@ module-build: kyma kustomize ## Build the Module and push it to a registry defin
 .PHONY: generate-manifests
 generate-manifests: kustomize
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default > manifests.yaml
+	$(KUSTOMIZE) build config/default > istio-manager.yaml
 
 ##@ Tools
 

@@ -117,12 +117,11 @@ test: manifests generate fmt vet envtest ## Run tests.
 
 .PHONY: build
 build: generate fmt vet ## Build manager binary.
-	go build -o bin/manager main.go
 	go build -o $(ISTIO_INSTALL_BIN_PATH) cmd/istio-install/main.go
+	go build -o bin/manager main.go
 
 .PHONY: run
-run: manifests generate fmt vet ## Run a controller from your host.
-	go build -o $(ISTIO_INSTALL_BIN_PATH) cmd/istio-install/main.go
+run: manifests build ## Run a controller from your host.
 	ISTIO_INSTALL_BIN_PATH=$(ISTIO_INSTALL_BIN_PATH) go run ./main.go
 
 .PHONY: docker-build

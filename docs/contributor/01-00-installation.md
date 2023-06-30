@@ -142,7 +142,7 @@ If the images were pushed successfully, you get the following output:
 }
 ```
 
-7. Inspect the generated module template. Change the existing repository context in `spec.descriptor.component`:
+7. Inspect the generated ModuleTemplate. Change the existing repository context in `spec.descriptor.component`:
 
 ```yaml
 repositoryContexts:                                                                           
@@ -164,15 +164,15 @@ kyma alpha deploy
 If deployed successfully, you get the following output:
 
 ```bash
-- Kustomize ready
-- Lifecycle Manager deployed
-- Module Manager deployed
-- Modules deployed
-- Kyma CR deployed
-- Kyma deployed successfully!
+- Successfully connected to cluster (63ms)
+- Deployed cert-manager.io in version v1.11.0 (38.246s)
+- Used Lifecycle-Manager: europe-docker.pkg.dev/kyma-project/prod/lifecycle-manager:latest (0s)
+- Kustomizations deployed: [https://github.com/kyma-project/lifecycle-manager/config/default] (38.776s)
+- CoreDNS patched successfully (20ms)
+- Kyma CR deployed and Ready! (3.121s)
 
-Kyma is installed in version:
-Kyma installation took: 18 seconds
+Kyma is installed in version:	alpha deployment with lifecycle-manager
+Kyma installation took:		1m20s
 
 Happy Kyma-ing! :)
 ```
@@ -181,8 +181,8 @@ Kyma installation is ready, but no module is activated yet.
 
 ```bash
 kubectl get kymas.operator.kyma-project.io -A
-NAMESPACE    NAME           STATE   AGE
-kcp-system   default-kyma   Ready   71s
+NAMESPACE     NAME           STATE   AGE
+kyma-system   default-kyma   Ready   37s
 ```
 
 2. Apply `template.yaml` to register Istio as a module known for Lifecycle Manager.
@@ -191,7 +191,7 @@ Istio Module is a known module, but it is not activated.
 
 ```bash
 kubectl get moduletemplates.operator.kyma-project.io -A 
-NAMESPACE    NAME                  AGE
+NAMESPACE    NAME                   AGE
 kcp-system   moduletemplate-istio   2m24s
 ```
 
@@ -199,9 +199,9 @@ kcp-system   moduletemplate-istio   2m24s
 
 >**NOTE:** This is a temporary workaround only required in the single-cluster mode.
 
-Module-manager must be able to apply CRDs to install modules. When it operates in remote mode, where the control-plane manages remote clusters, it receives an administrative kubeconfig that allows it to target the remote cluster and apply CRDs. However, when it operates in local mode (single-cluster mode), it uses Service Account and does not have permission to create CRDs by default.
+Lifecycle Manager must be able to apply CRDs to install modules. When it operates in remote mode, where the control plane manages remote clusters, it receives an administrative kubeconfig that allows it to target the remote cluster and apply CRDs. However, when it operates in local mode (single-cluster mode), it uses Service Account and does not have permission to create CRDs by default.
 
-Run the following command to make sure the module manager's Service Account is granted an administrative role:
+Run the following command to make sure the Lifecycle Manager's Service Account is granted an administrative role:
 
 ```bash
 kubectl edit clusterrole lifecycle-manager-manager-role

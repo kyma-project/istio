@@ -2,6 +2,7 @@ package clusterconfig_test
 
 import (
 	"context"
+
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
@@ -11,7 +12,9 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
-
+	v1alpha1 "istio.io/api/meta/v1alpha1"
+	apiv1alpha3 "istio.io/api/networking/v1alpha3"
+	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -20,6 +23,7 @@ import (
 const (
 	k3sMockKubeProxyVersion string = "v1.25.6+k3s1"
 	gkeMockKubeProxyVersion string = "v1.24.9-gke.3200"
+	gardenerMockOSImage     string = "Garden Linux 934.8"
 )
 
 var _ = Describe("EvaluateClusterConfiguration", func() {
@@ -92,6 +96,49 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 							"cniBinDir": "/home/kubernetes/bin",
 							"resourceQuotas": map[string]bool{
 								"enabled": true,
+							},
+						},
+					},
+				},
+			})))
+		})
+	})
+
+	Context("Gardener", func() {
+		It("should set Istio GW annotation specific for Gardener clusters only", func() {
+			//given
+			gardenerNode := corev1.Node{
+				ObjectMeta: v1.ObjectMeta{
+					Name: "shoot-node-1",
+				},
+				Status: corev1.NodeStatus{
+					NodeInfo: corev1.NodeSystemInfo{
+						OSImage: gardenerMockOSImage,
+					},
+				},
+			}
+			kymaGateway := networkingv1alpha3.Gateway{
+				TypeMeta:   v1.TypeMeta{},
+				ObjectMeta: v1.ObjectMeta{Name: "kyma-gateway", Namespace: "kyma-system"},
+				Spec:       apiv1alpha3.Gateway{Servers: []*apiv1alpha3.Server{{Hosts: []string{"*.example.com"}}}},
+				Status:     v1alpha1.IstioStatus{},
+			}
+
+			client := createFakeClient(&gardenerNode, &kymaGateway)
+
+			//when
+			config, err := clusterconfig.EvaluateClusterConfiguration(context.TODO(), client)
+
+			//then
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(config).To(Equal(clusterconfig.ClusterConfiguration(map[string]interface{}{
+				"spec": map[string]interface{}{
+					"values": map[string]interface{}{
+						"gateways": map[string]interface{}{
+							"istio-ingressgateway": map[string]interface{}{
+								"podAnnotations": map[string]string{
+									"dns.gardener.cloud/dnsnames": "*.example.com",
+								},
 							},
 						},
 					},
@@ -211,6 +258,8 @@ func createFakeClient(objects ...client.Object) client.Client {
 	err := operatorv1alpha1.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
 	err = corev1.AddToScheme(scheme.Scheme)
+	Expect(err).ShouldNot(HaveOccurred())
+	err = networkingv1alpha3.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
 
 	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build()

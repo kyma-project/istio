@@ -12,9 +12,6 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
-	v1alpha1 "istio.io/api/meta/v1alpha1"
-	apiv1alpha3 "istio.io/api/networking/v1alpha3"
-	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -117,11 +114,10 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 					},
 				},
 			}
-			kymaGateway := networkingv1alpha3.Gateway{
+			kymaGateway := corev1.ConfigMap{
 				TypeMeta:   v1.TypeMeta{},
-				ObjectMeta: v1.ObjectMeta{Name: "kyma-gateway", Namespace: "kyma-system"},
-				Spec:       apiv1alpha3.Gateway{Servers: []*apiv1alpha3.Server{{Hosts: []string{"*.example.com"}}}},
-				Status:     v1alpha1.IstioStatus{},
+				ObjectMeta: v1.ObjectMeta{Name: clusterconfig.ConfigMapShootInfoName, Namespace: clusterconfig.ConfigMapShootInfoNS},
+				Data:       map[string]string{"domain": "example.com"},
 			}
 
 			client := createFakeClient(&gardenerNode, &kymaGateway)
@@ -258,8 +254,6 @@ func createFakeClient(objects ...client.Object) client.Client {
 	err := operatorv1alpha1.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
 	err = corev1.AddToScheme(scheme.Scheme)
-	Expect(err).ShouldNot(HaveOccurred())
-	err = networkingv1alpha3.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
 
 	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build()

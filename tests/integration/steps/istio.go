@@ -8,11 +8,13 @@ import (
 
 	"github.com/avast/retry-go"
 	"github.com/cucumber/godog"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	"github.com/kyma-project/istio/operator/tests/integration/manifests"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	"github.com/mitchellh/mapstructure"
 	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -94,6 +96,30 @@ func IstioComponentHasResourcesSetToCpuAndMemory(ctx context.Context, component,
 		return fmt.Errorf("memory %s for component %s wasn't expected; expected=%s got=%s", resourceType, component, memory, resources.Memory)
 	}
 
+	return nil
+}
+
+func IstioDeploymentHasAnnotation(ctx context.Context, deploymentName, annotationName, clusterType string) error {
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	istioGWDeployment := appsv1.Deployment{}
+	err = k8sClient.Get(context.TODO(), types.NamespacedName{Name: deploymentName, Namespace: defaultIopNamespace}, &istioGWDeployment)
+	if err != nil {
+		return fmt.Errorf("default Istio Gateway Deployment wasn't found err=%s", err)
+	}
+	flavour, err := clusterconfig.DiscoverClusterFlavour(ctx, k8sClient)
+	if err != nil {
+		return fmt.Errorf("unable to determine cluster flavour err=%s", err)
+	}
+	_, found := istioGWDeployment.Spec.Template.Annotations[annotationName]
+	if flavour == clusterconfig.Gardener && !found {
+		return fmt.Errorf("expected annotation '%s' on Istio Gateway Deployment template for Gardener cluster wasn't found", annotationName)
+	}
+	if flavour != clusterconfig.Gardener && found {
+		return fmt.Errorf("unexpected annotation '%s' on Istio Gateway Deployment template for non-Gardener cluster was found", annotationName)
+	}
 	return nil
 }
 

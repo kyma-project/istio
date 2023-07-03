@@ -2,11 +2,10 @@ package clusterconfig
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"regexp"
 
 	"github.com/imdario/mergo"
-	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/types"
@@ -17,8 +16,8 @@ import (
 type ClusterSize int
 
 const (
-	KymaNamespace string = "kyma-system"
-	KymaGWName    string = "kyma-gateway"
+	ConfigMapShootInfoName = "shoot-info"
+	ConfigMapShootInfoNS   = "kube-system"
 
 	UnknownSize ClusterSize = iota
 	Evaluation
@@ -57,9 +56,9 @@ func (s ClusterSize) DefaultManifestPath() string {
 
 // EvaluateClusterSize counts the entire capacity of cpu and memory in the cluster and returns Evaluation
 // if the total capacity of any of the resources is lower than ProductionClusterCpuThreshold or ProductionClusterMemoryThresholdGi
-func EvaluateClusterSize(ctx context.Context, k8sclient client.Client) (ClusterSize, error) {
+func EvaluateClusterSize(ctx context.Context, k8sClient client.Client) (ClusterSize, error) {
 	nodeList := corev1.NodeList{}
-	err := k8sclient.List(ctx, &nodeList)
+	err := k8sClient.List(ctx, &nodeList)
 	if err != nil {
 		return UnknownSize, err
 	}
@@ -94,15 +93,15 @@ const (
 
 type ClusterConfiguration map[string]interface{}
 
-func EvaluateClusterConfiguration(ctx context.Context, k8sclient client.Client) (ClusterConfiguration, error) {
-	flavour, err := discoverClusterFlavour(ctx, k8sclient)
+func EvaluateClusterConfiguration(ctx context.Context, k8sClient client.Client) (ClusterConfiguration, error) {
+	flavour, err := DiscoverClusterFlavour(ctx, k8sClient)
 	if err != nil {
 		return ClusterConfiguration{}, err
 	}
-	return flavour.clusterConfiguration(ctx, k8sclient)
+	return flavour.clusterConfiguration(ctx, k8sClient)
 }
 
-func discoverClusterFlavour(ctx context.Context, k8sclient client.Client) (ClusterFlavour, error) {
+func DiscoverClusterFlavour(ctx context.Context, k8sClient client.Client) (ClusterFlavour, error) {
 	matcherGKE, err := regexp.Compile(`^v\d+\.\d+\.\d+-gke\.\d+$`)
 	if err != nil {
 		return Unknown, err
@@ -116,7 +115,7 @@ func discoverClusterFlavour(ctx context.Context, k8sclient client.Client) (Clust
 		return Unknown, err
 	}
 	nodeList := corev1.NodeList{}
-	err = k8sclient.List(ctx, &nodeList)
+	err = k8sClient.List(ctx, &nodeList)
 	if err != nil {
 		return Unknown, err
 	}
@@ -139,7 +138,7 @@ func discoverClusterFlavour(ctx context.Context, k8sclient client.Client) (Clust
 	return Unknown, nil
 }
 
-func (f ClusterFlavour) clusterConfiguration(ctx context.Context, k8sclient client.Client) (ClusterConfiguration, error) {
+func (f ClusterFlavour) clusterConfiguration(ctx context.Context, k8sClient client.Client) (ClusterConfiguration, error) {
 	switch f {
 	case k3d:
 		config := map[string]interface{}{
@@ -175,7 +174,7 @@ func (f ClusterFlavour) clusterConfiguration(ctx context.Context, k8sclient clie
 		}
 		return config, nil
 	case Gardener:
-		hostDomainName, err := getGWHostDomainName(ctx, k8sclient)
+		hostDomainName, err := getHostDomainName(ctx, k8sClient)
 		if err != nil {
 			return ClusterConfiguration{}, err
 		}
@@ -197,17 +196,13 @@ func (f ClusterFlavour) clusterConfiguration(ctx context.Context, k8sclient clie
 	return ClusterConfiguration{}, nil
 }
 
-func getGWHostDomainName(ctx context.Context, k8sclient client.Client) (string, error) {
-	kymaGateway := networkingv1alpha3.Gateway{}
-	err := k8sclient.Get(ctx, types.NamespacedName{Namespace: KymaNamespace, Name: KymaGWName}, &kymaGateway)
+func getHostDomainName(ctx context.Context, k8sClient client.Client) (string, error) {
+	cmShootInfo := corev1.ConfigMap{}
+	err := k8sClient.Get(ctx, types.NamespacedName{Namespace: ConfigMapShootInfoNS, Name: ConfigMapShootInfoName}, &cmShootInfo)
 	if err != nil {
 		return "", err
 	}
-	servers := kymaGateway.Spec.Servers
-	if len(servers) < 1 || len(servers[0].Hosts) < 1 {
-		return "", errors.New("expected at least one Host definition for Kyma Istio Gateway")
-	}
-	return servers[0].Hosts[0], nil
+	return fmt.Sprintf("*.%s", cmShootInfo.Data["domain"]), nil
 }
 
 func MergeOverrides(template []byte, overrides ClusterConfiguration) ([]byte, error) {

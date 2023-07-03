@@ -114,6 +114,7 @@ kyma alpha deploy
 ```
 
 4. Export the environment variable pointing to the module's registry.
+
 ```bash
 export MODULE_REGISTRY=registry.localhost:5001/unsigned
 ```

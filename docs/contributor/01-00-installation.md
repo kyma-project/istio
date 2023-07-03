@@ -106,7 +106,7 @@ k3d cluster create kyma --registry-create k3d-kyma-registry:0.0.0.0:5001
 kyma alpha deploy
 ```
 
-3. Add the `etc/hosts` entry to register the local Docker registry under the name `k3d-kyma-registry`.
+3. Add the `/etc/hosts` entry to register the local Docker registry under the name `k3d-kyma-registry`.
 
 ```bash
 127.0.0.1 registry.localhost
@@ -144,7 +144,7 @@ kyma alpha enable module istio -c alpha
 kyma provision k3d
 ```
 
-2. Install Kyma with Lifecycle Manager in the target cluster.
+2. Install Lifecycle Manager in the target cluster.
 
 ```bash
 kyma alpha deploy

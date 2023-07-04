@@ -99,7 +99,7 @@ func IstioComponentHasResourcesSetToCpuAndMemory(ctx context.Context, component,
 	return nil
 }
 
-func IstioDeploymentHasAnnotation(ctx context.Context, deploymentName, annotationName, clusterType string) error {
+func IstioDeploymentHasAnnotation(ctx context.Context, deploymentName, annotationName, clusterFlavour string) error {
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
@@ -114,11 +114,11 @@ func IstioDeploymentHasAnnotation(ctx context.Context, deploymentName, annotatio
 		return fmt.Errorf("unable to determine cluster flavour err=%s", err)
 	}
 	_, found := istioGWDeployment.Spec.Template.Annotations[annotationName]
-	if flavour == clusterconfig.Gardener && !found {
-		return fmt.Errorf("expected annotation '%s' on Istio Gateway Deployment template for Gardener cluster wasn't found", annotationName)
+	if !found && flavour.String() == clusterFlavour {
+		return fmt.Errorf("expected annotation '%s' on Istio Gateway Deployment template for %s cluster wasn't found", annotationName, clusterFlavour)
 	}
-	if flavour != clusterconfig.Gardener && found {
-		return fmt.Errorf("unexpected annotation '%s' on Istio Gateway Deployment template for non-Gardener cluster was found", annotationName)
+	if found && flavour.String() != clusterFlavour {
+		return fmt.Errorf("unexpected annotation '%s' on Istio Gateway Deployment template for non-%s cluster was found", annotationName, clusterFlavour)
 	}
 	return nil
 }

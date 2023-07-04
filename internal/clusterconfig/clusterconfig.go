@@ -91,6 +91,18 @@ const (
 	Gardener
 )
 
+func (s ClusterFlavour) String() string {
+	switch s {
+	case k3d:
+		return "k3d"
+	case GKE:
+		return "GKE"
+	case Gardener:
+		return "Gardener"
+	}
+	return "Unknown"
+}
+
 type ClusterConfiguration map[string]interface{}
 
 func EvaluateClusterConfiguration(ctx context.Context, k8sClient client.Client) (ClusterConfiguration, error) {

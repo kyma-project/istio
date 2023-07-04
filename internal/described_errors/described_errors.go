@@ -28,7 +28,7 @@ func (d DefaultDescribedError) DisableErrorWrap() DefaultDescribedError {
 }
 
 func (d DefaultDescribedError) Description() string {
-	if d.wrapError == true {
+	if d.wrapError {
 		return errors.Wrap(d.err, d.description).Error()
 	} else {
 		return d.description

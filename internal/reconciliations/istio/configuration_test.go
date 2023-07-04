@@ -41,7 +41,7 @@ var _ = Describe("CR configuration", func() {
 				cr := operatorv1alpha1.Istio{}
 
 				// when
-				changed, err := istio.EvaluateIstioCRChanges(cr, mockIstioTag)
+				changed, err := istio.ShouldInstall(cr, mockIstioTag)
 
 				// then
 				Expect(err).ShouldNot(HaveOccurred())
@@ -64,7 +64,7 @@ var _ = Describe("CR configuration", func() {
 				}
 
 				// when
-				changed, err := istio.EvaluateIstioCRChanges(cr, mockIstioTag)
+				changed, err := istio.ShouldInstall(cr, mockIstioTag)
 
 				// then
 				Expect(err).ShouldNot(HaveOccurred())
@@ -87,7 +87,7 @@ var _ = Describe("CR configuration", func() {
 				}
 
 				// when
-				changed, err := istio.EvaluateIstioCRChanges(cr, mockIstioTag)
+				changed, err := istio.ShouldInstall(cr, mockIstioTag)
 
 				// then
 				Expect(err).ShouldNot(HaveOccurred())
@@ -109,7 +109,7 @@ var _ = Describe("CR configuration", func() {
 				}
 
 				// when
-				changed, err := istio.EvaluateIstioCRChanges(cr, mockIstioTag)
+				changed, err := istio.ShouldInstall(cr, mockIstioTag)
 
 				// then
 				Expect(err).ShouldNot(HaveOccurred())
@@ -131,7 +131,7 @@ var _ = Describe("CR configuration", func() {
 				}
 
 				// when
-				changed, err := istio.EvaluateIstioCRChanges(cr, mockIstioTag)
+				changed, err := istio.ShouldInstall(cr, mockIstioTag)
 
 				// then
 				Expect(err).ShouldNot(HaveOccurred())
@@ -154,7 +154,7 @@ var _ = Describe("CR configuration", func() {
 				}
 
 				// when
-				changed, err := istio.EvaluateIstioCRChanges(cr, mockIstioTag)
+				changed, err := istio.ShouldInstall(cr, mockIstioTag)
 
 				// then
 				Expect(err).ShouldNot(HaveOccurred())
@@ -171,7 +171,7 @@ var _ = Describe("CR configuration", func() {
 				}}
 
 				// when
-				changed, err := istio.EvaluateIstioCRChanges(cr, "1.16.3-distroless")
+				changed, err := istio.ShouldInstall(cr, "1.16.3-distroless")
 
 				// then
 				Expect(err).ShouldNot(HaveOccurred())
@@ -187,7 +187,7 @@ var _ = Describe("CR configuration", func() {
 				}}
 
 				// when
-				changed, err := istio.EvaluateIstioCRChanges(cr, "1.16.3-distroless")
+				changed, err := istio.ShouldInstall(cr, "1.16.3-distroless")
 
 				// then
 				Expect(err).ShouldNot(HaveOccurred())
@@ -195,7 +195,7 @@ var _ = Describe("CR configuration", func() {
 			})
 		})
 		Context("Istio component configuration changes", func() {
-			DescribeTable("Component configuration table", func(a, b operatorv1alpha1.Istio, expectedChange istio.IstioCRChange) {
+			DescribeTable("Component configuration table", func(a, b operatorv1alpha1.Istio, expectedChange istio.CRChange) {
 				type appliedConfig struct {
 					operatorv1alpha1.IstioSpec
 					IstioTag string
@@ -215,7 +215,7 @@ var _ = Describe("CR configuration", func() {
 
 				b.Annotations[lastAppliedConfiguration] = string(config)
 
-				change, err := istio.EvaluateIstioCRChanges(b, mockIstioTag)
+				change, err := istio.ShouldInstall(b, mockIstioTag)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(change).To(Equal(expectedChange))
 			},

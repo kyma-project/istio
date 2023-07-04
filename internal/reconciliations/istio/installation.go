@@ -33,27 +33,22 @@ const (
 
 // Reconcile runs Istio reconciliation to install, upgrade or uninstall Istio and returns the updated Istio CR.
 func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.Istio, istioResourceListPath string) (operatorv1alpha1.Istio, error) {
-
 	istioTag := fmt.Sprintf("%s-%s", i.IstioVersion, i.IstioImageBase)
 
-	// We need to evaluate what changed since last reconciliation, to make sure we run Istio reconciliation only if it's necessary
-	istioCRChanges, err := EvaluateIstioCRChanges(istioCR, istioTag)
+	shouldInstallIstio, err := ShouldInstall(istioCR, istioTag)
 	if err != nil {
 		ctrl.Log.Error(err, "Error evaluating Istio CR changes")
 		return istioCR, err
 	}
 
-	if !istioCRChanges.requireIstioDeletion() && !hasInstallationFinalizer(istioCR) {
+	if !ShouldDelete(istioCR) && !hasInstallationFinalizer(istioCR) {
 		controllerutil.AddFinalizer(&istioCR, installationFinalizer)
 		if err := i.Client.Update(ctx, &istioCR); err != nil {
 			return istioCR, err
 		}
 	}
 
-	ctrl.Log.Info("Reconcile Istio installation", "Istio CR change evaluation", istioCRChanges)
-
-	if istioCRChanges.requireInstall() {
-
+	if shouldInstallIstio {
 		ctrl.Log.Info("Starting istio install", "istio version", i.IstioVersion, "istio image", i.IstioImageBase)
 
 		// To have a better visibility of the manager state during install and upgrade, we update the status to Processing
@@ -106,8 +101,7 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 		ctrl.Log.Info("Istio install completed")
 
 		// We use the installation finalizer to track if the deletion was already executed so can make the uninstallation process more reliable.
-	} else if istioCRChanges.requireIstioDeletion() && hasInstallationFinalizer(istioCR) {
-
+	} else if ShouldDelete(istioCR) && hasInstallationFinalizer(istioCR) {
 		ctrl.Log.Info("Starting istio uninstall")
 
 		_, err = status.Update(ctx, i.Client, &istioCR, operatorv1alpha1.Deleting, metav1.Condition{})
@@ -158,5 +152,4 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 
 func hasInstallationFinalizer(istioCR operatorv1alpha1.Istio) bool {
 	return controllerutil.ContainsFinalizer(&istioCR, installationFinalizer)
-
 }

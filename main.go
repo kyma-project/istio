@@ -19,6 +19,7 @@ package main
 import (
 	"flag"
 	"os"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"time"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -43,6 +44,7 @@ const (
 	rateLimiterFrequencyDefault = 30
 	failureBaseDelayDefault     = 1 * time.Second
 	failureMaxDelayDefault      = 1000 * time.Second
+	syncPeriodDefault           = 10 * time.Hour
 )
 
 var (
@@ -58,6 +60,7 @@ type FlagVar struct {
 	failureMaxDelay      time.Duration
 	rateLimiterFrequency int
 	rateLimiterBurst     int
+	syncPeriod           time.Duration
 }
 
 func init() { //nolint:gochecknoinits
@@ -76,11 +79,15 @@ func main() {
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
 
-	ratelimiter := controllers.RateLimiter{
+	rateLimiter := controllers.RateLimiter{
 		Burst:           flagVar.rateLimiterBurst,
 		Frequency:       flagVar.rateLimiterFrequency,
 		BaseDelay:       flagVar.failureBaseDelay,
 		FailureMaxDelay: flagVar.failureMaxDelay,
+	}
+
+	cacheOptions := cache.Options{
+		SyncPeriod: &flagVar.syncPeriod,
 	}
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
@@ -92,13 +99,14 @@ func main() {
 		HealthProbeBindAddress: flagVar.probeAddr,
 		LeaderElection:         flagVar.enableLeaderElection,
 		LeaderElectionID:       "76223278.kyma-project.io",
+		Cache:                  cacheOptions,
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
 	}
 
-	if err = controllers.NewReconciler(mgr).SetupWithManager(mgr, ratelimiter); err != nil {
+	if err = controllers.NewReconciler(mgr).SetupWithManager(mgr, rateLimiter); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Istio")
 		os.Exit(1)
 	}
@@ -134,6 +142,8 @@ func defineFlagVar() *FlagVar {
 	flag.DurationVar(&flagVar.failureBaseDelay, "failure-base-delay", failureBaseDelayDefault,
 		"Indicates the failure base delay in seconds for rate limiter.")
 	flag.DurationVar(&flagVar.failureMaxDelay, "failure-max-delay", failureMaxDelayDefault,
-		"Indicates the failure max delay in seconds")
+		"Indicates the failure max delay in seconds.")
+	flag.DurationVar(&flagVar.syncPeriod, "sync-period", syncPeriodDefault,
+		"Indicates the time based reconciliation interval in seconds.")
 	return flagVar
 }

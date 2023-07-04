@@ -1,9 +1,7 @@
-## Release notes
-
-### Features
+## New features
 
 - Some feature
 
-### Bugfixes
+## Fixed bugs
 
-- Some bugfix
+- Some bug fix

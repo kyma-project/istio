@@ -20,4 +20,4 @@ then
   LATEST_RELEASE=$(curl -H "${GITHUB_AUTH_HEADER}" -sS "${GITHUB_URL}/releases/latest" | jq -r '.tag_name')
 fi
 
-echo -e "\n## Full changelog since ${LATEST_RELEASE}\nhttps://github.com/$REPOSITORY/compare/${LATEST_RELEASE}...${RELEASE_TAG}" >> ${CHANGELOG_FILE}
+echo -e "\n**Full changelog:** https://github.com/$REPOSITORY/compare/${LATEST_RELEASE}...${RELEASE_TAG}" >> ${CHANGELOG_FILE}

@@ -21,7 +21,7 @@ function cleanup() {
 # Cleanup on exit, be it successful or on fail
 trap cleanup EXIT INT
 
-tag=$(gcloud container images list-tags europe-docker.pkg.dev/kyma-project/prod/istio-manager --limit 1 --format json | jq '.[0].tags[1]')
+tag=$(curl "https://europe-docker.pkg.dev/v2/kyma-project/prod/istio-manager/tags/list" | jq '.tags[]' | sort -V | tail -1)
 IMG=europe-docker.pkg.dev/kyma-project/prod/istio-manager:${tag} make install deploy
 kubectl apply -f config/samples/operator_v1alpha1_istio.yaml
 

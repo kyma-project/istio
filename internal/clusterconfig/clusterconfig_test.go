@@ -132,7 +132,7 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 					"values": map[string]interface{}{
 						"gateways": map[string]interface{}{
 							"istio-ingressgateway": map[string]interface{}{
-								"podAnnotations": map[string]string{
+								"serviceAnnotations": map[string]string{
 									"dns.gardener.cloud/dnsnames": "*.example.com",
 								},
 							},

@@ -646,7 +646,8 @@ var _ = Describe("Installation reconciliation", func() {
 
 		// then
 		Expect(err).Should(HaveOccurred())
-		Expect(err.Error()).To(Equal("could not delete Istio module instance since there are 1 customer created resources present"))
+		Expect(err.Error()).To(Equal("could not delete Istio module instance since there are 1 customer resources present"))
+		Expect(err.Description()).To(Equal("Resources blocking deletion: VirtualService:mock-ns/mock-vs"))
 		Expect(mockClient.installCalled).To(BeFalse())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 	})

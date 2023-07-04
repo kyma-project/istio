@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"time"
 
 	"github.com/kyma-project/istio/operator/internal/manifest"
@@ -72,13 +73,13 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			return ctrl.Result{}, nil
 		}
 		r.log.Error(err, "Error during fetching Istio CR")
-		return status.Update(ctx, r.Client, &istioCR, operatorv1alpha1.Error, metav1.Condition{}, ErrorRetryTime)
+		return status.SetError(ctx, described_errors.NewDescribedError(err, "Could not get Istio CR"), r.Client, &istioCR, metav1.Condition{}, ErrorRetryTime)
 	}
 
 	istioCR, err := r.istioInstallation.Reconcile(ctx, istioCR, IstioResourceListDefaultPath)
 	if err != nil {
 		r.log.Error(err, "Error occurred during reconciliation of Istio installation")
-		return status.Update(ctx, r.Client, &istioCR, operatorv1alpha1.Error, metav1.Condition{}, ErrorRetryTime)
+		return status.SetError(ctx, err, r.Client, &istioCR, metav1.Condition{}, ErrorRetryTime)
 	}
 
 	// If there are no finalizers left, we must assume that the resource is deleted and therefore must stop the reconciliation
@@ -91,28 +92,28 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	// We do not want to safeguard the Istio sidecar reconciliation by checking whether Istio has to be installed. The
 	// reason for this is that we want to guarantee the restart of the proxies during the next reconciliation even if an
 	// error occurs in the reconciliation of the Istio upgrade after the Istio upgrade.
-	err = r.proxySidecars.Reconcile(ctx, istioCR)
-	if err != nil {
+	proxyErr := r.proxySidecars.Reconcile(ctx, istioCR)
+	if proxyErr != nil {
 		r.log.Error(err, "Error occurred during reconciliation of Istio Sidecars")
-		return status.Update(ctx, r.Client, &istioCR, operatorv1alpha1.Error, metav1.Condition{}, ErrorRetryTime)
+		return status.SetError(ctx, described_errors.NewDescribedError(proxyErr, "Error occurred during reconciliation of Istio Sidecars"), r.Client, &istioCR, metav1.Condition{}, ErrorRetryTime)
 	}
 
 	// Put applied configuration in annotation
-	istioCR, err = istio.UpdateLastAppliedConfiguration(istioCR, IstioTag)
-	if err != nil {
+	istioCR, updateErr := istio.UpdateLastAppliedConfiguration(istioCR, IstioTag)
+	if updateErr != nil {
 		r.log.Error(err, "Error updating LastAppliedConfiguration")
-		return status.Update(ctx, r.Client, &istioCR, operatorv1alpha1.Error, metav1.Condition{}, ErrorRetryTime)
+		return status.SetError(ctx, described_errors.NewDescribedError(updateErr, "Error updating LastAppliedConfiguration"), r.Client, &istioCR, metav1.Condition{}, ErrorRetryTime)
 	}
 
-	err = r.Client.Update(ctx, &istioCR)
-	if err != nil {
+	updateErr = r.Client.Update(ctx, &istioCR)
+	if updateErr != nil {
 		r.log.Error(err, "Error during update of IstioCR")
-		return status.Update(ctx, r.Client, &istioCR, operatorv1alpha1.Error, metav1.Condition{}, ErrorRetryTime)
+		return status.SetError(ctx, described_errors.NewDescribedError(updateErr, "Error during update of IstioCR"), r.Client, &istioCR, metav1.Condition{}, ErrorRetryTime)
 	}
 
 	r.log.Info("Reconcile completed")
 
-	return status.Update(ctx, r.Client, &istioCR, operatorv1alpha1.Ready, metav1.Condition{})
+	return status.SetReady(ctx, r.Client, &istioCR, metav1.Condition{})
 }
 
 // +kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios,verbs=get;list;watch;create;update;patch;delete

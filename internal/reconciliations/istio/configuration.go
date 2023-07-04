@@ -6,17 +6,18 @@ import (
 	"github.com/coreos/go-semver/semver"
 	"github.com/google/go-cmp/cmp"
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
+	"github.com/kyma-project/istio/operator/internal/described_errors"
 )
 
 // IstioCRChange represents difference since last reconciliation of IstioCR
 type IstioCRChange int
 
 const (
-	NoChange            IstioCRChange = 0
-	Create              IstioCRChange = 1
-	VersionUpdate       IstioCRChange = 2
-	ConfigurationUpdate IstioCRChange = 4
-	Delete              IstioCRChange = 8
+	NoChange IstioCRChange = 0
+	Create   IstioCRChange = 1 << iota
+	VersionUpdate
+	ConfigurationUpdate
+	Delete
 )
 
 func (r IstioCRChange) requireInstall() bool {
@@ -33,7 +34,7 @@ type appliedConfig struct {
 }
 
 // EvaluateIstioCRChanges returns IstioCRChange that happened since LastAppliedConfiguration
-func EvaluateIstioCRChanges(istioCR operatorv1alpha1.Istio, istioTag string) (trigger IstioCRChange, err error) {
+func EvaluateIstioCRChanges(istioCR operatorv1alpha1.Istio, istioTag string) (trigger IstioCRChange, err described_errors.DescribedError) {
 	if !istioCR.DeletionTimestamp.IsZero() {
 		return Delete, nil
 	}
@@ -46,14 +47,14 @@ func EvaluateIstioCRChanges(istioCR operatorv1alpha1.Istio, istioTag string) (tr
 	trigger = NoChange
 
 	var lastAppliedConfig appliedConfig
-	err = json.Unmarshal([]byte(lastAppliedConfigAnnotation), &lastAppliedConfig)
-	if err != nil {
-		return trigger, err
+	gErr := json.Unmarshal([]byte(lastAppliedConfigAnnotation), &lastAppliedConfig)
+	if gErr != nil {
+		return trigger, described_errors.NewDescribedError(gErr, "Could not unmarshal last applied configuration")
 	}
 
-	err = CheckIstioVersion(lastAppliedConfig.IstioTag, istioTag)
-	if err != nil {
-		return trigger, err
+	gErr = CheckIstioVersion(lastAppliedConfig.IstioTag, istioTag)
+	if gErr != nil {
+		return trigger, described_errors.NewDescribedError(gErr, "Could not check istio version from last applied configuration")
 	}
 
 	if lastAppliedConfig.IstioTag != istioTag {
@@ -107,7 +108,7 @@ func CheckIstioVersion(currentIstioVersionString, targetIstioVersionString strin
 		return fmt.Errorf("target Istio version (%s) is lower than current version (%s) - downgrade not supported",
 			targetIstioVersion.String(), currentIstioVersion.String())
 	}
-	if !(currentIstioVersion.Major == targetIstioVersion.Major) {
+	if currentIstioVersion.Major != targetIstioVersion.Major {
 		return fmt.Errorf("target Istio version (%s) is different than current Istio version (%s) - major version upgrade is not supported", targetIstioVersion.String(), currentIstioVersion.String())
 	}
 	if !amongOneMinor(*currentIstioVersion, *targetIstioVersion) {

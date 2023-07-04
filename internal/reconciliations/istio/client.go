@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"sync"
+	"time"
 
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -46,12 +48,11 @@ func NewIstioClient() *IstioClient {
 }
 
 func (c *IstioClient) Install(mergedIstioOperatorPath string) error {
-	iopFileNames := make([]string, 0, 1)
-	iopFileNames = append(iopFileNames, mergedIstioOperatorPath)
-	// We don't want to verify after installation, because it is unreliable
-	installArgs := &istio.InstallArgs{SkipConfirmation: true, Verify: false, InFilenames: iopFileNames}
 
-	if err := istio.Install(&istio.RootArgs{}, installArgs, c.istioLogOptions, os.Stdout, c.consoleLogger, c.printer); err != nil {
+	err := installIstioInExternalProcess(mergedIstioOperatorPath)
+
+	if err != nil {
+		ctrl.Log.Error(err, "Error occured during a call to istio instalation in external process")
 		return err
 	}
 
@@ -115,6 +116,27 @@ func (c *IstioClient) Uninstall(ctx context.Context) error {
 	ctrl.Log.Info("Deleted istio control plane namespace", "namespace", constants.IstioSystemNamespace)
 
 	opts.ProgressLog.SetState(progress.StateUninstallComplete)
+
+	return nil
+}
+
+func installIstioInExternalProcess(mergedIstioOperatorPath string) error {
+	istioInstallPath, ok := os.LookupEnv("ISTIO_INSTALL_BIN_PATH")
+	if !ok {
+		istioInstallPath = "./istio_install"
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*6)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, istioInstallPath, mergedIstioOperatorPath)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

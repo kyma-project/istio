@@ -190,7 +190,7 @@ func (f ClusterFlavour) clusterConfiguration(ctx context.Context, k8sClient clie
 				"values": map[string]interface{}{
 					"gateways": map[string]interface{}{
 						"istio-ingressgateway": map[string]interface{}{
-							"podAnnotations": map[string]string{
+							"serviceAnnotations": map[string]string{
 								"dns.gardener.cloud/dnsnames": hostDomainName,
 							},
 						},

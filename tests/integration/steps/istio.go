@@ -14,7 +14,6 @@ import (
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	"github.com/mitchellh/mapstructure"
 	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
-	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -99,13 +98,13 @@ func IstioComponentHasResourcesSetToCpuAndMemory(ctx context.Context, component,
 	return nil
 }
 
-func IstioDeploymentHasAnnotation(ctx context.Context, deploymentName, annotationName, clusterFlavour string) error {
+func IstioServiceHasAnnotation(ctx context.Context, serviceName, annotationName, clusterFlavour string) error {
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
 	}
-	istioGWDeployment := appsv1.Deployment{}
-	err = k8sClient.Get(context.TODO(), types.NamespacedName{Name: deploymentName, Namespace: defaultIopNamespace}, &istioGWDeployment)
+	istioService := corev1.Service{}
+	err = k8sClient.Get(context.TODO(), types.NamespacedName{Name: serviceName, Namespace: defaultIopNamespace}, &istioService)
 	if err != nil {
 		return fmt.Errorf("default Istio Gateway Deployment wasn't found err=%s", err)
 	}
@@ -113,7 +112,7 @@ func IstioDeploymentHasAnnotation(ctx context.Context, deploymentName, annotatio
 	if err != nil {
 		return fmt.Errorf("unable to determine cluster flavour err=%s", err)
 	}
-	_, found := istioGWDeployment.Spec.Template.Annotations[annotationName]
+	_, found := istioService.Annotations[annotationName]
 	if !found && flavour.String() == clusterFlavour {
 		return fmt.Errorf("expected annotation '%s' on Istio Gateway Deployment template for %s cluster wasn't found", annotationName, clusterFlavour)
 	}

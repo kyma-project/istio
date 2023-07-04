@@ -55,7 +55,7 @@ Therefore, we have agreed that it is okay to block the reconciliation loop durin
  
 The following diagram shows the reconciliation process for installing, uninstalling, and canary upgrading (using revisions) Istio.
 
-![Istio Installation Reconciliation](../assets/istio-controller-reconciliation-loop.svg)
+![Istio Installation Reconciliation](../assets/istio-controller-reconciliation.svg)
 
 ### Istio upgrade version checking
 You can upgrade Istio only by one minor version (1.2.3 -> 1.3.0). Reconciliation fails if the difference between current and target minor versions is greater than one (1.2.3 -> 1.4.0).

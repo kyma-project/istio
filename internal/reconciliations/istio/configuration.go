@@ -7,16 +7,6 @@ import (
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 )
 
-// CRChange represents difference since last reconciliation of IstioCR
-type CRChange int
-
-const (
-	NoChange            CRChange = 0
-	Create              CRChange = 1
-	VersionUpdate       CRChange = 2
-	ConfigurationUpdate CRChange = 4
-)
-
 type appliedConfig struct {
 	operatorv1alpha1.IstioSpec
 	IstioTag string

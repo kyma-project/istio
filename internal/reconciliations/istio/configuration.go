@@ -17,10 +17,6 @@ const (
 	ConfigurationUpdate CRChange = 4
 )
 
-func (r CRChange) requireInstall() bool {
-	return r == Create || r&VersionUpdate > 0 || r&ConfigurationUpdate > 0
-}
-
 type appliedConfig struct {
 	operatorv1alpha1.IstioSpec
 	IstioTag string
@@ -36,6 +32,10 @@ func ShouldDelete(istioCR operatorv1alpha1.Istio) bool {
 
 // ShouldInstall returns true when Istio should be installed
 func ShouldInstall(istioCR operatorv1alpha1.Istio, istioTag string) (shouldInstall bool, err error) {
+	if ShouldDelete(istioCR) {
+		return false, nil
+	}
+
 	lastAppliedConfigAnnotation, ok := istioCR.Annotations[LastAppliedConfiguration]
 	if !ok {
 		return true, nil

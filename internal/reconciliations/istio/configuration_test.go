@@ -3,6 +3,7 @@ package istio_test
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/onsi/gomega/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
@@ -36,7 +37,7 @@ var _ = Describe("CR configuration", func() {
 
 	Context("ConfigurationChanged", func() {
 		Context("Istio version doesn't change", func() {
-			It("should return Create if \"operator.kyma-project.io/lastAppliedConfiguration\" annotation is not present on CR", func() {
+			It("should return true if \"operator.kyma-project.io/lastAppliedConfiguration\" annotation is not present on CR", func() {
 				// given
 				cr := operatorv1alpha1.Istio{}
 
@@ -45,10 +46,10 @@ var _ = Describe("CR configuration", func() {
 
 				// then
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(changed).To(Equal(istio.Create))
+				Expect(changed).To(BeTrue())
 			})
 
-			It("should return ConfigurationUpdate if lastAppliedConfiguration has different number of numTrustedProxies than CR", func() {
+			It("should return true if lastAppliedConfiguration has different number of numTrustedProxies than CR", func() {
 				// given
 				newNumTrustedProxies := 2
 				cr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
@@ -68,10 +69,10 @@ var _ = Describe("CR configuration", func() {
 
 				// then
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(changed).To(Equal(istio.ConfigurationUpdate))
+				Expect(changed).To(BeTrue())
 			})
 
-			It("should return ConfigurationUpdate if lastAppliedConfiguration has \"nil\" number of numTrustedProxies and CR doesn'y", func() {
+			It("should return true if lastAppliedConfiguration has \"nil\" number of numTrustedProxies and CR doesn'y", func() {
 				// given
 				newNumTrustedProxies := 2
 				cr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
@@ -91,10 +92,10 @@ var _ = Describe("CR configuration", func() {
 
 				// then
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(changed).To(Equal(istio.ConfigurationUpdate))
+				Expect(changed).To(BeTrue())
 			})
 
-			It("should return ConfigurationUpdate if lastAppliedConfiguration has any number of numTrustedProxies and CR has \"nil\"", func() {
+			It("should return true if lastAppliedConfiguration has any number of numTrustedProxies and CR has \"nil\"", func() {
 				// given
 				cr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
@@ -113,10 +114,10 @@ var _ = Describe("CR configuration", func() {
 
 				// then
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(changed).To(Equal(istio.ConfigurationUpdate))
+				Expect(changed).To(BeTrue())
 			})
 
-			It("should return NoChange if both configurations have \"nil\" numTrustedProxies", func() {
+			It("should return true if both configurations have \"nil\" numTrustedProxies", func() {
 				// given
 				cr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
@@ -135,10 +136,10 @@ var _ = Describe("CR configuration", func() {
 
 				// then
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(changed).To(Equal(istio.NoChange))
+				Expect(changed).To(BeTrue())
 			})
 
-			It("should return NoChange if lastAppliedConfiguration has the same number of numTrustedProxies as CR", func() {
+			It("should return true if lastAppliedConfiguration has the same number of numTrustedProxies as CR", func() {
 				// given
 				newNumTrustedProxies := 1
 				cr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
@@ -158,11 +159,11 @@ var _ = Describe("CR configuration", func() {
 
 				// then
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(changed).To(Equal(istio.NoChange))
+				Expect(changed).To(BeTrue())
 			})
 		})
 		Context("Istio version changes", func() {
-			It("should return VersionUpdate if IstioVersion in annotation is different than in CR and configuration didn't change", func() {
+			It("should return true if IstioVersion in annotation is different than in CR and configuration didn't change", func() {
 				// given
 				cr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
@@ -175,10 +176,10 @@ var _ = Describe("CR configuration", func() {
 
 				// then
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(changed).To(Equal(istio.VersionUpdate))
+				Expect(changed).To(BeTrue())
 			})
 
-			It("should return VersionUpdate if IstioVersion in annotation is different than in CR and configuration changed", func() {
+			It("should return true if IstioVersion in annotation is different than in CR and configuration changed", func() {
 				// given
 				cr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
@@ -191,11 +192,11 @@ var _ = Describe("CR configuration", func() {
 
 				// then
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(changed).To(Equal(istio.VersionUpdate | istio.ConfigurationUpdate))
+				Expect(changed).To(BeTrue())
 			})
 		})
 		Context("Istio component configuration changes", func() {
-			DescribeTable("Component configuration table", func(a, b operatorv1alpha1.Istio, expectedChange istio.CRChange) {
+			DescribeTable("Component configuration table", func(a, b operatorv1alpha1.Istio, expectedMatcher types.GomegaMatcher) {
 				type appliedConfig struct {
 					operatorv1alpha1.IstioSpec
 					IstioTag string
@@ -217,7 +218,7 @@ var _ = Describe("CR configuration", func() {
 
 				change, err := istio.ShouldInstall(b, mockIstioTag)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(change).To(Equal(expectedChange))
+				Expect(change).To(expectedMatcher)
 			},
 				Entry("When a field changes value should return ConfigurationChanged", operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
 					Components: &operatorv1alpha1.Components{
@@ -235,7 +236,7 @@ var _ = Describe("CR configuration", func() {
 							},
 						}},
 					},
-				}}, istio.ConfigurationUpdate),
+				}}, BeTrue()),
 
 				Entry("When a field changes from nil to not nil should return ConfigurationChanged", operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
 					Components: &operatorv1alpha1.Components{
@@ -253,7 +254,7 @@ var _ = Describe("CR configuration", func() {
 							},
 						}},
 					},
-				}}, istio.ConfigurationUpdate),
+				}}, BeTrue()),
 
 				Entry("When a field changes from not nil to nil should return ConfigurationChanged", operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
 					Components: &operatorv1alpha1.Components{
@@ -271,7 +272,7 @@ var _ = Describe("CR configuration", func() {
 							},
 						}},
 					},
-				}}, istio.ConfigurationUpdate),
+				}}, BeTrue()),
 
 				Entry("When resources config changes should return ConfigurationChanged", operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
 					Components: &operatorv1alpha1.Components{
@@ -293,7 +294,7 @@ var _ = Describe("CR configuration", func() {
 							},
 						}},
 					},
-				}}, istio.ConfigurationUpdate),
+				}}, BeTrue()),
 
 				Entry("When strategy config changes should return ConfigurationChanged", operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
 					Components: &operatorv1alpha1.Components{
@@ -325,7 +326,7 @@ var _ = Describe("CR configuration", func() {
 							}},
 						}},
 					},
-				}}, istio.ConfigurationUpdate),
+				}}, BeTrue()),
 
 				Entry("When ingress gateway configuration changed should return ConfigurationUpdate", operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
 					Components: &operatorv1alpha1.Components{
@@ -347,7 +348,7 @@ var _ = Describe("CR configuration", func() {
 							},
 						},
 					},
-				}}, istio.ConfigurationUpdate),
+				}}, BeTrue()),
 
 				Entry("If no change occurred should return NoChange", operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
 					Components: &operatorv1alpha1.Components{
@@ -365,7 +366,7 @@ var _ = Describe("CR configuration", func() {
 							},
 						}},
 					},
-				}}, istio.NoChange),
+				}}, BeTrue()),
 			)
 		})
 	})

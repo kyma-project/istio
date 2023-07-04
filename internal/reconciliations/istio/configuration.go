@@ -14,10 +14,7 @@ type appliedConfig struct {
 
 // ShouldDelete returns true when Istio should be deleted
 func ShouldDelete(istioCR operatorv1alpha1.Istio) bool {
-	if !istioCR.DeletionTimestamp.IsZero() {
-		return true
-	}
-	return false
+	return !istioCR.DeletionTimestamp.IsZero()
 }
 
 // ShouldInstall returns true when Istio should be installed

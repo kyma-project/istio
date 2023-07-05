@@ -35,7 +35,7 @@ const (
 func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.Istio, istioResourceListPath string) (operatorv1alpha1.Istio, error) {
 	istioTag := fmt.Sprintf("%s-%s", i.IstioVersion, i.IstioImageBase)
 
-	shouldInstallIstio, err := ShouldInstall(istioCR, istioTag)
+	shouldInstallIstio, err := shouldInstall(istioCR, istioTag)
 	if err != nil {
 		ctrl.Log.Error(err, "Error evaluating Istio CR changes")
 		return istioCR, err

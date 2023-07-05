@@ -17,8 +17,8 @@ func shouldDelete(istioCR operatorv1alpha1.Istio) bool {
 	return !istioCR.DeletionTimestamp.IsZero()
 }
 
-// ShouldInstall returns true when Istio should be installed
-func ShouldInstall(istioCR operatorv1alpha1.Istio, istioTag string) (shouldInstall bool, err error) {
+// shouldInstall returns true when Istio should be installed
+func shouldInstall(istioCR operatorv1alpha1.Istio, istioTag string) (shouldInstall bool, err error) {
 	if shouldDelete(istioCR) {
 		return false, nil
 	}

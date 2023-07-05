@@ -1,0 +1,54 @@
+name: Pull Request
+
+on:
+  pull_request:
+    types: [ synchronize, opened, reopened, ready_for_review ]
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - 'tests/performance/**'
+      - 'OWNERS'
+      - 'CODEOWNERS'
+      - 'sec-scanners-config.yaml'
+    branches:
+      - main
+permissions:
+  contents: read
+
+jobs:
+  verify-actions:
+    name: Ensure SHA pinned actions
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - uses: zgosalvez/github-actions-ensure-sha-pinned-actions@555a30da2656b4a7cf47b107800bef097723363e # 2.1.3
+        with:
+          allowlist: |
+            actions/checkout
+            actions/setup-go
+
+  lint:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+      - uses: actions/checkout@v3
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@639cd343e1d3b897ff35927a75193d57cfcba299 #v3.6.0
+        with:
+          version: 'latest'
+          args: --timeout=10m --verbose
+
+  run-tests:
+    name: Run tests
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+      - uses: actions/checkout@v3
+      - name: Run tests
+        run: ./tests/integration/scripts/code-coverage-guard.sh

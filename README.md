@@ -10,9 +10,45 @@ Istio is an open-source service mesh that provides a uniform way to manage, conn
 
 The Istio module allows you to add Istio Operator to the Kyma runtime. Within Istio Operator, Istio Controller is responsible for installing, uninstalling, and managing Istio. For more information, read the [Istio Controller documentation](./docs/user/00-10-overview-istio-controller.md).
 
+## Install Istio Manager and Istio from the latest release
+
+### Prerequisites
+
+- Access to a Kubernetes (v1.24 or higher) cluster
+- [kubectl](https://kubernetes.io/docs/tasks/tools/)
+
+### Procedure
+
+1. Clone the project and open the `istio` folder.
+
+   ```bash
+   git clone https://github.com/kyma-project/istio.git && cd istio/
+   ```
+
+2. To install Istio, you must install latest Istio Manager first. Run the following:
+
+   ```bash
+   kubectl create ns kyma-system
+   kubectl apply -f https://github.com/kyma-project/istio/releases/latest/download/istio-manager.yaml
+   ```
+
+3. To get Istio installed, apply the latest Istio CR:
+
+   ```bash
+   kubectl apply -f https://github.com/kyma-project/istio/releases/latest/download/istio-default-cr.yaml
+   ```
+
+   You should get a result similar to this example:
+
+   ```bash
+   istio.operator.kyma-project.io/default created
+   ```
+
+For more installation options, visit [Install Istio Manager](/docs/contributor/01-00-installation.md)
+
 ## Documentation
 
-To learn how to use the Istio module, read the documentation in the [user](./docs/user) directory. 
+To learn how to use the Istio module, read the documentation in the [user](./docs/user) directory.
 
 If you are interested in the detailed documentation of the module's design and technical aspects, check the [contributor](./docs/contributor/) directory.
 

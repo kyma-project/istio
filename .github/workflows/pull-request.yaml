@@ -37,13 +37,13 @@ jobs:
         with:
           go-version: '1.20'
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3 #639cd343e1d3b897ff35927a75193d57cfcba299 #v3.6.0
+        uses: golangci/golangci-lint-action@639cd343e1d3b897ff35927a75193d57cfcba299 #v3.6.0
         with:
           version: 'latest'
           args: --timeout=10m --verbose
 
-  run-tests:
-    name: Run tests
+  run-unit-tests:
+    name: Run unit tests
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
     steps:

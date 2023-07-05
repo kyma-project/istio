@@ -21,6 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
     steps:
+      - uses: actions/checkout@v3
       - uses: zgosalvez/github-actions-ensure-sha-pinned-actions@555a30da2656b4a7cf47b107800bef097723363e # 2.1.3
         with:
           allowlist: |
@@ -31,10 +32,10 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
     steps:
+      - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
         with:
           go-version: '1.20'
-      - uses: actions/checkout@v3
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3 #639cd343e1d3b897ff35927a75193d57cfcba299 #v3.6.0
         with:
@@ -46,9 +47,9 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
     steps:
+      - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
         with:
           go-version: '1.20'
-      - uses: actions/checkout@v3
       - name: Run tests
         run: make test

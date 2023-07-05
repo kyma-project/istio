@@ -106,7 +106,7 @@ func IstioServiceHasAnnotation(ctx context.Context, serviceName, annotationName,
 	istioService := corev1.Service{}
 	err = k8sClient.Get(context.TODO(), types.NamespacedName{Name: serviceName, Namespace: defaultIopNamespace}, &istioService)
 	if err != nil {
-		return fmt.Errorf("default Istio Gateway Deployment wasn't found err=%s", err)
+		return fmt.Errorf("default Istio Gateway Service wasn't found err=%s", err)
 	}
 	flavour, err := clusterconfig.DiscoverClusterFlavour(ctx, k8sClient)
 	if err != nil {
@@ -114,10 +114,10 @@ func IstioServiceHasAnnotation(ctx context.Context, serviceName, annotationName,
 	}
 	_, found := istioService.Annotations[annotationName]
 	if !found && flavour.String() == clusterFlavour {
-		return fmt.Errorf("expected annotation '%s' on Istio Gateway Deployment template for %s cluster wasn't found", annotationName, clusterFlavour)
+		return fmt.Errorf("expected annotation '%s' on Istio Gateway Service template for %s cluster (%s) wasn't found", annotationName, clusterFlavour, flavour)
 	}
 	if found && flavour.String() != clusterFlavour {
-		return fmt.Errorf("unexpected annotation '%s' on Istio Gateway Deployment template for non-%s cluster was found", annotationName, clusterFlavour)
+		return fmt.Errorf("unexpected annotation '%s' on Istio Gateway Service template for non-%s cluster (%s) was found", annotationName, clusterFlavour, flavour)
 	}
 	return nil
 }

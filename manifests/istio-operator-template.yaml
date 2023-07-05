@@ -261,7 +261,7 @@ spec:
       oneNamespace: false
       operatorManageWebhooks: false
       pilotCertProvider: istiod
-      #priorityClassName: kyma-system-priority
+      priorityClassName: istio-kyma-priority
       proxy:
         autoInject: enabled
         clusterDomain: cluster.local

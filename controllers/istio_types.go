@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"github.com/kyma-project/istio/operator/internal/status"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -19,6 +20,7 @@ type IstioReconciler struct {
 	istioInstallation istio.Installation
 	proxySidecars     proxy.Sidecars
 	log               logr.Logger
+	statusHandler     status.Status
 }
 type RateLimiter struct {
 	Burst           int

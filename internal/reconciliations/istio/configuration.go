@@ -54,7 +54,7 @@ func EvaluateIstioCRChanges(istioCR operatorv1alpha1.Istio, istioTag string) (tr
 
 	gErr = CheckIstioVersion(lastAppliedConfig.IstioTag, istioTag)
 	if gErr != nil {
-		return trigger, described_errors.NewDescribedError(gErr, "Could not check istio version from last applied configuration")
+		return trigger, described_errors.NewDescribedError(gErr, "Istio version check failed")
 	}
 
 	if lastAppliedConfig.IstioTag != istioTag {

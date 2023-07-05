@@ -26,6 +26,7 @@ type Installation struct {
 	IstioImageBase string
 	Client         client.Client
 	Merger         manifest.Merger
+	StatusHandler  status.Status
 }
 
 const (
@@ -59,7 +60,7 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 		ctrl.Log.Info("Starting istio install", "istio version", i.IstioVersion, "istio image", i.IstioImageBase)
 
 		// To have a better visibility of the manager state during install and upgrade, we update the status to Processing
-		_, err := status.SetProcessing(ctx, "Installing Istio", i.Client, &istioCR, metav1.Condition{})
+		_, err := i.StatusHandler.SetProcessing(ctx, "Installing Istio", i.Client, &istioCR, metav1.Condition{})
 		if err != nil {
 			return istioCR, described_errors.NewDescribedError(err, "Could not set status to processing")
 		}
@@ -112,8 +113,8 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 
 		ctrl.Log.Info("Starting istio uninstall")
 
-		_, deleting_err := status.SetDeleting(ctx, i.Client, &istioCR, metav1.Condition{})
-		if err != nil {
+		_, deleting_err := i.StatusHandler.SetDeleting(ctx, i.Client, &istioCR, metav1.Condition{})
+		if deleting_err != nil {
 			return istioCR, described_errors.NewDescribedError(deleting_err, "Could not set status to deleting")
 		}
 

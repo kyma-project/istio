@@ -71,6 +71,29 @@ var _ = Describe("CR configuration", func() {
 				Expect(changed).To(Equal(istio.ConfigurationUpdate))
 			})
 
+			It("should return an error if lastAppliedConfiguration cannot be unmarshalled", func() {
+				// given
+				newNumTrustedProxies := 2
+				cr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						lastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":"a"},"IstioTag":"%s"}`, mockIstioTag),
+					},
+				},
+					Spec: operatorv1alpha1.IstioSpec{
+						Config: operatorv1alpha1.Config{
+							NumTrustedProxies: &newNumTrustedProxies,
+						},
+					},
+				}
+
+				// when
+				_, err := istio.EvaluateIstioCRChanges(cr, mockIstioTag)
+
+				// then
+				Expect(err).Should(HaveOccurred())
+				Expect(err.Description()).To(Equal("Could not unmarshal last applied configuration: json: cannot unmarshal string into Go struct field Config.config.numTrustedProxies of type int"))
+			})
+
 			It("should return ConfigurationUpdate if lastAppliedConfiguration has \"nil\" number of numTrustedProxies and CR doesn'y", func() {
 				// given
 				newNumTrustedProxies := 2

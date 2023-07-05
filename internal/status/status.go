@@ -11,6 +11,19 @@ import (
 	"time"
 )
 
+type Status interface {
+	SetProcessing(ctx context.Context, description string, client client.Client, istioCR *operatorv1alpha1.Istio, condition metav1.Condition, retryTime ...time.Duration) (ctrl.Result, error)
+	SetReady(ctx context.Context, client client.Client, istioCR *operatorv1alpha1.Istio, condition metav1.Condition, retryTime ...time.Duration) (ctrl.Result, error)
+	SetError(ctx context.Context, err described_errors.DescribedError, client client.Client, istioCR *operatorv1alpha1.Istio, condition metav1.Condition, retryTime ...time.Duration) (ctrl.Result, error)
+	SetDeleting(ctx context.Context, client client.Client, istioCR *operatorv1alpha1.Istio, condition metav1.Condition, retryTime ...time.Duration) (ctrl.Result, error)
+}
+
+func NewDefaultStatusHandler() DefaultStatusHandler {
+	return DefaultStatusHandler{}
+}
+
+type DefaultStatusHandler struct{}
+
 func update(ctx context.Context, client client.Client, istioCR *operatorv1alpha1.Istio, condition metav1.Condition, retryTime ...time.Duration) (ctrl.Result, error) {
 	meta.SetStatusCondition(istioCR.Status.Conditions, condition)
 
@@ -26,24 +39,24 @@ func update(ctx context.Context, client client.Client, istioCR *operatorv1alpha1
 	return ctrl.Result{}, nil
 }
 
-func SetReady(ctx context.Context, client client.Client, istioCR *operatorv1alpha1.Istio, condition metav1.Condition, retryTime ...time.Duration) (ctrl.Result, error) {
+func (DefaultStatusHandler) SetReady(ctx context.Context, client client.Client, istioCR *operatorv1alpha1.Istio, condition metav1.Condition, retryTime ...time.Duration) (ctrl.Result, error) {
 	istioCR.Status.State = operatorv1alpha1.Ready
 	return update(ctx, client, istioCR, condition, retryTime...)
 }
 
-func SetProcessing(ctx context.Context, description string, client client.Client, istioCR *operatorv1alpha1.Istio, condition metav1.Condition, retryTime ...time.Duration) (ctrl.Result, error) {
+func (DefaultStatusHandler) SetProcessing(ctx context.Context, description string, client client.Client, istioCR *operatorv1alpha1.Istio, condition metav1.Condition, retryTime ...time.Duration) (ctrl.Result, error) {
 	istioCR.Status.State = operatorv1alpha1.Processing
 	istioCR.Status.Description = description
 	return update(ctx, client, istioCR, condition, retryTime...)
 }
 
-func SetError(ctx context.Context, err described_errors.DescribedError, client client.Client, istioCR *operatorv1alpha1.Istio, condition metav1.Condition, retryTime ...time.Duration) (ctrl.Result, error) {
+func (DefaultStatusHandler) SetError(ctx context.Context, err described_errors.DescribedError, client client.Client, istioCR *operatorv1alpha1.Istio, condition metav1.Condition, retryTime ...time.Duration) (ctrl.Result, error) {
 	istioCR.Status.State = operatorv1alpha1.Error
 	istioCR.Status.Description = err.Description()
 	return update(ctx, client, istioCR, condition, retryTime...)
 }
 
-func SetDeleting(ctx context.Context, client client.Client, istioCR *operatorv1alpha1.Istio, condition metav1.Condition, retryTime ...time.Duration) (ctrl.Result, error) {
+func (DefaultStatusHandler) SetDeleting(ctx context.Context, client client.Client, istioCR *operatorv1alpha1.Istio, condition metav1.Condition, retryTime ...time.Duration) (ctrl.Result, error) {
 	istioCR.Status.State = operatorv1alpha1.Deleting
 	return update(ctx, client, istioCR, condition, retryTime...)
 }

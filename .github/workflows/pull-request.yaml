@@ -36,6 +36,7 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: '1.20'
+          cache: false # We need to disable caching here, since this is handled by the golangci-lint action
       - name: golangci-lint
         uses: golangci/golangci-lint-action@639cd343e1d3b897ff35927a75193d57cfcba299 #v3.6.0
         with:

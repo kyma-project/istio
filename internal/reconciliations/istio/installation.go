@@ -41,52 +41,7 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 		return istioCR, err
 	}
 
-	if shouldDelete(istioCR) && hasInstallationFinalizer(istioCR) {
-		ctrl.Log.Info("Starting istio uninstall")
-
-		_, err = status.Update(ctx, i.Client, &istioCR, operatorv1alpha1.Deleting, metav1.Condition{})
-		if err != nil {
-			return istioCR, err
-		}
-
-		istioResourceFinder, err := resources.NewIstioResourcesFinderFromConfigYaml(ctx, i.Client, ctrl.Log, istioResourceListPath)
-		if err != nil {
-			return istioCR, err
-		}
-
-		clientResources, err := istioResourceFinder.FindUserCreatedIstioResources()
-		if err != nil {
-			return istioCR, err
-		}
-		if len(clientResources) > 0 {
-			return istioCR, fmt.Errorf("could not delete Istio module instance since there are %d customer created resources present", len(clientResources))
-		}
-
-		err = i.IstioClient.Uninstall(ctx)
-		if err != nil {
-			return istioCR, err
-		}
-
-		warnings, err := sidecarRemover.RemoveSidecars(ctx, i.Client, &ctrl.Log)
-		if err != nil {
-			return istioCR, err
-		}
-
-		if len(warnings) > 0 {
-			for _, w := range warnings {
-				ctrl.Log.Info("Removing sidecar warning:", "name", w.Name, "namespace", w.Namespace, "kind", w.Kind, "message", w.Message)
-			}
-		}
-
-		controllerutil.RemoveFinalizer(&istioCR, installationFinalizer)
-		if err := i.Client.Update(ctx, &istioCR); err != nil {
-			ctrl.Log.Error(err, "Error happened during istio installation finalizer removal")
-			return istioCR, err
-		}
-
-		ctrl.Log.Info("Istio uninstall completed")
-
-	} else if shouldInstallIstio {
+	if shouldInstallIstio {
 		if !hasInstallationFinalizer(istioCR) {
 			controllerutil.AddFinalizer(&istioCR, installationFinalizer)
 			if err := i.Client.Update(ctx, &istioCR); err != nil {
@@ -145,6 +100,50 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 
 		ctrl.Log.Info("Istio install completed")
 		// We use the installation finalizer to track if the deletion was already executed so can make the uninstallation process more reliable.
+	} else if shouldDelete(istioCR) && hasInstallationFinalizer(istioCR) {
+		ctrl.Log.Info("Starting istio uninstall")
+
+		_, err = status.Update(ctx, i.Client, &istioCR, operatorv1alpha1.Deleting, metav1.Condition{})
+		if err != nil {
+			return istioCR, err
+		}
+
+		istioResourceFinder, err := resources.NewIstioResourcesFinderFromConfigYaml(ctx, i.Client, ctrl.Log, istioResourceListPath)
+		if err != nil {
+			return istioCR, err
+		}
+
+		clientResources, err := istioResourceFinder.FindUserCreatedIstioResources()
+		if err != nil {
+			return istioCR, err
+		}
+		if len(clientResources) > 0 {
+			return istioCR, fmt.Errorf("could not delete Istio module instance since there are %d customer created resources present", len(clientResources))
+		}
+
+		err = i.IstioClient.Uninstall(ctx)
+		if err != nil {
+			return istioCR, err
+		}
+
+		warnings, err := sidecarRemover.RemoveSidecars(ctx, i.Client, &ctrl.Log)
+		if err != nil {
+			return istioCR, err
+		}
+
+		if len(warnings) > 0 {
+			for _, w := range warnings {
+				ctrl.Log.Info("Removing sidecar warning:", "name", w.Name, "namespace", w.Namespace, "kind", w.Kind, "message", w.Message)
+			}
+		}
+
+		controllerutil.RemoveFinalizer(&istioCR, installationFinalizer)
+		if err := i.Client.Update(ctx, &istioCR); err != nil {
+			ctrl.Log.Error(err, "Error happened during istio installation finalizer removal")
+			return istioCR, err
+		}
+
+		ctrl.Log.Info("Istio uninstall completed")
 	}
 
 	return istioCR, nil

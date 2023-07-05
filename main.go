@@ -39,11 +39,11 @@ import (
 )
 
 const (
-	rateLimiterBurstDefault     = 200
-	rateLimiterFrequencyDefault = 30
-	failureBaseDelayDefault     = 1 * time.Second
-	failureMaxDelayDefault      = 1000 * time.Second
-	retryTimeDefault            = 10 * time.Hour
+	rateLimiterBurstDefault       = 200
+	rateLimiterFrequencyDefault   = 30
+	failureBaseDelayDefault       = 1 * time.Second
+	failureMaxDelayDefault        = 1000 * time.Second
+	reconciliationIntervalDefault = 10 * time.Hour
 )
 
 var (
@@ -52,14 +52,14 @@ var (
 )
 
 type FlagVar struct {
-	metricsAddr          string
-	enableLeaderElection bool
-	probeAddr            string
-	failureBaseDelay     time.Duration
-	failureMaxDelay      time.Duration
-	rateLimiterFrequency int
-	rateLimiterBurst     int
-	retryTime            time.Duration
+	metricsAddr            string
+	enableLeaderElection   bool
+	probeAddr              string
+	failureBaseDelay       time.Duration
+	failureMaxDelay        time.Duration
+	rateLimiterFrequency   int
+	rateLimiterBurst       int
+	reconciliationInterval time.Duration
 }
 
 func init() { //nolint:gochecknoinits
@@ -100,7 +100,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = controllers.NewReconciler(mgr, flagVar.retryTime).SetupWithManager(mgr, rateLimiter); err != nil {
+	if err = controllers.NewReconciler(mgr, flagVar.reconciliationInterval).SetupWithManager(mgr, rateLimiter); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Istio")
 		os.Exit(1)
 	}
@@ -134,10 +134,10 @@ func defineFlagVar() *FlagVar {
 	flag.IntVar(&flagVar.rateLimiterFrequency, "rate-limiter-frequency", rateLimiterFrequencyDefault,
 		"Indicates the bucket rate limiter frequency, signifying no. of events per second.")
 	flag.DurationVar(&flagVar.failureBaseDelay, "failure-base-delay", failureBaseDelayDefault,
-		"Indicates the failure base delay in seconds for rate limiter.")
+		"Indicates the failure base delay for rate limiter.")
 	flag.DurationVar(&flagVar.failureMaxDelay, "failure-max-delay", failureMaxDelayDefault,
-		"Indicates the failure max delay in seconds.")
-	flag.DurationVar(&flagVar.retryTime, "retry-time", retryTimeDefault,
-		"Indicates the time based reconciliation interval in seconds.")
+		"Indicates the failure max delay.")
+	flag.DurationVar(&flagVar.reconciliationInterval, "reconciliation-interval", reconciliationIntervalDefault,
+		"Indicates the time based reconciliation interval.")
 	return flagVar
 }

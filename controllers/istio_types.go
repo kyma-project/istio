@@ -15,11 +15,11 @@ import (
 type IstioReconciler struct {
 	*rest.Config // required to pass rest config to the declarative library
 	client.Client
-	Scheme            *runtime.Scheme
-	istioInstallation istio.Installation
-	proxySidecars     proxy.Sidecars
-	log               logr.Logger
-	retryTime         time.Duration
+	Scheme                 *runtime.Scheme
+	istioInstallation      istio.Installation
+	proxySidecars          proxy.Sidecars
+	log                    logr.Logger
+	reconciliationInterval time.Duration
 }
 
 type RateLimiter struct {

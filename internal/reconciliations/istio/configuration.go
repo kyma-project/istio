@@ -12,14 +12,14 @@ type appliedConfig struct {
 	IstioTag string
 }
 
-// ShouldDelete returns true when Istio should be deleted
-func ShouldDelete(istioCR operatorv1alpha1.Istio) bool {
+// shouldDelete returns true when Istio should be deleted
+func shouldDelete(istioCR operatorv1alpha1.Istio) bool {
 	return !istioCR.DeletionTimestamp.IsZero()
 }
 
 // ShouldInstall returns true when Istio should be installed
 func ShouldInstall(istioCR operatorv1alpha1.Istio, istioTag string) (shouldInstall bool, err error) {
-	if ShouldDelete(istioCR) {
+	if shouldDelete(istioCR) {
 		return false, nil
 	}
 
@@ -29,13 +29,11 @@ func ShouldInstall(istioCR operatorv1alpha1.Istio, istioTag string) (shouldInsta
 	}
 
 	var lastAppliedConfig appliedConfig
-	err = json.Unmarshal([]byte(lastAppliedConfigAnnotation), &lastAppliedConfig)
-	if err != nil {
+	if err := json.Unmarshal([]byte(lastAppliedConfigAnnotation), &lastAppliedConfig); err != nil {
 		return false, err
 	}
 
-	err = CheckIstioVersion(lastAppliedConfig.IstioTag, istioTag)
-	if err != nil {
+	if err := CheckIstioVersion(lastAppliedConfig.IstioTag, istioTag); err != nil {
 		return false, err
 	}
 

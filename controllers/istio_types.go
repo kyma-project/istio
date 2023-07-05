@@ -19,7 +19,9 @@ type IstioReconciler struct {
 	istioInstallation istio.Installation
 	proxySidecars     proxy.Sidecars
 	log               logr.Logger
+	retryTime         time.Duration
 }
+
 type RateLimiter struct {
 	Burst           int
 	Frequency       int

@@ -55,7 +55,7 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 						"gateways": map[string]interface{}{
 							"istio-ingressgateway": map[string]interface{}{
 								"serviceAnnotations": map[string]string{
-									"dns.gardener.cloud/dnsnames": "'*.local.kyma.dev'",
+									"dns.gardener.cloud/dnsnames": clusterconfig.LocalKymaDomain,
 								},
 							},
 						},

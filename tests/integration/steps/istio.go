@@ -112,12 +112,12 @@ func IstioServiceHasAnnotation(ctx context.Context, serviceName, annotationName,
 	if err != nil {
 		return fmt.Errorf("unable to determine cluster flavour err=%s", err)
 	}
-	_, found := istioService.Annotations[annotationName]
+	annotationValue, found := istioService.Annotations[annotationName]
 	if !found && flavour.String() == clusterFlavour {
-		return fmt.Errorf("expected annotation '%s' on Istio Gateway Service template for %s cluster (%s) wasn't found", annotationName, clusterFlavour, flavour)
+		return fmt.Errorf("expected annotation '%s' on Istio Gateway Service for %s cluster (%s) wasn't found", annotationName, clusterFlavour, flavour)
 	}
-	if found && flavour.String() != clusterFlavour {
-		return fmt.Errorf("unexpected annotation '%s' on Istio Gateway Service template for non-%s cluster (%s) was found", annotationName, clusterFlavour, flavour)
+	if found && flavour.String() != clusterFlavour && annotationValue != clusterconfig.LocalKymaDomain {
+		return fmt.Errorf("unexpected annotation '%s' on Istio Gateway Service for non-%s cluster (%s) was found", annotationName, clusterFlavour, flavour)
 	}
 	return nil
 }

@@ -25,6 +25,8 @@ const (
 
 	ProductionClusterCpuThreshold      int64 = 4
 	ProductionClusterMemoryThresholdGi int64 = 10
+
+	LocalKymaDomain = "*.local.kyma.dev"
 )
 
 func (s ClusterSize) String() string {
@@ -158,7 +160,7 @@ func (f ClusterFlavour) clusterConfiguration(ctx context.Context, k8sClient clie
 					"gateways": map[string]interface{}{
 						"istio-ingressgateway": map[string]interface{}{
 							"serviceAnnotations": map[string]string{
-								"dns.gardener.cloud/dnsnames": "'*.local.kyma.dev'",
+								"dns.gardener.cloud/dnsnames": LocalKymaDomain,
 							},
 						},
 					},

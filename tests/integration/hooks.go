@@ -103,7 +103,7 @@ func forceIstioCrRemoval(ctx context.Context, istio *v1alpha1.Istio) error {
 			return nil
 		}
 
-		return errors.New("Istio CR found and not in error state, force removal not necessary yet")
+		return errors.New(fmt.Sprintf("istio CR in status %s found, skipping force removal", istio.Status.State))
 	}, testcontext.GetRetryOpts()...)
 }
 

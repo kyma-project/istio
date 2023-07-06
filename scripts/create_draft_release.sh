@@ -10,7 +10,7 @@ set -o pipefail # prevents errors in a pipeline from being masked
 
 RELEASE_TAG=$1
 
-if ! [[ "$RELEASE_TAG" =~ ^[0-9]\.[0-9]\.[0-9](-.+)?$ ]]; then
+if ! [[ "$RELEASE_TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-.+)?$ ]]; then
     echo "The tag $RELEASE_TAG doesn't obey semantic versioning"
     exit 1
 fi

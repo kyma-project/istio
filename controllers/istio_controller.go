@@ -50,15 +50,16 @@ const (
 
 var IstioTag = fmt.Sprintf("%s-%s", IstioVersion, IstioImageBase)
 
-func NewReconciler(mgr manager.Manager) *IstioReconciler {
+func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *IstioReconciler {
 	merger := manifest.NewDefaultIstioMerger()
 
 	return &IstioReconciler{
-		Client:            mgr.GetClient(),
-		Scheme:            mgr.GetScheme(),
-		istioInstallation: istio.Installation{Client: mgr.GetClient(), IstioClient: istio.NewIstioClient(), IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Merger: &merger},
-		proxySidecars:     proxy.Sidecars{IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Log: mgr.GetLogger(), Client: mgr.GetClient(), Merger: &merger},
-		log:               mgr.GetLogger(),
+		Client:                 mgr.GetClient(),
+		Scheme:                 mgr.GetScheme(),
+		istioInstallation:      istio.Installation{Client: mgr.GetClient(), IstioClient: istio.NewIstioClient(), IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Merger: &merger},
+		proxySidecars:          proxy.Sidecars{IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Log: mgr.GetLogger(), Client: mgr.GetClient(), Merger: &merger},
+		log:                    mgr.GetLogger(),
+		reconciliationInterval: reconciliationInterval,
 	}
 }
 
@@ -111,7 +112,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 
 	r.log.Info("Reconcile completed")
-	return status.Update(ctx, r.Client, &istioCR, operatorv1alpha1.Ready, metav1.Condition{})
+	return status.Update(ctx, r.Client, &istioCR, operatorv1alpha1.Ready, metav1.Condition{}, r.reconciliationInterval)
 }
 
 // +kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios,verbs=get;list;watch;create;update;patch;delete

@@ -19,20 +19,13 @@ The Istio module allows you to add Istio Operator to the Kyma runtime. Within Is
 
 ### Procedure
 
-1. Clone the project and open the `istio` folder.
+1. To install Istio, you must install latest Istio Manager first. Run the following:
 
    ```bash
-   git clone https://github.com/kyma-project/istio.git && cd istio/
-   ```
-
-2. To install Istio, you must install latest Istio Manager first. Run the following:
-
-   ```bash
-   kubectl create ns kyma-system
    kubectl apply -f https://github.com/kyma-project/istio/releases/latest/download/istio-manager.yaml
    ```
 
-3. To get Istio installed, apply the latest Istio CR:
+2. To get Istio installed, apply the latest default Istio CR:
 
    ```bash
    kubectl apply -f https://github.com/kyma-project/istio/releases/latest/download/istio-default-cr.yaml
@@ -42,6 +35,19 @@ The Istio module allows you to add Istio Operator to the Kyma runtime. Within Is
 
    ```bash
    istio.operator.kyma-project.io/default created
+   ```
+
+3. Check Istio CR state to verify a successful installation with:
+
+   ```bash
+   kubectl get -n kyma-system istios/default
+   ```
+
+   After successful installation you should get `Ready` state:
+
+   ```bash
+   NAME      STATE
+   default   Ready
    ```
 
 For more installation options, visit [Install Istio Manager](/docs/contributor/01-00-installation.md)

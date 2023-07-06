@@ -1401,8 +1401,6 @@ k8s.io/kube-openapi v0.0.0-20230523194449-df37dd07aa00 h1:Sb9XaC5itZdDOVp7CTFhW8
 k8s.io/kube-openapi v0.0.0-20230523194449-df37dd07aa00/go.mod h1:kzo02I3kQ4BTtEfVLaPbjvCkX97YqGve33wzlb3fofQ=
 k8s.io/kubectl v0.27.2 h1:sSBM2j94MHBFRWfHIWtEXWCicViQzZsb177rNsKBhZg=
 k8s.io/kubectl v0.27.2/go.mod h1:GCOODtxPcrjh+EC611MqREkU8RjYBh10ldQCQ6zpFKw=
-k8s.io/metrics v0.27.3 h1:pBVKgQjfui8xzfTidIxiOmLHwcCk3KbeuWowo/Oh0t0=
-k8s.io/metrics v0.27.3/go.mod h1:pXj63OTdOjpYgSc95p+88fB3t4krLybM7MOeqIksI6o=
 k8s.io/utils v0.0.0-20200324210504-a9aa75ae1b89/go.mod h1:sZAwmy6armz5eXlNoLmJcl4F1QuKu7sr+mFQ0byX7Ew=
 k8s.io/utils v0.0.0-20200603063816-c1c6865ac451/go.mod h1:jPW/WVKK9YHAvNhRxK0md/EJ228hCsBRufyofKtW8HA=
 k8s.io/utils v0.0.0-20230505201702-9f6742963106 h1:EObNQ3TW2D+WptiYXlApGNLVy0zm/JIBVY9i+M4wpAU=

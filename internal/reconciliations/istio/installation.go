@@ -3,6 +3,8 @@ package istio
 import (
 	"context"
 	"fmt"
+
+	ingressgateway "github.com/kyma-project/istio/operator/internal/ingress-gateway"
 	"github.com/kyma-project/istio/operator/internal/resources"
 	sidecarRemover "github.com/kyma-project/istio/operator/pkg/lib/sidecars/remove"
 
@@ -79,6 +81,11 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 			return istioCR, err
 		}
 
+		ingressGatewayNeedsRestart, err := ingressgateway.NeedsRestart(ctx, i.Client, &istioCR)
+		if err != nil {
+			return istioCR, err
+		}
+
 		err = i.IstioClient.Install(mergedIstioOperatorPath)
 		if err != nil {
 			return istioCR, err
@@ -99,6 +106,15 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 		}
 
 		ctrl.Log.Info("Istio install completed")
+
+		if ingressGatewayNeedsRestart {
+			ctrl.Log.Info("Restarting istio-ingressgateway")
+			err = ingressgateway.RestartDeployment(ctx, i.Client)
+			if err != nil {
+				return istioCR, err
+			}
+		}
+
 		// We use the installation finalizer to track if the deletion was already executed so can make the uninstallation process more reliable.
 	} else if shouldDelete(istioCR) && hasInstallationFinalizer(istioCR) {
 		ctrl.Log.Info("Starting istio uninstall")

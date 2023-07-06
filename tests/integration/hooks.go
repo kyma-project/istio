@@ -3,6 +3,7 @@ package integration
 import (
 	"context"
 	"fmt"
+
 	"github.com/avast/retry-go"
 	"github.com/cucumber/godog"
 	"github.com/kyma-project/istio/operator/api/v1alpha1"
@@ -60,9 +61,11 @@ var verifyIfControllerHasBeenRestarted = func(ctx context.Context, sc *godog.Sce
 	}
 
 	for _, cpod := range podList.Items {
-		if rc := cpod.Status.ContainerStatuses[0].RestartCount; rc > 0 {
-			errMsg := fmt.Sprintf("Controller has been restarted %d times", rc)
-			return ctx, errors.New(errMsg)
+		if len(cpod.Status.ContainerStatuses) > 0 {
+			if rc := cpod.Status.ContainerStatuses[0].RestartCount; rc > 0 {
+				errMsg := fmt.Sprintf("Controller has been restarted %d times", rc)
+				return ctx, errors.New(errMsg)
+			}
 		}
 	}
 
@@ -103,7 +106,7 @@ func forceIstioCrRemoval(ctx context.Context, istio *v1alpha1.Istio) error {
 			return nil
 		}
 
-		return errors.New("Istio CR found and not in error state, force removal not necessary yet")
+		return errors.New(fmt.Sprintf("istio CR in status %s found, skipping force removal", istio.Status.State))
 	}, testcontext.GetRetryOpts()...)
 }
 

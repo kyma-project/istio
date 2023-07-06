@@ -44,10 +44,12 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 		return istioCR, described_errors.NewDescribedError(err, "Istio version check failed")
 	}
 
-	if shouldInstallIstio && !hasInstallationFinalizer(istioCR) {
-		controllerutil.AddFinalizer(&istioCR, installationFinalizer)
-		if err := i.Client.Update(ctx, &istioCR); err != nil {
-			return istioCR, described_errors.NewDescribedError(err, "Could not add finalizer")
+	if shouldInstallIstio {
+		if !hasInstallationFinalizer(istioCR) {
+			controllerutil.AddFinalizer(&istioCR, installationFinalizer)
+			if err := i.Client.Update(ctx, &istioCR); err != nil {
+				return istioCR, described_errors.NewDescribedError(err, "Could not add finalizer")
+			}
 		}
 
 		ctrl.Log.Info("Starting istio install", "istio version", i.IstioVersion, "istio image", i.IstioImageBase)

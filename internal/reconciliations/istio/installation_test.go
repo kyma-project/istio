@@ -41,7 +41,7 @@ var istioTag = fmt.Sprintf("%s-%s", istioVersion, istioImageBase)
 
 var _ = Describe("Installation reconciliation", func() {
 
-	It("should not reconcile when Istio CR and Istio version didn't change", func() {
+	It("should reconcile when Istio CR and Istio version didn't change", func() {
 		// given
 
 		numTrustedProxies := 1
@@ -58,10 +58,13 @@ var _ = Describe("Installation reconciliation", func() {
 				},
 			},
 		}
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
+		istioNamespace := createNamespace("istio-system")
+		c := createFakeClient(&istioCr, istiod, istioNamespace)
 
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
-			Client:         createFakeClient(&istioCr),
+			Client:         c,
 			IstioClient:    &mockClient,
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
@@ -74,7 +77,7 @@ var _ = Describe("Installation reconciliation", func() {
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
-		Expect(mockClient.installCalled).To(BeFalse())
+		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 	})
 
@@ -668,10 +671,13 @@ var _ = Describe("Installation reconciliation", func() {
 				},
 			},
 		}
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
+		istioNamespace := createNamespace("istio-system")
+		c := createFakeClient(&istioCr, istiod, istioNamespace)
 
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
-			Client:         createFakeClient(&istioCr),
+			Client:         c,
 			IstioClient:    &mockClient,
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
@@ -705,10 +711,13 @@ var _ = Describe("Installation reconciliation", func() {
 				},
 			},
 		}
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
+		istioNamespace := createNamespace("istio-system")
+		c := createFakeClient(&istioCr, istiod, istioNamespace)
 
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
-			Client:         createFakeClient(&istioCr),
+			Client:         c,
 			IstioClient:    &mockClient,
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
@@ -768,7 +777,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(mockClient.uninstallCalled).To(BeTrue())
 	})
 
-	It("should not uninstall when Istio CR has no deletion timestamp", func() {
+	It("should install but not uninstall when Istio CR has no deletion timestamp", func() {
 		// given
 		numTrustedProxies := 1
 		istioCr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
@@ -784,10 +793,13 @@ var _ = Describe("Installation reconciliation", func() {
 				},
 			},
 		}
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
+		istioNamespace := createNamespace("istio-system")
+		c := createFakeClient(&istioCr, istiod, istioNamespace)
 
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
-			Client:         createFakeClient(&istioCr),
+			Client:         c,
 			IstioClient:    &mockClient,
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
@@ -800,7 +812,7 @@ var _ = Describe("Installation reconciliation", func() {
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
-		Expect(mockClient.installCalled).To(BeFalse())
+		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 	})
 
@@ -822,10 +834,13 @@ var _ = Describe("Installation reconciliation", func() {
 				},
 			},
 		}
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
+		istioNamespace := createNamespace("istio-system")
+		c := createFakeClient(&istioCr, istiod, istioNamespace)
 
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
-			Client:         createFakeClient(&istioCr),
+			Client:         c,
 			IstioClient:    &mockClient,
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
@@ -861,15 +876,18 @@ var _ = Describe("Installation reconciliation", func() {
 				},
 			},
 		}
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
+		istioNamespace := createNamespace("istio-system")
+		c := createFakeClient(&istioCr, istiod, istioNamespace, &networkingv1alpha3.EnvoyFilter{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "some-default-resource",
+				Namespace: "istio-system",
+			},
+		})
 
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
-			Client: createFakeClient(&istioCr, &networkingv1alpha3.EnvoyFilter{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "some-default-resource",
-					Namespace: "istio-system",
-				},
-			}),
+			Client:         c,
 			IstioClient:    &mockClient,
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,

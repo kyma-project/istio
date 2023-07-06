@@ -4,72 +4,40 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/coreos/go-semver/semver"
-	"github.com/google/go-cmp/cmp"
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
-	"github.com/kyma-project/istio/operator/internal/described_errors"
 )
-
-// IstioCRChange represents difference since last reconciliation of IstioCR
-type IstioCRChange int
-
-const (
-	NoChange IstioCRChange = 0
-	Create   IstioCRChange = 1 << iota
-	VersionUpdate
-	ConfigurationUpdate
-	Delete
-)
-
-func (r IstioCRChange) requireInstall() bool {
-	return r == Create || r&VersionUpdate > 0 || r&ConfigurationUpdate > 0
-}
-
-func (r IstioCRChange) requireIstioDeletion() bool {
-	return r == Delete
-}
 
 type appliedConfig struct {
 	operatorv1alpha1.IstioSpec
 	IstioTag string
 }
 
-// EvaluateIstioCRChanges returns IstioCRChange that happened since LastAppliedConfiguration
-func EvaluateIstioCRChanges(istioCR operatorv1alpha1.Istio, istioTag string) (trigger IstioCRChange, err described_errors.DescribedError) {
-	if !istioCR.DeletionTimestamp.IsZero() {
-		return Delete, nil
+// shouldDelete returns true when Istio should be deleted
+func shouldDelete(istioCR operatorv1alpha1.Istio) bool {
+	return !istioCR.DeletionTimestamp.IsZero()
+}
+
+// shouldInstall returns true when Istio should be installed
+func shouldInstall(istioCR operatorv1alpha1.Istio, istioTag string) (shouldInstall bool, err error) {
+	if shouldDelete(istioCR) {
+		return false, nil
 	}
 
 	lastAppliedConfigAnnotation, ok := istioCR.Annotations[LastAppliedConfiguration]
 	if !ok {
-		return Create, nil
+		return true, nil
 	}
-
-	trigger = NoChange
 
 	var lastAppliedConfig appliedConfig
-	gErr := json.Unmarshal([]byte(lastAppliedConfigAnnotation), &lastAppliedConfig)
-	if gErr != nil {
-		return trigger, described_errors.NewDescribedError(gErr, "Could not unmarshal last applied configuration")
+	if err := json.Unmarshal([]byte(lastAppliedConfigAnnotation), &lastAppliedConfig); err != nil {
+		return false, err
 	}
 
-	gErr = CheckIstioVersion(lastAppliedConfig.IstioTag, istioTag)
-	if gErr != nil {
-		return trigger, described_errors.NewDescribedError(gErr, "Istio version check failed")
+	if err := CheckIstioVersion(lastAppliedConfig.IstioTag, istioTag); err != nil {
+		return false, err
 	}
 
-	if lastAppliedConfig.IstioTag != istioTag {
-		trigger = trigger | VersionUpdate
-	}
-
-	if !cmp.Equal(lastAppliedConfig.Components, istioCR.Spec.Components) {
-		return trigger | ConfigurationUpdate, nil
-	}
-
-	if !cmp.Equal(lastAppliedConfig.Config.NumTrustedProxies, istioCR.Spec.Config.NumTrustedProxies) {
-		return trigger | ConfigurationUpdate, nil
-	}
-
-	return trigger, nil
+	return true, nil
 }
 
 // UpdateLastAppliedConfiguration annotates the passed CR with LastAppliedConfiguration, which holds information about last applied

@@ -8,6 +8,7 @@ import (
 
 	"github.com/avast/retry-go"
 	"github.com/cucumber/godog"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	"github.com/kyma-project/istio/operator/tests/integration/manifests"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
@@ -94,6 +95,30 @@ func IstioComponentHasResourcesSetToCpuAndMemory(ctx context.Context, component,
 		return fmt.Errorf("memory %s for component %s wasn't expected; expected=%s got=%s", resourceType, component, memory, resources.Memory)
 	}
 
+	return nil
+}
+
+func IstioServiceHasAnnotation(ctx context.Context, serviceName, annotationName, clusterFlavour string) error {
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	istioService := corev1.Service{}
+	err = k8sClient.Get(context.TODO(), types.NamespacedName{Name: serviceName, Namespace: defaultIopNamespace}, &istioService)
+	if err != nil {
+		return fmt.Errorf("default Istio Gateway Service wasn't found err=%s", err)
+	}
+	flavour, err := clusterconfig.DiscoverClusterFlavour(ctx, k8sClient)
+	if err != nil {
+		return fmt.Errorf("unable to determine cluster flavour err=%s", err)
+	}
+	annotationValue, found := istioService.Annotations[annotationName]
+	if !found && flavour.String() == clusterFlavour {
+		return fmt.Errorf("expected annotation '%s' on Istio Gateway Service for %s cluster (%s) wasn't found", annotationName, clusterFlavour, flavour)
+	}
+	if found && flavour.String() != clusterFlavour && annotationValue != clusterconfig.LocalKymaDomain {
+		return fmt.Errorf("unexpected annotation '%s' on Istio Gateway Service for non-%s cluster (%s) was found", annotationName, clusterFlavour, flavour)
+	}
 	return nil
 }
 

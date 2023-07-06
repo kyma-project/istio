@@ -2,6 +2,7 @@ package clusterconfig_test
 
 import (
 	"context"
+
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
@@ -11,7 +12,6 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
-
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -20,6 +20,7 @@ import (
 const (
 	k3sMockKubeProxyVersion string = "v1.25.6+k3s1"
 	gkeMockKubeProxyVersion string = "v1.24.9-gke.3200"
+	gardenerMockOSImage     string = "Garden Linux 934.8"
 )
 
 var _ = Describe("EvaluateClusterConfiguration", func() {
@@ -54,7 +55,7 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 						"gateways": map[string]interface{}{
 							"istio-ingressgateway": map[string]interface{}{
 								"serviceAnnotations": map[string]string{
-									"dns.gardener.cloud/dnsnames": "'*.local.kyma.dev'",
+									"dns.gardener.cloud/dnsnames": clusterconfig.LocalKymaDomain,
 								},
 							},
 						},
@@ -92,6 +93,48 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 							"cniBinDir": "/home/kubernetes/bin",
 							"resourceQuotas": map[string]bool{
 								"enabled": true,
+							},
+						},
+					},
+				},
+			})))
+		})
+	})
+
+	Context("Gardener", func() {
+		It("should set Istio GW annotation specific for Gardener clusters only", func() {
+			//given
+			gardenerNode := corev1.Node{
+				ObjectMeta: v1.ObjectMeta{
+					Name: "shoot-node-1",
+				},
+				Status: corev1.NodeStatus{
+					NodeInfo: corev1.NodeSystemInfo{
+						OSImage: gardenerMockOSImage,
+					},
+				},
+			}
+			kymaGateway := corev1.ConfigMap{
+				TypeMeta:   v1.TypeMeta{},
+				ObjectMeta: v1.ObjectMeta{Name: clusterconfig.ConfigMapShootInfoName, Namespace: clusterconfig.ConfigMapShootInfoNS},
+				Data:       map[string]string{"domain": "example.com"},
+			}
+
+			client := createFakeClient(&gardenerNode, &kymaGateway)
+
+			//when
+			config, err := clusterconfig.EvaluateClusterConfiguration(context.TODO(), client)
+
+			//then
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(config).To(Equal(clusterconfig.ClusterConfiguration(map[string]interface{}{
+				"spec": map[string]interface{}{
+					"values": map[string]interface{}{
+						"gateways": map[string]interface{}{
+							"istio-ingressgateway": map[string]interface{}{
+								"serviceAnnotations": map[string]string{
+									"dns.gardener.cloud/dnsnames": "*.example.com",
+								},
 							},
 						},
 					},

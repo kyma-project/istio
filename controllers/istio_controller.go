@@ -112,7 +112,6 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 
 	r.log.Info("Reconcile completed")
-
 	return status.Update(ctx, r.Client, &istioCR, operatorv1alpha1.Ready, metav1.Condition{}, r.reconciliationInterval)
 }
 

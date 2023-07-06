@@ -49,7 +49,3 @@ The Istio module installs Istio with a configuration that depends on the cluster
 ### CNI autoscaling
 
 The CNI component is provided as a DaemonSet, meaning that one replica is present on every node of the target cluster.
-
-### Reconcile interval
-
-By default, Istio module is reconciled every 10 hours or when custom resource is changed. You can set this interval by changing manager params, for example: `--reconciliation-interval=120s`.

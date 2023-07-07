@@ -43,7 +43,7 @@ The Istio module allows you to add Istio Operator to the Kyma runtime. Within Is
    kubectl get -n kyma-system istios/default
    ```
 
-   After successful installation you should get `Ready` state:
+   After successful installation, you get the following output:
 
    ```bash
    NAME      STATE

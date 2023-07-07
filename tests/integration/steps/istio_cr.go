@@ -55,6 +55,25 @@ func IstioCRInNamespaceHasStatus(ctx context.Context, name, namespace, status st
 	}, testcontext.GetRetryOpts()...)
 }
 
+func IstioCRInNamespaceHasDescription(ctx context.Context, name, namespace, desc string) error {
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	var cr istioCR.Istio
+	return retry.Do(func() error {
+		err := k8sClient.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, &cr)
+		if err != nil {
+			return err
+		}
+		if cr.Status.Description != desc {
+			return fmt.Errorf("description %s of Istio CR is not equal to %s", cr.Status.Description, desc)
+		}
+		return nil
+	}, testcontext.GetRetryOpts()...)
+}
+
 type TemplatedIstioCr struct {
 	templateValues map[string]string
 }

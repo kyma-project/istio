@@ -76,7 +76,7 @@ func CheckIstioVersion(currentIstioVersionString, targetIstioVersionString strin
 		return fmt.Errorf("target Istio version (%s) is lower than current version (%s) - downgrade not supported",
 			targetIstioVersion.String(), currentIstioVersion.String())
 	}
-	if !(currentIstioVersion.Major == targetIstioVersion.Major) {
+	if currentIstioVersion.Major != targetIstioVersion.Major {
 		return fmt.Errorf("target Istio version (%s) is different than current Istio version (%s) - major version upgrade is not supported", targetIstioVersion.String(), currentIstioVersion.String())
 	}
 	if !amongOneMinor(*currentIstioVersion, *targetIstioVersion) {

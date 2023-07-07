@@ -69,6 +69,8 @@ type IstioStatus struct {
 	State State `json:"state"`
 	//  Conditions associated with IstioStatus.
 	Conditions *[]metav1.Condition `json:"conditions,omitempty"`
+	// Description of Istio status
+	Description string `json:"description,omitempty"`
 }
 
 func init() {

@@ -10,6 +10,11 @@ set -o pipefail # prevents errors in a pipeline from being masked
 
 RELEASE_TAG=$1
 
+if ! [[ "$RELEASE_TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-.+)?$ ]]; then
+    echo "The tag $RELEASE_TAG doesn't obey semantic versioning"
+    exit 1
+fi
+
 REPOSITORY=${REPOSITORY:-kyma-project/istio}
 GITHUB_URL=https://api.github.com/repos/${REPOSITORY}
 GITHUB_AUTH_HEADER="Authorization: Bearer ${GITHUB_TOKEN}"

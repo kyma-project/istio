@@ -3,11 +3,14 @@ package proxy_test
 import (
 	"context"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
+	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/kyma-project/istio/operator/internal/manifest"
 	"github.com/kyma-project/istio/operator/internal/tests"
 	"github.com/onsi/ginkgo/v2/types"
 	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"testing"
+	"time"
 
 	"github.com/go-logr/logr"
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
@@ -61,6 +64,7 @@ var _ = Describe("Sidecars reconciliation", func() {
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
+			StatusHandler:  StatusMock{},
 		}
 		// when
 		err := sidecars.Reconcile(context.TODO(), istioCr)
@@ -116,3 +120,24 @@ func (m MergerMock) GetIstioOperator(_ string) (istioOperator.IstioOperator, err
 }
 
 func (m MergerMock) SetIstioInstallFlavor(_ clusterconfig.ClusterSize) {}
+
+type StatusMock struct {
+	result ctrl.Result
+	err    error
+}
+
+func (s StatusMock) SetProcessing(_ context.Context, _ string, _ client.Client, _ *operatorv1alpha1.Istio, _ metav1.Condition, _ ...time.Duration) (ctrl.Result, error) {
+	return s.result, s.err
+}
+
+func (s StatusMock) SetReady(_ context.Context, _ client.Client, _ *operatorv1alpha1.Istio, _ metav1.Condition, _ ...time.Duration) (ctrl.Result, error) {
+	return s.result, s.err
+}
+
+func (s StatusMock) SetError(_ context.Context, _ described_errors.DescribedError, _ client.Client, _ *operatorv1alpha1.Istio, _ metav1.Condition, _ ...time.Duration) (ctrl.Result, error) {
+	return s.result, s.err
+}
+
+func (s StatusMock) SetDeleting(_ context.Context, _ client.Client, _ *operatorv1alpha1.Istio, _ metav1.Condition, _ ...time.Duration) (ctrl.Result, error) {
+	return s.result, s.err
+}

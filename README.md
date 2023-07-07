@@ -50,7 +50,7 @@ The Istio module allows you to add Istio Operator to the Kyma runtime. Within Is
    default   Ready
    ```
 
-For more installation options, visit [Install Istio Manager](./docs/contributor/01-00-installation.md)
+For more installation options, visit [Install the Istio module](./docs/contributor/01-00-installation.md).
 
 ## Documentation
 

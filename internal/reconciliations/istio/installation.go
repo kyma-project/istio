@@ -124,13 +124,8 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 			clientResourcesList := strings.Join(
 				funk.Map(clientResources, func(a resources.Resource) string { return fmt.Sprintf("%s:%s/%s", a.GVK.Kind, a.Namespace, a.Name) }).([]string), ";")
 
-			_, warningErr := i.StatusHandler.SetWarning(ctx, i.Client, &istioCR, metav1.Condition{})
-			if warningErr != nil {
-				return istioCR, described_errors.NewDescribedError(deletingErr, "Could not set status to warning")
-			}
-
 			return istioCR, described_errors.NewDescribedError(fmt.Errorf("could not delete Istio module instance since there are %d customer resources present", len(clientResources)),
-				fmt.Sprintf("Resources blocking deletion: %s", clientResourcesList)).DisableErrorWrap()
+				fmt.Sprintf("Resources blocking deletion: %s", clientResourcesList)).DisableErrorWrap().SetWarning()
 		}
 
 		err = i.IstioClient.Uninstall(ctx)

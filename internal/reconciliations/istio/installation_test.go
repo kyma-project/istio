@@ -952,7 +952,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 	})
 
-	It("should not uninstall if there are not default Istio resources present", func() {
+	It("should not uninstall if there are Istio resources present", func() {
 		// given
 		now := metav1.NewTime(time.Now())
 		numTrustedProxies := 1
@@ -991,13 +991,12 @@ var _ = Describe("Installation reconciliation", func() {
 		}
 
 		// when
-		reconciledCR, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
 
 		// then
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Error()).To(Equal("could not delete Istio module instance since there are 1 customer resources present"))
 		Expect(err.Description()).To(Equal("Resources blocking deletion: VirtualService:mock-ns/mock-vs"))
-		Expect(reconciledCR.Status.State).To(Equal(operatorv1alpha1.Warning))
 		Expect(mockClient.installCalled).To(BeFalse())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 	})
@@ -1093,6 +1092,7 @@ type StatusMock struct {
 	readyError      error
 	deletingError   error
 	errorError      error
+	warningError    error
 }
 
 func (s StatusMock) SetProcessing(_ context.Context, _ string, _ client.Client, _ *operatorv1alpha1.Istio, _ metav1.Condition, _ ...time.Duration) (ctrl.Result, error) {
@@ -1109,4 +1109,8 @@ func (s StatusMock) SetError(_ context.Context, _ described_errors.DescribedErro
 
 func (s StatusMock) SetDeleting(_ context.Context, _ client.Client, _ *operatorv1alpha1.Istio, _ metav1.Condition, _ ...time.Duration) (ctrl.Result, error) {
 	return s.result, s.deletingError
+}
+
+func (s StatusMock) SetWarning(_ context.Context, _ described_errors.DescribedError, _ client.Client, _ *operatorv1alpha1.Istio, _ metav1.Condition, _ ...time.Duration) (ctrl.Result, error) {
+	return s.result, s.warningError
 }

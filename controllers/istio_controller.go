@@ -80,6 +80,9 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	istioCR, err := r.istioInstallation.Reconcile(ctx, istioCR, IstioResourceListDefaultPath)
 	if err != nil {
 		r.log.Error(err, "Error occurred during reconciliation of Istio installation")
+		if err.Level() == described_errors.Warning {
+			return r.statusHandler.SetWarning(ctx, err, r.Client, &istioCR, metav1.Condition{}, ErrorRetryTime)
+		}
 		return r.statusHandler.SetError(ctx, err, r.Client, &istioCR, metav1.Condition{}, ErrorRetryTime)
 	}
 

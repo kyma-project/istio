@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	apinetworkingv1alpha3 "istio.io/api/networking/v1alpha3"
+	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
 
 	"github.com/avast/retry-go"
@@ -205,4 +208,110 @@ func getResourcesForComponent(operator *istioOperator.IstioOperator, component, 
 	default:
 		return nil, godog.ErrPending
 	}
+}
+
+// CreateIstioGateway creates an Istio Gateway with http port 80 configured and any host
+func CreateIstioGateway(ctx context.Context, name, namespace string) (context.Context, error) {
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return ctx, err
+	}
+
+	if err != nil {
+		return ctx, err
+	}
+
+	gateway := &networkingv1alpha3.Gateway{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: apinetworkingv1alpha3.Gateway{
+			Selector: map[string]string{
+				"app":   "istio-ingressgateway",
+				"istio": "ingressgateway",
+			},
+			Servers: []*apinetworkingv1alpha3.Server{
+				{
+					Port: &apinetworkingv1alpha3.Port{
+						Number:   80,
+						Protocol: "HTTP",
+						Name:     "http",
+					},
+					Hosts: []string{
+						"*",
+					},
+				},
+			},
+		},
+	}
+
+	err = retry.Do(func() error {
+		err := k8sClient.Create(context.TODO(), gateway)
+		if err != nil {
+			return err
+		}
+		ctx = testcontext.AddCreatedTestObjectInContext(ctx, gateway)
+		return nil
+	}, testcontext.GetRetryOpts()...)
+
+	return ctx, err
+}
+
+// CreateVirtualService creates a VirtualService that exposes the given service on any host
+func CreateVirtualService(ctx context.Context, name, exposedService, gateway, namespace string) (context.Context, error) {
+
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return ctx, err
+	}
+
+	vs := &networkingv1alpha3.VirtualService{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: apinetworkingv1alpha3.VirtualService{
+			Hosts: []string{
+				"*",
+			},
+			Gateways: []string{
+				gateway,
+			},
+			Http: []*apinetworkingv1alpha3.HTTPRoute{
+				{
+					Match: []*apinetworkingv1alpha3.HTTPMatchRequest{
+						{
+							Uri: &apinetworkingv1alpha3.StringMatch{
+								MatchType: &apinetworkingv1alpha3.StringMatch_Prefix{
+									Prefix: "/",
+								},
+							},
+						},
+					},
+					Route: []*apinetworkingv1alpha3.HTTPRouteDestination{
+						{
+							Destination: &apinetworkingv1alpha3.Destination{
+								Host: exposedService,
+								Port: &apinetworkingv1alpha3.PortSelector{
+									Number: 8000,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	err = retry.Do(func() error {
+		err := k8sClient.Create(context.TODO(), vs)
+		if err != nil {
+			return err
+		}
+		ctx = testcontext.AddCreatedTestObjectInContext(ctx, vs)
+		return nil
+	}, testcontext.GetRetryOpts()...)
+
+	return ctx, err
 }

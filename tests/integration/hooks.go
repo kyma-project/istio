@@ -18,13 +18,23 @@ import (
 var testObjectsTearDown = func(ctx context.Context, sc *godog.Scenario, _ error) (context.Context, error) {
 	if objects, ok := testcontext.GetCreatedTestObjectsFromContext(ctx); ok {
 		for _, o := range objects {
-			err := retry.Do(func() error {
+
+			t, err := testcontext.GetTestingFromContext(ctx)
+			if err != nil {
+				return ctx, err
+			}
+			t.Logf("Teardown %s", o.GetName())
+
+			err = retry.Do(func() error {
 				return removeObjectFromCluster(ctx, o)
 			}, testcontext.GetRetryOpts()...)
 
 			if err != nil {
+				t.Logf("Failed to delete %s", o.GetName())
 				return ctx, err
 			}
+
+			t.Logf("Deleted %s", o.GetName())
 		}
 	}
 	return ctx, nil
@@ -111,12 +121,6 @@ func forceIstioCrRemoval(ctx context.Context, istio *v1alpha1.Istio) error {
 }
 
 func removeObjectFromCluster(ctx context.Context, object client.Object) error {
-	t, err := testcontext.GetTestingFromContext(ctx)
-	if err != nil {
-		return err
-	}
-
-	t.Logf("Teardown %s", object.GetName())
 
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
@@ -130,7 +134,6 @@ func removeObjectFromCluster(ctx context.Context, object client.Object) error {
 	if err != nil && !k8serrors.IsNotFound(err) {
 		return err
 	}
-	t.Logf("Deleted %s", object.GetName())
 
 	return nil
 }

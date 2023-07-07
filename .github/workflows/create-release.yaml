@@ -55,22 +55,16 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Wait for image build to succeed
-        uses: lewagon/wait-on-check-action@e106e5c43e8ca1edea6383a39a01c5ca495fd812 # 1.3.1
+      - uses: autotelic/action-wait-for-status-check@6556cf50c8fb6608412945382eae73581f56cbb4
         with:
-          ref: ${{ github.ref }}
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          running-workflow-name: 'Publish release'
-          check-name: rel-istio-build
-          wait-interval: 20
-      - name: Wait for module template build to succeed
-        uses: lewagon/wait-on-check-action@e106e5c43e8ca1edea6383a39a01c5ca495fd812 # 1.3.1
+          token: ${{ secrets.GITHUB_TOKEN }}
+          statusName: "rel-istio-module-build"
+          timeoutSeconds: "1800"
+      - uses: autotelic/action-wait-for-status-check@6556cf50c8fb6608412945382eae73581f56cbb4
         with:
-          ref: ${{ github.ref }}
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          running-workflow-name: 'Publish release'
-          check-name: rel-istio-module-build
-          wait-interval: 20
+          token: ${{ secrets.GITHUB_TOKEN }}
+          statusName: "rel-istio-build"
+          timeoutSeconds: "1800"
 
       - name: Publish release assets
         env:

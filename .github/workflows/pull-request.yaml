@@ -72,7 +72,7 @@ jobs:
         name: "Create Single Cluster"
         with:
           cluster-name: "test-cluster-1"
-          args: |
+          args: >-
            --agents 1
            --image docker.io/rancher/k3s:v1.27.3+k3s1
       - name: Wait for image build to succeed

@@ -3,19 +3,22 @@ package istio_test
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/manifest"
 	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
-	"time"
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/scheme"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -56,7 +59,8 @@ var _ = Describe("Installation reconciliation", func() {
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
 		istioNamespace := createNamespace("istio-system")
-		c := createFakeClient(&istioCr, istiod, istioNamespace)
+		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Name: "istio-ingressgateway", Namespace: "istio-system"}}
+		c := createFakeClient(&istioCr, istiod, istioNamespace, igwDeployment)
 
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
@@ -93,7 +97,8 @@ var _ = Describe("Installation reconciliation", func() {
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
 		istioNamespace := createNamespace("istio-system")
-		c := createFakeClient(&istioCr, istiod, istioNamespace)
+		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Name: "istio-ingressgateway", Namespace: "istio-system"}}
+		c := createFakeClient(&istioCr, istiod, istioNamespace, igwDeployment)
 
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
@@ -130,7 +135,8 @@ var _ = Describe("Installation reconciliation", func() {
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
 		istioNamespace := createNamespace("istio-system")
-		c := createFakeClient(&istioCr, istiod, istioNamespace)
+		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Name: "istio-ingressgateway", Namespace: "istio-system"}}
+		c := createFakeClient(&istioCr, istiod, istioNamespace, igwDeployment)
 
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
@@ -211,9 +217,10 @@ var _ = Describe("Installation reconciliation", func() {
 
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
 		istioNamespace := createNamespace("istio-system")
+		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Name: "istio-ingressgateway", Namespace: "istio-system"}}
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
-			Client:         createFakeClient(&istioCr, istiod, istioNamespace),
+			Client:         createFakeClient(&istioCr, istiod, istioNamespace, igwDeployment),
 			IstioClient:    &mockClient,
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
@@ -247,7 +254,8 @@ var _ = Describe("Installation reconciliation", func() {
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.17.0")
 		istioNamespace := createNamespace("istio-system")
-		c := createFakeClient(&istioCr, istiod, istioNamespace)
+		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Name: "istio-ingressgateway", Namespace: "istio-system"}}
+		c := createFakeClient(&istioCr, istiod, istioNamespace, igwDeployment)
 
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
@@ -401,7 +409,8 @@ var _ = Describe("Installation reconciliation", func() {
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
 		istioNamespace := createNamespace("istio-system")
-		c := createFakeClient(&istioCr, istiod, istioNamespace)
+		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Name: "istio-ingressgateway", Namespace: "istio-system"}}
+		c := createFakeClient(&istioCr, istiod, istioNamespace, igwDeployment)
 
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
@@ -442,7 +451,8 @@ var _ = Describe("Installation reconciliation", func() {
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
 		istioNamespace := createNamespace("istio-system")
-		c := createFakeClient(&istioCr, istiod, istioNamespace)
+		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Name: "istio-ingressgateway", Namespace: "istio-system"}}
+		c := createFakeClient(&istioCr, istiod, istioNamespace, igwDeployment)
 
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
@@ -519,7 +529,8 @@ var _ = Describe("Installation reconciliation", func() {
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
 		istioNamespace := createNamespace("istio-system")
-		c := createFakeClient(&istioCr, istiod, istioNamespace)
+		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Name: "istio-ingressgateway", Namespace: "istio-system"}}
+		c := createFakeClient(&istioCr, istiod, istioNamespace, igwDeployment)
 
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
@@ -691,7 +702,7 @@ func createFakeClient(objects ...client.Object) client.Client {
 	Expect(err).ShouldNot(HaveOccurred())
 	err = corev1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
-	err = corev1.AddToScheme(scheme.Scheme)
+	err = appsv1.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
 	err = networkingv1alpha3.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())

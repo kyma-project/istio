@@ -33,26 +33,19 @@ func RestartDeployment(ctx context.Context, k8sClient client.Client) error {
 }
 
 func NeedsRestart(ctx context.Context, client client.Client, istioCR *operatorv1alpha1.Istio) (bool, error) {
+	if istioCR == nil {
+		return false, nil
+	}
+
 	numTrustedProxies, err := GetNumTrustedProxyFromIstioCM(ctx, client)
 	if err != nil {
 		return false, err
 	}
 
-	// Restart to default if no IstioCR is present
-	if numTrustedProxies != nil && istioCR == nil {
-		return true, nil
-	}
-
-	if istioCR == nil {
-		return false, nil
-	}
-
 	isNewNotNil := (istioCR.Spec.Config.NumTrustedProxies != nil)
 	isOldNotNil := (numTrustedProxies != nil)
-	if isNewNotNil && isOldNotNil {
-		if *istioCR.Spec.Config.NumTrustedProxies != *numTrustedProxies {
-			return true, nil
-		}
+	if isNewNotNil && isOldNotNil && *istioCR.Spec.Config.NumTrustedProxies != *numTrustedProxies {
+		return true, nil
 	}
 	if isNewNotNil != isOldNotNil {
 		return true, nil

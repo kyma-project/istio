@@ -2,13 +2,15 @@ package ingressgateway_test
 
 import (
 	"context"
-	"testing"
 
 	ingressgateway "github.com/kyma-project/istio/operator/internal/ingress-gateway"
-	"github.com/stretchr/testify/require"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
-const TestConfigMap string = `
+const (
+	TestConfigMap string = `
 accessLogEncoding: JSON
 defaultConfig:
   discoveryAddress: istiod.istio-system.svc:15012
@@ -24,7 +26,7 @@ rootNamespace: istio-system
 trustDomain: cluster.local
 `
 
-const TestConfigMapEmpty string = `
+	TestConfigMapEmpty string = `
 accessLogEncoding: JSON
 defaultConfig:
   discoveryAddress: istiod.istio-system.svc:15012
@@ -37,22 +39,33 @@ enableTracing: true
 rootNamespace: istio-system
 trustDomain: cluster.local
 `
+)
 
-func TestGetNumTrustedProxyFromIstioCM(t *testing.T) {
-	t.Run("should return 3 numTrustedProxies when CM has configure 3 numTrustedProxies", func(t *testing.T) {
-		client := GetClientSet(t, TestConfigMap)
-		numTrustedProxies, err := ingressgateway.GetNumTrustedProxyFromIstioCM(context.TODO(), client)
-		require.NoError(t, err)
-		require.NotNil(t, numTrustedProxies)
-		require.Equal(t, 3, *numTrustedProxies)
-	})
-}
+var _ = Describe("Config", func() {
+	Context("GetNumTrustedProxyFromIstioCM", func() {
+		It("should return 3 numTrustedProxies when CM has configure 3 numTrustedProxies", func() {
+			//given
+			client := CreateFakeClientWithIGW(TestConfigMap)
 
-func TestDefaultNumTrustedProxyFromIstioCM(t *testing.T) {
-	t.Run("should return nil when CM has no configuration for numTrustedProxies", func(t *testing.T) {
-		client := GetClientSet(t, TestConfigMapEmpty)
-		numTrustedProxies, err := ingressgateway.GetNumTrustedProxyFromIstioCM(context.TODO(), client)
-		require.NoError(t, err)
-		require.Nil(t, numTrustedProxies)
+			//when
+			numTrustedProxies, err := ingressgateway.GetNumTrustedProxyFromIstioCM(context.TODO(), client)
+
+			//then
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(numTrustedProxies).ToNot(BeNil())
+			Expect(*numTrustedProxies).To(Equal(3))
+		})
+
+		It("should return nil when CM has no configuration for numTrustedProxies", func() {
+			//given
+			client := CreateFakeClientWithIGW(TestConfigMapEmpty)
+
+			//when
+			numTrustedProxies, err := ingressgateway.GetNumTrustedProxyFromIstioCM(context.TODO(), client)
+
+			//then
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(numTrustedProxies).To(BeNil())
+		})
 	})
-}
+})

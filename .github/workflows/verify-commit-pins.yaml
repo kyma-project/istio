@@ -1,0 +1,25 @@
+name: Verify that actions are SHA pinned
+
+on:
+  pull_request:
+    types: [ synchronize, opened, reopened, ready_for_review ]
+    paths:
+      - '.github/workflows/**'
+    branches:
+      - main
+permissions:
+  contents: read
+
+jobs:
+  verify-actions:
+    name: Ensure SHA pinned actions
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - uses: actions/checkout@v3
+      - uses: zgosalvez/github-actions-ensure-sha-pinned-actions@555a30da2656b4a7cf47b107800bef097723363e # 2.1.3
+        with:
+          allowlist: |
+            actions/checkout
+            actions/setup-go
+            actions/upload-artifact

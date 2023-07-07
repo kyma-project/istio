@@ -73,16 +73,27 @@ jobs:
         with:
           cluster-name: "test-cluster-1"
           args: --agents 1
+      - name: Wait for image build to succeed
+        uses: lewagon/wait-on-check-action@e106e5c43e8ca1edea6383a39a01c5ca495fd812 # 1.3.1
+        with:
+          ref: ${{ github.ref }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }
+          check-name: pull-istio-operator-build
+          wait-interval: 20
       - name: Run integration tests
         run: |
           kubectl config use-context k3d-test-cluster-1
-          EXPORT_RESULT=true IMG=europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-202 make istio-integration-test
+          EXPORT_RESULT=true IMG=europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}} make istio-integration-test
       - name: Check deprecations
         run: |
           set -eou pipefail
           GO111MODULE=on go install github.com/prometheus/prom2json/cmd/prom2json@v1.3.3
-          kubectl get --context k3d-test-cluster-1 --raw /metrics | prom2json | jq '.[] | select(.name=="apiserver_requested_deprecated_apis").metrics[].labels' > tests/integration/reports/deprecations.txt
+          kubectl get --context k3d-test-cluster-1 --raw /metrics | prom2json | jq '.[] | select(.name=="apiserver_requested_deprecated_apis").metrics[].labels' > deprecations.txt
       - uses: actions/upload-artifact@v3
         with:
-          name: pr-report
+          name: html-reports
           path: tests/integration/reports/
+      - uses: actions/upload-artifact@v3
+        with:
+          name: deprecation-report
+          path: deprecations.txt

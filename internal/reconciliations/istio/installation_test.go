@@ -643,6 +643,9 @@ var _ = Describe("Installation reconciliation", func() {
 					NumTrustedProxies: &numTrustedProxies,
 				},
 			},
+			Status: operatorv1alpha1.IstioStatus{
+				State: operatorv1alpha1.Ready,
+			},
 		}
 
 		mockClient := mockLibraryClient{}
@@ -660,11 +663,12 @@ var _ = Describe("Installation reconciliation", func() {
 		}
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+		reconciledCR, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
 
 		// then
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Error()).To(Equal("could not delete Istio module instance since there are 1 customer created resources present"))
+		Expect(reconciledCR.Status.State).To(Equal(operatorv1alpha1.Warning))
 		Expect(mockClient.installCalled).To(BeFalse())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 	})

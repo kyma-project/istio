@@ -118,6 +118,10 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 			return istioCR, err
 		}
 		if len(clientResources) > 0 {
+			_, err = status.Update(ctx, i.Client, &istioCR, operatorv1alpha1.Warning, metav1.Condition{})
+			if err != nil {
+				return istioCR, err
+			}
 			return istioCR, fmt.Errorf("could not delete Istio module instance since there are %d customer created resources present", len(clientResources))
 		}
 

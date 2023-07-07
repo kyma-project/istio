@@ -1270,12 +1270,13 @@ spec:
                 type: array
               state:
                 description: State signifies current state of CustomObject. Value
-                  can be one of ("Ready", "Processing", "Error", "Deleting").
+                  can be one of ("Ready", "Processing", "Error", "Deleting", "Warning").
                 enum:
                 - Processing
                 - Deleting
                 - Ready
                 - Error
+                - Warning
                 type: string
             required:
             - state
@@ -2540,12 +2541,13 @@ spec:
                 type: array
               state:
                 description: State signifies current state of CustomObject. Value
-                  can be one of ("Ready", "Processing", "Error", "Deleting").
+                  can be one of ("Ready", "Processing", "Error", "Deleting", "Warning").
                 enum:
                 - Processing
                 - Deleting
                 - Ready
                 - Error
+                - Warning
                 type: string
             required:
             - state

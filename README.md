@@ -25,7 +25,7 @@ The Istio module allows you to add Istio Operator to the Kyma runtime. Within Is
    kubectl apply -f https://github.com/kyma-project/istio/releases/latest/download/istio-manager.yaml
    ```
 
-2. To get Istio installed, apply the latest default Istio CR:
+2. To get Istio installed, apply the default Istio CR:
 
    ```bash
    kubectl apply -f https://github.com/kyma-project/istio/releases/latest/download/istio-default-cr.yaml

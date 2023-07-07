@@ -76,13 +76,11 @@ jobs:
            --agents 1
            --image docker.io/rancher/k3s:v1.27.3-k3s1
       - name: Wait for image build to succeed
-        uses: "autotelic/action-wait-for-status-check@v1@6556cf50c8fb6608412945382eae73581f56cbb4"
+        uses: autotelic/action-wait-for-status-check@v1@6556cf50c8fb6608412945382eae73581f56cbb4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           statusName: "pull-istio-operator-build"
           timeoutSeconds: "1800"
-        env:
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       - name: Run integration tests
         run: |
           kubectl config use-context k3d-test-cluster-1

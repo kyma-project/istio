@@ -27,6 +27,7 @@ jobs:
           allowlist: |
             actions/checkout
             actions/setup-go
+            actions/upload-artifact
 
   lint:
     runs-on: ubuntu-latest

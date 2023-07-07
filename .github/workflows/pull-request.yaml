@@ -79,7 +79,7 @@ jobs:
         uses: "WyriHaximus/github-action-wait-for-status@a0d59308face45c8229ad5aef809d6df5a0c7620"
         with:
           ref: ${{ github.ref }}
-          ignoreActions: "Kubernetes version compatibility check"
+          ignoreActions: "Kubernetes version compatibility check,tide"
           checkInterval: 20
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

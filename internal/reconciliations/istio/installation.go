@@ -3,22 +3,20 @@ package istio
 import (
 	"context"
 	"fmt"
+	"strings"
 
-	ingressgateway "github.com/kyma-project/istio/operator/internal/ingress-gateway"
-	"github.com/kyma-project/istio/operator/internal/resources"
-	sidecarRemover "github.com/kyma-project/istio/operator/pkg/lib/sidecars/remove"
+	"github.com/thoas/go-funk"
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
-	"github.com/thoas/go-funk"
-	"strings"
-
+	ingressgateway "github.com/kyma-project/istio/operator/internal/ingress-gateway"
 	"github.com/kyma-project/istio/operator/internal/manifest"
 	"github.com/kyma-project/istio/operator/internal/resources"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 	sidecarRemover "github.com/kyma-project/istio/operator/pkg/lib/sidecars/remove"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -89,7 +87,7 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 
 		ingressGatewayNeedsRestart, err := ingressgateway.NeedsRestart(ctx, i.Client, &istioCR)
 		if err != nil {
-			return istioCR, err
+			return istioCR, described_errors.NewDescribedError(err, "Could not check if Istio GW deployment needs restart")
 		}
 
 		err = i.IstioClient.Install(mergedIstioOperatorPath)
@@ -117,7 +115,7 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 			ctrl.Log.Info("Restarting istio-ingressgateway")
 			err = ingressgateway.RestartDeployment(ctx, i.Client)
 			if err != nil {
-				return istioCR, err
+				return istioCR, described_errors.NewDescribedError(err, "Could not restart Istio GW deployment")
 			}
 		}
 

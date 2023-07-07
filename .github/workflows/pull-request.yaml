@@ -90,7 +90,7 @@ jobs:
     needs: [verify-actions, changes]
     name: Kubernetes version compatibility check
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false && ${{ needs.changes.outputs.change == 'true' }}
+    if: ${{ github.event.pull_request.draft == false  needs.changes.outputs.change == 'true' }}
     steps:
       - run: echo ${{ needs.changes.outputs.change }}
       - uses: actions/checkout@v3

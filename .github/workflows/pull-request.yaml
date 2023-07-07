@@ -81,8 +81,8 @@ jobs:
         run: |
           set -eou pipefail
           GO111MODULE=on go install github.com/prometheus/prom2json/cmd/prom2json@v1.3.3
-          kubectl get --context k3d-test-cluster-1 --raw /metrics | prom2json | jq '.[] | select(.name=="apiserver_requested_deprecated_apis").metrics[].labels' > reports/deprecations.txt
+          kubectl get --context k3d-test-cluster-1 --raw /metrics | prom2json | jq '.[] | select(.name=="apiserver_requested_deprecated_apis").metrics[].labels' > tests/integration/reports/deprecations.txt
       - uses: actions/upload-artifact@v3
         with:
           name: pr-report
-          path: reports/
+          path: tests/integration/reports/

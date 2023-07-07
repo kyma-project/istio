@@ -4,8 +4,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
+	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/kyma-project/istio/operator/internal/manifest"
+	"github.com/kyma-project/istio/operator/internal/status"
+	"github.com/pkg/errors"
 	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"time"
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
@@ -65,6 +69,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
+			StatusHandler:  StatusMock{},
 		}
 
 		// when
@@ -102,6 +107,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
+			StatusHandler:  status.NewDefaultStatusHandler(),
 		}
 		// when
 		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
@@ -139,6 +145,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
+			StatusHandler:  StatusMock{},
 		}
 		// when
 		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
@@ -181,6 +188,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
+			StatusHandler:  status.NewDefaultStatusHandler(),
 		}
 		// when
 		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
@@ -218,6 +226,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
+			StatusHandler:  StatusMock{},
 		}
 		// when
 		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
@@ -256,6 +265,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   "1.17.0",
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
+			StatusHandler:  status.NewDefaultStatusHandler(),
 		}
 		// when
 		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
@@ -294,6 +304,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   istioVersionDowngrade,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
+			StatusHandler:  StatusMock{},
 		}
 		// when
 		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
@@ -301,6 +312,7 @@ var _ = Describe("Installation reconciliation", func() {
 		// then
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Error()).To(Equal("target Istio version (1.16.0-distroless) is lower than current version (1.16.1-distroless) - downgrade not supported"))
+		Expect(err.Description()).To(Equal("Istio version check failed: target Istio version (1.16.0-distroless) is lower than current version (1.16.1-distroless) - downgrade not supported"))
 		Expect(mockClient.installCalled).To(BeFalse())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 	})
@@ -332,6 +344,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   istioVersionTwoMinor,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
+			StatusHandler:  StatusMock{},
 		}
 		// when
 		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
@@ -339,6 +352,7 @@ var _ = Describe("Installation reconciliation", func() {
 		// then
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Error()).To(Equal("target Istio version (1.18.0-distroless) is higher than current Istio version (1.16.1-distroless) - the difference between versions exceed one minor version"))
+		Expect(err.Description()).To(Equal("Istio version check failed: target Istio version (1.18.0-distroless) is higher than current Istio version (1.16.1-distroless) - the difference between versions exceed one minor version"))
 		Expect(mockClient.installCalled).To(BeFalse())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 	})
@@ -370,6 +384,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   istioVersionOneMajor,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
+			StatusHandler:  StatusMock{},
 		}
 		// when
 		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
@@ -377,7 +392,222 @@ var _ = Describe("Installation reconciliation", func() {
 		// then
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Error()).To(Equal("target Istio version (2.0.0-distroless) is different than current Istio version (1.16.1-distroless) - major version upgrade is not supported"))
+		Expect(err.Description()).To(Equal("Istio version check failed: target Istio version (2.0.0-distroless) is different than current Istio version (1.16.1-distroless) - major version upgrade is not supported"))
 		Expect(mockClient.installCalled).To(BeFalse())
+		Expect(mockClient.uninstallCalled).To(BeFalse())
+	})
+
+	It("should fail when istio version is invalid", func() {
+		// given
+
+		numTrustedProxies := 1
+		istioCr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+			Name:            "default",
+			ResourceVersion: "1",
+			Annotations: map[string]string{
+				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
+			},
+		},
+			Spec: operatorv1alpha1.IstioSpec{
+				Config: operatorv1alpha1.Config{
+					NumTrustedProxies: &numTrustedProxies,
+				},
+			},
+		}
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.17.0")
+		istioNamespace := createNamespace("istio-system")
+		c := createFakeClient(&istioCr, istiod, istioNamespace)
+
+		mockClient := mockLibraryClient{}
+		installation := istio.Installation{
+			Client:         c,
+			IstioClient:    &mockClient,
+			IstioVersion:   "fake",
+			IstioImageBase: istioImageBase,
+			Merger:         MergerMock{},
+			StatusHandler:  StatusMock{},
+		}
+
+		// when
+		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+
+		// then
+		Expect(err).Should(HaveOccurred())
+		Expect(err.Error()).To(Equal("fake is not in dotted-tri format"))
+		Expect(err.Description()).To(Equal("Istio version check failed: fake is not in dotted-tri format"))
+		Expect(mockClient.installCalled).To(BeFalse())
+		Expect(mockClient.uninstallCalled).To(BeFalse())
+	})
+
+	It("should fail when istio sidecar version on cluster is invalid", func() {
+		// given
+
+		numTrustedProxies := 1
+		istioCr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+			Name:            "default",
+			ResourceVersion: "1",
+			Annotations: map[string]string{
+				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
+			},
+		},
+			Spec: operatorv1alpha1.IstioSpec{
+				Config: operatorv1alpha1.Config{
+					NumTrustedProxies: &numTrustedProxies,
+				},
+			},
+		}
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "fake")
+		istioNamespace := createNamespace("istio-system")
+		c := createFakeClient(&istioCr, istiod, istioNamespace)
+
+		mockClient := mockLibraryClient{}
+		installation := istio.Installation{
+			Client:         c,
+			IstioClient:    &mockClient,
+			IstioVersion:   "1.17.0",
+			IstioImageBase: istioImageBase,
+			Merger:         MergerMock{},
+			StatusHandler:  StatusMock{},
+		}
+
+		// when
+		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+
+		// then
+		Expect(err).Should(HaveOccurred())
+		Expect(err.Error()).To(Equal("Invalid Semantic Version"))
+		Expect(err.Description()).To(Equal("Could not get Istio sidecar version on cluster: Invalid Semantic Version"))
+		Expect(mockClient.installCalled).To(BeTrue())
+		Expect(mockClient.uninstallCalled).To(BeFalse())
+	})
+
+	It("should fail when custom resource list merging fails", func() {
+		// given
+
+		numTrustedProxies := 1
+		istioCr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+			Name:            "default",
+			ResourceVersion: "1",
+			Annotations: map[string]string{
+				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
+			},
+		},
+			Spec: operatorv1alpha1.IstioSpec{
+				Config: operatorv1alpha1.Config{
+					NumTrustedProxies: &numTrustedProxies,
+				},
+			},
+		}
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "fake")
+		istioNamespace := createNamespace("istio-system")
+		c := createFakeClient(&istioCr, istiod, istioNamespace)
+
+		mockClient := mockLibraryClient{}
+		installation := istio.Installation{
+			Client:         c,
+			IstioClient:    &mockClient,
+			IstioVersion:   "1.17.0",
+			IstioImageBase: istioImageBase,
+			Merger: MergerMock{
+				mergeError: errors.New("merging failed"),
+			},
+			StatusHandler: StatusMock{},
+		}
+
+		// when
+		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+
+		// then
+		Expect(err).Should(HaveOccurred())
+		Expect(err.Error()).To(Equal("merging failed"))
+		Expect(err.Description()).To(Equal("Could not get configuration from Istio Operator file: merging failed"))
+		Expect(mockClient.installCalled).To(BeFalse())
+		Expect(mockClient.uninstallCalled).To(BeFalse())
+	})
+
+	It("should fail if status update to processing fails", func() {
+		// given
+
+		numTrustedProxies := 1
+		istioCr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+			Name:            "default",
+			ResourceVersion: "1",
+			Annotations: map[string]string{
+				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
+			},
+		},
+			Spec: operatorv1alpha1.IstioSpec{
+				Config: operatorv1alpha1.Config{
+					NumTrustedProxies: &numTrustedProxies,
+				},
+			},
+		}
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.17.0")
+		istioNamespace := createNamespace("istio-system")
+		c := createFakeClient(&istioCr, istiod, istioNamespace)
+
+		mockClient := mockLibraryClient{}
+		installation := istio.Installation{
+			Client:         c,
+			IstioClient:    &mockClient,
+			IstioVersion:   "1.17.0",
+			IstioImageBase: istioImageBase,
+			Merger:         MergerMock{},
+			StatusHandler: StatusMock{
+				processingError: errors.New("update error"),
+			},
+		}
+		// when
+		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+
+		// then
+		Expect(err).Should(HaveOccurred())
+		Expect(err.Error()).To(Equal("update error"))
+		Expect(err.Description()).To(Equal("Could not set status to processing: update error"))
+		Expect(mockClient.installCalled).To(BeFalse())
+		Expect(mockClient.uninstallCalled).To(BeFalse())
+	})
+
+	It("should fail when istio installation fails", func() {
+		// given
+
+		numTrustedProxies := 1
+		istioCr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+			Name:            "default",
+			ResourceVersion: "1",
+			Annotations: map[string]string{
+				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
+			},
+		},
+			Spec: operatorv1alpha1.IstioSpec{
+				Config: operatorv1alpha1.Config{
+					NumTrustedProxies: &numTrustedProxies,
+				},
+			},
+		}
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.17.0")
+		istioNamespace := createNamespace("istio-system")
+		c := createFakeClient(&istioCr, istiod, istioNamespace)
+
+		mockClient := mockLibraryClient{
+			installError: errors.New("installation failed"),
+		}
+		installation := istio.Installation{
+			Client:         c,
+			IstioClient:    &mockClient,
+			IstioVersion:   "1.17.0",
+			IstioImageBase: istioImageBase,
+			Merger:         MergerMock{},
+			StatusHandler:  StatusMock{},
+		}
+		// when
+		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+
+		// then
+		Expect(err).Should(HaveOccurred())
+		Expect(err.Error()).To(Equal("installation failed"))
+		Expect(err.Description()).To(Equal("Could not install Istio: installation failed"))
+		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 	})
 
@@ -410,6 +640,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
+			StatusHandler:  status.NewDefaultStatusHandler(),
 		}
 		// when
 		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
@@ -451,6 +682,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
+			StatusHandler:  StatusMock{},
 		}
 		// when
 		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
@@ -490,6 +722,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
+			StatusHandler:  StatusMock{},
 		}
 
 		// when
@@ -497,6 +730,49 @@ var _ = Describe("Installation reconciliation", func() {
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
+		Expect(mockClient.installCalled).To(BeFalse())
+		Expect(mockClient.uninstallCalled).To(BeTrue())
+	})
+
+	It("should fail when uninstall fails", func() {
+		// given
+		now := metav1.NewTime(time.Now())
+		numTrustedProxies := 1
+		istioCr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+			Name:            "default",
+			ResourceVersion: "1",
+			Annotations: map[string]string{
+				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
+			},
+			DeletionTimestamp: &now,
+			Finalizers:        []string{"istios.operator.kyma-project.io/istio-installation"},
+		},
+			Spec: operatorv1alpha1.IstioSpec{
+				Config: operatorv1alpha1.Config{
+					NumTrustedProxies: &numTrustedProxies,
+				},
+			},
+		}
+
+		mockClient := mockLibraryClient{
+			uninstallError: errors.New("uninstall failed"),
+		}
+		installation := istio.Installation{
+			Client:         createFakeClient(&istioCr),
+			IstioClient:    &mockClient,
+			IstioVersion:   istioVersion,
+			IstioImageBase: istioImageBase,
+			Merger:         MergerMock{},
+			StatusHandler:  StatusMock{},
+		}
+
+		// when
+		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+
+		// then
+		Expect(err).Should(HaveOccurred())
+		Expect(err.Error()).To(Equal("uninstall failed"))
+		Expect(err.Description()).To(Equal("Could not uninstall istio: uninstall failed"))
 		Expect(mockClient.installCalled).To(BeFalse())
 		Expect(mockClient.uninstallCalled).To(BeTrue())
 	})
@@ -528,6 +804,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
+			StatusHandler:  StatusMock{},
 		}
 
 		// when
@@ -568,6 +845,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
+			StatusHandler:  StatusMock{},
 		}
 
 		// when
@@ -614,6 +892,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
+			StatusHandler:  StatusMock{},
 		}
 
 		// when
@@ -623,6 +902,54 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(mockClient.installCalled).To(BeFalse())
 		Expect(mockClient.uninstallCalled).To(BeTrue())
+	})
+
+	It("should return an error when update to status deleting fails", func() {
+		// given
+		now := metav1.NewTime(time.Now())
+		numTrustedProxies := 1
+		istioCr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+			Name:            "default",
+			ResourceVersion: "1",
+			Annotations: map[string]string{
+				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
+			},
+			DeletionTimestamp: &now,
+			Finalizers:        []string{"istios.operator.kyma-project.io/istio-installation"},
+		},
+			Spec: operatorv1alpha1.IstioSpec{
+				Config: operatorv1alpha1.Config{
+					NumTrustedProxies: &numTrustedProxies,
+				},
+			},
+		}
+
+		mockClient := mockLibraryClient{}
+		installation := istio.Installation{
+			Client: createFakeClient(&istioCr, &networkingv1alpha3.EnvoyFilter{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "some-default-resource",
+					Namespace: "istio-system",
+				},
+			}),
+			IstioClient:    &mockClient,
+			IstioVersion:   istioVersion,
+			IstioImageBase: istioImageBase,
+			Merger:         MergerMock{},
+			StatusHandler: StatusMock{
+				deletingError: errors.New("could not update status to deleting"),
+			},
+		}
+
+		// when
+		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+
+		// then
+		Expect(err).Should(HaveOccurred())
+		Expect(err.Error()).To(Equal("could not update status to deleting"))
+		Expect(err.Description()).To(Equal("Could not set status to deleting: could not update status to deleting"))
+		Expect(mockClient.installCalled).To(BeFalse())
+		Expect(mockClient.uninstallCalled).To(BeFalse())
 	})
 
 	It("should not uninstall if there are not default Istio resources present", func() {
@@ -657,6 +984,7 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
+			StatusHandler:  StatusMock{},
 		}
 
 		// when
@@ -664,7 +992,8 @@ var _ = Describe("Installation reconciliation", func() {
 
 		// then
 		Expect(err).Should(HaveOccurred())
-		Expect(err.Error()).To(Equal("could not delete Istio module instance since there are 1 customer created resources present"))
+		Expect(err.Error()).To(Equal("could not delete Istio module instance since there are 1 customer resources present"))
+		Expect(err.Description()).To(Equal("Resources blocking deletion: VirtualService:mock-ns/mock-vs"))
 		Expect(mockClient.installCalled).To(BeFalse())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 	})
@@ -674,16 +1003,18 @@ type mockLibraryClient struct {
 	installCalled   bool
 	uninstallCalled bool
 	*istio.IstioClient
+	installError   error
+	uninstallError error
 }
 
 func (c *mockLibraryClient) Install(_ string) error {
 	c.installCalled = true
-	return nil
+	return c.installError
 }
 
 func (c *mockLibraryClient) Uninstall(_ context.Context) error {
 	c.uninstallCalled = true
-	return nil
+	return c.uninstallError
 }
 
 func createFakeClient(objects ...client.Object) client.Client {
@@ -738,14 +1069,40 @@ func createNamespace(name string) *corev1.Namespace {
 }
 
 type MergerMock struct {
+	mergeError            error
+	getIstioOperatorError error
 }
 
 func (m MergerMock) Merge(_ string, _ *operatorv1alpha1.Istio, _ manifest.TemplateData, _ clusterconfig.ClusterConfiguration) (string, error) {
-	return "mocked istio operator merge result", nil
+	return "mocked istio operator merge result", m.mergeError
 }
 
 func (m MergerMock) GetIstioOperator(_ string) (istioOperator.IstioOperator, error) {
-	return istioOperator.IstioOperator{}, nil
+	return istioOperator.IstioOperator{}, m.getIstioOperatorError
 }
 
 func (m MergerMock) SetIstioInstallFlavor(_ clusterconfig.ClusterSize) {}
+
+type StatusMock struct {
+	result          ctrl.Result
+	processingError error
+	readyError      error
+	deletingError   error
+	errorError      error
+}
+
+func (s StatusMock) SetProcessing(_ context.Context, _ string, _ client.Client, _ *operatorv1alpha1.Istio, _ metav1.Condition, _ ...time.Duration) (ctrl.Result, error) {
+	return s.result, s.processingError
+}
+
+func (s StatusMock) SetReady(_ context.Context, _ client.Client, _ *operatorv1alpha1.Istio, _ metav1.Condition, _ ...time.Duration) (ctrl.Result, error) {
+	return s.result, s.readyError
+}
+
+func (s StatusMock) SetError(_ context.Context, _ described_errors.DescribedError, _ client.Client, _ *operatorv1alpha1.Istio, _ metav1.Condition, _ ...time.Duration) (ctrl.Result, error) {
+	return s.result, s.errorError
+}
+
+func (s StatusMock) SetDeleting(_ context.Context, _ client.Client, _ *operatorv1alpha1.Istio, _ metav1.Condition, _ ...time.Duration) (ctrl.Result, error) {
+	return s.result, s.deletingError
+}

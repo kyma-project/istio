@@ -19,7 +19,7 @@ The Istio module allows you to add Istio Operator to the Kyma runtime. Within Is
 
 ### Procedure
 
-1. To install Istio, you must install latest Istio Manager and Istio CRD first. Run the following:
+1. To install Istio, you must install the latest version of Istio Operator and Istio CRD first. Run:
 
    ```bash
    kubectl apply -f https://github.com/kyma-project/istio/releases/latest/download/istio-manager.yaml

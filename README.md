@@ -37,7 +37,7 @@ The Istio module allows you to add Istio Operator to the Kyma runtime. Within Is
    istio.operator.kyma-project.io/default created
    ```
 
-3. Check Istio CR state to verify a successful installation with:
+3. Check the state of Istio CR to verify if Istio was installed successfully:
 
    ```bash
    kubectl get -n kyma-system istios/default

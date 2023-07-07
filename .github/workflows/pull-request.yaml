@@ -72,6 +72,13 @@ jobs:
       - name: Run integration tests
         run: |
           kubectl config use-context k3d-test-cluster-1
-          IMG=europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-202 make istio-integration-test
-      - name: Check deprecations
-        run: kubectl get --context k3d-test-cluster-1 --raw /metrics | prom2json | jq '.[] | select(.name=="apiserver_requested_deprecated_apis").metrics[].labels'
+          EXPORT_RESULT=true IMG=europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-202 make istio-integration-test
+      - name: Check deprecations1
+        run: |
+          set -eou pipefail
+          GO111MODULE=on go install github.com/prometheus/prom2json/cmd/prom2json@v1.3.3
+          kubectl get --context k3d-test-cluster-1 --raw /metrics | prom2json | jq '.[] | select(.name=="apiserver_requested_deprecated_apis").metrics[].labels' > reports/deprecations.txt
+      - uses: actions/upload-artifact@v3
+        with:
+          name: pr-report
+          path: reports/

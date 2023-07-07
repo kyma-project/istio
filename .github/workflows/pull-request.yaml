@@ -76,11 +76,11 @@ jobs:
            --agents 1
            --image docker.io/rancher/k3s:v1.27.3-k3s1
       - name: Wait for image build to succeed
-        uses: "WyriHaximus/github-action-wait-for-status@a0d59308face45c8229ad5aef809d6df5a0c7620"
+        uses: "autotelic/action-wait-for-status-check@v1@6556cf50c8fb6608412945382eae73581f56cbb4"
         with:
-          ref: ${{ github.ref }}
-          ignoreActions: "Kubernetes version compatibility check,tide"
-          checkInterval: 20
+          token: ${{ secrets.GITHUB_TOKEN }}
+          statusName: "pull-istio-operator-build"
+          timeoutSeconds: "1800"
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       - name: Run integration tests

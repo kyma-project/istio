@@ -76,12 +76,13 @@ jobs:
            --agents 1
            --image docker.io/rancher/k3s:v1.27.3-k3s1
       - name: Wait for image build to succeed
-        uses: lewagon/wait-on-check-action@e106e5c43e8ca1edea6383a39a01c5ca495fd812 # 1.3.1
+        uses: "WyriHaximus/github-action-wait-for-status@a0d59308face45c8229ad5aef809d6df5a0c7620"
         with:
           ref: ${{ github.ref }}
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          check-name: pull-istio-operator-build
-          wait-interval: 20
+          ignoreActions: "Kubernetes version compatibility check"
+          checkInterval: 20
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       - name: Run integration tests
         run: |
           kubectl config use-context k3d-test-cluster-1

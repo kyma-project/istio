@@ -39,6 +39,22 @@ const (
 	testValue            string = "value"
 	istioDisclaimerKey   string = "istios.operator.kyma-project.io/managed-by-disclaimer"
 	istioDisclaimerValue string = "DO NOT EDIT - This resource is managed by Kyma.\nAny modifications are discarded and the resource is reverted to the original state."
+
+	istioConfigMap string = `
+accessLogEncoding: JSON
+defaultConfig:
+  discoveryAddress: istiod.istio-system.svc:15012
+  gatewayTopology:
+    numTrustedProxies: 1
+  proxyMetadata: {}
+  tracing:
+    sampling: 100
+    zipkin:
+      address: zipkin.kyma-system:9411
+enableTracing: true
+rootNamespace: istio-system
+trustDomain: cluster.local
+`
 )
 
 var istioTag = fmt.Sprintf("%s-%s", istioVersion, istioImageBase)
@@ -64,7 +80,7 @@ var _ = Describe("Installation reconciliation", func() {
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
 		istioNamespace := createNamespace("istio-system")
-		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Name: "istio-ingressgateway", Namespace: "istio-system"}}
+		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway"}}
 		c := createFakeClient(&istioCr, istiod, istioNamespace, igwDeployment)
 
 		mockClient := mockLibraryClient{}
@@ -103,7 +119,7 @@ var _ = Describe("Installation reconciliation", func() {
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
 		istioNamespace := createNamespace("istio-system")
-		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Name: "istio-ingressgateway", Namespace: "istio-system"}}
+		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway"}}
 		c := createFakeClient(&istioCr, istiod, istioNamespace, igwDeployment)
 
 		mockClient := mockLibraryClient{}
@@ -142,7 +158,7 @@ var _ = Describe("Installation reconciliation", func() {
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
 		istioNamespace := createNamespace("istio-system")
-		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Name: "istio-ingressgateway", Namespace: "istio-system"}}
+		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway"}}
 		c := createFakeClient(&istioCr, istiod, istioNamespace, igwDeployment)
 
 		mockClient := mockLibraryClient{}
@@ -226,7 +242,7 @@ var _ = Describe("Installation reconciliation", func() {
 
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
 		istioNamespace := createNamespace("istio-system")
-		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Name: "istio-ingressgateway", Namespace: "istio-system"}}
+		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway"}}
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
 			Client:         createFakeClient(&istioCr, istiod, istioNamespace, igwDeployment),
@@ -243,6 +259,107 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(returnedIstioCr.Finalizers).To(ContainElement("istios.operator.kyma-project.io/istio-installation"))
+	})
+
+	It("should execute install to upgrade istio and update Istio CR status when NumTrustedProxies has changed and restart Istio GW", func() {
+		// given
+
+		newNumTrustedProxies := 3
+		numTrustedProxies := 1
+		istioCr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+			Name:            "default",
+			ResourceVersion: "1",
+			Annotations: map[string]string{
+				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
+			},
+		},
+			Spec: operatorv1alpha1.IstioSpec{
+				Config: operatorv1alpha1.Config{
+					NumTrustedProxies: &newNumTrustedProxies,
+				},
+			},
+		}
+		data := make(map[string]string)
+		data["mesh"] = istioConfigMap
+		istioCM := &corev1.ConfigMap{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio"}, Data: data}
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
+		istioNamespace := createNamespace("istio-system")
+		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway"}}
+		c := createFakeClient(&istioCr, istiod, istioNamespace, igwDeployment, istioCM)
+
+		mockClient := mockLibraryClient{}
+		installation := istio.Installation{
+			Client:         c,
+			IstioClient:    &mockClient,
+			IstioVersion:   istioVersion,
+			IstioImageBase: istioImageBase,
+			Merger:         MergerMock{},
+			StatusHandler:  status.NewDefaultStatusHandler(),
+		}
+		// when
+		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+
+		// then
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(mockClient.installCalled).To(BeTrue())
+		Expect(mockClient.uninstallCalled).To(BeFalse())
+		Expect(returnedIstioCr.Status.State).To(Equal(operatorv1alpha1.Processing))
+
+		currentIGWDeployment := appsv1.Deployment{}
+		error := c.Get(context.TODO(), types.NamespacedName{Namespace: "istio-system", Name: "istio-ingressgateway"}, &currentIGWDeployment)
+
+		Expect(error).To(Not(HaveOccurred()))
+		Expect(currentIGWDeployment.Spec.Template.Annotations["reconciler.kyma-project.io/lastRestartDate"]).ToNot(BeEmpty())
+	})
+
+	It("should execute install to upgrade istio and update Istio CR status when NumTrustedProxies has not changed and do not restart Istio GW", func() {
+		// given
+
+		numTrustedProxies := 1
+		istioCr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+			Name:            "default",
+			ResourceVersion: "1",
+			Annotations: map[string]string{
+				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
+			},
+		},
+			Spec: operatorv1alpha1.IstioSpec{
+				Config: operatorv1alpha1.Config{
+					NumTrustedProxies: &numTrustedProxies,
+				},
+			},
+		}
+		data := make(map[string]string)
+		data["mesh"] = istioConfigMap
+		istioCM := &corev1.ConfigMap{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio"}, Data: data}
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
+		istioNamespace := createNamespace("istio-system")
+		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway"}}
+		c := createFakeClient(&istioCr, istiod, istioNamespace, igwDeployment, istioCM)
+
+		mockClient := mockLibraryClient{}
+		installation := istio.Installation{
+			Client:         c,
+			IstioClient:    &mockClient,
+			IstioVersion:   istioVersion,
+			IstioImageBase: istioImageBase,
+			Merger:         MergerMock{},
+			StatusHandler:  status.NewDefaultStatusHandler(),
+		}
+		// when
+		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+
+		// then
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(mockClient.installCalled).To(BeTrue())
+		Expect(mockClient.uninstallCalled).To(BeFalse())
+		Expect(returnedIstioCr.Status.State).To(Equal(operatorv1alpha1.Processing))
+
+		currentIGWDeployment := appsv1.Deployment{}
+		error := c.Get(context.TODO(), types.NamespacedName{Namespace: "istio-system", Name: "istio-ingressgateway"}, &currentIGWDeployment)
+
+		Expect(error).To(Not(HaveOccurred()))
+		Expect(currentIGWDeployment.Spec.Template.Annotations["reconciler.kyma-project.io/lastRestartDate"]).To(BeEmpty())
 	})
 
 	It("should execute install to upgrade istio and update Istio CR status when Istio version has changed", func() {
@@ -264,7 +381,7 @@ var _ = Describe("Installation reconciliation", func() {
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.17.0")
 		istioNamespace := createNamespace("istio-system")
-		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Name: "istio-ingressgateway", Namespace: "istio-system"}}
+		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway"}}
 		c := createFakeClient(&istioCr, istiod, istioNamespace, igwDeployment)
 
 		mockClient := mockLibraryClient{}
@@ -620,48 +737,6 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 	})
 
-	It("should execute install to upgrade istio and update Istio CR status when Istio CR has changed", func() {
-		// given
-
-		newNumTrustedProxies := 3
-		numTrustedProxies := 1
-		istioCr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
-			Name:            "default",
-			ResourceVersion: "1",
-			Annotations: map[string]string{
-				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
-			},
-		},
-			Spec: operatorv1alpha1.IstioSpec{
-				Config: operatorv1alpha1.Config{
-					NumTrustedProxies: &newNumTrustedProxies,
-				},
-			},
-		}
-		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
-		istioNamespace := createNamespace("istio-system")
-		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Name: "istio-ingressgateway", Namespace: "istio-system"}}
-		c := createFakeClient(&istioCr, istiod, istioNamespace, igwDeployment)
-
-		mockClient := mockLibraryClient{}
-		installation := istio.Installation{
-			Client:         c,
-			IstioClient:    &mockClient,
-			IstioVersion:   istioVersion,
-			IstioImageBase: istioImageBase,
-			Merger:         MergerMock{},
-			StatusHandler:  status.NewDefaultStatusHandler(),
-		}
-		// when
-		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
-
-		// then
-		Expect(err).ShouldNot(HaveOccurred())
-		Expect(mockClient.installCalled).To(BeTrue())
-		Expect(mockClient.uninstallCalled).To(BeFalse())
-		Expect(returnedIstioCr.Status.State).To(Equal(operatorv1alpha1.Processing))
-	})
-
 	It("should not install or uninstall when Istio CR has changed, but has deletion timestamp", func() {
 		// given
 		now := metav1.NewTime(time.Now())
@@ -683,7 +758,7 @@ var _ = Describe("Installation reconciliation", func() {
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
 		istioNamespace := createNamespace("istio-system")
-		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Name: "istio-ingressgateway", Namespace: "istio-system"}}
+		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway"}}
 		c := createFakeClient(&istioCr, istiod, istioNamespace, igwDeployment)
 
 		mockClient := mockLibraryClient{}
@@ -806,7 +881,7 @@ var _ = Describe("Installation reconciliation", func() {
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
 		istioNamespace := createNamespace("istio-system")
-		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Name: "istio-ingressgateway", Namespace: "istio-system"}}
+		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway"}}
 		c := createFakeClient(&istioCr, istiod, istioNamespace, igwDeployment)
 
 		mockClient := mockLibraryClient{}

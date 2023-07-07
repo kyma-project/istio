@@ -123,7 +123,7 @@ var _ = Describe("Istio GW Deployment", func() {
 			Expect(err).To(Not(HaveOccurred()))
 
 			dep := appsv1.Deployment{}
-			err = client.Get(context.TODO(), types.NamespacedName{Namespace: "istio", Name: "istio-ingressgateway"}, &dep)
+			err = client.Get(context.TODO(), types.NamespacedName{Namespace: "istio-system", Name: "istio-ingressgateway"}, &dep)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))

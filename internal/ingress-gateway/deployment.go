@@ -12,14 +12,14 @@ import (
 )
 
 const (
-	namespace      string = "istio-system"
-	name           string = "istio-ingressgateway"
+	deploymentNS   string = "istio-system"
+	deploymentName string = "istio-ingressgateway"
 	annotationName string = "reconciler.kyma-project.io/lastRestartDate"
 )
 
 func RestartDeployment(ctx context.Context, k8sClient client.Client) error {
 	deployment := appsv1.Deployment{}
-	err := k8sClient.Get(ctx, types.NamespacedName{Namespace: namespace, Name: name}, &deployment)
+	err := k8sClient.Get(ctx, types.NamespacedName{Namespace: deploymentNS, Name: deploymentName}, &deployment)
 	if err != nil {
 		return err
 	}

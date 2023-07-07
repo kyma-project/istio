@@ -14,8 +14,8 @@ import (
 type NumTrustedProxies *int
 
 const (
-	CMNamespace string = "istio-system"
-	CMName      string = "istio"
+	configMapNS   string = "istio-system"
+	configMapName string = "istio"
 )
 
 // GetNumTrustedProxyFromIstioCM fetches current cluster configuration for "numTrustedProxies" from istio-system/istio ConfigMap.
@@ -25,7 +25,7 @@ const (
 // to Istio Manager, as reconciliation will run on every update of Istio Custom Resource
 func GetNumTrustedProxyFromIstioCM(ctx context.Context, client client.Client) (NumTrustedProxies, error) {
 	cm := corev1.ConfigMap{}
-	err := client.Get(ctx, types.NamespacedName{Namespace: CMNamespace, Name: CMName}, &cm)
+	err := client.Get(ctx, types.NamespacedName{Namespace: configMapNS, Name: configMapName}, &cm)
 
 	if k8serrors.IsNotFound(err) {
 		return nil, nil

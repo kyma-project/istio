@@ -1268,6 +1268,9 @@ spec:
                   - type
                   type: object
                 type: array
+              description:
+                description: Description of Istio status
+                type: string
               state:
                 description: State signifies current state of CustomObject. Value
                   can be one of ("Ready", "Processing", "Error", "Deleting", "Warning").
@@ -2539,6 +2542,9 @@ spec:
                   - type
                   type: object
                 type: array
+              description:
+                description: Description of Istio status
+                type: string
               state:
                 description: State signifies current state of CustomObject. Value
                   can be one of ("Ready", "Processing", "Error", "Deleting", "Warning").

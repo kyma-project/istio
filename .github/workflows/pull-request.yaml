@@ -72,7 +72,7 @@ jobs:
       - name: Run integration tests
         run: |
           kubectl config use-context k3d-test-cluster-1
-          EXPORT_RESULT=true IMG=europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-202 make istio-integration-test
+          EXPORT_RESULT=true IMG=europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-202 make deploy
       - name: Check deprecations1
         run: |
           set -eou pipefail

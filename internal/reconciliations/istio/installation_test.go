@@ -970,9 +970,6 @@ var _ = Describe("Installation reconciliation", func() {
 					NumTrustedProxies: &numTrustedProxies,
 				},
 			},
-			Status: operatorv1alpha1.IstioStatus{
-				State: operatorv1alpha1.Ready,
-			},
 		}
 
 		mockClient := mockLibraryClient{}

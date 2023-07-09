@@ -74,7 +74,7 @@ func fetchIstioIngressGatewayAddress(ctx context.Context) (string, error) {
 			}
 		} else {
 			// In case we are not running on Gardener we assume that it's a k3d cluster that has 127.0.0.1 as default address
-			ingressIp = "127.0.0.1"
+			ingressIp = "localhost"
 			ingressPort = 80
 		}
 

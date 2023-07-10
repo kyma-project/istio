@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/avast/retry-go"
@@ -100,6 +102,23 @@ func IstioComponentHasResourcesSetToCpuAndMemory(ctx context.Context, component,
 func UninstallIstio(ctx context.Context) error {
 	istioClient := istio.NewIstioClient()
 	return istioClient.Uninstall(ctx)
+}
+
+func DeployIstioOperatorFromLocalSource(ctx context.Context) error {
+	// Spawned process inherit env vars from the go test process.
+	_, ok := os.LookupEnv("IMG")
+	if !ok {
+		return fmt.Errorf("provide IMG env variable to deploy new version of controller")
+	}
+	cmd := exec.CommandContext(ctx, "make", "deploy")
+	// go test is invoked from tests/integration dir by Makefile
+	// Set dir to root of the project to be able to invoke make deploy without additional parameters.
+	cmd.Dir = "../.."
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func getIstioOperatorFromCluster(k8sClient client.Client) (*istioOperator.IstioOperator, error) {

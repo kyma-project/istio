@@ -272,9 +272,12 @@ gardener-perf-test:
 PULL_IMAGE_VERSION=PR-${PULL_NUMBER}
 POST_IMAGE_VERSION=v$(shell date '+%Y%m%d')-$(shell printf %.8s ${PULL_BASE_SHA})
 
+# the - before cd bellow is here to run remaining commands if the one after dash fails
 .PHONY: istio-integration-test
 istio-integration-test: install deploy
-	cd tests/integration && EXPORT_RESULT=true go test -v -timeout 25m -run TestIstioMain && ./deploy-latest-release-to-cluster.sh && EXPORT_RESULT=true IMG=${IMG} go test -v -timeout 10m -run TestIstioUpgrade
+	-cd tests/integration && EXPORT_RESULT=true go test -v -timeout 25m -run TestIstioMain
+	make undeploy
+	cd tests/integration && ./scripts/deploy-latest-release-to-cluster.sh && EXPORT_RESULT=true IMG=${IMG} go test -v -timeout 10m -run TestIstioUpgrade
 
 .PHONY: gardener-istio-integration-test
 gardener-istio-integration-test:

@@ -2,5 +2,7 @@
 ## File-based project format
 cucumber-report.json
 junit-report.xml
+junit-main-report.xml
+junit-upgrade-report.xml
 reports
 

@@ -47,7 +47,7 @@ func TestIstioMain(t *testing.T) {
 	}
 
 	if os.Getenv("EXPORT_RESULT") == "true" {
-		goDogOptsMainSuite.Format = "pretty,junit:junit-report.xml,cucumber:cucumber-report.json"
+		goDogOptsMainSuite.Format = "pretty,junit:junit-main-report.xml,cucumber:cucumber-report.json"
 	}
 
 	mainSuite := godog.TestSuite{
@@ -85,7 +85,7 @@ func TestIstioUpgrade(t *testing.T) {
 	}
 
 	if os.Getenv("EXPORT_RESULT") == "true" {
-		goDogOptsUpgradeSuite.Format = "pretty,junit:junit-report.xml,cucumber:cucumber-report.json"
+		goDogOptsUpgradeSuite.Format = "pretty,junit:junit-upgrade-report.xml,cucumber:cucumber-report.json"
 	}
 
 	upgradeSuite := godog.TestSuite{

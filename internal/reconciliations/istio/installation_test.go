@@ -1089,7 +1089,6 @@ type StatusMock struct {
 	readyError      error
 	deletingError   error
 	errorError      error
-	warningError    error
 }
 
 func (s StatusMock) SetProcessing(_ context.Context, _ string, _ client.Client, _ *operatorv1alpha1.Istio, _ metav1.Condition, _ ...time.Duration) (ctrl.Result, error) {

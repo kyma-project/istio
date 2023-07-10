@@ -13,6 +13,7 @@ import (
 	"github.com/kyma-project/istio/operator/internal/manifest"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	"github.com/kyma-project/istio/operator/internal/status"
+	"github.com/kyma-project/istio/operator/pkg/lib/common"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 
@@ -305,11 +306,13 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 		Expect(returnedIstioCr.Status.State).To(Equal(operatorv1alpha1.Processing))
 
-		currentIGWDeployment := appsv1.Deployment{}
-		error := c.Get(context.TODO(), types.NamespacedName{Namespace: "istio-system", Name: "istio-ingressgateway"}, &currentIGWDeployment)
+		igwDeployment = &appsv1.Deployment{}
+		error := c.Get(context.TODO(), types.NamespacedName{Namespace: "istio-system", Name: "istio-ingressgateway"}, igwDeployment)
 
 		Expect(error).To(Not(HaveOccurred()))
-		Expect(currentIGWDeployment.Spec.Template.Annotations["reconciler.kyma-project.io/lastRestartDate"]).ToNot(BeEmpty())
+
+		wasRestarted := common.WasRestarted(igwDeployment.Spec.Template.Annotations)
+		Expect(wasRestarted).To(BeTrue())
 	})
 
 	It("should execute install to upgrade istio and update Istio CR status when NumTrustedProxies has not changed and do not restart Istio GW", func() {

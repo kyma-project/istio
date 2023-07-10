@@ -3,10 +3,10 @@ package restart
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/go-logr/logr"
 
+	"github.com/kyma-project/istio/operator/pkg/lib/common"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -38,7 +38,7 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 			}
 			ds := obj.(*appsv1.DaemonSet)
 			patch := client.StrategicMergeFrom(ds.DeepCopy())
-			ds.Spec.Template.Annotations = addRestartAnnotation(ds.Spec.Template.Annotations)
+			ds.Spec.Template.Annotations = common.AddRestartAnnotation(ds.Spec.Template.Annotations)
 
 			return k8sclient.Patch(ctx, ds, patch)
 		})
@@ -51,7 +51,7 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 			}
 			dep := obj.(*appsv1.Deployment)
 			patch := client.StrategicMergeFrom(dep.DeepCopy())
-			dep.Spec.Template.Annotations = addRestartAnnotation(dep.Spec.Template.Annotations)
+			dep.Spec.Template.Annotations = common.AddRestartAnnotation(dep.Spec.Template.Annotations)
 
 			return k8sclient.Patch(ctx, dep, patch)
 		})
@@ -64,7 +64,7 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 			}
 			rs := obj.(*appsv1.ReplicaSet)
 			patch := client.StrategicMergeFrom(rs.DeepCopy())
-			rs.Spec.Template.Annotations = addRestartAnnotation(rs.Spec.Template.Annotations)
+			rs.Spec.Template.Annotations = common.AddRestartAnnotation(rs.Spec.Template.Annotations)
 
 			return k8sclient.Patch(ctx, rs, patch)
 		})
@@ -77,7 +77,7 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 			}
 			ss := obj.(*appsv1.StatefulSet)
 			patch := client.StrategicMergeFrom(ss.DeepCopy())
-			ss.Spec.Template.Annotations = addRestartAnnotation(ss.Spec.Template.Annotations)
+			ss.Spec.Template.Annotations = common.AddRestartAnnotation(ss.Spec.Template.Annotations)
 
 			return k8sclient.Patch(ctx, ss, patch)
 		})
@@ -90,13 +90,4 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 	}
 
 	return nil, nil
-}
-
-func addRestartAnnotation(annotations map[string]string) map[string]string {
-	if len(annotations) == 0 {
-		annotations = map[string]string{}
-	}
-
-	annotations[restartAnnotationName] = time.Now().Format(time.RFC3339)
-	return annotations
 }

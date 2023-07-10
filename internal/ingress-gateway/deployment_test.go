@@ -24,7 +24,7 @@ var _ = Describe("Istio GW Deployment", func() {
 			istio.Spec.Config.NumTrustedProxies = &newNumTrustedProxies
 
 			//when
-			does, err := ingressgateway.NeedsRestart(context.TODO(), client, &istio)
+			does, err := ingressgateway.NeedsRestart(context.TODO(), client, istio)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))
@@ -36,7 +36,7 @@ var _ = Describe("Istio GW Deployment", func() {
 			istio.Spec.Config.NumTrustedProxies = nil
 
 			//when
-			does, err := ingressgateway.NeedsRestart(context.TODO(), client, &istio)
+			does, err := ingressgateway.NeedsRestart(context.TODO(), client, istio)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))
@@ -49,20 +49,7 @@ var _ = Describe("Istio GW Deployment", func() {
 			istio.Spec.Config.NumTrustedProxies = &sameNumTrustedProxies
 
 			//when
-			does, err := ingressgateway.NeedsRestart(context.TODO(), client, &istio)
-
-			//then
-			Expect(err).To(Not(HaveOccurred()))
-			Expect(does).To(BeFalse())
-		})
-
-		It("should not restart when Istio CR is nil", func() {
-			//given
-			newNumTrustedProxies := 2
-			istio.Spec.Config.NumTrustedProxies = &newNumTrustedProxies
-
-			//when
-			does, err := ingressgateway.NeedsRestart(context.TODO(), client, nil)
+			does, err := ingressgateway.NeedsRestart(context.TODO(), client, istio)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))
@@ -79,7 +66,7 @@ var _ = Describe("Istio GW Deployment", func() {
 			istio.Spec.Config.NumTrustedProxies = &newNumTrustedProxies
 
 			//when
-			does, err := ingressgateway.NeedsRestart(context.TODO(), client, &istio)
+			does, err := ingressgateway.NeedsRestart(context.TODO(), client, istio)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))
@@ -91,7 +78,7 @@ var _ = Describe("Istio GW Deployment", func() {
 			istio.Spec.Config.NumTrustedProxies = nil
 
 			//when
-			does, err := ingressgateway.NeedsRestart(context.TODO(), client, &istio)
+			does, err := ingressgateway.NeedsRestart(context.TODO(), client, istio)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))
@@ -103,7 +90,7 @@ var _ = Describe("Istio GW Deployment", func() {
 			client := CreateFakeClientWithIGW()
 
 			//when
-			does, err := ingressgateway.NeedsRestart(context.TODO(), client, &istio)
+			does, err := ingressgateway.NeedsRestart(context.TODO(), client, istio)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))

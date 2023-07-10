@@ -85,7 +85,7 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 			return istioCR, described_errors.NewDescribedError(err, "Could not get configuration from Istio Operator file")
 		}
 
-		ingressGatewayNeedsRestart, err := ingressgateway.NeedsRestart(ctx, i.Client, &istioCR)
+		ingressGatewayNeedsRestart, err := ingressgateway.NeedsRestart(ctx, i.Client, istioCR)
 		if err != nil {
 			return istioCR, described_errors.NewDescribedError(err, "Could not check if Istio GW deployment needs restart")
 		}

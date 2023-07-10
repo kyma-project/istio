@@ -3,6 +3,7 @@ package istio
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/coreos/go-semver/semver"
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 )

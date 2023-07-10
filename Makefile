@@ -278,20 +278,12 @@ PULL_IMAGE_VERSION=PR-${PULL_NUMBER}
 POST_IMAGE_VERSION=v$(shell date '+%Y%m%d')-$(shell printf %.8s ${PULL_BASE_SHA})
 
 .PHONY: istio-integration-test
-<<<<<<< HEAD
 istio-integration-test: install deploy
 	# Increased TEST_REQUEST_TIMEOUT to 300s to avoid timeouts on newly created k3s clusters on Prow
 	# The - before cd bellow is here to run remaining commands if the one after dash fails
 	-cd tests/integration && TEST_REQUEST_TIMEOUT=300s && EXPORT_RESULT=true go test -v -timeout 25m -run TestIstioMain
 	make undeploy
 	cd tests/integration && ./scripts/deploy-latest-release-to-cluster.sh && EXPORT_RESULT=true IMG=${IMG} go test -v -timeout 10m -run TestIstioUpgrade
-=======
-istio-integration-test:
-	make install
-	make deploy
-	# Increased TEST_REQUEST_TIMEOUT to 300s to avoid timeouts on newly created k3s clusters on Prow
-	cd tests/integration && TEST_REQUEST_TIMEOUT=300s && EXPORT_RESULT=true go test -timeout 25m
->>>>>>> main
 
 .PHONY: gardener-istio-integration-test
 gardener-istio-integration-test:

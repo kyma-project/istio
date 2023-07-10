@@ -2,17 +2,17 @@
 
 ## Summary 
 
-This document proposes  istio-manager API exposed to users. Initial version covers hpa and resources configuration for Istio components such as istiod and ingress gateway. This version also covers configuration needed to forward client information to workloads (client address via xff).
+This document proposes Istio Manager API exposed to users. The initial version of the API includes hpa and resources' configuration options for Istio components, such as istiod and ingress gateway, as well as the ability to forward client information to workloads (client address via XFF).
 
 ## Details
 
-API specification on root level was split into `components` and `config`. `components` holds subset of [k8s component specyfication](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec) for `pilot` and `ingressGateway` Istio components. For this moment it's `hpaSpec`, `strategy` and `resources`. `config` holds `profiles` configuration, support for xff, gardener DNS names configuration, tracing and DNS proxying. 
+API specification on the root level is split into **components** and **config**. The **components** field specifies the subset of [k8s component specification](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec) for `pilot` and `ingressGateway` Istio components. For now, it's **hpaSpec**, **strategy** and **resources**. The **config** parameter holds configuration of `profiles`, support for XFF, Gardener DNS names' configuration, tracing, and DNS proxying. 
 
-Status will be implemented per `kyma-operator` requirements.
+The status is implemented per `kyma-operator` requirements.
 
 ## Istio CR example
 
-```
+```bash
 apiVersion: operator.kyma-project.io/v1alpha1
 kind: Istio
 metadata:
@@ -67,4 +67,4 @@ status:
 
 ## Future plans
 
-Proposal does not cover resource settings for sidecars. This configuration is applied via IstioOperator CR but Istio does not support restarting sidecars. It is still under consideration wheater `istio-manager` should be responsible for managing sidecars.
+The proposal does not address the resource settings for sidecars. Currently, this configuration can be applied through the IstioOperator CR, but Istio does not support restarting sidecars. It is still being considered whether Istio Manager should be responsible for managing sidecars.

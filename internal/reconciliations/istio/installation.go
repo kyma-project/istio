@@ -120,6 +120,7 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 		if err != nil {
 			return istioCR, described_errors.NewDescribedError(err, "Could not get customer resources from the cluster")
 		}
+
 		if len(clientResources) > 0 {
 			clientResourcesList := strings.Join(
 				funk.Map(clientResources, func(a resources.Resource) string { return fmt.Sprintf("%s:%s/%s", a.GVK.Kind, a.Namespace, a.Name) }).([]string), ";")

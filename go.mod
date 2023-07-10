@@ -20,7 +20,6 @@ require (
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 	golang.org/x/time v0.3.0
 	google.golang.org/protobuf v1.30.0
-	gopkg.in/yaml.v3 v3.0.1
 	istio.io/api v0.0.0-20230621030812-36698ea550c8
 	istio.io/client-go v1.18.1-0.20230621031510-0789e128a186
 	istio.io/istio v0.0.0-20230621044911-6f0d7ae668c8
@@ -209,6 +208,7 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	helm.sh/helm/v3 v3.12.0 // indirect
 	k8s.io/apiserver v0.27.2 // indirect
 	k8s.io/cli-runtime v0.27.2 // indirect

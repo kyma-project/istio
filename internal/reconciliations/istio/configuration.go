@@ -1,35 +1,45 @@
 package istio
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
 	"github.com/coreos/go-semver/semver"
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
+	"github.com/kyma-project/istio/operator/pkg/lib/common"
+	appsv1 "k8s.io/api/apps/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type appliedConfig struct {
+const (
+	ingressgatewayNamespace      string = "istio-system"
+	ingressgatewayDeploymentName string = "istio-ingressgateway"
+)
+
+type AppliedConfig struct {
 	operatorv1alpha1.IstioSpec
 	IstioTag string
 }
 
 // shouldDelete returns true when Istio should be deleted
-func shouldDelete(istioCR operatorv1alpha1.Istio) bool {
-	return !istioCR.DeletionTimestamp.IsZero()
+func shouldDelete(istio operatorv1alpha1.Istio) bool {
+	return !istio.DeletionTimestamp.IsZero()
 }
 
 // shouldInstall returns true when Istio should be installed
-func shouldInstall(istioCR operatorv1alpha1.Istio, istioTag string) (shouldInstall bool, err error) {
-	if shouldDelete(istioCR) {
+func shouldInstall(istio operatorv1alpha1.Istio, istioTag string) (shouldInstall bool, err error) {
+	if shouldDelete(istio) {
 		return false, nil
 	}
 
-	lastAppliedConfigAnnotation, ok := istioCR.Annotations[LastAppliedConfiguration]
+	lastAppliedConfigAnnotation, ok := istio.Annotations[LastAppliedConfiguration]
 	if !ok {
 		return true, nil
 	}
 
-	var lastAppliedConfig appliedConfig
+	var lastAppliedConfig AppliedConfig
 	if err := json.Unmarshal([]byte(lastAppliedConfigAnnotation), &lastAppliedConfig); err != nil {
 		return false, err
 	}
@@ -43,13 +53,13 @@ func shouldInstall(istioCR operatorv1alpha1.Istio, istioTag string) (shouldInsta
 
 // UpdateLastAppliedConfiguration annotates the passed CR with LastAppliedConfiguration, which holds information about last applied
 // IstioCR spec and IstioTag (IstioVersion-IstioImageBase)
-func UpdateLastAppliedConfiguration(cr operatorv1alpha1.Istio, istioTag string) (operatorv1alpha1.Istio, error) {
-	if cr.Annotations == nil {
-		cr.Annotations = make(map[string]string)
+func UpdateLastAppliedConfiguration(istio operatorv1alpha1.Istio, istioTag string) (operatorv1alpha1.Istio, error) {
+	if len(istio.Annotations) == 0 {
+		istio.Annotations = map[string]string{}
 	}
 
-	newAppliedConfig := appliedConfig{
-		IstioSpec: cr.Spec,
+	newAppliedConfig := AppliedConfig{
+		IstioSpec: istio.Spec,
 		IstioTag:  istioTag,
 	}
 
@@ -58,9 +68,25 @@ func UpdateLastAppliedConfiguration(cr operatorv1alpha1.Istio, istioTag string) 
 		return operatorv1alpha1.Istio{}, err
 	}
 
-	cr.Annotations[LastAppliedConfiguration] = string(config)
+	istio.Annotations[LastAppliedConfiguration] = string(config)
 
-	return cr, nil
+	return istio, nil
+}
+
+func GetLastAppliedConfiguration(istio operatorv1alpha1.Istio) (AppliedConfig, error) {
+	lastAppliedConfig := AppliedConfig{}
+	if len(istio.Annotations) == 0 {
+		return lastAppliedConfig, nil
+	}
+
+	if lastAppliedAnnotation, found := istio.Annotations[LastAppliedConfiguration]; found {
+		err := json.Unmarshal([]byte(lastAppliedAnnotation), &lastAppliedConfig)
+		if err != nil {
+			return lastAppliedConfig, err
+		}
+	}
+
+	return lastAppliedConfig, nil
 }
 
 func CheckIstioVersion(currentIstioVersionString, targetIstioVersionString string) error {
@@ -89,4 +115,32 @@ func CheckIstioVersion(currentIstioVersionString, targetIstioVersionString strin
 
 func amongOneMinor(current, target semver.Version) bool {
 	return current.Minor == target.Minor || current.Minor-target.Minor == -1 || current.Minor-target.Minor == 1
+}
+
+func restartIngressGateway(ctx context.Context, k8sClient client.Client) error {
+	deployment := appsv1.Deployment{}
+	err := k8sClient.Get(ctx, types.NamespacedName{Namespace: ingressgatewayNamespace, Name: ingressgatewayDeploymentName}, &deployment)
+	if err != nil {
+		return err
+	}
+	deployment.Spec.Template.Annotations = common.AddRestartAnnotation(deployment.Spec.Template.Annotations)
+	return k8sClient.Update(ctx, &deployment)
+}
+
+func ingressGatewayNeedsRestart(istioCR operatorv1alpha1.Istio) (bool, error) {
+	lastAppliedConfig, err := GetLastAppliedConfiguration(istioCR)
+	if err != nil {
+		return false, err
+	}
+
+	isNewNotNil := (istioCR.Spec.Config.NumTrustedProxies != nil)
+	isOldNotNil := (lastAppliedConfig.IstioSpec.Config.NumTrustedProxies != nil)
+	if isNewNotNil && isOldNotNil && *istioCR.Spec.Config.NumTrustedProxies != *lastAppliedConfig.IstioSpec.Config.NumTrustedProxies {
+		return true, nil
+	}
+	if isNewNotNil != isOldNotNil {
+		return true, nil
+	}
+
+	return false, nil
 }

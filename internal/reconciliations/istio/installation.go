@@ -10,7 +10,6 @@ import (
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
-	ingressgateway "github.com/kyma-project/istio/operator/internal/ingress-gateway"
 	"github.com/kyma-project/istio/operator/internal/manifest"
 	"github.com/kyma-project/istio/operator/internal/resources"
 	"github.com/kyma-project/istio/operator/internal/status"
@@ -85,7 +84,7 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 			return istioCR, described_errors.NewDescribedError(err, "Could not get configuration from Istio Operator file")
 		}
 
-		ingressGatewayNeedsRestart, err := ingressgateway.NeedsRestart(ctx, i.Client, istioCR)
+		ingressGatewayNeedsRestart, err := ingressgateway.NeedsRestart(istioCR)
 		if err != nil {
 			return istioCR, described_errors.NewDescribedError(err, "Could not check if Istio GW deployment needs restart")
 		}

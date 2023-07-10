@@ -33,6 +33,9 @@ jobs:
           args: >-
             --agents 1
             --image docker.io/rancher/k3s:v1.27.3-k3s1
+            --port 80:80@loadbalancer
+            --port 443:443@loadbalancer
+            --k3s-arg "--disable=traefik@server:0"
       - uses: autotelic/action-wait-for-status-check@6556cf50c8fb6608412945382eae73581f56cbb4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}

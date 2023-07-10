@@ -6,6 +6,7 @@ import (
 	"github.com/avast/retry-go"
 	"github.com/cucumber/godog"
 	istioCR "github.com/kyma-project/istio/operator/api/v1alpha1"
+	"github.com/kyma-project/istio/operator/controllers"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	v1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
@@ -202,6 +203,65 @@ func ResourceNotPresent(ctx context.Context, kind string) error {
 		default:
 			return fmt.Errorf("can't check if resource is present for undefined kind %s", kind)
 		}
+		return nil
+	}, testcontext.GetRetryOpts()...)
+}
+func ResourceHasRequiredVersionAndIsReady(ctx context.Context, kind, name, namespace string) error {
+	const requiredVersion = controllers.IstioVersion
+
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	return retry.Do(func() error {
+		var object client.Object
+		switch kind {
+		case Deployment.String():
+			object = &v1.Deployment{}
+		case DaemonSet.String():
+			object = &v1.DaemonSet{}
+		default:
+			return godog.ErrUndefined
+		}
+		err := k8sClient.Get(context.TODO(), client.ObjectKey{Namespace: namespace, Name: name}, object)
+		if err != nil {
+			return err
+		}
+
+		switch kind {
+		case Deployment.String():
+			for _, c := range object.(*v1.Deployment).Spec.Template.Spec.Containers {
+				deployedVersion, err := getVersionFromImageName(c.Image)
+				if err != nil {
+					return err
+				}
+				if deployedVersion != requiredVersion {
+					return fmt.Errorf("resource %s has version %s, but required %s", name, deployedVersion, requiredVersion)
+				}
+			}
+			if object.(*v1.Deployment).Status.Replicas != object.(*v1.Deployment).Status.ReadyReplicas {
+				return fmt.Errorf("%s %s/%s is not ready",
+					kind, namespace, name)
+			}
+		case DaemonSet.String():
+			for _, c := range object.(*v1.DaemonSet).Spec.Template.Spec.Containers {
+				deployedVersion, err := getVersionFromImageName(c.Image)
+				if err != nil {
+					return err
+				}
+				if deployedVersion != requiredVersion {
+					return fmt.Errorf("resource %s has version %s, but required %s", name, deployedVersion, requiredVersion)
+				}
+			}
+			if object.(*v1.DaemonSet).Status.NumberReady != object.(*v1.DaemonSet).Status.DesiredNumberScheduled {
+				return fmt.Errorf("%s %s/%s is not ready",
+					kind, namespace, name)
+			}
+		default:
+			return godog.ErrUndefined
+		}
+
 		return nil
 	}, testcontext.GetRetryOpts()...)
 }

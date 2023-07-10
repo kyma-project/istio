@@ -273,10 +273,8 @@ PULL_IMAGE_VERSION=PR-${PULL_NUMBER}
 POST_IMAGE_VERSION=v$(shell date '+%Y%m%d')-$(shell printf %.8s ${PULL_BASE_SHA})
 
 .PHONY: istio-integration-test
-istio-integration-test:
-	make install
-	make deploy
-	cd tests/integration && EXPORT_RESULT=true go test -timeout 25m
+istio-integration-test: install deploy
+	cd tests/integration && EXPORT_RESULT=true go test -v -timeout 25m -run TestIstioMain && ./deploy-latest-release-to-cluster.sh && EXPORT_RESULT=true IMG=${IMG} go test -v -timeout 10m -run TestIstioUpgrade
 
 .PHONY: gardener-istio-integration-test
 gardener-istio-integration-test:

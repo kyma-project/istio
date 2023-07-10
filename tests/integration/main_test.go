@@ -20,12 +20,13 @@ import (
 const (
 	evaluationEnv string = "TEST_EVALUATION"
 
-	productionPath string = "features/istio/production"
-	evaluationPath string = "features/istio/evaluation"
+	productionMainSuitePath    string = "features/istio/production/main-suite"
+	productionUpgradeSuitePath string = "features/istio/production/upgrade-suite"
+	evaluationPath             string = "features/istio/evaluation"
 )
 
-func TestIstio(t *testing.T) {
-	featurePath := productionPath
+func TestIstioMain(t *testing.T) {
+	featurePath := productionMainSuitePath
 	ev, ok := os.LookupEnv(evaluationEnv)
 	if ok {
 		if ev == "TRUE" {
@@ -33,7 +34,7 @@ func TestIstio(t *testing.T) {
 		}
 	}
 
-	goDogOpts := godog.Options{
+	goDogOptsMainSuite := godog.Options{
 		Output: colors.Colored(os.Stdout),
 		Format: "pretty",
 		Paths:  []string{featurePath},
@@ -46,15 +47,15 @@ func TestIstio(t *testing.T) {
 	}
 
 	if os.Getenv("EXPORT_RESULT") == "true" {
-		goDogOpts.Format = "pretty,junit:junit-report.xml,cucumber:cucumber-report.json"
+		goDogOptsMainSuite.Format = "pretty,junit:junit-report.xml,cucumber:cucumber-report.json"
 	}
 
-	suite := godog.TestSuite{
+	mainSuite := godog.TestSuite{
 		Name:                "istio",
 		ScenarioInitializer: initScenario,
-		Options:             &goDogOpts,
+		Options:             &goDogOptsMainSuite,
 	}
-	testExitCode := suite.Run()
+	mainSuiteTestExitCode := mainSuite.Run()
 
 	if os.Getenv("EXPORT_RESULT") == "true" {
 		err := generateReport("istio-installation")
@@ -63,9 +64,47 @@ func TestIstio(t *testing.T) {
 		}
 	}
 
-	println("Test exit code: ", testExitCode)
-	if testExitCode != 0 {
-		t.Fatalf("non-zero status returned, failed to run feature tests")
+	println("Main suite test exit code: ", mainSuiteTestExitCode)
+	if mainSuiteTestExitCode != 0 {
+		t.Fatalf("non-zero status returned, failed to run feature tests (main suite)")
+	}
+}
+
+func TestIstioUpgrade(t *testing.T) {
+	upgradePath := productionUpgradeSuitePath
+	goDogOptsUpgradeSuite := godog.Options{
+		Output: colors.Colored(os.Stdout),
+		Format: "pretty",
+		Paths:  []string{upgradePath},
+		// Concurrency must be set to 1, as the tests modify the global cluster state and can't be isolated.
+		Concurrency: 1,
+		// We want to randomize the scenario order to avoid any implicit dependencies between scenarios.
+		Randomize:      time.Now().UTC().UnixNano(),
+		DefaultContext: createDefaultContext(t),
+		Strict:         true,
+	}
+
+	if os.Getenv("EXPORT_RESULT") == "true" {
+		goDogOptsUpgradeSuite.Format = "pretty,junit:junit-report.xml,cucumber:cucumber-report.json"
+	}
+
+	upgradeSuite := godog.TestSuite{
+		Name:                "istio-upgrade-suite",
+		ScenarioInitializer: upgradeInitScenario,
+		Options:             &goDogOptsUpgradeSuite,
+	}
+	upgradeSuiteTestExitCode := upgradeSuite.Run()
+
+	if os.Getenv("EXPORT_RESULT") == "true" {
+		err := generateReport("istio-upgrade")
+		if err != nil {
+			t.Errorf("error while generating report: %s", err)
+		}
+	}
+
+	println("Upgrade suite test exit code: ", upgradeSuiteTestExitCode)
+	if upgradeSuiteTestExitCode != 0 {
+		t.Fatalf("non-zero status returned, failed to run feature tests (upgrade-suite suite)")
 	}
 }
 

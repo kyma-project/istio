@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/avast/retry-go"
+	"github.com/kyma-project/istio/operator/controllers"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -11,6 +12,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"strings"
 )
 
 const applicationImage = "europe-docker.pkg.dev/kyma-project/prod/external/kennethreitz/httpbin"
@@ -168,4 +170,74 @@ func ApplicationPodShouldHaveIstioProxy(ctx context.Context, appName, namespace,
 		return fmt.Errorf("checking the istio-proxy for app %s in namespace %s failed", appName, namespace)
 	}, testcontext.GetRetryOpts()...)
 
+}
+
+func ApplicationPodShouldHaveIstioProxyInRequiredVersion(ctx context.Context, appName, namespace string) error {
+	const requiredProxyVersion = controllers.IstioVersion
+
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	var podList corev1.PodList
+	return retry.Do(func() error {
+		err := k8sClient.List(context.TODO(), &podList, &client.ListOptions{
+			Namespace: namespace,
+			LabelSelector: labels.SelectorFromSet(map[string]string{
+				"app": appName,
+			}),
+		})
+		if err != nil {
+			return err
+		}
+
+		if len(podList.Items) == 0 {
+			return fmt.Errorf("no pods found for app %s in namespace %s", appName, namespace)
+		}
+
+		hasProxyInVersion := false
+		for _, pod := range podList.Items {
+			for _, container := range pod.Spec.Containers {
+				if container.Name != "istio-proxy" {
+					continue
+				}
+				deployedVersion, err := getVersionFromImageName(container.Image)
+				if err != nil {
+					return err
+				}
+
+				if deployedVersion == requiredProxyVersion {
+					hasProxyInVersion = true
+				}
+			}
+		}
+
+		if !hasProxyInVersion {
+			return fmt.Errorf("after upgrade proxy does not match required version")
+		}
+
+		return nil
+	}, testcontext.GetRetryOpts()...)
+
+}
+
+func getVersionFromImageName(name string) (string, error) {
+	tmp := strings.Split(name, "/")
+	if len(tmp) == 1 {
+		return "", fmt.Errorf("parsing istio proxy image name failed")
+	}
+
+	tmp = strings.Split(tmp[len(tmp)-1], ":")
+	if len(tmp) == 1 {
+		return "", fmt.Errorf("parsing istio proxy image name failed")
+	}
+
+	tmp = strings.Split(tmp[1], "-")
+	if len(tmp) == 1 {
+		return "", fmt.Errorf("parsing istio proxy image name failed")
+	}
+
+	v := tmp[0]
+	return v, nil
 }

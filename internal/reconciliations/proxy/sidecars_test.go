@@ -141,7 +141,3 @@ func (s StatusMock) SetError(_ context.Context, _ described_errors.DescribedErro
 func (s StatusMock) SetDeleting(_ context.Context, _ client.Client, _ *operatorv1alpha1.Istio, _ metav1.Condition, _ ...time.Duration) (ctrl.Result, error) {
 	return s.result, s.err
 }
-
-func (s StatusMock) SetWarning(_ context.Context, _ described_errors.DescribedError, _ client.Client, _ *operatorv1alpha1.Istio, _ metav1.Condition, _ ...time.Duration) (ctrl.Result, error) {
-	return s.result, s.err
-}

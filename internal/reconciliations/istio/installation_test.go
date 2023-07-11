@@ -271,7 +271,7 @@ var _ = Describe("Installation reconciliation", func() {
 			Name:            "default",
 			ResourceVersion: "1",
 			Annotations: map[string]string{
-				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
+				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"NumTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
 			},
 		},
 			Spec: operatorv1alpha1.IstioSpec{

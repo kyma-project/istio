@@ -113,21 +113,7 @@ func CheckIstioVersion(currentIstioVersionString, targetIstioVersionString strin
 	return nil
 }
 
-func amongOneMinor(current, target semver.Version) bool {
-	return current.Minor == target.Minor || current.Minor-target.Minor == -1 || current.Minor-target.Minor == 1
-}
-
-func restartIngressGateway(ctx context.Context, k8sClient client.Client) error {
-	deployment := appsv1.Deployment{}
-	err := k8sClient.Get(ctx, types.NamespacedName{Namespace: ingressgatewayNamespace, Name: ingressgatewayDeploymentName}, &deployment)
-	if err != nil {
-		return err
-	}
-	deployment.Spec.Template.Annotations = common.AddRestartAnnotation(deployment.Spec.Template.Annotations)
-	return k8sClient.Update(ctx, &deployment)
-}
-
-func ingressGatewayNeedsRestart(istioCR operatorv1alpha1.Istio) (bool, error) {
+func IngressGatewayNeedsRestart(istioCR operatorv1alpha1.Istio) (bool, error) {
 	lastAppliedConfig, err := GetLastAppliedConfiguration(istioCR)
 	if err != nil {
 		return false, err
@@ -143,4 +129,18 @@ func ingressGatewayNeedsRestart(istioCR operatorv1alpha1.Istio) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func RestartIngressGateway(ctx context.Context, k8sClient client.Client) error {
+	deployment := appsv1.Deployment{}
+	err := k8sClient.Get(ctx, types.NamespacedName{Namespace: ingressgatewayNamespace, Name: ingressgatewayDeploymentName}, &deployment)
+	if err != nil {
+		return err
+	}
+	deployment.Spec.Template.Annotations = common.AddRestartAnnotation(deployment.Spec.Template.Annotations)
+	return k8sClient.Update(ctx, &deployment)
+}
+
+func amongOneMinor(current, target semver.Version) bool {
+	return current.Minor == target.Minor || current.Minor-target.Minor == -1 || current.Minor-target.Minor == 1
 }

@@ -1,16 +1,12 @@
 package istio_test
 
 import (
-	"fmt"
-	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
-	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
 	"context"
-	"encoding/json"
+	"fmt"
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
-	"github.com/kyma-project/istio/operator/internal/ingressgateway"
+	istio "github.com/kyma-project/istio/operator/internal/reconciliations/istio"
+
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/types"
 
@@ -28,111 +24,119 @@ const (
 	lastAppliedConfiguration string = "operator.kyma-project.io/lastAppliedConfiguration"
 )
 
-var _ = Describe("CR configuration", func() {
-	Context("lastAppliedConfiguration", func() {
-		It("should update lastAppliedConfiguration and is able to retrieve it back from annotation", func() {
+var _ = Describe("Istio Configuration", func() {
+	Context("LastAppliedConfiguration", func() {
+		It("should update lastAppliedConfiguration and is able to unmarshal it back from annotation", func() {
 			// given
 			numTrustedProxies := 1
-			istio := operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{
-				Config: operatorv1alpha1.Config{NumTrustedProxies: &numTrustedProxies},
-			}}
+			istioCR := operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{Config: operatorv1alpha1.Config{NumTrustedProxies: &numTrustedProxies}}}
 
 			// when
-			updatedCR, err := istio.UpdateLastAppliedConfiguration(istio, mockIstioTag)
+			updatedCR, err := istio.UpdateLastAppliedConfiguration(istioCR, mockIstioTag)
 
 			// then
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(updatedCR.Annotations).To(Not(BeEmpty()))
-			Expect(updatedCR.Annotations[lastAppliedConfiguration]).To(Equal(fmt.Sprintf(`{"config":{},"IstioTag":"%s"}`, mockIstioTag)))
+			Expect(updatedCR.Annotations[lastAppliedConfiguration]).To(Equal(fmt.Sprintf(`{"config":{"numTrustedProxies":1},"IstioTag":"%s"}`, mockIstioTag)))
 
 			appliedConfig, err := istio.GetLastAppliedConfiguration(updatedCR)
 
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(appliedConfig.Config.NumTrustedProxies).To(Equal(1))
+			Expect(*appliedConfig.Config.NumTrustedProxies).To(Equal(1))
 		})
 	})
 })
 
-var _ = Describe("IngressGateway", func() {
-	istio := operatorv1alpha1.Istio{}
-	client := createFakeClient()
-
-	Context("NeedsRestart with lastAppliedConfig", func() {
-
-		It("should restart when CR numTrustedProxies is 2 and CM has configuration for 3", func() {
+var _ = Describe("Ingress Gateway", func() {
+	Context("IngressGatewayNeedsRestart", func() {
+		It("should restart when CR numTrustedProxies is 2 and in lastAppliedConfig is 1", func() {
 			//given
+			oldNumTrustedProxies := 1
+
+			istioCR := operatorv1alpha1.Istio{}
+			istioCR.Spec.Config.NumTrustedProxies = &oldNumTrustedProxies
+
+			updatedCR, err := istio.UpdateLastAppliedConfiguration(istioCR, mockIstioTag)
+			Expect(err).ShouldNot(HaveOccurred())
+
 			newNumTrustedProxies := 2
-			istio.Spec.Config.NumTrustedProxies = &newNumTrustedProxies
-			applyLastAppliedConfiguration(istio, spec, mockIstioTag)
+			updatedCR.Spec.Config.NumTrustedProxies = &newNumTrustedProxies
 
 			//when
-			does, err := ingressgateway.NeedsRestart(context.TODO(), client, istio)
+			does, err := istio.IngressGatewayNeedsRestart(updatedCR)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(does).To(BeTrue())
 		})
 
-		It("should restart when CR numTrustedProxies is nil and CM has configuration for numTrustedProxies:3", func() {
+		It("should restart when CR numTrustedProxies is nil and in lastAppliedConfig is 1", func() {
 			//given
-			istio.Spec.Config.NumTrustedProxies = nil
+			oldNumTrustedProxies := 1
+
+			istioCR := operatorv1alpha1.Istio{}
+			istioCR.Spec.Config.NumTrustedProxies = &oldNumTrustedProxies
+
+			updatedCR, err := istio.UpdateLastAppliedConfiguration(istioCR, mockIstioTag)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			updatedCR.Spec.Config.NumTrustedProxies = nil
 
 			//when
-			does, err := ingressgateway.NeedsRestart(context.TODO(), client, istio)
+			does, err := istio.IngressGatewayNeedsRestart(updatedCR)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(does).To(BeTrue())
 		})
 
-		It("should not restart when CR numTrustedProxies is 3 and CM has configuration for numTrustedProxies:3", func() {
+		It("should restart when CR numTrustedProxies is 1 and in lastAppliedConfig is nil", func() {
 			//given
-			sameNumTrustedProxies := 3
-			istio.Spec.Config.NumTrustedProxies = &sameNumTrustedProxies
+			istioCR := operatorv1alpha1.Istio{}
+
+			updatedCR, err := istio.UpdateLastAppliedConfiguration(istioCR, mockIstioTag)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			newNumTrustedProxies := 1
+			updatedCR.Spec.Config.NumTrustedProxies = &newNumTrustedProxies
 
 			//when
-			does, err := ingressgateway.NeedsRestart(context.TODO(), client, istio)
+			does, err := istio.IngressGatewayNeedsRestart(updatedCR)
+
+			//then
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(does).To(BeTrue())
+		})
+
+		It("should not restart when CR numTrustedProxies is the same value as in lastAppliedConfig", func() {
+			//given
+			oldNumTrustedProxies := 2
+			istioCR := operatorv1alpha1.Istio{}
+			istioCR.Spec.Config.NumTrustedProxies = &oldNumTrustedProxies
+
+			updatedCR, err := istio.UpdateLastAppliedConfiguration(istioCR, mockIstioTag)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			newNumTrustedProxies := 2
+			updatedCR.Spec.Config.NumTrustedProxies = &newNumTrustedProxies
+
+			//when
+			does, err := istio.IngressGatewayNeedsRestart(updatedCR)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(does).To(BeFalse())
 		})
-	})
 
-	Context("NeedsRestart without lastAppliedConfig", func() {
-		client := createFakeClient()
-
-		It("should restart when CR has numTrustedProxy configured, and CM doesn't have configuration for numTrustedProxies", func() {
+		It("should restart when CR has numTrustedProxy configured and lastAppliedConfig annotation is not set", func() {
 			//given
-			newNumTrustedProxies := 2
-			istio.Spec.Config.NumTrustedProxies = &newNumTrustedProxies
+			newNumTrustedProxies := 1
+
+			istioCR := operatorv1alpha1.Istio{}
+			istioCR.Spec.Config.NumTrustedProxies = &newNumTrustedProxies
 
 			//when
-			does, err := ingressgateway.NeedsRestart(context.TODO(), client, istio)
-
-			//then
-			Expect(err).To(Not(HaveOccurred()))
-			Expect(does).To(BeTrue())
-		})
-
-		It("should not restart when CR doesn't configure numTrustedProxies, and CM doesn't have configuration for numTrustedProxies", func() {
-			//given
-			istio.Spec.Config.NumTrustedProxies = nil
-
-			//when
-			does, err := ingressgateway.NeedsRestart(context.TODO(), client, istio)
-
-			//then
-			Expect(err).To(Not(HaveOccurred()))
-			Expect(does).To(BeFalse())
-		})
-
-		It("should restart when there's no CM", func() {
-			//given
-			client := createFakeClient()
-
-			//when
-			does, err := ingressgateway.NeedsRestart(context.TODO(), client, istio)
+			does, err := istio.IngressGatewayNeedsRestart(istioCR)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))
@@ -140,28 +144,31 @@ var _ = Describe("IngressGateway", func() {
 		})
 	})
 
-	Context("RestartDeployment", func() {
-		client := createFakeClient()
+	Context("RestartIngressGateway", func() {
+		client := createFakeClientWithDeployment()
 
 		It("should set annotation on Istio IG deployment when restart is needed", func() {
 			//given
-			istio.Spec.Config.NumTrustedProxies = nil
+			newNumTrustedProxies := 1
+
+			istioCR := operatorv1alpha1.Istio{}
+			istioCR.Spec.Config.NumTrustedProxies = &newNumTrustedProxies
 
 			//when
-			err := ingressgateway.RestartDeployment(context.TODO(), client)
+			err := istio.RestartIngressGateway(context.TODO(), client)
 			Expect(err).To(Not(HaveOccurred()))
 
-			dep := appsv1.Deployment{}
-			err = client.Get(context.TODO(), types.NamespacedName{Namespace: "istio-system", Name: "istio-ingressgateway"}, &dep)
+			deployment := appsv1.Deployment{}
+			err = client.Get(context.TODO(), types.NamespacedName{Namespace: "istio-system", Name: "istio-ingressgateway"}, &deployment)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))
-			Expect(dep.Spec.Template.Annotations["reconciler.kyma-project.io/lastRestartDate"]).ToNot(BeEmpty())
+			Expect(deployment.Spec.Template.Annotations["istio-operator.kyma-project.io/restartedAt"]).ToNot(BeEmpty())
 		})
 	})
 })
 
-func createFakeClient() client.Client {
+func createFakeClientWithDeployment() client.Client {
 	deployment := appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway"}}
 
 	err := corev1.AddToScheme(scheme.Scheme)
@@ -170,19 +177,4 @@ func createFakeClient() client.Client {
 	Expect(err).ShouldNot(HaveOccurred())
 
 	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(&deployment).Build()
-}
-
-func applyLastAppliedConfiguration(istio *operatorv1alpha1.Istio, spec operatorv1alpha1.IstioSpec, istioTag string) error {
-	lastAppliedConfig := istio.AppliedConfig{
-		IstioSpec: spec,
-		IstioTag:  istioTag,
-	}
-
-	config, err := json.Marshal(lastAppliedConfig)
-	if err != nil {
-		return err
-	}
-
-	istio.Annotations[LastAppliedConfiguration] = string(config)
-	return nil
 }

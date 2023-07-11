@@ -24,9 +24,10 @@ However, if a resource is a job, a ReplicaSet that is not managed by any deploym
 
 ## Status codes
 
-|   Code         | Description                                  |
-|:--------------:|:---------------------------------------------|
-|  `Ready`       | Controller finished reconciliation.          |
-|  `Processing`  | Controller is installing or upgrading Istio. |
-|  `Deleting`    | Controller is uninstalling Istio.            |
-|  `Error`       | An error occurred during reconciliation.     |
+|     Code     | Description                                  |
+|:------------:|:---------------------------------------------|
+|   `Ready`    | Controller finished reconciliation.          |
+| `Processing` | Controller is installing or upgrading Istio. |
+|  `Deleting`  | Controller is uninstalling Istio.            |
+|   `Error`    | An error occurred during reconciliation.     |
+|  `Warning`   | Controller is misconfigured.                 |

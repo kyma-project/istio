@@ -51,7 +51,11 @@ func (DefaultStatusHandler) SetProcessing(ctx context.Context, description strin
 }
 
 func (DefaultStatusHandler) SetError(ctx context.Context, err described_errors.DescribedError, client client.Client, istioCR *operatorv1alpha1.Istio, condition metav1.Condition, retryTime ...time.Duration) (ctrl.Result, error) {
-	istioCR.Status.State = operatorv1alpha1.Error
+	if err.Level() == described_errors.Warning {
+		istioCR.Status.State = operatorv1alpha1.Warning
+	} else {
+		istioCR.Status.State = operatorv1alpha1.Error
+	}
 	istioCR.Status.Description = err.Description()
 	return update(ctx, client, istioCR, condition, retryTime...)
 }

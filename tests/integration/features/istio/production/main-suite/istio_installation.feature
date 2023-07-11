@@ -62,7 +62,7 @@ Feature: Installing and uninstalling Istio module
     And Namespace "istio-system" is "present"
     And Destination rule "customer-destination-rule" in namespace "default" with host "testing-svc.default.svc.cluster.local" exists
     When "Istio CR" "istio-sample" in namespace "default" is deleted
-    Then Istio CR "istio-sample" in namespace "default" has status "Error"
+    Then Istio CR "istio-sample" in namespace "default" has status "Warning"
     And Istio CR "istio-sample" in namespace "default" has description "Resources blocking deletion: DestinationRule:default/customer-destination-rule"
     And Istio CRDs "should" be present on cluster
     And Namespace "istio-system" is "present"

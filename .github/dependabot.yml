@@ -1,7 +1,7 @@
 version: 2
 updates:
   - package-ecosystem: "gomod"
-    directory: "/operator/"
+    directory: "/"
     labels:
       - "go"
       - "area/dependency"
@@ -11,7 +11,7 @@ updates:
       prefix: "gomod"
       include: "scope"
   - package-ecosystem: "docker"
-    directory: "/operator/"
+    directory: "/"
     labels:
       - "docker"
       - "area/dependency"
@@ -20,3 +20,7 @@ updates:
     commit-message:
       prefix: "docker"
       include: "scope"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

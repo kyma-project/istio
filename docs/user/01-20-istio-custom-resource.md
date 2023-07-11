@@ -39,4 +39,4 @@ This table lists all the possible parameters of the given resource together with
 
 | Parameter | Type | Description                                                                                                                       |
 | ---- | ----------- |-----------------------------------------------------------------------------------------------------------------------------------|
-| **state** (required) | string | Signifies the current state of **CustomObject**. Its value can be either `Ready`, `Processing`, `Error`, `Warning` or `Deleting`. |
+| **state** (required) | string | Signifies the current state of **CustomObject**. Its value can be either `Ready`, `Processing`, `Error`, `Warning`, or `Deleting`. |

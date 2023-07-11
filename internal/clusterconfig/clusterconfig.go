@@ -23,7 +23,7 @@ const (
 	Evaluation
 	Production
 
-	ProductionClusterCpuThreshold      int64 = 4
+	ProductionClusterCpuThreshold      int64 = 5
 	ProductionClusterMemoryThresholdGi int64 = 10
 
 	LocalKymaDomain = "*.local.kyma.dev"

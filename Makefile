@@ -284,7 +284,8 @@ istio-integration-test: install deploy
 
 .PHONY: isitio-upgrade-integration-test
 istio-upgrade-integration-test:
-	cd tests/integration && ./scripts/deploy-latest-release-to-cluster.sh && EXPORT_RESULT=true IMG=${IMG} go test -v -timeout 10m -run TestIstioUpgrade
+	# Increased TEST_REQUEST_TIMEOUT to 300s to avoid timeouts on newly created k3s clusters on Prow
+	cd tests/integration && ./scripts/deploy-latest-release-to-cluster.sh && TEST_REQUEST_TIMEOUT=300s && EXPORT_RESULT=true IMG=${IMG} go test -v -timeout 10m -run TestIstioUpgrade
 
 
 .PHONY: gardener-istio-integration-test

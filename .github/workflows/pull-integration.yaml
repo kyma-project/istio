@@ -17,6 +17,7 @@ permissions:
   contents: read
 
 jobs:
+
   k8s-compatibility-test:
     name: Kubernetes version compatibility check
     runs-on: ubuntu-latest
@@ -57,6 +58,7 @@ jobs:
           path: deprecations.txt
       - run: if [[ $(wc -l deprecations.txt | awk '{print $1}' ) != '0' ]]; then exit 1; fi
         name: Check that deprecations are empty
+
   istio-upgrade-integration-test:
     name: Istio upgrade test
     runs-on: ubuntu-latest

@@ -83,29 +83,33 @@ func TestIstioUpgrade(t *testing.T) {
 		DefaultContext: createDefaultContext(t),
 		Strict:         true,
 	}
+	runTestSuite(t, &goDogOptsUpgradeSuite, "Istio Upgrade")
+}
 
-	if os.Getenv("EXPORT_RESULT") == "true" {
-		goDogOptsUpgradeSuite.Format = "pretty,junit:junit-report.xml,cucumber:cucumber-report.json"
+func runTestSuite(t *testing.T, opts *godog.Options, suiteName string) {
+	if shouldExportResults() {
+		opts.Format = "pretty,junit:junit-report.xml,cucumber:cucumber-report.json"
 	}
-
 	suite := godog.TestSuite{
-		Name:                "istio",
+		Name:                suiteName,
 		ScenarioInitializer: upgradeInitScenario,
-		Options:             &goDogOptsUpgradeSuite,
+		Options:             opts,
 	}
 	testExitCode := suite.Run()
-
-	if os.Getenv("EXPORT_RESULT") == "true" {
-		err := generateReport("istio-upgrade")
-		if err != nil {
-			t.Errorf("error while generating report: %s", err)
-		}
-	}
-
 	println("Test exit code: ", testExitCode)
 	if testExitCode != 0 {
 		t.Fatalf("non-zero status returned, failed to run feature tests")
 	}
+	if shouldExportResults() {
+		err := generateReport(suiteName)
+		if err != nil {
+			t.Errorf("error while generating report: %s", err)
+		}
+	}
+}
+
+func shouldExportResults() bool {
+	return os.Getenv("EXPORT_RESULT") == "true"
 }
 
 func createDefaultContext(t *testing.T) context.Context {

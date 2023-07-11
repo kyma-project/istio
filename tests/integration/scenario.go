@@ -37,6 +37,7 @@ func initScenario(ctx *godog.ScenarioContext) {
 
 func upgradeInitScenario(ctx *godog.ScenarioContext) {
 
+	ctx.After(verifyIfControllerHasBeenRestarted)
 	ctx.After(testObjectsTearDown)
 	ctx.After(istioCrTearDown)
 

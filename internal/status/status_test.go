@@ -134,4 +134,27 @@ var _ = Describe("SetError", func() {
 		Expect(cr.Status.State).To(Equal(operatorv1alpha1.Error))
 		Expect(cr.Status.Description).To(Equal("Something: error happened"))
 	})
+
+	It("Should update Istio CR status to warning with description", func() {
+		// given
+		handler := status.NewDefaultStatusHandler()
+
+		cr := operatorv1alpha1.Istio{
+			ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+		}
+		k8sClient := createFakeClient(&cr)
+
+		describedError := described_errors.NewDescribedError(errors.New("error happened"), "Something").SetWarning()
+
+		// when
+		_, err := handler.SetError(context.TODO(), describedError, k8sClient, &cr, metav1.Condition{})
+
+		// then
+		Expect(err).ToNot(HaveOccurred())
+
+		err = k8sClient.Get(context.TODO(), types2.NamespacedName{Name: "test", Namespace: "default"}, &cr)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(cr.Status.State).To(Equal(operatorv1alpha1.Warning))
+		Expect(cr.Status.Description).To(Equal("Something: error happened"))
+	})
 })

@@ -8,7 +8,7 @@ spec:
     base:
       enabled: true
     cni:
-      enabled: true
+      enabled: false
       namespace: istio-system
       k8s:
         affinity:

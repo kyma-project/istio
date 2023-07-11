@@ -13,8 +13,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const restartAnnotationName = "istio-operator.kyma-project.io/restartedAt"
-
 func newRolloutAction(object actionObject) restartAction {
 	return restartAction{
 		run:    rolloutRun,

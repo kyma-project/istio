@@ -16,4 +16,4 @@ Feature: Upgrade Istio
     And Application "test-app" in namespace "default" has required version of proxy
     And "Deployment" "istiod" in namespace "istio-system" has required version and is ready
     And "Deployment" "istio-ingressgateway" in namespace "istio-system" has required version and is ready
-    And "DaemonSet" "Istio-cni-node" in namespace "istio-system" has required version and is ready
+    And "DaemonSet" "istio-cni-node" in namespace "istio-system" has required version and is ready

@@ -40,22 +40,6 @@ const (
 	testValue            string = "value"
 	istioDisclaimerKey   string = "istios.operator.kyma-project.io/managed-by-disclaimer"
 	istioDisclaimerValue string = "DO NOT EDIT - This resource is managed by Kyma.\nAny modifications are discarded and the resource is reverted to the original state."
-
-	istioConfigMap string = `
-accessLogEncoding: JSON
-defaultConfig:
-  discoveryAddress: istiod.istio-system.svc:15012
-  gatewayTopology:
-    numTrustedProxies: 1
-  proxyMetadata: {}
-  tracing:
-    sampling: 100
-    zipkin:
-      address: zipkin.kyma-system:9411
-enableTracing: true
-rootNamespace: istio-system
-trustDomain: cluster.local
-`
 )
 
 var istioTag = fmt.Sprintf("%s-%s", istioVersion, istioImageBase)
@@ -280,13 +264,10 @@ var _ = Describe("Installation reconciliation", func() {
 				},
 			},
 		}
-		data := make(map[string]string)
-		data["mesh"] = istioConfigMap
-		istioCM := &corev1.ConfigMap{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio"}, Data: data}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
 		istioNamespace := createNamespace("istio-system")
 		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway"}}
-		c := createFakeClient(&istioCr, istiod, istioNamespace, igwDeployment, istioCM)
+		c := createFakeClient(&istioCr, istiod, istioNamespace, igwDeployment)
 
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
@@ -332,13 +313,10 @@ var _ = Describe("Installation reconciliation", func() {
 				},
 			},
 		}
-		data := make(map[string]string)
-		data["mesh"] = istioConfigMap
-		istioCM := &corev1.ConfigMap{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio"}, Data: data}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
 		istioNamespace := createNamespace("istio-system")
 		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway"}}
-		c := createFakeClient(&istioCr, istiod, istioNamespace, igwDeployment, istioCM)
+		c := createFakeClient(&istioCr, istiod, istioNamespace, igwDeployment)
 
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{

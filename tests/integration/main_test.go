@@ -46,33 +46,12 @@ func TestIstioMain(t *testing.T) {
 		Strict:         true,
 	}
 
-	if os.Getenv("EXPORT_RESULT") == "true" {
-		goDogOpts.Format = "pretty,junit:junit-report.xml,cucumber:cucumber-report.json"
-	}
-
-	suite := godog.TestSuite{
-		Name:                "istio",
-		ScenarioInitializer: initScenario,
-		Options:             &goDogOpts,
-	}
-	testExitCode := suite.Run()
-
-	if os.Getenv("EXPORT_RESULT") == "true" {
-		err := generateReport("istio-installation")
-		if err != nil {
-			t.Errorf("error while generating report: %s", err)
-		}
-	}
-
-	println("Test exit code: ", testExitCode)
-	if testExitCode != 0 {
-		t.Fatalf("non-zero status returned, failed to run feature tests")
-	}
+	runTestSuite(t, &goDogOpts, "Istio Install")
 }
 
 func TestIstioUpgrade(t *testing.T) {
 	upgradePath := productionUpgradeSuitePath
-	goDogOptsUpgradeSuite := godog.Options{
+	goDogOpts := godog.Options{
 		Output: colors.Colored(os.Stdout),
 		Format: "pretty",
 		Paths:  []string{upgradePath},
@@ -83,19 +62,22 @@ func TestIstioUpgrade(t *testing.T) {
 		DefaultContext: createDefaultContext(t),
 		Strict:         true,
 	}
-	runTestSuite(t, &goDogOptsUpgradeSuite, "Istio Upgrade")
+
+	runTestSuite(t, &goDogOpts, "Istio Upgrade")
 }
 
 func runTestSuite(t *testing.T, opts *godog.Options, suiteName string) {
 	if shouldExportResults() {
 		opts.Format = "pretty,junit:junit-report.xml,cucumber:cucumber-report.json"
 	}
+
 	suite := godog.TestSuite{
 		Name:                suiteName,
 		ScenarioInitializer: upgradeInitScenario,
 		Options:             opts,
 	}
 	testExitCode := suite.Run()
+
 	println("Test exit code: ", testExitCode)
 	if testExitCode != 0 {
 		t.Fatalf("non-zero status returned, failed to run feature tests")

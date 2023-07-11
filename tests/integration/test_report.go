@@ -92,7 +92,6 @@ func generateReport(suiteName string) error {
 				return err
 			}
 		}
-	
 	}
 	return nil
 }

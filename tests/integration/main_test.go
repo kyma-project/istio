@@ -34,7 +34,7 @@ func TestIstioMain(t *testing.T) {
 		}
 	}
 
-	goDogOptsMainSuite := godog.Options{
+	goDogOpts := godog.Options{
 		Output: colors.Colored(os.Stdout),
 		Format: "pretty",
 		Paths:  []string{featurePath},
@@ -47,26 +47,26 @@ func TestIstioMain(t *testing.T) {
 	}
 
 	if os.Getenv("EXPORT_RESULT") == "true" {
-		goDogOptsMainSuite.Format = "pretty,junit:junit-main-report.xml,cucumber:cucumber-report.json"
+		goDogOpts.Format = "pretty,junit:junit-report.xml,cucumber:cucumber-report.json"
 	}
 
-	mainSuite := godog.TestSuite{
-		Name:                "istio-main-suite",
+	suite := godog.TestSuite{
+		Name:                "istio",
 		ScenarioInitializer: initScenario,
-		Options:             &goDogOptsMainSuite,
+		Options:             &goDogOpts,
 	}
-	mainSuiteTestExitCode := mainSuite.Run()
+	testExitCode := suite.Run()
 
 	if os.Getenv("EXPORT_RESULT") == "true" {
-		err := generateReport("istio-main-suite")
+		err := generateReport("istio-installation")
 		if err != nil {
 			t.Errorf("error while generating report: %s", err)
 		}
 	}
 
-	println("Main suite test exit code: ", mainSuiteTestExitCode)
-	if mainSuiteTestExitCode != 0 {
-		t.Fatalf("non-zero status returned, failed to run feature tests (main suite)")
+	println("Test exit code: ", testExitCode)
+	if testExitCode != 0 {
+		t.Fatalf("non-zero status returned, failed to run feature tests")
 	}
 }
 
@@ -85,26 +85,26 @@ func TestIstioUpgrade(t *testing.T) {
 	}
 
 	if os.Getenv("EXPORT_RESULT") == "true" {
-		goDogOptsUpgradeSuite.Format = "pretty,junit:junit-upgrade-report.xml,cucumber:cucumber-report.json"
+		goDogOptsUpgradeSuite.Format = "pretty,junit:junit-report.xml,cucumber:cucumber-report.json"
 	}
 
-	upgradeSuite := godog.TestSuite{
-		Name:                "istio-upgrade-suite",
+	suite := godog.TestSuite{
+		Name:                "istio",
 		ScenarioInitializer: upgradeInitScenario,
 		Options:             &goDogOptsUpgradeSuite,
 	}
-	upgradeSuiteTestExitCode := upgradeSuite.Run()
+	testExitCode := suite.Run()
 
 	if os.Getenv("EXPORT_RESULT") == "true" {
-		err := generateReport("istio-upgrade-suite")
+		err := generateReport("istio-upgrade")
 		if err != nil {
 			t.Errorf("error while generating report: %s", err)
 		}
 	}
 
-	println("Upgrade suite test exit code: ", upgradeSuiteTestExitCode)
-	if upgradeSuiteTestExitCode != 0 {
-		t.Fatalf("non-zero status returned, failed to run feature tests (upgrade-suite suite)")
+	println("Test exit code: ", testExitCode)
+	if testExitCode != 0 {
+		t.Fatalf("non-zero status returned, failed to run feature tests")
 	}
 }
 

@@ -1042,7 +1042,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 	})
 
-	It("should not uninstall if there are not default Istio resources present", func() {
+	It("should not uninstall if there are Istio resources present", func() {
 		// given
 		now := metav1.NewTime(time.Now())
 		numTrustedProxies := 1

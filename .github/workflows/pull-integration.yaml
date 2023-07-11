@@ -31,11 +31,12 @@ jobs:
         with:
           cluster-name: "test-cluster-1"
           args: >-
-            --agents 1
+            --agents 2
             --image docker.io/rancher/k3s:v1.27.3-k3s1
             --port 80:80@loadbalancer
             --port 443:443@loadbalancer
             --k3s-arg "--disable=traefik@server:0"
+            --servers-memory=16g
       - uses: autotelic/action-wait-for-status-check@6556cf50c8fb6608412945382eae73581f56cbb4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}

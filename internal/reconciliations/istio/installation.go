@@ -122,9 +122,9 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 	} else if shouldDelete(istioCR) && hasInstallationFinalizer(istioCR) {
 		ctrl.Log.Info("Starting istio uninstall")
 
-		_, deleting_err := i.StatusHandler.SetDeleting(ctx, i.Client, &istioCR, metav1.Condition{})
-		if deleting_err != nil {
-			return istioCR, described_errors.NewDescribedError(deleting_err, "Could not set status to deleting")
+		_, deletingErr := i.StatusHandler.SetDeleting(ctx, i.Client, &istioCR, metav1.Condition{})
+		if deletingErr != nil {
+			return istioCR, described_errors.NewDescribedError(deletingErr, "Could not set status to deleting")
 		}
 
 		istioResourceFinder, err := resources.NewIstioResourcesFinderFromConfigYaml(ctx, i.Client, ctrl.Log, istioResourceListPath)
@@ -140,8 +140,9 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 		if len(clientResources) > 0 {
 			clientResourcesList := strings.Join(
 				funk.Map(clientResources, func(a resources.Resource) string { return fmt.Sprintf("%s:%s/%s", a.GVK.Kind, a.Namespace, a.Name) }).([]string), ";")
+
 			return istioCR, described_errors.NewDescribedError(fmt.Errorf("could not delete Istio module instance since there are %d customer resources present", len(clientResources)),
-				fmt.Sprintf("Resources blocking deletion: %s", clientResourcesList)).DisableErrorWrap()
+				fmt.Sprintf("Resources blocking deletion: %s", clientResourcesList)).DisableErrorWrap().SetWarning()
 		}
 
 		err = i.IstioClient.Uninstall(ctx)

@@ -12,8 +12,6 @@ on:
       - 'CODEOWNERS'
       - 'sec-scanners-config.yaml'
       - './github/dependabot.yml'
-permissions:
-  contents: read
 
 jobs:
 

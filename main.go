@@ -70,7 +70,6 @@ func init() { //nolint:gochecknoinits
 	//+kubebuilder:scaffold:scheme
 }
 
-func main() {
 	flagVar := defineFlagVar()
 	opts := zap.Options{
 		Development: true,

@@ -26,6 +26,7 @@ const (
 )
 
 func TestIstioMain(t *testing.T) {
+	suiteName := "Istio Install"
 	featurePath := productionMainSuitePath
 	ev, ok := os.LookupEnv(evaluationEnv)
 	if ok {
@@ -34,6 +35,16 @@ func TestIstioMain(t *testing.T) {
 		}
 	}
 
+	runTestSuite(t, initScenario, featurePath, suiteName)
+}
+
+func TestIstioUpgrade(t *testing.T) {
+	suiteName := "Istio Upgrade"
+	featurePath := productionUpgradeSuitePath
+	runTestSuite(t, upgradeInitScenario, featurePath, suiteName)
+}
+
+func runTestSuite(t *testing.T, scenarioInit func(ctx *godog.ScenarioContext), featurePath string, suiteName string) {
 	goDogOpts := godog.Options{
 		Output: colors.Colored(os.Stdout),
 		Format: "pretty",
@@ -45,36 +56,14 @@ func TestIstioMain(t *testing.T) {
 		DefaultContext: createDefaultContext(t),
 		Strict:         true,
 	}
-
-	runTestSuite(t, &goDogOpts, "Istio Install")
-}
-
-func TestIstioUpgrade(t *testing.T) {
-	upgradePath := productionUpgradeSuitePath
-	goDogOpts := godog.Options{
-		Output: colors.Colored(os.Stdout),
-		Format: "pretty",
-		Paths:  []string{upgradePath},
-		// Concurrency must be set to 1, as the tests modify the global cluster state and can't be isolated.
-		Concurrency: 1,
-		// We want to randomize the scenario order to avoid any implicit dependencies between scenarios.
-		Randomize:      time.Now().UTC().UnixNano(),
-		DefaultContext: createDefaultContext(t),
-		Strict:         true,
-	}
-
-	runTestSuite(t, &goDogOpts, "Istio Upgrade")
-}
-
-func runTestSuite(t *testing.T, opts *godog.Options, suiteName string) {
 	if shouldExportResults() {
-		opts.Format = "pretty,junit:junit-report.xml,cucumber:cucumber-report.json"
+		goDogOpts.Format = "pretty,junit:junit-report.xml,cucumber:cucumber-report.json"
 	}
 
 	suite := godog.TestSuite{
 		Name:                suiteName,
-		ScenarioInitializer: upgradeInitScenario,
-		Options:             opts,
+		ScenarioInitializer: scenarioInit,
+		Options:             &goDogOpts,
 	}
 	testExitCode := suite.Run()
 

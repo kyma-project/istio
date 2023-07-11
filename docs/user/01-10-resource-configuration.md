@@ -4,7 +4,7 @@ The Istio module provides baseline values for the Istio installation. Those valu
 
 ## Cluster-based default configuration
 
-The Istio module installs Istio with a configuration that depends on the cluster capabilities. If your cluster has less than 4 total virtual CPU cores or its total memory capacity is less than 10 Gigabytes, the default setup for resources and autoscaling is lighter. If your cluster exceeds both of these thresholds, Istio is installed with the higher resource configuration.
+The Istio module installs Istio with a configuration that depends on the cluster capabilities. If your cluster has less than 5 total virtual CPU cores or its total memory capacity is less than 17 Gigabytes, the default setup for resources and autoscaling is lighter. If your cluster exceeds both of these thresholds, Istio is installed with the higher resource configuration.
 
 ### Default resource configuration for larger clusters
 

@@ -173,7 +173,7 @@ var _ = Describe("EvaluateClusterSize", func() {
 			},
 			Status: corev1.NodeStatus{
 				Capacity: map[corev1.ResourceName]resource.Quantity{
-					"cpu":    *resource.NewMilliQuantity(clusterconfig.ProductionClusterCpuThreshold-1, resource.DecimalSI),
+					"cpu":    *resource.NewQuantity(clusterconfig.ProductionClusterCpuThreshold-1, resource.DecimalSI),
 					"memory": *resource.NewScaledQuantity(int64(32), resource.Giga),
 				},
 			},

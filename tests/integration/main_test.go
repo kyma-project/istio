@@ -51,14 +51,14 @@ func TestIstioMain(t *testing.T) {
 	}
 
 	mainSuite := godog.TestSuite{
-		Name:                "istio",
+		Name:                "istio-main-suite",
 		ScenarioInitializer: initScenario,
 		Options:             &goDogOptsMainSuite,
 	}
 	mainSuiteTestExitCode := mainSuite.Run()
 
 	if os.Getenv("EXPORT_RESULT") == "true" {
-		err := generateReport("istio-installation")
+		err := generateReport("istio-main-suite")
 		if err != nil {
 			t.Errorf("error while generating report: %s", err)
 		}
@@ -96,7 +96,7 @@ func TestIstioUpgrade(t *testing.T) {
 	upgradeSuiteTestExitCode := upgradeSuite.Run()
 
 	if os.Getenv("EXPORT_RESULT") == "true" {
-		err := generateReport("istio-upgrade")
+		err := generateReport("istio-upgrade-suite")
 		if err != nil {
 			t.Errorf("error while generating report: %s", err)
 		}

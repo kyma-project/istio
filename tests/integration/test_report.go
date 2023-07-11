@@ -82,6 +82,10 @@ func generateReport(suiteName string) error {
 		}
 
 		_, err = copyReport("./junit-main-report.xml", fmt.Sprintf("%s/junit-main-report-%s.xml", artifactsDir, suiteName))
+		if err != nil {
+			return err
+		}
+	
 		_, err = copyReport("./junit-upgrade-report.xml", fmt.Sprintf("%s/junit-upgrade-report-%s.xml", artifactsDir, suiteName))
 		if err != nil {
 			return err

@@ -39,4 +39,5 @@ Feature: Configuration of Istio module
     And Request with header X-Forwarded-For with value "10.2.1.1,10.0.0.1" sent to httpbin should return X-Envoy-External-Address with value "10.0.0.1"
     When Template value "NumTrustedProxies" is set to "2"
     And Istio CR "istio-sample" is updated in namespace "default"
+    And Istio CR "istio-sample" in namespace "default" has status "Ready"
     Then Request with header X-Forwarded-For with value "10.2.1.1,10.0.0.1" sent to httpbin should return X-Envoy-External-Address with value "10.2.1.1"

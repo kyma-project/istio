@@ -1,21 +1,15 @@
-name: Main
+name: Main cache
 
 on:
   push:
     branches:
       - main
-    paths-ignore:
-      - 'docs/**'
-      - '**/*.md'
-      - 'tests/performance/**'
-      - 'OWNERS'
-      - 'CODEOWNERS'
-      - 'sec-scanners-config.yaml'
-      - './github/dependabot.yml'
+    paths:
+      - 'go.mod'
 
 jobs:
 
-  run-unit-tests:
+  build-cache:
     name: Build cache
     description: Build cache on main so it can be reused in branches.
     runs-on: ubuntu-latest

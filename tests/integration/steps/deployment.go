@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/avast/retry-go"
+	"github.com/docker/distribution/reference"
 	"github.com/kyma-project/istio/operator/controllers"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
+	"github.com/masterminds/semver"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -173,7 +175,7 @@ func ApplicationPodShouldHaveIstioProxy(ctx context.Context, appName, namespace,
 }
 
 func ApplicationPodShouldHaveIstioProxyInRequiredVersion(ctx context.Context, appName, namespace string) error {
-	const requiredProxyVersion = controllers.IstioVersion
+	requiredProxyVersion := strings.Join([]string{controllers.IstioVersion, controllers.IstioImageBase}, "-")
 
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
@@ -222,22 +224,15 @@ func ApplicationPodShouldHaveIstioProxyInRequiredVersion(ctx context.Context, ap
 
 }
 
-func getVersionFromImageName(name string) (string, error) {
-	tmp := strings.Split(name, "/")
-	if len(tmp) == 1 {
-		return "", fmt.Errorf("parsing istio proxy image name failed")
+func getVersionFromImageName(image string) (string, error) {
+	noVersion := ""
+	matches := reference.ReferenceRegexp.FindStringSubmatch(image)
+	if matches == nil || len(matches) < 3 {
+		return noVersion, fmt.Errorf("unable to parse container image reference: %s", image)
 	}
-
-	tmp = strings.Split(tmp[len(tmp)-1], ":")
-	if len(tmp) == 1 {
-		return "", fmt.Errorf("parsing istio proxy image name failed")
+	version, err := semver.NewVersion(matches[2])
+	if err != nil {
+		return noVersion, err
 	}
-
-	tmp = strings.Split(tmp[1], "-")
-	if len(tmp) == 1 {
-		return "", fmt.Errorf("parsing istio proxy image name failed")
-	}
-
-	v := tmp[0]
-	return v, nil
+	return version.String(), nil
 }

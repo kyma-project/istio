@@ -15,6 +15,7 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"strings"
 )
 
 type godogResourceMapping int
@@ -207,7 +208,7 @@ func ResourceNotPresent(ctx context.Context, kind string) error {
 	}, testcontext.GetRetryOpts()...)
 }
 func ResourceHasRequiredVersionAndIsReady(ctx context.Context, kind, name, namespace string) error {
-	const requiredVersion = controllers.IstioVersion
+	requiredVersion := strings.Join([]string{controllers.IstioVersion, controllers.IstioImageBase}, "-")
 
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {

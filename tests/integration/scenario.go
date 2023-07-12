@@ -55,8 +55,8 @@ func upgradeInitScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" is ready$`, steps.ResourceIsReady)
 	ctx.Step(`^Istio CR "([^"]*)" in namespace "([^"]*)" has status "([^"]*)"$`, steps.IstioCRInNamespaceHasStatus)
 	ctx.Step(`^Application "([^"]*)" in namespace "([^"]*)" has required version of proxy$`, steps.ApplicationPodShouldHaveIstioProxyInRequiredVersion)
-	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" has required version and is ready$`, steps.ResourceHasRequiredVersionAndIsReady)
-	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" has required version and is ready$`, steps.ResourceHasRequiredVersionAndIsReady)
-	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" has required version and is ready$`, steps.ResourceHasRequiredVersionAndIsReady)
+	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" has required version and is ready$`, steps.IstioResourceHasRequiredVersionAndIsReady)
+	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" has required version and is ready$`, steps.IstioResourceHasRequiredVersionAndIsReady)
+	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" has required version and is ready$`, steps.IstioResourceHasRequiredVersionAndIsReady)
 
 }

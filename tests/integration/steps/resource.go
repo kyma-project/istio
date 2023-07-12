@@ -207,7 +207,7 @@ func ResourceNotPresent(ctx context.Context, kind string) error {
 		return nil
 	}, testcontext.GetRetryOpts()...)
 }
-func ResourceHasRequiredVersionAndIsReady(ctx context.Context, kind, name, namespace string) error {
+func IstioResourceHasRequiredVersionAndIsReady(ctx context.Context, kind, name, namespace string) error {
 	requiredVersion := strings.Join([]string{controllers.IstioVersion, controllers.IstioImageBase}, "-")
 
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
@@ -225,7 +225,7 @@ func ResourceHasRequiredVersionAndIsReady(ctx context.Context, kind, name, names
 		default:
 			return godog.ErrUndefined
 		}
-		err := k8sClient.Get(context.TODO(), client.ObjectKey{Namespace: namespace, Name: name}, object)
+		err := k8sClient.Get(ctx, client.ObjectKey{Namespace: namespace, Name: name}, object)
 		if err != nil {
 			return err
 		}
@@ -238,7 +238,7 @@ func ResourceHasRequiredVersionAndIsReady(ctx context.Context, kind, name, names
 					return err
 				}
 				if deployedVersion != requiredVersion {
-					return fmt.Errorf("resource %s has version %s, but required %s", name, deployedVersion, requiredVersion)
+					return fmt.Errorf("istio resource %s:%s has version %s, but required %s", name, kind, deployedVersion, requiredVersion)
 				}
 			}
 			if object.(*v1.Deployment).Status.Replicas != object.(*v1.Deployment).Status.ReadyReplicas {
@@ -252,7 +252,7 @@ func ResourceHasRequiredVersionAndIsReady(ctx context.Context, kind, name, names
 					return err
 				}
 				if deployedVersion != requiredVersion {
-					return fmt.Errorf("resource %s has version %s, but required %s", name, deployedVersion, requiredVersion)
+					return fmt.Errorf("istio resource %s:%s has version %s, but required %s", name, kind, deployedVersion, requiredVersion)
 				}
 			}
 			if object.(*v1.DaemonSet).Status.NumberReady != object.(*v1.DaemonSet).Status.DesiredNumberScheduled {

@@ -8,7 +8,7 @@ require (
 	github.com/cucumber/godog v0.12.6
 	github.com/docker/distribution v2.8.2+incompatible
 	github.com/go-logr/logr v1.2.4
-	github.com/imdario/mergo v0.3.13
+	github.com/imdario/mergo v0.3.16
 	github.com/masterminds/semver v1.5.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/onsi/ginkgo/v2 v2.11.0

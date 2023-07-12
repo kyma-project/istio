@@ -182,7 +182,7 @@ func ApplicationPodShouldHaveIstioProxyInRequiredVersion(ctx context.Context, ap
 
 	var podList corev1.PodList
 	return retry.Do(func() error {
-		err := k8sClient.List(context.TODO(), &podList, &client.ListOptions{
+		err := k8sClient.List(ctx, &podList, &client.ListOptions{
 			Namespace: namespace,
 			LabelSelector: labels.SelectorFromSet(map[string]string{
 				"app": appName,

@@ -3,12 +3,12 @@ module github.com/kyma-project/istio/operator
 go 1.20
 
 require (
+	dario.cat/mergo v1.0.0
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/coreos/go-semver v0.3.1
 	github.com/cucumber/godog v0.12.6
 	github.com/docker/distribution v2.8.2+incompatible
 	github.com/go-logr/logr v1.2.4
-	github.com/imdario/mergo v0.3.16
 	github.com/masterminds/semver v1.5.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/onsi/ginkgo/v2 v2.11.0
@@ -114,6 +114,7 @@ require (
 	github.com/hashicorp/golang-lru/v2 v2.0.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/huandu/xstrings v1.4.0 // indirect
+	github.com/imdario/mergo v0.3.13 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jonboulle/clockwork v0.3.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect

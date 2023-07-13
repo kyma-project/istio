@@ -127,7 +127,7 @@ which is used to apply changes to the Istio installation. The applied `IstioOper
 The component also detects changes in the `numTrustedProxies` configuration and restarts the Istio Ingress Gateway accordingly. Whenever a change in the `numTrustedProxies` configuration is detected, the Pods in the `istio-system/istio-ingressgateway` deployment are restarted. To determine the current state of the applied Istio configuration, the component reads the `operator.kyma-project.io/lastAppliedConfiguration` annotation from the Istio CR. This annotation is updated after a successful `IstioInstallationReconciliation` run.
 
 - Restart on `numTrustedProxies` change. We restart the `istio-system/istio-ingressgateway` deployment pods each time we detect change in `numTrustedProxies` configuration. The actual state of the applied Istio configuration is read from Istio CR's `operator.kyma-project.io/lastAppliedConfiguration` annotation. This annotation is updated at the end of a successful `IstioInstallationReconciliation` run.
-For resetting the deployment we apply an annotation named `istio-operator.kyma-project.io/restartedAt` with current timestamp in the `spec.template.annotations` of the `istio-system/istio-ingressgateway` deployment.
+To reset the deployment, apply the annotation `istio-operator.kyma-project.io/restartedAt` with a current timestamp in **spec.template.annotations** of the `istio-system/istio-ingressgateway` deployment.
 
 ##### IstioClient
 

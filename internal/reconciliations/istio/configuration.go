@@ -139,7 +139,10 @@ func RestartIngressGatewayIfNeeded(ctx context.Context, k8sClient client.Client,
 			return err
 		}
 		deployment.Spec.Template.Annotations = common.AddRestartAnnotation(deployment.Spec.Template.Annotations)
-		k8sClient.Update(ctx, &deployment)
+		err = k8sClient.Update(ctx, &deployment)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

@@ -84,11 +84,6 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 			return istioCR, described_errors.NewDescribedError(err, "Could not get configuration from Istio Operator file")
 		}
 
-		ingressGatewayNeedsRestart, err := IngressGatewayNeedsRestart(istioCR)
-		if err != nil {
-			return istioCR, described_errors.NewDescribedError(err, "Could not check if Istio GW deployment needs restart")
-		}
-
 		err = i.IstioClient.Install(mergedIstioOperatorPath)
 		if err != nil {
 			return istioCR, described_errors.NewDescribedError(err, "Could not install Istio")
@@ -110,12 +105,9 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 
 		ctrl.Log.Info("Istio install completed")
 
-		if ingressGatewayNeedsRestart {
-			ctrl.Log.Info("Restarting istio-ingressgateway")
-			err = RestartIngressGateway(ctx, i.Client)
-			if err != nil {
-				return istioCR, described_errors.NewDescribedError(err, "Could not restart Istio GW deployment")
-			}
+		err = RestartIngressGatewayIfNeeded(ctx, i.Client, istioCR)
+		if err != nil {
+			return istioCR, described_errors.NewDescribedError(err, "Could not restart Istio Ingress GW deployment")
 		}
 
 		// We use the installation finalizer to track if the deletion was already executed so can make the uninstallation process more reliable.

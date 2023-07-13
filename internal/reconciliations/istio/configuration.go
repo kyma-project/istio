@@ -10,6 +10,7 @@ import (
 	"github.com/kyma-project/istio/operator/pkg/lib/common"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/types"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -18,7 +19,7 @@ const (
 	ingressgatewayDeploymentName string = "istio-ingressgateway"
 )
 
-type AppliedConfig struct {
+type appliedConfig struct {
 	operatorv1alpha1.IstioSpec
 	IstioTag string
 }
@@ -39,7 +40,7 @@ func shouldInstall(istio operatorv1alpha1.Istio, istioTag string) (shouldInstall
 		return true, nil
 	}
 
-	var lastAppliedConfig AppliedConfig
+	var lastAppliedConfig appliedConfig
 	if err := json.Unmarshal([]byte(lastAppliedConfigAnnotation), &lastAppliedConfig); err != nil {
 		return false, err
 	}
@@ -58,7 +59,7 @@ func UpdateLastAppliedConfiguration(istio operatorv1alpha1.Istio, istioTag strin
 		istio.Annotations = map[string]string{}
 	}
 
-	newAppliedConfig := AppliedConfig{
+	newAppliedConfig := appliedConfig{
 		IstioSpec: istio.Spec,
 		IstioTag:  istioTag,
 	}
@@ -73,8 +74,8 @@ func UpdateLastAppliedConfiguration(istio operatorv1alpha1.Istio, istioTag strin
 	return istio, nil
 }
 
-func GetLastAppliedConfiguration(istio operatorv1alpha1.Istio) (AppliedConfig, error) {
-	lastAppliedConfig := AppliedConfig{}
+func GetLastAppliedConfiguration(istio operatorv1alpha1.Istio) (appliedConfig, error) {
+	lastAppliedConfig := appliedConfig{}
 	if len(istio.Annotations) == 0 {
 		return lastAppliedConfig, nil
 	}
@@ -113,32 +114,34 @@ func CheckIstioVersion(currentIstioVersionString, targetIstioVersionString strin
 	return nil
 }
 
-func IngressGatewayNeedsRestart(istioCR operatorv1alpha1.Istio) (bool, error) {
+func RestartIngressGatewayIfNeeded(ctx context.Context, k8sClient client.Client, istioCR operatorv1alpha1.Istio) error {
+	mustRestart := false
+
 	lastAppliedConfig, err := GetLastAppliedConfiguration(istioCR)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	isNewNotNil := (istioCR.Spec.Config.NumTrustedProxies != nil)
 	isOldNotNil := (lastAppliedConfig.IstioSpec.Config.NumTrustedProxies != nil)
 	if isNewNotNil && isOldNotNil && *istioCR.Spec.Config.NumTrustedProxies != *lastAppliedConfig.IstioSpec.Config.NumTrustedProxies {
-		return true, nil
-	}
-	if isNewNotNil != isOldNotNil {
-		return true, nil
+		mustRestart = true
+	} else if isNewNotNil != isOldNotNil {
+		mustRestart = true
 	}
 
-	return false, nil
-}
+	if mustRestart {
+		ctrl.Log.Info("Restarting istio-ingressgateway")
 
-func RestartIngressGateway(ctx context.Context, k8sClient client.Client) error {
-	deployment := appsv1.Deployment{}
-	err := k8sClient.Get(ctx, types.NamespacedName{Namespace: ingressgatewayNamespace, Name: ingressgatewayDeploymentName}, &deployment)
-	if err != nil {
-		return err
+		deployment := appsv1.Deployment{}
+		err := k8sClient.Get(ctx, types.NamespacedName{Namespace: ingressgatewayNamespace, Name: ingressgatewayDeploymentName}, &deployment)
+		if err != nil {
+			return err
+		}
+		deployment.Spec.Template.Annotations = common.AddRestartAnnotation(deployment.Spec.Template.Annotations)
+		k8sClient.Update(ctx, &deployment)
 	}
-	deployment.Spec.Template.Annotations = common.AddRestartAnnotation(deployment.Spec.Template.Annotations)
-	return k8sClient.Update(ctx, &deployment)
+	return nil
 }
 
 func amongOneMinor(current, target semver.Version) bool {

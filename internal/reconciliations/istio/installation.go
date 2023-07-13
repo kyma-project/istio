@@ -105,7 +105,7 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 
 		ctrl.Log.Info("Istio install completed")
 
-		err = RestartIngressGatewayIfNeeded(ctx, i.Client, istioCR)
+		err = restartIngressGatewayIfNeeded(ctx, i.Client, istioCR)
 		if err != nil {
 			return istioCR, described_errors.NewDescribedError(err, "Could not restart Istio Ingress GW deployment")
 		}

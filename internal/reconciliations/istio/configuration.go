@@ -7,7 +7,7 @@ import (
 
 	"github.com/coreos/go-semver/semver"
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
-	"github.com/kyma-project/istio/operator/pkg/lib/common"
+	"github.com/kyma-project/istio/operator/pkg/lib/annotations"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -74,7 +74,7 @@ func UpdateLastAppliedConfiguration(istio operatorv1alpha1.Istio, istioTag strin
 	return istio, nil
 }
 
-func GetLastAppliedConfiguration(istio operatorv1alpha1.Istio) (appliedConfig, error) {
+func getLastAppliedConfiguration(istio operatorv1alpha1.Istio) (appliedConfig, error) {
 	lastAppliedConfig := appliedConfig{}
 	if len(istio.Annotations) == 0 {
 		return lastAppliedConfig, nil
@@ -114,10 +114,10 @@ func CheckIstioVersion(currentIstioVersionString, targetIstioVersionString strin
 	return nil
 }
 
-func RestartIngressGatewayIfNeeded(ctx context.Context, k8sClient client.Client, istioCR operatorv1alpha1.Istio) error {
+func restartIngressGatewayIfNeeded(ctx context.Context, k8sClient client.Client, istioCR operatorv1alpha1.Istio) error {
 	mustRestart := false
 
-	lastAppliedConfig, err := GetLastAppliedConfiguration(istioCR)
+	lastAppliedConfig, err := getLastAppliedConfiguration(istioCR)
 	if err != nil {
 		return err
 	}
@@ -138,7 +138,7 @@ func RestartIngressGatewayIfNeeded(ctx context.Context, k8sClient client.Client,
 		if err != nil {
 			return err
 		}
-		deployment.Spec.Template.Annotations = common.AddRestartAnnotation(deployment.Spec.Template.Annotations)
+		deployment.Spec.Template.Annotations = annotations.AddRestartAnnotation(deployment.Spec.Template.Annotations)
 		err = k8sClient.Update(ctx, &deployment)
 		if err != nil {
 			return err

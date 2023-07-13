@@ -1,11 +1,10 @@
-package istio_test
+package istio
 
 import (
 	"context"
 	"fmt"
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
-	istio "github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -32,14 +31,14 @@ var _ = Describe("Istio Configuration", func() {
 			istioCR := operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{Config: operatorv1alpha1.Config{NumTrustedProxies: &numTrustedProxies}}}
 
 			// when
-			updatedCR, err := istio.UpdateLastAppliedConfiguration(istioCR, mockIstioTag)
+			updatedCR, err := UpdateLastAppliedConfiguration(istioCR, mockIstioTag)
 
 			// then
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(updatedCR.Annotations).To(Not(BeEmpty()))
 			Expect(updatedCR.Annotations[lastAppliedConfiguration]).To(Equal(fmt.Sprintf(`{"config":{"numTrustedProxies":1},"IstioTag":"%s"}`, mockIstioTag)))
 
-			appliedConfig, err := istio.GetLastAppliedConfiguration(updatedCR)
+			appliedConfig, err := getLastAppliedConfiguration(updatedCR)
 
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(*appliedConfig.Config.NumTrustedProxies).To(Equal(1))
@@ -48,7 +47,7 @@ var _ = Describe("Istio Configuration", func() {
 })
 
 var _ = Describe("Ingress Gateway", func() {
-	Context("RestartIngressGatewayIfNeeded", func() {
+	Context("restartIngressGatewayIfNeeded", func() {
 		It("should restart when CR spec numTrustedProxies is different than in lastAppliedConfig", func() {
 			//given
 			client := createFakeClientWithDeployment()
@@ -59,7 +58,7 @@ var _ = Describe("Ingress Gateway", func() {
 			istioCR.Annotations[lastAppliedConfiguration] = fmt.Sprintf(`{"config":{"numTrustedProxies":1},"IstioTag":"%s"}`, mockIstioTag)
 
 			//when
-			err := istio.RestartIngressGatewayIfNeeded(context.TODO(), client, istioCR)
+			err := restartIngressGatewayIfNeeded(context.TODO(), client, istioCR)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))
@@ -77,7 +76,7 @@ var _ = Describe("Ingress Gateway", func() {
 			istioCR.Annotations[lastAppliedConfiguration] = fmt.Sprintf(`{"config":{"numTrustedProxies":1},"IstioTag":"%s"}`, mockIstioTag)
 
 			//when
-			err := istio.RestartIngressGatewayIfNeeded(context.TODO(), client, istioCR)
+			err := restartIngressGatewayIfNeeded(context.TODO(), client, istioCR)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))
@@ -97,7 +96,7 @@ var _ = Describe("Ingress Gateway", func() {
 			istioCR.Annotations[lastAppliedConfiguration] = fmt.Sprintf(`{"config":{},"IstioTag":"%s"}`, mockIstioTag)
 
 			//when
-			err := istio.RestartIngressGatewayIfNeeded(context.TODO(), client, istioCR)
+			err := restartIngressGatewayIfNeeded(context.TODO(), client, istioCR)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))
@@ -116,7 +115,7 @@ var _ = Describe("Ingress Gateway", func() {
 			istioCR.Annotations[lastAppliedConfiguration] = fmt.Sprintf(`{"config":{"numTrustedProxies":1},"IstioTag":"%s"}`, mockIstioTag)
 
 			//when
-			err := istio.RestartIngressGatewayIfNeeded(context.TODO(), client, istioCR)
+			err := restartIngressGatewayIfNeeded(context.TODO(), client, istioCR)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))
@@ -134,7 +133,7 @@ var _ = Describe("Ingress Gateway", func() {
 			istioCR.Spec.Config.NumTrustedProxies = &newNumTrustedProxies
 
 			//when
-			err := istio.RestartIngressGatewayIfNeeded(context.TODO(), client, istioCR)
+			err := restartIngressGatewayIfNeeded(context.TODO(), client, istioCR)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))

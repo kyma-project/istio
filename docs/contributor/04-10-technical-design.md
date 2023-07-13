@@ -160,7 +160,7 @@ The PeerAuthenticationReconcilation must only be applied if Istio is installed a
 
 The default behaviour triggered on deletion of Istio Custom Resource is to uninstall all of Istio components only if there are none customer created resources present on the cluster. This behaviour is called `blocking` deletion strategy and will take place unless the intent to delete all resources, including non default Istio ones, is explicitly defined by selecting `cascading` deletion strategy.
 
-> TODO: At this moment only `blocking` strategy is implemented and triggered by default. Implement `cascading` strategy as described in <https://github.com/kyma-project/istio/issues/130>
+> TODO: At this moment only `blocking` strategy is implemented and triggered by default. Implement `cascading` strategy as described in this [issue](https://github.com/kyma-project/istio/issues/130).
 
 ## Scenario: Users bring their own Istio installation
 

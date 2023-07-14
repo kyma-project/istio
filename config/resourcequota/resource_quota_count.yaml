@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: custom-resources-count
+spec:
+  hard:
+    count/istios.operator.kyma-project.io: "1"

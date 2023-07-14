@@ -44,6 +44,7 @@ func (m *IstioMerger) Merge(baseManifestPath string, istioCR *operatorv1alpha1.I
 	if err != nil {
 		return "", err
 	}
+	
 	mergedManifest, err := applyIstioCR(istioCR, toBeInstalledIop)
 	if err != nil {
 		return "", err

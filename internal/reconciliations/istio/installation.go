@@ -3,17 +3,19 @@ package istio
 import (
 	"context"
 	"fmt"
+	"strings"
+
+	"github.com/thoas/go-funk"
+
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
-	"github.com/thoas/go-funk"
-	"strings"
-
 	"github.com/kyma-project/istio/operator/internal/manifest"
 	"github.com/kyma-project/istio/operator/internal/resources"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 	sidecarRemover "github.com/kyma-project/istio/operator/pkg/lib/sidecars/remove"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -102,6 +104,12 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 		}
 
 		ctrl.Log.Info("Istio install completed")
+
+		err = restartIngressGatewayIfNeeded(ctx, i.Client, istioCR)
+		if err != nil {
+			return istioCR, described_errors.NewDescribedError(err, "Could not restart Istio Ingress GW deployment")
+		}
+
 		// We use the installation finalizer to track if the deletion was already executed so can make the uninstallation process more reliable.
 	} else if shouldDelete(istioCR) && hasInstallationFinalizer(istioCR) {
 		ctrl.Log.Info("Starting istio uninstall")

@@ -9,6 +9,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -168,4 +169,51 @@ func ApplicationPodShouldHaveIstioProxy(ctx context.Context, appName, namespace,
 		return fmt.Errorf("checking the istio-proxy for app %s in namespace %s failed", appName, namespace)
 	}, testcontext.GetRetryOpts()...)
 
+}
+
+// CreateHttpbinApplication creates a deployment and a service for the httpbin application
+func CreateHttpbinApplication(ctx context.Context, appName, namespace string) (context.Context, error) {
+	ctx, err := CreateApplicationDeployment(ctx, appName, namespace)
+	if err != nil {
+		return ctx, err
+	}
+
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return ctx, err
+	}
+
+	svc := corev1.Service{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "Service",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      appName,
+			Namespace: namespace,
+		},
+		Spec: corev1.ServiceSpec{
+			Selector: map[string]string{
+				"app": appName,
+			},
+			Ports: []corev1.ServicePort{
+				{
+					Name:       "http",
+					Port:       8000,
+					TargetPort: intstr.FromInt(80),
+				},
+			},
+		},
+	}
+
+	err = retry.Do(func() error {
+		err := k8sClient.Create(context.TODO(), &svc)
+		if err != nil {
+			return err
+		}
+		ctx = testcontext.AddCreatedTestObjectInContext(ctx, &svc)
+		return nil
+	}, testcontext.GetRetryOpts()...)
+
+	return ctx, err
 }

@@ -23,6 +23,7 @@ import (
 
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/kyma-project/istio/operator/internal/status"
+	"github.com/pkg/errors"
 
 	"github.com/kyma-project/istio/operator/internal/manifest"
 
@@ -31,7 +32,7 @@ import (
 	"github.com/kyma-project/istio/operator/internal/reconciliations/proxy"
 	"golang.org/x/time/rate"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -54,23 +55,23 @@ const (
 
 var IstioTag = fmt.Sprintf("%s-%s", IstioVersion, IstioImageBase)
 
-type istioInKymaSystemPredicate struct {
+type namespacePredicate struct {
 	predicate.Funcs
 }
 
-func (p istioInKymaSystemPredicate) Create(e event.CreateEvent) bool {
+func (p namespacePredicate) Create(e event.CreateEvent) bool {
 	return p.Generic(event.GenericEvent(e))
 }
 
-func (p istioInKymaSystemPredicate) Delete(e event.DeleteEvent) bool {
+func (p namespacePredicate) Delete(e event.DeleteEvent) bool {
 	return p.Generic(event.GenericEvent{Object: e.Object})
 }
 
-func (p istioInKymaSystemPredicate) Update(e event.UpdateEvent) bool {
+func (p namespacePredicate) Update(e event.UpdateEvent) bool {
 	return p.Generic(event.GenericEvent{Object: e.ObjectNew})
 }
 
-func (p istioInKymaSystemPredicate) Generic(e event.GenericEvent) bool {
+func (p namespacePredicate) Generic(e event.GenericEvent) bool {
 	return e.Object != nil && e.Object.GetNamespace() == namespace
 }
 
@@ -90,15 +91,21 @@ func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *I
 
 func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	r.log.Info("Was called to reconcile Kyma Istio Service Mesh")
-	istioCR := operatorv1alpha1.Istio{}
 
+	istioCR := operatorv1alpha1.Istio{}
 	if err := r.Client.Get(ctx, req.NamespacedName, &istioCR); err != nil {
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			r.log.Info("Skipped reconciliation, because Istio CR was not found", "request object", req.NamespacedName)
 			return ctrl.Result{}, nil
 		}
 		r.log.Error(err, "Error during fetching Istio CR")
 		return r.statusHandler.SetError(ctx, described_errors.NewDescribedError(err, "Could not get Istio CR"), r.Client, &istioCR, metav1.Condition{}, ErrorRetryTime)
+	}
+
+	if istioCR.GetNamespace() != namespace {
+		errWrongNS := errors.New(fmt.Sprintf("Istio CR is not in %s namespace", namespace))
+		r.log.Error(errWrongNS, "Skipped reconciliation")
+		return r.statusHandler.SetError(ctx, described_errors.NewDescribedError(errWrongNS, "Error occurred during reconciliation of Istio CR"), r.Client, &istioCR, metav1.Condition{}, ErrorRetryTime)
 	}
 
 	istioCR, err := r.istioInstallation.Reconcile(ctx, istioCR, IstioResourceListDefaultPath)
@@ -119,20 +126,20 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	// error occurs in the reconciliation of the Istio upgrade after the Istio upgrade.
 	proxyErr := r.proxySidecars.Reconcile(ctx, istioCR)
 	if proxyErr != nil {
-		r.log.Error(err, "Error occurred during reconciliation of Istio Sidecars")
+		r.log.Error(proxyErr, "Error occurred during reconciliation of Istio Sidecars")
 		return r.statusHandler.SetError(ctx, described_errors.NewDescribedError(proxyErr, "Error occurred during reconciliation of Istio Sidecars"), r.Client, &istioCR, metav1.Condition{}, ErrorRetryTime)
 	}
 
 	// Put applied configuration in annotation
 	istioCR, updateErr := istio.UpdateLastAppliedConfiguration(istioCR, IstioTag)
 	if updateErr != nil {
-		r.log.Error(err, "Error updating LastAppliedConfiguration")
+		r.log.Error(updateErr, "Error updating LastAppliedConfiguration")
 		return r.statusHandler.SetError(ctx, described_errors.NewDescribedError(updateErr, "Error updating LastAppliedConfiguration"), r.Client, &istioCR, metav1.Condition{}, ErrorRetryTime)
 	}
 
 	updateErr = r.Client.Update(ctx, &istioCR)
 	if updateErr != nil {
-		r.log.Error(err, "Error during update of IstioCR")
+		r.log.Error(updateErr, "Error during update of IstioCR")
 		return r.statusHandler.SetError(ctx, described_errors.NewDescribedError(updateErr, "Error during update of IstioCR"), r.Client, &istioCR, metav1.Condition{}, ErrorRetryTime)
 	}
 
@@ -157,7 +164,7 @@ func (r *IstioReconciler) SetupWithManager(mgr ctrl.Manager, rateLimiter RateLim
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&operatorv1alpha1.Istio{}, builder.WithPredicates(&istioInKymaSystemPredicate{})).
+		For(&operatorv1alpha1.Istio{}, builder.WithPredicates(&namespacePredicate{})).
 		WithEventFilter(predicate.GenerationChangedPredicate{}).
 		WithOptions(controller.Options{
 			RateLimiter: TemplateRateLimiter(

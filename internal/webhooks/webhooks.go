@@ -75,7 +75,7 @@ func getWebhooksWithTag(ctx context.Context, kubeClient client.Client, tag strin
 func getWebhooksWithRevision(ctx context.Context, kubeClient client.Client, rev string) ([]v1.MutatingWebhookConfiguration, error) {
 	var webhooks v1.MutatingWebhookConfigurationList
 	err := kubeClient.List(ctx, &webhooks, client.MatchingLabels{
-		label.IoIstioRev.Name: fmt.Sprintf("%s", rev),
+		label.IoIstioRev.Name: rev,
 	})
 	if err != nil {
 		return nil, err

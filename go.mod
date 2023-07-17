@@ -22,7 +22,7 @@ require (
 	google.golang.org/protobuf v1.30.0
 	istio.io/api v0.0.0-20230713061407-06047cce866f
 	istio.io/client-go v1.18.1
-	istio.io/istio v0.0.0-20230621044911-6f0d7ae668c8
+	istio.io/istio v0.0.0-20230713183549-b39cf4080772
 	istio.io/pkg v0.0.0-20230524020242-1015535057be
 	k8s.io/api v0.27.3
 	k8s.io/apiextensions-apiserver v0.27.3

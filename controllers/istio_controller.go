@@ -42,7 +42,7 @@ import (
 )
 
 const (
-	IstioVersion                 string = "1.18.0"
+	IstioVersion                 string = "1.18.1"
 	IstioImageBase               string = "distroless"
 	IstioResourceListDefaultPath        = "manifests/controlled_resources_list.yaml"
 	ErrorRetryTime                      = time.Minute * 1

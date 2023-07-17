@@ -1,12 +1,12 @@
 # Istio v1alpha1 proposal
 
-## Summary 
+## Summary
 
 This document proposes Istio Manager API exposed to users. The initial version of the API includes hpa and resources' configuration options for Istio components, such as istiod and ingress gateway, as well as the ability to forward client information to workloads (client address via XFF).
 
 ## Details
 
-API specification on the root level is split into **components** and **config**. The **components** field specifies the subset of [k8s component specification](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec) for `pilot` and `ingressGateway` Istio components. For now, it's **hpaSpec**, **strategy** and **resources**. The **config** parameter holds configuration of `profiles`, support for XFF, Gardener DNS names' configuration, tracing, and DNS proxying. 
+Istio CR *must* be in `kyma-system` namespace and we restrict to having just a single one on a Kyma cluster with a ResourceQuota resource. API specification on the root level is split into **components** and **config**. The **components** field specifies the subset of [k8s component specification](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec) for `pilot` and `ingressGateway` Istio components. For now, it's **hpaSpec**, **strategy** and **resources**. The **config** parameter holds configuration of `profiles`, support for XFF, Gardener DNS names' configuration, tracing, and DNS proxying.
 
 The status is implemented per `kyma-operator` requirements.
 
@@ -16,11 +16,13 @@ The status is implemented per `kyma-operator` requirements.
 apiVersion: operator.kyma-project.io/v1alpha1
 kind: Istio
 metadata:
+  name: default
+  namespace: kyma-system
 spec:
   components: -> subset of k8s component spec
     pilot:
       k8s:
-        hpaSpec: 
+        hpaSpec:
           maxReplicas: 5
           minReplicas: 2
         strategy:
@@ -36,7 +38,7 @@ spec:
             memory: 128Mi
     ingressGateway:
       k8s:
-        hpaSpec: 
+        hpaSpec:
           maxReplicas: 5
           minReplicas: 2
         strategy:

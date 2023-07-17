@@ -36,10 +36,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/ratelimiter"
@@ -54,26 +52,6 @@ const (
 )
 
 var IstioTag = fmt.Sprintf("%s-%s", IstioVersion, IstioImageBase)
-
-type namespacePredicate struct {
-	predicate.Funcs
-}
-
-func (p namespacePredicate) Create(e event.CreateEvent) bool {
-	return p.Generic(event.GenericEvent(e))
-}
-
-func (p namespacePredicate) Delete(e event.DeleteEvent) bool {
-	return p.Generic(event.GenericEvent{Object: e.Object})
-}
-
-func (p namespacePredicate) Update(e event.UpdateEvent) bool {
-	return p.Generic(event.GenericEvent{Object: e.ObjectNew})
-}
-
-func (p namespacePredicate) Generic(e event.GenericEvent) bool {
-	return e.Object != nil && e.Object.GetNamespace() == namespace
-}
 
 func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *IstioReconciler {
 	merger := manifest.NewDefaultIstioMerger()
@@ -164,7 +142,7 @@ func (r *IstioReconciler) SetupWithManager(mgr ctrl.Manager, rateLimiter RateLim
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&operatorv1alpha1.Istio{}, builder.WithPredicates(&namespacePredicate{})).
+		For(&operatorv1alpha1.Istio{}).
 		WithEventFilter(predicate.GenerationChangedPredicate{}).
 		WithOptions(controller.Options{
 			RateLimiter: TemplateRateLimiter(

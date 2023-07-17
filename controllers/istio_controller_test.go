@@ -23,7 +23,7 @@ import (
 
 var _ = Describe("Istio Controller", func() {
 	Context("Reconcile", func() {
-		It("should fail to reconcile Istio CR in default namespace", func() {
+		It("should fail to reconcile Istio CR in different than kyma-system namespace and set error state", func() {
 			//given"
 			numTrustedProxies := 1
 			istioCR := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{

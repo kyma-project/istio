@@ -341,7 +341,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(currentIGWDeployment.Spec.Template.Annotations["reconciler.kyma-project.io/lastRestartDate"]).To(BeEmpty())
 	})
 
-	It("should update Istio CR status to error when NumTrustedProxies has changed and fails to restart Istio GW", func() {
+	It("should fail Istio reconciliation when NumTrustedProxies has changed and fails to restart Istio GW", func() {
 		// given
 
 		newNumTrustedProxies := 3

@@ -2,7 +2,7 @@ apiVersion: operator.kyma-project.io/v1alpha1
 kind: Istio
 metadata:
   name: istio-sample
-  namespace: default
+  namespace: kyma-system
   labels:
     app.kubernetes.io/name: istio-sample
 spec:
@@ -11,42 +11,42 @@ spec:
       k8s:
         resources:
           limits:
-            cpu: {{ .PilotCPULimit }}
-            memory: {{ .PilotMemoryLimit }}
+            cpu: { { .PilotCPULimit } }
+            memory: { { .PilotMemoryLimit } }
           requests:
-            cpu: {{ .PilotCPURequests }}
-            memory: {{ .PilotMemoryRequests }}
+            cpu: { { .PilotCPURequests } }
+            memory: { { .PilotMemoryRequests } }
         strategy:
           rollingUpdate:
-            maxSurge: {{ .PilotMaxSurge }}
-            maxUnavailable: {{ .PilotMaxUnavailable }}
+            maxSurge: { { .PilotMaxSurge } }
+            maxUnavailable: { { .PilotMaxUnavailable } }
         hpaSpec:
-          maxReplicas: {{ .PilotMaxReplicas }}
-          minReplicas: {{ .PilotMinReplicas }}
+          maxReplicas: { { .PilotMaxReplicas } }
+          minReplicas: { { .PilotMinReplicas } }
     ingressGateway:
       k8s:
         resources:
           limits:
-            cpu: {{ .IGCPULimit }}
-            memory: {{ .IGMemoryLimit }}
+            cpu: { { .IGCPULimit } }
+            memory: { { .IGMemoryLimit } }
           requests:
-            cpu: {{ .IGCPURequests }}
-            memory: {{ .IGMemoryRequests }}
+            cpu: { { .IGCPURequests } }
+            memory: { { .IGMemoryRequests } }
         strategy:
           rollingUpdate:
-            maxSurge: {{ .IGMaxSurge }}
-            maxUnavailable: {{ .IGMaxUnavailable }}
+            maxSurge: { { .IGMaxSurge } }
+            maxUnavailable: { { .IGMaxUnavailable } }
         hpaSpec:
-          maxReplicas: {{ .IGMaxReplicas }}
-          minReplicas: {{ .IGMinReplicas }}
+          maxReplicas: { { .IGMaxReplicas } }
+          minReplicas: { { .IGMinReplicas } }
     proxy:
       k8s:
         resources:
           limits:
-            cpu: {{ .ProxyCPULimit }}
-            memory: {{ .ProxyMemoryLimit }}
+            cpu: { { .ProxyCPULimit } }
+            memory: { { .ProxyMemoryLimit } }
           requests:
-            cpu: {{ .ProxyCPURequest }}
-            memory: {{ .ProxyMemoryRequest }}
+            cpu: { { .ProxyCPURequest } }
+            memory: { { .ProxyMemoryRequest } }
   config:
-    numTrustedProxies: {{ .NumTrustedProxies }}
+    numTrustedProxies: { { .NumTrustedProxies } }

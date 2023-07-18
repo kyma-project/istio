@@ -70,7 +70,6 @@ func DeployIstioOperatorFromLocalManifest(ctx context.Context) error {
 		for _, pod := range pods.Items {
 			for _, c := range pod.Spec.Containers {
 				if c.Image != newImage {
-					println(c.Image, ":", newImage)
 					return fmt.Errorf("controller is not updated")
 				}
 			}

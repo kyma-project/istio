@@ -1,4 +1,4 @@
-ame: Pull Request integration tests
+name: Pull Request integration tests
 
 on:
   pull_request:

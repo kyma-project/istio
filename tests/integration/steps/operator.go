@@ -18,7 +18,7 @@ func DeployIstioOperatorFromLocalManifest(ctx context.Context) error {
 		return err
 	}
 
-	resources, err := manifestprocessor.ParseFromFileWithTemplate("local-manifest.yaml", "manifests", manifestprocessor.ResourceSeparator)
+	resources, err := manifestprocessor.ParseFromFileWithTemplate("local-manifest.yaml", "manifests", nil)
 	if err != nil {
 		return err
 	}

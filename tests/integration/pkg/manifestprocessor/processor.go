@@ -11,8 +11,6 @@ import (
 	"text/template"
 )
 
-const ResourceSeparator = `---`
-
 func parseTemplateWithData(templateRaw string, data interface{}) (string, error) {
 	tmpl, err := template.New("tmpl").Parse(templateRaw)
 	if err != nil {

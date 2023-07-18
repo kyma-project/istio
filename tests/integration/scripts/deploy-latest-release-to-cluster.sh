@@ -1,12 +1,13 @@
 #!/bin/bash
 
 set -o errexit
-set -o nounset
 set -o pipefail
 
 BRANCH=$(git branch --show-current)
+TARGET="$1"
 
-if [ "$BRANCH" == "main" ]
+
+if [ "$TARGET" != "main" ]
 then
   TAG=$(git describe --tags --abbrev=0)
   RELEASE_MANIFEST_URL="https://github.com/kyma-project/istio/releases/download/${TAG}/istio-manager.yaml"

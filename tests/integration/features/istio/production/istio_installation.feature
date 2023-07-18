@@ -71,7 +71,7 @@ Feature: Installing and uninstalling Istio module
     And Istio CRDs "should not" be present on cluster
     And Namespace "istio-system" is "not present"
 
-Scenario: Uninstallation of Istio module if Istio was manually deleted
+  Scenario: Uninstallation of Istio module if Istio was manually deleted
     Given Istio CR "istio-sample" is applied in namespace "kyma-system"
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
     And Namespace "istio-system" is "present"
@@ -83,7 +83,12 @@ Scenario: Uninstallation of Istio module if Istio was manually deleted
     And Istio CRDs "should not" be present on cluster
     And Namespace "istio-system" is "not present"
 
-Scenario: Installation of Istio module with Istio CR in wrong namespace
-  When Istio CR "istio-sample" is applied in namespace "default"
-  Then Istio CR "istio-sample" in namespace "default" has status "Error"
-  And Istio CR "istio-sample" in namespace "default" has description "Error occurred during reconciliation of Istio CR: Istio CR is not in kyma-system namespace"
+  Scenario: Installation of Istio module with Istio CR in different namespace
+    When Istio CR "istio-sample" is applied in namespace "default"
+    Then Istio CR "istio-sample" in namespace "default" has status "Error"
+    And Istio CR "istio-sample" in namespace "default" has description "Error occurred during reconciliation of Istio CR: Istio CR is not in kyma-system namespace"
+
+  Scenario: Installation of Istio module with a secondary Istio CR in kyma-system namespace
+    Given Istio CR "istio-sample" is applied in namespace "kyma-system"
+    And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
+    Then Istio CR "istio-sample2" can not be applied in namespace "kyma-system" with error "exceeded quota"

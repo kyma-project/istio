@@ -3,6 +3,7 @@ package istio
 import (
 	"context"
 	"fmt"
+	"k8s.io/client-go/util/retry"
 	"strings"
 
 	"github.com/thoas/go-funk"
@@ -16,7 +17,6 @@ import (
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 	sidecarRemover "github.com/kyma-project/istio/operator/pkg/lib/sidecars/remove"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -47,19 +47,14 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 	}
 
 	if shouldInstallIstio {
+		ctrl.Log.Info("Starting istio install", "istio version", i.IstioVersion, "istio image", i.IstioImageBase)
+
 		if !hasInstallationFinalizer(istioCR) {
 			controllerutil.AddFinalizer(&istioCR, installationFinalizer)
 			if err := i.Client.Update(ctx, &istioCR); err != nil {
+				ctrl.Log.Error(err, "Failed to add Istio installation finalizer")
 				return istioCR, described_errors.NewDescribedError(err, "Could not add finalizer")
 			}
-		}
-
-		ctrl.Log.Info("Starting istio install", "istio version", i.IstioVersion, "istio image", i.IstioImageBase)
-
-		// To have a better visibility of the manager state during install and upgrade, we update the status to Processing
-		_, err := i.StatusHandler.SetProcessing(ctx, "Installing Istio", i.Client, &istioCR, metav1.Condition{})
-		if err != nil {
-			return istioCR, described_errors.NewDescribedError(err, "Could not set status to processing")
 		}
 
 		clusterConfiguration, err := clusterconfig.EvaluateClusterConfiguration(ctx, i.Client)
@@ -114,11 +109,6 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 	} else if shouldDelete(istioCR) && hasInstallationFinalizer(istioCR) {
 		ctrl.Log.Info("Starting istio uninstall")
 
-		_, deletingErr := i.StatusHandler.SetDeleting(ctx, i.Client, &istioCR, metav1.Condition{})
-		if deletingErr != nil {
-			return istioCR, described_errors.NewDescribedError(deletingErr, "Could not set status to deleting")
-		}
-
 		istioResourceFinder, err := resources.NewIstioResourcesFinderFromConfigYaml(ctx, i.Client, ctrl.Log, istioResourceListPath)
 		if err != nil {
 			return istioCR, described_errors.NewDescribedError(err, "Could not read customer resources finder configuration")
@@ -153,8 +143,7 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 			}
 		}
 
-		controllerutil.RemoveFinalizer(&istioCR, installationFinalizer)
-		if err := i.Client.Update(ctx, &istioCR); err != nil {
+		if err := removeInstallationFinalizer(ctx, i.Client, &istioCR); err != nil {
 			ctrl.Log.Error(err, "Error happened during istio installation finalizer removal")
 			return istioCR, described_errors.NewDescribedError(err, "Could not remove finalizer")
 		}
@@ -167,4 +156,23 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 
 func hasInstallationFinalizer(istioCR operatorv1alpha1.Istio) bool {
 	return controllerutil.ContainsFinalizer(&istioCR, installationFinalizer)
+}
+
+func removeInstallationFinalizer(ctx context.Context, apiClient client.Client, istioCR *operatorv1alpha1.Istio) error {
+	ctrl.Log.Info("Removing Istio installation finalizer")
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		if getErr := apiClient.Get(ctx, client.ObjectKeyFromObject(istioCR), istioCR); getErr != nil {
+			return getErr
+		}
+
+		controllerutil.RemoveFinalizer(istioCR, installationFinalizer)
+		if updateErr := apiClient.Update(ctx, istioCR); updateErr != nil {
+			return updateErr
+		}
+
+		ctrl.Log.Info("Successfully removed Istio installation finalizer")
+
+		return nil
+	})
+
 }

@@ -3,8 +3,6 @@ package proxy
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/istio/operator/internal/status"
-
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
@@ -22,7 +20,6 @@ type Sidecars struct {
 	Log            logr.Logger
 	Client         client.Client
 	Merger         manifest.Merger
-	StatusHandler  status.Status
 }
 
 const (

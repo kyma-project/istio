@@ -25,7 +25,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -101,7 +100,11 @@ var _ = Describe("Installation reconciliation", func() {
 					NumTrustedProxies: &numTrustedProxies,
 				},
 			},
+			Status: operatorv1alpha1.IstioStatus{
+				State: operatorv1alpha1.Processing,
+			},
 		}
+
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
 		istioNamespace := createNamespace("istio-system")
 		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway"}}
@@ -185,6 +188,9 @@ var _ = Describe("Installation reconciliation", func() {
 					NumTrustedProxies: &numTrustedProxies,
 				},
 			},
+			Status: operatorv1alpha1.IstioStatus{
+				State: operatorv1alpha1.Processing,
+			},
 		}
 
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.0")
@@ -263,6 +269,9 @@ var _ = Describe("Installation reconciliation", func() {
 					NumTrustedProxies: &newNumTrustedProxies,
 				},
 			},
+			Status: operatorv1alpha1.IstioStatus{
+				State: operatorv1alpha1.Processing,
+			},
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
 		istioNamespace := createNamespace("istio-system")
@@ -287,8 +296,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(returnedIstioCr.Status.State).To(Equal(operatorv1alpha1.Processing))
 
 		igwDeployment = &appsv1.Deployment{}
-		error := c.Get(context.TODO(), types.NamespacedName{Namespace: "istio-system", Name: "istio-ingressgateway"}, igwDeployment)
-		Expect(error).To(Not(HaveOccurred()))
+		Expect(c.Get(context.TODO(), types.NamespacedName{Namespace: "istio-system", Name: "istio-ingressgateway"}, igwDeployment)).Should(Succeed())
 
 		hasRestartAnnotation := annotations.HasRestartAnnotation(igwDeployment.Spec.Template.Annotations)
 		Expect(hasRestartAnnotation).To(BeTrue())
@@ -309,6 +317,9 @@ var _ = Describe("Installation reconciliation", func() {
 				Config: operatorv1alpha1.Config{
 					NumTrustedProxies: &numTrustedProxies,
 				},
+			},
+			Status: operatorv1alpha1.IstioStatus{
+				State: operatorv1alpha1.Processing,
 			},
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
@@ -335,9 +346,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(returnedIstioCr.Status.State).To(Equal(operatorv1alpha1.Processing))
 
 		currentIGWDeployment := appsv1.Deployment{}
-		error := c.Get(context.TODO(), types.NamespacedName{Namespace: "istio-system", Name: "istio-ingressgateway"}, &currentIGWDeployment)
-
-		Expect(error).To(Not(HaveOccurred()))
+		Expect(c.Get(context.TODO(), types.NamespacedName{Namespace: "istio-system", Name: "istio-ingressgateway"}, &currentIGWDeployment)).Should(Succeed())
 		Expect(currentIGWDeployment.Spec.Template.Annotations["reconciler.kyma-project.io/lastRestartDate"]).To(BeEmpty())
 	})
 
@@ -357,6 +366,9 @@ var _ = Describe("Installation reconciliation", func() {
 				Config: operatorv1alpha1.Config{
 					NumTrustedProxies: &newNumTrustedProxies,
 				},
+			},
+			Status: operatorv1alpha1.IstioStatus{
+				State: operatorv1alpha1.Processing,
 			},
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
@@ -391,8 +403,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(returnedIstioCr.Status.State).To(Equal(operatorv1alpha1.Processing))
 
 		igwDeployment = &appsv1.Deployment{}
-		error := c.Get(context.TODO(), types.NamespacedName{Namespace: "istio-system", Name: "istio-ingressgateway"}, igwDeployment)
-		Expect(error).To(Not(HaveOccurred()))
+		Expect(c.Get(context.TODO(), types.NamespacedName{Namespace: "istio-system", Name: "istio-ingressgateway"}, igwDeployment)).Should(Succeed())
 
 		hasRestartAnnotation := annotations.HasRestartAnnotation(igwDeployment.Spec.Template.Annotations)
 		Expect(hasRestartAnnotation).To(BeFalse())
@@ -413,6 +424,9 @@ var _ = Describe("Installation reconciliation", func() {
 				Config: operatorv1alpha1.Config{
 					NumTrustedProxies: &numTrustedProxies,
 				},
+			},
+			Status: operatorv1alpha1.IstioStatus{
+				State: operatorv1alpha1.Processing,
 			},
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.17.0")
@@ -683,49 +697,6 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Error()).To(Equal("merging failed"))
 		Expect(err.Description()).To(Equal("Could not get configuration from Istio Operator file: merging failed"))
-		Expect(mockClient.installCalled).To(BeFalse())
-		Expect(mockClient.uninstallCalled).To(BeFalse())
-	})
-
-	It("should fail if status update to processing fails", func() {
-		// given
-
-		numTrustedProxies := 1
-		istioCr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
-			Name:            "default",
-			ResourceVersion: "1",
-			Annotations: map[string]string{
-				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
-			},
-		},
-			Spec: operatorv1alpha1.IstioSpec{
-				Config: operatorv1alpha1.Config{
-					NumTrustedProxies: &numTrustedProxies,
-				},
-			},
-		}
-		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.17.0")
-		istioNamespace := createNamespace("istio-system")
-		c := createFakeClient(&istioCr, istiod, istioNamespace)
-
-		mockClient := mockLibraryClient{}
-		installation := istio.Installation{
-			Client:         c,
-			IstioClient:    &mockClient,
-			IstioVersion:   "1.17.0",
-			IstioImageBase: istioImageBase,
-			Merger:         MergerMock{},
-			StatusHandler: StatusMock{
-				processingError: errors.New("update error"),
-			},
-		}
-		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
-
-		// then
-		Expect(err).Should(HaveOccurred())
-		Expect(err.Error()).To(Equal("update error"))
-		Expect(err.Description()).To(Equal("Could not set status to processing: update error"))
 		Expect(mockClient.installCalled).To(BeFalse())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 	})
@@ -1027,54 +998,6 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(mockClient.uninstallCalled).To(BeTrue())
 	})
 
-	It("should return an error when update to status deleting fails", func() {
-		// given
-		now := metav1.NewTime(time.Now())
-		numTrustedProxies := 1
-		istioCr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
-			Name:            "default",
-			ResourceVersion: "1",
-			Annotations: map[string]string{
-				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
-			},
-			DeletionTimestamp: &now,
-			Finalizers:        []string{"istios.operator.kyma-project.io/istio-installation"},
-		},
-			Spec: operatorv1alpha1.IstioSpec{
-				Config: operatorv1alpha1.Config{
-					NumTrustedProxies: &numTrustedProxies,
-				},
-			},
-		}
-
-		mockClient := mockLibraryClient{}
-		installation := istio.Installation{
-			Client: createFakeClient(&istioCr, &networkingv1alpha3.EnvoyFilter{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "some-default-resource",
-					Namespace: "istio-system",
-				},
-			}),
-			IstioClient:    &mockClient,
-			IstioVersion:   istioVersion,
-			IstioImageBase: istioImageBase,
-			Merger:         MergerMock{},
-			StatusHandler: StatusMock{
-				deletingError: errors.New("could not update status to deleting"),
-			},
-		}
-
-		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
-
-		// then
-		Expect(err).Should(HaveOccurred())
-		Expect(err.Error()).To(Equal("could not update status to deleting"))
-		Expect(err.Description()).To(Equal("Could not set status to deleting: could not update status to deleting"))
-		Expect(mockClient.installCalled).To(BeFalse())
-		Expect(mockClient.uninstallCalled).To(BeFalse())
-	})
-
 	It("should not uninstall if there are Istio resources present", func() {
 		// given
 		now := metav1.NewTime(time.Now())
@@ -1158,7 +1081,7 @@ type shouldFailFakeClientOnAnnotation struct {
 	failAnnotation string
 }
 
-func (p *shouldFailFakeClientOnAnnotation) Update(ctx context.Context, obj client.Object, opts ...client.UpdateOption) error {
+func (p *shouldFailFakeClientOnAnnotation) Update(ctx context.Context, obj client.Object, _ ...client.UpdateOption) error {
 	_, found := obj.GetAnnotations()[p.failAnnotation]
 	if found {
 		return fmt.Errorf("Intentionally failing client update call on annotation: %s", p.failAnnotation)
@@ -1220,25 +1143,24 @@ func (m MergerMock) GetIstioOperator(_ string) (istioOperator.IstioOperator, err
 func (m MergerMock) SetIstioInstallFlavor(_ clusterconfig.ClusterSize) {}
 
 type StatusMock struct {
-	result          ctrl.Result
 	processingError error
 	readyError      error
 	deletingError   error
 	errorError      error
 }
 
-func (s StatusMock) SetProcessing(_ context.Context, _ string, _ client.Client, _ *operatorv1alpha1.Istio, _ metav1.Condition, _ ...time.Duration) (ctrl.Result, error) {
-	return s.result, s.processingError
+func (s StatusMock) UpdateToProcessing(_ context.Context, _ string, _ client.Client, _ *operatorv1alpha1.Istio) error {
+	return s.processingError
 }
 
-func (s StatusMock) SetReady(_ context.Context, _ client.Client, _ *operatorv1alpha1.Istio, _ metav1.Condition, _ ...time.Duration) (ctrl.Result, error) {
-	return s.result, s.readyError
+func (s StatusMock) UpdateToError(_ context.Context, _ described_errors.DescribedError, _ client.Client, _ *operatorv1alpha1.Istio) error {
+	return s.errorError
 }
 
-func (s StatusMock) SetError(_ context.Context, _ described_errors.DescribedError, _ client.Client, _ *operatorv1alpha1.Istio, _ metav1.Condition, _ ...time.Duration) (ctrl.Result, error) {
-	return s.result, s.errorError
+func (s StatusMock) UpdateToDeleting(_ context.Context, _ client.Client, _ *operatorv1alpha1.Istio) error {
+	return s.deletingError
 }
 
-func (s StatusMock) SetDeleting(_ context.Context, _ client.Client, _ *operatorv1alpha1.Istio, _ metav1.Condition, _ ...time.Duration) (ctrl.Result, error) {
-	return s.result, s.deletingError
+func (s StatusMock) UpdateToReady(_ context.Context, _ client.Client, _ *operatorv1alpha1.Istio) error {
+	return s.readyError
 }

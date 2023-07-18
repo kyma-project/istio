@@ -5,4 +5,5 @@ junit-report.xml
 junit-main-report.xml
 junit-upgrade-report.xml
 reports
+manifests/local-manifest.yaml
 

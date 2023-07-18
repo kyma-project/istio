@@ -9,7 +9,7 @@ import (
 	"github.com/kyma-project/istio/operator/controllers"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
-	v1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
+	"istio.io/client-go/pkg/apis/networking/v1beta1"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -207,7 +207,7 @@ func ResourceNotPresent(ctx context.Context, kind string) error {
 		return nil
 	}, testcontext.GetRetryOpts()...)
 }
-func IstioResourceHasRequiredVersionAndIsReady(ctx context.Context, kind, name, namespace string) error {
+func IstioComponentHasRequiredVersionAndIsReady(ctx context.Context, kind, name, namespace string) error {
 	requiredVersion := strings.Join([]string{controllers.IstioVersion, controllers.IstioImageBase}, "-")
 
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)

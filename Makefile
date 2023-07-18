@@ -97,6 +97,11 @@ help: ## Display this help.
 manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
 	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
+.PHONY: generate-integration-test-manifest
+generate-integration-test-manifest: manifests
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build config/default -o tests/integration/manifests/local-manifest.yaml
+
 .PHONY: generate
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
@@ -283,7 +288,7 @@ istio-integration-test: install deploy
 	cd tests/integration && TEST_REQUEST_TIMEOUT=300s && EXPORT_RESULT=true go test -v -timeout 25m -run TestIstioMain
 
 .PHONY: istio-upgrade-integration-test
-istio-upgrade-integration-test:
+istio-upgrade-integration-test: generate-integration-test-manifest
 	# Increased TEST_REQUEST_TIMEOUT to 300s to avoid timeouts on newly created k3s clusters on Prow
 	cd tests/integration && ./scripts/deploy-latest-release-to-cluster.sh && TEST_REQUEST_TIMEOUT=300s && EXPORT_RESULT=true IMG=${IMG} go test -v -timeout 10m -run TestIstioUpgrade
 

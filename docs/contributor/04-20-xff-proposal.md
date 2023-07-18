@@ -6,7 +6,7 @@ This document proposes Istio Manager API exposed to users. The initial version o
 
 ## Details
 
-Istio CR *must* be in `kyma-system` namespace and we restrict to having just a single one on a Kyma cluster with a ResourceQuota resource. API specification on the root level is split into **components** and **config**. The **components** field specifies the subset of [k8s component specification](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec) for `pilot` and `ingressGateway` Istio components. For now, it's **hpaSpec**, **strategy** and **resources**. The **config** parameter holds configuration of `profiles`, support for XFF, Gardener DNS names' configuration, tracing, and DNS proxying.
+Istio CR must be present in the `kyma-system` Namespace. The `ResourceQuota` resource ensures that there is only one Istio CR in a Kyma cluster. API specification on the root level is split into **components** and **config**. The **components** field specifies the subset of [k8s component specification](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec) for `pilot` and `ingressGateway` Istio components. For now, it's **hpaSpec**, **strategy** and **resources**. The **config** parameter holds configuration of `profiles`, support for XFF, Gardener DNS names' configuration, tracing, and DNS proxying.
 
 The status is implemented per `kyma-operator` requirements.
 

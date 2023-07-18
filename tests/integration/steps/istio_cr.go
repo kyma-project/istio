@@ -177,5 +177,5 @@ func (t *TemplatedIstioCr) IstioCRCanNotBeAppliedInNamespaceWithError(ctx contex
 		return ctx, errors.New(fmt.Sprintf("Expected error not found: %s", expectedError))
 	}
 
-	return ctx, err
+	return ctx, nil
 }

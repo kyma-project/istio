@@ -106,7 +106,7 @@ jobs:
             --port 80:80@loadbalancer
             --port 443:443@loadbalancer
             --k3s-arg "--disable=traefik@server:0"
-      - name: Run integration tests
+      - name: Run upgrade integration test
         run: |
           kubectl config use-context k3d-test-cluster-1
           EXPORT_RESULT=true IMG=europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}} make istio-upgrade-integration-test

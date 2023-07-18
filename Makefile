@@ -98,7 +98,7 @@ manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and Cust
 	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
 .PHONY: generate-integration-test-manifest
-generate-integration-test-manifest: manifests
+generate-integration-test-manifest: manifests kustomize
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default -o tests/integration/manifests/local-manifest.yaml
 

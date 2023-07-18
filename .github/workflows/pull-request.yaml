@@ -10,8 +10,10 @@ on:
       - 'OWNERS'
       - 'CODEOWNERS'
       - 'sec-scanners-config.yaml'
+      - './github/dependabot.yml'
     branches:
       - main
+      - 'release-**'
 permissions:
   contents: read
 

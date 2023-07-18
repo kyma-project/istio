@@ -7,7 +7,6 @@ import (
 	"istio.io/istio/operator/pkg/util/clog"
 	istiolog "istio.io/pkg/log"
 	"os"
-	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 func initializeLog() *istiolog.Options {
@@ -37,7 +36,7 @@ func main() {
 	installArgs := &istio.InstallArgs{SkipConfirmation: true, Verify: false, InFilenames: iopFileNames}
 
 	if err := istio.Install(&istio.RootArgs{}, installArgs, istioLogOptions, os.Stdout, consoleLogger, printer); err != nil {
-		ctrl.Log.Error(err, "Error occured during istio installation in external process")
+		consoleLogger.LogAndError("Istio install error: ", err)
 		os.Exit(1)
 	}
 }

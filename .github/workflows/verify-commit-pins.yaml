@@ -1,4 +1,4 @@
-name: Verify that actions are SHA pinned
+name: Workflow validation
 
 on:
   pull_request:

@@ -33,6 +33,10 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^Destination rule "([^"]*)" in namespace "([^"]*)" with host "([^"]*)" exists$`, steps.CreateDestinationRule)
 	ctx.Step(`^Istio is manually uninstalled$`, steps.UninstallIstio)
 	ctx.Step(`^Istio "([^"]*)" service has annotation "([^"]*)" on "([^"]*)" cluster$`, steps.IstioServiceHasAnnotation)
+	ctx.Step(`^Httpbin application "([^"]*)" is running in namespace "([^"]*)"$`, steps.CreateHttpbinApplication)
+	ctx.Step(`^Istio gateway "([^"]*)" is configured in namespace "([^"]*)"$`, steps.CreateIstioGateway)
+	ctx.Step(`^Virtual service "([^"]*)" exposing service "([^"]*)" by gateway "([^"]*)" is configured in namespace "([^"]*)"$`, steps.CreateVirtualService)
+	ctx.Step(`^Request with header X-Forwarded-For with value "([^"]*)" sent to httpbin should return X-Envoy-External-Address with value "([^"]*)"$`, steps.ValidateExternalAddressForwarding)
 }
 
 func upgradeInitScenario(ctx *godog.ScenarioContext) {

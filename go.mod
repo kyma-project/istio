@@ -3,12 +3,12 @@ module github.com/kyma-project/istio/operator
 go 1.20
 
 require (
+	dario.cat/mergo v1.0.0
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/coreos/go-semver v0.3.1
 	github.com/cucumber/godog v0.12.6
 	github.com/docker/distribution v2.8.2+incompatible
 	github.com/go-logr/logr v1.2.4
-	github.com/imdario/mergo v0.3.13
 	github.com/masterminds/semver v1.5.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/onsi/ginkgo/v2 v2.11.0
@@ -19,18 +19,18 @@ require (
 	gitlab.com/rodrigoodhin/gocure v0.0.0-20220718065339-f14dfe79276a
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 	golang.org/x/time v0.3.0
-	google.golang.org/protobuf v1.30.0
-	istio.io/api v0.0.0-20230621030812-36698ea550c8
-	istio.io/client-go v1.18.1-0.20230621031510-0789e128a186
-	istio.io/istio v0.0.0-20230621044911-6f0d7ae668c8
+	google.golang.org/protobuf v1.31.0
+	istio.io/api v0.0.0-20230713061407-06047cce866f
+	istio.io/client-go v1.18.1
+	istio.io/istio v0.0.0-20230713183549-b39cf4080772
 	istio.io/pkg v0.0.0-20230524020242-1015535057be
 	k8s.io/api v0.27.3
-	k8s.io/apiextensions-apiserver v0.27.2
+	k8s.io/apiextensions-apiserver v0.27.3
 	k8s.io/apimachinery v0.27.3
 	k8s.io/client-go v0.27.3
-	k8s.io/kubectl v0.27.2
+	k8s.io/kubectl v0.27.3
 	k8s.io/utils v0.0.0-20230505201702-9f6742963106
-	sigs.k8s.io/controller-runtime v0.13.1-0.20230315234915-a26de2d610c3
+	sigs.k8s.io/controller-runtime v0.13.1-0.20230315234915-a26de2d610c3 // Since we are using the Istio library directly, we should also use the controller-runtime version that is used by Istio.
 	sigs.k8s.io/yaml v1.3.0
 )
 
@@ -114,6 +114,7 @@ require (
 	github.com/hashicorp/golang-lru/v2 v2.0.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/huandu/xstrings v1.4.0 // indirect
+	github.com/imdario/mergo v0.3.13 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jonboulle/clockwork v0.3.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
@@ -210,9 +211,9 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	helm.sh/helm/v3 v3.12.0 // indirect
-	k8s.io/apiserver v0.27.2 // indirect
-	k8s.io/cli-runtime v0.27.2 // indirect
-	k8s.io/component-base v0.27.2 // indirect
+	k8s.io/apiserver v0.27.3 // indirect
+	k8s.io/cli-runtime v0.27.3 // indirect
+	k8s.io/component-base v0.27.3 // indirect
 	k8s.io/klog/v2 v2.100.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20230523194449-df37dd07aa00 // indirect
 	sigs.k8s.io/gateway-api v0.6.2 // indirect

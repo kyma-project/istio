@@ -5,7 +5,7 @@
 ![Kyma IstioOperator Overview](./../assets/istio-operator-overview.svg)
 
 We want to keep the Kyma Istio operator as simple as possible. That's why we decided to start with one controller that consists of several self-contained components
-executing reconciliation logic. The controller uses [Istio CR](./04-20-xff-proposal.md) as a resource. Istio CR *must* be in `kyma-system` namespace and we restrict to having just a single one on a Kyma cluster with a ResourceQuota resource.
+executing reconciliation logic. The controller uses [Istio CR](./04-20-xff-proposal.md) as a resource, which must be present in the `kyma-system` Namespace. The `ResourceQuota` resource ensures that there is only one Istio CR in a Kyma cluster.
 
 ### Ownership of current resources in Kyma repository
 

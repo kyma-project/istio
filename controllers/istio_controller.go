@@ -45,7 +45,7 @@ import (
 
 const (
 	namespace                    = "kyma-system"
-	IstioVersion                 = "1.18.0"
+	IstioVersion                 = "1.18.1"
 	IstioImageBase               = "distroless"
 	IstioResourceListDefaultPath = "manifests/controlled_resources_list.yaml"
 	ErrorRetryTime               = time.Minute * 1

@@ -9,7 +9,7 @@ BRANCH=$(git branch --show-current)
 if [ "$BRANCH" == "main" ]
 then
   TAG=$(git describe --tags --abbrev=0)
-  RELEASE_MANIFEST_URL="https://github.com/kyma-project/istio/releases/download/${TAG}/istio-default-cr.yaml"
+  RELEASE_MANIFEST_URL="https://github.com/kyma-project/istio/releases/download/${TAG}/istio-manager.yaml"
  curl -L "$RELEASE_MANIFEST_URL" | kubectl apply -f -
 else
  RELEASE_INFO=$(curl -L \

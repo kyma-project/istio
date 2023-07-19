@@ -94,4 +94,4 @@ jobs:
       - name: Run upgrade integration test
         run: |
           kubectl config use-context k3d-test-cluster-1
-          EXPORT_RESULT=true IMG=europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}} TARGET=${{github.base_ref}} make istio-upgrade-integration-test
+          EXPORT_RESULT=true IMG=europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}} TARGET_BRANCH=${{github.base_ref}} make istio-upgrade-integration-test

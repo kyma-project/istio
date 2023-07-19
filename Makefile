@@ -50,6 +50,8 @@ IMG ?= $(IMG_REGISTRY)/$(MODULE_NAME)-operator:$(MODULE_VERSION)
 
 COMPONENT_CLI_VERSION ?= latest
 
+TARGET_BRANCH ?= ""
+
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
 GOBIN=$(shell go env GOPATH)/bin
@@ -290,7 +292,8 @@ istio-integration-test: install deploy
 .PHONY: istio-upgrade-integration-test
 istio-upgrade-integration-test: generate-integration-test-manifest
 	# Increased TEST_REQUEST_TIMEOUT to 300s to avoid timeouts on newly created k3s clusters on Prow
-	cd tests/integration && ./scripts/deploy-latest-release-to-cluster.sh $(TARGET) && TEST_REQUEST_TIMEOUT=300s && EXPORT_RESULT=true IMG=${IMG} go test -v -timeout 10m -run TestIstioUpgrade
+	#cd tests/integration && ./scripts/deploy-latest-release-to-cluster.sh $(TARGET_BRANCH) && TEST_REQUEST_TIMEOUT=300s && EXPORT_RESULT=true IMG=${IMG} go test -v -timeout 10m -run TestIstioUpgrade
+	cd tests/integration && ./scripts/deploy-latest-release-to-cluster.sh $(TARGET_BRANCH)
 
 
 .PHONY: gardener-istio-integration-test

@@ -14,6 +14,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+type SidecarsReconciliation interface {
+	Reconcile(ctx context.Context, istioCr v1alpha1.Istio) error
+}
+
 type Sidecars struct {
 	IstioVersion   string
 	IstioImageBase string

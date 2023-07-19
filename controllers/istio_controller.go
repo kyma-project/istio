@@ -55,8 +55,8 @@ func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *I
 	return &IstioReconciler{
 		Client:                 mgr.GetClient(),
 		Scheme:                 mgr.GetScheme(),
-		istioInstallation:      istio.Installation{Client: mgr.GetClient(), IstioClient: istio.NewIstioClient(), IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Merger: &merger, StatusHandler: status.NewDefaultStatusHandler()},
-		proxySidecars:          proxy.Sidecars{IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Log: mgr.GetLogger(), Client: mgr.GetClient(), Merger: &merger},
+		istioInstallation:      &istio.Installation{Client: mgr.GetClient(), IstioClient: istio.NewIstioClient(), IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Merger: &merger},
+		proxySidecars:          &proxy.Sidecars{IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Log: mgr.GetLogger(), Client: mgr.GetClient(), Merger: &merger},
 		log:                    mgr.GetLogger(),
 		statusHandler:          status.NewDefaultStatusHandler(),
 		reconciliationInterval: reconciliationInterval,
@@ -72,17 +72,19 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			r.log.Info("Skipped reconciliation, because Istio CR was not found", "request object", req.NamespacedName)
 			return ctrl.Result{}, nil
 		}
-		describedErr := described_errors.NewDescribedError(err, "Could not get Istio CR")
-		return r.stopReconcile(ctx, istioCR, describedErr)
+		r.log.Error(err, "Could not get Istio CR")
+		return ctrl.Result{}, err
 	}
 
 	if istioCR.DeletionTimestamp.IsZero() {
 		if err := r.statusHandler.UpdateToProcessing(ctx, "Reconciling Istio resources", r.Client, &istioCR); err != nil {
-			return r.stopReconcile(ctx, istioCR, described_errors.NewDescribedError(err, "Could not set status to processing"))
+			r.log.Error(err, "Update status to processing failed")
+			return ctrl.Result{}, err
 		}
 	} else {
 		if err := r.statusHandler.UpdateToDeleting(ctx, r.Client, &istioCR); err != nil {
-			return r.stopReconcile(ctx, istioCR, described_errors.NewDescribedError(err, "Could not set status to deleting"))
+			r.log.Error(err, "Update status to deleting failed")
+			return ctrl.Result{}, err
 		}
 	}
 
@@ -94,7 +96,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	// If there are no finalizers left, we must assume that the resource is deleted and therefore must stop the reconciliation
 	// to prevent accidental read or write to the resource.
 	if !istioCR.HasFinalizer() {
-		r.log.Info("Finish reconciliation as all finalizers have been removed")
+		r.log.Info("End reconciliation because all finalizers have been removed")
 		return ctrl.Result{}, nil
 	}
 

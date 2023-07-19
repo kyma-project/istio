@@ -85,7 +85,7 @@ var _ = Describe("SetReady", func() {
 		// then
 		Expect(err).ToNot(HaveOccurred())
 
-		err = k8sClient.Get(context.TODO(), types2.NamespacedName{Name: "test", Namespace: "default"}, &cr)
+		Expect(k8sClient.Get(context.TODO(), types2.NamespacedName{Name: "test", Namespace: "default"}, &cr)).Should(Succeed())
 		Expect(cr.Status.State).To(Equal(operatorv1alpha1.Ready))
 		Expect(cr.Status.Description).To(BeEmpty())
 	})

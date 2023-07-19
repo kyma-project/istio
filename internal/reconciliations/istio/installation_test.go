@@ -9,10 +9,8 @@ import (
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
-	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/kyma-project/istio/operator/internal/manifest"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
-	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/pkg/lib/annotations"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
@@ -74,7 +72,6 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
-			StatusHandler:  StatusMock{},
 		}
 
 		// when
@@ -117,7 +114,6 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
-			StatusHandler:  status.NewDefaultStatusHandler(),
 		}
 		// when
 		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
@@ -156,7 +152,6 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
-			StatusHandler:  StatusMock{},
 		}
 		// when
 		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
@@ -202,7 +197,6 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
-			StatusHandler:  status.NewDefaultStatusHandler(),
 		}
 		// when
 		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
@@ -241,7 +235,6 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
-			StatusHandler:  StatusMock{},
 		}
 		// when
 		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
@@ -284,7 +277,6 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
-			StatusHandler:  status.NewDefaultStatusHandler(),
 		}
 		// when
 		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
@@ -334,7 +326,6 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
-			StatusHandler:  status.NewDefaultStatusHandler(),
 		}
 		// when
 		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
@@ -391,7 +382,6 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
-			StatusHandler:  status.NewDefaultStatusHandler(),
 		}
 		// when
 		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
@@ -441,7 +431,6 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   "1.17.0",
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
-			StatusHandler:  status.NewDefaultStatusHandler(),
 		}
 		// when
 		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
@@ -480,7 +469,6 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   istioVersionDowngrade,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
-			StatusHandler:  StatusMock{},
 		}
 		// when
 		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
@@ -520,7 +508,6 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   istioVersionTwoMinor,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
-			StatusHandler:  StatusMock{},
 		}
 		// when
 		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
@@ -560,7 +547,6 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   istioVersionOneMajor,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
-			StatusHandler:  StatusMock{},
 		}
 		// when
 		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
@@ -601,7 +587,6 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   "fake",
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
-			StatusHandler:  StatusMock{},
 		}
 
 		// when
@@ -643,7 +628,6 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   "1.17.0",
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
-			StatusHandler:  StatusMock{},
 		}
 
 		// when
@@ -687,7 +671,6 @@ var _ = Describe("Installation reconciliation", func() {
 			Merger: MergerMock{
 				mergeError: errors.New("merging failed"),
 			},
-			StatusHandler: StatusMock{},
 		}
 
 		// when
@@ -731,7 +714,6 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   "1.17.0",
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
-			StatusHandler:  StatusMock{},
 		}
 		// when
 		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
@@ -775,7 +757,6 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
-			StatusHandler:  StatusMock{},
 		}
 		// when
 		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
@@ -815,7 +796,6 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
-			StatusHandler:  StatusMock{},
 		}
 
 		// when
@@ -856,7 +836,6 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
-			StatusHandler:  StatusMock{},
 		}
 
 		// when
@@ -898,7 +877,6 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
-			StatusHandler:  StatusMock{},
 		}
 
 		// when
@@ -939,7 +917,6 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
-			StatusHandler:  StatusMock{},
 		}
 
 		// when
@@ -986,7 +963,6 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
-			StatusHandler:  StatusMock{},
 		}
 
 		// when
@@ -1030,7 +1006,6 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
-			StatusHandler:  StatusMock{},
 		}
 
 		// when
@@ -1084,7 +1059,7 @@ type shouldFailFakeClientOnAnnotation struct {
 func (p *shouldFailFakeClientOnAnnotation) Update(ctx context.Context, obj client.Object, _ ...client.UpdateOption) error {
 	_, found := obj.GetAnnotations()[p.failAnnotation]
 	if found {
-		return fmt.Errorf("Intentionally failing client update call on annotation: %s", p.failAnnotation)
+		return fmt.Errorf("intentionally failing client update call on annotation: %s", p.failAnnotation)
 	}
 	return p.Client.Update(ctx, obj)
 }
@@ -1141,26 +1116,3 @@ func (m MergerMock) GetIstioOperator(_ string) (istioOperator.IstioOperator, err
 }
 
 func (m MergerMock) SetIstioInstallFlavor(_ clusterconfig.ClusterSize) {}
-
-type StatusMock struct {
-	processingError error
-	readyError      error
-	deletingError   error
-	errorError      error
-}
-
-func (s StatusMock) UpdateToProcessing(_ context.Context, _ string, _ client.Client, _ *operatorv1alpha1.Istio) error {
-	return s.processingError
-}
-
-func (s StatusMock) UpdateToError(_ context.Context, _ described_errors.DescribedError, _ client.Client, _ *operatorv1alpha1.Istio) error {
-	return s.errorError
-}
-
-func (s StatusMock) UpdateToDeleting(_ context.Context, _ client.Client, _ *operatorv1alpha1.Istio) error {
-	return s.deletingError
-}
-
-func (s StatusMock) UpdateToReady(_ context.Context, _ client.Client, _ *operatorv1alpha1.Istio) error {
-	return s.readyError
-}

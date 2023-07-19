@@ -13,7 +13,6 @@ import (
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/kyma-project/istio/operator/internal/manifest"
 	"github.com/kyma-project/istio/operator/internal/resources"
-	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 	sidecarRemover "github.com/kyma-project/istio/operator/pkg/lib/sidecars/remove"
 
@@ -22,13 +21,16 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
+type InstallationReconciliation interface {
+	Reconcile(ctx context.Context, istioCR operatorv1alpha1.Istio, istioResourceListPath string) (operatorv1alpha1.Istio, described_errors.DescribedError)
+}
+
 type Installation struct {
 	IstioClient    LibraryClient
 	IstioVersion   string
 	IstioImageBase string
 	Client         client.Client
 	Merger         manifest.Merger
-	StatusHandler  status.Status
 }
 
 const (

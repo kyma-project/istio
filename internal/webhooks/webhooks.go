@@ -23,7 +23,7 @@ var deactivatedLabel = map[string]string{
 	"istio.io/deactivated": "never-match",
 }
 
-// DeleteConflictedDefaultTag deletes conflicted tagged MutatingWebhookConfiguration, if it exists and if the default revision MutatingWebhookConfiguration is not deactivated by istioctl.
+// DeleteConflictedDefaultTag deletes conflicted tagged MutatingWebhookConfiguration, if it exists and if the default revision MutatingWebhookConfiguration is not deactivated by Istio installation logic.
 func DeleteConflictedDefaultTag(ctx context.Context, kubeClient client.Client) error {
 
 	retryOpts := []retry.Option{

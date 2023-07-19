@@ -87,8 +87,8 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 
 		err = i.IstioClient.Install(mergedIstioOperatorPath)
 		if err != nil {
-			// In case of error in the istioctl, old mutatingwebhook won't be deactivated, which will block later reconciliations.
-			err2 := webhooks.DeleteConflictedDefaultTag(context.Background(), i.Client)
+			// In case of an error during the Istio installation, the old mutatingwebhook won't be deactivated, which will block later reconciliations
+			err2 := webhooks.DeleteConflictedDefaultTag(ctx, i.Client)
 			if err2 != nil {
 				ctrl.Log.Error(err2, "Error occurred when tried to clean conflicted webhooks")
 			}

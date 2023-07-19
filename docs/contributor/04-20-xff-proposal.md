@@ -13,7 +13,7 @@ The status is implemented per `kyma-operator` requirements.
 ## Istio CR example
 
 ```bash
-apiVersion: operator.kyma-project.io/v1alpha1
+apiVersion: operator.kyma-project.io/v1alpha2
 kind: Istio
 metadata:
   name: default

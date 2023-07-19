@@ -81,7 +81,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 
 	if istioCR.GetNamespace() != namespace {
-		errWrongNS := errors.New(fmt.Sprintf("Istio CR is not in %s namespace", namespace))
+		errWrongNS := fmt.Errorf("Istio CR is not in %s namespace", namespace))
 		r.log.Error(errWrongNS, "Skipped reconciliation")
 		return r.statusHandler.SetError(ctx, described_errors.NewDescribedError(errWrongNS, "Error occurred during reconciliation of Istio CR"), r.Client, &istioCR, metav1.Condition{}, ErrorRetryTime)
 	}

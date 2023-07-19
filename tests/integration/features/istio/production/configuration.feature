@@ -5,6 +5,7 @@ Feature: Configuration of Istio module
     And Evaluated cluster size is "Production"
     And Istio CRD is installed
     And "Deployment" "istio-controller-manager" in namespace "kyma-system" is ready
+    And "ResourceQuota" "istio-custom-resources-count" in namespace "kyma-system" is ready
 
   Scenario: Updating proxy resource configuration
     Given Template value "ProxyCPURequest" is set to "30m"

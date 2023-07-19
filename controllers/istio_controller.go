@@ -19,9 +19,10 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/kyma-project/istio/operator/internal/status"
-	"time"
 
 	"github.com/kyma-project/istio/operator/internal/manifest"
 
@@ -30,7 +31,7 @@ import (
 	"github.com/kyma-project/istio/operator/internal/reconciliations/proxy"
 	"golang.org/x/time/rate"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -42,10 +43,11 @@ import (
 )
 
 const (
-	IstioVersion                 string = "1.18.1"
-	IstioImageBase               string = "distroless"
-	IstioResourceListDefaultPath        = "manifests/controlled_resources_list.yaml"
-	ErrorRetryTime                      = time.Minute * 1
+	namespace                    = "kyma-system"
+	IstioVersion                 = "1.18.1"
+	IstioImageBase               = "distroless"
+	IstioResourceListDefaultPath = "manifests/controlled_resources_list.yaml"
+	ErrorRetryTime               = time.Minute * 1
 )
 
 var IstioTag = fmt.Sprintf("%s-%s", IstioVersion, IstioImageBase)
@@ -66,15 +68,21 @@ func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *I
 
 func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	r.log.Info("Was called to reconcile Kyma Istio Service Mesh")
-	istioCR := operatorv1alpha1.Istio{}
 
+	istioCR := operatorv1alpha1.Istio{}
 	if err := r.Client.Get(ctx, req.NamespacedName, &istioCR); err != nil {
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			r.log.Info("Skipped reconciliation, because Istio CR was not found", "request object", req.NamespacedName)
 			return ctrl.Result{}, nil
 		}
 		r.log.Error(err, "Error during fetching Istio CR")
 		return r.statusHandler.SetError(ctx, described_errors.NewDescribedError(err, "Could not get Istio CR"), r.Client, &istioCR, metav1.Condition{}, ErrorRetryTime)
+	}
+
+	if istioCR.GetNamespace() != namespace {
+		errWrongNS := fmt.Errorf("Istio CR is not in %s namespace", namespace)
+		r.log.Error(errWrongNS, "Skipped reconciliation")
+		return r.statusHandler.SetError(ctx, described_errors.NewDescribedError(errWrongNS, "Error occurred during reconciliation of Istio CR"), r.Client, &istioCR, metav1.Condition{}, ErrorRetryTime)
 	}
 
 	istioCR, err := r.istioInstallation.Reconcile(ctx, istioCR, IstioResourceListDefaultPath)
@@ -95,20 +103,20 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	// error occurs in the reconciliation of the Istio upgrade after the Istio upgrade.
 	proxyErr := r.proxySidecars.Reconcile(ctx, istioCR)
 	if proxyErr != nil {
-		r.log.Error(err, "Error occurred during reconciliation of Istio Sidecars")
+		r.log.Error(proxyErr, "Error occurred during reconciliation of Istio Sidecars")
 		return r.statusHandler.SetError(ctx, described_errors.NewDescribedError(proxyErr, "Error occurred during reconciliation of Istio Sidecars"), r.Client, &istioCR, metav1.Condition{}, ErrorRetryTime)
 	}
 
 	// Put applied configuration in annotation
 	istioCR, updateErr := istio.UpdateLastAppliedConfiguration(istioCR, IstioTag)
 	if updateErr != nil {
-		r.log.Error(err, "Error updating LastAppliedConfiguration")
+		r.log.Error(updateErr, "Error updating LastAppliedConfiguration")
 		return r.statusHandler.SetError(ctx, described_errors.NewDescribedError(updateErr, "Error updating LastAppliedConfiguration"), r.Client, &istioCR, metav1.Condition{}, ErrorRetryTime)
 	}
 
 	updateErr = r.Client.Update(ctx, &istioCR)
 	if updateErr != nil {
-		r.log.Error(err, "Error during update of IstioCR")
+		r.log.Error(updateErr, "Error during update of IstioCR")
 		return r.statusHandler.SetError(ctx, described_errors.NewDescribedError(updateErr, "Error during update of IstioCR"), r.Client, &istioCR, metav1.Condition{}, ErrorRetryTime)
 	}
 

@@ -79,13 +79,13 @@ make deploy
 - Install Istio in your cluster.
 
 ```bash
-kubectl apply -f config/samples/operator_v1alpha1_istio.yaml
+kubectl apply -f config/samples/operator_v1alpha2_istio.yaml
 ```
 
 - Delete Istio from your cluster.
 
 ```bash
-kubectl delete -f config/samples/operator_v1alpha1_istio.yaml
+kubectl delete -f config/samples/operator_v1alpha2_istio.yaml
 ```
 
 ## Install the Istio module with Lifecycle Manager locally on k3d

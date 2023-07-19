@@ -23,7 +23,7 @@ trap cleanup EXIT INT
 
 tag=$(gcloud container images list-tags europe-docker.pkg.dev/kyma-project/prod/istio-manager --limit 1 --format json | jq '.[0].tags[1]')
 IMG=europe-docker.pkg.dev/kyma-project/prod/istio-manager:${tag} make install deploy
-kubectl apply -f config/samples/operator_v1alpha1_istio.yaml
+kubectl apply -f config/samples/operator_v1alpha2_istio.yaml
 
 number=1
 	while [[ $number -le 100 ]] ; do

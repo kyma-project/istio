@@ -31,5 +31,5 @@ curl -f -L \
   -H "${GITHUB_AUTH_HEADER}" \
   -H "X-GitHub-Api-Version: 2022-11-28" \
   -H "Content-Type: application/octet-stream" \
-  --data-binary @"config/samples/operator_v1alpha1_istio.yaml" \
+  --data-binary @"config/samples/operator_v1alpha2_istio.yaml" \
   ${GITHUB_URL}/releases/${RELEASE_ID}/assets?name=istio-default-cr.yaml

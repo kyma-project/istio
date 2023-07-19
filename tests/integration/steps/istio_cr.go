@@ -4,15 +4,18 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
+	"strings"
+	"text/template"
+
 	"github.com/avast/retry-go"
 	istioCR "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
+	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
-	"os"
 	"sigs.k8s.io/yaml"
-	"text/template"
 )
 
 const templateFileName string = "manifests/istio_cr_template.yaml"
@@ -91,7 +94,7 @@ func (t *TemplatedIstioCr) IstioCRIsAppliedInNamespace(ctx context.Context, name
 		return ctx, err
 	}
 
-	istio, err := createIstioCrFromTemplate(name, namespace, t.templateValues)
+	istio, err := createIstioCRFromTemplate(name, namespace, t.templateValues)
 	if err != nil {
 		return ctx, err
 	}
@@ -108,13 +111,13 @@ func (t *TemplatedIstioCr) IstioCRIsAppliedInNamespace(ctx context.Context, name
 	return ctx, err
 }
 
-func (t *TemplatedIstioCr) IstioCrIsUpdatedInNamespace(ctx context.Context, name, namespace string) error {
+func (t *TemplatedIstioCr) IstioCRIsUpdatedInNamespace(ctx context.Context, name, namespace string) error {
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
 	}
 
-	istio, err := createIstioCrFromTemplate(name, namespace, t.templateValues)
+	istio, err := createIstioCRFromTemplate(name, namespace, t.templateValues)
 	if err != nil {
 		return err
 	}
@@ -130,7 +133,7 @@ func (t *TemplatedIstioCr) IstioCrIsUpdatedInNamespace(ctx context.Context, name
 	}, testcontext.GetRetryOpts()...)
 }
 
-func createIstioCrFromTemplate(name string, namespace string, templateValues map[string]string) (istioCR.Istio, error) {
+func createIstioCRFromTemplate(name string, namespace string, templateValues map[string]string) (istioCR.Istio, error) {
 	istioCRYaml, err := os.ReadFile(templateFileName)
 	if err != nil {
 		return istioCR.Istio{}, err
@@ -156,4 +159,23 @@ func createIstioCrFromTemplate(name string, namespace string, templateValues map
 	istio.Namespace = namespace
 	istio.Name = name
 	return istio, nil
+}
+
+func (t *TemplatedIstioCr) IstioCRCanNotBeAppliedInNamespaceWithError(ctx context.Context, name, namespace, expectedError string) (context.Context, error) {
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return ctx, err
+	}
+
+	istio, err := createIstioCRFromTemplate(name, namespace, t.templateValues)
+	if err != nil {
+		return ctx, err
+	}
+
+	err = k8sClient.Create(context.TODO(), &istio)
+	if err == nil || !strings.Contains(err.Error(), expectedError) {
+		return ctx, errors.New(fmt.Sprintf("Expected error not found: %s", expectedError))
+	}
+
+	return ctx, nil
 }

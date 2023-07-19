@@ -29,13 +29,13 @@ func DeployIstioOperatorFromLocalManifest(ctx context.Context) error {
 			var existingResource unstructured.Unstructured
 			existingResource.SetGroupVersionKind(gvk)
 
-			err := k8sClient.Get(context.TODO(), client.ObjectKey{
+			err := k8sClient.Get(ctx, client.ObjectKey{
 				Namespace: resource.GetNamespace(),
 				Name:      resource.GetName(),
 			}, &existingResource)
 
 			if err != nil {
-				err := k8sClient.Create(context.TODO(), &resource)
+				err := k8sClient.Create(ctx, &resource)
 				if err != nil {
 					return err
 				}
@@ -43,14 +43,14 @@ func DeployIstioOperatorFromLocalManifest(ctx context.Context) error {
 
 			mergedResource := mergeResources(&existingResource, &resource)
 
-			err = k8sClient.Update(context.TODO(), mergedResource)
+			err = k8sClient.Update(ctx, mergedResource)
 			if err != nil {
 				return err
 			}
 		}
 
 		var controller v1.Deployment
-		err = k8sClient.Get(context.TODO(), client.ObjectKey{
+		err = k8sClient.Get(ctx, client.ObjectKey{
 			Namespace: "kyma-system",
 			Name:      "istio-controller-manager",
 		}, &controller)
@@ -60,7 +60,7 @@ func DeployIstioOperatorFromLocalManifest(ctx context.Context) error {
 		newImage := controller.Spec.Template.Spec.Containers[0].Image
 
 		var pods v1c.PodList
-		err = k8sClient.List(context.TODO(), &pods, client.MatchingLabels{
+		err = k8sClient.List(ctx, &pods, client.MatchingLabels{
 			"app.kubernetes.io/component": "istio-operator.kyma-project.io",
 		})
 		if err != nil {

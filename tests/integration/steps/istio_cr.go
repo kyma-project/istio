@@ -94,7 +94,7 @@ func (t *TemplatedIstioCr) IstioCRIsAppliedInNamespace(ctx context.Context, name
 		return ctx, err
 	}
 
-	istio, err := createIstioCrFromTemplate(name, namespace, t.templateValues)
+	istio, err := createIstioCRFromTemplate(name, namespace, t.templateValues)
 	if err != nil {
 		return ctx, err
 	}
@@ -111,13 +111,13 @@ func (t *TemplatedIstioCr) IstioCRIsAppliedInNamespace(ctx context.Context, name
 	return ctx, err
 }
 
-func (t *TemplatedIstioCr) IstioCrIsUpdatedInNamespace(ctx context.Context, name, namespace string) error {
+func (t *TemplatedIstioCr) IstioCRIsUpdatedInNamespace(ctx context.Context, name, namespace string) error {
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
 	}
 
-	istio, err := createIstioCrFromTemplate(name, namespace, t.templateValues)
+	istio, err := createIstioCRFromTemplate(name, namespace, t.templateValues)
 	if err != nil {
 		return err
 	}
@@ -133,7 +133,7 @@ func (t *TemplatedIstioCr) IstioCrIsUpdatedInNamespace(ctx context.Context, name
 	}, testcontext.GetRetryOpts()...)
 }
 
-func createIstioCrFromTemplate(name string, namespace string, templateValues map[string]string) (istioCR.Istio, error) {
+func createIstioCRFromTemplate(name string, namespace string, templateValues map[string]string) (istioCR.Istio, error) {
 	istioCRYaml, err := os.ReadFile(templateFileName)
 	if err != nil {
 		return istioCR.Istio{}, err
@@ -167,7 +167,7 @@ func (t *TemplatedIstioCr) IstioCRCanNotBeAppliedInNamespaceWithError(ctx contex
 		return ctx, err
 	}
 
-	istio, err := createIstioCrFromTemplate(name, namespace, t.templateValues)
+	istio, err := createIstioCRFromTemplate(name, namespace, t.templateValues)
 	if err != nil {
 		return ctx, err
 	}

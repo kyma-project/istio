@@ -7,7 +7,7 @@ Feature: Installing and uninstalling Istio module
     And "Deployment" "istio-controller-manager" in namespace "kyma-system" is ready
 
   Scenario: Installation of Istio module with default values
-    When Istio CR "istio-sample" is applied in namespace "kyma-system"
+    Given Istio CR "istio-sample" is applied in namespace "kyma-system"
     Then Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
     And Istio "istio-ingressgateway" service has annotation "dns.gardener.cloud/dnsnames" on "Gardener" cluster
     And "proxy" has "requests" set to cpu - "10m" and memory - "192Mi"
@@ -84,7 +84,7 @@ Feature: Installing and uninstalling Istio module
     And Namespace "istio-system" is "not present"
 
   Scenario: Installation of Istio module with Istio CR in different namespace
-    When Istio CR "istio-sample" is applied in namespace "default"
+    Given Istio CR "istio-sample" is applied in namespace "default"
     Then Istio CR "istio-sample" in namespace "default" has status "Error"
     And Istio CR "istio-sample" in namespace "default" has description "Error occurred during reconciliation of Istio CR: Istio CR is not in kyma-system namespace"
 

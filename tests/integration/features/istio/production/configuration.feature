@@ -1,10 +1,13 @@
 Feature: Configuration of Istio module
 
-  Scenario: Updating proxy resource configuration
+  Background:
     Given "Istio CR" is not present on cluster
+    And Evaluated cluster size is "Production"
     And Istio CRD is installed
     And "Deployment" "istio-controller-manager" in namespace "kyma-system" is ready
-    And Template value "ProxyCPURequest" is set to "30m"
+
+  Scenario: Updating proxy resource configuration
+    Given Template value "ProxyCPURequest" is set to "30m"
     And Template value "ProxyMemoryRequest" is set to "190Mi"
     And Template value "ProxyCPULimit" is set to "700m"
     And Template value "ProxyMemoryLimit" is set to "700Mi"
@@ -26,10 +29,7 @@ Feature: Configuration of Istio module
     And Application "test-app" in namespace "default" has proxy with "limits" set to cpu - "900m" and memory - "900Mi"
 
   Scenario: Ingress Gateway adds correct X-Envoy-External-Address header after updating numTrustedProxies
-    Given "Istio CR" is not present on cluster
-    And Istio CRD is installed
-    And "Deployment" "istio-controller-manager" in namespace "kyma-system" is ready
-    And Template value "NumTrustedProxies" is set to "1"
+    Given Template value "NumTrustedProxies" is set to "1"
     And Istio CR "istio-sample" is applied in namespace "kyma-system"
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
     And Istio injection is enabled in namespace "default"

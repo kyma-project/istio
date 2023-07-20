@@ -127,7 +127,8 @@ spec:
   meshConfig:
     defaultConfig:
       holdApplicationUntilProxyStarts: true
-      proxyMetadata: {}
+      proxyMetadata:
+        BOOTSTRAP_XDS_AGENT: "true"
     defaultProviders:
       tracing: []
     enablePrometheusMerge: false

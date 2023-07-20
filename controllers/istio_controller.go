@@ -31,7 +31,8 @@ import (
 	"github.com/kyma-project/istio/operator/internal/reconciliations/proxy"
 	"golang.org/x/time/rate"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -42,9 +43,10 @@ import (
 )
 
 const (
-	IstioVersion                 string = "1.18.0"
-	IstioImageBase               string = "distroless"
-	IstioResourceListDefaultPath        = "manifests/controlled_resources_list.yaml"
+	namespace                    = "kyma-system"
+	IstioVersion                 = "1.18.1"
+	IstioImageBase               = "distroless"
+	IstioResourceListDefaultPath = "manifests/controlled_resources_list.yaml"
 )
 
 var IstioTag = fmt.Sprintf("%s-%s", IstioVersion, IstioImageBase)
@@ -65,15 +67,21 @@ func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *I
 
 func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	r.log.Info("Was called to reconcile Kyma Istio Service Mesh")
-	istioCR := operatorv1alpha1.Istio{}
 
+	istioCR := operatorv1alpha1.Istio{}
 	if err := r.Client.Get(ctx, req.NamespacedName, &istioCR); err != nil {
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			r.log.Info("Skipped reconciliation, because Istio CR was not found", "request object", req.NamespacedName)
 			return ctrl.Result{}, nil
 		}
 		r.log.Error(err, "Could not get Istio CR")
 		return ctrl.Result{}, err
+	}
+
+	if istioCR.GetNamespace() != namespace {
+		errWrongNS := fmt.Errorf("istio CR is not in %s namespace", namespace)
+		r.log.Error(errWrongNS, "Skipped reconciliation")
+		return r.stopReconcile(ctx, istioCR, described_errors.NewDescribedError(errWrongNS, "Error occurred during reconciliation of Istio CR"))
 	}
 
 	if istioCR.DeletionTimestamp.IsZero() {

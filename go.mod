@@ -20,9 +20,9 @@ require (
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 	golang.org/x/time v0.3.0
 	google.golang.org/protobuf v1.31.0
-	istio.io/api v0.0.0-20230621030812-36698ea550c8
-	istio.io/client-go v1.18.1-0.20230621031510-0789e128a186
-	istio.io/istio v0.0.0-20230621044911-6f0d7ae668c8
+	istio.io/api v0.0.0-20230713061407-06047cce866f
+	istio.io/client-go v1.18.1
+	istio.io/istio v0.0.0-20230713183549-b39cf4080772
 	istio.io/pkg v0.0.0-20230524020242-1015535057be
 	k8s.io/api v0.27.3
 	k8s.io/apiextensions-apiserver v0.27.3
@@ -114,7 +114,7 @@ require (
 	github.com/hashicorp/golang-lru/v2 v2.0.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/huandu/xstrings v1.4.0 // indirect
-	github.com/imdario/mergo v0.3.13 // indirect
+	github.com/imdario/mergo v0.3.15 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jonboulle/clockwork v0.3.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect

@@ -489,8 +489,8 @@ github.com/ianlancetaylor/demangle v0.0.0-20200824232613-28f6c0f3b639/go.mod h1:
 github.com/imdario/mergo v0.3.5/go.mod h1:2EnlNZ0deacrJVfApfmtdGgDfMuh/nq6Ok1EcJh5FfA=
 github.com/imdario/mergo v0.3.9/go.mod h1:2EnlNZ0deacrJVfApfmtdGgDfMuh/nq6Ok1EcJh5FfA=
 github.com/imdario/mergo v0.3.11/go.mod h1:jmQim1M+e3UYxmgPu/WyfjB3N3VflVyUjjjwH0dnCYA=
-github.com/imdario/mergo v0.3.13 h1:lFzP57bqS/wsqKssCGmtLAb8A0wKjLGrve2q3PPVcBk=
-github.com/imdario/mergo v0.3.13/go.mod h1:4lJ1jqUDcsbIECGy0RUJAXNIhg+6ocWgb1ALK2O4oXg=
+github.com/imdario/mergo v0.3.15 h1:M8XP7IuFNsqUx6VPK2P9OSmsYsI/YFaGil0uD21V3dM=
+github.com/imdario/mergo v0.3.15/go.mod h1:WBLT9ZmE3lPoWsEzCh9LPo3TiwVN+ZKEjmz+hD27ysY=
 github.com/inconshreveable/mousetrap v1.0.0/go.mod h1:PxqpIevigyE2G7u3NXJIT2ANytuPF1OarO4DADm73n8=
 github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2s0bqwp9tc8=
 github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
@@ -1339,7 +1339,6 @@ gopkg.in/yaml.v3 v3.0.0-20200121175148-a6ecf24a6d71/go.mod h1:K4uyk7z7BCEPqu6E+C
 gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
-gopkg.in/yaml.v3 v3.0.0/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
 gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 gotest.tools v2.2.0+incompatible h1:VsBPFP1AI068pPrMxtb/S8Zkgf9xEmTLJjfM+P5UIEo=
@@ -1354,12 +1353,12 @@ honnef.co/go/tools v0.0.0-20190523083050-ea95bdfd59fc/go.mod h1:rf3lG4BRIbNafJWh
 honnef.co/go/tools v0.0.1-2019.2.3/go.mod h1:a3bituU0lyd329TUQxRnasdCoJDkEUEAqEt0JzvZhAg=
 honnef.co/go/tools v0.0.1-2020.1.3/go.mod h1:X/FiERA/W4tHapMX5mGpAtMSVEeEUOyHaw9vFzvIQ3k=
 honnef.co/go/tools v0.0.1-2020.1.4/go.mod h1:X/FiERA/W4tHapMX5mGpAtMSVEeEUOyHaw9vFzvIQ3k=
-istio.io/api v0.0.0-20230621030812-36698ea550c8 h1:1ingPT0tqhmD6TV2xd5uezp03x3kTG8XbrE4fQrwvyg=
-istio.io/api v0.0.0-20230621030812-36698ea550c8/go.mod h1:dDMe1TsOtrRoUlBzdxqNolWXpXPQjLfbcXvqPMtQ6eo=
-istio.io/client-go v1.18.1-0.20230621031510-0789e128a186 h1:SvZfmG4D42n7ezSVX2DK5Hx/MLz1HC9EaZhMp4GivrM=
-istio.io/client-go v1.18.1-0.20230621031510-0789e128a186/go.mod h1:ZfQMaoZraY1oc/mnZPnWfQa8HTOIS+curQgxoahAosY=
-istio.io/istio v0.0.0-20230621044911-6f0d7ae668c8 h1:UKbgsFiJkSf/K/bMwl9WdqGeguTK60TG0e2bh5nbhXQ=
-istio.io/istio v0.0.0-20230621044911-6f0d7ae668c8/go.mod h1:43rThrQ0YdizhQjrQqx39ymqKmHwmZqO581kVCQ0W2Y=
+istio.io/api v0.0.0-20230713061407-06047cce866f h1:Z+KCZ5Eo48Ea3ZrbqyCLvoyT30ZUzCTrGXzoy1Qw5kM=
+istio.io/api v0.0.0-20230713061407-06047cce866f/go.mod h1:dDMe1TsOtrRoUlBzdxqNolWXpXPQjLfbcXvqPMtQ6eo=
+istio.io/client-go v1.18.1 h1:qSpKeJ0+3L9wAEfs30KaTWkifhz7YRmyXsOPnC+zMqk=
+istio.io/client-go v1.18.1/go.mod h1:ha62DtaYYStYdisMZw9OG5iG92irhr2sWK7C38qCdqI=
+istio.io/istio v0.0.0-20230713183549-b39cf4080772 h1:xFyLrLSXICF4PD0bO7DLv0TBTZjl9oNAYMkJb9ZA0O4=
+istio.io/istio v0.0.0-20230713183549-b39cf4080772/go.mod h1:MD6vtUgg32SZtPWnBEJyv7aDhN9KcArqrCZVWn2Docs=
 istio.io/pkg v0.0.0-20230524020242-1015535057be h1:H+ww/6ysv++W5na8wIVNfoE01shRez0rXZXzLGoMIvg=
 istio.io/pkg v0.0.0-20230524020242-1015535057be/go.mod h1:ZcwaaLCBsaAszynqi6s8Bs6VL3yeTtuXDon9QuzSD5E=
 k8s.io/api v0.18.2/go.mod h1:SJCWI7OLzhZSvbY7U8zwNl9UA4o1fizoug34OV/2r78=

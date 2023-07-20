@@ -3,6 +3,7 @@ package istio
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/istio/operator/internal/webhooks"
 	"k8s.io/client-go/util/retry"
 	"strings"
 
@@ -83,6 +84,12 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 
 		err = i.IstioClient.Install(mergedIstioOperatorPath)
 		if err != nil {
+			// In case of an error during the Istio installation, the old mutatingwebhook won't be deactivated, which will block later reconciliations
+			err2 := webhooks.DeleteConflictedDefaultTag(ctx, i.Client)
+			if err2 != nil {
+				ctrl.Log.Error(err2, "Error occurred when tried to clean conflicted webhooks")
+			}
+
 			return istioCR, described_errors.NewDescribedError(err, "Could not install Istio")
 		}
 

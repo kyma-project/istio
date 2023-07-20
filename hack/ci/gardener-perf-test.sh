@@ -29,8 +29,7 @@ while [[ $n -le 100 ]] ; do
   echo ">--> checking resource quota status #$n"
   state_hard=$(kubectl get -n kyma-system resourcequota istio-custom-resources-count -o jsonpath="{.status.hard}" | jq -r '.["count/istios.operator.kyma-project.io"]')
   state_used=$(kubectl get -n kyma-system resourcequota istio-custom-resources-count -o jsonpath="{.status.used}" | jq -r '.["count/istios.operator.kyma-project.io"]')
-  echo "resource quota hard: ${state_hard:='UNKNOWN'}"
-  echo "resource quota used: ${state_used:='UNKNOWN'}"
+  echo "resource quota used/hard: ${state_used:='UNKNOWN'}/${state_hard:='UNKNOWN'}"
   [[ "$state_hard" == "1" ]] && [[ "$state_used" == "0" ]] && break
   n=$((n+1))
   sleep 5

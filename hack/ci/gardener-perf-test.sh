@@ -23,17 +23,30 @@ trap cleanup EXIT INT
 
 tag=$(gcloud container images list-tags europe-docker.pkg.dev/kyma-project/prod/istio-manager --limit 1 --format json | jq '.[0].tags[1]')
 IMG=europe-docker.pkg.dev/kyma-project/prod/istio-manager:${tag} make install deploy
+
+n=1
+while [[ $n -le 100 ]] ; do
+  echo ">--> checking resource quota status #$n"
+  state_hard=$(kubectl get -n kyma-system resourcequota istio-custom-resources-count -o jsonpath="{.status.hard}" | jq -r '.["count/istios.operator.kyma-project.io"]')
+  state_used=$(kubectl get -n kyma-system resourcequota istio-custom-resources-count -o jsonpath="{.status.used}" | jq -r '.["count/istios.operator.kyma-project.io"]')
+  echo "resource quotate hard state: ${state_hard:='UNKNOWN'}"
+  echo "resource quotate used state: ${state_used:='UNKNOWN'}"
+  [[ "$state_hard" == "1" ]] && [[ "$state_used" == "0" ]] && break
+  n=$((n+1))
+  sleep 5
+done
+
 kubectl apply -f config/samples/operator_v1alpha2_istio.yaml
 
-number=1
-	while [[ $number -le 100 ]] ; do
-		echo ">--> checking kyma status #$number"
-		STATUS=$(kubectl get istio default -o jsonpath='{.status.state}')
-		echo "kyma status: ${STATUS:='UNKNOWN'}"
-		[[ "$STATUS" == "Ready" ]] && break
-		sleep 5
-        	((number = number + 1))
-	done
+n=1
+while [[ $n -le 100 ]] ; do
+  echo ">--> checking kyma status #$n"
+  state=$(kubectl get -n kyma-system istio default -o jsonpath='{.status.state}')
+  echo "Istio state: ${state:='UNKNOWN'}"
+  [[ "$state" == "Ready" ]] && break
+  n=$((n+1))
+  sleep 5
+done
 
 domain=$(kubectl config view -o json | jq '.clusters[0].cluster.server' | sed -e "s/https:\/\/api.//" -e 's/"//g')
 kubectl annotate service -n istio-system istio-ingressgateway "dns.gardener.cloud/dnsnames=*.${domain}" --overwrite

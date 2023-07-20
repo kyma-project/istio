@@ -24,10 +24,10 @@ require (
 	istio.io/client-go v1.18.1
 	istio.io/istio v0.0.0-20230713183549-b39cf4080772
 	istio.io/pkg v0.0.0-20230524020242-1015535057be
-	k8s.io/api v0.27.3
+	k8s.io/api v0.27.4
 	k8s.io/apiextensions-apiserver v0.27.3
-	k8s.io/apimachinery v0.27.3
-	k8s.io/client-go v0.27.3
+	k8s.io/apimachinery v0.27.4
+	k8s.io/client-go v0.27.4
 	k8s.io/kubectl v0.27.3
 	k8s.io/utils v0.0.0-20230505201702-9f6742963106
 	sigs.k8s.io/controller-runtime v0.13.1-0.20230315234915-a26de2d610c3

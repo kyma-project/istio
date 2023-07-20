@@ -29,8 +29,8 @@ while [[ $n -le 100 ]] ; do
   echo ">--> checking resource quota status #$n"
   state_hard=$(kubectl get -n kyma-system resourcequota istio-custom-resources-count -o jsonpath="{.status.hard}" | jq -r '.["count/istios.operator.kyma-project.io"]')
   state_used=$(kubectl get -n kyma-system resourcequota istio-custom-resources-count -o jsonpath="{.status.used}" | jq -r '.["count/istios.operator.kyma-project.io"]')
-  echo "resource quotate hard state: ${state_hard:='UNKNOWN'}"
-  echo "resource quotate used state: ${state_used:='UNKNOWN'}"
+  echo "resource quota hard: ${state_hard:='UNKNOWN'}"
+  echo "resource quota used: ${state_used:='UNKNOWN'}"
   [[ "$state_hard" == "1" ]] && [[ "$state_used" == "0" ]] && break
   n=$((n+1))
   sleep 5
@@ -40,9 +40,9 @@ kubectl apply -f config/samples/operator_v1alpha2_istio.yaml
 
 n=1
 while [[ $n -le 100 ]] ; do
-  echo ">--> checking kyma status #$n"
+  echo ">--> checking istio status #$n"
   state=$(kubectl get -n kyma-system istio default -o jsonpath='{.status.state}')
-  echo "Istio state: ${state:='UNKNOWN'}"
+  echo "istio state: ${state:='UNKNOWN'}"
   [[ "$state" == "Ready" ]] && break
   n=$((n+1))
   sleep 5

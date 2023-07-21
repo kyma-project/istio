@@ -281,8 +281,8 @@ POST_IMAGE_VERSION=v$(shell date '+%Y%m%d')-$(shell printf %.8s ${PULL_BASE_SHA}
 istio-integration-test:
 	make install
 	make deploy
-	# Increased TEST_REQUEST_TIMEOUT to 480s to avoid timeouts on newly created k3s clusters on Prow
-	cd tests/integration && TEST_REQUEST_TIMEOUT=480s && EXPORT_RESULT=true go test -timeout 25m
+	# Increased TEST_REQUEST_TIMEOUT to 300s to avoid timeouts on newly created k3s clusters on Prow
+	cd tests/integration && TEST_REQUEST_TIMEOUT=300s && EXPORT_RESULT=true go test -timeout 25m
 
 .PHONY: gardener-istio-integration-test
 gardener-istio-integration-test:

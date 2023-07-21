@@ -87,9 +87,10 @@ func ResourceIsReady(ctx context.Context, kind, name, namespace string) error {
 		case ResourceQuota.String():
 			rqStatus := object.(*corev1.ResourceQuota).Status
 			used := rqStatus.Used["count/istios.operator.kyma-project.io"]
-			if used.String() != "0" {
-				return fmt.Errorf("%s %s/%s is not ready (used %s)",
-					kind, namespace, name, used.String())
+			hard := rqStatus.Hard["count/istios.operator.kyma-project.io"]
+			if used.String() != "0" || hard.String() != "1" {
+				return fmt.Errorf("%s %s/%s is not ready (used/hard %s/%s)",
+					kind, namespace, name, used.String(), hard.String())
 			}
 		default:
 			return godog.ErrUndefined

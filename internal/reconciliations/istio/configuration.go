@@ -143,6 +143,7 @@ func restartIngressGatewayIfNeeded(ctx context.Context, k8sClient client.Client,
 		if err != nil {
 			return err
 		}
+		ctrl.Log.Info("istio-ingressgateway restarted")
 	}
 	return nil
 }

@@ -3,8 +3,6 @@ package proxy
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/istio/operator/internal/status"
-
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
@@ -16,13 +14,16 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+type SidecarsReconciliation interface {
+	Reconcile(ctx context.Context, istioCr v1alpha1.Istio) error
+}
+
 type Sidecars struct {
 	IstioVersion   string
 	IstioImageBase string
 	Log            logr.Logger
 	Client         client.Client
 	Merger         manifest.Merger
-	StatusHandler  status.Status
 }
 
 const (

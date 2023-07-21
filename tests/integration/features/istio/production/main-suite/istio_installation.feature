@@ -87,7 +87,7 @@ Feature: Installing and uninstalling Istio module
   Scenario: Installation of Istio module with Istio CR in different namespace
     Given Istio CR "istio-sample" is applied in namespace "default"
     Then Istio CR "istio-sample" in namespace "default" has status "Error"
-    And Istio CR "istio-sample" in namespace "default" has description "Error occurred during reconciliation of Istio CR: Istio CR is not in kyma-system namespace"
+    And Istio CR "istio-sample" in namespace "default" has description "Stopped Istio CR reconciliation: istio CR is not in kyma-system namespace"
 
   Scenario: Installation of Istio module with a secondary Istio CR in kyma-system namespace
     Given Istio CR "istio-sample" is applied in namespace "kyma-system"

@@ -5,16 +5,12 @@ import (
 	"github.com/go-logr/logr"
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
-	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/pkg/errors"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"time"
 
@@ -47,11 +43,11 @@ var _ = Describe("Istio Controller", func() {
 			client := createFakeClient(&istioCR)
 			istioController := &IstioReconciler{
 				Client:                 client,
-				Scheme:                 scheme.Scheme,
+				Scheme:                 getTestScheme(),
 				istioInstallation:      &istioInstallationReconciliationMock{},
 				proxySidecars:          &proxySidecarsReconciliationMock{},
 				log:                    logr.Discard(),
-				statusHandler:          status.NewDefaultStatusHandler(),
+				statusHandler:          newStatusHandler(client),
 				reconciliationInterval: 10 * time.Hour,
 			}
 			req := reconcile.Request{
@@ -125,7 +121,7 @@ var _ = Describe("Istio Controller", func() {
 			// then
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(result).Should(Equal(reconcile.Result{}))
-			Expect(statusMock.updatedToProcessing).Should(BeTrue())
+			Expect(statusMock.updatedToProcessingCalled).Should(BeTrue())
 		})
 
 		It("Should return an error when update status to processing failed", func() {
@@ -158,7 +154,7 @@ var _ = Describe("Istio Controller", func() {
 			// then
 			Expect(err.Error()).To(Equal("Update to processing error"))
 			Expect(result).Should(Equal(reconcile.Result{}))
-			Expect(statusMock.updatedToProcessing).Should(BeTrue())
+			Expect(statusMock.updatedToProcessingCalled).Should(BeTrue())
 		})
 
 		It("Should call update status to deleting when CR is deleted", func() {
@@ -191,7 +187,7 @@ var _ = Describe("Istio Controller", func() {
 			// then
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(result).Should(Equal(reconcile.Result{}))
-			Expect(statusMock.updatedToDeleting).Should(BeTrue())
+			Expect(statusMock.updatedToDeletingCalled).Should(BeTrue())
 		})
 
 		It("Should return an error when update status to deleting failed", func() {
@@ -227,7 +223,7 @@ var _ = Describe("Istio Controller", func() {
 			// then
 			Expect(err.Error()).To(Equal("Update to deleting error"))
 			Expect(result).Should(Equal(reconcile.Result{}))
-			Expect(statusMock.updatedToDeleting).Should(BeTrue())
+			Expect(statusMock.updatedToDeletingCalled).Should(BeTrue())
 		})
 
 		It("Should not requeue a deleted CR when there are no finalizers", func() {
@@ -250,7 +246,7 @@ var _ = Describe("Istio Controller", func() {
 				istioInstallation:      &istioInstallationReconciliationMock{},
 				proxySidecars:          &proxySidecarsReconciliationMock{},
 				log:                    logr.Discard(),
-				statusHandler:          status.NewDefaultStatusHandler(),
+				statusHandler:          newStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
 			}
 
@@ -290,7 +286,7 @@ var _ = Describe("Istio Controller", func() {
 				istioInstallation:      &istioInstallationReconciliationMock{},
 				proxySidecars:          &proxySidecarsReconciliationMock{},
 				log:                    logr.Discard(),
-				statusHandler:          status.NewDefaultStatusHandler(),
+				statusHandler:          newStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
 			}
 
@@ -338,7 +334,7 @@ var _ = Describe("Istio Controller", func() {
 			// then
 			Expect(err.Error()).To(Equal("Update to ready error"))
 			Expect(result).Should(Equal(reconcile.Result{}))
-			Expect(statusMock.updatedToReady).Should(BeTrue())
+			Expect(statusMock.updatedToReadyCalled).Should(BeTrue())
 		})
 
 		It("Should set error status and return an error when Istio installation reconciliation failed", func() {
@@ -363,7 +359,7 @@ var _ = Describe("Istio Controller", func() {
 				},
 				proxySidecars:          &proxySidecarsReconciliationMock{},
 				log:                    logr.Discard(),
-				statusHandler:          status.NewDefaultStatusHandler(),
+				statusHandler:          newStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
 			}
 
@@ -402,7 +398,7 @@ var _ = Describe("Istio Controller", func() {
 					err: errors.New("sidecar test error"),
 				},
 				log:                    logr.Discard(),
-				statusHandler:          status.NewDefaultStatusHandler(),
+				statusHandler:          newStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
 			}
 
@@ -421,16 +417,6 @@ var _ = Describe("Istio Controller", func() {
 	})
 })
 
-func createFakeClient(objects ...client.Object) client.Client {
-	return fake.NewClientBuilder().WithScheme(getTestScheme()).WithObjects(objects...).Build()
-}
-
-func getTestScheme() *runtime.Scheme {
-	Expect(operatorv1alpha1.AddToScheme(scheme.Scheme)).Should(Succeed())
-
-	return scheme.Scheme
-}
-
 type istioInstallationReconciliationMock struct {
 	err described_errors.DescribedError
 }
@@ -448,32 +434,32 @@ func (p *proxySidecarsReconciliationMock) Reconcile(_ context.Context, _ operato
 }
 
 type StatusMock struct {
-	processingError     error
-	updatedToProcessing bool
-	readyError          error
-	updatedToReady      bool
-	deletingError       error
-	updatedToDeleting   bool
-	errorError          error
-	updatedToError      bool
+	processingError           error
+	updatedToProcessingCalled bool
+	readyError                error
+	updatedToReadyCalled      bool
+	deletingError             error
+	updatedToDeletingCalled   bool
+	errorError                error
+	updatedToErrorCalled      bool
 }
 
-func (s *StatusMock) UpdateToProcessing(_ context.Context, _ string, _ client.Client, _ *operatorv1alpha1.Istio) error {
-	s.updatedToProcessing = true
+func (s *StatusMock) updateToProcessing(_ context.Context, _ string, _ *operatorv1alpha1.Istio) error {
+	s.updatedToProcessingCalled = true
 	return s.processingError
 }
 
-func (s *StatusMock) UpdateToError(_ context.Context, _ described_errors.DescribedError, _ client.Client, _ *operatorv1alpha1.Istio) error {
-	s.updatedToError = true
+func (s *StatusMock) updateToError(_ context.Context, _ described_errors.DescribedError, _ *operatorv1alpha1.Istio) error {
+	s.updatedToErrorCalled = true
 	return s.errorError
 }
 
-func (s *StatusMock) UpdateToDeleting(_ context.Context, _ client.Client, _ *operatorv1alpha1.Istio) error {
-	s.updatedToDeleting = true
+func (s *StatusMock) updateToDeleting(_ context.Context, _ *operatorv1alpha1.Istio) error {
+	s.updatedToDeletingCalled = true
 	return s.deletingError
 }
 
-func (s *StatusMock) UpdateToReady(_ context.Context, _ client.Client, _ *operatorv1alpha1.Istio) error {
-	s.updatedToReady = true
+func (s *StatusMock) updateToReady(_ context.Context, _ *operatorv1alpha1.Istio) error {
+	s.updatedToReadyCalled = true
 	return s.readyError
 }

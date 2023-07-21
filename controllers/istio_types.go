@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"github.com/kyma-project/istio/operator/internal/status"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -20,7 +19,7 @@ type IstioReconciler struct {
 	istioInstallation      istio.InstallationReconciliation
 	proxySidecars          proxy.SidecarsReconciliation
 	log                    logr.Logger
-	statusHandler          status.Status
+	statusHandler          status
 	reconciliationInterval time.Duration
 }
 

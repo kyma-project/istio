@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
-	"github.com/kyma-project/istio/operator/internal/status"
 	"k8s.io/client-go/util/retry"
 	"time"
 
@@ -59,7 +58,7 @@ func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *I
 		istioInstallation:      &istio.Installation{Client: mgr.GetClient(), IstioClient: istio.NewIstioClient(), IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Merger: &merger},
 		proxySidecars:          &proxy.Sidecars{IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Log: mgr.GetLogger(), Client: mgr.GetClient(), Merger: &merger},
 		log:                    mgr.GetLogger(),
-		statusHandler:          status.NewDefaultStatusHandler(),
+		statusHandler:          newStatusHandler(mgr.GetClient()),
 		reconciliationInterval: reconciliationInterval,
 	}
 }
@@ -83,13 +82,13 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 
 	if istioCR.DeletionTimestamp.IsZero() {
-		if err := r.statusHandler.UpdateToProcessing(ctx, "Reconciling Istio resources", r.Client, &istioCR); err != nil {
+		if err := r.statusHandler.updateToProcessing(ctx, "Reconciling Istio resources", &istioCR); err != nil {
 			r.log.Error(err, "Update status to processing failed")
 			// We don't update the status to error, because the status update already failed and to avoid another status update error we simply requeue the request.
 			return ctrl.Result{}, err
 		}
 	} else {
-		if err := r.statusHandler.UpdateToDeleting(ctx, r.Client, &istioCR); err != nil {
+		if err := r.statusHandler.updateToDeleting(ctx, &istioCR); err != nil {
 			r.log.Error(err, "Update status to deleting failed")
 			// We don't update the status to error, because the status update already failed and to avoid another status update error we simply requeue the request.
 			return ctrl.Result{}, err
@@ -122,7 +121,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 // cancelReconcile cancels the reconciliation and requeues the request.
 func (r *IstioReconciler) cancelReconcile(ctx context.Context, istioCR operatorv1alpha1.Istio, err described_errors.DescribedError) (ctrl.Result, error) {
-	statusUpdateErr := r.statusHandler.UpdateToError(ctx, err, r.Client, &istioCR)
+	statusUpdateErr := r.statusHandler.updateToError(ctx, err, &istioCR)
 	if statusUpdateErr != nil {
 		r.log.Error(statusUpdateErr, "Error during updating status to error")
 	}
@@ -133,7 +132,7 @@ func (r *IstioReconciler) cancelReconcile(ctx context.Context, istioCR operatorv
 
 // stopReconciliation stops the reconciliation and does not requeue the request.
 func (r *IstioReconciler) stopReconciliation(ctx context.Context, istioCR operatorv1alpha1.Istio, err described_errors.DescribedError) (ctrl.Result, error) {
-	statusUpdateErr := r.statusHandler.UpdateToError(ctx, err, r.Client, &istioCR)
+	statusUpdateErr := r.statusHandler.updateToError(ctx, err, &istioCR)
 	if statusUpdateErr != nil {
 		r.log.Error(statusUpdateErr, "Error during updating status to error")
 		// In case the update of the status fails we must requeue the request, because otherwise the Error state is never visible in the CR.
@@ -165,7 +164,7 @@ func (r *IstioReconciler) finishReconcile(ctx context.Context, istioCR operatorv
 		return r.cancelReconcile(ctx, istioCR, describedErr)
 	}
 
-	if statusErr := r.statusHandler.UpdateToReady(ctx, r.Client, &istioCR); statusErr != nil {
+	if statusErr := r.statusHandler.updateToReady(ctx, &istioCR); statusErr != nil {
 		r.log.Error(statusErr, "Error during updating status to ready")
 		return ctrl.Result{}, statusErr
 	}

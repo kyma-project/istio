@@ -78,7 +78,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 	if istioCR.GetNamespace() != namespace {
 		errWrongNS := fmt.Errorf("istio CR is not in %s namespace", namespace)
-		return r.stopReconciliation(ctx, istioCR, described_errors.NewDescribedError(errWrongNS, "Stopped Istio CR reconciliation"))
+		return r.terminateReconciliation(ctx, istioCR, described_errors.NewDescribedError(errWrongNS, "Stopped Istio CR reconciliation"))
 	}
 
 	if istioCR.DeletionTimestamp.IsZero() {
@@ -97,7 +97,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 	istioCR, installationErr := r.istioInstallation.Reconcile(ctx, istioCR, IstioResourceListDefaultPath)
 	if installationErr != nil {
-		return r.cancelReconcile(ctx, istioCR, installationErr)
+		return r.requeueReconciliation(ctx, istioCR, installationErr)
 	}
 
 	// If there are no finalizers left, we must assume that the resource is deleted and therefore must stop the reconciliation
@@ -113,14 +113,14 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	proxyErr := r.proxySidecars.Reconcile(ctx, istioCR)
 	if proxyErr != nil {
 		describedErr := described_errors.NewDescribedError(proxyErr, "Error occurred during reconciliation of Istio Sidecars")
-		return r.cancelReconcile(ctx, istioCR, describedErr)
+		return r.requeueReconciliation(ctx, istioCR, describedErr)
 	}
 
 	return r.finishReconcile(ctx, istioCR, IstioTag)
 }
 
-// cancelReconcile cancels the reconciliation and requeues the request.
-func (r *IstioReconciler) cancelReconcile(ctx context.Context, istioCR operatorv1alpha1.Istio, err described_errors.DescribedError) (ctrl.Result, error) {
+// requeueReconciliation cancels the reconciliation and requeues the request.
+func (r *IstioReconciler) requeueReconciliation(ctx context.Context, istioCR operatorv1alpha1.Istio, err described_errors.DescribedError) (ctrl.Result, error) {
 	statusUpdateErr := r.statusHandler.updateToError(ctx, err, &istioCR)
 	if statusUpdateErr != nil {
 		r.log.Error(statusUpdateErr, "Error during updating status to error")
@@ -130,8 +130,8 @@ func (r *IstioReconciler) cancelReconcile(ctx context.Context, istioCR operatorv
 	return ctrl.Result{}, err
 }
 
-// stopReconciliation stops the reconciliation and does not requeue the request.
-func (r *IstioReconciler) stopReconciliation(ctx context.Context, istioCR operatorv1alpha1.Istio, err described_errors.DescribedError) (ctrl.Result, error) {
+// terminateReconciliation stops the reconciliation and does not requeue the request.
+func (r *IstioReconciler) terminateReconciliation(ctx context.Context, istioCR operatorv1alpha1.Istio, err described_errors.DescribedError) (ctrl.Result, error) {
 	statusUpdateErr := r.statusHandler.updateToError(ctx, err, &istioCR)
 	if statusUpdateErr != nil {
 		r.log.Error(statusUpdateErr, "Error during updating status to error")
@@ -161,7 +161,7 @@ func (r *IstioReconciler) finishReconcile(ctx context.Context, istioCR operatorv
 
 	if retryErr != nil {
 		describedErr := described_errors.NewDescribedError(retryErr, "Error updating LastAppliedConfiguration")
-		return r.cancelReconcile(ctx, istioCR, describedErr)
+		return r.requeueReconciliation(ctx, istioCR, describedErr)
 	}
 
 	if statusErr := r.statusHandler.updateToReady(ctx, &istioCR); statusErr != nil {

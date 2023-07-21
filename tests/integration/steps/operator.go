@@ -8,17 +8,20 @@ import (
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	v1 "k8s.io/api/apps/v1"
 	v1c "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func DeployIstioOperatorFromLocalManifest(ctx context.Context) error {
+	const manifestDirectory = "manifests/generated"
+	const manifestFileName = "generated-operator-manifest.yaml"
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
 	}
 
-	resources, err := manifestprocessor.ParseFromFileWithTemplate("local-manifest.yaml", "manifests", nil)
+	resources, err := manifestprocessor.ParseFromFileWithTemplate(manifestFileName, manifestDirectory, nil)
 	if err != nil {
 		return err
 	}
@@ -35,8 +38,12 @@ func DeployIstioOperatorFromLocalManifest(ctx context.Context) error {
 			}, &existingResource)
 
 			if err != nil {
-				err := k8sClient.Create(ctx, &resource)
-				if err != nil {
+				if errors.IsNotFound(err) {
+					err := k8sClient.Create(ctx, &resource)
+					if err != nil {
+						return err
+					}
+				} else {
 					return err
 				}
 			}

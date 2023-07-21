@@ -50,6 +50,7 @@ IMG ?= $(IMG_REGISTRY)/$(MODULE_NAME)-operator:$(MODULE_VERSION)
 
 COMPONENT_CLI_VERSION ?= latest
 
+# It is required for upgrade integration test
 TARGET_BRANCH ?= ""
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
@@ -102,7 +103,7 @@ manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and Cust
 .PHONY: generate-integration-test-manifest
 generate-integration-test-manifest: manifests kustomize
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default -o tests/integration/manifests/local-manifest.yaml
+	$(KUSTOMIZE) build config/default -o tests/integration/manifests/generated/generated-operator-manifest.yaml
 
 .PHONY: generate
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
@@ -289,10 +290,15 @@ istio-integration-test: install deploy
 	# Increased TEST_REQUEST_TIMEOUT to 300s to avoid timeouts on newly created k3s clusters on Prow
 	cd tests/integration && TEST_REQUEST_TIMEOUT=300s && EXPORT_RESULT=true go test -v -timeout 25m -run TestIstioMain
 
+.PHONY: deploy-latest-release
+deploy-latest-release:
+	cd tests/integration && ./scripts/deploy-latest-release-to-cluster.sh $(TARGET_BRANCH)
+
+# Latest release deployed on cluster is a prerequisite, it is handled by deploy-latest-release target
 .PHONY: istio-upgrade-integration-test
-istio-upgrade-integration-test: generate-integration-test-manifest
+istio-upgrade-integration-test: deploy-latest-release generate-integration-test-manifest
 	# Increased TEST_REQUEST_TIMEOUT to 300s to avoid timeouts on newly created k3s clusters on Prow
-	cd tests/integration && ./scripts/deploy-latest-release-to-cluster.sh $(TARGET_BRANCH) && TEST_REQUEST_TIMEOUT=300s && EXPORT_RESULT=true IMG=${IMG} go test -v -timeout 10m -run TestIstioUpgrade
+	cd tests/integration &&  TEST_REQUEST_TIMEOUT=300s && EXPORT_RESULT=true go test -v -timeout 10m -run TestIstioUpgrade
 
 
 .PHONY: gardener-istio-integration-test

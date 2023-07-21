@@ -41,8 +41,7 @@ func TestIstioMain(t *testing.T) {
 
 func TestIstioUpgrade(t *testing.T) {
 	suiteName := "Istio Upgrade"
-	featurePath := productionUpgradeSuitePath
-	runTestSuite(t, upgradeInitScenario, featurePath, suiteName)
+	runTestSuite(t, upgradeInitScenario, productionUpgradeSuitePath, suiteName)
 }
 
 func runTestSuite(t *testing.T, scenarioInit func(ctx *godog.ScenarioContext), featurePath string, suiteName string) {
@@ -68,7 +67,6 @@ func runTestSuite(t *testing.T, scenarioInit func(ctx *godog.ScenarioContext), f
 	}
 	testExitCode := suite.Run()
 
-	println("Test exit code: ", testExitCode)
 	if testExitCode != 0 {
 		t.Fatalf("non-zero status returned, failed to run feature tests")
 	}

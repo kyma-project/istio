@@ -222,7 +222,7 @@ func ResourceNotPresent(ctx context.Context, kind string) error {
 		return nil
 	}, testcontext.GetRetryOpts()...)
 }
-func IstioComponentHasRequiredVersionAndIsReady(ctx context.Context, kind, name, namespace string) error {
+func IstioResourceContainerHasRequiredVersion(ctx context.Context, containerName, kind, resourceName, namespace string) error {
 	requiredVersion := strings.Join([]string{controllers.IstioVersion, controllers.IstioImageBase}, "-")
 
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
@@ -240,39 +240,47 @@ func IstioComponentHasRequiredVersionAndIsReady(ctx context.Context, kind, name,
 		default:
 			return godog.ErrUndefined
 		}
-		err := k8sClient.Get(ctx, client.ObjectKey{Namespace: namespace, Name: name}, object)
+		err := k8sClient.Get(ctx, client.ObjectKey{Namespace: namespace, Name: resourceName}, object)
 		if err != nil {
 			return err
 		}
 
 		switch kind {
 		case Deployment.String():
+			counter := 0
 			for _, c := range object.(*v1.Deployment).Spec.Template.Spec.Containers {
+				if c.Name != containerName {
+					continue
+				}
 				deployedVersion, err := getVersionFromImageName(c.Image)
 				if err != nil {
 					return err
 				}
 				if deployedVersion != requiredVersion {
-					return fmt.Errorf("istio resource %s:%s has version %s, but required %s", name, kind, deployedVersion, requiredVersion)
+					return fmt.Errorf("container: %s kind: %s name: %s in namespace %s has version %s when required %s", containerName, kind, resourceName, namespace, deployedVersion, requiredVersion)
 				}
+				counter++
 			}
-			if object.(*v1.Deployment).Status.Replicas != object.(*v1.Deployment).Status.ReadyReplicas {
-				return fmt.Errorf("%s %s/%s is not ready",
-					kind, namespace, name)
+			if counter == 0 {
+				return fmt.Errorf("container: %s kind: %s name: %s in namespace %s not found", containerName, kind, resourceName, namespace)
 			}
 		case DaemonSet.String():
+			counter := 0
 			for _, c := range object.(*v1.DaemonSet).Spec.Template.Spec.Containers {
+				if c.Name != containerName {
+					continue
+				}
 				deployedVersion, err := getVersionFromImageName(c.Image)
 				if err != nil {
 					return err
 				}
 				if deployedVersion != requiredVersion {
-					return fmt.Errorf("istio resource %s:%s has version %s, but required %s", name, kind, deployedVersion, requiredVersion)
+					return fmt.Errorf("container: %s kind: %s name: %s in namespace %s has version %s when required %s", containerName, kind, resourceName, namespace, deployedVersion, requiredVersion)
 				}
+				counter++
 			}
-			if object.(*v1.DaemonSet).Status.NumberReady != object.(*v1.DaemonSet).Status.DesiredNumberScheduled {
-				return fmt.Errorf("%s %s/%s is not ready",
-					kind, namespace, name)
+			if counter == 0 {
+				return fmt.Errorf("container: %s kind: %s name: %s in namespace %s not found", containerName, kind, resourceName, namespace)
 			}
 		default:
 			return godog.ErrUndefined

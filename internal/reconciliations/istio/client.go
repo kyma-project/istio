@@ -3,6 +3,7 @@ package istio
 import (
 	"context"
 	"fmt"
+	"github.com/pkg/errors"
 	"os"
 	"os/exec"
 	"sync"
@@ -18,7 +19,7 @@ import (
 	"istio.io/istio/operator/pkg/util/progress"
 	"istio.io/istio/pkg/config/constants"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 
@@ -52,7 +53,6 @@ func (c *IstioClient) Install(mergedIstioOperatorPath string) error {
 	err := installIstioInExternalProcess(mergedIstioOperatorPath)
 
 	if err != nil {
-		ctrl.Log.Error(err, "Error occured during a call to istio instalation in external process")
 		return err
 	}
 
@@ -110,7 +110,7 @@ func (c *IstioClient) Uninstall(ctx context.Context) error {
 	}, &ctrlclient.DeleteOptions{
 		PropagationPolicy: &deletePolicy,
 	})
-	if err != nil && !errors.IsNotFound(err) {
+	if err != nil && !apiErrors.IsNotFound(err) {
 		return err
 	}
 	ctrl.Log.Info("Deleted istio control plane namespace", "namespace", constants.IstioSystemNamespace)
@@ -135,7 +135,9 @@ func installIstioInExternalProcess(mergedIstioOperatorPath string) error {
 	err := cmd.Run()
 
 	if err != nil {
-		return err
+		// We should not return the error of the external process, because it is always "exit status 1" and we do
+		// not want to show such an error in the resource status
+		return errors.New("Istio installation resulted in an error")
 	}
 
 	return nil

@@ -89,7 +89,7 @@ func ResourceIsReady(ctx context.Context, kind, name, namespace string) error {
 			used := rqStatus.Used["count/istios.operator.kyma-project.io"]
 			hard := rqStatus.Hard["count/istios.operator.kyma-project.io"]
 			if used.String() != "0" || hard.String() != "1" {
-				return fmt.Errorf("%s %s/%s is not ready (used/hard %s/%s)",
+				return fmt.Errorf("%s %s/%s is not ready (%s/%s)",
 					kind, namespace, name, used.String(), hard.String())
 			}
 		default:

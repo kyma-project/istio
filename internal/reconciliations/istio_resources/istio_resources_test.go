@@ -14,26 +14,24 @@ import (
 )
 
 var _ = Describe("Reconcilation", func() {
-	Context("k3d", func() {
-		It("should create resource and return no error", func() {
+	It("should create resource and return no error", func() {
 
-			client := createFakeClient()
+		client := createFakeClient()
 
-			sample := NewEnvoyFilterAllowPartialReferer()
+		sample := NewEnvoyFilterAllowPartialReferer(context.TODO(), client)
 
-			reconciler := NewReconciler(client, []Resource{sample})
+		reconciler := NewReconciler(client, []Resource{&sample})
 
-			//when
-			err := reconciler.Reconcile(context.TODO())
+		//when
+		err := reconciler.Reconcile(context.TODO())
 
-			//then
-			Expect(err).To(Not(HaveOccurred()))
+		//then
+		Expect(err).To(Not(HaveOccurred()))
 
-			var s networkingv1alpha3.EnvoyFilterList
-			listErr := client.List(context.TODO(), &s)
-			Expect(listErr).To(Not(HaveOccurred()))
-			Expect(s.Items).To(HaveLen(1))
-		})
+		var s networkingv1alpha3.EnvoyFilterList
+		listErr := client.List(context.TODO(), &s)
+		Expect(listErr).To(Not(HaveOccurred()))
+		Expect(s.Items).To(HaveLen(1))
 	})
 })
 

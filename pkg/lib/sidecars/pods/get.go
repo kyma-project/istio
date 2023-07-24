@@ -55,7 +55,12 @@ func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage Sideca
 	for _, pod := range podList.Items {
 
 		for _, predicate := range predicates {
-			if predicate.RequiresProxyRestart(pod) {
+			req, err := predicate.RequiresProxyRestart(pod)
+			if err != nil {
+				return v1.PodList{}, err
+			}
+
+			if req {
 				outputPodsList.Items = append(outputPodsList.Items, *pod.DeepCopy())
 				// If the pod matches one predicate, we don't need to check the rest
 				break

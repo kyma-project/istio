@@ -2,22 +2,28 @@ package testcontext
 
 import (
 	"context"
+	"testing"
+
 	"github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"testing"
 )
 
 // istioCrCtxKey is the key used to store the IstioCR used by a scenario in the context.Context.
 type istioCrCtxKey struct{}
 
-func GetIstioCrFromContext(ctx context.Context) (*v1alpha1.Istio, bool) {
-	v, ok := ctx.Value(istioCrCtxKey{}).(*v1alpha1.Istio)
+func GetIstioCRsFromContext(ctx context.Context) ([]*v1alpha1.Istio, bool) {
+	v, ok := ctx.Value(istioCrCtxKey{}).([]*v1alpha1.Istio)
 	return v, ok
 }
 
-func SetIstioCrInContext(ctx context.Context, istio *v1alpha1.Istio) context.Context {
-	return context.WithValue(ctx, istioCrCtxKey{}, istio)
+func AddIstioCRIntoContext(ctx context.Context, istio *v1alpha1.Istio) context.Context {
+	istios, ok := GetIstioCRsFromContext(ctx)
+	if !ok {
+		istios = []*v1alpha1.Istio{}
+	}
+	istios = append(istios, istio)
+	return context.WithValue(ctx, istioCrCtxKey{}, istios)
 }
 
 // createdTestObjectsCtxKey is the key used to store the test resources created during tests in the context.Context.

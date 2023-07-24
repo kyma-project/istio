@@ -5,13 +5,11 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 	"text/template"
 
 	"github.com/avast/retry-go"
 	istioCR "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
-	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
@@ -159,23 +157,4 @@ func createIstioCRFromTemplate(name string, namespace string, templateValues map
 	istio.Namespace = namespace
 	istio.Name = name
 	return istio, nil
-}
-
-func (t *TemplatedIstioCr) IstioCRCanNotBeAppliedInNamespaceWithError(ctx context.Context, name, namespace, expectedError string) (context.Context, error) {
-	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
-	if err != nil {
-		return ctx, err
-	}
-
-	istio, err := createIstioCRFromTemplate(name, namespace, t.templateValues)
-	if err != nil {
-		return ctx, err
-	}
-
-	err = k8sClient.Create(context.TODO(), &istio)
-	if err == nil || !strings.Contains(err.Error(), expectedError) {
-		return ctx, errors.New(fmt.Sprintf("Expected error not found: %s", expectedError))
-	}
-
-	return ctx, nil
 }

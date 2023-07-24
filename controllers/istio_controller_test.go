@@ -507,7 +507,7 @@ var _ = Describe("Istio Controller", func() {
 
 			Expect(fakeClient.Get(context.TODO(), client.ObjectKeyFromObject(newerIstioCR), newerIstioCR)).Should(Succeed())
 			Expect(newerIstioCR.Status.State).Should(Equal(operatorv1alpha1.Error))
-			Expect(newerIstioCR.Status.Description).To(ContainSubstring(fmt.Sprintf("'%s' Istio CR in '%s' namespace reconciles the module", istioCrName, testNamespace)))
+			Expect(newerIstioCR.Status.Description).To(ContainSubstring(fmt.Sprintf("Only Istio CR %s in %s reconciles the module", istioCrName, testNamespace)))
 		})
 
 		It("Should set an error status and requeue an Istio CR when is unable to list Istio CRs", func() {

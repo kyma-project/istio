@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"github.com/kyma-project/istio/operator/internal/reconciliations/ingress_gateway"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio_resources"
 	"time"
 
@@ -20,6 +21,7 @@ type IstioReconciler struct {
 	istioInstallation      istio.InstallationReconciliation
 	proxySidecars          proxy.SidecarsReconciliation
 	istioResources         istio_resources.Reconciliation
+	ingressGateway         ingress_gateway.Reconciliation
 	log                    logr.Logger
 	statusHandler          status
 	reconciliationInterval time.Duration

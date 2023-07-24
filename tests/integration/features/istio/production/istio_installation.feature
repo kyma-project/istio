@@ -91,6 +91,6 @@ Feature: Installing and uninstalling Istio module
   Scenario: Installation of Istio module with a second Istio CR in kyma-system namespace
     Given Istio CR "istio-sample" is applied in namespace "kyma-system"
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
-    When "Istio CR" "istio-sample-new" is applied in namespace "kyma-system"
+    When Istio CR "istio-sample-new" is applied in namespace "kyma-system"
     Then Istio CR "istio-sample-new" in namespace "default" has status "Error"
     And Istio CR "istio-sample-new" in namespace "kyma-system" has description "Only Istio CR istio-sample in kyma-system reconciles the module"

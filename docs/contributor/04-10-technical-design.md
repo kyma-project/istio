@@ -4,7 +4,7 @@
 
 ![Kyma IstioOperator Overview](/docs/assets/istio-operator-overview.svg)
 
-We want to keep the Kyma Istio operator as simple as possible. That's why we decided to start with one controller that consists of several self-contained components executing reconciliation logic. The controller uses [Istio CR](/docs/contributor/04-20-xff-proposal.md) as a resource, which must be present in the `kyma-system` Namespace. We reconcile only the oldest (sorted by creation timestamp) Istio CR in `kyma-system` namespace, all other Istio CRs will have error state after reconciliation.
+We want to keep the Kyma Istio operator as simple as possible. That's why we decided to start with one controller that consists of several self-contained components executing reconciliation logic. The controller uses [Istio CR](/docs/contributor/04-20-xff-proposal.md) as a resource, which must be present in the `kyma-system` Namespace. It only reconciles the oldest Istio CR in the `kyma-system` Namespace, based on its creation timestamp. After this reconciliation process is completed, all other Istio CRs will be in the `error` state.
 
 ### Ownership of current resources in Kyma repository
 

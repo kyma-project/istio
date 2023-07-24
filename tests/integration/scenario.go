@@ -37,7 +37,6 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^Istio gateway "([^"]*)" is configured in namespace "([^"]*)"$`, steps.CreateIstioGateway)
 	ctx.Step(`^Virtual service "([^"]*)" exposing service "([^"]*)" by gateway "([^"]*)" is configured in namespace "([^"]*)"$`, steps.CreateVirtualService)
 	ctx.Step(`^Request with header X-Forwarded-For with value "([^"]*)" sent to httpbin should return X-Envoy-External-Address with value "([^"]*)"$`, steps.ValidateExternalAddressForwarding)
-	ctx.Step(`^Istio CR "([^"]*)" can not be applied in namespace "([^"]*)" with error "([^"]*)"$`, t.IstioCRCanNotBeAppliedInNamespaceWithError)
 }
 
 func upgradeInitScenario(ctx *godog.ScenarioContext) {

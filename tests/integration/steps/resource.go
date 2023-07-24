@@ -14,7 +14,6 @@ import (
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
@@ -32,8 +31,6 @@ func (k godogResourceMapping) String() string {
 		return "Istio CR"
 	case DestinationRule:
 		return "DestinationRule"
-	case ResourceQuota:
-		return "ResourceQuota"
 	}
 	panic(fmt.Errorf("%#v has unimplemented String() method", k))
 }
@@ -43,7 +40,6 @@ const (
 	Deployment
 	IstioCR
 	DestinationRule
-	ResourceQuota
 )
 
 func ResourceIsReady(ctx context.Context, kind, name, namespace string) error {
@@ -61,8 +57,6 @@ func ResourceIsReady(ctx context.Context, kind, name, namespace string) error {
 			object = &v1.Deployment{}
 		case DaemonSet.String():
 			object = &v1.DaemonSet{}
-		case ResourceQuota.String():
-			object = &corev1.ResourceQuota{}
 		default:
 			return godog.ErrUndefined
 		}
@@ -84,12 +78,6 @@ func ResourceIsReady(ctx context.Context, kind, name, namespace string) error {
 			}
 		case DaemonSet.String():
 			if object.(*v1.DaemonSet).Status.NumberReady != object.(*v1.DaemonSet).Status.DesiredNumberScheduled {
-				return fmt.Errorf("%s %s/%s is not ready",
-					kind, namespace, name)
-			}
-		case ResourceQuota.String():
-			rqStatus := object.(*corev1.ResourceQuota).Status
-			if rqStatus.Hard["count/istios.operator.kyma-project.io"] != resource.MustParse("1") || rqStatus.Used["count/istios.operator.kyma-project.io"] != resource.MustParse("0") {
 				return fmt.Errorf("%s %s/%s is not ready",
 					kind, namespace, name)
 			}

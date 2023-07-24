@@ -14,7 +14,7 @@ import (
 )
 
 func DeployIstioOperatorFromLocalManifest(ctx context.Context) error {
-	const manifestDirectory = "manifests/generated"
+	const manifestDirectory = "manifests"
 	const manifestFileName = "generated-operator-manifest.yaml"
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {

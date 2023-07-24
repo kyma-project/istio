@@ -2,6 +2,7 @@ package sidecars
 
 import (
 	"context"
+	"github.com/kyma-project/istio/operator/internal/filter"
 
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
@@ -10,8 +11,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func ProxyReset(ctx context.Context, c client.Client, expectedImage pods.SidecarImage, expectedResources v1.ResourceRequirements, logger *logr.Logger) ([]restart.RestartWarning, error) {
-	podListToRestart, err := pods.GetPodsToRestart(ctx, c, expectedImage, expectedResources, logger)
+func ProxyReset(ctx context.Context, c client.Client, expectedImage pods.SidecarImage, expectedResources v1.ResourceRequirements, predicates []filter.SidecarProxyPredicate, logger *logr.Logger) ([]restart.RestartWarning, error) {
+	podListToRestart, err := pods.GetPodsToRestart(ctx, c, expectedImage, expectedResources, predicates, logger)
 	if err != nil {
 		return nil, err
 	}

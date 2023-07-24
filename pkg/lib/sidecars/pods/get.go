@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-logr/logr"
+	"github.com/kyma-project/istio/operator/internal/filter"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -42,7 +43,7 @@ func getAllRunningPods(ctx context.Context, c client.Client) (*v1.PodList, error
 	return podList, nil
 }
 
-func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage SidecarImage, expectedResources v1.ResourceRequirements, logger *logr.Logger) (outputPodsList v1.PodList, err error) {
+func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage SidecarImage, expectedResources v1.ResourceRequirements, predicates []filter.SidecarProxyPredicate, logger *logr.Logger) (outputPodsList v1.PodList, err error) {
 	podList, err := getAllRunningPods(ctx, c)
 	if err != nil {
 		return outputPodsList, err
@@ -52,6 +53,15 @@ func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage Sideca
 	outputPodsList.Items = []v1.Pod{}
 
 	for _, pod := range podList.Items {
+
+		for _, predicate := range predicates {
+			if predicate.RequiresProxyRestart(pod) {
+				outputPodsList.Items = append(outputPodsList.Items, *pod.DeepCopy())
+				// If the pod matches one predicate, we don't need to check the rest
+				break
+			}
+		}
+		// TODO: Those needs to migrated to predicates
 		if needsRestart(pod, expectedImage, expectedResources) {
 			outputPodsList.Items = append(outputPodsList.Items, *pod.DeepCopy())
 		}

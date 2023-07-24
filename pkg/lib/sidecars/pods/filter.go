@@ -9,17 +9,17 @@ const (
 )
 
 func needsRestart(pod v1.Pod, expectedImage SidecarImage, expectedResources v1.ResourceRequirements) bool {
-	return hasIstioSidecarStatusAnnotation(pod) &&
-		isPodReady(pod) &&
+	return HasIstioSidecarStatusAnnotation(pod) &&
+		IsPodReady(pod) &&
 		(hasSidecarContainerWithWithDifferentImage(pod, expectedImage) || hasDifferentSidecarResources(pod, expectedResources))
 }
 
-func hasIstioSidecarStatusAnnotation(pod v1.Pod) bool {
+func HasIstioSidecarStatusAnnotation(pod v1.Pod) bool {
 	_, exists := pod.Annotations["sidecar.istio.io/status"]
 	return exists
 }
 
-func isPodReady(pod v1.Pod) bool {
+func IsPodReady(pod v1.Pod) bool {
 	isMarkedForDeletion := pod.ObjectMeta.DeletionTimestamp != nil
 	return !isMarkedForDeletion && hasTrueStatusConditions(pod) && isPodRunning(pod)
 }

@@ -46,6 +46,7 @@ var _ = Describe("Istio Controller", func() {
 				Scheme:                 getTestScheme(),
 				istioInstallation:      &istioInstallationReconciliationMock{},
 				proxySidecars:          &proxySidecarsReconciliationMock{},
+				istioResources:         &istioResourcesReconciliationMock{},
 				log:                    logr.Discard(),
 				statusHandler:          newStatusHandler(client),
 				reconciliationInterval: 10 * time.Hour,
@@ -80,6 +81,7 @@ var _ = Describe("Istio Controller", func() {
 				Scheme:                 getTestScheme(),
 				istioInstallation:      &istioInstallationReconciliationMock{},
 				proxySidecars:          &proxySidecarsReconciliationMock{},
+				istioResources:         &istioResourcesReconciliationMock{},
 				log:                    logr.Discard(),
 				statusHandler:          &StatusMock{},
 				reconciliationInterval: testReconciliationInterval,
@@ -110,6 +112,7 @@ var _ = Describe("Istio Controller", func() {
 				Scheme:                 getTestScheme(),
 				istioInstallation:      &istioInstallationReconciliationMock{},
 				proxySidecars:          &proxySidecarsReconciliationMock{},
+				istioResources:         &istioResourcesReconciliationMock{},
 				log:                    logr.Discard(),
 				statusHandler:          &statusMock,
 				reconciliationInterval: testReconciliationInterval,
@@ -143,6 +146,7 @@ var _ = Describe("Istio Controller", func() {
 				Scheme:                 getTestScheme(),
 				istioInstallation:      &istioInstallationReconciliationMock{},
 				proxySidecars:          &proxySidecarsReconciliationMock{},
+				istioResources:         &istioResourcesReconciliationMock{},
 				log:                    logr.Discard(),
 				statusHandler:          &statusMock,
 				reconciliationInterval: testReconciliationInterval,
@@ -176,6 +180,7 @@ var _ = Describe("Istio Controller", func() {
 				Scheme:                 getTestScheme(),
 				istioInstallation:      &istioInstallationReconciliationMock{},
 				proxySidecars:          &proxySidecarsReconciliationMock{},
+				istioResources:         &istioResourcesReconciliationMock{},
 				log:                    logr.Discard(),
 				statusHandler:          &statusMock,
 				reconciliationInterval: testReconciliationInterval,
@@ -212,6 +217,7 @@ var _ = Describe("Istio Controller", func() {
 				Scheme:                 getTestScheme(),
 				istioInstallation:      &istioInstallationReconciliationMock{},
 				proxySidecars:          &proxySidecarsReconciliationMock{},
+				istioResources:         &istioResourcesReconciliationMock{},
 				log:                    logr.Discard(),
 				statusHandler:          &statusMock,
 				reconciliationInterval: testReconciliationInterval,
@@ -245,6 +251,7 @@ var _ = Describe("Istio Controller", func() {
 				Scheme:                 getTestScheme(),
 				istioInstallation:      &istioInstallationReconciliationMock{},
 				proxySidecars:          &proxySidecarsReconciliationMock{},
+				istioResources:         &istioResourcesReconciliationMock{},
 				log:                    logr.Discard(),
 				statusHandler:          newStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
@@ -285,6 +292,7 @@ var _ = Describe("Istio Controller", func() {
 				Scheme:                 getTestScheme(),
 				istioInstallation:      &istioInstallationReconciliationMock{},
 				proxySidecars:          &proxySidecarsReconciliationMock{},
+				istioResources:         &istioResourcesReconciliationMock{},
 				log:                    logr.Discard(),
 				statusHandler:          newStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
@@ -323,6 +331,7 @@ var _ = Describe("Istio Controller", func() {
 				Scheme:                 getTestScheme(),
 				istioInstallation:      &istioInstallationReconciliationMock{},
 				proxySidecars:          &proxySidecarsReconciliationMock{},
+				istioResources:         &istioResourcesReconciliationMock{},
 				log:                    logr.Discard(),
 				statusHandler:          &statusMock,
 				reconciliationInterval: testReconciliationInterval,
@@ -358,6 +367,7 @@ var _ = Describe("Istio Controller", func() {
 					err: described_errors.NewDescribedError(errors.New("istio test error"), "test error description"),
 				},
 				proxySidecars:          &proxySidecarsReconciliationMock{},
+				istioResources:         &istioResourcesReconciliationMock{},
 				log:                    logr.Discard(),
 				statusHandler:          newStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
@@ -397,6 +407,7 @@ var _ = Describe("Istio Controller", func() {
 				proxySidecars: &proxySidecarsReconciliationMock{
 					err: errors.New("sidecar test error"),
 				},
+				istioResources:         &istioResourcesReconciliationMock{},
 				log:                    logr.Discard(),
 				statusHandler:          newStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
@@ -416,6 +427,13 @@ var _ = Describe("Istio Controller", func() {
 		})
 	})
 })
+
+type istioResourcesReconciliationMock struct {
+}
+
+func (i *istioResourcesReconciliationMock) Reconcile(_ context.Context) described_errors.DescribedError {
+	return nil
+}
 
 type istioInstallationReconciliationMock struct {
 	err described_errors.DescribedError

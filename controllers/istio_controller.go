@@ -20,6 +20,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
+	"github.com/kyma-project/istio/operator/internal/filter"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio_resources"
 	"k8s.io/client-go/util/retry"
 	"time"
 
@@ -52,11 +54,15 @@ var IstioTag = fmt.Sprintf("%s-%s", IstioVersion, IstioImageBase)
 func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *IstioReconciler {
 	merger := manifest.NewDefaultIstioMerger()
 
+	envoyFilterReferer := istio_resources.NewEnvoyFilterAllowPartialReferer()
+	istioResources := []istio_resources.Resource{envoyFilterReferer}
+
 	return &IstioReconciler{
 		Client:                 mgr.GetClient(),
 		Scheme:                 mgr.GetScheme(),
 		istioInstallation:      &istio.Installation{Client: mgr.GetClient(), IstioClient: istio.NewIstioClient(), IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Merger: &merger},
-		proxySidecars:          &proxy.Sidecars{IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Log: mgr.GetLogger(), Client: mgr.GetClient(), Merger: &merger},
+		proxySidecars:          &proxy.Sidecars{IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Log: mgr.GetLogger(), Client: mgr.GetClient(), Merger: &merger, Predicates: []filter.SidecarProxyPredicate{envoyFilterReferer}},
+		istioResources:         istio_resources.NewReconciler(mgr.GetClient(), istioResources),
 		log:                    mgr.GetLogger(),
 		statusHandler:          newStatusHandler(mgr.GetClient()),
 		reconciliationInterval: reconciliationInterval,
@@ -105,6 +111,11 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	if !istioCR.HasFinalizer() {
 		r.log.Info("End reconciliation because all finalizers have been removed")
 		return ctrl.Result{}, nil
+	}
+
+	resourcesErr := r.istioResources.Reconcile(ctx)
+	if resourcesErr != nil {
+		return r.requeueReconciliation(ctx, istioCR, resourcesErr)
 	}
 
 	// We do not want to safeguard the Istio sidecar reconciliation by checking whether Istio has to be installed. The

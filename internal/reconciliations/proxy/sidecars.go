@@ -6,6 +6,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
+	"github.com/kyma-project/istio/operator/internal/filter"
 	"github.com/kyma-project/istio/operator/internal/manifest"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars"
@@ -24,6 +25,7 @@ type Sidecars struct {
 	Log            logr.Logger
 	Client         client.Client
 	Merger         manifest.Merger
+	Predicates     []filter.SidecarProxyPredicate
 }
 
 const (
@@ -62,7 +64,7 @@ func (s *Sidecars) Reconcile(ctx context.Context, istioCr v1alpha1.Istio) error 
 		return err
 	}
 
-	warnings, err := sidecars.ProxyReset(ctx, s.Client, expectedImage, expectedResources, &s.Log)
+	warnings, err := sidecars.ProxyReset(ctx, s.Client, expectedImage, expectedResources, s.Predicates, &s.Log)
 	if err != nil {
 		return err
 	}

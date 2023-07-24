@@ -2,6 +2,7 @@ package pods_test
 
 import (
 	"context"
+	"github.com/kyma-project/istio/operator/internal/filter"
 	"testing"
 	"time"
 
@@ -149,7 +150,7 @@ var _ = Describe("Get Pods", func() {
 
 		for _, tt := range tests {
 			It(tt.name, func() {
-				podList, err := pods.GetPodsToRestart(ctx, tt.c, expectedImage, helpers.DefaultSidecarResources, &logger)
+				podList, err := pods.GetPodsToRestart(ctx, tt.c, expectedImage, helpers.DefaultSidecarResources, []filter.SidecarProxyPredicate{}, &logger)
 
 				Expect(err).NotTo(HaveOccurred())
 				tt.assertFunc(podList.Items)
@@ -235,7 +236,7 @@ var _ = Describe("Get Pods", func() {
 					Tag:        "1.10.0",
 				}
 
-				podList, err := pods.GetPodsToRestart(ctx, tt.c, expectedImage, helpers.DefaultSidecarResources, &logger)
+				podList, err := pods.GetPodsToRestart(ctx, tt.c, expectedImage, helpers.DefaultSidecarResources, []filter.SidecarProxyPredicate{}, &logger)
 
 				Expect(err).NotTo(HaveOccurred())
 				tt.assertFunc(podList.Items)

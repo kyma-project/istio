@@ -40,7 +40,7 @@ func (s *SampleResource) Apply(ctx context.Context, k8sClient client.Client) (ch
 	return true, nil
 }
 
-func (s *SampleResource) RestartPredicate(_ context.Context, _ client.Client) (igRestart bool, proxyRestart bool) {
+func (s *SampleResource) RestartPredicate(_ context.Context, _ client.Client) (igRestart bool, proxyRestart bool, onChange bool) {
 	//TODO: fill in actual predicate
-	return true, true
+	return true, true, false
 }

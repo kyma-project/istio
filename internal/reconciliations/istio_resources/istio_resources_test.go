@@ -13,9 +13,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
-var _ = Describe("ApplyResources", func() {
+var _ = Describe("Reconcilation", func() {
 	Context("k3d", func() {
-		It("should create resource and return true for both restarts", func() {
+		It("should create resource and return no error", func() {
 
 			client := createFakeClient()
 

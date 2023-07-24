@@ -9,7 +9,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-var _ = Describe("ApplyResources", func() {
+var _ = Describe("Apply", func() {
 	Context("k3d", func() {
 		It("should return created if no resource was present", func() {
 			client := createFakeClient()
@@ -23,7 +23,7 @@ var _ = Describe("ApplyResources", func() {
 			Expect(changed).To(Equal(controllerutil.OperationResultCreated))
 		})
 
-		It("should return false for changed if no change is needed", func() {
+		It("should return not changed if no change is needed", func() {
 			//given
 			var filter networkingv1alpha3.EnvoyFilter
 			err := yaml.Unmarshal(manifest, &filter)
@@ -41,7 +41,7 @@ var _ = Describe("ApplyResources", func() {
 			Expect(changed).To(Equal(controllerutil.OperationResultNone))
 		})
 
-		It("should return changed if change is needed", func() {
+		It("should return updated if change is needed", func() {
 			//given
 			var filter networkingv1alpha3.EnvoyFilter
 			err := yaml.Unmarshal(manifest, &filter)

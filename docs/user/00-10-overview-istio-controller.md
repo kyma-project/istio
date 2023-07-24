@@ -10,7 +10,7 @@ The version of Istio is dependent on the version of Istio Controller that you us
 
 ## Istio CR
 
-The `istios.operator.kyma-project.io` CustomResourceDefinition (CRD) describes the Istio CR that is used to manage the Istio installation. To learn more, read the [Istio CR documentation](../user/01-20-istio-custom-resource.md).
+The `istios.operator.kyma-project.io` CustomResourceDefinition (CRD) describes the Istio CR that is used to manage the Istio installation. To learn more, read the [Istio CR documentation](/docs/user/01-20-istio-custom-resource.md).
 
 ## Restart of workloads with enabled sidecar injection
 

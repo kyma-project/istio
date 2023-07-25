@@ -134,12 +134,13 @@ func ApplicationPodShouldHaveIstioProxy(ctx context.Context, appName, namespace,
 
 	var podList corev1.PodList
 	return retry.Do(func() error {
-		err := k8sClient.List(context.TODO(), &podList, &client.ListOptions{
+		podListOpts := &client.ListOptions{
 			Namespace: namespace,
 			LabelSelector: labels.SelectorFromSet(map[string]string{
 				"app": appName,
 			}),
-		})
+		}
+		err := getPodList(ctx, k8sClient, &podList, podListOpts)
 		if err != nil {
 			return err
 		}
@@ -185,12 +186,14 @@ func ApplicationPodShouldHaveIstioProxyInRequiredVersion(ctx context.Context, ap
 
 	var podList corev1.PodList
 	return retry.Do(func() error {
-		err := k8sClient.List(ctx, &podList, &client.ListOptions{
+		podListOpts := &client.ListOptions{
 			Namespace: namespace,
 			LabelSelector: labels.SelectorFromSet(map[string]string{
 				"app": appName,
 			}),
-		})
+		}
+		err := getPodList(ctx, k8sClient, &podList, podListOpts)
+
 		if err != nil {
 			return err
 		}
@@ -270,6 +273,15 @@ func CreateHttpbinApplication(ctx context.Context, appName, namespace string) (c
 	}, testcontext.GetRetryOpts()...)
 
 	return ctx, err
+}
+
+func getPodList(ctx context.Context, k8sClient client.Client, podList *corev1.PodList, opts *client.ListOptions) error {
+	err := k8sClient.List(ctx, podList, opts)
+	if err != nil {
+		return err
+	}
+	return nil
+
 }
 
 func getVersionFromImageName(image string) (string, error) {

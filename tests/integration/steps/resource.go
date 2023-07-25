@@ -249,7 +249,7 @@ func IstioResourceContainerHasRequiredVersion(ctx context.Context, containerName
 				}
 				hasExpectedVersion = true
 			}
-			if hasExpectedVersion == false {
+			if !hasExpectedVersion {
 				return fmt.Errorf("container: %s kind: %s name: %s in namespace %s not found", containerName, kind, resourceName, namespace)
 			}
 		case DaemonSet.String():
@@ -267,7 +267,7 @@ func IstioResourceContainerHasRequiredVersion(ctx context.Context, containerName
 				}
 				hasExpectedVersion = true
 			}
-			if hasExpectedVersion == false {
+			if !hasExpectedVersion {
 				return fmt.Errorf("container: %s kind: %s name: %s in namespace %s not found", containerName, kind, resourceName, namespace)
 			}
 		default:

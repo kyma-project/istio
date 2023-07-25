@@ -102,7 +102,7 @@ func (t *TemplatedIstioCr) IstioCRIsAppliedInNamespace(ctx context.Context, name
 		if err != nil {
 			return err
 		}
-		ctx = testcontext.SetIstioCrInContext(ctx, &istio)
+		ctx = testcontext.AddIstioCRIntoContext(ctx, &istio)
 		return nil
 	}, testcontext.GetRetryOpts()...)
 

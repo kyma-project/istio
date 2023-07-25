@@ -19,9 +19,10 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"k8s.io/client-go/util/retry"
-	"time"
 
 	"github.com/kyma-project/istio/operator/internal/manifest"
 
@@ -79,6 +80,19 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	if istioCR.GetNamespace() != namespace {
 		errWrongNS := fmt.Errorf("istio CR is not in %s namespace", namespace)
 		return r.terminateReconciliation(ctx, istioCR, described_errors.NewDescribedError(errWrongNS, "Stopped Istio CR reconciliation"))
+	}
+
+	existingIstioCRs := &operatorv1alpha1.IstioList{}
+	if err := r.List(ctx, existingIstioCRs, client.InNamespace(namespace)); err != nil {
+		return r.requeueReconciliation(ctx, istioCR, described_errors.NewDescribedError(err, "Unable to list Istio CRs"))
+	}
+
+	if len(existingIstioCRs.Items) > 1 {
+		oldestCr := r.getOldestCR(existingIstioCRs)
+		if istioCR.GetUID() != oldestCr.GetUID() {
+			errNotOldestCR := fmt.Errorf("only Istio CR %s in %s reconciles the module", oldestCr.GetName(), oldestCr.GetNamespace())
+			return r.terminateReconciliation(ctx, istioCR, described_errors.NewDescribedError(errNotOldestCR, "Stopped Istio CR reconciliation"))
+		}
 	}
 
 	if istioCR.DeletionTimestamp.IsZero() {
@@ -140,9 +154,7 @@ func (r *IstioReconciler) terminateReconciliation(ctx context.Context, istioCR o
 	}
 
 	r.log.Error(err, "Reconcile failed, but won't requeue")
-	return ctrl.Result{
-		Requeue: false,
-	}, err
+	return ctrl.Result{}, nil
 }
 
 func (r *IstioReconciler) finishReconcile(ctx context.Context, istioCR operatorv1alpha1.Istio, istioTag string) (ctrl.Result, error) {
@@ -210,4 +222,15 @@ func TemplateRateLimiter(failureBaseDelay time.Duration, failureMaxDelay time.Du
 	return workqueue.NewMaxOfRateLimiter(
 		workqueue.NewItemExponentialFailureRateLimiter(failureBaseDelay, failureMaxDelay),
 		&workqueue.BucketRateLimiter{Limiter: rate.NewLimiter(rate.Limit(frequency), burst)})
+}
+
+func (r *IstioReconciler) getOldestCR(istioCRs *operatorv1alpha1.IstioList) *operatorv1alpha1.Istio {
+	oldest := istioCRs.Items[0]
+	for _, item := range istioCRs.Items {
+		timestamp := &item.CreationTimestamp
+		if !(oldest.CreationTimestamp.Before(timestamp)) {
+			oldest = item
+		}
+	}
+	return &oldest
 }

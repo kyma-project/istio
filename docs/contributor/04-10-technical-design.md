@@ -135,7 +135,7 @@ This component also contains the logic to carry out Istio actions like install, 
 
 #### ProxySidecarReconciliation
 
-ProxySidecarReconcilation component is responsible for keeping the proxy sidecars in the desired state. It restarts Pods that are part of Service Mesh or
+ProxySidecarReconciliation component is responsible for keeping the proxy sidecars in the desired state. It restarts Pods that are part of Service Mesh or
 that need to be added to Service Mesh.
 The desired state is represented by [Istio CR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md) and Istio Version coupled to the Operator.
 This component carries a high risk that its execution in this controller takes too long. We need to check its performance during the implementation
@@ -152,6 +152,7 @@ For now, the following scenarios must be covered by this component:
 
 IstioResourcesReconciliation is a component responsible for applying resources dependent on Istio (e.g. VirtualService, EnvoyFilter) and making sure that the state of Istio service-mesh is configured according to those resources.
 To ensure the correct state, IstioResourcesReconciliation component provides predicates on per-resource basis, that are consumed by IstioIngressGatewayReconciliation and ProxySidecarReconciliation. The predicates specify when does a restart of the aforementioned components should happen.
+For cases where it isn't trivial to check whether the configuration got applied to cluster state we use timestamp based approach. For example `envoy_filter_allow_partial_referer` resource is annotated with `istios.operator.kyma-project.io/updatedAt` annotation containing the timestamp at which it was last updated, and the predicate will trigger sidecar and Ingress gateway restart if the target has been created before this timestamp.
 
 #### IstioIngressGatewayReconciliation
 

@@ -235,7 +235,7 @@ func IstioResourceContainerHasRequiredVersion(ctx context.Context, containerName
 
 		switch kind {
 		case Deployment.String():
-			counter := 0
+			hasExpectedVersion := false
 			for _, c := range object.(*v1.Deployment).Spec.Template.Spec.Containers {
 				if c.Name != containerName {
 					continue
@@ -247,13 +247,13 @@ func IstioResourceContainerHasRequiredVersion(ctx context.Context, containerName
 				if deployedVersion != requiredVersion {
 					return fmt.Errorf("container: %s kind: %s name: %s in namespace %s has version %s when required %s", containerName, kind, resourceName, namespace, deployedVersion, requiredVersion)
 				}
-				counter++
+				hasExpectedVersion = true
 			}
-			if counter == 0 {
+			if hasExpectedVersion == false {
 				return fmt.Errorf("container: %s kind: %s name: %s in namespace %s not found", containerName, kind, resourceName, namespace)
 			}
 		case DaemonSet.String():
-			counter := 0
+			hasExpectedVersion := false
 			for _, c := range object.(*v1.DaemonSet).Spec.Template.Spec.Containers {
 				if c.Name != containerName {
 					continue
@@ -265,9 +265,9 @@ func IstioResourceContainerHasRequiredVersion(ctx context.Context, containerName
 				if deployedVersion != requiredVersion {
 					return fmt.Errorf("container: %s kind: %s name: %s in namespace %s has version %s when required %s", containerName, kind, resourceName, namespace, deployedVersion, requiredVersion)
 				}
-				counter++
+				hasExpectedVersion = true
 			}
-			if counter == 0 {
+			if hasExpectedVersion == false {
 				return fmt.Errorf("container: %s kind: %s name: %s in namespace %s not found", containerName, kind, resourceName, namespace)
 			}
 		default:

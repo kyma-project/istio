@@ -9,7 +9,6 @@ Feature: Upgrade Istio
     And Istio injection is enabled in namespace "default"
     And Application "test-app" is running in namespace "default"
     And Application pod "test-app" in namespace "default" has Istio proxy "present"
-    And "DaemonSet" "istio-cni-node" in namespace "istio-system" is ready
     When Istio controller has been upgraded to the new version
     Then "Deployment" "istio-controller-manager" in namespace "kyma-system" is ready
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Processing"

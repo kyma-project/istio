@@ -4,7 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/avast/retry-go"
+	"github.com/docker/distribution/reference"
+	"github.com/kyma-project/istio/operator/controllers"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
+	"github.com/masterminds/semver"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -12,6 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"strings"
 )
 
 const applicationImage = "europe-docker.pkg.dev/kyma-project/prod/external/kennethreitz/httpbin"
@@ -130,12 +134,13 @@ func ApplicationPodShouldHaveIstioProxy(ctx context.Context, appName, namespace,
 
 	var podList corev1.PodList
 	return retry.Do(func() error {
-		err := k8sClient.List(context.TODO(), &podList, &client.ListOptions{
+		podListOpts := &client.ListOptions{
 			Namespace: namespace,
 			LabelSelector: labels.SelectorFromSet(map[string]string{
 				"app": appName,
 			}),
-		})
+		}
+		err := getPodList(ctx, k8sClient, &podList, podListOpts)
 		if err != nil {
 			return err
 		}
@@ -167,6 +172,58 @@ func ApplicationPodShouldHaveIstioProxy(ctx context.Context, appName, namespace,
 		}
 
 		return fmt.Errorf("checking the istio-proxy for app %s in namespace %s failed", appName, namespace)
+	}, testcontext.GetRetryOpts()...)
+
+}
+
+func ApplicationPodShouldHaveIstioProxyInRequiredVersion(ctx context.Context, appName, namespace string) error {
+	requiredProxyVersion := strings.Join([]string{controllers.IstioVersion, controllers.IstioImageBase}, "-")
+
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	var podList corev1.PodList
+	return retry.Do(func() error {
+		podListOpts := &client.ListOptions{
+			Namespace: namespace,
+			LabelSelector: labels.SelectorFromSet(map[string]string{
+				"app": appName,
+			}),
+		}
+		err := getPodList(ctx, k8sClient, &podList, podListOpts)
+
+		if err != nil {
+			return err
+		}
+
+		if len(podList.Items) == 0 {
+			return fmt.Errorf("no pods found for app %s in namespace %s", appName, namespace)
+		}
+
+		hasProxyInVersion := false
+		for _, pod := range podList.Items {
+			for _, container := range pod.Spec.Containers {
+				if container.Name != "istio-proxy" {
+					continue
+				}
+				deployedVersion, err := getVersionFromImageName(container.Image)
+				if err != nil {
+					return err
+				}
+
+				if deployedVersion == requiredProxyVersion {
+					hasProxyInVersion = true
+				}
+			}
+		}
+
+		if !hasProxyInVersion {
+			return fmt.Errorf("after upgrade proxy does not match required version")
+		}
+
+		return nil
 	}, testcontext.GetRetryOpts()...)
 
 }
@@ -216,4 +273,26 @@ func CreateHttpbinApplication(ctx context.Context, appName, namespace string) (c
 	}, testcontext.GetRetryOpts()...)
 
 	return ctx, err
+}
+
+func getPodList(ctx context.Context, k8sClient client.Client, podList *corev1.PodList, opts *client.ListOptions) error {
+	err := k8sClient.List(ctx, podList, opts)
+	if err != nil {
+		return err
+	}
+	return nil
+
+}
+
+func getVersionFromImageName(image string) (string, error) {
+	noVersion := ""
+	matches := reference.ReferenceRegexp.FindStringSubmatch(image)
+	if matches == nil || len(matches) < 3 {
+		return noVersion, fmt.Errorf("unable to parse container image reference: %s", image)
+	}
+	version, err := semver.NewVersion(matches[2])
+	if err != nil {
+		return noVersion, err
+	}
+	return version.String(), nil
 }

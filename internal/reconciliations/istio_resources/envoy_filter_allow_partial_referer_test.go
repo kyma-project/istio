@@ -15,7 +15,7 @@ import (
 var _ = Describe("Apply", func() {
 	It("should return created and annotate with timestamp if no resource was present", func() {
 		client := createFakeClient()
-		sample := NewEnvoyFilterAllowPartialReferer(context.TODO(), client)
+		sample := NewEnvoyFilterAllowPartialReferer(client)
 
 		//when
 		changed, err := sample.apply(context.TODO(), client)
@@ -41,7 +41,7 @@ var _ = Describe("Apply", func() {
 
 		client := createFakeClient(&filter)
 
-		sample := NewEnvoyFilterAllowPartialReferer(context.TODO(), client)
+		sample := NewEnvoyFilterAllowPartialReferer(client)
 
 		//when
 		changed, err := sample.apply(context.TODO(), client)
@@ -68,7 +68,7 @@ var _ = Describe("Apply", func() {
 		filter.Spec.Priority = 2
 		client := createFakeClient(&filter)
 
-		sample := NewEnvoyFilterAllowPartialReferer(context.TODO(), client)
+		sample := NewEnvoyFilterAllowPartialReferer(client)
 
 		//when
 		changed, err := sample.apply(context.TODO(), client)
@@ -99,14 +99,14 @@ var _ = Describe("RequiresProxyRestart", func() {
 
 		client := createFakeClient(pod, pod2)
 
-		sample := NewEnvoyFilterAllowPartialReferer(context.TODO(), client)
+		sample := NewEnvoyFilterAllowPartialReferer(client)
 		changed, err := sample.apply(context.TODO(), client)
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(changed).To(Equal(controllerutil.OperationResultCreated))
 
 		//when
-		restart, err := sample.RequiresProxyRestart(*pod)
-		restart2, err2 := sample.RequiresProxyRestart(*pod2)
+		restart, err := sample.RequiresProxyRestart(context.TODO(), *pod)
+		restart2, err2 := sample.RequiresProxyRestart(context.TODO(), *pod2)
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))
@@ -125,13 +125,13 @@ var _ = Describe("RequiresProxyRestart", func() {
 
 		client := createFakeClient(pod)
 
-		sample := NewEnvoyFilterAllowPartialReferer(context.TODO(), client)
+		sample := NewEnvoyFilterAllowPartialReferer(client)
 		changed, err := sample.apply(context.TODO(), client)
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(changed).To(Equal(controllerutil.OperationResultCreated))
 
 		//when
-		restart, err := sample.RequiresProxyRestart(*pod)
+		restart, err := sample.RequiresProxyRestart(context.TODO(), *pod)
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))
@@ -149,13 +149,13 @@ var _ = Describe("RequiresProxyRestart", func() {
 
 		client := createFakeClient(pod)
 
-		sample := NewEnvoyFilterAllowPartialReferer(context.TODO(), client)
+		sample := NewEnvoyFilterAllowPartialReferer(client)
 		changed, err := sample.apply(context.TODO(), client)
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(changed).To(Equal(controllerutil.OperationResultCreated))
 
 		//when
-		restart, err := sample.RequiresIngressGatewayRestart(*pod)
+		restart, err := sample.RequiresIngressGatewayRestart(context.TODO(), *pod)
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))
@@ -171,13 +171,13 @@ var _ = Describe("RequiresProxyRestart", func() {
 
 		client := createFakeClient(pod)
 
-		sample := NewEnvoyFilterAllowPartialReferer(context.TODO(), client)
+		sample := NewEnvoyFilterAllowPartialReferer(client)
 		changed, err := sample.apply(context.TODO(), client)
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(changed).To(Equal(controllerutil.OperationResultCreated))
 
 		//when
-		restart, err := sample.RequiresIngressGatewayRestart(*pod)
+		restart, err := sample.RequiresIngressGatewayRestart(context.TODO(), *pod)
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))

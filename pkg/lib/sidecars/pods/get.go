@@ -55,7 +55,7 @@ func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage Sideca
 	for _, pod := range podList.Items {
 
 		for _, predicate := range predicates {
-			req, err := predicate.RequiresProxyRestart(pod)
+			req, err := predicate.RequiresProxyRestart(ctx, pod)
 			if err != nil {
 				return v1.PodList{}, err
 			}

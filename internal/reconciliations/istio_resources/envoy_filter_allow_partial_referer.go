@@ -19,16 +19,15 @@ var manifest []byte
 const EnvoyFilterAnnotation = "istios.operator.kyma-project.io/updatedAt"
 
 type EnvoyFilterAllowPartialReferer struct {
-	ctx             context.Context
 	k8sClient       client.Client
 	envoyUpdateTime time.Time
 }
 
-func NewEnvoyFilterAllowPartialReferer(ctx context.Context, k8sClient client.Client) EnvoyFilterAllowPartialReferer {
-	return EnvoyFilterAllowPartialReferer{ctx: ctx, k8sClient: k8sClient}
+func NewEnvoyFilterAllowPartialReferer(k8sClient client.Client) EnvoyFilterAllowPartialReferer {
+	return EnvoyFilterAllowPartialReferer{k8sClient: k8sClient}
 }
 
-func (EnvoyFilterAllowPartialReferer) apply(ctx context.Context, k8sClient client.Client) (controllerutil.OperationResult, error) {
+func (*EnvoyFilterAllowPartialReferer) apply(ctx context.Context, k8sClient client.Client) (controllerutil.OperationResult, error) {
 	var filter unstructured.Unstructured
 	err := yaml.Unmarshal(manifest, &filter)
 	if err != nil {
@@ -63,22 +62,22 @@ func (*EnvoyFilterAllowPartialReferer) Name() string {
 	return "partial referer envoy filter"
 }
 
-func (e *EnvoyFilterAllowPartialReferer) RequiresProxyRestart(p v1.Pod) (bool, error) {
+func (e *EnvoyFilterAllowPartialReferer) RequiresProxyRestart(ctx context.Context, p v1.Pod) (bool, error) {
 	if e.envoyUpdateTime.IsZero() {
-		updateTime, err := getUpdateTime(e.ctx, e.k8sClient)
+		updateTime, err := getUpdateTime(ctx, e.k8sClient)
 		if err != nil {
 			return false, err
 		}
 		e.envoyUpdateTime = updateTime
 	}
 
-	return podIsOlder(p, e.envoyUpdateTime) && pods.HasIstioSidecarStatusAnnotation(p) &&
-		pods.IsPodReady(p), nil
+	return pods.HasIstioSidecarStatusAnnotation(p) &&
+		pods.IsPodReady(p) && podIsOlder(p, e.envoyUpdateTime), nil
 }
 
-func (e *EnvoyFilterAllowPartialReferer) RequiresIngressGatewayRestart(p v1.Pod) (bool, error) {
+func (e *EnvoyFilterAllowPartialReferer) RequiresIngressGatewayRestart(ctx context.Context, p v1.Pod) (bool, error) {
 	if e.envoyUpdateTime.IsZero() {
-		updateTime, err := getUpdateTime(e.ctx, e.k8sClient)
+		updateTime, err := getUpdateTime(ctx, e.k8sClient)
 		if err != nil {
 			return false, err
 		}

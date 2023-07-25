@@ -39,7 +39,7 @@ func (r Reconciler) Reconcile(ctx context.Context) described_errors.DescribedErr
 
 	for _, pod := range podList.Items {
 		for _, predicate := range r.Predicates {
-			shouldRestart, err := predicate.RequiresIngressGatewayRestart(pod)
+			shouldRestart, err := predicate.RequiresIngressGatewayRestart(ctx, pod)
 			if err != nil {
 				return described_errors.NewDescribedError(err, "Cannot check predicate")
 			}

@@ -1,0 +1,223 @@
+<mxfile host="app.diagrams.net" modified="2023-07-25T10:28:32.622Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5.1 Safari/605.1.15" etag="a_YZ4m0J_HE95RehRo9f" version="21.6.5" type="device">
+  <diagram name="Page-1" id="MNH3XjC20ktFi9s7011N">
+    <mxGraphModel dx="1514" dy="721" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" background="#000000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="p223mYYwb6-epg65SY8K-14" value="istioInstallation.Reconcile(CR)&lt;br style=&quot;font-size: 12px;&quot;&gt;" style="edgeStyle=elbowEdgeStyle;shape=connector;curved=0;rounded=0;orthogonalLoop=1;jettySize=auto;elbow=vertical;html=1;labelBackgroundColor=none;strokeColor=#666666;fontFamily=Helvetica;fontSize=12;fontColor=#FFFFFF;endArrow=block;targetPerimeterSpacing=0;spacingTop=-17;" edge="1" parent="1" source="p223mYYwb6-epg65SY8K-1" target="p223mYYwb6-epg65SY8K-20">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="270" y="185" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-1" value="Istio Controller" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};fillColor=#000000;fontColor=#FFFFFF;labelBorderColor=default;strokeColor=#666666;rounded=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="130" y="83" width="110" height="1211" as="geometry" />
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-19" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};fontFamily=Helvetica;fontSize=11;fontColor=#FFFFFF;fillColor=#000000;strokeColor=#666666;" vertex="1" parent="p223mYYwb6-epg65SY8K-1">
+          <mxGeometry x="50" y="99" width="10" height="1048" as="geometry" />
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-3" value="Istio CR change / &lt;br style=&quot;font-size: 12px;&quot;&gt;time based trigger" style="html=1;verticalAlign=bottom;startArrow=oval;startFill=1;endArrow=block;startSize=8;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;strokeColor=#666666;labelBackgroundColor=none;fontColor=#FFFFFF;fontSize=12;" edge="1" parent="1" target="p223mYYwb6-epg65SY8K-1">
+          <mxGeometry width="60" relative="1" as="geometry">
+            <mxPoint x="48" y="165" as="sourcePoint" />
+            <mxPoint x="177.5" y="165" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-15" value="Install istio and apply Istio changes" style="edgeStyle=elbowEdgeStyle;shape=connector;curved=0;rounded=0;orthogonalLoop=1;jettySize=auto;elbow=vertical;html=1;labelBackgroundColor=none;strokeColor=#666666;fontFamily=Helvetica;fontSize=12;fontColor=#FFFFFF;endArrow=block;targetPerimeterSpacing=0;spacingTop=-17;" edge="1" parent="1" source="p223mYYwb6-epg65SY8K-20" target="p223mYYwb6-epg65SY8K-21">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="364" y="204" as="sourcePoint" />
+            <mxPoint x="1082" y="204" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="723.5" y="204" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-17" style="edgeStyle=elbowEdgeStyle;shape=connector;curved=0;rounded=0;orthogonalLoop=1;jettySize=auto;elbow=vertical;html=1;labelBackgroundColor=none;strokeColor=#666666;fontFamily=Helvetica;fontSize=11;fontColor=#FFFFFF;endArrow=block;targetPerimeterSpacing=0;dashed=1;" edge="1" parent="1" source="p223mYYwb6-epg65SY8K-20">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="190" y="292" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="265" y="292" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-4" value="IstioInstallation&lt;br style=&quot;font-size: 13px;&quot;&gt;Reconciliation" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};fillColor=#000000;fontColor=#FFFFFF;labelBorderColor=default;strokeColor=#666666;rounded=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="309" y="83" width="110" height="1211" as="geometry" />
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-20" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};fontFamily=Helvetica;fontSize=11;fontColor=#FFFFFF;fillColor=#000000;strokeColor=#666666;" vertex="1" parent="p223mYYwb6-epg65SY8K-4">
+          <mxGeometry x="50" y="97" width="10" height="117" as="geometry" />
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-6" value="IstioResources&lt;br&gt;Reconciliation" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};fillColor=#000000;fontColor=#FFFFFF;labelBorderColor=default;strokeColor=#666666;rounded=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="488" y="83" width="110" height="1211" as="geometry" />
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-24" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};fontFamily=Helvetica;fontSize=11;fontColor=#FFFFFF;fillColor=#000000;strokeColor=#666666;" vertex="1" parent="p223mYYwb6-epg65SY8K-6">
+          <mxGeometry x="50" y="240" width="10" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-7" value="IstioIngressGateway&lt;br style=&quot;font-size: 13px;&quot;&gt;Reconciliation" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};fillColor=#000000;fontColor=#FFFFFF;labelBorderColor=default;strokeColor=#666666;rounded=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="661" y="83" width="128" height="1211" as="geometry" />
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-35" value="Evaluate if restart &lt;br style=&quot;font-size: 12px;&quot;&gt;is needed" style="edgeStyle=elbowEdgeStyle;shape=connector;rounded=1;orthogonalLoop=1;jettySize=auto;elbow=vertical;html=1;labelBackgroundColor=none;strokeColor=#666666;fontFamily=Helvetica;fontSize=12;fontColor=#FFFFFF;endArrow=block;targetPerimeterSpacing=0;" edge="1" parent="p223mYYwb6-epg65SY8K-7" source="p223mYYwb6-epg65SY8K-31" target="p223mYYwb6-epg65SY8K-31">
+          <mxGeometry x="-0.649" y="19" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="214" y="427" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-42" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};fontFamily=Helvetica;fontSize=11;fontColor=#FFFFFF;fillColor=#000000;strokeColor=#666666;" vertex="1" parent="p223mYYwb6-epg65SY8K-7">
+          <mxGeometry x="59" y="321" width="10" height="384" as="geometry" />
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-31" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};fontFamily=Helvetica;fontSize=11;fontColor=#FFFFFF;fillColor=#000000;strokeColor=#666666;" vertex="1" parent="p223mYYwb6-epg65SY8K-7">
+          <mxGeometry x="65" y="339" width="10" height="108" as="geometry" />
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-8" value="ProxySidecars&lt;br style=&quot;font-size: 13px;&quot;&gt;Reconcilation" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};fillColor=#000000;fontColor=#FFFFFF;labelBorderColor=default;strokeColor=#666666;rounded=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="853" y="83" width="110" height="1211" as="geometry" />
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-46" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};fontFamily=Helvetica;fontSize=11;fontColor=#FFFFFF;fillColor=#000000;strokeColor=#666666;" vertex="1" parent="p223mYYwb6-epg65SY8K-8">
+          <mxGeometry x="50" y="731" width="10" height="403" as="geometry" />
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-53" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};fontFamily=Helvetica;fontSize=11;fontColor=#FFFFFF;fillColor=#000000;strokeColor=#666666;" vertex="1" parent="p223mYYwb6-epg65SY8K-8">
+          <mxGeometry x="55" y="809" width="10" height="108" as="geometry" />
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-54" value="Evaluate if restart&amp;nbsp;&lt;br style=&quot;border-color: var(--border-color); font-size: 12px;&quot;&gt;is needed" style="edgeStyle=elbowEdgeStyle;shape=connector;curved=0;rounded=0;orthogonalLoop=1;jettySize=auto;elbow=vertical;html=1;labelBackgroundColor=none;strokeColor=#666666;fontFamily=Helvetica;fontSize=12;fontColor=#FFFFFF;endArrow=block;targetPerimeterSpacing=0;" edge="1" parent="p223mYYwb6-epg65SY8K-8" source="p223mYYwb6-epg65SY8K-53" target="p223mYYwb6-epg65SY8K-53">
+          <mxGeometry x="-0.6467" y="16" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="202" y="910" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-16" style="edgeStyle=elbowEdgeStyle;shape=connector;curved=0;rounded=0;orthogonalLoop=1;jettySize=auto;elbow=vertical;html=1;labelBackgroundColor=none;strokeColor=#666666;fontFamily=Helvetica;fontSize=11;fontColor=#FFFFFF;endArrow=block;targetPerimeterSpacing=0;dashed=1;" edge="1" parent="1" source="p223mYYwb6-epg65SY8K-21" target="p223mYYwb6-epg65SY8K-20">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="696" y="277" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-9" value="Kubernetes&lt;br&gt;API Server" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};fillColor=#000000;fontColor=#FFFFFF;labelBorderColor=default;strokeColor=#666666;rounded=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="1027" y="83" width="110" height="1211" as="geometry" />
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-21" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};fontFamily=Helvetica;fontSize=11;fontColor=#FFFFFF;fillColor=#000000;strokeColor=#666666;" vertex="1" parent="p223mYYwb6-epg65SY8K-9">
+          <mxGeometry x="50" y="113" width="10" height="87" as="geometry" />
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-26" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};fontFamily=Helvetica;fontSize=11;fontColor=#FFFFFF;fillColor=#000000;strokeColor=#666666;" vertex="1" parent="p223mYYwb6-epg65SY8K-9">
+          <mxGeometry x="50" y="244" width="10" height="33" as="geometry" />
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-37" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};fontFamily=Helvetica;fontSize=11;fontColor=#FFFFFF;fillColor=#000000;strokeColor=#666666;" vertex="1" parent="p223mYYwb6-epg65SY8K-9">
+          <mxGeometry x="50" y="539" width="10" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-58" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};fontFamily=Helvetica;fontSize=11;fontColor=#FFFFFF;fillColor=#000000;strokeColor=#666666;" vertex="1" parent="p223mYYwb6-epg65SY8K-9">
+          <mxGeometry x="50" y="948" width="10" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-25" value="istioResources.Reconcile()" style="edgeStyle=elbowEdgeStyle;shape=connector;curved=0;rounded=0;orthogonalLoop=1;jettySize=auto;elbow=vertical;html=1;labelBackgroundColor=none;strokeColor=#666666;fontFamily=Helvetica;fontSize=12;fontColor=#FFFFFF;endArrow=block;targetPerimeterSpacing=0;spacingTop=-17;" edge="1" parent="1" source="p223mYYwb6-epg65SY8K-19" target="p223mYYwb6-epg65SY8K-24">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="367" y="333" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-28" value="Apply resources" style="edgeStyle=elbowEdgeStyle;shape=connector;curved=0;rounded=0;orthogonalLoop=1;jettySize=auto;elbow=vertical;html=1;labelBackgroundColor=none;strokeColor=#666666;fontFamily=Helvetica;fontSize=12;fontColor=#FFFFFF;endArrow=block;targetPerimeterSpacing=0;spacingTop=-17;" edge="1" parent="1" source="p223mYYwb6-epg65SY8K-24" target="p223mYYwb6-epg65SY8K-26">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="813" y="338" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-29" style="edgeStyle=elbowEdgeStyle;shape=connector;curved=0;rounded=0;orthogonalLoop=1;jettySize=auto;elbow=vertical;html=1;labelBackgroundColor=none;strokeColor=#666666;fontFamily=Helvetica;fontSize=12;fontColor=#FFFFFF;endArrow=block;targetPerimeterSpacing=0;dashed=1;" edge="1" parent="1" source="p223mYYwb6-epg65SY8K-26" target="p223mYYwb6-epg65SY8K-24">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="815" y="352" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-30" style="edgeStyle=elbowEdgeStyle;shape=connector;curved=0;rounded=0;orthogonalLoop=1;jettySize=auto;elbow=vertical;html=1;labelBackgroundColor=none;strokeColor=#666666;fontFamily=Helvetica;fontSize=12;fontColor=#FFFFFF;endArrow=block;targetPerimeterSpacing=0;dashed=1;" edge="1" parent="1" source="p223mYYwb6-epg65SY8K-24" target="p223mYYwb6-epg65SY8K-19">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="393" y="356" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-32" style="edgeStyle=elbowEdgeStyle;shape=connector;curved=0;rounded=0;orthogonalLoop=1;jettySize=auto;elbow=vertical;html=1;labelBackgroundColor=none;strokeColor=#666666;fontFamily=Helvetica;fontSize=12;fontColor=#FFFFFF;endArrow=block;targetPerimeterSpacing=0;" edge="1" parent="1" source="p223mYYwb6-epg65SY8K-19" target="p223mYYwb6-epg65SY8K-42">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="578" y="450" />
+              <mxPoint x="458" y="416" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-34" value="If: Ingress Gateway restart is needed" style="shape=umlFrame;whiteSpace=wrap;html=1;pointerEvents=0;fontFamily=Helvetica;fontSize=13;fontColor=#FFFFFF;fillColor=none;swimlaneFillColor=none;strokeColor=#666666;width=123;height=55;perimeter=rectanglePerimeter;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="590" y="560" width="585" height="173" as="geometry" />
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-40" value="Restart Ingress Gateway" style="edgeStyle=elbowEdgeStyle;shape=connector;curved=0;rounded=0;orthogonalLoop=1;jettySize=auto;elbow=vertical;html=1;labelBackgroundColor=none;strokeColor=#666666;fontFamily=Helvetica;fontSize=12;fontColor=#FFFFFF;endArrow=block;targetPerimeterSpacing=0;spacingTop=-17;" edge="1" parent="1" source="p223mYYwb6-epg65SY8K-39" target="p223mYYwb6-epg65SY8K-37">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="734.5" y="638.5" as="sourcePoint" />
+            <mxPoint x="1081.5" y="638.5" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="904" y="634" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-39" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};fontFamily=Helvetica;fontSize=11;fontColor=#FFFFFF;fillColor=#000000;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="725" y="625" width="10" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-41" style="edgeStyle=elbowEdgeStyle;shape=connector;curved=0;rounded=0;orthogonalLoop=1;jettySize=auto;elbow=vertical;html=1;labelBackgroundColor=none;strokeColor=#666666;fontFamily=Helvetica;fontSize=13;fontColor=#FFFFFF;endArrow=block;targetPerimeterSpacing=0;dashed=1;" edge="1" parent="1" source="p223mYYwb6-epg65SY8K-37" target="p223mYYwb6-epg65SY8K-39">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="895" y="678" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-44" style="edgeStyle=elbowEdgeStyle;shape=connector;curved=0;rounded=0;orthogonalLoop=1;jettySize=auto;elbow=vertical;html=1;labelBackgroundColor=none;strokeColor=#666666;fontFamily=Helvetica;fontSize=13;fontColor=#FFFFFF;endArrow=block;targetPerimeterSpacing=0;dashed=1;" edge="1" parent="1" source="p223mYYwb6-epg65SY8K-42" target="p223mYYwb6-epg65SY8K-19">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="487" y="763" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-45" style="edgeStyle=elbowEdgeStyle;shape=connector;curved=0;rounded=0;orthogonalLoop=1;jettySize=auto;elbow=vertical;html=1;labelBackgroundColor=none;strokeColor=#666666;fontFamily=Helvetica;fontSize=13;fontColor=#FFFFFF;endArrow=block;targetPerimeterSpacing=0;" edge="1" parent="1" source="p223mYYwb6-epg65SY8K-19" target="p223mYYwb6-epg65SY8K-46">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="535" y="834" />
+              <mxPoint x="525" y="874" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-47" value="For: Pod with Istio sidecar" style="shape=umlFrame;whiteSpace=wrap;html=1;pointerEvents=0;strokeColor=#666666;fontFamily=Helvetica;fontSize=13;fontColor=#FFFFFF;fillColor=none;width=97;height=43;" vertex="1" parent="1">
+          <mxGeometry x="757" y="865" width="481" height="282" as="geometry" />
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-52" value="If: Restart is needed" style="shape=umlFrame;whiteSpace=wrap;html=1;pointerEvents=0;fontFamily=Helvetica;fontSize=13;fontColor=#FFFFFF;fillColor=none;swimlaneFillColor=none;strokeColor=#666666;width=123;height=55;perimeter=rectanglePerimeter;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="771.5" y="1015" width="441.5" height="123" as="geometry" />
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-59" value="Restart Pod" style="edgeStyle=elbowEdgeStyle;shape=connector;curved=0;rounded=0;orthogonalLoop=1;jettySize=auto;elbow=vertical;html=1;labelBackgroundColor=none;strokeColor=#666666;fontFamily=Helvetica;fontSize=12;fontColor=#FFFFFF;endArrow=block;targetPerimeterSpacing=0;spacingTop=-17;" edge="1" parent="1" source="p223mYYwb6-epg65SY8K-55" target="p223mYYwb6-epg65SY8K-58">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="993" y="1043" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-55" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};fontFamily=Helvetica;fontSize=11;fontColor=#FFFFFF;fillColor=#000000;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="909" y="1031" width="10" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-60" style="edgeStyle=elbowEdgeStyle;shape=connector;curved=0;rounded=0;orthogonalLoop=1;jettySize=auto;elbow=vertical;html=1;labelBackgroundColor=none;strokeColor=#666666;fontFamily=Helvetica;fontSize=13;fontColor=#FFFFFF;endArrow=block;targetPerimeterSpacing=0;dashed=1;" edge="1" parent="1" source="p223mYYwb6-epg65SY8K-58" target="p223mYYwb6-epg65SY8K-55">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1002" y="1086" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-61" style="edgeStyle=elbowEdgeStyle;shape=connector;curved=0;rounded=0;orthogonalLoop=1;jettySize=auto;elbow=vertical;html=1;labelBackgroundColor=none;strokeColor=#666666;fontFamily=Helvetica;fontSize=13;fontColor=#FFFFFF;endArrow=block;targetPerimeterSpacing=0;dashed=1;" edge="1" parent="1" source="p223mYYwb6-epg65SY8K-46" target="p223mYYwb6-epg65SY8K-19">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="544" y="1201" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p223mYYwb6-epg65SY8K-62" value="Reconcilation end" style="html=1;verticalAlign=bottom;startArrow=oval;startFill=1;endArrow=none;startSize=8;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;rounded=0;strokeColor=#666666;labelBackgroundColor=none;fontColor=#FFFFFF;fontSize=12;endFill=0;dashed=1;" edge="1" parent="1" target="p223mYYwb6-epg65SY8K-19">
+          <mxGeometry width="60" relative="1" as="geometry">
+            <mxPoint x="46" y="1212" as="sourcePoint" />
+            <mxPoint x="161" y="1212" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

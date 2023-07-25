@@ -146,21 +146,20 @@ For now, the following scenarios must be covered by this component:
 - Restart Pods with proxy sidecar when CNI config changes.
 - Restart Pods with proxy sidecar after an Istio version update.
 - Restart Pods with proxy sidecar when proxy resources change.
+- Restart Pods if they match predicates that IstioResourcesReconciliation component will specify (e.g. being up-to-date with an EnvoyFilter)
+
+#### IstioResourcesReconciliation
+
+IstioResourcesReconciliation is a component responsible for applying resources dependent on Istio (e.g. VirtualService, EnvoyFilter) and making sure that the state of Istio service-mesh is configured according to those resources.
+To ensure the correct state, IstioResourcesReconciliation component provides predicates on per-resource basis, that are consumed by IstioIngressGatewayReconciliation and ProxySidecarReconciliation. The predicates specify when does a restart of the aforementioned components should happen.
 
 #### IstioIngressGatewayReconciliation
 
 The IstioIngressGatewayReconciliation component is responsible for bringing Istio Ingress Gateway to the desired state.
 
-#### PeerAuthenticationReconciliation
-
-The PeerAuthenticationReconcilation component applies the PeerAuthentication that configures default mTLS mode in a cluster.
-The PeerAuthenticationReconcilation must only be applied if Istio is installed and PeerAuthentication does not already exist or the generation is changed, as we want to ensure that it is always our expected configuration.
-
 ## Istio component uninstallation
 
-The default behaviour triggered on deletion of Istio Custom Resource is to uninstall all of Istio components only if there are none customer created resources present on the cluster. This behaviour is called `blocking` deletion strategy and will take place unless the intent to delete all resources, including non default Istio ones, is explicitly defined by selecting `cascading` deletion strategy.
-
-> TODO: At this moment only `blocking` strategy is implemented and triggered by default. Implement `cascading` strategy as described in this [issue](https://github.com/kyma-project/istio/issues/130).
+The default behaviour triggered on deletion of Istio Custom Resource is to uninstall all of Istio components only if there are none customer created resources present on the cluster. This behaviour is called `blocking` deletion strategy.
 
 ## Scenario: Users bring their own Istio installation
 

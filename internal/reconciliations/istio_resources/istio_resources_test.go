@@ -18,7 +18,7 @@ var _ = Describe("Reconcilation", func() {
 
 		client := createFakeClient()
 
-		sample := NewEnvoyFilterAllowPartialReferer(context.TODO(), client)
+		sample := NewEnvoyFilterAllowPartialReferer(client)
 
 		reconciler := NewReconciler(client, []Resource{&sample})
 

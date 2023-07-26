@@ -21,12 +21,14 @@ import (
 const (
 	evaluationEnv string = "TEST_EVALUATION"
 
-	productionPath string = "features/istio/production"
-	evaluationPath string = "features/istio/evaluation"
+	productionMainSuitePath    string = "features/istio/production/main-suite"
+	productionUpgradeSuitePath string = "features/istio/production/upgrade-suite"
+	evaluationPath             string = "features/istio/evaluation"
 )
 
-func TestIstio(t *testing.T) {
-	featurePath := productionPath
+func TestIstioMain(t *testing.T) {
+	suiteName := "Istio Install"
+	featurePath := productionMainSuitePath
 	ev, ok := os.LookupEnv(evaluationEnv)
 	if ok {
 		if ev == "TRUE" {
@@ -34,6 +36,15 @@ func TestIstio(t *testing.T) {
 		}
 	}
 
+	runTestSuite(t, initScenario, featurePath, suiteName)
+}
+
+func TestIstioUpgrade(t *testing.T) {
+	suiteName := "Istio Upgrade"
+	runTestSuite(t, upgradeInitScenario, productionUpgradeSuitePath, suiteName)
+}
+
+func runTestSuite(t *testing.T, scenarioInit func(ctx *godog.ScenarioContext), featurePath string, suiteName string) {
 	goDogOpts := godog.Options{
 		Output: colors.Colored(os.Stdout),
 		Format: "pretty",
@@ -45,29 +56,30 @@ func TestIstio(t *testing.T) {
 		DefaultContext: createDefaultContext(t),
 		Strict:         true,
 	}
-
-	if os.Getenv("EXPORT_RESULT") == "true" {
+	if shouldExportResults() {
 		goDogOpts.Format = "pretty,junit:junit-report.xml,cucumber:cucumber-report.json"
 	}
 
 	suite := godog.TestSuite{
-		Name:                "istio",
-		ScenarioInitializer: initScenario,
+		Name:                suiteName,
+		ScenarioInitializer: scenarioInit,
 		Options:             &goDogOpts,
 	}
 	testExitCode := suite.Run()
 
-	if os.Getenv("EXPORT_RESULT") == "true" {
-		err := generateReport("istio-installation")
+	if testExitCode != 0 {
+		t.Fatalf("non-zero status returned, failed to run feature tests")
+	}
+	if shouldExportResults() {
+		err := generateReport(suiteName)
 		if err != nil {
 			t.Errorf("error while generating report: %s", err)
 		}
 	}
+}
 
-	println("Test exit code: ", testExitCode)
-	if testExitCode != 0 {
-		t.Fatalf("non-zero status returned, failed to run feature tests")
-	}
+func shouldExportResults() bool {
+	return os.Getenv("EXPORT_RESULT") == "true"
 }
 
 func createDefaultContext(t *testing.T) context.Context {

@@ -5,7 +5,6 @@ Feature: Installing and uninstalling Istio module
     And Evaluated cluster size is "Production"
     And Istio CRD is installed
     And "Deployment" "istio-controller-manager" in namespace "kyma-system" is ready
-    And "ResourceQuota" "istio-custom-resources-count" in namespace "kyma-system" is ready
 
   Scenario: Installation of Istio module with default values
     Given Istio CR "istio-sample" is applied in namespace "kyma-system"
@@ -89,7 +88,9 @@ Feature: Installing and uninstalling Istio module
     Then Istio CR "istio-sample" in namespace "default" has status "Error"
     And Istio CR "istio-sample" in namespace "default" has description "Stopped Istio CR reconciliation: istio CR is not in kyma-system namespace"
 
-  Scenario: Installation of Istio module with a secondary Istio CR in kyma-system namespace
+  Scenario: Installation of Istio module with a second Istio CR in kyma-system namespace
     Given Istio CR "istio-sample" is applied in namespace "kyma-system"
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
-    Then Istio CR "istio-sample2" can not be applied in namespace "kyma-system" with error "exceeded quota"
+    When Istio CR "istio-sample-new" is applied in namespace "kyma-system"
+    Then Istio CR "istio-sample-new" in namespace "kyma-system" has status "Error"
+    And Istio CR "istio-sample-new" in namespace "kyma-system" has description "Stopped Istio CR reconciliation: only Istio CR istio-sample in kyma-system reconciles the module"

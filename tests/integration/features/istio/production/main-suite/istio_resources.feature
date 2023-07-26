@@ -5,7 +5,6 @@ Feature: Istio resources configuration
     And Evaluated cluster size is "Production"
     And Istio CRD is installed
     And "Deployment" "istio-controller-manager" in namespace "kyma-system" is ready
-    And "ResourceQuota" "istio-custom-resources-count" in namespace "kyma-system" is ready
 
   Scenario: Ingress Gateway and proxy sidecar allow Referer Header with fragment identifier (# character)
     Given Istio CR "istio-sample" is applied in namespace "kyma-system"

@@ -2,10 +2,9 @@
 
 ## Kyma Istio Operator
 
-![Kyma IstioOperator Overview](./../assets/istio-operator-overview.svg)
+![Kyma IstioOperator Overview](/docs/assets/istio-operator-overview.svg)
 
-We want to keep the Kyma Istio operator as simple as possible. That's why we decided to start with one controller that consists of several self-contained components
-executing reconciliation logic. The controller uses [Istio CR](./04-20-xff-proposal.md) as a resource, which must be present in the `kyma-system` Namespace. The `ResourceQuota` resource ensures that there is only one Istio CR in a Kyma cluster.
+We want to keep the Kyma Istio operator as simple as possible. That's why we decided to start with one controller that consists of several self-contained components executing reconciliation logic. The controller uses [Istio CR](/docs/contributor/04-20-xff-proposal.md) as a resource, which must be present in the `kyma-system` Namespace. It only reconciles the oldest Istio CR in the `kyma-system` Namespace, based on its creation timestamp. After this reconciliation process is completed, all other Istio CRs will be in the `error` state.
 
 ### Ownership of current resources in Kyma repository
 
@@ -64,7 +63,7 @@ Therefore, we have agreed that it is okay to block the reconciliation loop durin
 
 The following diagram shows the reconciliation process for installing, uninstalling, and canary upgrading (using revisions) Istio.
 
-![Istio Installation Reconciliation](../assets/istio-controller-reconciliation.svg)
+![Istio Installation Reconciliation](/docs/assets/istio-installation-reconciliation.svg)
 
 ### Istio upgrade version checking
 
@@ -79,7 +78,7 @@ and must work in isolation when assessing whether reconciliation is required, ap
 The execution of the reconciliation must be fast, and we must avoid many blocking calls. Long-running tasks must be executed asynchronously, and the status must be evaluated in the next reconciliation cycle.
 
  The following diagram shows the reconciliation loop of `IstioController`:
-![Reconciliation Loop Diagram](../assets/istio-controller-reconciliation-loop.svg)
+![Reconciliation Loop Diagram](/docs/assets/istio-controller-reconciliation-loop.svg)
 
 #### Interval
 
@@ -112,7 +111,7 @@ We need to make sure that each reconciliation component is completely independen
 The reason for this is that, for the sake of simplicity, we want to start with just one controller that handles all the logic to reconcile Istio. Since we have independent components, we can move them into new controllers if
 improving the performance of `IstioController` is necessary.
 
-![Controller Component Diagram](../assets/controller-component-diagram.svg)
+![Controller Component Diagram](/docs/assets/controller-component-diagram.svg)
 
 #### IstioController
 

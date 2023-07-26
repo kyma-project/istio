@@ -17,10 +17,27 @@ permissions:
   contents: read
 
 jobs:
+  wait-for-image-build:
+    name: Wait for image build
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - uses: autotelic/action-wait-for-status-check@6556cf50c8fb6608412945382eae73581f56cbb4
+        name: Wait for build to succeed
+        id: wait-for-status
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          statusName: "pull-istio-operator-build"
+          timeoutSeconds: "1800"
+      - name: Check that build status is success
+        if: steps.wait-for-status.outputs.state != 'success'
+        run: exit 1
+
   k8s-compatibility-test:
     name: Kubernetes version compatibility check
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
+    needs: [wait-for-image-build]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
@@ -37,17 +54,6 @@ jobs:
             --port 80:80@loadbalancer
             --port 443:443@loadbalancer
             --k3s-arg "--disable=traefik@server:0"
-      - uses: autotelic/action-wait-for-status-check@6556cf50c8fb6608412945382eae73581f56cbb4
-        name: Wait for build to succeed
-        id: wait-for-status
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          statusName: "pull-istio-operator-build"
-          timeoutSeconds: "1800"
-      - name: Check that build status is success
-        if: steps.wait-for-status.outputs.state != 'success'
-        run: exit 1
-      
       - name: Run integration tests
         run: |
           kubectl config use-context k3d-test-cluster-1
@@ -67,3 +73,25 @@ jobs:
           path: deprecations.txt
       - run: if [[ $(wc -l deprecations.txt | awk '{print $1}' ) != '0' ]]; then exit 1; fi
         name: Check that deprecations are empty
+
+  istio-upgrade-integration-test:
+    name: Istio upgrade integration test
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    needs: [wait-for-image-build]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "1.20"
+      - uses: AbsaOSS/k3d-action@4e8b3239042be1dc0aed6c5eb80c13b18200fc79 #v2.4.0
+        name: "Create Single Cluster"
+        with:
+          cluster-name: "test-cluster-1"
+          args: >-
+            --agents 0
+            --k3s-arg "--disable=traefik@server:0"
+      - name: Run upgrade integration test
+        run: |
+          kubectl config use-context k3d-test-cluster-1
+          EXPORT_RESULT=true IMG=europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}} TARGET_BRANCH=${{github.base_ref}} make istio-upgrade-integration-test

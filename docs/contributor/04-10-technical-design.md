@@ -134,7 +134,7 @@ This component also contains the logic to carry out Istio actions like install, 
 
 #### ProxySidecarReconciliation
 
-ProxySidecarReconcilation component is responsible for keeping the proxy sidecars in the desired state. It restarts Pods that are part of Service Mesh or
+ProxySidecarReconciliation component is responsible for keeping the proxy sidecars in the desired state. It restarts Pods that are part of Service Mesh or
 that need to be added to Service Mesh.
 The desired state is represented by [Istio CR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md) and Istio Version coupled to the Operator.
 This component carries a high risk that its execution in this controller takes too long. We need to check its performance during the implementation
@@ -145,21 +145,21 @@ For now, the following scenarios must be covered by this component:
 - Restart Pods with proxy sidecar when CNI config changes.
 - Restart Pods with proxy sidecar after an Istio version update.
 - Restart Pods with proxy sidecar when proxy resources change.
+- Restart Pods if they match predicates that the IstioResourcesReconciliation component specifies (for example, being up-to-date with EnvoyFilter)
+
+#### IstioResourcesReconciliation
+
+IstioResourcesReconciliation is a component responsible for applying resources dependent on Istio, such as VirtualService or EnvoyFilter, and ensuring that the state of the Istio service mesh is configured correctly based on those resources.
+To maintain the correct state, the IstioResourcesReconciliation component provides predicates on a per-resource basis, which are consumed by the IstioIngressGatewayReconciliation and ProxySidecarReconciliation components. The predicates specify when the aforementioned components should be restarted.
+For cases where it isn't trivial to check whether the configuration has been applied to the cluster state, a timestamp-based approach is used. For example, the `envoy_filter_allow_partial_referer` resource is annotated with the `istios.operator.kyma-project.io/updatedAt` annotation, which includes the timestamp of its last update. The predicate initiates a restart of the sidecar and Ingress Gateway if the target had been created prior to this timestamp.
 
 #### IstioIngressGatewayReconciliation
 
 The IstioIngressGatewayReconciliation component is responsible for bringing Istio Ingress Gateway to the desired state.
 
-#### PeerAuthenticationReconciliation
-
-The PeerAuthenticationReconcilation component applies the PeerAuthentication that configures default mTLS mode in a cluster.
-The PeerAuthenticationReconcilation must only be applied if Istio is installed and PeerAuthentication does not already exist or the generation is changed, as we want to ensure that it is always our expected configuration.
-
 ## Istio component uninstallation
 
-The default behaviour triggered on deletion of Istio Custom Resource is to uninstall all of Istio components only if there are none customer created resources present on the cluster. This behaviour is called `blocking` deletion strategy and will take place unless the intent to delete all resources, including non default Istio ones, is explicitly defined by selecting `cascading` deletion strategy.
-
-> TODO: At this moment only `blocking` strategy is implemented and triggered by default. Implement `cascading` strategy as described in this [issue](https://github.com/kyma-project/istio/issues/130).
+When Istio Custom Resource is deleted, the default behavior is to uninstall all Istio components, but only if there are no customer-created resources on the cluster. This behavior is known as the blocking deletion strategy.
 
 ## Scenario: Users bring their own Istio installation
 

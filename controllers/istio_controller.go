@@ -43,7 +43,7 @@ import (
 
 const (
 	namespace                    = "kyma-system"
-	IstioVersion                 = "1.18.1"
+	IstioVersion                 = "1.18.2"
 	IstioImageBase               = "distroless"
 	IstioResourceListDefaultPath = "manifests/controlled_resources_list.yaml"
 )

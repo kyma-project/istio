@@ -20,9 +20,10 @@ require (
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 	golang.org/x/time v0.3.0
 	google.golang.org/protobuf v1.31.0
+	gopkg.in/yaml.v3 v3.0.1
 	istio.io/api v0.0.0-20230713061407-06047cce866f
-	istio.io/client-go v1.18.1
-	istio.io/istio v0.0.0-20230713183549-b39cf4080772
+	istio.io/client-go v1.18.1 //There was no version update on 1.18.2
+	istio.io/istio v0.0.0-20230721203100-0183f2886bc0
 	istio.io/pkg v0.0.0-20230524020242-1015535057be
 	k8s.io/api v0.27.4
 	k8s.io/apiextensions-apiserver v0.27.4
@@ -209,7 +210,6 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 	helm.sh/helm/v3 v3.12.0 // indirect
 	k8s.io/apiserver v0.27.4 // indirect
 	k8s.io/cli-runtime v0.27.4 // indirect

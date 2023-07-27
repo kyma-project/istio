@@ -471,6 +471,8 @@ var _ = Describe("Istio Controller", func() {
 				Client:                 fakeClient,
 				Scheme:                 getTestScheme(),
 				istioInstallation:      &istioInstallationReconciliationMock{},
+				istioResources:         &istioResourcesReconciliationMock{},
+				ingressGateway:         &ingressGatewayReconciliationMock{},
 				proxySidecars:          &proxySidecarsReconciliationMock{},
 				log:                    logr.Discard(),
 				statusHandler:          newStatusHandler(fakeClient),

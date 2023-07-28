@@ -3,17 +3,18 @@ package steps
 import (
 	"context"
 	"fmt"
-
 	"github.com/avast/retry-go"
 	"github.com/cucumber/godog"
 	istioCR "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/controllers"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
+	"github.com/thoas/go-funk"
 	"istio.io/client-go/pkg/apis/networking/v1beta1"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
@@ -72,9 +73,28 @@ func ResourceIsReady(ctx context.Context, kind, name, namespace string) error {
 
 		switch kind {
 		case Deployment.String():
-			if object.(*v1.Deployment).Status.Replicas != object.(*v1.Deployment).Status.ReadyReplicas {
-				return fmt.Errorf("%s %s/%s is not ready",
-					kind, namespace, name)
+			dep := object.(*v1.Deployment)
+			podList := corev1.PodList{}
+			err := k8sClient.List(ctx, &podList, &client.ListOptions{Namespace: dep.Namespace})
+			if err != nil {
+				return err
+			}
+
+			replicaSets := v1.ReplicaSetList{}
+			err = k8sClient.List(ctx, &replicaSets, &client.ListOptions{Namespace: dep.Namespace})
+			if err != nil {
+				return err
+			}
+
+			depReplicaSet := funk.Find(replicaSets.Items, func(rep v1.ReplicaSet) bool {
+				return funk.Contains(rep.OwnerReferences, func(reference metav1.OwnerReference) bool { return reference.UID == dep.UID })
+			}).(v1.ReplicaSet)
+
+			for _, pod := range podList.Items {
+				if funk.Contains(pod.OwnerReferences, func(reference metav1.OwnerReference) bool { return reference.UID == depReplicaSet.UID }) && pod.Status.Phase != "Running" {
+					return fmt.Errorf("%s %s/%s is not ready",
+						"Pod", namespace, name)
+				}
 			}
 		case DaemonSet.String():
 			if object.(*v1.DaemonSet).Status.NumberReady != object.(*v1.DaemonSet).Status.DesiredNumberScheduled {

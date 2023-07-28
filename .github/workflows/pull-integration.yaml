@@ -1,3 +1,6 @@
+# Jobs defined in this file are resposible for all kinds of integration tests
+# Those tests depend on a container image so in the first job we wait for the image build to succeed
+
 name: Pull Request integration tests
 
 on:
@@ -48,9 +51,7 @@ jobs:
   k8s-compatibility-test:
     name: Kubernetes version compatibility check
     runs-on: ubuntu-latest
-    if: |
-      github.event.pull_request.draft == false &&
-      github.event_name != 'push'
+    if: github.event.pull_request.draft == false
     needs: [wait-for-image-build]
     steps:
       - uses: actions/checkout@v3

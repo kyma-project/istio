@@ -13,6 +13,7 @@ on:
       - ".github/**" #Ignoring since build job isn't triggered on the workflow directory changes
     branches:
       - main
+      - 'release-**'
 permissions:
   contents: read
 

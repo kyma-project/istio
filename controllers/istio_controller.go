@@ -122,6 +122,13 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return r.requeueReconciliation(ctx, istioCR, installationErr)
 	}
 
+	// If there are no finalizers left, we must assume that the resource is deleted and therefore must stop the reconciliation
+	// to prevent accidental read or write to the resource.
+	if !istioCR.HasFinalizer() {
+		r.log.Info("End reconciliation because all finalizers have been removed")
+		return ctrl.Result{}, nil
+	}
+
 	resourcesErr := r.istioResources.Reconcile(ctx)
 	if resourcesErr != nil {
 		return r.requeueReconciliation(ctx, istioCR, resourcesErr)
@@ -139,13 +146,6 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	ingressGatewayErr := r.ingressGateway.Reconcile(ctx)
 	if ingressGatewayErr != nil {
 		return r.requeueReconciliation(ctx, istioCR, ingressGatewayErr)
-	}
-
-	// If there are no finalizers left, we must assume that the resource is deleted and therefore must stop the reconciliation
-	// to prevent accidental read or write to the resource.
-	if !istioCR.HasFinalizer() {
-		r.log.Info("End reconciliation because all finalizers have been removed")
-		return ctrl.Result{}, nil
 	}
 
 	return r.finishReconcile(ctx, istioCR, IstioTag)

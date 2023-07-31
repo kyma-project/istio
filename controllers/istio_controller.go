@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"github.com/kyma-project/istio/operator/internal/described_errors"
-	"github.com/kyma-project/istio/operator/internal/filter"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/ingress_gateway"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio_resources"
 	"k8s.io/client-go/util/retry"
@@ -56,16 +55,13 @@ var IstioTag = fmt.Sprintf("%s-%s", IstioVersion, IstioImageBase)
 func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *IstioReconciler {
 	merger := manifest.NewDefaultIstioMerger()
 
-	envoyFilterReferer := istio_resources.NewEnvoyFilterAllowPartialReferer(mgr.GetClient())
-	istioResources := []istio_resources.Resource{&envoyFilterReferer}
-
 	return &IstioReconciler{
 		Client:                 mgr.GetClient(),
 		Scheme:                 mgr.GetScheme(),
 		istioInstallation:      &istio.Installation{Client: mgr.GetClient(), IstioClient: istio.NewIstioClient(), IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Merger: &merger},
-		proxySidecars:          &proxy.Sidecars{IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Log: mgr.GetLogger(), Client: mgr.GetClient(), Merger: &merger, Predicates: []filter.SidecarProxyPredicate{&envoyFilterReferer}},
-		istioResources:         istio_resources.NewReconciler(mgr.GetClient(), istioResources),
-		ingressGateway:         ingress_gateway.Reconciler{Client: mgr.GetClient(), Predicates: []filter.IngressGatewayPredicate{&envoyFilterReferer}},
+		proxySidecars:          &proxy.Sidecars{IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Log: mgr.GetLogger(), Client: mgr.GetClient(), Merger: &merger},
+		istioResources:         istio_resources.NewReconciler(mgr.GetClient()),
+		ingressGateway:         ingress_gateway.Reconciler{Client: mgr.GetClient()},
 		log:                    mgr.GetLogger(),
 		statusHandler:          newStatusHandler(mgr.GetClient()),
 		reconciliationInterval: reconciliationInterval,
@@ -74,6 +70,11 @@ func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *I
 
 func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	r.log.Info("Was called to reconcile Kyma Istio Service Mesh")
+
+	envoyFilterReferer := istio_resources.NewEnvoyFilterAllowPartialReferer(r.Client)
+	r.istioResources.AddReconcileResource(&envoyFilterReferer)
+	r.ingressGateway.AddReconcilePredicate(&envoyFilterReferer)
+	r.proxySidecars.AddReconcilePredicate(&envoyFilterReferer)
 
 	istioCR := operatorv1alpha1.Istio{}
 	if err := r.Client.Get(ctx, req.NamespacedName, &istioCR); err != nil {

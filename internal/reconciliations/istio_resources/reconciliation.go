@@ -11,6 +11,7 @@ import (
 
 type Reconciliation interface {
 	Reconcile(ctx context.Context) described_errors.DescribedError
+	AddReconcileResource(resource Resource) Reconciler
 }
 
 type Reconciler struct {
@@ -18,10 +19,9 @@ type Reconciler struct {
 	resources []Resource
 }
 
-func NewReconciler(client client.Client, resources []Resource) Reconciler {
+func NewReconciler(client client.Client) Reconciler {
 	return Reconciler{
-		client:    client,
-		resources: resources,
+		client: client,
 	}
 }
 
@@ -46,4 +46,9 @@ func (r Reconciler) Reconcile(ctx context.Context) described_errors.DescribedErr
 	ctrl.Log.Info("Successfully reconciled istio resources")
 
 	return nil
+}
+
+func (r Reconciler) AddReconcileResource(resource Resource) Reconciler {
+	r.resources = append(r.resources, resource)
+	return r
 }

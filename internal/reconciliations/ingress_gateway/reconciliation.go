@@ -20,6 +20,7 @@ const (
 
 type Reconciliation interface {
 	Reconcile(ctx context.Context) described_errors.DescribedError
+	AddReconcilePredicate(predicate filter.IngressGatewayPredicate) Reconciler
 }
 
 type Reconciler struct {
@@ -63,6 +64,11 @@ func (r Reconciler) Reconcile(ctx context.Context) described_errors.DescribedErr
 
 	ctrl.Log.Info("Successfully reconciled Istio ingress gateway")
 	return nil
+}
+
+func (r Reconciler) AddReconcilePredicate(predicate filter.IngressGatewayPredicate) Reconciler {
+	r.Predicates = append(r.Predicates, predicate)
+	return r
 }
 
 func getIngressGatewayPods(ctx context.Context, k8sClient client.Client) (*v1.PodList, error) {

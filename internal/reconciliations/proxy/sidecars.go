@@ -17,6 +17,7 @@ import (
 
 type SidecarsReconciliation interface {
 	Reconcile(ctx context.Context, istioCr v1alpha1.Istio) error
+	AddReconcilePredicate(predicate filter.SidecarProxyPredicate)
 }
 
 type Sidecars struct {
@@ -75,4 +76,8 @@ func (s *Sidecars) Reconcile(ctx context.Context, istioCr v1alpha1.Istio) error 
 	}
 
 	return nil
+}
+
+func (s *Sidecars) AddReconcilePredicate(predicate filter.SidecarProxyPredicate) {
+	s.Predicates = append(s.Predicates, predicate)
 }

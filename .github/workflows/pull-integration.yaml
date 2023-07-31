@@ -1,8 +1,23 @@
+# Jobs defined in this file are resposible for all kinds of integration tests
+# Those tests depend on a container image so in the first job we wait for the image build to succeed
+
 name: Pull Request integration tests
 
 on:
   pull_request:
     types: [synchronize, opened, reopened, ready_for_review]
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+      - "tests/performance/**"
+      - "OWNERS"
+      - "CODEOWNERS"
+      - "sec-scanners-config.yaml"
+      - ".github/**" #Ignoring since build job isn't triggered on the workflow directory changes
+    branches:
+      - main
+      - 'release-**'
+  push:
     paths-ignore:
       - "docs/**"
       - "**/*.md"

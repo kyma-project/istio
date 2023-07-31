@@ -38,6 +38,7 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^Virtual service "([^"]*)" exposing service "([^"]*)" by gateway "([^"]*)" is configured in namespace "([^"]*)"$`, steps.CreateVirtualService)
 	ctx.Step(`^Request with header X-Forwarded-For with value "([^"]*)" sent to httpbin should return X-Envoy-External-Address with value "([^"]*)"$`, steps.ValidateHeader)
 	ctx.Step(`^Request with header "([^"]*)" with value "([^"]*)" sent to httpbin should return "([^"]*)" with value "([^"]*)"$`, steps.ValidateHeader)
+	ctx.Step(`^Every "([^"]*)" instance in namespace "([^"]*)" has envoy\.reloadable_features\.http_allow_partial_urls_in_referer set to false$`, steps.EveryInstanceInNamespaceHasEnvoyReferer)
 }
 
 func upgradeInitScenario(ctx *godog.ScenarioContext) {

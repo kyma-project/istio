@@ -30,6 +30,7 @@ jobs:
       - uses: ./.github/actions/wait-for-job-succeed-or-fail
         with:
           job-name: 'pull-istio-operator-build'
+          github-auth-token: ${{ secrets.GITHUB_TOKEN }}
 
   k8s-compatibility-test:
     name: Kubernetes version compatibility check

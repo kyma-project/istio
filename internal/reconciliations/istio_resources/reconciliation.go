@@ -11,7 +11,7 @@ import (
 
 type Reconciliation interface {
 	Reconcile(ctx context.Context) described_errors.DescribedError
-	AddReconcileResource(resource Resource) Reconciler
+	AddReconcileResource(resource Resource) Reconciliation
 }
 
 type Reconciler struct {
@@ -48,7 +48,7 @@ func (r Reconciler) Reconcile(ctx context.Context) described_errors.DescribedErr
 	return nil
 }
 
-func (r Reconciler) AddReconcileResource(resource Resource) Reconciler {
+func (r Reconciler) AddReconcileResource(resource Resource) Reconciliation {
 	r.resources = append(r.resources, resource)
 	return r
 }

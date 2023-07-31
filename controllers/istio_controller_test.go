@@ -3,6 +3,9 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/istio/operator/internal/filter"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/ingress_gateway"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio_resources"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -572,11 +575,19 @@ var _ = Describe("Istio Controller", func() {
 type ingressGatewayReconciliationMock struct {
 }
 
+func (i *ingressGatewayReconciliationMock) AddReconcilePredicate(_ filter.IngressGatewayPredicate) ingress_gateway.Reconciliation {
+	return i
+}
+
 func (i *ingressGatewayReconciliationMock) Reconcile(_ context.Context) described_errors.DescribedError {
 	return nil
 }
 
 type istioResourcesReconciliationMock struct {
+}
+
+func (i *istioResourcesReconciliationMock) AddReconcileResource(_ istio_resources.Resource) istio_resources.Reconciliation {
+	return i
 }
 
 func (i *istioResourcesReconciliationMock) Reconcile(_ context.Context) described_errors.DescribedError {
@@ -605,6 +616,10 @@ func (i *istioInstallationReconciliationMock) Reconcile(_ context.Context, istio
 
 type proxySidecarsReconciliationMock struct {
 	err error
+}
+
+func (p *proxySidecarsReconciliationMock) AddReconcilePredicate(_ filter.SidecarProxyPredicate) {
+	return
 }
 
 func (p *proxySidecarsReconciliationMock) Reconcile(_ context.Context, _ operatorv1alpha1.Istio) error {

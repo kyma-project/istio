@@ -20,7 +20,7 @@ const (
 
 type Reconciliation interface {
 	Reconcile(ctx context.Context) described_errors.DescribedError
-	AddReconcilePredicate(predicate filter.IngressGatewayPredicate) Reconciler
+	AddReconcilePredicate(predicate filter.IngressGatewayPredicate) Reconciliation
 }
 
 type Reconciler struct {
@@ -66,7 +66,7 @@ func (r Reconciler) Reconcile(ctx context.Context) described_errors.DescribedErr
 	return nil
 }
 
-func (r Reconciler) AddReconcilePredicate(predicate filter.IngressGatewayPredicate) Reconciler {
+func (r Reconciler) AddReconcilePredicate(predicate filter.IngressGatewayPredicate) Reconciliation {
 	r.Predicates = append(r.Predicates, predicate)
 	return r
 }

@@ -20,7 +20,8 @@ var _ = Describe("Reconcilation", func() {
 
 		sample := NewEnvoyFilterAllowPartialReferer(client)
 
-		reconciler := NewReconciler(client, []Resource{&sample})
+		reconciler := NewReconciler(client)
+		reconciler.AddReconcileResource(&sample)
 
 		//when
 		err := reconciler.Reconcile(context.TODO())

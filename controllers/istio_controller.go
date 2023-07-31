@@ -72,8 +72,8 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	r.log.Info("Was called to reconcile Kyma Istio Service Mesh")
 
 	envoyFilterReferer := istio_resources.NewEnvoyFilterAllowPartialReferer(r.Client)
-	r.istioResources.AddReconcileResource(&envoyFilterReferer)
-	r.ingressGateway.AddReconcilePredicate(&envoyFilterReferer)
+	r.istioResources = r.istioResources.AddReconcileResource(&envoyFilterReferer)
+	r.ingressGateway = r.ingressGateway.AddReconcilePredicate(&envoyFilterReferer)
 	r.proxySidecars.AddReconcilePredicate(&envoyFilterReferer)
 
 	istioCR := operatorv1alpha1.Istio{}

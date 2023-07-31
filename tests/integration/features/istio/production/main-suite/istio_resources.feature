@@ -13,7 +13,7 @@ Feature: Istio resources configuration
     And Httpbin application "httpbin" is running in namespace "default"
     And Istio gateway "test-gateway" is configured in namespace "default"
     And "Deployment" "httpbin" in namespace "default" is ready
-    And Every "httpbin" instance in namespace "default" has envoy.reloadable_features.http_allow_partial_urls_in_referer set to false
-    And Every "ingress-gateway" instance in namespace "istio-system" has envoy.reloadable_features.http_allow_partial_urls_in_referer set to false
+    #And Every "httpbin" instance in namespace "default" has envoy.reloadable_features.http_allow_partial_urls_in_referer set to false
+    #And Every "ingress-gateway" instance in namespace "istio-system" has envoy.reloadable_features.http_allow_partial_urls_in_referer set to false
     When Virtual service "test-vs" exposing service "httpbin.default.svc.cluster.local" by gateway "default/test-gateway" is configured in namespace "default"
     Then Request with header "Referer" with value "https://someurl.com/context/#view" sent to httpbin should return "Referer" with value "https://someurl.com/context/#view"

@@ -26,11 +26,13 @@ runs:
       run: |
         kubectl config use-context k3d-test-cluster-1
         EXPORT_RESULT=true IMG=${{ inputs.img-env }} make istio-integration-test
+      shell: bash
     - name: Check deprecations
       run: |
         set -eou pipefail
         GO111MODULE=on go install github.com/prometheus/prom2json/cmd/prom2json@v1.3.3
         kubectl get --context k3d-test-cluster-1 --raw /metrics | prom2json | jq '.[] | select(.name=="apiserver_requested_deprecated_apis").metrics[].labels' > deprecations.txt
+      shell: bash
     - uses: actions/upload-artifact@v3
       with:
         name: html-reports
@@ -39,5 +41,6 @@ runs:
       with:
         name: deprecation-report
         path: deprecations.txt
-    - run: if [[ $(wc -l deprecations.txt | awk '{print $1}' ) != '0' ]]; then exit 1; fi
-      name: Check that deprecations are empty
+    - name: Check that deprecations are empty
+      run: if [[ $(wc -l deprecations.txt | awk '{print $1}' ) != '0' ]]; then exit 1; fi
+      shell: bash

@@ -25,7 +25,7 @@ runs:
     - name: Run integration tests
       run: |
         kubectl config use-context k3d-test-cluster-1
-        EXPORT_RESULT=true IMG=${{ inputs.img-env }} make istio-integration-test
+        EXPORT_RESULT=true IMG=${{ inputs.makefile-img-env }} make istio-integration-test
       shell: bash
     - name: Check deprecations
       run: |

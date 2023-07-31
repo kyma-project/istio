@@ -33,7 +33,7 @@ jobs:
           github-auth-token: ${{ secrets.GITHUB_TOKEN }}
 
   k8s-compatibility-test:
-    name: Kubernetes version compatibility check
+    name: Kubernetes version compatibility test
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
     needs: [wait-for-image-build]
@@ -42,7 +42,7 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: "1.20"
-      - uses: ./.github/actions/k8s-compatibility-check
+      - uses: ./.github/actions/k8s-compatibility-test
         with:
           makefile-img-env: "europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}"
 

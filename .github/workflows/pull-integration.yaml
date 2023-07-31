@@ -26,6 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
     steps:
+      - uses: actions/checkout@v3
       - uses: ./.github/actions/wait-for-job-succeed-or-fail
         with:
           job-name: 'pull-istio-operator-build'

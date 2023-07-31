@@ -1,6 +1,7 @@
 # Waits for a given job to finish
 # On succees it passes, on failure it fails the job
 # inputs: job-name (required), timeout (optional)
+# Don't forget to use actions/checkout@v3 and actions/setup-go@v4 before
 
 name: 'Wait for job'
 description: 'Waits for given job (check) to succeed or fails'

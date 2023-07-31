@@ -17,6 +17,7 @@ module-build:
 		IMG=${IMG} \
 		MODULE_REGISTRY=${MODULE_REGISTRY} \
 		MODULE_VERSION=${MODULE_VERSION}-${MODULE_SHA} \
+		MODULE_CHANNEL=regular
 
 .PHONY: module-template-arifact
 module-template-artifact:

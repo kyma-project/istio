@@ -1,5 +1,6 @@
 - path: spec.config.numTrustedProxies
   simple: true
   name: Number of trusted proxies
+  required: false
   value:
     type: number

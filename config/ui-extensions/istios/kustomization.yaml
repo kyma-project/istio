@@ -1,6 +1,6 @@
 configMapGenerator:
-- name: istios.operator.kyma-project.io
-  namespace: kube-public
+- name: ui.operator.kyma-project.io
+  namespace: kyma-system
   files:
   - general
   - form

@@ -57,13 +57,13 @@ func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *I
 	merger := manifest.NewDefaultIstioMerger()
 
 	envoyFilterReferer := istio_resources.NewEnvoyFilterAllowPartialReferer(mgr.GetClient())
-	istioResources := []istio_resources.Resource{&envoyFilterReferer}
+	istioResources := []istio_resources.Resource{envoyFilterReferer}
 
 	return &IstioReconciler{
 		Client:                 mgr.GetClient(),
 		Scheme:                 mgr.GetScheme(),
 		istioInstallation:      &istio.Installation{Client: mgr.GetClient(), IstioClient: istio.NewIstioClient(), IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Merger: &merger},
-		proxySidecars:          &proxy.Sidecars{IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Log: mgr.GetLogger(), Client: mgr.GetClient(), Merger: &merger, Predicates: []filter.SidecarProxyPredicate{&envoyFilterReferer}},
+		proxySidecars:          &proxy.Sidecars{IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Log: mgr.GetLogger(), Client: mgr.GetClient(), Merger: &merger, Predicates: []filter.SidecarProxyPredicate{envoyFilterReferer}},
 		istioResources:         istio_resources.NewReconciler(mgr.GetClient(), istioResources),
 		ingressGateway:         ingress_gateway.Reconciler{Client: mgr.GetClient(), Predicates: []filter.IngressGatewayPredicate{envoyFilterReferer}},
 		log:                    mgr.GetLogger(),

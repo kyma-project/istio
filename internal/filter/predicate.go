@@ -6,9 +6,17 @@ import (
 )
 
 type SidecarProxyPredicate interface {
-	RequiresProxyRestart(context.Context, v1.Pod) (bool, error)
+	NewProxyRestartEvaluator(context.Context) (ProxyRestartEvaluator, error)
 }
 
 type IngressGatewayPredicate interface {
-	RequiresIngressGatewayRestart(context.Context, v1.Pod) (bool, error)
+	NewIngressGatewayEvaluator(context.Context) (IngressGatewayRestartEvaluator, error)
+}
+
+type ProxyRestartEvaluator interface {
+	RequiresProxyRestart(v1.Pod) bool
+}
+
+type IngressGatewayRestartEvaluator interface {
+	RequiresIngressGatewayRestart(v1.Pod) bool
 }

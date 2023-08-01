@@ -3,6 +3,7 @@ package istio_resources
 import (
 	"context"
 	_ "embed"
+	"github.com/kyma-project/istio/operator/internal/filter"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -19,7 +20,10 @@ var manifest []byte
 const EnvoyFilterAnnotation = "istios.operator.kyma-project.io/updatedAt"
 
 type EnvoyFilterAllowPartialReferer struct {
-	k8sClient       client.Client
+	k8sClient client.Client
+}
+
+type EnvoyFilterEvaluator struct {
 	envoyUpdateTime time.Time
 }
 
@@ -27,29 +31,45 @@ func NewEnvoyFilterAllowPartialReferer(k8sClient client.Client) EnvoyFilterAllow
 	return EnvoyFilterAllowPartialReferer{k8sClient: k8sClient}
 }
 
-func (*EnvoyFilterAllowPartialReferer) apply(ctx context.Context, k8sClient client.Client) (controllerutil.OperationResult, error) {
-	var filter unstructured.Unstructured
-	err := yaml.Unmarshal(manifest, &filter)
+func (e EnvoyFilterAllowPartialReferer) NewProxyRestartEvaluator(ctx context.Context) (filter.ProxyRestartEvaluator, error) {
+	return newEnvoyFilterEvaluator(ctx, e.k8sClient)
+}
+
+func (e EnvoyFilterAllowPartialReferer) NewIngressGatewayEvaluator(ctx context.Context) (filter.IngressGatewayRestartEvaluator, error) {
+	return newEnvoyFilterEvaluator(ctx, e.k8sClient)
+}
+
+func newEnvoyFilterEvaluator(ctx context.Context, k8sClient client.Client) (EnvoyFilterEvaluator, error) {
+	updateTime, err := getUpdateTime(ctx, k8sClient)
+	if err != nil {
+		return EnvoyFilterEvaluator{}, err
+	}
+	return EnvoyFilterEvaluator{envoyUpdateTime: updateTime}, nil
+}
+
+func (e EnvoyFilterAllowPartialReferer) apply(ctx context.Context, k8sClient client.Client) (controllerutil.OperationResult, error) {
+	var envoyFilter unstructured.Unstructured
+	err := yaml.Unmarshal(manifest, &envoyFilter)
 	if err != nil {
 		return controllerutil.OperationResultNone, err
 	}
 
-	spec := filter.Object["spec"]
+	spec := envoyFilter.Object["spec"]
 
-	result, err := controllerutil.CreateOrUpdate(ctx, k8sClient, &filter, func() error {
-		filter.Object["spec"] = spec
+	result, err := controllerutil.CreateOrUpdate(ctx, k8sClient, &envoyFilter, func() error {
+		envoyFilter.Object["spec"] = spec
 		return nil
 	})
 	if err != nil {
 		return controllerutil.OperationResultNone, err
 	}
 	var ok bool
-	if filter.GetAnnotations() != nil {
-		_, ok = filter.GetAnnotations()[EnvoyFilterAnnotation]
+	if envoyFilter.GetAnnotations() != nil {
+		_, ok = envoyFilter.GetAnnotations()[EnvoyFilterAnnotation]
 	}
 
-	if result != controllerutil.OperationResultNone || filter.GetAnnotations() == nil || !ok {
-		err := annotateWithTimestamp(ctx, filter, k8sClient)
+	if result != controllerutil.OperationResultNone || envoyFilter.GetAnnotations() == nil || !ok {
+		err := annotateWithTimestamp(ctx, envoyFilter, k8sClient)
 		if err != nil {
 			return controllerutil.OperationResultNone, err
 		}
@@ -58,33 +78,17 @@ func (*EnvoyFilterAllowPartialReferer) apply(ctx context.Context, k8sClient clie
 	return result, nil
 }
 
-func (*EnvoyFilterAllowPartialReferer) Name() string {
+func (EnvoyFilterAllowPartialReferer) Name() string {
 	return "partial referer envoy filter"
 }
 
-func (e *EnvoyFilterAllowPartialReferer) RequiresProxyRestart(ctx context.Context, p v1.Pod) (bool, error) {
-	if e.envoyUpdateTime.IsZero() {
-		updateTime, err := getUpdateTime(ctx, e.k8sClient)
-		if err != nil {
-			return false, err
-		}
-		e.envoyUpdateTime = updateTime
-	}
-
+func (e EnvoyFilterEvaluator) RequiresProxyRestart(p v1.Pod) bool {
 	return pods.HasIstioSidecarStatusAnnotation(p) &&
-		pods.IsPodReady(p) && podIsOlder(p, e.envoyUpdateTime), nil
+		pods.IsPodReady(p) && podIsOlder(p, e.envoyUpdateTime)
 }
 
-func (e *EnvoyFilterAllowPartialReferer) RequiresIngressGatewayRestart(ctx context.Context, p v1.Pod) (bool, error) {
-	if e.envoyUpdateTime.IsZero() {
-		updateTime, err := getUpdateTime(ctx, e.k8sClient)
-		if err != nil {
-			return false, err
-		}
-		e.envoyUpdateTime = updateTime
-	}
-
-	return podIsOlder(p, e.envoyUpdateTime), nil
+func (e EnvoyFilterEvaluator) RequiresIngressGatewayRestart(p v1.Pod) bool {
+	return podIsOlder(p, e.envoyUpdateTime)
 }
 
 // Checks whether the pod CreationTimestamp is older than EnvoyFilterAnnotation

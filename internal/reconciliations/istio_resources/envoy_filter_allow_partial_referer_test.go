@@ -105,14 +105,13 @@ var _ = Describe("RequiresProxyRestart", func() {
 		Expect(changed).To(Equal(controllerutil.OperationResultCreated))
 
 		//when
-		restart, err := sample.RequiresProxyRestart(context.TODO(), *pod)
-		restart2, err2 := sample.RequiresProxyRestart(context.TODO(), *pod2)
+		evaluator, err := sample.NewProxyRestartEvaluator(context.TODO())
+		restart := evaluator.RequiresProxyRestart(*pod)
+		restart2 := evaluator.RequiresProxyRestart(*pod2)
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(restart).To(BeTrue())
-
-		Expect(err2).To(Not(HaveOccurred()))
 		Expect(restart2).To(BeTrue())
 	})
 
@@ -131,10 +130,11 @@ var _ = Describe("RequiresProxyRestart", func() {
 		Expect(changed).To(Equal(controllerutil.OperationResultCreated))
 
 		//when
-		restart, err := sample.RequiresProxyRestart(context.TODO(), *pod)
+		evaluator, err := sample.NewProxyRestartEvaluator(context.TODO())
+		Expect(err).To(Not(HaveOccurred()))
 
 		//then
-		Expect(err).To(Not(HaveOccurred()))
+		restart := evaluator.RequiresProxyRestart(*pod)
 		Expect(restart).To(BeFalse())
 	})
 })
@@ -155,10 +155,11 @@ var _ = Describe("RequiresProxyRestart", func() {
 		Expect(changed).To(Equal(controllerutil.OperationResultCreated))
 
 		//when
-		restart, err := sample.RequiresIngressGatewayRestart(context.TODO(), *pod)
+		evaluator, err := sample.NewIngressGatewayEvaluator(context.TODO())
+		Expect(err).To(Not(HaveOccurred()))
 
 		//then
-		Expect(err).To(Not(HaveOccurred()))
+		restart := evaluator.RequiresIngressGatewayRestart(*pod)
 		Expect(restart).To(BeFalse())
 	})
 
@@ -177,10 +178,11 @@ var _ = Describe("RequiresProxyRestart", func() {
 		Expect(changed).To(Equal(controllerutil.OperationResultCreated))
 
 		//when
-		restart, err := sample.RequiresIngressGatewayRestart(context.TODO(), *pod)
+		evaluator, err := sample.NewIngressGatewayEvaluator(context.TODO())
+		Expect(err).To(Not(HaveOccurred()))
 
 		//then
-		Expect(err).To(Not(HaveOccurred()))
+		restart := evaluator.RequiresIngressGatewayRestart(*pod)
 		Expect(restart).To(BeTrue())
 	})
 })

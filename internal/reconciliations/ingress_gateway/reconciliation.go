@@ -20,7 +20,6 @@ const (
 
 type Reconciliation interface {
 	Reconcile(ctx context.Context) described_errors.DescribedError
-	AddReconcilePredicate(predicate filter.IngressGatewayPredicate) Reconciliation
 }
 
 type Reconciler struct {
@@ -38,13 +37,13 @@ func (r Reconciler) Reconcile(ctx context.Context) described_errors.DescribedErr
 
 	mustRestart := false
 
-	for _, pod := range podList.Items {
-		for _, predicate := range r.Predicates {
-			shouldRestart, err := predicate.RequiresIngressGatewayRestart(ctx, pod)
-			if err != nil {
-				return described_errors.NewDescribedError(err, "Cannot check predicate")
-			}
-			if shouldRestart {
+	for _, predicate := range r.Predicates {
+		evaluator, err := predicate.NewIngressGatewayEvaluator(ctx)
+		if err != nil {
+			return described_errors.NewDescribedError(err, "Cannot create evaluator")
+		}
+		for _, pod := range podList.Items {
+			if evaluator.RequiresIngressGatewayRestart(pod) {
 				mustRestart = true
 				break
 			}
@@ -64,11 +63,6 @@ func (r Reconciler) Reconcile(ctx context.Context) described_errors.DescribedErr
 
 	ctrl.Log.Info("Successfully reconciled Istio ingress gateway")
 	return nil
-}
-
-func (r Reconciler) AddReconcilePredicate(predicate filter.IngressGatewayPredicate) Reconciliation {
-	r.Predicates = append(r.Predicates, predicate)
-	return r
 }
 
 func getIngressGatewayPods(ctx context.Context, k8sClient client.Client) (*v1.PodList, error) {

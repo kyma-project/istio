@@ -5,8 +5,8 @@
 name: 'Kubernetes version compatibility check'
 description: 'Runs Kubernetes version compatibility check'
 inputs:
-  makefile-img-env:
-    description: 'ENV variable required for make target'
+  img-url:
+    description: 'Env variable required for make target'
     required: true
 runs:
   using: "composite"
@@ -25,7 +25,7 @@ runs:
     - name: Run integration tests
       run: |
         kubectl config use-context k3d-test-cluster-1
-        EXPORT_RESULT=true IMG=${{ inputs.makefile-img-env }} make istio-integration-test
+        EXPORT_RESULT=true IMG=${{ inputs.img-url }} make istio-integration-test
       shell: bash
     - name: Check deprecations
       run: |

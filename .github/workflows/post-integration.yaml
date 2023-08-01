@@ -43,4 +43,4 @@ jobs:
           go-version: "1.20"
       - uses: ./.github/actions/upgrade-integration-test
         with:
-          makefile-img-env: "europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{github.sha}}"
+          img-url: "europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{github.sha}}"

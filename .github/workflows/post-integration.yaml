@@ -44,3 +44,17 @@ jobs:
       - uses: ./.github/actions/upgrade-integration-test
         with:
           img-url: "europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{github.sha}}"
+
+  slack_failed_notification:
+    name: Slack notification on failed job
+    runs-on: ubuntu-latest
+    if: ${{ failure() }}
+    needs: [istio-upgrade-integration-test]
+    steps:
+      - name: Notify
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          channel-id: ${{ env.SLACK_CHANNEL_ID }}
+          slack-message: "Workflow Failed! --- Repository: ${{ github.repository }} -- Workflow: ${{ github.workflow }} }}"
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

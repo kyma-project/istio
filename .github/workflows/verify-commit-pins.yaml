@@ -23,4 +23,4 @@ jobs:
             actions/checkout
             actions/setup-go
             actions/upload-artifact
-            actions/slack-github-action
+            slackapi/slack-github-action

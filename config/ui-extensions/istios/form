@@ -6,7 +6,7 @@
   children:
   - path: numTrustedProxies
     simple: true
-    name: Trusted proxies
+    name: numTrustedProxies
     inputInfo: inputInfo.config.numTrustedProxies
     value:
       type: number

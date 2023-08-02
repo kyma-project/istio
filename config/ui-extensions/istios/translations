@@ -1,4 +1,5 @@
 en:
+  numTrustedProxies: Number of trusted proxies
   inputInfo.config.numTrustedProxies: Defines the number of trusted proxies deployed in front of the Istio gateway proxy
   inputInfo.hpaSpec.minReplicas: Minimum number of replicas for this deployment
   inputInfo.hpaSpec.maxReplicas: Maximum number of replicas for this deployment

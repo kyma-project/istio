@@ -55,8 +55,7 @@ func (r Reconciler) Reconcile(ctx context.Context) described_errors.DescribedErr
 	}
 
 	if mustRestart {
-		// TODO: just re-used the existing logic, we can also think about restarting the pod directly
-		if err := restartIngressGateway(ctx, r.Client); err != nil {
+		if err := RestartIngressGateway(ctx, r.Client); err != nil {
 			return described_errors.NewDescribedError(err, "Failed to restart ingress gateway")
 		}
 	}
@@ -81,8 +80,7 @@ func getIngressGatewayPods(ctx context.Context, k8sClient client.Client) (*v1.Po
 
 }
 
-// TODO this code is duplicated in istio installation package, we should reuse it
-func restartIngressGateway(ctx context.Context, k8sClient client.Client) error {
+func RestartIngressGateway(ctx context.Context, k8sClient client.Client) error {
 	ctrl.Log.Info("Restarting istio-ingressgateway")
 
 	deployment := appsv1.Deployment{}

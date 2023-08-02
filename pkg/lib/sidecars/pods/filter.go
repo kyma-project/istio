@@ -1,12 +1,39 @@
 package pods
 
 import (
+	"context"
+	"github.com/kyma-project/istio/operator/internal/filter"
 	v1 "k8s.io/api/core/v1"
 )
 
 const (
 	istioSidecarName = "istio-proxy"
 )
+
+type RestartProxyPredicate struct {
+	expectedImage     SidecarImage
+	expectedResources v1.ResourceRequirements
+}
+
+func NewRestartProxyPredicate(expectedImage SidecarImage, expectedResources v1.ResourceRequirements) *RestartProxyPredicate {
+	return &RestartProxyPredicate{expectedImage: expectedImage, expectedResources: expectedResources}
+}
+
+type ProxyRestartEvaluator struct {
+	expectedImage     SidecarImage
+	expectedResources v1.ResourceRequirements
+}
+
+func (p ProxyRestartEvaluator) RequiresProxyRestart(pod v1.Pod) bool {
+	return needsRestart(pod, p.expectedImage, *p.expectedResources.DeepCopy())
+}
+
+func (r RestartProxyPredicate) NewProxyRestartEvaluator(_ context.Context) (filter.ProxyRestartEvaluator, error) {
+	return ProxyRestartEvaluator{
+		expectedImage:     r.expectedImage,
+		expectedResources: *r.expectedResources.DeepCopy(),
+	}, nil
+}
 
 func needsRestart(pod v1.Pod, expectedImage SidecarImage, expectedResources v1.ResourceRequirements) bool {
 	return HasIstioSidecarStatusAnnotation(pod) &&

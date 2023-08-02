@@ -52,7 +52,8 @@ func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage Sideca
 	podList.DeepCopyInto(&outputPodsList)
 	outputPodsList.Items = []v1.Pod{}
 
-	remaining := podList.DeepCopy()
+	//Add predicate for image version and resources configuration
+	predicates = append(predicates, NewRestartProxyPredicate(expectedImage, expectedResources))
 
 	for _, predicate := range predicates {
 		evaluator, err := predicate.NewProxyRestartEvaluator(ctx)
@@ -60,18 +61,10 @@ func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage Sideca
 			return v1.PodList{}, err
 		}
 
-		for i, pod := range podList.Items {
+		for _, pod := range podList.Items {
 			if evaluator.RequiresProxyRestart(pod) {
 				outputPodsList.Items = append(outputPodsList.Items, *pod.DeepCopy())
-				remaining.Items = append(remaining.Items[:i], remaining.Items[i+1:]...)
 			}
-		}
-	}
-
-	// TODO: Migrate needsRestart to predicate
-	for _, pod := range remaining.Items {
-		if needsRestart(pod, expectedImage, expectedResources) {
-			outputPodsList.Items = append(outputPodsList.Items, *pod.DeepCopy())
 		}
 	}
 

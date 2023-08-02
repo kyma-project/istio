@@ -115,5 +115,3 @@ func createK8sClient() client.Client {
 
 	return c
 }
-
-// test 2

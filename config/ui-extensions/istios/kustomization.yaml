@@ -6,6 +6,7 @@ configMapGenerator:
   - form
   - list
   - details
+  - translations
   options:
     disableNameSuffixHash: true
     labels:

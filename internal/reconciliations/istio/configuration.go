@@ -11,11 +11,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const (
-	ingressgatewayNamespace      string = "istio-system"
-	ingressgatewayDeploymentName string = "istio-ingressgateway"
-)
-
 type appliedConfig struct {
 	operatorv1alpha1.IstioSpec
 	IstioTag string

@@ -42,8 +42,6 @@ jobs:
         with:
           go-version: "1.20"
       - uses: ./.github/actions/upgrade-integration-test
-        with:
-          img-url: "europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{github.sha}}"
 
   slack_failed_notification:
     name: Slack Notification
@@ -51,6 +49,7 @@ jobs:
     if: ${{ failure() }}
     needs: [istio-upgrade-integration-test]
     steps:
+      - uses: actions/checkout@v3
       - name: Notify
         uses: ./.github/actions/slack-notification-failed-workflow
         with:

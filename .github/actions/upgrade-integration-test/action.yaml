@@ -4,10 +4,6 @@
 
 name: 'Upgrade integration test'
 description: 'Runs upgrade suite of integration tests'
-inputs:
-  img-url:
-    description: 'Env variable required for make target'
-    required: true
 runs:
   using: "composite"
   steps:

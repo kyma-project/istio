@@ -1,91 +1,119 @@
 header:
-  - name: Ready
-    source: status.state
-    widget: Badge
-    highlights:
-      positive:
-        - 'Ready'
+- name: Ready
+  source: status.state
+  widget: Badge
+  highlights:
+    positive:
+      - 'Ready'
 body:
-  - name: Specification
-    widget: Panel
+- widget: Tabs
+  children:
+  - name: General
     children:
-      - source: spec.config.numTrustedProxies
-        name: config.numTrustedProxies
-        visibility: '$exists($value)'
+    - widget: Panel
+      name: Configuration
+      children:
+        - source: spec.config.numTrustedProxies
+          name: config.numTrustedProxies
+          visibility: '$exists($value)'
+  - name: Components
+    children:
+    - widget: Panel
+      name: Pilot
+      children:
       - source: spec.components.pilot.k8s.hpaSpec.minReplicas
-        name: pilot.k8s.hpaSpec.minReplicas
+        name: k8s.hpaSpec.minReplicas
         visibility: '$exists($value)'
       - source: spec.components.pilot.k8s.hpaSpec.maxReplicas
-        name: pilot.k8s.hpaSpec.maxReplicas
+        name: k8s.hpaSpec.maxReplicas
         visibility: '$exists($value)'
       - source: spec.components.pilot.k8s.strategy.rollingUpdate.maxSurge
-        name: pilot.k8s.strategy.rollingUpdate.maxSurge
+        name: k8s.strategy.rollingUpdate.maxSurge
         visibility: '$exists($value)'
       - source: spec.components.pilot.k8s.strategy.rollingUpdate.maxUnavailable
-        name: pilot.k8s.strategy.rollingUpdate.maxUnavailable
+        name: k8s.strategy.rollingUpdate.maxUnavailable
         visibility: '$exists($value)'
       - source: spec.components.pilot.k8s.resources.limits.cpu
-        name: pilot.k8s.resources.limits.cpu
+        name: k8s.resources.limits.cpu
         visibility: '$exists($value)'
       - source: spec.components.pilot.k8s.resources.limits.memory
-        name: pilot.k8s.resources.limits.memory
+        name: k8s.resources.limits.memory
         visibility: '$exists($value)'
       - source: spec.components.pilot.k8s.resources.requests.cpu
-        name: pilot.k8s.resources.requests.cpu
+        name: k8s.resources.requests.cpu
         visibility: '$exists($value)'
       - source: spec.components.pilot.k8s.resources.requests.memory
-        name: pilot.k8s.resources.requests.memory
+        name: k8s.resources.requests.memory
         visibility: '$exists($value)'
-      - source: spec.components.ingressgateway.k8s.hpaSpec.minReplicas
-        name: pilot.k8s.hpaSpec.minReplicas
+    - widget: Panel
+      name: Ingress Gateway
+      children:
+      - source: spec.components.ingressGateway.k8s.hpaSpec.minReplicas
+        name: k8s.hpaSpec.minReplicas
         visibility: '$exists($value)'
-      - source: spec.components.ingressgateway.k8s.hpaSpec.maxReplicas
-        name: ingressgateway.k8s.hpaSpec.maxReplicas
+      - source: spec.components.ingressGateway.k8s.hpaSpec.maxReplicas
+        name: k8s.hpaSpec.maxReplicas
         visibility: '$exists($value)'
-      - source: spec.components.ingressgateway.k8s.strategy.rollingUpdate.maxSurge
-        name: ingressgateway.k8s.strategy.rollingUpdate.maxSurge
+      - source: spec.components.ingressGateway.k8s.strategy.rollingUpdate.maxSurge
+        name: k8s.strategy.rollingUpdate.maxSurge
         visibility: '$exists($value)'
-      - source: spec.components.ingressgateway.k8s.strategy.rollingUpdate.maxUnavailable
-        name: ingressgateway.k8s.strategy.rollingUpdate.maxUnavailable
+      - source: spec.components.ingressGateway.k8s.strategy.rollingUpdate.maxUnavailable
+        name: k8s.strategy.rollingUpdate.maxUnavailable
         visibility: '$exists($value)'
-      - source: spec.components.ingressgateway.k8s.resources.limits.cpu
-        name: ingressgateway.k8s.resources.limits.cpu
+      - source: spec.components.ingressGateway.k8s.resources.limits.cpu
+        name: k8s.resources.limits.cpu
         visibility: '$exists($value)'
-      - source: spec.components.ingressgateway.k8s.resources.limits.memory
-        name: ingressgateway.k8s.resources.limits.memory
+      - source: spec.components.ingressGateway.k8s.resources.limits.memory
+        name: k8s.resources.limits.memory
         visibility: '$exists($value)'
-      - source: spec.components.ingressgateway.k8s.resources.requests.cpu
-        name: ingressgateway.k8s.resources.requests.cpu
+      - source: spec.components.ingressGateway.k8s.resources.requests.cpu
+        name: k8s.resources.requests.cpu
         visibility: '$exists($value)'
-      - source: spec.components.cni.k8s.resources.limits.cpu
-        name: cni.k8s.resources.limits.cpu
+      - source: spec.components.ingressGateway.k8s.resources.requests.memory
+        name: k8s.resources.requests.memory
         visibility: '$exists($value)'
-      - source: spec.components.cni.k8s.resources.limits.memory
-        name: cni.k8s.resources.limits.memory
-        visibility: '$exists($value)'
-      - source: spec.components.cni.k8s.resources.requests.cpu
-        name: cni.k8s.resources.requests.cpu
-        visibility: '$exists($value)'
-      - source: spec.components.cni.k8s.resources.requests.memory
-        name: cni.k8s.resources.requests.memory
-        visibility: '$exists($value)'
+    - widget: Panel
+      name: CNI
+      children:
+        - source: spec.components.cni.k8s.resources.limits.cpu
+          name: k8s.resources.limits.cpu
+          visibility: '$exists($value)'
+        - source: spec.components.cni.k8s.resources.limits.memory
+          name: k8s.resources.limits.memory
+          visibility: '$exists($value)'
+        - source: spec.components.cni.k8s.resources.requests.cpu
+          name: k8s.resources.requests.cpu
+          visibility: '$exists($value)'
+        - source: spec.components.cni.k8s.resources.requests.memory
+          name: k8s.resources.requests.memory
+          visibility: '$exists($value)'
+        - source: spec.components.cni.k8s.affinity
+          name: k8s.affinity
+          widget: CodeViewer
+          description: Kubernetes documentation for {{[Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity)}}
+          language: "'yaml'"
+          visibility: '$exists($value)'
+    - widget: Panel
+      name: Proxy
+      children:
       - source: spec.components.proxy.k8s.resources.limits.cpu
-        name: proxy.k8s.resources.limits.cpu
+        name: k8s.resources.limits.cpu
         visibility: '$exists($value)'
       - source: spec.components.proxy.k8s.resources.limits.memory
-        name: proxy.k8s.resources.limits.memory
+        name: k8s.resources.limits.memory
         visibility: '$exists($value)'
       - source: spec.components.proxy.k8s.resources.requests.cpu
-        name: proxy.k8s.resources.requests.cpu
+        name: k8s.resources.requests.cpu
         visibility: '$exists($value)'
       - source: spec.components.proxy.k8s.resources.requests.memory
-        name: proxy.k8s.resources.requests.memory
+        name: k8s.resources.requests.memory
         visibility: '$exists($value)'
-
-  - source: status.conditions
-    widget: Table
-    name: Reconciliation Conditions
+  - name: Reconciliation
     children:
+    - widget: Table
+      source: status.conditions
+      name: Conditions
+      children:
       - source: type
         name: Type
       - source: status
@@ -103,8 +131,7 @@ body:
       - source: '$readableTimestamp(lastTransitionTime)'
         name: Last transition
         sort: true
-
-  - widget: EventList
-    filter: '$matchEvents($$, $root.kind, $root.metadata.name)'
-    name: Events
-    defaultType: information
+    - widget: EventList
+      filter: '$matchEvents($$, $root.kind, $root.metadata.name)'
+      name: Events
+      defaultType: information

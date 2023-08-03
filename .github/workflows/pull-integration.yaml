@@ -39,7 +39,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/k8s-compatibility-test
         with:
-          img-url: "europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}"
+          operator-image-name: "europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}"
 
   istio-upgrade-integration-test:
     name: Istio upgrade integration test
@@ -50,4 +50,4 @@ jobs:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/upgrade-integration-test
         with:
-          img-url: "europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}"
+          operator-image-name: "europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}"

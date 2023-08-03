@@ -1,7 +1,7 @@
 # This workflow is responsible for all kinds of integration tests that are run after push to main.
 # Those tests depend on a container image so in the first job we wait for the image build to succeed.
 
-name: Post submit integration tests
+name: main integration tests
 
 on:
   push:

@@ -1,0 +1,24 @@
+name: 'Upgrade integration test'
+description: 'Runs upgrade suite of integration tests'
+inputs:
+  operator-image-name:
+    description: 'Operator image used for test'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-go@v4
+      with:
+        go-version: "1.20"
+    - name: Create Single Cluster
+      uses: AbsaOSS/k3d-action@4e8b3239042be1dc0aed6c5eb80c13b18200fc79 #v2.4.0
+      with:
+        cluster-name: "test-cluster-1"
+        args: >-
+          --agents 0
+          --k3s-arg "--disable=traefik@server:0"
+    - name: Run upgrade integration test
+      run: |
+        kubectl config use-context k3d-test-cluster-1
+        EXPORT_RESULT=true IMG=${{ inputs.operator-image-name }} TARGET_BRANCH=${{github.base_ref}} make istio-upgrade-integration-test
+      shell: bash

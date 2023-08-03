@@ -11,13 +11,13 @@
     value:
       type: number
 - path: spec.components
-  simple: true
+  advanced: true
   name: Components
   widget: FormGroup
   defaultExpanded: true
   children:
   - path: 'pilot'
-    simple: true
+    advanced: true
     name: Pilot
     widget: FormGroup
     defaultExpanded: false
@@ -25,23 +25,23 @@
     - path: 'k8s.hpaSpec'
       name: Horizontal Pod Autoscaler
       widget: FormGroup
-      simple: true
+      advanced: true
       defaultExpanded: false
       children:
       - path: 'minReplicas'
-        simple: true
+        advanced: true
         name: Minimum repilicas
         inputInfo: inputInfo.hpaSpec.minReplicas
         value:
           type: number
       - path: 'maxReplicas'
-        simple: true
+        advanced: true
         name: Maximum repilicas
         inputInfo: inputInfo.hpaSpec.maxReplicas
         value:
           type: number
     - path: 'k8s.strategy.rollingUpdate'
-      simple: true
+      advanced: true
       name: Rolling Update Strategy
       widget: FormGroup
       defaultExpanded: false
@@ -53,49 +53,49 @@
           type: string
       children:
       - path: 'maxSurge'
-        simple: true
+        advanced: true
         name: Maximum surge
         inputInfo: inputInfo.rollingUpdate.maxSurge
         value:
           type: string
           pattern: ^\d+%?$
       - path: 'maxUnavailable'
-        simple: true
+        advanced: true
         name: Maximum unavailable
         inputInfo: inputInfo.rollingUpdate.maxUnvailable
         value:
           type: string
           pattern: ^\d+%?$
     - path: 'k8s.resources.limits'
-      simple: true
+      advanced: true
       name: Resource Limits
       widget: FormGroup
       defaultExpanded: false
       children:
       - path: 'cpu'
-        simple: true
+        advanced: true
         name: CPU
         inputInfo: inputInfo.limits.cpu
       - path: 'memory'
-        simple: true
+        advanced: true
         name: Memory
         inputInfo: inputInfo.limits.memory
     - path: 'k8s.resources.requests'
-      simple: true
+      advanced: true
       name: Resource Requests
       widget: FormGroup
       defaultExpanded: false
       children:
       - path: 'cpu'
-        simple: true
+        advanced: true
         name: CPU
         inputInfo: inputInfo.requests.cpu
       - path: 'memory'
-        simple: true
+        advanced: true
         name: Memory
         inputInfo: inputInfo.requests.memory
   - path: 'ingressGateway'
-    simple: true
+    advanced: true
     name: Ingress Gateway
     widget: FormGroup
     defaultExpanded: false
@@ -103,23 +103,23 @@
     - path: 'k8s.hpaSpec'
       name: Horizontal Pod Autoscaler
       widget: FormGroup
-      simple: true
+      advanced: true
       defaultExpanded: false
       children:
       - path: 'minReplicas'
-        simple: true
+        advanced: true
         name: Minimum repilicas
         inputInfo: inputInfo.hpaSpec.minReplicas
         value:
           type: number
       - path: 'maxReplicas'
-        simple: true
+        advanced: true
         name: Maximum repilicas
         inputInfo: inputInfo.hpaSpec.maxReplicas
         value:
           type: number
     - path: 'k8s.strategy.rollingUpdate'
-      simple: true
+      advanced: true
       name: Rolling Update Strategy
       widget: FormGroup
       defaultExpanded: false
@@ -131,112 +131,112 @@
           type: string
       children:
       - path: 'maxSurge'
-        simple: true
+        advanced: true
         name: Maximum surge
         inputInfo: inputInfo.rollingUpdate.maxSurge
         value:
           type: string
           pattern: ^\d+%?$
       - path: 'maxUnavailable'
-        simple: true
+        advanced: true
         name: Maximum unavailable
         inputInfo: inputInfo.rollingUpdate.maxUnvailable
         value:
           type: string
           pattern: ^\d+%?$
     - path: 'k8s.resources.limits'
-      simple: true
+      advanced: true
       name: Resource Limits
       widget: FormGroup
       defaultExpanded: false
       children:
       - path: 'cpu'
-        simple: true
+        advanced: true
         name: CPU
         inputInfo: inputInfo.limits.cpu
       - path: 'memory'
-        simple: true
+        advanced: true
         name: Memory
         inputInfo: inputInfo.limits.memory
     - path: 'k8s.resources.requests'
-      simple: true
+      advanced: true
       name: Resource Requests
       widget: FormGroup
       defaultExpanded: false
       children:
       - path: 'cpu'
-        simple: true
+        advanced: true
         name: CPU
         inputInfo: inputInfo.requests.cpu
       - path: 'memory'
-        simple: true
+        advanced: true
         name: Memory
         inputInfo: inputInfo.requests.memory
   - path: 'cni'
-    simple: true
+    advanced: true
     name: CNI
     widget: FormGroup
     defaultExpanded: false
     children:
     - path: 'k8s.resources.limits'
-      simple: true
+      advanced: true
       name: Resource Limits
       widget: FormGroup
       defaultExpanded: false
       children:
       - path: 'cpu'
-        simple: true
+        advanced: true
         name: CPU
         inputInfo: inputInfo.limits.cpu
       - path: 'memory'
-        simple: true
+        advanced: true
         name: Memory
         inputInfo: inputInfo.limits.memory
     - path: 'k8s.resources.requests'
-      simple: true
+      advanced: true
       name: Resource Requests
       widget: FormGroup
       defaultExpanded: false
       children:
       - path: 'cpu'
-        simple: true
+        advanced: true
         name: CPU
         inputInfo: inputInfo.requests.cpu
       - path: 'memory'
-        simple: true
+        advanced: true
         name: Memory
         inputInfo: inputInfo.requests.memory
   - path: 'proxy'
-    simple: true
+    advanced: true
     name: Proxy
     widget: FormGroup
     defaultExpanded: false
     children:
     - path: 'k8s.resources.limits'
-      simple: true
+      advanced: true
       name: Resource Limits
       widget: FormGroup
       defaultExpanded: false
       children:
       - path: 'cpu'
-        simple: true
+        advanced: true
         name: CPU
         inputInfo: inputInfo.limits.cpu
       - path: 'memory'
-        simple: true
+        advanced: true
         name: Memory
         inputInfo: inputInfo.limits.memory
     - path: 'k8s.resources.requests'
-      simple: true
+      advanced: true
       name: Resource Requests
       widget: FormGroup
       defaultExpanded: false
       children:
       - path: 'cpu'
-        simple: true
+        advanced: true
         name: CPU
         inputInfo: inputInfo.requests.cpu
       - path: 'memory'
-        simple: true
+        advanced: true
         name: Memory
         inputInfo: inputInfo.requests.memory

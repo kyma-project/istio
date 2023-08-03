@@ -1,5 +1,5 @@
-# This workflow is resposible for all kinds of integration tests run on PULL REQUEST
-# Those tests depend on a container image so in the first job we wait for the image build to succeed
+# This workflow is responsible for all kinds of integration tests run on pull request.
+# Those tests depend on a container image so in the first job we wait for the image build to succeed.
 
 name: Pull Request integration tests
 
@@ -17,8 +17,6 @@ on:
     branches:
       - main
       - 'release-**'
-permissions:
-  contents: read
 
 jobs:
   wait-for-image-build:
@@ -39,9 +37,6 @@ jobs:
     needs: [wait-for-image-build]
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
-        with:
-          go-version: "1.20"
       - uses: ./.github/actions/k8s-compatibility-test
         with:
           img-url: "europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}"
@@ -53,9 +48,6 @@ jobs:
     needs: [wait-for-image-build]
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
-        with:
-          go-version: "1.20"
       - uses: ./.github/actions/upgrade-integration-test
         with:
           img-url: "europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}"

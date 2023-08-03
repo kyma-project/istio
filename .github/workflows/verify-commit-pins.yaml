@@ -19,8 +19,8 @@ jobs:
       - uses: actions/checkout@v3
       - uses: zgosalvez/github-actions-ensure-sha-pinned-actions@f32435541e24cd6a4700a7f52bb2ec59e80603b1 # 2.1.4
         with:
+          # We only want to allow official Github Actions
           allowlist: |
             actions/checkout
             actions/setup-go
             actions/upload-artifact
-            slackapi/slack-github-action

@@ -36,7 +36,8 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^Httpbin application "([^"]*)" is running in namespace "([^"]*)"$`, steps.CreateHttpbinApplication)
 	ctx.Step(`^Istio gateway "([^"]*)" is configured in namespace "([^"]*)"$`, steps.CreateIstioGateway)
 	ctx.Step(`^Virtual service "([^"]*)" exposing service "([^"]*)" by gateway "([^"]*)" is configured in namespace "([^"]*)"$`, steps.CreateVirtualService)
-	ctx.Step(`^Request with header X-Forwarded-For with value "([^"]*)" sent to httpbin should return X-Envoy-External-Address with value "([^"]*)"$`, steps.ValidateExternalAddressForwarding)
+	ctx.Step(`^Request with header X-Forwarded-For with value "([^"]*)" sent to httpbin should return X-Envoy-External-Address with value "([^"]*)"$`, steps.ValidateHeader)
+	ctx.Step(`^Request with header "([^"]*)" with value "([^"]*)" sent to httpbin should return "([^"]*)" with value "([^"]*)"$`, steps.ValidateHeader)
 }
 
 func upgradeInitScenario(ctx *godog.ScenarioContext) {

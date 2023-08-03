@@ -4,19 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/ingress_gateway"
 
 	"github.com/coreos/go-semver/semver"
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
-	"github.com/kyma-project/istio/operator/pkg/lib/annotations"
-	appsv1 "k8s.io/api/apps/v1"
-	"k8s.io/apimachinery/pkg/types"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-)
-
-const (
-	ingressgatewayNamespace      string = "istio-system"
-	ingressgatewayDeploymentName string = "istio-ingressgateway"
 )
 
 type appliedConfig struct {
@@ -131,19 +123,10 @@ func restartIngressGatewayIfNeeded(ctx context.Context, k8sClient client.Client,
 	}
 
 	if mustRestart {
-		ctrl.Log.Info("Restarting istio-ingressgateway")
-
-		deployment := appsv1.Deployment{}
-		err := k8sClient.Get(ctx, types.NamespacedName{Namespace: ingressgatewayNamespace, Name: ingressgatewayDeploymentName}, &deployment)
+		err := ingress_gateway.RestartIngressGateway(ctx, k8sClient)
 		if err != nil {
 			return err
 		}
-		deployment.Spec.Template.Annotations = annotations.AddRestartAnnotation(deployment.Spec.Template.Annotations)
-		err = k8sClient.Update(ctx, &deployment)
-		if err != nil {
-			return err
-		}
-		ctrl.Log.Info("istio-ingressgateway restarted")
 	}
 	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-logr/logr"
+	"github.com/kyma-project/istio/operator/internal/filter"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -42,7 +43,7 @@ func getAllRunningPods(ctx context.Context, c client.Client) (*v1.PodList, error
 	return podList, nil
 }
 
-func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage SidecarImage, expectedResources v1.ResourceRequirements, logger *logr.Logger) (outputPodsList v1.PodList, err error) {
+func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage SidecarImage, expectedResources v1.ResourceRequirements, predicates []filter.SidecarProxyPredicate, logger *logr.Logger) (outputPodsList v1.PodList, err error) {
 	podList, err := getAllRunningPods(ctx, c)
 	if err != nil {
 		return outputPodsList, err
@@ -51,9 +52,19 @@ func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage Sideca
 	podList.DeepCopyInto(&outputPodsList)
 	outputPodsList.Items = []v1.Pod{}
 
-	for _, pod := range podList.Items {
-		if needsRestart(pod, expectedImage, expectedResources) {
-			outputPodsList.Items = append(outputPodsList.Items, *pod.DeepCopy())
+	//Add predicate for image version and resources configuration
+	predicates = append(predicates, NewRestartProxyPredicate(expectedImage, expectedResources))
+
+	for _, predicate := range predicates {
+		evaluator, err := predicate.NewProxyRestartEvaluator(ctx)
+		if err != nil {
+			return v1.PodList{}, err
+		}
+
+		for _, pod := range podList.Items {
+			if evaluator.RequiresProxyRestart(pod) {
+				outputPodsList.Items = append(outputPodsList.Items, *pod.DeepCopy())
+			}
 		}
 	}
 

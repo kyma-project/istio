@@ -17,6 +17,8 @@ resources:
         namespace: "istio-system"
       - name: "tcp-stats-filter-\\d\\.\\d\\d"
         namespace: "istio-system"
+      - name: "kyma-referer"
+        namespace: "istio-system"
   - GroupVersionKind:
       group: networking.istio.io
       version: v1alpha3

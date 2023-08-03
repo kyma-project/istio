@@ -37,8 +37,8 @@ Feature: Configuration of Istio module
     And "Deployment" "httpbin" in namespace "default" is ready
     And Istio gateway "test-gateway" is configured in namespace "default"
     And Virtual service "test-vs" exposing service "httpbin.default.svc.cluster.local" by gateway "default/test-gateway" is configured in namespace "default"
-    And Request with header X-Forwarded-For with value "10.2.1.1,10.0.0.1" sent to httpbin should return X-Envoy-External-Address with value "10.0.0.1"
+    And Request with header "X-Forwarded-For" with value "10.2.1.1,10.0.0.1" sent to httpbin should return "X-Envoy-External-Address" with value "10.0.0.1"
     When Template value "NumTrustedProxies" is set to "2"
     And Istio CR "istio-sample" is updated in namespace "kyma-system"
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
-    Then Request with header X-Forwarded-For with value "10.2.1.1,10.0.0.1" sent to httpbin should return X-Envoy-External-Address with value "10.2.1.1"
+    Then Request with header "X-Forwarded-For" with value "10.2.1.1,10.0.0.1" sent to httpbin should return "X-Envoy-External-Address" with value "10.2.1.1"

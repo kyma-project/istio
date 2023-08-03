@@ -11,8 +11,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-// ValidateExternalAddressForwarding validates that the expectedExternalAddress in the X-Forwarded-For header value is forwarded to the application as X-Envoy-External-Address header.
-func ValidateExternalAddressForwarding(ctx context.Context, givenXForwardedForValue, expectedExternalAddress string) (context.Context, error) {
+// ValidateHeader validates that the header givenHeaderName with value givenHeaderValue is forwarded to the application as header expectedHeaderName with the value expectedHeaderValue.
+func ValidateHeader(ctx context.Context, givenHeaderName, givenHeaderValue, expectedHeaderName, expectedHeaderValue string) (context.Context, error) {
 
 	ingressAddress, err := fetchIstioIngressGatewayAddress(ctx)
 	if err != nil {
@@ -21,12 +21,12 @@ func ValidateExternalAddressForwarding(ctx context.Context, givenXForwardedForVa
 
 	c := testsupport.NewHttpClientWithRetry()
 	headers := map[string]string{
-		"X-Forwarded-For": givenXForwardedForValue,
+		givenHeaderName: givenHeaderValue,
 	}
 	url := fmt.Sprintf("http://%s/get?show_env=true", ingressAddress)
 	asserter := testsupport.BodyContainsAsserter{
 		Expected: []string{
-			fmt.Sprintf(`"X-Envoy-External-Address": "%s"`, expectedExternalAddress),
+			fmt.Sprintf(`"%s": "%s"`, expectedHeaderName, expectedHeaderValue),
 		},
 	}
 

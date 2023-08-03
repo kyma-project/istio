@@ -3,6 +3,7 @@ package test
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/istio/operator/internal/filter"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/test/helpers"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -22,6 +23,7 @@ func (s *scenario) aRestartHappens(sidecarImage string) error {
 		s.Client,
 		pods.SidecarImage{Repository: "istio/proxyv2", Tag: sidecarImage},
 		helpers.DefaultSidecarResources,
+		[]filter.SidecarProxyPredicate{},
 		&s.logger)
 	s.restartWarnings = warnings
 	return err
@@ -46,6 +48,7 @@ func (s *scenario) aRestartHappensWithUpdatedResources(sidecarImage string, reso
 		s.Client,
 		pods.SidecarImage{Repository: "istio/proxyv2", Tag: sidecarImage},
 		resources,
+		[]filter.SidecarProxyPredicate{},
 		&s.logger)
 	s.restartWarnings = warnings
 	return err

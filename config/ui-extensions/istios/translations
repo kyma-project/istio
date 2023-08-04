@@ -4,7 +4,7 @@ en:
   k8s.hpaSpec: Horizontal Pod Autoscaler
   k8s.hpaSpec.minReplicas: Minimum number of repilicas
   k8s.hpaSpec.maxReplicas: Maximum number of repilicas
-  k8s.strategy.rollingUpdate: Rolling Update Strategy
+  k8s.strategy.rollingUpdate: Rolling update strategy
   k8s.strategy.rollingUpdate.maxSurge: Maximum surge
   k8s.strategy.rollingUpdate.maxUnavailable: Maximum unavailable
   k8s.resources.cpu: CPU

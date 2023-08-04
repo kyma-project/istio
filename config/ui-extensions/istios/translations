@@ -21,4 +21,4 @@ en:
   inputInfo.limits.cpu: Across all pods in a non-terminal state, the sum of CPU limits cannot exceed this value
   inputInfo.limits.memory: Across all pods in a non-terminal state, the sum of memory limits cannot exceed this value
   inputInfo.requests.cpu: Across all pods in a non-terminal state, the sum of CPU requests cannot exceed this value
-  inputInfo.requests.memory: Across all pods in a non-terminal state, the sum of memory requests cannot exceed this value
+  inputInfo.requests.memory: Total memory requests of all Pods that are in a non-terminal state must not exceed this value

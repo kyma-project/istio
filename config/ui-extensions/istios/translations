@@ -12,7 +12,7 @@ en:
   k8s.resources.limits.cpu: CPU limits
   k8s.resources.limits.memory: Memory limits
   k8s.resources.requests.cpu: CPU requests
-  k8s.resources.requests.memory: Requests Memory
+  k8s.resources.requests.memory: Memory requests
   k8s.affinity: Affinity (YAML)
   inputInfo.hpaSpec.minReplicas: Minimum number of replicas for this deployment
   inputInfo.hpaSpec.maxReplicas: Maximum number of replicas for this deployment

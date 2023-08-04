@@ -17,7 +17,7 @@ en:
   inputInfo.hpaSpec.minReplicas: Minimum number of replicas for this deployment
   inputInfo.hpaSpec.maxReplicas: Maximum number of replicas for this deployment
   inputInfo.rollingUpdate.maxSurge: Maximum number of Pods, or the percentage of Pods that can be created on top during an update
-  inputInfo.rollingUpdate.maxUnvailable: Number of pods or as percent that can be unavailable during an update
+  inputInfo.rollingUpdate.maxUnvailable: Maximum number of Pods, or the percentage of Pods that can be unavailable during an update
   inputInfo.limits.cpu: Across all pods in a non-terminal state, the sum of CPU limits cannot exceed this value
   inputInfo.limits.memory: Across all pods in a non-terminal state, the sum of memory limits cannot exceed this value
   inputInfo.requests.cpu: Across all pods in a non-terminal state, the sum of CPU requests cannot exceed this value

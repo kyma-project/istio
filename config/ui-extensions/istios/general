@@ -12,4 +12,4 @@ features:
     disableDelete: true
 description: >-
   {{[Istio CR](https://github.com/kyma-project/istio/blob/main/config/samples/operator_v1alpha2_istio.yaml)}}
-  specifies Istio module.
+  describes the Istio module

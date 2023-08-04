@@ -31,11 +31,9 @@ require (
 	k8s.io/client-go v0.27.4
 	k8s.io/kubectl v0.27.4
 	k8s.io/utils v0.0.0-20230505201702-9f6742963106
-	sigs.k8s.io/controller-runtime v0.13.1-0.20230315234915-a26de2d610c3 // Since we are using the Istio library directly, we should also use the controller-runtime version that is used by Istio.
+	sigs.k8s.io/controller-runtime v0.15.1 // Since we are using the Istio library directly, we should also use the controller-runtime version that is used by Istio.
 	sigs.k8s.io/yaml v1.3.0
 )
-
-require gopkg.in/yaml.v3 v3.0.1
 
 require (
 	cloud.google.com/go v0.110.2 // indirect

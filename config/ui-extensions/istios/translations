@@ -19,6 +19,6 @@ en:
   inputInfo.rollingUpdate.maxSurge: Maximum number of Pods, or the percentage of Pods that can be created on top during an update
   inputInfo.rollingUpdate.maxUnvailable: Maximum number of Pods, or the percentage of Pods that can be unavailable during an update
   inputInfo.limits.cpu: Total CPU limits of all Pods that are in a non-terminal state must not exceed this value
-  inputInfo.limits.memory: Across all pods in a non-terminal state, the sum of memory limits cannot exceed this value
+  inputInfo.limits.memory: Total memory limits of all Pods that are in a non-terminal state must not exceed this value
   inputInfo.requests.cpu: Across all pods in a non-terminal state, the sum of CPU requests cannot exceed this value
   inputInfo.requests.memory: Total memory requests of all Pods that are in a non-terminal state must not exceed this value

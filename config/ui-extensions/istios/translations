@@ -9,7 +9,7 @@ en:
   k8s.strategy.rollingUpdate.maxUnavailable: Maximum unavailable
   k8s.resources.cpu: CPU
   k8s.resources.memory: Memory
-  k8s.resources.limits.cpu: Limits CPU
+  k8s.resources.limits.cpu: CPU limits
   k8s.resources.limits.memory: Limits Memory
   k8s.resources.requests.cpu: Requests CPU
   k8s.resources.requests.memory: Requests Memory

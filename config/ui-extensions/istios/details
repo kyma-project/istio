@@ -90,7 +90,7 @@ body:
         - source: spec.components.cni.k8s.affinity
           name: k8s.affinity
           widget: CodeViewer
-          description: Kubernetes documentation for {{[Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity)}}
+          description: "Kubernetes documentation for {{[Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity)}}"
           language: "'yaml'"
           visibility: '$exists($value)'
     - widget: Panel

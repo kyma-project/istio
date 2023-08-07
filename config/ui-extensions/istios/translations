@@ -1,0 +1,24 @@
+en:
+  config.numTrustedProxies: Number of trusted proxies
+  inputInfo.config.numTrustedProxies: Number of trusted proxies deployed in front of the Istio gateway proxy
+  k8s.hpaSpec: Horizontal Pod Autoscaler
+  k8s.hpaSpec.minReplicas: Minimum number of repilicas
+  k8s.hpaSpec.maxReplicas: Maximum number of repilicas
+  k8s.strategy.rollingUpdate: Rolling update strategy
+  k8s.strategy.rollingUpdate.maxSurge: Maximum surge
+  k8s.strategy.rollingUpdate.maxUnavailable: Maximum unavailable
+  k8s.resources.cpu: CPU
+  k8s.resources.memory: Memory
+  k8s.resources.limits.cpu: CPU limits
+  k8s.resources.limits.memory: Memory limits
+  k8s.resources.requests.cpu: CPU requests
+  k8s.resources.requests.memory: Memory requests
+  k8s.affinity: Affinity (YAML)
+  inputInfo.hpaSpec.minReplicas: Minimum number of replicas for this deployment
+  inputInfo.hpaSpec.maxReplicas: Maximum number of replicas for this deployment
+  inputInfo.rollingUpdate.maxSurge: Maximum number of Pods, or the percentage of Pods that can be created on top during an update
+  inputInfo.rollingUpdate.maxUnvailable: Maximum number of Pods, or the percentage of Pods that can be unavailable during an update
+  inputInfo.limits.cpu: Total CPU limits of all Pods that are in a non-terminal state must not exceed this value
+  inputInfo.limits.memory: Total memory limits of all Pods that are in a non-terminal state must not exceed this value
+  inputInfo.requests.cpu: Total CPU requests of all Pods that are in a non-terminal state must not exceed this value
+  inputInfo.requests.memory: Total memory requests of all Pods that are in a non-terminal state must not exceed this value

@@ -4,6 +4,9 @@ inputs:
   operator-image-name:
     description: 'Operator image used for test'
     required: true
+  target_branch:
+    description: 'Target branch'
+    required: true
 runs:
   using: "composite"
   steps:
@@ -20,5 +23,5 @@ runs:
     - name: Run upgrade integration test
       run: |
         kubectl config use-context k3d-test-cluster-1
-        EXPORT_RESULT=true IMG=${{ inputs.operator-image-name }} TARGET_BRANCH=${{github.base_ref}} make istio-upgrade-integration-test
+        EXPORT_RESULT=true IMG=${{ inputs.operator-image-name }} TARGET_BRANCH=${{inputs.target_branch}} make istio-upgrade-integration-test
       shell: bash

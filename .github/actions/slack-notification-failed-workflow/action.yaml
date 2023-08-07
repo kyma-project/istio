@@ -14,7 +14,7 @@ runs:
       with:
         payload: |
           {
-            "repository": "${{ github.repository }}"
+            "repository": "${{ github.repository }}",
             "workflow": "${{ github.workflow }}"
           }
       env:

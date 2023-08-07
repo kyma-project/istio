@@ -37,6 +37,7 @@ jobs:
       - uses: ./.github/actions/upgrade-integration-test
         with:
           operator-image-name: "europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{github.sha}}"
+          target_branch: ${{github.ref_name}}
 
   slack_failed_notification:
     name: Slack Notification

@@ -51,3 +51,4 @@ jobs:
       - uses: ./.github/actions/upgrade-integration-test
         with:
           operator-image-name: "europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}"
+          target_branch: ${{ github.base_ref }}

@@ -3,6 +3,7 @@ package steps
 import (
 	"context"
 	"fmt"
+
 	"github.com/avast/retry-go"
 	"github.com/kyma-project/istio/operator/tests/integration/pkg/manifestprocessor"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
@@ -21,7 +22,7 @@ func DeployIstioOperatorFromLocalManifest(ctx context.Context) error {
 		return err
 	}
 
-	resources, err := manifestprocessor.ParseFromFileWithTemplate(manifestFileName, manifestDirectory, nil)
+	resources, err := manifestprocessor.ParseYamlFromFile(manifestFileName, manifestDirectory)
 	if err != nil {
 		return err
 	}

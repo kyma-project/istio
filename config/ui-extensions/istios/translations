@@ -2,8 +2,8 @@ en:
   config.numTrustedProxies: Number of trusted proxies
   inputInfo.config.numTrustedProxies: Number of trusted proxies deployed in front of the Istio gateway proxy
   k8s.hpaSpec: Horizontal Pod Autoscaler
-  k8s.hpaSpec.minReplicas: Minimum number of repilicas
-  k8s.hpaSpec.maxReplicas: Maximum number of repilicas
+  k8s.hpaSpec.minReplicas: Minimum number of replicas
+  k8s.hpaSpec.maxReplicas: Maximum number of replicas
   k8s.strategy.rollingUpdate: Rolling update strategy
   k8s.strategy.rollingUpdate.maxSurge: Maximum surge
   k8s.strategy.rollingUpdate.maxUnavailable: Maximum unavailable

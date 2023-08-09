@@ -10,7 +10,6 @@ kubectl get crd istios.operator.kyma-project.io -o yaml
 
 This table lists all the possible parameters of the given resource together with their descriptions:
 
-
 **Spec:**
 
 | Parameter | Type | Description |

@@ -23,5 +23,5 @@ runs:
     - name: Run upgrade integration test
       run: |
         kubectl config use-context k3d-test-cluster-1
-        exit 1
+        EXPORT_RESULT=true IMG=${{ inputs.operator-image-name }} TARGET_BRANCH=${{inputs.target_branch}} make istio-upgrade-integration-test
       shell: bash

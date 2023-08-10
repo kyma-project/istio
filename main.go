@@ -144,5 +144,3 @@ func defineFlagVar() *FlagVar {
 		"Indicates the time based reconciliation interval.")
 	return flagVar
 }
-
-// fail fail

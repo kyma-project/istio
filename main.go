@@ -18,9 +18,10 @@ package main
 
 import (
 	"flag"
-	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	"os"
 	"time"
+
+	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -143,3 +144,5 @@ func defineFlagVar() *FlagVar {
 		"Indicates the time based reconciliation interval.")
 	return flagVar
 }
+
+// fail fail

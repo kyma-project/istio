@@ -7,8 +7,6 @@ MANAGER_IMAGE_TAG ?= 0.0.1
 
 PROJECT_ROOT ?= ../../..
 
-TEMPLATE_PATH ?= ${PROJECT_ROOT}/template.yaml
-
 KYMA ?= ${PROJECT_ROOT}/bin/kyma-unstable
 
 .PHONY: kyma
@@ -24,7 +22,7 @@ delete-k3d-cluster:
 	-k3d cluster delete ${CLUSTER_NAME}
 
 .PHONY: create-k3d
-create-k3d: 
+create-k3d:
 	${KYMA} provision k3d --registry-port ${REGISTRY_PORT} --name ${CLUSTER_NAME} --ci
 
 .PHONY: delete-k3d
@@ -52,6 +50,7 @@ module-build: clean-charts
 	@make -C ${PROJECT_ROOT} module-build \
 		IMG=k3d-${REGISTRY_NAME}:${REGISTRY_PORT}/${MANAGER_IMAGE_NAME}:${MANAGER_IMAGE_TAG} \
 		MODULE_REGISTRY=localhost:${REGISTRY_PORT}/unsigned
+		MODULE_CHANNEL=fast
 
 .PHONY: yq-install
 yq-install:
@@ -59,7 +58,7 @@ yq-install:
 
 .PHONY: fix-template
 fix-template:
-	@cat ${PROJECT_ROOT}/template.yaml \
+	@cat ${PROJECT_ROOT}/template-fast.yaml \
 	| sed -e 's/remote/control-plane/g' \
 		-e 's/${REGISTRY_PORT}/5000/g' \
 	    -e 's/localhost/k3d-${REGISTRY_NAME}.localhost/g' \

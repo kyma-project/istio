@@ -150,24 +150,6 @@ local-run:
 local-stop:
 	make -C hack/local stop
 
-##@ CI
-
-.PHONY: ci-k3d-integration-test
-ci-k3d-integration-test: local-run
-	make -C hack/ci integration-test
-
-.PHONY: ci-k3d-upgrade-test
-ci-k3d-upgrade-test: 
-	@echo "upgrade tests not implemented yet"
-
-.PHONY: ci-k3d-k8s-compatibility-test
-ci-k3d-k8s-compatibility-test: 
-	@echo "k8s compatibility tests not implemented yet"
-
-.PHONY: ci-hyperscalers-compatibility-test
-ci-hyperscalers-compatibility-test: 
-	@echo "hyperscalers compatibility tests not implemented yet"
-
 ##@ Deployment
 
 ifndef ignore-not-found
@@ -239,7 +221,7 @@ module-image: docker-build docker-push ## Build the Module Image and push it to 
 .PHONY: module-build
 module-build: kyma kustomize ## Build the Module and push it to a registry defined in MODULE_REGISTRY
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	@$(KYMA) alpha create module --channel=${MODULE_CHANNEL} --name kyma-project.io/module/$(MODULE_NAME) --version $(MODULE_VERSION) --path . $(MODULE_CREATION_FLAGS)
+	@$(KYMA) alpha create module --channel=${MODULE_CHANNEL} --name kyma-project.io/module/$(MODULE_NAME) --version $(MODULE_VERSION) --path . --output "template-${MODULE_CHANNEL}.yaml" $(MODULE_CREATION_FLAGS)
 
 .PHONY: generate-manifests
 generate-manifests: kustomize
@@ -261,7 +243,7 @@ KYMA_FILE_NAME ?= $(shell ./hack/get_kyma_file_name.sh ${OS_TYPE} ${OS_ARCH})
 KYMA ?= $(LOCALBIN)/kyma-$(KYMA_STABILITY)
 kyma: $(LOCALBIN) $(KYMA) ## Download kyma locally if necessary.
 $(KYMA):
-	## Detect if operating system 
+	## Detect if operating system
 	$(if $(KYMA_FILE_NAME),,$(call os_error, ${OS_TYPE}, ${OS_ARCH}))
 	test -f $@ || curl -s -Lo $(KYMA) https://storage.googleapis.com/kyma-cli-$(KYMA_STABILITY)/$(KYMA_FILE_NAME)
 	chmod 0100 $(KYMA)

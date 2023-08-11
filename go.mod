@@ -21,7 +21,7 @@ require (
 	golang.org/x/time v0.3.0
 	google.golang.org/protobuf v1.31.0
 	gopkg.in/yaml.v3 v3.0.1
-	istio.io/api v0.0.0-20230713061407-06047cce866f
+	istio.io/api v1.19.0-beta.0
 	istio.io/client-go v1.18.1 //There was no version update on 1.18.2
 	istio.io/istio v0.0.0-20230721203100-0183f2886bc0
 	istio.io/pkg v0.0.0-20230524020242-1015535057be
@@ -34,8 +34,6 @@ require (
 	sigs.k8s.io/controller-runtime v0.13.1-0.20230315234915-a26de2d610c3 // Since we are using the Istio library directly, we should also use the controller-runtime version that is used by Istio.
 	sigs.k8s.io/yaml v1.3.0
 )
-
-require gopkg.in/yaml.v3 v3.0.1
 
 require (
 	cloud.google.com/go v0.110.2 // indirect

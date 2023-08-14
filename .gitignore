@@ -95,6 +95,8 @@ charts
 kyma.yaml
 default.yaml
 template.yaml
+template-fast.yaml
+template-regular.yaml
 template-k3d.yaml
 
 # Binaries for programs and plugins

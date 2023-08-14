@@ -17,22 +17,27 @@ module-build:
 		IMG=${IMG} \
 		MODULE_REGISTRY=${MODULE_REGISTRY} \
 		MODULE_VERSION=${MODULE_VERSION}-${MODULE_SHA} \
+		MODULE_CHANNEL=fast
+	@make -C ${PROJECT_ROOT} module-build \
+		IMG=${IMG} \
+		MODULE_REGISTRY=${MODULE_REGISTRY} \
+		MODULE_VERSION=${MODULE_VERSION}-${MODULE_SHA} \
 		MODULE_CHANNEL=regular
 
 .PHONY: module-template-arifact
 module-template-artifact:
-	@cp ${PROJECT_ROOT}/template.yaml ${ARTIFACTS}
+	@cp ${PROJECT_ROOT}/template-fast.yaml ${ARTIFACTS}
+	@cp ${PROJECT_ROOT}/template-regular.yaml ${ARTIFACTS}
 
 .PHONY: module-template-print
 module-template-print:
-	@echo "\n~~~~~~~~~~~~BEGINING OF MODULE TEMPLATE~~~~~~~~~~~~~~"
-	@cat ${PROJECT_ROOT}/template.yaml
-	@echo "\n~~~~~~~~~~~~~~~END OF MODULE TEMPLATE~~~~~~~~~~~~~~~~"
+	@echo "\n~~~~~~~~~~~~BEGINING OF MODULE TEMPLATE FAST CHANNEL~~~~~~~~~~~~~~"
+	@cat ${PROJECT_ROOT}/template-fast.yaml
+	@echo "\n~~~~~~~~~~~~~~~END OF MODULE TEMPLATE FAST CHANNEL~~~~~~~~~~~~~~~~"
+	@echo "\n~~~~~~~~~~~~BEGINING OF MODULE TEMPLATE REGULAR CHANNEL~~~~~~~~~~~~~~"
+	@cat ${PROJECT_ROOT}/template-regular.yaml
+	@echo "\n~~~~~~~~~~~~~~~END OF MODULE TEMPLATE REGULAR CHANNEL~~~~~~~~~~~~~~~~"
 
 # rename it from 'all' to something more accurate like 'module-build-and-print'
 .PHONY: all
 all: module-build module-template-artifact module-template-print
-
-.PHONY: integration-test
-integration-test:
-	@echo "integration tests not implemented yet"

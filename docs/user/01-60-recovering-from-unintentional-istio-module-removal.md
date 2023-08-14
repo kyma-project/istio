@@ -2,7 +2,7 @@
 
 ## Symptom
 
-* Istio CR is in `WARNING` state]
+* Istio CR is in `WARNING` state
 
 
 ### Typical log output / error messages

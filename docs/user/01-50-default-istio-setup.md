@@ -5,7 +5,7 @@ title: Default Istio setup
 The Istio module uses the
 [Istio library](https://github.com/istio/istio/tree/master/operator) to facilitate the Istio installation.
 
-This list shows the available Istio components and addons. Check which of those are enabled in Kyma:
+This list shows the available Istio components and addons. Check which of those are enabled with Istio module:
 - Istiod (Pilot)
 - Ingress Gateway
 

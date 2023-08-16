@@ -1,5 +1,5 @@
 # Troubleshooting: The Istio module was unintentionally disabled
-Follow the steps outlined in this troubleshooting guide if you unintentionally deleted the Istio module and want to restore the system to its normal state without losing any user-created resources. However, if you intended to delete the module, the symptoms described in this document are expected and you must clean up the orphaned resources by yourself.
+Follow the steps outlined in this troubleshooting guide if you unintentionally deleted the Istio module and want to restore the system to its normal state without losing any user-created resources. However, the following assumes that (for any reason) the module deletion was unintened and the goal is to recover normal system state w/o loosing any user created resources. In case module deletion WAS intended, the symptoms described below are expected and the user should clean up the orphaned resources by himself.
 
 ## Symptom
 

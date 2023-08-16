@@ -27,7 +27,6 @@ For example, the issue occurs when you delete the Istio module, but there are st
 
 ## Remedy
 
-> NOTE: The following assumes that (for any reason) the module deletion was unintened and the goal  is to recover normal system state w/o loosing any user created resources. In case module deletion WAS intended, the symptoms described above are expected and the user should clean up the orphaned resources by himself. 
 
 
  1. Edit the Istio CR and remove the finalizer.

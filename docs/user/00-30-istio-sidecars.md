@@ -4,7 +4,7 @@ title: Istio sidecars in Kyma and why you want them
 
 ## Purpose of Istio sidecars
 
-By default, Istio installed as part of the Istio module [is configured](./smsh-02-default-istio-setup-in-kyma.md) with automatic Istio proxy sidecar injection disabled. This means that none of Pods of your workloads (such as deployments and StatefulSets; except any workloads in the `kyma-system` Namespace) get their own sidecar proxy container running next to your application.
+By default, Istio installed as part of the Istio module [is configured](./01-50-default-istio-setup.md) with automatic Istio proxy sidecar injection disabled. This means that none of Pods of your workloads (such as deployments and StatefulSets; except any workloads in the `kyma-system` Namespace) get their own sidecar proxy container running next to your application.
 
 With an Istio sidecar, the resource becomes part of Istio service mesh, which brings the following benefits that would be complex to manage otherwise.
 
@@ -19,8 +19,6 @@ Another security benefit of having a sidecar proxy is that you can perform [requ
 Furthermore, Istio proxies improve tracing: Istio performs global tracing and forwards the data to a tracing backend using the [OTLP protocol](https://opentelemetry.io/docs/reference/specification/protocol/). Learn more in [Tracing Architecture](../../01-overview/telemetry/telemetry-03-traces.md#architecture).
 
 Kiali is another tool to monitor the service mesh; and Kyma configures Istio to export metrics necessary to support Kiali features that facilitate managing, visualizing, and troubleshooting your service mesh. Learn more about deploying Kiali to your Kyma cluster in our [Kiali example](https://github.com/kyma-project/examples/tree/main/kiali).
-
-Moreover, Kyma provides [Istio-specific Grafana dashboards](https://istio.io/latest/docs/ops/integrations/grafana/#configuration) for the [monitoring component](../../05-technical-reference/00-architecture/obsv-01-architecture-monitoring.md). Together with metrics exposed by the Istio sidecar, you get better visibility into workloads and the mesh control plane performance.
 
 Being part of Istio service mesh enables all these advanced observability features, which would not be possible without advanced instrumentation code within your application.
 

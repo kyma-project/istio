@@ -1,8 +1,9 @@
-# Troubleshooting: Module was disabled unintentionally
+# Troubleshooting: The Istio module was unintentionally disabled
+Follow the steps outlined in this troubleshooting guide if you unintentionally deleted the Istio module and want to restore the system to its normal state without losing any user-created resources. However, if you intended to delete the module, the symptoms described in this document are expected and you must clean up the orphaned resources by yourself.
 
 ## Symptom
 
-* Istio CR is in `WARNING` state
+* The Istio custom resource (CR) is in the `WARNING` state.
 
 
 ### Typical log output / error messages
@@ -19,9 +20,9 @@ Resources blocking deletion: DestinationRule:kyma-system/api-gateway-metrics;Des
 
 ## Cause
 
-- Module was disabled. It was not effectively removed because user's custom resources still exist. 
+- The Istio module was disabled, but it was not completely removed because the user's CRs still exist.
 
-For instance: istio module was deleted but there are still `VirtualService` resources belonging to the user or installed by another Kyma component/module. In such case the hooked finalizer pauses normal module deletion until user cleans up all the related resources. This [blocking deletion strategy](https://github.com/kyma-project/community/issues/765) is designed on purpose and is enabled by default for all modules.
+For example, the issue occurs when you delete the Istio module, but there are still `VirtualService` resources that either belong to the user or were installed by another Kyma component or module. In such cases, the hooked finalizer pauses the deletion of the module until you remove all the related resources. This [blocking deletion strategy](https://github.com/kyma-project/community/issues/765) is intentionally designed and is enabled by default for the Istio module.
 
 
 ## Remedy
@@ -29,7 +30,7 @@ For instance: istio module was deleted but there are still `VirtualService` reso
 > NOTE: The following assumes that (for any reason) the module deletion was unintened and the goal  is to recover normal system state w/o loosing any user created resources. In case module deletion WAS intended, the symptoms described above are expected and the user should clean up the orphaned resources by himself. 
 
 
- 1. Edit the Module CR (in this case, Keda CR) and remove the finalizer.
+ 1. Edit the Istio CR and remove the finalizer.
 ```
 kubectl edit istio -n kyma-system default
 ```
@@ -49,8 +50,8 @@ status:
   description: 'Resources blocking deletion: DestinationRule:kyma-system/api-gateway-metrics;DestinationRule:kyma-system/eventing-nats;PeerAuthentication:kyma-system/eventing-controller-metrics;PeerAuthentication:kyma-system/eventing-publisher-proxy-metrics'
   state: Warning
 ```
- 2. The the Module CR should be deleted, but no resources will be removed (for example istiod deployment will stay on the cluster)
+ 2. When the finalizer is removed, the Istio CR is deleted. Other resources, such as the `istiod` deployment, remain on the cluster.
 
- 3. Enable the module back by reapplying the custom resource
+ 3. Reapply the Istio CR to enable the Istio module once again.
 
-This will retrigger reconcilation of the module. Istio CR should be back in `READY` state in a few seconds.
+By completing the steps, the module's reconciliation is triggered again. The Istio CR should return to the `READY` state within a few seconds.

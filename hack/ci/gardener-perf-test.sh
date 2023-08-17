@@ -28,7 +28,7 @@ kubectl apply -f config/samples/operator_v1alpha2_istio.yaml
 number=1
 	while [[ $number -le 100 ]] ; do
 		echo ">--> checking kyma status #$number"
-		STATUS=$(kubectl get istio default -o jsonpath='{.status.state}')
+		STATUS=$(kubectl get -n kyma-system istio default -o jsonpath='{.status.state}')
 		echo "kyma status: ${STATUS:='UNKNOWN'}"
 		[[ "$STATUS" == "Ready" ]] && break
 		sleep 5

@@ -55,7 +55,6 @@ If the restart doesn't help, change the image of Istio Ingress Gateway to allow 
     kubectl get secrets -n istio-system kyma-gateway-certs-cacert -oyaml
     ```
 
-<!-- Update step 6 once the long-lasting certificate is implemented. Probably, only the details about Gardener will be needed. -->
 6. To regenerate a corrupted certificate, follow [this tutorial](https://kyma-project.io/docs/kyma/latest/03-tutorials/00-security/sec-01-tls-certificates-security/). If you are running Kyma provisioned through Gardener, follow this [troubleshooting guide](https://kyma-project.io/docs/kyma/latest/04-operation-guides/troubleshooting/security/sec-01-certificates-gardener/) instead.
 
    >**NOTE**: Remember to switch back to the `distroless` image after you resolved the issue.

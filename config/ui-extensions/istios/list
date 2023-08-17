@@ -5,3 +5,7 @@
   highlights:
     positive:
       - 'Ready'
+    negative:
+      - 'Warning'
+    critical:
+      - 'Error'

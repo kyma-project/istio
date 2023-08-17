@@ -6,6 +6,10 @@ header:
   highlights:
     positive:
       - 'Ready'
+    negative:
+      - 'Warning'
+    critical:
+      - 'Error'
 body:
 - widget: Tabs
   children:

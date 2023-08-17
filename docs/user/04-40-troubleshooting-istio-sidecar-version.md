@@ -12,7 +12,7 @@ By default, the Istio module has sidecar injection disabled - there is no automa
 
 The sidecar version in Pods must match the installed Istio version. Otherwise, mesh connectivity may be broken.
 This issue may appear during the Istio module upgrade. When it is upgraded to a new version along with a new Istio version, existing sidecars injected into Pods remain in an original version.
-The Istio module contains `istio-proxy-reset` <!--`istio-proxy-reset` is no longer a job. Update and explain what `istio-proxy-reset` actually is once Reconciller is ready to use.--> that performs a rollout for most common workload types, such as Deployments, DaemonSets, etc. The job ensures all Kyma components are properly updated.
+Istio module contains the `ProxySidecarReconcilation` component that performs a rollout for common workload types like Deployments and DaemonSets. The component ensures that all running sidecars are updated correctly.
 However, some user-defined workloads can't be rolled out automatically. This applies, for example, to a standalone Pod without any backing management mechanism, such as a ReplicaSet or a Job.
 Such user-defined workloads must be manually restarted to work correctly with the updated Istio version.
 

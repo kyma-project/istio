@@ -19,7 +19,7 @@ Note that if the sidecar proxy injection is disabled at the Namespace level or t
 
 Read the [Istio documentation](https://istio.io/docs/setup/kubernetes/additional-setup/sidecar-injection/) to learn more about the sidecar proxy injection and consider [benefits of having the sidecar container inside your application Pod](./00-30-istio-sidecars.md).
 
-If there are issues with the Istio sidecar, you can check whether there is an [issue with the sidecar injection](./04-30-troubleshooting-istio-no-sidecar.md) or a [mismatching Istio version](./04-40-troubleshooting-istio-sidecar-version.md).
+If there are issues with the Istio sidecar, you can check whether there is an [issue with the sidecar injection](./04-30-istio-no-sidecar.md) or a [mismatching Istio version](./04-40-incompatible-istio-sidecar-version.md).
 
 ## Check whether your workloads have automatic Istio sidecar injection enabled
 

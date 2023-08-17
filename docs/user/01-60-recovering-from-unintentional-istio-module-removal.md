@@ -27,8 +27,6 @@ For example, the issue occurs when you delete the Istio module, but there are st
 
 ## Remedy
 
-
-
  1. Edit the Istio CR and remove the finalizer.
 ```
 kubectl edit istio -n kyma-system default

@@ -25,14 +25,13 @@ To learn if any Pods or workloads require a manual restart, follow these steps:
 * From the `istiod` deployment in a running cluster, run:
 
    ```bash
-   export KYMA_ISTIO_VERSION=$(kubectl get deployment istiod -n istio-system -o json | jq '.spec.template.spec.containers | .[].image' | sed 's/[^:"]*[:]//' | sed 's/["]//g')
+   export PILOT_ISTIO_VERSION=$(kubectl get deployment istiod -n istio-system -o json | jq '.spec.template.spec.containers | .[].image' | sed 's/[^:"]*[:]//' | sed 's/["]//g')
 2. Get the list of objects which require rollout. Find all Pods with outdated sidecars. The returned list follows the `name/namespace` format. The empty output means that there is no Pod that requires migration. To find all outdated Pods, run:
 
-     <!--The command in step 2 can change once we start using solo.io images.-->
 
    ```bash
    COMMON_ISTIO_PROXY_IMAGE_PREFIX="europe-docker.pkg.dev/kyma-project/prod/external/istio/proxyv2"
-   kubectl get pods -A -o json | jq -rc '.items | .[] | select(.spec.containers[].image | startswith("'"${COMMON_ISTIO_PROXY_IMAGE_PREFIX}"'") and (endswith("'"${KYMA_ISTIO_VERSION}"'") | not))  | "\(.metadata.name)/\(.metadata.namespace)"'
+   kubectl get pods -A -o json | jq -rc '.items | .[] | select(.spec.containers[].image | startswith("'"${COMMON_ISTIO_PROXY_IMAGE_PREFIX}"'") and (endswith("'"${PILOT_ISTIO_VERSION}"'") | not))  | "\(.metadata.name)/\(.metadata.namespace)"'
    ```
 
 3. After you find a set of objects that require the manual update, restart their related workloads so that new Istio sidecars are injected into the Pods.

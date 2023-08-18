@@ -78,6 +78,7 @@ and must work in isolation when assessing whether reconciliation is required, ap
 The execution of the reconciliation must be fast, and we must avoid many blocking calls. Long-running tasks must be executed asynchronously, and the status must be evaluated in the next reconciliation cycle.
 
  The following diagram shows the reconciliation loop of `IstioController`:
+
 ![Reconciliation Loop Diagram](../assets/istio-controller-reconciliation-loop.svg)
 
 #### Interval

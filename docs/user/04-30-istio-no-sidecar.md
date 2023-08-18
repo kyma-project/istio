@@ -32,4 +32,4 @@ Follow these steps to troubleshoot:
 
    Sidecar injection is disabled if the output does not contain the `sidecar.istio.io/inject:true` line. Change or add the label and restart the Pod to enable sidecar injection for the Deployment.
 
-For more information, read [Istio documentation](https://istio.io/docs/ops/common-problems/injection/).
+For more information, read the [Istio documentation](https://istio.io/docs/ops/common-problems/injection/).

@@ -8,13 +8,13 @@ You upgraded the Istio module and mesh connectivity is broken.
 
 ## Cause
 
-By default, the Istio module has sidecar injection disabled - there is no automatic sidecar injection into any Pod in a cluster. For more information, read the document about [enabling Istio sidecar proxy injection](./01-60-enable-sidecar-injection.md).
+By default, the Istio module has Istio sidecar injection disabled - it does not automatically inject the Istio sidecar into any Pod in a cluster.
+The sidecar version in Pods must match the installed Istio version to ensure proper mesh connectivity. During an upgrade of the Istio module to a new version, existing sidecars injected into Pods remain in the original version, potentially causing connectivity issues.
 
-The sidecar version in Pods must match the installed Istio version. Otherwise, mesh connectivity may be broken.
-This issue may appear during the Istio module upgrade. When it is upgraded to a new version along with a new Istio version, existing sidecars injected into Pods remain in an original version.
-The Istio module contains the `ProxySidecarReconcilation` component that performs a rollout for most common workload types, such as Deployments, DaemonSets, etc. The job ensures all running sidecars are properly updated.
-However, some user-defined workloads can't be rolled out automatically. This applies, for example, to a standalone Pod without any backing management mechanism, such as a ReplicaSet or a Job.
-Such user-defined workloads must be manually restarted to work correctly with the updated Istio version.
+The Istio module contains the `ProxySidecarReconcilation` component that performs a rollout for most common workload types like Deployments and DaemonSets. This component ensures that all running sidecars are updated correctly.
+However, there are some user-defined workloads that can't be rolled out automatically. This includes standalone Pods without any management mechanism like a ReplicaSet or a Job.
+
+You must manually restart such user-defined workloads to ensure proper functionality with the updated Istio version.
 
 ## Remedy
 
@@ -22,10 +22,11 @@ To learn if any Pods or workloads require a manual restart, follow these steps:
 
 1. Check the installed Istio version using this method:
 
-* From the `istiod` deployment in a running cluster, run:
+   * From the `istiod` deployment in a running cluster, run:
 
-   ```bash
-   export PILOT_ISTIO_VERSION=$(kubectl get deployment istiod -n istio-system -o json | jq '.spec.template.spec.containers | .[].image' | sed 's/[^:"]*[:]//' | sed 's/["]//g')
+      ```bash
+      export PILOT_ISTIO_VERSION=$(kubectl get deployment istiod -n istio-system -o json | jq '.spec.template.spec.containers | .[].image' | sed 's/[^:"]*[:]//' | sed 's/["]//g')
+      ```
 2. Get the list of objects which require rollout. Find all Pods with outdated sidecars. The returned list follows the `name/namespace` format. The empty output means that there is no Pod that requires migration. To find all outdated Pods, run:
 
 

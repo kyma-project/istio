@@ -17,15 +17,11 @@ You can enable the sidecar proxy injection for either an entire Namespace or a s
 
 Note that if the sidecar proxy injection is disabled at the Namespace level or the `sidecar.istio.io/inject` label on a Pod is set to `false`, the sidecar proxy is not injected.
 
-Read the [Istio documentation](https://istio.io/docs/setup/kubernetes/additional-setup/sidecar-injection/) to learn more about the sidecar proxy injection and consider [benefits of having the sidecar container inside your application Pod](./00-30-istio-sidecars.md).
-
-If there are issues with the Istio sidecar, you can check whether there is an [issue with the sidecar injection](./04-30-istio-no-sidecar.md) or a [mismatching Istio version](./04-40-incompatible-istio-sidecar-version.md).
-
 ## Check whether your workloads have automatic Istio sidecar injection enabled
 
-You can easily check whether your workloads have automatic Istio sidecar injection enabled by running [this script](../assets/sidecar-analysis.sh). You can either pass the **namespace** parameter to the script or run it with no parameter.
+Check whether your workloads have automatic Istio sidecar injection enabled by running [this script](../assets/sidecar-analysis.sh). You can either pass the **namespace** parameter to the script or run it with no parameter.
 
-If no parameter is passed, the execution output contains Pods from all Namespaces that don't have the automatic Istio sidecar injection enabled, whereas passing the parameter results in the analysis of only the given Namespace.
+If you don't provide any parameter, the execution output contains Pods from all Namespaces that don't have automatic Istio sidecar injection enabled. If you pass a parameter, only the Pods from the specified Namespace are analyzed.
 
 The script outputs the information in `{namespace}/{pod}` if run for all Namespaces and in `{pod}` form for a specific Namespace.
 
@@ -35,9 +31,9 @@ The script outputs the information in `{namespace}/{pod}` if run for all Namespa
 ./sidecar-analysis.sh {namespace}
 ```
 
-* Example output
+* Here's an example output.
 
-  * `./sidecar-analysis.sh`
+  * If you run `./sidecar-analysis.sh`:
 
   ```
   Pods out of istio mesh:
@@ -49,7 +45,7 @@ The script outputs the information in `{namespace}/{pod}` if run for all Namespa
       - no-label/some-pod
   ```
 
-  * `./sidecar-analysis.sh some-namespace`
+  * If you run `./sidecar-analysis.sh some-namespace`:
 
   ```
   Pods out of istio mesh in namespace some-namespace:

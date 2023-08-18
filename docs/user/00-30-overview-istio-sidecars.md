@@ -1,16 +1,16 @@
 ---
-title: Istio sidecars in Kyma and why you want them
+title: Purpose and benefits of Istio sidecars
 ---
 
 ## Purpose of Istio sidecars
 
-By default, Istio installed as part of the Istio module [is configured](./01-50-default-istio-setup.md) with automatic Istio proxy sidecar injection disabled. This means that none of Pods of your workloads (such as deployments and StatefulSets; except any workloads in the `kyma-system` Namespace) get their own sidecar proxy container running next to your application.
+By default, Istio installed as part of the Istio module is configured with automatic [Istio proxy sidecar injection](https://istio.io/docs/setup/kubernetes/additional-setup/sidecar-injection/) disabled. This means that none of Pods of your workloads (such as deployments and StatefulSets; except any workloads in the `kyma-system` Namespace) get their own sidecar proxy container running next to your application. 
 
 With an Istio sidecar, the resource becomes part of Istio Service Mesh, which brings the following benefits that would be complex to manage otherwise.
 
 ## Secure communication
 
-In Kyma's [default Istio configuration](./01-50-default-istio-setup.md), [peer authentication](https://istio.io/latest/docs/concepts/security/#peer-authentication) is set to cluster-wide `STRICT` mode. This ensures that your workload only accepts [mutual TLS traffic](https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/) where both, client and server certificates, are validated to have all traffic encrypted. This provides each service with a strong identity, with reliable key and certificate management system.
+In Kyma's [default Istio configuration](./00-40-overview-istio-setup.md), [peer authentication](https://istio.io/latest/docs/concepts/security/#peer-authentication) is set to cluster-wide `STRICT` mode. This ensures that your workload only accepts [mutual TLS traffic](https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/) where both, client and server certificates, are validated to have all traffic encrypted. This provides each service with a strong identity, with reliable key and certificate management system.
 
 Another security benefit of having a sidecar proxy is that you can perform [request authentication](https://istio.io/latest/docs/reference/config/security/request_authentication/) for your service. Istio enables request authentication with JSON Web Token (JWT) validation using a custom authentication provider.
 
@@ -33,3 +33,8 @@ To improve the resiliency of your applications, you can use [mirroring](https://
 ### Resiliency
 
 Application resiliency is an important topic within traffic management. Traditionally, resiliency features like timeouts, retries, and circuit breakers were implemented by application libraries. However, with service mesh, you can delegate such tasks to the mesh, and the same configuration options will work regardless of the programming language of your application. You can read more about it in [Network resilience and testing](https://istio.io/latest/docs/concepts/traffic-management/#network-resilience-and-testing).
+
+## Tutorials and troubleshooting
+
+Learn how to [enable automatic Istio sidecar proxy injection](./01-50-enable-sidecar-injection.md). 
+Follow the troubleshooting guides if you experiece [issues with Istio sidecar injection](./04-30-istio-no-sidecar.md) or have [incompatible Istio sidecar version after the Istio module upgrade](./04-40-incompatible-istio-sidecar-version.md).

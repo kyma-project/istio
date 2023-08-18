@@ -8,7 +8,7 @@ A Pod doesn't have a sidecar but you did not disable sidecar injection on purpos
 
 ## Cause
 
-By default, the Istio module has sidecar injection disabled - there is no automatic sidecar injection into any Pod in a cluster. For more information, read the document about [enabling Istio sidecar proxy injection](./01-60-enable-sidecar-injection.md).
+By default, the Istio module has sidecar injection disabled - there is no automatic sidecar injection into any Pod in a cluster. For more information, read the document about [enabling Istio sidecar proxy injection](./01-50-enable-sidecar-injection.md).
 
 ## Remedy
 

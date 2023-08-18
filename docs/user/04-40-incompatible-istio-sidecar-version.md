@@ -4,7 +4,7 @@ title: Incompatible Istio sidecar version after the Istio module upgrade
 
 ## Symptom
 
-You upgraded the Istio module and mesh connectivity is broken.
+You upgraded the Istio module, and mesh connectivity is broken.
 
 ## Cause
 

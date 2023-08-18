@@ -8,7 +8,7 @@ You try to access a Kyma endpoint and receive the `503` status code.
 
 ## Cause
 
-This behavior might be caused by a configuration error in Istio Ingress Gateway. As the result, the endpoint you call is not exposed.
+This behavior might be caused by a configuration error in Istio Ingress Gateway. As a result, the endpoint you call is not exposed.
 
 ## Remedy
 
@@ -55,6 +55,6 @@ If the restart doesn't help, change the image of Istio Ingress Gateway to allow 
     kubectl get secrets -n istio-system kyma-gateway-certs-cacert -oyaml
     ```
 
-6. To regenerate a corrupted certificate, follow [this tutorial](https://kyma-project.io/docs/kyma/latest/03-tutorials/00-security/sec-01-tls-certificates-security/). If you are running Kyma provisioned through Gardener, follow this [troubleshooting guide](https://kyma-project.io/docs/kyma/latest/04-operation-guides/troubleshooting/security/sec-01-certificates-gardener/) instead.
+6. To regenerate a corrupted certificate, follow the tutorial to [Set up or update a custom domain TLS certificate in Kyma](https://kyma-project.io/docs/kyma/latest/03-tutorials/00-security/sec-01-tls-certificates-security/). If you are running Kyma provisioned through Gardener, follow the [Gardener troubleshooting guide](https://kyma-project.io/docs/kyma/latest/04-operation-guides/troubleshooting/security/sec-01-certificates-gardener/) instead.
 
    >**NOTE**: Remember to switch back to the `distroless` image after you resolved the issue.

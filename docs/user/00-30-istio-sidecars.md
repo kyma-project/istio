@@ -16,11 +16,11 @@ Another security benefit of having a sidecar proxy is that you can perform [requ
 
 ## Observability
 
-Furthermore, Istio proxies improve tracing: Istio performs global tracing and forwards the data to a tracing backend using the [OTLP protocol](https://opentelemetry.io/docs/reference/specification/protocol/). Learn more in [Tracing Architecture](https://kyma-project.io/docs/kyma/latest/01-overview/telemetry/telemetry-03-traces/).
+Furthermore, Istio proxies enhance tracing capabilities by performing global tracing and forwarding the data to a tracing backend using the [OTLP protocol](https://opentelemetry.io/docs/reference/specification/protocol/).
 
-Kiali is another tool to monitor the service mesh; and Kyma configures Istio to export metrics necessary to support Kiali features that facilitate managing, visualizing, and troubleshooting your service mesh. Learn more about deploying Kiali to your Kyma cluster in our [Kiali example](https://github.com/kyma-project/examples/tree/main/kiali).
+Kiali is another tool that allows you to monitor the service mesh. You can configure Istio to export metrics necessary to support Kiali features that facilitate managing, visualizing, and troubleshooting your service mesh. Follow the [Kiali example](https://github.com/kyma-project/examples/tree/main/kiali) to learn how to deploy Kiali to your Kyma cluster.
 
-Being part of Istio service mesh enables all these advanced observability features, which would not be possible without advanced instrumentation code within your application.
+By being part of Istio Service Mesh, you can access advanced observability features that would otherwise require complex instrumentation code within your application.
 
 ## Traffic management
 
@@ -33,7 +33,3 @@ To improve the resiliency of your applications, you can use [mirroring](https://
 ### Resiliency
 
 Application resiliency is an important topic within traffic management. Traditionally, resiliency features like timeouts, retries, and circuit breakers were implemented by application libraries. However, with service mesh, you can delegate such tasks to the mesh, and the same configuration options will work regardless of the programming language of your application. You can read more about it in [Network resilience and testing](https://istio.io/latest/docs/concepts/traffic-management/#network-resilience-and-testing).
-
-## Sidecar proxy behavior during Kyma upgrade
-
-For Kyma upgrades, it's a priority to have full compatibility of existing workloads with the upgraded version of Istio. To ensure that the newest version of sidecar proxy is injected into the Pods, the upgrade performs a `rollout restart` of the workloads whenever possible. To learn more about exceptions when it's impossible to restart workloads, read the troubleshooting guide [Pods stuck in `Pending/Failed/Unknown` state after upgrade](https://kyma-project.io/docs/kyma/latest/04-operation-guides/troubleshooting/api-exposure/apix-05-upgrade-sidecar-proxy/#cause).

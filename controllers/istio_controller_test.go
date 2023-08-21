@@ -6,6 +6,7 @@ import (
 	"github.com/kyma-project/istio/operator/internal/filter"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/ingress_gateway"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio_resources"
+	"k8s.io/utils/ptr"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -15,7 +16,6 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -291,7 +291,7 @@ var _ = Describe("Istio Controller", func() {
 				},
 				Spec: operatorv1alpha1.IstioSpec{
 					Config: operatorv1alpha1.Config{
-						NumTrustedProxies: pointer.Int(2),
+						NumTrustedProxies: ptr.To(2),
 					},
 				},
 			}
@@ -455,7 +455,7 @@ var _ = Describe("Istio Controller", func() {
 				},
 				Spec: operatorv1alpha1.IstioSpec{
 					Config: operatorv1alpha1.Config{
-						NumTrustedProxies: pointer.Int(2),
+						NumTrustedProxies: ptr.To(2),
 					},
 				},
 			}

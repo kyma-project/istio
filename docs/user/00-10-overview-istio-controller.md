@@ -3,7 +3,7 @@
 ## Overview
 
 Istio Controller is part of Istio Operator. Its role is to manage the installation of Istio as defined by the Istio custom resource (CR). The controller is responsible for:
-- Installing, upgrading, and uninstalling Istio,
+- Installing, upgrading, and uninstalling Istio
 - Restarting workloads that have a proxy sidecar to ensure that these workloads are using the correct Istio version.
 
 ## Istio version

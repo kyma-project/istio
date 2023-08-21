@@ -24,7 +24,7 @@ To fix this problem, restart the Pods of the Gateway.
      kubectl delete pod -l app=istio-ingressgateway -n istio-system
      ```
 
-If the restart doesn't help, change the image of Istio Ingress Gateway to allow further investigation. The Istio module uses distroless Istio images that are more secure, but you cannot execute commands inside them. Follow this steps:
+If the restart doesn't help, change the image of Istio Ingress Gateway to allow further investigation. The Istio module uses distroless Istio images that are more secure, but you cannot execute commands inside them. Follow these steps:
 
 1. Edit the Istio Ingress Gateway Deployment:
 

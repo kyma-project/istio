@@ -18,9 +18,7 @@ You must manually restart such user-defined workloads to ensure proper functiona
 
 To learn if any Pods or workloads require a manual restart, follow these steps:
 
-1. Check the installed Istio version using this method:
-
-   * From the `istiod` deployment in a running cluster, run:
+1. Check the installed Istio version. From the `istiod` deployment in a running cluster, run:
 
       ```bash
       export PILOT_ISTIO_VERSION=$(kubectl get deployment istiod -n istio-system -o json | jq '.spec.template.spec.containers | .[].image' | sed 's/[^:"]*[:]//' | sed 's/["]//g')

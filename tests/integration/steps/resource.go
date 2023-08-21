@@ -3,6 +3,7 @@ package steps
 import (
 	"context"
 	"fmt"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/avast/retry-go"
 	"github.com/cucumber/godog"
@@ -31,6 +32,8 @@ func (k godogResourceMapping) String() string {
 		return "Istio CR"
 	case DestinationRule:
 		return "DestinationRule"
+	case Namespace:
+		return "Namespace"
 	}
 	panic(fmt.Errorf("%#v has unimplemented String() method", k))
 }
@@ -40,6 +43,7 @@ const (
 	Deployment
 	IstioCR
 	DestinationRule
+	Namespace
 )
 
 func ResourceIsReady(ctx context.Context, kind, name, namespace string) error {
@@ -107,6 +111,15 @@ func EvaluatedClusterSizeIs(ctx context.Context, size string) error {
 	return nil
 }
 
+func NamespaceIsCreated(ctx context.Context, name string) error {
+	k8sclient, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	return k8sclient.Create(ctx, &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: name}})
+}
+
 func NamespaceIsPresent(ctx context.Context, name, shouldBePresent string) error {
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
@@ -145,6 +158,24 @@ func NamespaceHasLabelAndAnnotation(ctx context.Context, name, label, annotation
 	}, testcontext.GetRetryOpts()...)
 }
 
+func ClusterResourceIsDeleted(ctx context.Context, kind, name string) error {
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	switch kind {
+	case Namespace.String():
+		return retry.Do(func() error {
+			err := k8sClient.Delete(context.TODO(), &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: name}})
+			return err
+		})
+	default:
+		return fmt.Errorf("can't delete resource for undefined kind %s", kind)
+	}
+
+}
+
 func ResourceInNamespaceIsDeleted(ctx context.Context, kind, name, namespace string) error {
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
@@ -171,6 +202,16 @@ func ResourceInNamespaceIsDeleted(ctx context.Context, kind, name, namespace str
 			}
 
 			return k8sClient.Delete(context.TODO(), &dr)
+		})
+	case Deployment.String():
+		return retry.Do(func() error {
+			var dep v1.Deployment
+			err := k8sClient.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, &dep)
+			if err != nil {
+				return err
+			}
+
+			return k8sClient.Delete(context.TODO(), &dep)
 		})
 	default:
 		return fmt.Errorf("can't delete resource for undefined kind %s", kind)

@@ -13,7 +13,7 @@ Feature: Configuration of Istio module
     And Template value "ProxyMemoryLimit" is set to "700Mi"
     And Istio CR "istio-sample" is applied in namespace "kyma-system"
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
-    And Istio injection is enabled in namespace "default"
+    And Istio injection is "enabled" in namespace "default"
     And Application "test-app" is running in namespace "default"
     And Application "test-app" in namespace "default" has proxy with "requests" set to cpu - "30m" and memory - "190Mi"
     And Application "test-app" in namespace "default" has proxy with "limits" set to cpu - "700m" and memory - "700Mi"
@@ -32,7 +32,7 @@ Feature: Configuration of Istio module
     Given Template value "NumTrustedProxies" is set to "1"
     And Istio CR "istio-sample" is applied in namespace "kyma-system"
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
-    And Istio injection is enabled in namespace "default"
+    And Istio injection is "enabled" in namespace "default"
     And Httpbin application "httpbin" is running in namespace "default"
     And "Deployment" "httpbin" in namespace "default" is ready
     And Istio gateway "test-gateway" is configured in namespace "default"

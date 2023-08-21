@@ -2,7 +2,7 @@
 
 ## Ingress
 
-[Istio Ingress Gateway](https://istio.io/latest/docs/reference/config/networking/gateway/) handles all incoming traffic, manages TLS termination, and facilitates mTLS communication between the cluster and external services. By default, the [`kyma-gateway`](https://github.com/kyma-project/kyma/blob/main/resources/certificates/templates/gateway.yaml) configuration defines the points of entry to expose all applications using the supplied domain and certificates.
+[Istio Ingress Gateway](https://istio.io/latest/docs/reference/config/networking/gateway/) handles all incoming traffic, manages TLS termination, and facilitates mTLS communication between the cluster and external services. By default, the [`kyma-gateway`](https://github.com/kyma-project/kyma/blob/main/resources/istio-resources/templates/gateway.yaml) configuration defines the points of entry to expose all applications using the supplied domain and certificates.
 
 The configuration specifies the following parameters and their values:
 

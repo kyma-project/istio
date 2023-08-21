@@ -1,6 +1,4 @@
----
-title: Connection refused errors
----
+# Connection refused errors
 
 ## Symptom
 

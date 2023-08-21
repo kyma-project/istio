@@ -1,6 +1,4 @@
----
-title: Issues with Istio sidecar injection
----
+# Issues with Istio sidecar injection
 
 ## Symptom
 

@@ -1,6 +1,4 @@
----
-title: Default Istio setup
----
+# Default Istio setup
 
 This document provides an overview of the default setup for Istio. The Istio module uses the [Istio library](https://github.com/istio/istio/tree/master/operator) for installing Istio. The module includes components like Istiod (Pilot) and Ingress Gateway, which are enabled by default.
 

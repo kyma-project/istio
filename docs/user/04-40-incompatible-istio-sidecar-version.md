@@ -1,6 +1,4 @@
----
-title: Incompatible Istio sidecar version after the Istio module upgrade
----
+# Incompatible Istio sidecar version after the Istio module upgrade
 
 ## Symptom
 

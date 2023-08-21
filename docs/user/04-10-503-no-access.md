@@ -1,6 +1,4 @@
----
-title: Can't access a Kyma endpoint (503 status code)
----
+# Can't access a Kyma endpoint (503 status code)
 
 ## Symptom
 

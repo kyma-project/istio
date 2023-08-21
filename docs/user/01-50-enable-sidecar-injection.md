@@ -1,7 +1,4 @@
-
----
-title: Enable automatic Istio sidecar proxy injection
----
+# Enable automatic Istio sidecar proxy injection
 
 Enabling automatic sidecar injection allows `istiod` to watch all Pod creation operations on all Namespaces, which should be part of Istio Service Mesh, and inject the newly created Pods with a sidecar proxy.
 
@@ -23,31 +20,28 @@ Check whether your workloads have automatic Istio sidecar injection enabled by r
 
 If you don't provide any parameter, the execution output contains Pods from all Namespaces that don't have automatic Istio sidecar injection enabled. If you pass a parameter, only the Pods from the specified Namespace are analyzed.
 
-The script outputs the information in the format of `{namespace}/{pod}` if run for all Namespaces and in the format of `{pod}` if run for a specific Namespace.
-
-* Run the script:
+The script outputs the information in the format of `{namespace}/{pod}` if run for all Namespaces and in the format of `{pod}` if run for a specific Namespace. Run the script:
 
 ```bash
 ./sidecar-analysis.sh {namespace}
 ```
 
-* Here's an example output.
 
-  * If you run `./sidecar-analysis.sh`:
+* If you run `./sidecar-analysis.sh`, you get an output similar to this one:
 
-  ```
-  Pods out of istio mesh:
-    In namespace labeled with "istio-injection=disabled":
-      - sidecar-disabled/some-pod
-    In namespace labeled with "istio-injection=enabled" with pod labeled with "sidecar.istio.io/inject=false":
-      - sidecar-enabled/some-pod
-    In not labeled ns with pod not labeled with "sidecar.istio.io inject=true":
-      - no-label/some-pod
-  ```
+```
+Pods out of istio mesh:
+  In namespace labeled with "istio-injection=disabled":
+    - sidecar-disabled/some-pod
+  In namespace labeled with "istio-injection=enabled" with pod labeled with "sidecar.istio.io/inject=false":
+    - sidecar-enabled/some-pod
+  In not labeled ns with pod not labeled with "sidecar.istio.io inject=true":
+    - no-label/some-pod
+```
 
-  * If you run `./sidecar-analysis.sh some-namespace`:
+* If you run `./sidecar-analysis.sh some-namespace`, you get an output similar to this one:
 
-  ```
-  Pods out of istio mesh in namespace some-namespace:
-    - some-pod
-  ```
+```
+Pods out of istio mesh in namespace some-namespace:
+  - some-pod
+```

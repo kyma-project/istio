@@ -6,6 +6,6 @@
     positive:
       - 'Ready'
     negative:
-      - 'Warning'
-    critical:
       - 'Error'
+    critical:
+      - 'Warning'

@@ -7,9 +7,9 @@ header:
     positive:
       - 'Ready'
     negative:
-      - 'Warning'
-    critical:
       - 'Error'
+    critical:
+      - 'Warning'
 body:
 - widget: Tabs
   children:

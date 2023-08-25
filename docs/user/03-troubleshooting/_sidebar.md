@@ -1,6 +1,6 @@
 * [Home](/)
 * [Operation Guides](../README.md)
-* [Troubleshooting](README.md)
+* [Troubleshooting](/README.md)
   * [Istio Operator](./README.md)
     * [Can't access a Kyma endpoint (503 status code)](./03-10-503-no-access.md)
     * [Connection refused errors](./03-20-connection-refused.md)

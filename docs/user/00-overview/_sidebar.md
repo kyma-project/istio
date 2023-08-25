@@ -9,3 +9,5 @@
   * [Service Mesh](/01-overview/service-mesh/README.md)
   * [Telemetry](/01-overview/telemetry/README.md)
   * [User Interfaces](/01-overview/ui/README.md)
+  * [Istio Operator](/istio-operator/user/00-overview/README.md)
+    * [Istio Controller](./00-10-overview-istio-controller.md)

@@ -1,2 +1,2 @@
-- [Ingress and Egress traffic](./01-40-ingress-egress-traffic.md)
-- [Enable automatic Istio sidecar proxy injection](./01-50-enable-sidecar-injection.md)
+- [Ingress and Egress traffic](./02-10-ingress-egress-traffic.md)
+- [Enable automatic Istio sidecar proxy injection](./02-20-enable-sidecar-injection.md)

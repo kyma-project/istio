@@ -1,0 +1,5 @@
+- [Can't access a Kyma endpoint (503 status code)](./04-10-503-no-access.md)
+- [Connection refused errors](./04-20-connection-refused.md)
+- [Issues with Istio sidecar injection](./04-30-istio-no-sidecar.md)
+- [Incompatible Istio sidecar version after the Istio module upgrade](./04-40-incompatible-istio-sidecar-version.md)
+- [Istio module unintentionally disabled](./04-50-recovering-from-unintentional-istio-module-removal.md)

@@ -1,4 +1,4 @@
-# Istio module
+# Istio Operator
 
 ## What is Istio
 
@@ -6,9 +6,9 @@
 
 Istio is an open-source service mesh that provides a uniform way to manage, connect, and secure microservices. It helps to manage traffic, enhance security capabilities, and provide telemetry data for understanding service behavior. Read the [Istio documentation](https://istio.io/latest/) to learn more.
 
-## Istio module
+## Istio Operator component
 
-The Istio module allows you to add Istio Operator to the Kyma runtime. Within Istio Operator, Istio Controller is responsible for installing, uninstalling, and managing Istio. For more information, read the [Istio Controller documentation](/docs/user/00-10-overview-istio-controller.md).
+The Istio Operator component allows you to add Istio Operator to the Kyma runtime. Within Istio Operator, Istio Controller is responsible for installing, uninstalling, and managing Istio. For more information, read the [Istio Controller documentation](/docs/user/00-10-overview-istio-controller.md).
 
 ## Install Istio Operator and Istio from the latest release
 
@@ -54,9 +54,9 @@ For more installation options, visit [Install the Istio module](/docs/contributo
 
 ## Documentation
 
-To learn how to use the Istio module, read the documentation in the [user](/docs/user) directory.
+To learn how to use the Istio Operator component, read the documentation in the [user](/docs/user) directory.
 
-If you are interested in the detailed documentation of the module's design and technical aspects, check the [contributor](/docs/contributor/) directory.
+If you are interested in the detailed documentation of the Istio Operator's design and technical aspects, check the [contributor](/docs/contributor/) directory.
 
 ## Contributing
 

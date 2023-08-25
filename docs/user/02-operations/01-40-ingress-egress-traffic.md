@@ -22,4 +22,4 @@ If you don't want to use your custom certificate, you can choose between a self-
 
 Currently no Egress limitations are implemented, meaning that all applications deployed in the Kyma cluster can access outside resources without limitations.
 
->**NOTE:** In the case of connection problems with external services, it may be required to create a [Service Entry](https://istio.io/latest/docs/reference/config/networking/service-entry/) object to register the service.
+>**NOTE:** In the case of connection problems with external services, it may be required to create an [Service Entry](https://istio.io/latest/docs/reference/config/networking/service-entry/) object to register the service.

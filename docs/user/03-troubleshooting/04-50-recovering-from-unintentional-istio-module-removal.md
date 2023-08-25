@@ -1,5 +1,5 @@
-# Troubleshooting: The Istio module was unintentionally disabled
-Follow the steps outlined in this troubleshooting guide if you unintentionally deleted the Istio module and want to restore the system to its normal state without losing any user-created resources. However, if you intended to delete the module, the symptoms described in this document are expected and you must clean up the orphaned resources by yourself.
+# Istio Operator was unintentionally disabled
+Follow the steps outlined in this troubleshooting guide if you unintentionally deleted Istio Operator and want to restore the system to its normal state without losing any user-created resources. However, if you intended to delete Istio Operator, the symptoms described in this document are expected and you must clean up the orphaned resources by yourself.
 
 ## Symptom
 
@@ -20,9 +20,9 @@ Resources blocking deletion: DestinationRule:kyma-system/api-gateway-metrics;Des
 
 ## Cause
 
-- The Istio module was disabled, but it was not completely removed because the user's CRs still exist.
+- Istio Operator was disabled, but it was not completely removed because the user's CRs still exist.
 
-For example, the issue occurs when you delete the Istio module, but there are still `VirtualService` resources that either belong to the user or were installed by another Kyma component or module. In such cases, the hooked finalizer pauses the deletion of the module until you remove all the related resources. This [blocking deletion strategy](https://github.com/kyma-project/community/issues/765) is intentionally designed and is enabled by default for the Istio module.
+For example, the issue occurs when you delete Istio Operator, but there are still `VirtualService` resources that either belong to the user or were installed by another Kyma component or module. In such cases, the hooked finalizer pauses the deletion of the module until you remove all the related resources. This [blocking deletion strategy](https://github.com/kyma-project/community/issues/765) is intentionally designed and is enabled by default for the Istio Operator component.
 
 
 ## Remedy

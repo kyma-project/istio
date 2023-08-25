@@ -4,7 +4,7 @@ You can configure Istio Controller using various parameters. All options are lis
 
 ## Reconciliation interval
 
-By default, the Istio module is reconciled every 10 hours or whenever the custom resource is changed. You can adjust this interval by modifying the manager's parameters. For example, you can set the **-reconciliation-interval** parameter to `120s`.
+By default, Istio Operator is reconciled every 10 hours or whenever the custom resource is changed. You can adjust this interval by modifying the operator's parameters. For example, you can set the **-reconciliation-interval** parameter to `120s`.
 
 ## All configuration parameters
 

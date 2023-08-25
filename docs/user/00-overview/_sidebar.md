@@ -1,6 +1,2 @@
 * [Home](/)
 * [Kyma Components](/01-overview/README.md)
-* [Istio Controller overview](./00-10-overview-istio-controller.md)
-* [Istio Service Mesh](./00-20-overview-service-mesh.md)
-* [Default Istio setup](./00-40-overview-istio-setup.md)
-* [Purpose and benefits of Istio sidecars](./00-30-overview-istio-sidecars.md)

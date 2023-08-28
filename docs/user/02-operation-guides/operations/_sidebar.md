@@ -1,5 +1,5 @@
 * [Home](/)
-* [Operation Guides](../README.md)
+* [Operation Guides](/04-operation-guides/README.md)
 * [Operations](/04-operation-guides/operations/README.md)
   * [Install Kyma CLI](/04-operation-guides/operations/01-install-kyma-CLI.md)
   * [Install Kyma](/04-operation-guides/operations/02-install-kyma.md)
@@ -18,4 +18,5 @@
   * [Enable mTLS for custom metrics](/04-operation-guides/operations/obsv-04-enable-mtls-for-custom-metrics.md)
   * [Enable Kyma with Runtime Agent](/04-operation-guides/operations/ra-01-enable-kyma-with-runtime-agent.md)
   * [Enable automatic Istio sidecar proxy injection](/04-operation-guides/operations/smsh-01-istio-enable-sidecar-injection.md)
-  * [Enable automatic Istio sidecar proxy injection](./02-20-enable-sidecar-injection.md)
+  * [Kyma Istio Operator](./02-20-enable-sidecar-injection.md)
+    * [Enable automatic Istio sidecar proxy injection](./02-20-enable-sidecar-injection.md)

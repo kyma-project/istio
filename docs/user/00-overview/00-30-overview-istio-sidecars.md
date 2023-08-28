@@ -2,7 +2,7 @@
 
 ## Purpose of Istio sidecars
 
-By default, Istio installed by Istio Operator is configured with automatic [Istio proxy sidecar injection](https://istio.io/docs/setup/kubernetes/additional-setup/sidecar-injection/) disabled. This means that none of the Pods of your workloads (such as deployments and StatefulSets, except any workloads in the `kyma-system` Namespace) get their own sidecar proxy container running next to your application.
+By default, Istio installed by Kyma Istio Operator is configured with automatic [Istio proxy sidecar injection](https://istio.io/docs/setup/kubernetes/additional-setup/sidecar-injection/) disabled. This means that none of the Pods of your workloads (such as deployments and StatefulSets, except any workloads in the `kyma-system` Namespace) get their own sidecar proxy container running next to your application.
 
 With an Istio sidecar, the resource becomes part of Istio Service Mesh, which brings the following benefits that would be complex to manage otherwise.
 
@@ -35,4 +35,4 @@ Application resiliency is an important topic within traffic management. Traditio
 ## Tutorials and troubleshooting
 
 Learn how to [enable automatic Istio sidecar proxy injection](../02-operations/02-20-enable-sidecar-injection.md). 
-Follow the troubleshooting guides if you experience [issues with Istio sidecar injection](./04-30-istio-no-sidecar.md) or have [incompatible Istio sidecar version after Istio Operator's upgrade](../03-troubleshooting/03-40-incompatible-istio-sidecar-version.md).
+Follow the troubleshooting guides if you experience [issues with Istio sidecar injection](./04-30-istio-no-sidecar.md) or have [incompatible Istio sidecar version after Kyma Istio Operator's upgrade](../03-troubleshooting/03-40-incompatible-istio-sidecar-version.md).

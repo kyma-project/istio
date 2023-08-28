@@ -12,9 +12,9 @@ In order to transition to a more modularised architecture, the [IstioOperator re
 the [additional istio-resources](https://github.com/kyma-project/kyma/tree/main/resources/istio-resources), and
 the [certificates](https://github.com/kyma-project/kyma/tree/main/resources/certificates) must be moved to the new modules.
 
-#### Istio Operator resource
+#### Kyma Istio Operator resource
 
-The Istio Operator resource is moved into the new Kyma Istio Operator. It is used to define default values for Istio, which the user can customise by modyfying Istio CR.
+The Kyma Istio Operator resource is moved into the new Kyma Istio Operator. It is used to define default values for Istio, which the user can customise by modyfying Istio CR.
 
 #### Istio resources
 

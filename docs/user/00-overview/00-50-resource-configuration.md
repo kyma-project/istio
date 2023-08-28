@@ -1,6 +1,6 @@
-# Default resources and autoscaling configuration for Istio Operator
+# Default resources and autoscaling configuration for Kyma Istio Operator
 
-Istio Operator provides baseline values for the Istio installation. Those values can be overridden with configuration in the Istio custom resource (CR).
+Kyma Istio Operator provides baseline values for the Istio installation. Those values can be overridden with configuration in the Istio custom resource (CR).
 
 ## Cluster-based default configuration
 

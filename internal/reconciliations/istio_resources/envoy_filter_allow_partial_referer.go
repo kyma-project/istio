@@ -3,7 +3,10 @@ package istio_resources
 import (
 	"context"
 	_ "embed"
+	"time"
+
 	"github.com/kyma-project/istio/operator/internal/filter"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -11,11 +14,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/yaml"
-	"time"
 )
 
 //go:embed envoy_filter_allow_partial_referer.yaml
-var manifest []byte
+var manifest_ef_allow_partial_referer []byte
 
 const EnvoyFilterAnnotation = "istios.operator.kyma-project.io/updatedAt"
 
@@ -49,7 +51,7 @@ func newEnvoyFilterEvaluator(ctx context.Context, k8sClient client.Client) (Envo
 
 func (e EnvoyFilterAllowPartialReferer) apply(ctx context.Context, k8sClient client.Client) (controllerutil.OperationResult, error) {
 	var envoyFilter unstructured.Unstructured
-	err := yaml.Unmarshal(manifest, &envoyFilter)
+	err := yaml.Unmarshal(manifest_ef_allow_partial_referer, &envoyFilter)
 	if err != nil {
 		return controllerutil.OperationResultNone, err
 	}
@@ -63,13 +65,22 @@ func (e EnvoyFilterAllowPartialReferer) apply(ctx context.Context, k8sClient cli
 	if err != nil {
 		return controllerutil.OperationResultNone, err
 	}
-	var ok bool
-	if envoyFilter.GetAnnotations() != nil {
-		_, ok = envoyFilter.GetAnnotations()[EnvoyFilterAnnotation]
+
+	var efaFound, daFound bool
+	annotations := envoyFilter.GetAnnotations()
+	if annotations != nil {
+		_, efaFound = annotations[EnvoyFilterAnnotation]
+		_, daFound = annotations[istio.DisclaimerKey]
 	}
 
-	if result != controllerutil.OperationResultNone || envoyFilter.GetAnnotations() == nil || !ok {
+	if result != controllerutil.OperationResultNone || !efaFound {
 		err := annotateWithTimestamp(ctx, envoyFilter, k8sClient)
+		if err != nil {
+			return controllerutil.OperationResultNone, err
+		}
+	}
+	if !daFound {
+		err := annotateWithDisclaimer(ctx, envoyFilter, k8sClient)
 		if err != nil {
 			return controllerutil.OperationResultNone, err
 		}
@@ -111,7 +122,7 @@ func annotateWithTimestamp(ctx context.Context, filter unstructured.Unstructured
 
 func getUpdateTime(ctx context.Context, k8sClient client.Client) (time.Time, error) {
 	var object unstructured.Unstructured
-	err := yaml.Unmarshal(manifest, &object)
+	err := yaml.Unmarshal(manifest_ef_allow_partial_referer, &object)
 	if err != nil {
 		return time.Time{}, err
 	}

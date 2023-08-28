@@ -3,7 +3,10 @@ package istio_resources
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/istio/operator/internal/described_errors"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -46,4 +49,16 @@ func (r Reconciler) Reconcile(ctx context.Context) described_errors.DescribedErr
 	ctrl.Log.Info("Successfully reconciled istio resources")
 
 	return nil
+}
+
+func annotateWithDisclaimer(ctx context.Context, resource unstructured.Unstructured, k8sClient client.Client) error {
+	annotations := resource.GetAnnotations()
+	if annotations == nil {
+		annotations = make(map[string]string)
+	}
+	annotations[istio.DisclaimerKey] = istio.DisclaimerValue
+	resource.SetAnnotations(annotations)
+
+	err := k8sClient.Update(ctx, &resource)
+	return err
 }

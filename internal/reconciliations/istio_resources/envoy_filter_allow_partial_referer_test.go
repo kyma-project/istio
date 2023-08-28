@@ -2,6 +2,9 @@ package istio_resources
 
 import (
 	"context"
+	"time"
+
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
@@ -9,7 +12,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/yaml"
-	"time"
 )
 
 var _ = Describe("Apply", func() {
@@ -31,12 +33,13 @@ var _ = Describe("Apply", func() {
 
 		Expect(s.Items[0].Annotations).To(Not(BeNil()))
 		Expect(s.Items[0].Annotations[EnvoyFilterAnnotation]).To(Not(BeNil()))
+		Expect(s.Items[0].Annotations[istio.DisclaimerKey]).To(Not(BeNil()))
 	})
 
 	It("should return not changed and annotate with timestamp if no change is needed", func() {
 		//given
 		var filter networkingv1alpha3.EnvoyFilter
-		err := yaml.Unmarshal(manifest, &filter)
+		err := yaml.Unmarshal(manifest_ef_allow_partial_referer, &filter)
 		Expect(err).To(Not(HaveOccurred()))
 
 		client := createFakeClient(&filter)
@@ -57,12 +60,13 @@ var _ = Describe("Apply", func() {
 
 		Expect(s.Items[0].Annotations).To(Not(BeNil()))
 		Expect(s.Items[0].Annotations[EnvoyFilterAnnotation]).To(Not(BeNil()))
+		Expect(s.Items[0].Annotations[istio.DisclaimerKey]).To(Not(BeNil()))
 	})
 
 	It("should return updated and annotate with timestamp if change is needed", func() {
 		//given
 		var filter networkingv1alpha3.EnvoyFilter
-		err := yaml.Unmarshal(manifest, &filter)
+		err := yaml.Unmarshal(manifest_ef_allow_partial_referer, &filter)
 		Expect(err).To(Not(HaveOccurred()))
 
 		filter.Spec.Priority = 2
@@ -84,6 +88,7 @@ var _ = Describe("Apply", func() {
 
 		Expect(s.Items[0].Annotations).To(Not(BeNil()))
 		Expect(s.Items[0].Annotations[EnvoyFilterAnnotation]).To(Not(BeNil()))
+		Expect(s.Items[0].Annotations[istio.DisclaimerKey]).To(Not(BeNil()))
 	})
 })
 

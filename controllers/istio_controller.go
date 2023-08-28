@@ -19,8 +19,9 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/istio/operator/internal/filter"
 	"time"
+
+	"github.com/kyma-project/istio/operator/internal/filter"
 
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/ingress_gateway"
@@ -57,7 +58,8 @@ func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *I
 	merger := manifest.NewDefaultIstioMerger()
 
 	envoyFilterReferer := istio_resources.NewEnvoyFilterAllowPartialReferer(mgr.GetClient())
-	istioResources := []istio_resources.Resource{envoyFilterReferer}
+	vsHealthz := istio_resources.NewVirtualServiceHealthz(mgr.GetClient())
+	istioResources := []istio_resources.Resource{envoyFilterReferer, vsHealthz}
 
 	return &IstioReconciler{
 		Client:                 mgr.GetClient(),

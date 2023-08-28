@@ -14,3 +14,4 @@
     * [Istio Service Mesh](./00-20-overview-service-mesh.md)
     * [Istio Sidecars](./00-30-overview-istio-sidecars.md)
     * [Default Istio setup](./00-40-overview-istio-setup.md)
+    * [Resource configuration](./00-50-resource-configuration.md)

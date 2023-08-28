@@ -1,2 +1,0 @@
-- [Istio Controller parameters](./01-10-istio-controller-parameters.md)
-- [Resource and autoscaling configuration](./01-30-resource-configuration.md)

@@ -1,4 +1,4 @@
-Troubleshooting - Istio Operator
+# Troubleshooting - Istio Operator
 
 The troubleshooting section aims to identify the most common recurring problems the users face when they use Istio Operator, as well as the most suitable solutions to these problems.
 

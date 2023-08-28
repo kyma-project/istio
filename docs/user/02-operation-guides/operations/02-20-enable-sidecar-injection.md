@@ -16,7 +16,7 @@ Note that if the sidecar proxy injection is disabled at the Namespace level or t
 
 ## Check whether your workloads have automatic Istio sidecar injection enabled
 
-Check whether your workloads have automatic Istio sidecar injection enabled by running [this script](../../assets/sidecar-analysis.sh). You can either pass the **namespace** parameter to the script or run it with no parameter.
+Check whether your workloads have automatic Istio sidecar injection enabled by running [this script](../../../assets/sidecar-analysis.sh). You can either pass the **namespace** parameter to the script or run it with no parameter.
 
 If you don't provide any parameter, the execution output contains Pods from all Namespaces that don't have automatic Istio sidecar injection enabled. If you pass a parameter, only the Pods from the specified Namespace are analyzed.
 

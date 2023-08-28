@@ -8,7 +8,7 @@ This document provides an overview of the default setup for Istio. Kyma Istio Op
 These configuration changes are applied to customize Istio:
 
 - Both [Istio control plane and data plane](https://istio.io/latest/docs/ops/deployment/architecture/) use distroless images. To learn more, read about [Harden Docker Container Images](https://istio.io/latest/docs/ops/configuration/security/harden-docker-images/).
-- Automatic sidecar injection is disabled by default. See how to [enable sidecar proxy injection](../02-operations/02-20-enable-sidecar-injection.md).
+- Automatic sidecar injection is disabled by default. See how to [enable sidecar proxy injection](../02-operation-guides/operations/02-20-enable-sidecar-injection.md).
 - Resource requests and limits for Istio sidecars are modified to best suit the needs of the evaluation and production profiles.
 - [Mutual TLS (mTLS)](https://istio.io/docs/concepts/security/#mutual-tls-authentication) is enabled cluster-wide in the `STRICT` mode.
 - Ingress Gateway is expanded to handle ports `80`, `443`, and `31400` for local Kyma deployments.

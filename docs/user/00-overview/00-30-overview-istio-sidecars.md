@@ -34,5 +34,5 @@ Application resiliency is an important topic within traffic management. Traditio
 
 ## Tutorials and troubleshooting
 
-Learn how to [enable automatic Istio sidecar proxy injection](../02-operations/02-20-enable-sidecar-injection.md). 
-Follow the troubleshooting guides if you experience [issues with Istio sidecar injection](./04-30-istio-no-sidecar.md) or have [incompatible Istio sidecar version after Kyma Istio Operator's upgrade](../03-troubleshooting/03-40-incompatible-istio-sidecar-version.md).
+Learn how to [enable automatic Istio sidecar proxy injection](../02-operation-guides/operations/02-20-enable-sidecar-injection.md). 
+Follow the troubleshooting guides if you experience [issues with Istio sidecar injection](../02-operation-guides/troubleshooting/03-30-istio-no-sidecar.md) or have [incompatible Istio sidecar version after Kyma Istio Operator's upgrade](../02-operation-guides/troubleshooting/03-40-incompatible-istio-sidecar-version.md).

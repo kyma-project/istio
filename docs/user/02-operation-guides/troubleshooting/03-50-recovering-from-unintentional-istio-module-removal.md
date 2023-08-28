@@ -29,22 +29,22 @@ For example, the issue occurs when you delete Kyma Istio Operator, but there are
 
  1. Edit the Istio CR and remove the finalizer.
 ```
-kubectl edit istio -n kyma-system default
-```
-```diff
-apiVersion: operator.kyma-project.io/v1alpha1
-kind: Istio
-metadata:
-< finalizers:
-< - istios.operator.kyma-project.io/istio-installation
-  generation: 2
-  name: default
-  namespace: kyma-system
-spec:
-  ...
-status:
-  description: 'Resources blocking deletion: DestinationRule:kyma-system/api-gateway-metrics;DestinationRule:kyma-system/eventing-nats;PeerAuthentication:kyma-system/eventing-controller-metrics;PeerAuthentication:kyma-system/eventing-publisher-proxy-metrics'
-  state: Warning
+  kubectl edit istio -n kyma-system default
+  ```
+  ```diff
+  apiVersion: operator.kyma-project.io/v1alpha1
+  kind: Istio
+  metadata:
+  < finalizers:
+  < - istios.operator.kyma-project.io/istio-installation
+    generation: 2
+    name: default
+    namespace: kyma-system
+  spec:
+    ...
+  status:
+    description: 'Resources blocking deletion: DestinationRule:kyma-system/api-gateway-metrics;DestinationRule:kyma-system/eventing-nats;PeerAuthentication:kyma-system/eventing-controller-metrics;PeerAuthentication:kyma-system/eventing-publisher-proxy-metrics'
+    state: Warning
 ```
  2. When the finalizer is removed, the Istio CR is deleted. Other resources, such as the `istiod` deployment, remain on the cluster.
 

@@ -1,8 +1,10 @@
 package istio_resources
 
 import (
+	"bytes"
 	"context"
 	_ "embed"
+	"text/template"
 
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -22,9 +24,20 @@ func NewVirtualServiceHealthz(k8sClient client.Client) VirtualServiceHealthz {
 	return VirtualServiceHealthz{k8sClient: k8sClient}
 }
 
-func (VirtualServiceHealthz) apply(ctx context.Context, k8sClient client.Client) (controllerutil.OperationResult, error) {
+func (VirtualServiceHealthz) apply(ctx context.Context, k8sClient client.Client, templateValues map[string]string) (controllerutil.OperationResult, error) {
+	resourceTemplate, err := template.New("tmpl").Option("missingkey=error").Parse(string(manifest_vs_healthz))
+	if err != nil {
+		return controllerutil.OperationResultNone, err
+	}
+
+	var resourceBuffer bytes.Buffer
+	err = resourceTemplate.Execute(&resourceBuffer, templateValues)
+	if err != nil {
+		return controllerutil.OperationResultNone, err
+	}
+
 	var resource unstructured.Unstructured
-	err := yaml.Unmarshal(manifest_vs_healthz, &resource)
+	err = yaml.Unmarshal(resourceBuffer.Bytes(), &resource)
 	if err != nil {
 		return controllerutil.OperationResultNone, err
 	}

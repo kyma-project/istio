@@ -20,7 +20,7 @@ spec:
       - ECDHE-RSA-AES256-GCM-SHA384
       - ECDHE-RSA-AES128-GCM-SHA256
     hosts:
-      - "*.{{ .Values.global.domainName }}"
+      - "*.{{.DomainName}}"
   - port:
       number: 80
       name: http
@@ -28,4 +28,4 @@ spec:
     tls:
       httpsRedirect: true # automatic 301 redirect from http to https
     hosts:
-      - "*.{{ .Values.global.domainName }}"
+      - "*.{{.DomainName}}"

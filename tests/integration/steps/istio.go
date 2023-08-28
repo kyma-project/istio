@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
+
 	apinetworkingv1alpha3 "istio.io/api/networking/v1alpha3"
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strings"
 
 	"github.com/avast/retry-go"
 	"github.com/cucumber/godog"
@@ -119,7 +120,7 @@ func IstioServiceHasAnnotation(ctx context.Context, serviceName, annotationName,
 	if !found && flavour.String() == clusterFlavour {
 		return fmt.Errorf("expected annotation '%s' on Istio Gateway Service for %s cluster (%s) wasn't found", annotationName, clusterFlavour, flavour)
 	}
-	if found && flavour.String() != clusterFlavour && annotationValue != clusterconfig.LocalKymaDomain {
+	if found && flavour.String() != clusterFlavour && annotationValue != fmt.Sprintf("*.%s", clusterconfig.LocalKymaDomain) {
 		return fmt.Errorf("unexpected annotation '%s' on Istio Gateway Service for non-%s cluster (%s) was found", annotationName, clusterFlavour, flavour)
 	}
 	return nil

@@ -20,7 +20,7 @@ var _ = Describe("Apply", func() {
 		sample := NewEnvoyFilterAllowPartialReferer(client)
 
 		//when
-		changed, err := sample.apply(context.TODO(), client)
+		changed, err := sample.apply(context.TODO(), client, map[string]string{})
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))
@@ -47,7 +47,7 @@ var _ = Describe("Apply", func() {
 		sample := NewEnvoyFilterAllowPartialReferer(client)
 
 		//when
-		changed, err := sample.apply(context.TODO(), client)
+		changed, err := sample.apply(context.TODO(), client, map[string]string{})
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))
@@ -75,7 +75,7 @@ var _ = Describe("Apply", func() {
 		sample := NewEnvoyFilterAllowPartialReferer(client)
 
 		//when
-		changed, err := sample.apply(context.TODO(), client)
+		changed, err := sample.apply(context.TODO(), client, map[string]string{})
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))
@@ -105,7 +105,7 @@ var _ = Describe("RequiresProxyRestart", func() {
 		client := createFakeClient(pod, pod2)
 
 		sample := NewEnvoyFilterAllowPartialReferer(client)
-		changed, err := sample.apply(context.TODO(), client)
+		changed, err := sample.apply(context.TODO(), client, map[string]string{})
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(changed).To(Equal(controllerutil.OperationResultCreated))
 
@@ -130,7 +130,7 @@ var _ = Describe("RequiresProxyRestart", func() {
 		client := createFakeClient(pod)
 
 		sample := NewEnvoyFilterAllowPartialReferer(client)
-		changed, err := sample.apply(context.TODO(), client)
+		changed, err := sample.apply(context.TODO(), client, map[string]string{})
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(changed).To(Equal(controllerutil.OperationResultCreated))
 
@@ -155,7 +155,7 @@ var _ = Describe("RequiresProxyRestart", func() {
 		client := createFakeClient(pod)
 
 		sample := NewEnvoyFilterAllowPartialReferer(client)
-		changed, err := sample.apply(context.TODO(), client)
+		changed, err := sample.apply(context.TODO(), client, map[string]string{})
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(changed).To(Equal(controllerutil.OperationResultCreated))
 
@@ -178,7 +178,7 @@ var _ = Describe("RequiresProxyRestart", func() {
 		client := createFakeClient(pod)
 
 		sample := NewEnvoyFilterAllowPartialReferer(client)
-		changed, err := sample.apply(context.TODO(), client)
+		changed, err := sample.apply(context.TODO(), client, map[string]string{})
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(changed).To(Equal(controllerutil.OperationResultCreated))
 

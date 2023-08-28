@@ -7,7 +7,7 @@ spec:
   gateways:
   - kyma-system/kyma-gateway
   hosts:
-  - healthz.{{ .Values.global.domainName }}
+  - healthz.{{.DomainName}}
   http:
   - match:
     - uri:

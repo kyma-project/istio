@@ -40,9 +40,8 @@ metadata:
   generation: 2
   name: default
   namespace: kyma-system
-
 spec:
-...
+  ...
 status:
   description: 'Resources blocking deletion: DestinationRule:kyma-system/api-gateway-metrics;DestinationRule:kyma-system/eventing-nats;PeerAuthentication:kyma-system/eventing-controller-metrics;PeerAuthentication:kyma-system/eventing-publisher-proxy-metrics'
   state: Warning

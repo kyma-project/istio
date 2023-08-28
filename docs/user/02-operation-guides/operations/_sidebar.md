@@ -18,5 +18,5 @@
   * [Enable mTLS for custom metrics](/04-operation-guides/operations/obsv-04-enable-mtls-for-custom-metrics.md)
   * [Enable Kyma with Runtime Agent](/04-operation-guides/operations/ra-01-enable-kyma-with-runtime-agent.md)
   * [Enable automatic Istio sidecar proxy injection](/04-operation-guides/operations/smsh-01-istio-enable-sidecar-injection.md)
-  * [Kyma Istio Operator](./02-20-enable-sidecar-injection.md)
+  * [Kyma Istio Operator](./02-20-enable-sidecar-injection?id=enable-automatic-istio-sidecar-proxy-injection)
     * [Enable automatic Istio sidecar proxy injection](./02-20-enable-sidecar-injection.md)

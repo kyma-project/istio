@@ -13,18 +13,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-type Reconciliation interface {
-	Reconcile(ctx context.Context) described_errors.DescribedError
-}
-
-type Reconciler struct {
+type ResourcesReconciler struct {
 	client         client.Client
 	resources      []Resource
 	templateValues map[string]string
 }
 
-func NewReconciler(client client.Client, resources []Resource) Reconciler {
-	return Reconciler{
+func NewReconciler(client client.Client, resources []Resource) *ResourcesReconciler {
+	return &ResourcesReconciler{
 		client:    client,
 		resources: resources,
 	}
@@ -35,12 +31,12 @@ type Resource interface {
 	apply(ctx context.Context, k8sClient client.Client, templateValues map[string]string) (controllerutil.OperationResult, error)
 }
 
-func (r Reconciler) Reconcile(ctx context.Context) described_errors.DescribedError {
+func (r *ResourcesReconciler) Reconcile(ctx context.Context) described_errors.DescribedError {
 	ctrl.Log.Info("Reconciling istio resources")
 
-	err := r.initTemplateValues(ctx)
+	err := r.getTemplateValues(ctx)
 	if err != nil {
-		return described_errors.NewDescribedError(err, "Could not initialize template values for istio resources")
+		return described_errors.NewDescribedError(err, "Could not get template values for istio resources")
 	}
 
 	for _, resource := range r.resources {
@@ -58,6 +54,30 @@ func (r Reconciler) Reconcile(ctx context.Context) described_errors.DescribedErr
 	return nil
 }
 
+func (r *ResourcesReconciler) getTemplateValues(ctx context.Context) error {
+	if len(r.templateValues) == 0 {
+		r.templateValues = make(map[string]string)
+	}
+
+	_, found := r.templateValues["DomainName"]
+	if !found {
+		domainName := clusterconfig.LocalKymaDomain
+		flavour, err := clusterconfig.DiscoverClusterFlavour(ctx, r.client)
+		if err != nil {
+			return err
+		}
+		if flavour == clusterconfig.Gardener {
+			domainName, err = clusterconfig.GetDomainName(ctx, r.client)
+			if err != nil {
+				return err
+			}
+		}
+		r.templateValues["DomainName"] = domainName
+	}
+
+	return nil
+}
+
 func annotateWithDisclaimer(ctx context.Context, resource unstructured.Unstructured, k8sClient client.Client) error {
 	annotations := resource.GetAnnotations()
 	if annotations == nil {
@@ -68,25 +88,4 @@ func annotateWithDisclaimer(ctx context.Context, resource unstructured.Unstructu
 
 	err := k8sClient.Update(ctx, &resource)
 	return err
-}
-
-func (r Reconciler) initTemplateValues(ctx context.Context) error {
-	if len(r.templateValues) == 0 {
-		r.templateValues = make(map[string]string)
-	}
-
-	domainName := clusterconfig.LocalKymaDomain
-	flavour, err := clusterconfig.DiscoverClusterFlavour(ctx, r.client)
-	if err != nil {
-		return err
-	}
-	if flavour == clusterconfig.Gardener {
-		domainName, err = clusterconfig.GetDomainName(ctx, r.client)
-		if err != nil {
-			return err
-		}
-	}
-	r.templateValues["DomainName"] = domainName
-
-	return nil
 }

@@ -34,18 +34,6 @@ Feature: Istio sidecar injection works properly in target namespace
     And Application pod "test-app" in namespace "sidecar-enable" has Istio proxy "not present"
     And "Namespace" "sidecar-enable" is deleted
 
-  # We are not labeling kyma-system in context of Istio manager (should we?)
-  #Scenario: Kyma-system namespace contains pods with sidecar
-  #  Given Istio CR "istio-sample" is applied in namespace "kyma-system"
-  #  Then Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
-  #  And Application "test-app" is running in namespace "kyma-system"
-  #  And Application pod "test-app" in namespace "kyma-system" has Istio proxy "present"
-  #  And "Istio CR" "istio-sample" in namespace "kyma-system" is deleted
-  #  And "Istio CR" is not present on cluster
-  #  And Istio CRDs "should not" be present on cluster
-  #  And Application pod "test-app" in namespace "default" has Istio proxy "not present"
-  #  And "Deployment" "test-app" in namespace "kyma-system" is deleted
-
   Scenario: Kube-system namespace does not contain pods with sidecar
     Given Istio CR "istio-sample" is applied in namespace "kyma-system"
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"

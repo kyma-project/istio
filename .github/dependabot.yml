@@ -10,6 +10,8 @@ updates:
     commit-message:
       prefix: "gomod"
       include: "scope"
+    ignore:
+      - dependency-name: "sigs.k8s.io/controller-runtime"
     groups:
       k8s-dependencies:
         patterns:
@@ -36,6 +38,7 @@ updates:
       prefix: "gomod"
       include: "scope"
     ignore:
+      - dependency-name: "sigs.k8s.io/controller-runtime"
       - dependency-name: "*"
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
     groups:

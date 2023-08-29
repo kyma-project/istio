@@ -58,9 +58,16 @@ func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *I
 	merger := manifest.NewDefaultIstioMerger()
 
 	efReferer := istio_resources.NewEnvoyFilterAllowPartialReferer(mgr.GetClient())
-	gwKyma := istio_resources.NewGatewayKyma(mgr.GetClient())
-	vsHealthz := istio_resources.NewVirtualServiceHealthz(mgr.GetClient())
-	istioResources := []istio_resources.Resource{gwKyma, efReferer, vsHealthz}
+
+	istioResources := []istio_resources.Resource{efReferer}
+	istioResources = append(istioResources, istio_resources.NewGatewayKyma(mgr.GetClient()))
+	istioResources = append(istioResources, istio_resources.NewVirtualServiceHealthz(mgr.GetClient()))
+	istioResources = append(istioResources, istio_resources.NewPeerAuthenticationMtls(mgr.GetClient()))
+	istioResources = append(istioResources, istio_resources.NewConfigMapControlPlane(mgr.GetClient()))
+	istioResources = append(istioResources, istio_resources.NewConfigMapMesh(mgr.GetClient()))
+	istioResources = append(istioResources, istio_resources.NewConfigMapPerformance(mgr.GetClient()))
+	istioResources = append(istioResources, istio_resources.NewConfigMapService(mgr.GetClient()))
+	istioResources = append(istioResources, istio_resources.NewConfigMapWorkload(mgr.GetClient()))
 
 	return &IstioReconciler{
 		Client:                 mgr.GetClient(),

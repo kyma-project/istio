@@ -10,3 +10,4 @@ whitesource:
   exclude:
     - "**/tests/**"
     - "**/test/**"
+    - "**/*_test.go"

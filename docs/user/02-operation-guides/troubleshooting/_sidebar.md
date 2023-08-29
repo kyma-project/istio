@@ -7,7 +7,3 @@
     * [Issues with Istio sidecar injection](./03-30-istio-no-sidecar.md)
     * [Incompatible Istio sidecar version after Kyma Istio Operator's upgrade](./03-40-incompatible-istio-sidecar-version.md)
     * [Kyma Istio Operator unintentionally disabled](./03-50-recovering-from-unintentional-istio-module-removal.md)
-
-
-
-

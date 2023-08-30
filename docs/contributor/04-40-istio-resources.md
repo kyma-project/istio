@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Istio additional resources includes Kyma configuration of Istio and consists of:
+The additional Istio resources include the Kyma configuration of Istio. They consist of:
 
 - Istio monitoring configuration details providing Grafana dashboards specification
 - Istio Ingress Gateway configuring incoming traffic to Kyma

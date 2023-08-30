@@ -63,7 +63,7 @@ Feature: Installing and uninstalling Istio module
     And Destination rule "customer-destination-rule" in namespace "default" with host "testing-svc.default.svc.cluster.local" exists
     When "Istio CR" "istio-sample" in namespace "kyma-system" is deleted
     Then Istio CR "istio-sample" in namespace "kyma-system" has status "Warning"
-    And Istio CR "istio-sample" in namespace "kyma-system" has description "Resources blocking deletion: DestinationRule:default/customer-destination-rule"
+    And Istio CR "istio-sample" in namespace "kyma-system" has description "Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning"
     And Istio CRDs "should" be present on cluster
     And Namespace "istio-system" is "present"
     When "DestinationRule" "customer-destination-rule" in namespace "default" is deleted

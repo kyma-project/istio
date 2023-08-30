@@ -22,7 +22,7 @@ data:
           }
         ]
       },
-      "description": "Istio Workload Dashboard version 1.17.1",
+      "description": "Istio Workload Dashboard",
       "editable": false,
       "gnetId": 7630,
       "graphTooltip": 0,

@@ -22,7 +22,7 @@ data:
           }
         ]
       },
-      "description": "Istio Mesh Dashboard version 1.17.1",
+      "description": "Istio Mesh Dashboard",
       "editable": false,
       "gnetId": 7639,
       "graphTooltip": 0,

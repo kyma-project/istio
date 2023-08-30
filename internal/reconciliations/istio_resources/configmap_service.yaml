@@ -22,7 +22,7 @@ data:
           }
         ]
       },
-      "description": "Istio Service Dashboard version 1.17.1",
+      "description": "Istio Service Dashboard",
       "editable": false,
       "gnetId": 7636,
       "graphTooltip": 0,

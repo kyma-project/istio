@@ -3,6 +3,7 @@ package steps
 import (
 	"context"
 	"fmt"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"strings"
@@ -14,7 +15,6 @@ import (
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
-	"istio.io/client-go/pkg/apis/networking/v1beta1"
 	networkingv1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
 	securityv1beta1 "istio.io/client-go/pkg/apis/security/v1beta1"
 	v1 "k8s.io/api/apps/v1"
@@ -241,7 +241,7 @@ func ResourceInNamespaceIsDeleted(ctx context.Context, kind, name, namespace str
 		})
 	case DestinationRule.String():
 		return retry.Do(func() error {
-			var dr v1beta1.DestinationRule
+			var dr networkingv1beta1.DestinationRule
 			err := k8sClient.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, &dr)
 			if err != nil {
 				return err
@@ -283,7 +283,7 @@ func ResourceNotPresent(ctx context.Context, kind string) error {
 			}
 
 		case DestinationRule.String():
-			var drList v1beta1.DestinationRuleList
+			var drList networkingv1beta1.DestinationRuleList
 			err := k8sClient.List(context.TODO(), &drList)
 			if err != nil {
 				return err

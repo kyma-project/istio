@@ -15,10 +15,6 @@ spec:
     tls:
       mode: SIMPLE
       credentialName: kyma-gateway-certs
-      cipherSuites:
-      - ECDHE-RSA-CHACHA20-POLY1305
-      - ECDHE-RSA-AES256-GCM-SHA384
-      - ECDHE-RSA-AES128-GCM-SHA256
     hosts:
       - "*.{{.DomainName}}"
   - port:

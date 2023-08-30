@@ -4,7 +4,8 @@
 
 The additional Istio resources include the Kyma configuration of Istio. They consist of:
 
-- Istio monitoring configuration details providing Grafana dashboards specification
+
+- Configuration details for Istio monitoring containing specifications for Grafana dashboards
 - Istio Ingress Gateway configuring incoming traffic to Kyma
 - Mutual TLS (mTLS) configuration enabling mTLS cluster-wide in the STRICT mode
 - Istio [VirtualService](https://istio.io/docs/reference/config/networking/virtual-service/) informing whether Istio is up and running

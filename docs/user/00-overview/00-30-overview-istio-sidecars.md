@@ -1,4 +1,4 @@
-# Purpose and benefits of Istio side
+# Purpose and benefits of Istio sidecars
 
 ## Purpose of Istio sidecars
 

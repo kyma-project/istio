@@ -6,7 +6,6 @@
   * [Observability](/01-overview/observability/README.md)
   * [Serverless](/01-overview/serverless/README.md)
   * [Service Management](/01-overview/service-management/README.md)
-  * [Telemetry](/01-overview/telemetry/README.md)
   * [User Interfaces](/01-overview/ui/README.md)
   * [Kyma Istio Operator](./README.md)
     * [Istio Controller](./00-10-overview-istio-controller.md)

@@ -13,7 +13,7 @@
 - [kubectl](https://kubernetes.io/docs/tasks/tools/)
 - [kubebuilder](https://book.kubebuilder.io/)
 - [Docker](https://www.docker.com)
-- [Kyma CLI](https://kyma-project.io/docs/kyma/latest/04-operation-guides/operations/01-install-kyma-CLI)
+- [Kyma CLI](https://kyma-project.io/#/04-operation-guides/operations/01-install-kyma-CLI)
 
 ## Install Kyma Istio Operator manually
 

@@ -83,7 +83,7 @@ The execution of the reconciliation must be fast, and we must avoid many blockin
 
 #### Interval
 
-Since the Isito module deals with security-related topics, we want to perform the reconciliation as often as possible.
+Since Kyma Istio Operator deals with security-related topics, we want to perform the reconciliation as often as possible.
 Not only do we want to reconcile when [Istio CR](../contributor/04-20-xff-proposal.md) changes, but also to verify regularly if resources remain unchanged and are in the expected state.  
 The reconciliation frequency of a manager is determined by the [SyncPeriod](https://pkg.go.dev/sigs.k8s.io/controller-runtime/pkg/manager#Options). By default, it is set to 10 hours.
 To match the desired reconciliation interval, use one of the following options:

@@ -50,7 +50,7 @@ Kyma Istio Operator is a component of the Kyma runtime that handles the manageme
    default   Ready
    ```
 
-For more installation options, visit [Install the Istio module](/docs/contributor/01-00-installation.md).
+For more installation options, visit [the installation guide](/docs/contributor/01-00-installation.md).
 
 ## Useful links
 

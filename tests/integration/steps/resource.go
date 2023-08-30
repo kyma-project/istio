@@ -4,19 +4,23 @@ import (
 	"context"
 	"fmt"
 
+	"strings"
+
 	"github.com/avast/retry-go"
 	"github.com/cucumber/godog"
 	istioCR "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/controllers"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
+	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	"istio.io/client-go/pkg/apis/networking/v1beta1"
+	networkingv1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
+	securityv1beta1 "istio.io/client-go/pkg/apis/security/v1beta1"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
 )
 
 type godogResourceMapping int
@@ -31,6 +35,16 @@ func (k godogResourceMapping) String() string {
 		return "Istio CR"
 	case DestinationRule:
 		return "DestinationRule"
+	case Gateway:
+		return "Gateway"
+	case EnvoyFilter:
+		return "EnvoyFilter"
+	case PeerAuthentication:
+		return "PeerAuthentication"
+	case VirtualService:
+		return "VirtualService"
+	case ConfigMap:
+		return "ConfigMap"
 	}
 	panic(fmt.Errorf("%#v has unimplemented String() method", k))
 }
@@ -40,10 +54,14 @@ const (
 	Deployment
 	IstioCR
 	DestinationRule
+	Gateway
+	EnvoyFilter
+	PeerAuthentication
+	VirtualService
+	ConfigMap
 )
 
 func ResourceIsReady(ctx context.Context, kind, name, namespace string) error {
-
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
@@ -66,10 +84,6 @@ func ResourceIsReady(ctx context.Context, kind, name, namespace string) error {
 			return err
 		}
 
-		if err != nil {
-			return err
-		}
-
 		switch kind {
 		case Deployment.String():
 			if object.(*v1.Deployment).Status.Replicas != object.(*v1.Deployment).Status.ReadyReplicas {
@@ -83,6 +97,39 @@ func ResourceIsReady(ctx context.Context, kind, name, namespace string) error {
 			}
 		default:
 			return godog.ErrUndefined
+		}
+
+		return nil
+	}, testcontext.GetRetryOpts()...)
+}
+
+func ResourceIsApplied(ctx context.Context, kind, name, namespace string) error {
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	return retry.Do(func() error {
+		var object client.Object
+
+		switch kind {
+		case Gateway.String():
+			object = &networkingv1alpha3.Gateway{}
+		case EnvoyFilter.String():
+			object = &networkingv1alpha3.EnvoyFilter{}
+		case PeerAuthentication.String():
+			object = &securityv1beta1.PeerAuthentication{}
+		case VirtualService.String():
+			object = &networkingv1beta1.VirtualService{}
+		case ConfigMap.String():
+			object = &corev1.ConfigMap{}
+		default:
+			return godog.ErrUndefined
+		}
+
+		err := k8sClient.Get(context.TODO(), client.ObjectKey{Namespace: namespace, Name: name}, object)
+		if err != nil {
+			return err
 		}
 
 		return nil
@@ -210,6 +257,7 @@ func ResourceNotPresent(ctx context.Context, kind string) error {
 		return nil
 	}, testcontext.GetRetryOpts()...)
 }
+
 func IstioResourceContainerHasRequiredVersion(ctx context.Context, containerName, kind, resourceName, namespace string) error {
 	requiredVersion := strings.Join([]string{controllers.IstioVersion, controllers.IstioImageBase}, "-")
 

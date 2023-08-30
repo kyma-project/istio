@@ -87,6 +87,29 @@ var _ = Describe("Reconcilation", func() {
 		Expect(listErr).To(Not(HaveOccurred()))
 		Expect(s.Items).To(HaveLen(1))
 	})
+
+	It("should succeed creating config maps for dashboards", func() {
+		client := createFakeClient()
+
+		resources := []Resource{}
+		resources = append(resources, NewConfigMapControlPlane(client))
+		resources = append(resources, NewConfigMapMesh(client))
+		resources = append(resources, NewConfigMapPerformance(client))
+		resources = append(resources, NewConfigMapService(client))
+		resources = append(resources, NewConfigMapWorkload(client))
+		reconciler := NewReconciler(client, resources)
+
+		//when
+		err := reconciler.Reconcile(context.TODO())
+
+		//then
+		Expect(err).To(Not(HaveOccurred()))
+
+		var s corev1.ConfigMapList
+		listErr := client.List(context.TODO(), &s)
+		Expect(listErr).To(Not(HaveOccurred()))
+		Expect(s.Items).To(HaveLen(5))
+	})
 })
 
 func createFakeClient(objects ...client.Object) client.Client {

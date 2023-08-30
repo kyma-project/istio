@@ -16,12 +16,10 @@ import (
 )
 
 var _ = Describe("Reconcilation", func() {
-	It("should create resource and return no error", func() {
-
+	It("should succeed creating envoy filter referer", func() {
 		client := createFakeClient()
 
 		sample := NewEnvoyFilterAllowPartialReferer(client)
-
 		reconciler := NewReconciler(client, []Resource{sample})
 
 		//when
@@ -31,6 +29,60 @@ var _ = Describe("Reconcilation", func() {
 		Expect(err).To(Not(HaveOccurred()))
 
 		var s networkingv1alpha3.EnvoyFilterList
+		listErr := client.List(context.TODO(), &s)
+		Expect(listErr).To(Not(HaveOccurred()))
+		Expect(s.Items).To(HaveLen(1))
+	})
+
+	It("should succeed creating gateway kyna", func() {
+		client := createFakeClient()
+
+		sample := NewGatewayKyma(client)
+		reconciler := NewReconciler(client, []Resource{sample})
+
+		//when
+		err := reconciler.Reconcile(context.TODO())
+
+		//then
+		Expect(err).To(Not(HaveOccurred()))
+
+		var s networkingv1alpha3.GatewayList
+		listErr := client.List(context.TODO(), &s)
+		Expect(listErr).To(Not(HaveOccurred()))
+		Expect(s.Items).To(HaveLen(1))
+	})
+
+	It("should succeed creating virtual service healthz", func() {
+		client := createFakeClient()
+
+		sample := NewVirtualServiceHealthz(client)
+		reconciler := NewReconciler(client, []Resource{sample})
+
+		//when
+		err := reconciler.Reconcile(context.TODO())
+
+		//then
+		Expect(err).To(Not(HaveOccurred()))
+
+		var s networkingv1beta1.VirtualServiceList
+		listErr := client.List(context.TODO(), &s)
+		Expect(listErr).To(Not(HaveOccurred()))
+		Expect(s.Items).To(HaveLen(1))
+	})
+
+	It("should succeed creating peer authentication mtls", func() {
+		client := createFakeClient()
+
+		sample := NewPeerAuthenticationMtls(client)
+		reconciler := NewReconciler(client, []Resource{sample})
+
+		//when
+		err := reconciler.Reconcile(context.TODO())
+
+		//then
+		Expect(err).To(Not(HaveOccurred()))
+
+		var s securityv1beta1.PeerAuthenticationList
 		listErr := client.List(context.TODO(), &s)
 		Expect(listErr).To(Not(HaveOccurred()))
 		Expect(s.Items).To(HaveLen(1))

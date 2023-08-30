@@ -12,7 +12,7 @@ import (
 )
 
 //go:embed peer_authentication_mtls.yaml
-var manifest_pa_mts []byte
+var manifest_pa_mtls []byte
 
 type PeerAuthenticationMtls struct {
 	k8sClient client.Client
@@ -24,7 +24,7 @@ func NewPeerAuthenticationMtls(k8sClient client.Client) PeerAuthenticationMtls {
 
 func (PeerAuthenticationMtls) apply(ctx context.Context, k8sClient client.Client, _ map[string]string) (controllerutil.OperationResult, error) {
 	var resource unstructured.Unstructured
-	err := yaml.Unmarshal(manifest_pa_mts, &resource)
+	err := yaml.Unmarshal(manifest_pa_mtls, &resource)
 	if err != nil {
 		return controllerutil.OperationResultNone, err
 	}

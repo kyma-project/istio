@@ -1,0 +1,113 @@
+package istio_resources
+
+import (
+	"bytes"
+	"context"
+	"text/template"
+
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	networkingv1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/yaml"
+)
+
+var _ = Describe("Apply", func() {
+	It("should return created if no resource was present", func() {
+		//given
+		client := createFakeClient()
+		sample := NewVirtualServiceHealthz(client)
+
+		templateValues := map[string]string{}
+		templateValues["DomainName"] = "example.com"
+
+		//when
+		changed, err := sample.apply(context.TODO(), client, templateValues)
+
+		//then
+		Expect(err).To(Not(HaveOccurred()))
+		Expect(changed).To(Equal(controllerutil.OperationResultCreated))
+
+		var s networkingv1beta1.VirtualServiceList
+		listErr := client.List(context.TODO(), &s)
+		Expect(listErr).To(Not(HaveOccurred()))
+		Expect(s.Items).To(HaveLen(1))
+
+		Expect(s.Items[0].Annotations).To(Not(BeNil()))
+		Expect(s.Items[0].Annotations[istio.DisclaimerKey]).To(Not(BeNil()))
+	})
+
+	It("should return not changed if no change was applied", func() {
+		//given
+		resourceTemplate, err := template.New("tmpl").Option("missingkey=error").Parse(string(manifest_vs_healthz))
+		Expect(err).To(Not(HaveOccurred()))
+
+		templateValues := map[string]string{}
+		templateValues["DomainName"] = "example.com"
+
+		var resourceBuffer bytes.Buffer
+		err = resourceTemplate.Execute(&resourceBuffer, templateValues)
+		Expect(err).To(Not(HaveOccurred()))
+
+		var p networkingv1beta1.VirtualService
+		err = yaml.Unmarshal(resourceBuffer.Bytes(), &p)
+		Expect(err).To(Not(HaveOccurred()))
+
+		client := createFakeClient(&p)
+
+		sample := NewVirtualServiceHealthz(client)
+
+		//when
+		changed, err := sample.apply(context.TODO(), client, templateValues)
+
+		//then
+		Expect(err).To(Not(HaveOccurred()))
+		Expect(changed).To(Equal(controllerutil.OperationResultNone))
+
+		var s networkingv1beta1.VirtualServiceList
+		listErr := client.List(context.TODO(), &s)
+		Expect(listErr).To(Not(HaveOccurred()))
+		Expect(s.Items).To(HaveLen(1))
+
+		Expect(s.Items[0].Annotations).To(Not(BeNil()))
+		Expect(s.Items[0].Annotations[istio.DisclaimerKey]).To(Not(BeNil()))
+	})
+
+	It("should return updated if change was applied", func() {
+		//given
+		resourceTemplate, err := template.New("tmpl").Option("missingkey=error").Parse(string(manifest_vs_healthz))
+		Expect(err).To(Not(HaveOccurred()))
+
+		templateValues := map[string]string{}
+		templateValues["DomainName"] = "example.com"
+
+		var resourceBuffer bytes.Buffer
+		err = resourceTemplate.Execute(&resourceBuffer, templateValues)
+		Expect(err).To(Not(HaveOccurred()))
+
+		var p networkingv1beta1.VirtualService
+		err = yaml.Unmarshal(resourceBuffer.Bytes(), &p)
+		Expect(err).To(Not(HaveOccurred()))
+
+		p.Spec.Hosts = append(p.Spec.Hosts, "new-host.com")
+		client := createFakeClient(&p)
+
+		sample := NewVirtualServiceHealthz(client)
+
+		//when
+		changed, err := sample.apply(context.TODO(), client, templateValues)
+
+		//then
+		Expect(err).To(Not(HaveOccurred()))
+		Expect(changed).To(Equal(controllerutil.OperationResultUpdated))
+
+		var s networkingv1beta1.VirtualServiceList
+		listErr := client.List(context.TODO(), &s)
+		Expect(listErr).To(Not(HaveOccurred()))
+		Expect(s.Items).To(HaveLen(1))
+
+		Expect(s.Items[0].Annotations).To(Not(BeNil()))
+		Expect(s.Items[0].Annotations[istio.DisclaimerKey]).To(Not(BeNil()))
+	})
+})

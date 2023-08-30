@@ -54,9 +54,9 @@ For more installation options, visit [Install the Istio module](/docs/contributo
 
 ## Useful links
 
-To learn how to use Kyma Istio Operator, read the documentation in the [user](/docs/user) directory.
+To learn how to use Kyma Istio Operator, read the documentation in the [`user`](/docs/user) directory.
 
-If you are interested in the detailed documentation of the Kyma Istio Operator's design and technical aspects, check the [contributor](/docs/contributor/) directory.
+If you are interested in the detailed documentation of the Kyma Istio Operator's design and technical aspects, check the [`contributor`](/docs/contributor/) directory.
 
 ## Contributing
 

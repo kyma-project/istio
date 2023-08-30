@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/kyma-project/istio/operator/internal/filter"
+	"github.com/pkg/errors"
 	"time"
 
 	"github.com/kyma-project/istio/operator/internal/described_errors"
@@ -137,10 +138,13 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	// We do not want to safeguard the Istio sidecar reconciliation by checking whether Istio has to be installed. The
 	// reason for this is that we want to guarantee the restart of the proxies during the next reconciliation even if an
 	// error occurs in the reconciliation of the Istio upgrade after the Istio upgrade.
-	proxyErr := r.proxySidecars.Reconcile(ctx, istioCR)
+	warningHappened, proxyErr := r.proxySidecars.Reconcile(ctx, istioCR)
 	if proxyErr != nil {
 		describedErr := described_errors.NewDescribedError(proxyErr, "Error occurred during reconciliation of Istio Sidecars")
 		return r.requeueReconciliation(ctx, istioCR, describedErr)
+	} else if warningHappened {
+		warning := described_errors.NewDescribedError(errors.New("Istio controller could not restart one or more istio-injected pods."), "Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning").SetWarning()
+		return r.requeueReconciliation(ctx, istioCR, warning)
 	}
 
 	ingressGatewayErr := r.ingressGateway.Reconcile(ctx)

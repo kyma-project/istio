@@ -92,7 +92,7 @@ func (e EnvoyFilterEvaluator) RequiresIngressGatewayRestart(p v1.Pod) bool {
 }
 
 // Checks whether the pod CreationTimestamp is older than EnvoyFilterAnnotation
-// If EnvoyFilterAnnotation returns false
+// If EnvoyFilterAnnotation doesn't exist returns false
 func podIsOlder(pod v1.Pod, envoyTime time.Time) bool {
 	return !pod.CreationTimestamp.IsZero() && !envoyTime.IsZero() && pod.CreationTimestamp.Compare(envoyTime) <= 0
 }

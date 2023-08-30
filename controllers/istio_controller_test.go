@@ -573,6 +573,45 @@ var _ = Describe("Istio Controller", func() {
 			Expect(istioCR.Status.State).Should(Equal(operatorv1alpha1.Error))
 			Expect(istioCR.Status.Description).To(ContainSubstring("Unable to list Istio CRs"))
 		})
+
+		It("Should set a warning if warning happened during sidecars reconciliation", func() {
+			// given
+			istioCR := &operatorv1alpha1.Istio{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:              istioCrName,
+					Namespace:         testNamespace,
+					UID:               "1",
+					CreationTimestamp: metav1.Unix(1494505756, 0),
+					Finalizers: []string{
+						"istios.operator.kyma-project.io/istio-installation",
+					},
+				},
+			}
+
+			fakeClient := createFakeClient(istioCR)
+			sut := &IstioReconciler{
+				Client:                 fakeClient,
+				Scheme:                 getTestScheme(),
+				istioInstallation:      &istioInstallationReconciliationMock{},
+				proxySidecars:          &proxySidecarsReconciliationMock{warning: true},
+				istioResources:         &istioResourcesReconciliationMock{},
+				ingressGateway:         &ingressGatewayReconciliationMock{},
+				log:                    logr.Discard(),
+				statusHandler:          newStatusHandler(fakeClient),
+				reconciliationInterval: testReconciliationInterval,
+			}
+
+			// when
+			result, err := sut.Reconcile(context.Background(), reconcile.Request{NamespacedName: types.NamespacedName{Namespace: testNamespace, Name: istioCrName}})
+
+			// then
+			Expect(err).To(HaveOccurred())
+			Expect(result.Requeue).To(BeFalse())
+
+			Expect(fakeClient.Get(context.TODO(), client.ObjectKeyFromObject(istioCR), istioCR)).Should(Succeed())
+			Expect(istioCR.Status.State).Should(Equal(operatorv1alpha1.Warning))
+			Expect(istioCR.Status.Description).To(ContainSubstring("Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning: Istio controller could not restart one or more istio-injected pods."))
+		})
 	})
 })
 
@@ -619,14 +658,15 @@ func (i *istioInstallationReconciliationMock) Reconcile(_ context.Context, istio
 }
 
 type proxySidecarsReconciliationMock struct {
-	err error
+	warning bool
+	err     error
 }
 
 func (p *proxySidecarsReconciliationMock) AddReconcilePredicate(_ filter.SidecarProxyPredicate) {
 }
 
-func (p *proxySidecarsReconciliationMock) Reconcile(_ context.Context, _ operatorv1alpha1.Istio) error {
-	return p.err
+func (p *proxySidecarsReconciliationMock) Reconcile(_ context.Context, _ operatorv1alpha1.Istio) (bool, error) {
+	return p.warning, p.err
 }
 
 type StatusMock struct {

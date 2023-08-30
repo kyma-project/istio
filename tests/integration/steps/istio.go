@@ -59,7 +59,7 @@ func IstioCRDsBePresentOnCluster(ctx context.Context, should string) error {
 	}, testcontext.GetRetryOpts()...)
 }
 
-func EnableIstioInjection(ctx context.Context, namespace string) error {
+func SetIstioInjection(ctx context.Context, enabled, namespace string) error {
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
@@ -71,7 +71,7 @@ func EnableIstioInjection(ctx context.Context, namespace string) error {
 		if err != nil {
 			return err
 		}
-		ns.Labels["istio-injection"] = "enabled"
+		ns.Labels["istio-injection"] = enabled
 		return k8sClient.Update(context.TODO(), &ns)
 	}, testcontext.GetRetryOpts()...)
 }

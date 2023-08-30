@@ -22,7 +22,7 @@ Feature: Istio resources configuration
   Scenario: Ingress Gateway and proxy sidecar allow Referer Header with fragment identifier (# character)
     Given Istio CR "istio-sample" is applied in namespace "kyma-system"
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
-    And Istio injection is enabled in namespace "default"
+    And Istio injection is "enabled" in namespace "default"
     And Httpbin application "httpbin" is running in namespace "default"
     And Istio gateway "test-gateway" is configured in namespace "default"
     And "Deployment" "httpbin" in namespace "default" is ready

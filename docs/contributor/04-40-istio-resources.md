@@ -12,4 +12,5 @@ The additional Istio resources include the Kyma configuration of Istio. They con
 
 ## Prerequisites
 
-Installation of Istio resources requires Kyma prerequisties, namely [`cluster essentials`](../cluster-essentials) and [`certificates`](../certificates), to be installed first.
+Before installing Istio resources, install the following prerequisites for Kyma: [`cluster essentials`](../cluster-essentials) and [`certificates`](../certificates).
+

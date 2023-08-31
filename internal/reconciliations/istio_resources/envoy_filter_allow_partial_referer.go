@@ -67,7 +67,7 @@ func (e EnvoyFilterAllowPartialReferer) apply(ctx context.Context, k8sClient cli
 		return controllerutil.OperationResultNone, err
 	}
 
-	var efaFound, daFound bool
+	var efaFound, daFound bool = false, false
 	annotations := envoyFilter.GetAnnotations()
 	if annotations != nil {
 		_, efaFound = annotations[EnvoyFilterAnnotation]

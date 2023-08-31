@@ -55,5 +55,5 @@ func (ConfigMapMesh) apply(ctx context.Context, k8sClient client.Client, owner m
 }
 
 func (ConfigMapMesh) Name() string {
-	return "config map mesh"
+	return "ConfigMap/istio-mesh-grafana-dashboard"
 }

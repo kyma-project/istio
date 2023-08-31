@@ -55,5 +55,5 @@ func (ConfigMapPerformance) apply(ctx context.Context, k8sClient client.Client, 
 }
 
 func (ConfigMapPerformance) Name() string {
-	return "config map performance"
+	return "ConfigMap/istio-performance-grafana-dashboard"
 }

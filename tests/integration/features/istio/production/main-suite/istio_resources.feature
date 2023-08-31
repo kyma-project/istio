@@ -9,15 +9,15 @@ Feature: Istio resources configuration
   Scenario: Additional Istio resources are applied
     Given Istio CR "istio-sample" is applied in namespace "kyma-system"
     When Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
-    Then Gateway "kyma-gateway" in namespace "kyma-system" is applied
-    And EnvoyFilter "kyma-referer" in namespace "istio-system" is applied
-    And PeerAuthentication "defaul" in namespace "istio-system" is applied
-    And VirtualService "istio-healthz" in namespace "istio-system" is applied
-    And ConfigMap "istio-control-plane-grafana-dashboard" in namespace "kyma-system" is applied
-    And ConfigMap "istio-mesh-grafana-dashboard" in namespace "kyma-system" is applied
-    And ConfigMap "istio-performance-grafana-dashboard" in namespace "kyma-system" is applied
-    And ConfigMap "istio-service-grafana-dashboard" in namespace "kyma-system" is applied
-    And ConfigMap "istio-workload-grafana-dashboard" in namespace "kyma-system" is applied
+    Then "Gateway" "kyma-gateway" in namespace "kyma-system" is applied
+    And "EnvoyFilter" "kyma-referer" in namespace "istio-system" is applied
+    And "PeerAuthentication" "defaul" in namespace "istio-system" is applied
+    And "VirtualService" "istio-healthz" in namespace "istio-system" is applied
+    And "ConfigMap" "istio-control-plane-grafana-dashboard" in namespace "kyma-system" is applied
+    And "ConfigMap" "istio-mesh-grafana-dashboard" in namespace "kyma-system" is applied
+    And "ConfigMap" "istio-performance-grafana-dashboard" in namespace "kyma-system" is applied
+    And "ConfigMap" "istio-service-grafana-dashboard" in namespace "kyma-system" is applied
+    And "ConfigMap" "istio-workload-grafana-dashboard" in namespace "kyma-system" is applied
 
   Scenario: Ingress Gateway and proxy sidecar allow Referer Header with fragment identifier (# character)
     Given Istio CR "istio-sample" is applied in namespace "kyma-system"

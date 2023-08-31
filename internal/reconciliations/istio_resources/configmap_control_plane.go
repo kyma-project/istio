@@ -55,5 +55,5 @@ func (ConfigMapControlPlane) apply(ctx context.Context, k8sClient client.Client,
 }
 
 func (ConfigMapControlPlane) Name() string {
-	return "config map control plane"
+	return "ConfigMap/istio-control-plane-grafana-dashboard"
 }

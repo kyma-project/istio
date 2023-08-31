@@ -7,7 +7,7 @@
   * [Serverless](/01-overview/serverless/README.md)
   * [Service Management](/01-overview/service-management/README.md)
   * [User Interfaces](/01-overview/ui/README.md)
-  * [Kyma Istio Operator](./README.md)
+  * [Istio](./README.md)
     * [Istio Controller](./00-10-overview-istio-controller.md)
     * [Istio Service Mesh](./00-20-overview-service-mesh.md)
     * [Istio Sidecars](./00-30-overview-istio-sidecars.md)

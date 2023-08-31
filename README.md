@@ -1,4 +1,4 @@
-# Kyma Istio Operator
+# Istio
 
 ## What is Istio
 

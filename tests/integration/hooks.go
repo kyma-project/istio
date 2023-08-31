@@ -95,7 +95,6 @@ func forceIstioCrRemoval(ctx context.Context, istio *v1alpha1.Istio) error {
 	}
 
 	return retry.Do(func() error {
-
 		err = c.Get(ctx, client.ObjectKey{Namespace: istio.GetNamespace(), Name: istio.GetName()}, istio)
 
 		if k8serrors.IsNotFound(err) {

@@ -40,7 +40,7 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^Virtual service "([^"]*)" exposing service "([^"]*)" by gateway "([^"]*)" is configured in namespace "([^"]*)"$`, steps.CreateVirtualService)
 	ctx.Step(`^Request with header X-Forwarded-For with value "([^"]*)" sent to httpbin should return X-Envoy-External-Address with value "([^"]*)"$`, steps.ValidateHeader)
 	ctx.Step(`^Request with header "([^"]*)" with value "([^"]*)" sent to httpbin should return "([^"]*)" with value "([^"]*)"$`, steps.ValidateHeader)
-	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" is present`, steps.ResourceIsApplied)
+	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" is present`, steps.ResourceIsPresent)
 }
 
 func upgradeInitScenario(ctx *godog.ScenarioContext) {

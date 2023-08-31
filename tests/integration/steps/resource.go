@@ -107,7 +107,7 @@ func ResourceIsReady(ctx context.Context, kind, name, namespace string) error {
 	}, testcontext.GetRetryOpts()...)
 }
 
-func ResourceIsApplied(ctx context.Context, kind, name, namespace string) error {
+func ResourceIsPresent(ctx context.Context, kind, name, namespace string) error {
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err

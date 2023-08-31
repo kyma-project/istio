@@ -9,9 +9,6 @@ import (
 	"github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	"github.com/pkg/errors"
-	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
-	networkingv1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
-	securityv1beta1 "istio.io/client-go/pkg/apis/security/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -40,87 +37,6 @@ var testObjectsTearDown = func(ctx context.Context, sc *godog.Scenario, _ error)
 			t.Logf("Deleted %s", o.GetName())
 		}
 	}
-	return ctx, nil
-}
-
-var additionalResourcesTearDown = func(ctx context.Context, sc *godog.Scenario, _ error) (context.Context, error) {
-	t, err := testcontext.GetTestingFromContext(ctx)
-	if err != nil {
-		return ctx, err
-	}
-
-	objects := []client.Object{}
-
-	objects = append(objects, &networkingv1alpha3.Gateway{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "kyma-gateway",
-			Namespace: "kyma-system",
-		},
-	})
-	objects = append(objects, &networkingv1alpha3.EnvoyFilter{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "kyma-referer",
-			Namespace: "istio-system",
-		},
-	})
-	objects = append(objects, &securityv1beta1.PeerAuthentication{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "default",
-			Namespace: "istio-system",
-		},
-	})
-	objects = append(objects, &networkingv1beta1.VirtualService{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "istio-healthz",
-			Namespace: "istio-system",
-		},
-	})
-	objects = append(objects, &corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "istio-control-plane-grafana-dashboard",
-			Namespace: "kyma-system",
-		},
-	})
-	objects = append(objects, &corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "istio-mesh-grafana-dashboard",
-			Namespace: "kyma-system",
-		},
-	})
-	objects = append(objects, &corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "istio-performance-grafana-dashboard",
-			Namespace: "kyma-system",
-		},
-	})
-	objects = append(objects, &corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "istio-service-grafana-dashboard",
-			Namespace: "kyma-system",
-		},
-	})
-	objects = append(objects, &corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "istio-workload-grafana-dashboard",
-			Namespace: "kyma-system",
-		},
-	})
-
-	for _, o := range objects {
-		t.Logf("Teardown %s", o.GetName())
-
-		err = retry.Do(func() error {
-			return removeObjectFromCluster(ctx, o)
-		}, testcontext.GetRetryOpts()...)
-
-		if err != nil {
-			t.Logf("Failed to delete %s", o.GetName())
-			return ctx, err
-		}
-
-		t.Logf("Deleted %s", o.GetName())
-	}
-
 	return ctx, nil
 }
 

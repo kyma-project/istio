@@ -9,7 +9,6 @@ func initScenario(ctx *godog.ScenarioContext) {
 
 	ctx.After(verifyIfControllerHasBeenRestarted)
 	ctx.After(testObjectsTearDown)
-	//ctx.After(additionalResourcesTearDown)
 	ctx.After(istioCrTearDown)
 
 	t := steps.TemplatedIstioCr{}
@@ -48,7 +47,6 @@ func upgradeInitScenario(ctx *godog.ScenarioContext) {
 
 	ctx.After(verifyIfControllerHasBeenRestarted)
 	ctx.After(testObjectsTearDown)
-	ctx.After(additionalResourcesTearDown)
 	ctx.After(istioCrTearDown)
 
 	t := steps.TemplatedIstioCr{}

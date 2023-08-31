@@ -55,5 +55,5 @@ func (ConfigMapService) apply(ctx context.Context, k8sClient client.Client, owne
 }
 
 func (ConfigMapService) Name() string {
-	return "config map service"
+	return "ConfigMap/istio-service-grafana-dashboard"
 }

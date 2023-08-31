@@ -7,7 +7,3 @@
     * [Subscription](/05-technical-reference/00-custom-resources/evnt-01-subscription.md)
     * [EventingBackend](/05-technical-reference/00-custom-resources/evnt-02-eventingbackend.md)
     * [Istio](./01-30-istio-custom-resource.md)
-    * [Function](/05-technical-reference/00-custom-resources/svls-01-function.md)
-    * [LogPipeline](/05-technical-reference/00-custom-resources/telemetry-01-logpipeline.md)
-    * [LogParser](/05-technical-reference/00-custom-resources/telemetry-02-logparser.md)
-    * [TracePipeline](/05-technical-reference/00-custom-resources/telemetry-03-tracepipeline.md)

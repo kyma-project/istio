@@ -9,6 +9,7 @@ import (
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -49,7 +50,7 @@ func newEnvoyFilterEvaluator(ctx context.Context, k8sClient client.Client) (Envo
 	return EnvoyFilterEvaluator{envoyUpdateTime: updateTime}, nil
 }
 
-func (e EnvoyFilterAllowPartialReferer) apply(ctx context.Context, k8sClient client.Client, _ map[string]string) (controllerutil.OperationResult, error) {
+func (e EnvoyFilterAllowPartialReferer) apply(ctx context.Context, k8sClient client.Client, _ metav1.OwnerReference, _ map[string]string) (controllerutil.OperationResult, error) {
 	var envoyFilter unstructured.Unstructured
 	err := yaml.Unmarshal(manifest_ef_allow_partial_referer, &envoyFilter)
 	if err != nil {

@@ -5,6 +5,7 @@ import (
 	_ "embed"
 
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -22,7 +23,7 @@ func NewPeerAuthenticationMtls(k8sClient client.Client) PeerAuthenticationMtls {
 	return PeerAuthenticationMtls{k8sClient: k8sClient}
 }
 
-func (PeerAuthenticationMtls) apply(ctx context.Context, k8sClient client.Client, _ map[string]string) (controllerutil.OperationResult, error) {
+func (PeerAuthenticationMtls) apply(ctx context.Context, k8sClient client.Client, _ metav1.OwnerReference, _ map[string]string) (controllerutil.OperationResult, error) {
 	var resource unstructured.Unstructured
 	err := yaml.Unmarshal(manifest_pa_mtls, &resource)
 	if err != nil {

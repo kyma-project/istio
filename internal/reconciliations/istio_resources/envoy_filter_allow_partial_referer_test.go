@@ -15,12 +15,20 @@ import (
 )
 
 var _ = Describe("Apply", func() {
+	templateValues := map[string]string{}
+	owner := metav1.OwnerReference{
+		APIVersion: "operator.kyma-project.io/v1alpha2",
+		Kind:       "Istio",
+		Name:       "owner-name",
+		UID:        "owner-uid",
+	}
+
 	It("should return created and annotate with timestamp if no resource was present", func() {
 		client := createFakeClient()
 		sample := NewEnvoyFilterAllowPartialReferer(client)
 
 		//when
-		changed, err := sample.apply(context.TODO(), client, map[string]string{})
+		changed, err := sample.apply(context.TODO(), client, owner, templateValues)
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))
@@ -47,7 +55,7 @@ var _ = Describe("Apply", func() {
 		sample := NewEnvoyFilterAllowPartialReferer(client)
 
 		//when
-		changed, err := sample.apply(context.TODO(), client, map[string]string{})
+		changed, err := sample.apply(context.TODO(), client, owner, templateValues)
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))
@@ -75,7 +83,7 @@ var _ = Describe("Apply", func() {
 		sample := NewEnvoyFilterAllowPartialReferer(client)
 
 		//when
-		changed, err := sample.apply(context.TODO(), client, map[string]string{})
+		changed, err := sample.apply(context.TODO(), client, owner, templateValues)
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))
@@ -93,6 +101,14 @@ var _ = Describe("Apply", func() {
 })
 
 var _ = Describe("RequiresProxyRestart", func() {
+	templateValues := map[string]string{}
+	owner := metav1.OwnerReference{
+		APIVersion: "operator.kyma-project.io/v1alpha2",
+		Kind:       "Istio",
+		Name:       "owner-name",
+		UID:        "owner-uid",
+	}
+
 	It("should return true when pod was created before EnvoyFilter updated", func() {
 		//given
 		pod := createPod("test", "test", "Deployment", "owner")
@@ -105,7 +121,7 @@ var _ = Describe("RequiresProxyRestart", func() {
 		client := createFakeClient(pod, pod2)
 
 		sample := NewEnvoyFilterAllowPartialReferer(client)
-		changed, err := sample.apply(context.TODO(), client, map[string]string{})
+		changed, err := sample.apply(context.TODO(), client, owner, templateValues)
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(changed).To(Equal(controllerutil.OperationResultCreated))
 
@@ -130,7 +146,7 @@ var _ = Describe("RequiresProxyRestart", func() {
 		client := createFakeClient(pod)
 
 		sample := NewEnvoyFilterAllowPartialReferer(client)
-		changed, err := sample.apply(context.TODO(), client, map[string]string{})
+		changed, err := sample.apply(context.TODO(), client, owner, templateValues)
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(changed).To(Equal(controllerutil.OperationResultCreated))
 
@@ -145,6 +161,14 @@ var _ = Describe("RequiresProxyRestart", func() {
 })
 
 var _ = Describe("RequiresProxyRestart", func() {
+	templateValues := map[string]string{}
+	owner := metav1.OwnerReference{
+		APIVersion: "operator.kyma-project.io/v1alpha2",
+		Kind:       "Istio",
+		Name:       "owner-name",
+		UID:        "owner-uid",
+	}
+
 	It("should return false when pod was created after EnvoyFilter updated", func() {
 		//given
 		pod := createPod("test", "test", "Deployment", "owner")
@@ -155,7 +179,7 @@ var _ = Describe("RequiresProxyRestart", func() {
 		client := createFakeClient(pod)
 
 		sample := NewEnvoyFilterAllowPartialReferer(client)
-		changed, err := sample.apply(context.TODO(), client, map[string]string{})
+		changed, err := sample.apply(context.TODO(), client, owner, templateValues)
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(changed).To(Equal(controllerutil.OperationResultCreated))
 
@@ -178,7 +202,7 @@ var _ = Describe("RequiresProxyRestart", func() {
 		client := createFakeClient(pod)
 
 		sample := NewEnvoyFilterAllowPartialReferer(client)
-		changed, err := sample.apply(context.TODO(), client, map[string]string{})
+		changed, err := sample.apply(context.TODO(), client, owner, templateValues)
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(changed).To(Equal(controllerutil.OperationResultCreated))
 

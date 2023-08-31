@@ -139,7 +139,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, nil
 	}
 
-	resourcesErr := r.istioResources.Reconcile(ctx)
+	resourcesErr := r.istioResources.Reconcile(ctx, istioCR)
 	if resourcesErr != nil {
 		return r.requeueReconciliation(ctx, istioCR, resourcesErr)
 	}

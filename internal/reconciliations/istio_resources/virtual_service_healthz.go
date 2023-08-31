@@ -7,6 +7,7 @@ import (
 	"text/template"
 
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -24,7 +25,7 @@ func NewVirtualServiceHealthz(k8sClient client.Client) VirtualServiceHealthz {
 	return VirtualServiceHealthz{k8sClient: k8sClient}
 }
 
-func (VirtualServiceHealthz) apply(ctx context.Context, k8sClient client.Client, templateValues map[string]string) (controllerutil.OperationResult, error) {
+func (VirtualServiceHealthz) apply(ctx context.Context, k8sClient client.Client, _ metav1.OwnerReference, templateValues map[string]string) (controllerutil.OperationResult, error) {
 	resourceTemplate, err := template.New("tmpl").Option("missingkey=error").Parse(string(manifest_vs_healthz))
 	if err != nil {
 		return controllerutil.OperationResultNone, err

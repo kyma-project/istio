@@ -7,17 +7,27 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/yaml"
 )
 
 var _ = Describe("Apply", func() {
+	templateValues := map[string]string{}
+	owner := metav1.OwnerReference{
+		APIVersion: "operator.kyma-project.io/v1alpha2",
+		Kind:       "Istio",
+		Name:       "owner-name",
+		UID:        "owner-uid",
+	}
+
 	It("should return created if no resource was present", func() {
+		//given
 		client := createFakeClient()
 		sample := NewConfigMapService(client)
 
 		//when
-		changed, err := sample.apply(context.TODO(), client, map[string]string{})
+		changed, err := sample.apply(context.TODO(), client, owner, templateValues)
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))
@@ -43,7 +53,7 @@ var _ = Describe("Apply", func() {
 		sample := NewConfigMapService(client)
 
 		//when
-		changed, err := sample.apply(context.TODO(), client, map[string]string{})
+		changed, err := sample.apply(context.TODO(), client, owner, templateValues)
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))

@@ -9,21 +9,29 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	networkingv1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/yaml"
 )
 
 var _ = Describe("Apply", func() {
+	templateValues := map[string]string{}
+	templateValues["DomainName"] = "example.com"
+
+	owner := metav1.OwnerReference{
+		APIVersion: "operator.kyma-project.io/v1alpha2",
+		Kind:       "Istio",
+		Name:       "owner-name",
+		UID:        "owner-uid",
+	}
+
 	It("should return created if no resource was present", func() {
 		//given
 		client := createFakeClient()
 		sample := NewVirtualServiceHealthz(client)
 
-		templateValues := map[string]string{}
-		templateValues["DomainName"] = "example.com"
-
 		//when
-		changed, err := sample.apply(context.TODO(), client, templateValues)
+		changed, err := sample.apply(context.TODO(), client, owner, templateValues)
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))
@@ -43,9 +51,6 @@ var _ = Describe("Apply", func() {
 		resourceTemplate, err := template.New("tmpl").Option("missingkey=error").Parse(string(manifest_vs_healthz))
 		Expect(err).To(Not(HaveOccurred()))
 
-		templateValues := map[string]string{}
-		templateValues["DomainName"] = "example.com"
-
 		var resourceBuffer bytes.Buffer
 		err = resourceTemplate.Execute(&resourceBuffer, templateValues)
 		Expect(err).To(Not(HaveOccurred()))
@@ -55,11 +60,10 @@ var _ = Describe("Apply", func() {
 		Expect(err).To(Not(HaveOccurred()))
 
 		client := createFakeClient(&p)
-
 		sample := NewVirtualServiceHealthz(client)
 
 		//when
-		changed, err := sample.apply(context.TODO(), client, templateValues)
+		changed, err := sample.apply(context.TODO(), client, owner, templateValues)
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))
@@ -79,9 +83,6 @@ var _ = Describe("Apply", func() {
 		resourceTemplate, err := template.New("tmpl").Option("missingkey=error").Parse(string(manifest_vs_healthz))
 		Expect(err).To(Not(HaveOccurred()))
 
-		templateValues := map[string]string{}
-		templateValues["DomainName"] = "example.com"
-
 		var resourceBuffer bytes.Buffer
 		err = resourceTemplate.Execute(&resourceBuffer, templateValues)
 		Expect(err).To(Not(HaveOccurred()))
@@ -96,7 +97,7 @@ var _ = Describe("Apply", func() {
 		sample := NewVirtualServiceHealthz(client)
 
 		//when
-		changed, err := sample.apply(context.TODO(), client, templateValues)
+		changed, err := sample.apply(context.TODO(), client, owner, templateValues)
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))

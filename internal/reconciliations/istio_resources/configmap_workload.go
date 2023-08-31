@@ -5,6 +5,7 @@ import (
 	_ "embed"
 
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -22,7 +23,7 @@ func NewConfigMapWorkload(k8sClient client.Client) ConfigMapWorkload {
 	return ConfigMapWorkload{k8sClient: k8sClient}
 }
 
-func (ConfigMapWorkload) apply(ctx context.Context, k8sClient client.Client, _ map[string]string) (controllerutil.OperationResult, error) {
+func (ConfigMapWorkload) apply(ctx context.Context, k8sClient client.Client, owner metav1.OwnerReference, _ map[string]string) (controllerutil.OperationResult, error) {
 	var resource unstructured.Unstructured
 	err := yaml.Unmarshal(manifest_cm_workload, &resource)
 	if err != nil {
@@ -32,6 +33,7 @@ func (ConfigMapWorkload) apply(ctx context.Context, k8sClient client.Client, _ m
 	spec := resource.Object["spec"]
 	result, err := controllerutil.CreateOrUpdate(ctx, k8sClient, &resource, func() error {
 		resource.Object["spec"] = spec
+		resource.SetOwnerReferences([]metav1.OwnerReference{owner})
 		return nil
 	})
 	if err != nil {

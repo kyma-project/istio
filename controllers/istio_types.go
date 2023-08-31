@@ -7,6 +7,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio_resources"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/proxy"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
@@ -24,7 +25,7 @@ type IstioReconciler struct {
 	Scheme                 *runtime.Scheme
 	istioInstallation      istio.InstallationReconciliation
 	proxySidecars          proxy.SidecarsReconciliation
-	istioResources         Reconciliation
+	istioResources         istio_resources.ResourcesReconciliation
 	ingressGateway         Reconciliation
 	log                    logr.Logger
 	statusHandler          status

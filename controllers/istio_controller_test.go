@@ -590,11 +590,11 @@ func (i *ingressGatewayReconciliationMock) Reconcile(_ context.Context) describe
 type istioResourcesReconciliationMock struct {
 }
 
-func (i *istioResourcesReconciliationMock) AddReconcileResource(_ istio_resources.Resource) Reconciliation {
+func (i *istioResourcesReconciliationMock) AddReconcileResource(_ istio_resources.Resource) istio_resources.ResourcesReconciliation {
 	return i
 }
 
-func (i *istioResourcesReconciliationMock) Reconcile(_ context.Context) described_errors.DescribedError {
+func (i *istioResourcesReconciliationMock) Reconcile(_ context.Context, istioCR operatorv1alpha1.Istio) described_errors.DescribedError {
 	return nil
 }
 

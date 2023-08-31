@@ -54,5 +54,5 @@ func (PeerAuthenticationMtls) apply(ctx context.Context, k8sClient client.Client
 }
 
 func (PeerAuthenticationMtls) Name() string {
-	return "peer authentication mtls"
+	return "PeerAuthentication/default"
 }

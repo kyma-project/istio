@@ -4,14 +4,13 @@ Feature: Istio resources configuration
     Given "Istio CR" is not present on cluster
     And Evaluated cluster size is "Production"
     And Istio CRD is installed
-    And "Deployment" "istio-controller-manager" in namespace "kyma-system" is ready
 
   Scenario: Additional Istio resources are present
     Given Istio CR "istio-sample" is applied in namespace "kyma-system"
     When Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
     Then "Gateway" "kyma-gateway" in namespace "kyma-system" is present
     And "EnvoyFilter" "kyma-referer" in namespace "istio-system" is present
-    And "PeerAuthentication" "defaul" in namespace "istio-system" is present
+    And "PeerAuthentication" "default" in namespace "istio-system" is present
     And "VirtualService" "istio-healthz" in namespace "istio-system" is present
     And "ConfigMap" "istio-control-plane-grafana-dashboard" in namespace "kyma-system" is present
     And "ConfigMap" "istio-mesh-grafana-dashboard" in namespace "kyma-system" is present

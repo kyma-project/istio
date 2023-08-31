@@ -7,9 +7,7 @@ import (
 	"github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
-	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -88,16 +86,4 @@ func (r *ResourcesReconciler) getTemplateValues(ctx context.Context, istioCR v1a
 	}
 
 	return nil
-}
-
-func annotateWithDisclaimer(ctx context.Context, resource unstructured.Unstructured, k8sClient client.Client) error {
-	annotations := resource.GetAnnotations()
-	if annotations == nil {
-		annotations = make(map[string]string)
-	}
-	annotations[istio.DisclaimerKey] = istio.DisclaimerValue
-	resource.SetAnnotations(annotations)
-
-	err := k8sClient.Update(ctx, &resource)
-	return err
 }

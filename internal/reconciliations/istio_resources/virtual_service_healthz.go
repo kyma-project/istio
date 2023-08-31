@@ -6,12 +6,9 @@ import (
 	_ "embed"
 	"text/template"
 
-	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/yaml"
 )
 
 //go:embed virtual_service_healthz.yaml
@@ -37,33 +34,7 @@ func (VirtualServiceHealthz) apply(ctx context.Context, k8sClient client.Client,
 		return controllerutil.OperationResultNone, err
 	}
 
-	var resource unstructured.Unstructured
-	err = yaml.Unmarshal(resourceBuffer.Bytes(), &resource)
-	if err != nil {
-		return controllerutil.OperationResultNone, err
-	}
-
-	spec := resource.Object["spec"]
-	result, err := controllerutil.CreateOrUpdate(ctx, k8sClient, &resource, func() error {
-		resource.Object["spec"] = spec
-		return nil
-	})
-	if err != nil {
-		return controllerutil.OperationResultNone, err
-	}
-
-	var daFound bool
-	if resource.GetAnnotations() != nil {
-		_, daFound = resource.GetAnnotations()[istio.DisclaimerKey]
-	}
-	if !daFound {
-		err := annotateWithDisclaimer(ctx, resource, k8sClient)
-		if err != nil {
-			return controllerutil.OperationResultNone, err
-		}
-	}
-
-	return result, nil
+	return applyResource(ctx, k8sClient, resourceBuffer.Bytes(), nil)
 }
 
 func (VirtualServiceHealthz) Name() string {

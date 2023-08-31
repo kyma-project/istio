@@ -67,7 +67,7 @@ func (e EnvoyFilterAllowPartialReferer) apply(ctx context.Context, k8sClient cli
 		return controllerutil.OperationResultNone, err
 	}
 
-	var efaFound, daFound bool = false, false
+	var efaFound, daFound = false, false
 	annotations := envoyFilter.GetAnnotations()
 	if annotations != nil {
 		_, efaFound = annotations[EnvoyFilterAnnotation]
@@ -80,6 +80,7 @@ func (e EnvoyFilterAllowPartialReferer) apply(ctx context.Context, k8sClient cli
 			return controllerutil.OperationResultNone, err
 		}
 	}
+
 	if !daFound {
 		err := annotateWithDisclaimer(ctx, envoyFilter, k8sClient)
 		if err != nil {
@@ -91,7 +92,7 @@ func (e EnvoyFilterAllowPartialReferer) apply(ctx context.Context, k8sClient cli
 }
 
 func (EnvoyFilterAllowPartialReferer) Name() string {
-	return "partial referer envoy filter"
+	return "EnvoyFilter/kyma-referer"
 }
 
 func (e EnvoyFilterEvaluator) RequiresProxyRestart(p v1.Pod) bool {
@@ -107,18 +108,6 @@ func (e EnvoyFilterEvaluator) RequiresIngressGatewayRestart(p v1.Pod) bool {
 // If EnvoyFilterAnnotation returns false
 func podIsOlder(pod v1.Pod, envoyTime time.Time) bool {
 	return !pod.CreationTimestamp.IsZero() && !envoyTime.IsZero() && pod.CreationTimestamp.Compare(envoyTime) <= 0
-}
-
-func annotateWithTimestamp(ctx context.Context, filter unstructured.Unstructured, k8sClient client.Client) error {
-	annotations := filter.GetAnnotations()
-	if annotations == nil {
-		annotations = make(map[string]string)
-	}
-	annotations[EnvoyFilterAnnotation] = time.Now().Format(time.RFC3339)
-	filter.SetAnnotations(annotations)
-
-	err := k8sClient.Update(ctx, &filter)
-	return err
 }
 
 func getUpdateTime(ctx context.Context, k8sClient client.Client) (time.Time, error) {
@@ -140,4 +129,16 @@ func getUpdateTime(ctx context.Context, k8sClient client.Client) (time.Time, err
 	} else {
 		return time.Time{}, nil
 	}
+}
+
+func annotateWithTimestamp(ctx context.Context, filter unstructured.Unstructured, k8sClient client.Client) error {
+	annotations := filter.GetAnnotations()
+	if annotations == nil {
+		annotations = make(map[string]string)
+	}
+	annotations[EnvoyFilterAnnotation] = time.Now().Format(time.RFC3339)
+	filter.SetAnnotations(annotations)
+
+	err := k8sClient.Update(ctx, &filter)
+	return err
 }

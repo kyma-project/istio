@@ -67,5 +67,5 @@ func (GatewayKyma) apply(ctx context.Context, k8sClient client.Client, _ metav1.
 }
 
 func (GatewayKyma) Name() string {
-	return "gateway kyma"
+	return "Gateway/kyma-gateway"
 }

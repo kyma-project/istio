@@ -40,7 +40,7 @@ func (ConfigMapWorkload) apply(ctx context.Context, k8sClient client.Client, own
 		return controllerutil.OperationResultNone, err
 	}
 
-	var daFound bool
+	var daFound bool = false
 	if resource.GetAnnotations() != nil {
 		_, daFound = resource.GetAnnotations()[istio.DisclaimerKey]
 	}

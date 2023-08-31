@@ -6,7 +6,6 @@
   * [Change Kyma settings](/04-operation-guides/operations/03-change-kyma-config-values.md)
   * [Upgrade or Downgrade Kyma](/04-operation-guides/operations/05-upgrade-kyma.md)
   * [Uninstall Kyma or components](/04-operation-guides/operations/07-uninstall-kyma.md)
-  * [Enable, disable and upgrade a Kyma module](/04-operation-guides/operations/08-enable-disable-upgrade-kyma-module.md)
   * [Back up Kyma](/04-operation-guides/operations/10-backup-kyma.md)
   * [Pass an access token in a request header](/04-operation-guides/operations/ac-01-pass-access-token-in-request-header.md)
   * [Grafana Dashboards for Kyma Eventing](/04-operation-guides/operations/evnt-01-eventing-dashboards.md)

@@ -107,7 +107,7 @@ func forceIstioCrRemoval(ctx context.Context, istio *v1alpha1.Istio) error {
 		}
 
 		if istio.Status.State == v1alpha1.Error {
-			t.Log(fmt.Sprintf("Istio CR in error state (%s), force removal", istio.Status.Description))
+			t.Logf("Istio CR in error state (%s), force removal", istio.Status.Description)
 			istio.Finalizers = nil
 			err = c.Update(ctx, istio)
 			if err != nil {

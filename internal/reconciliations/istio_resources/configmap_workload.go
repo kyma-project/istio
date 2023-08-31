@@ -55,5 +55,5 @@ func (ConfigMapWorkload) apply(ctx context.Context, k8sClient client.Client, own
 }
 
 func (ConfigMapWorkload) Name() string {
-	return "config map workload"
+	return "ConfigMap/istio-workload-grafana-dashboard"
 }

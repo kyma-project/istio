@@ -67,5 +67,5 @@ func (VirtualServiceHealthz) apply(ctx context.Context, k8sClient client.Client,
 }
 
 func (VirtualServiceHealthz) Name() string {
-	return "virtual service healthz"
+	return "VirtualService/istio-healthz"
 }

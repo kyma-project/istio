@@ -2,6 +2,7 @@ package istio
 
 import (
 	"context"
+
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -11,8 +12,9 @@ const (
 	istioNamespace   = "istio-system"
 	wardenLabelKey   = "namespaces.warden.kyma-project.io/validate"
 	wardenLabelValue = "enabled"
-	disclaimerKey    = "istios.operator.kyma-project.io/managed-by-disclaimer"
-	disclaimerValue  = "DO NOT EDIT - This resource is managed by Kyma.\nAny modifications are discarded and the resource is reverted to the original state."
+
+	DisclaimerKey   = "istios.operator.kyma-project.io/managed-by-disclaimer"
+	DisclaimerValue = "DO NOT EDIT - This resource is managed by Kyma.\nAny modifications are discarded and the resource is reverted to the original state."
 )
 
 // addWardenValidationAndDisclaimer updates the Istio namespace
@@ -24,7 +26,7 @@ func addWardenValidationAndDisclaimer(ctx context.Context, kubeClient client.Cli
 		return err
 	}
 	patch := client.StrategicMergeFrom(ns.DeepCopy())
-	ns.Annotations = addToMap(ns.Annotations, disclaimerKey, disclaimerValue)
+	ns.Annotations = addToMap(ns.Annotations, DisclaimerKey, DisclaimerValue)
 	ns.Labels = addToMap(ns.Labels, wardenLabelKey, wardenLabelValue)
 
 	err = kubeClient.Patch(ctx, ns, patch)

@@ -1,4 +1,4 @@
-# Istio module
+# Istio
 
 ## What is Istio
 
@@ -6,11 +6,11 @@
 
 Istio is an open-source service mesh that provides a uniform way to manage, connect, and secure microservices. It helps to manage traffic, enhance security capabilities, and provide telemetry data for understanding service behavior. Read the [Istio documentation](https://istio.io/latest/) to learn more.
 
-## Istio module
+## Kyma Istio Operator
 
-The Istio module allows you to add Istio Operator to the Kyma runtime. Within Istio Operator, Istio Controller is responsible for installing, uninstalling, and managing Istio. For more information, read the [Istio Controller documentation](/docs/user/00-10-overview-istio-controller.md).
+Kyma Istio Operator is a component of the Kyma runtime that handles the management and configuration of Istio Service Mesh. Within Kyma Istio Operator, [Istio Controller](/docs/user/00-overview/00-10-overview-istio-controller.md) is responsible for installing, uninstalling, and upgrading Istio.
 
-## Install Istio Operator and Istio from the latest release
+## Install Kyma Istio Operator and Istio from the latest release
 
 ### Prerequisites
 
@@ -19,7 +19,7 @@ The Istio module allows you to add Istio Operator to the Kyma runtime. Within Is
 
 ### Procedure
 
-1. To install Istio, you must install the latest version of Istio Operator and Istio CRD first. Run:
+1. To install Istio, you must install the latest version of Kyma Istio Operator and Istio CRD first. Run:
 
    ```bash
    kubectl apply -f https://github.com/kyma-project/istio/releases/latest/download/istio-manager.yaml
@@ -50,13 +50,13 @@ The Istio module allows you to add Istio Operator to the Kyma runtime. Within Is
    default   Ready
    ```
 
-For more installation options, visit [Install the Istio module](/docs/contributor/01-00-installation.md).
+For more installation options, visit [the installation guide](/docs/contributor/01-00-installation.md).
 
-## Documentation
+## Useful links
 
-To learn how to use the Istio module, read the documentation in the [user](/docs/user) directory.
+To learn how to use Kyma Istio Operator, read the documentation in the [`user`](/docs/user) directory.
 
-If you are interested in the detailed documentation of the module's design and technical aspects, check the [contributor](/docs/contributor/) directory.
+If you are interested in the detailed documentation of the Kyma Istio Operator's design and technical aspects, check the [`contributor`](/docs/contributor/) directory.
 
 ## Contributing
 

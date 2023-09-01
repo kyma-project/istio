@@ -1,15 +1,15 @@
-# Incompatible Istio sidecar version after the Istio module upgrade
+# Incompatible Istio sidecar version after Istio Operator's upgrade
 
 ## Symptom
 
-You upgraded the Istio module, and mesh connectivity is broken.
+You upgraded Kyma Istio Oprator, and mesh connectivity is broken.
 
 ## Cause
 
-By default, the Istio module has Istio sidecar injection disabled - it does not automatically inject the Istio sidecar into any Pod in a cluster.
-The sidecar version in Pods must match the installed Istio version to ensure proper mesh connectivity. During an upgrade of the Istio module to a new version, existing sidecars injected into Pods remain in the original version, potentially causing connectivity issues.
+By default, Kyma Istio Operator has Istio sidecar injection disabled - it does not automatically inject the Istio sidecar into any Pod in a cluster.
+The sidecar version in Pods must match the installed Istio version to ensure proper mesh connectivity. During an upgrade of Kyma Istio Operator to a new version, existing sidecars injected into Pods remain in the original version, potentially causing connectivity issues.
 
-The Istio module contains the `ProxySidecarReconcilation` component that performs a rollout for most common workload types like Deployments and DaemonSets. This component ensures that all running sidecars are updated correctly.
+Kyma Istio Operator contains the `ProxySidecarReconcilation` component that performs a rollout for most common workload types like Deployments and DaemonSets. This component ensures that all running sidecars are updated correctly.
 However, there are some user-defined workloads that can't be rolled out automatically. This includes standalone Pods without any management mechanism like a ReplicaSet or a Job.
 
 You must manually restart such user-defined workloads to ensure proper functionality with the updated Istio version.

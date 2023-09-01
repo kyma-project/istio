@@ -12,9 +12,9 @@ In order to transition to a more modularised architecture, the [IstioOperator re
 the [additional istio-resources](https://github.com/kyma-project/kyma/tree/main/resources/istio-resources), and
 the [certificates](https://github.com/kyma-project/kyma/tree/main/resources/certificates) must be moved to the new modules.
 
-#### Istio Operator resource
+#### Kyma Istio Operator resource
 
-The Istio Operator resource is moved into the new Kyma Istio Operator. It is used to define default values for Istio, which the user can customise by modyfying Istio CR.
+The Kyma Istio Operator resource is moved into the new Kyma Istio Operator. It is used to define default values for Istio, which the user can customise by modyfying Istio CR.
 
 #### Istio resources
 
@@ -29,7 +29,7 @@ For more information, see this [PR](https://github.com/kyma-project/kyma/pull/16
 
 ##### istio-healthz Virtual Service
 
-Isito-healthz Virtual Service offers the possibility of monitoring Istio externally by exposing an endpoint. This resource is not part of the Istio module.
+Isito-healthz Virtual Service offers the possibility of monitoring Istio externally by exposing an endpoint. This resource is not part of Kyma Istio Operator.
 Therefore, a user who needs such external monitoring must take care of this particular configuration.
 
 ##### Global mTLS PeerAuthentication
@@ -83,7 +83,7 @@ The execution of the reconciliation must be fast, and we must avoid many blockin
 
 #### Interval
 
-Since the Isito module deals with security-related topics, we want to perform the reconciliation as often as possible.
+Since Kyma Istio Operator deals with security-related topics, we want to perform the reconciliation as often as possible.
 Not only do we want to reconcile when [Istio CR](../contributor/04-20-xff-proposal.md) changes, but also to verify regularly if resources remain unchanged and are in the expected state.  
 The reconciliation frequency of a manager is determined by the [SyncPeriod](https://pkg.go.dev/sigs.k8s.io/controller-runtime/pkg/manager#Options). By default, it is set to 10 hours.
 To match the desired reconciliation interval, use one of the following options:

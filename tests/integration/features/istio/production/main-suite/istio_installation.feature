@@ -4,6 +4,7 @@ Feature: Installing and uninstalling Istio module
     Given "Istio CR" is not present on cluster
     And Evaluated cluster size is "Production"
     And Istio CRD is installed
+    And Namespace "istio-system" is "not present"
     And "Deployment" "istio-controller-manager" in namespace "kyma-system" is ready
 
   Scenario: Installation of Istio module with default values
@@ -47,7 +48,7 @@ Feature: Installing and uninstalling Istio module
     Given Istio CR "istio-sample" is applied in namespace "kyma-system"
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
     And Namespace "istio-system" is "present"
-    And Istio injection is enabled in namespace "default"
+    And Istio injection is "enabled" in namespace "default"
     And Application "test-app" is running in namespace "default"
     And Application pod "test-app" in namespace "default" has Istio proxy "present"
     When "Istio CR" "istio-sample" in namespace "kyma-system" is deleted

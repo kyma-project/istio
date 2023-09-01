@@ -2,18 +2,20 @@ package integration
 
 import (
 	"context"
-	"github.com/cucumber/godog"
-	"github.com/cucumber/godog/colors"
-	istioCR "github.com/kyma-project/istio/operator/api/v1alpha1"
-	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
-	"istio.io/client-go/pkg/apis/networking/v1alpha3"
-	"istio.io/client-go/pkg/apis/networking/v1beta1"
-	iop "istio.io/istio/operator/pkg/apis"
 	"os"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"testing"
 	"time"
+
+	"github.com/cucumber/godog"
+	"github.com/cucumber/godog/colors"
+	iopv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
+	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
+	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
+	networkingv1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
+	securityv1beta1 "istio.io/client-go/pkg/apis/security/v1beta1"
+	iopapis "istio.io/istio/operator/pkg/apis"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
 
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
@@ -93,22 +95,27 @@ func createK8sClient() client.Client {
 		panic(err)
 	}
 
-	err = iop.AddToScheme(c.Scheme())
+	err = iopapis.AddToScheme(c.Scheme())
 	if err != nil {
 		panic(err)
 	}
 
-	err = istioCR.AddToScheme(c.Scheme())
+	err = iopv1alpha1.AddToScheme(c.Scheme())
 	if err != nil {
 		panic(err)
 	}
 
-	err = v1beta1.AddToScheme(c.Scheme())
+	err = networkingv1alpha3.AddToScheme(c.Scheme())
 	if err != nil {
 		panic(err)
 	}
 
-	err = v1alpha3.AddToScheme(c.Scheme())
+	err = networkingv1beta1.AddToScheme(c.Scheme())
+	if err != nil {
+		panic(err)
+	}
+
+	err = securityv1beta1.AddToScheme(c.Scheme())
 	if err != nil {
 		panic(err)
 	}

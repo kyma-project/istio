@@ -4,6 +4,7 @@ Feature: Istio resources configuration
     Given "Istio CR" is not present on cluster
     And Evaluated cluster size is "Production"
     And Istio CRD is installed
+    And Namespace "istio-system" is "not present"
     And "Deployment" "istio-controller-manager" in namespace "kyma-system" is ready
 
   Scenario: Additional Istio resources are present

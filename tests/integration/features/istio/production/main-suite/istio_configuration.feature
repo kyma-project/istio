@@ -4,6 +4,7 @@ Feature: Configuration of Istio module
     Given "Istio CR" is not present on cluster
     And Evaluated cluster size is "Production"
     And Istio CRD is installed
+    And Namespace "istio-system" is "not present"
     And "Deployment" "istio-controller-manager" in namespace "kyma-system" is ready
 
   Scenario: Updating proxy resource configuration

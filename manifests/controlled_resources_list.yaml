@@ -23,6 +23,9 @@ resources:
       group: networking.istio.io
       version: v1alpha3
       kind: Gateway
+    ControlledList:
+      - name: "kyma-gateway"
+        namespace: "kyma-system"
   - GroupVersionKind:
       group: install.istio.io
       version: v1alpha1
@@ -34,6 +37,9 @@ resources:
       group: security.istio.io
       version: v1beta1
       kind: PeerAuthentication
+    ControlledList:
+      - name: "default"
+        namespace: "istio-system"
   - GroupVersionKind:
       group: networking.istio.io
       version: v1beta1
@@ -58,6 +64,16 @@ resources:
       group: networking.istio.io
       version: v1alpha3
       kind: VirtualService
+    ControlledList:
+      - name: "istio-healthz"
+        namespace: "istio-system"
+  - GroupVersionKind:
+      group: networking.istio.io
+      version: v1beta1
+      kind: VirtualService
+    ControlledList:
+      - name: "istio-healthz"
+        namespace: "istio-system"
   - GroupVersionKind:
       group: extensions.istio.io
       version: v1alpha1

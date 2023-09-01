@@ -2,6 +2,7 @@ package clusterconfig_test
 
 import (
 	"context"
+	"fmt"
 
 	"k8s.io/apimachinery/pkg/api/resource"
 
@@ -55,7 +56,7 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 						"gateways": map[string]interface{}{
 							"istio-ingressgateway": map[string]interface{}{
 								"serviceAnnotations": map[string]string{
-									"dns.gardener.cloud/dnsnames": clusterconfig.LocalKymaDomain,
+									"dns.gardener.cloud/dnsnames": fmt.Sprintf("*.%s", clusterconfig.LocalKymaDomain),
 								},
 							},
 						},

@@ -9,7 +9,7 @@ import (
 	"github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	"github.com/pkg/errors"
-	v1c "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -41,7 +41,6 @@ var testObjectsTearDown = func(ctx context.Context, sc *godog.Scenario, _ error)
 }
 
 var istioCrTearDown = func(ctx context.Context, sc *godog.Scenario, _ error) (context.Context, error) {
-
 	if istios, ok := testcontext.GetIstioCRsFromContext(ctx); ok {
 		// We can ignore a failed removal of the Istio CR, because we need to run force remove in any case to make sure no resource is left before the next scenario
 		for _, istio := range istios {
@@ -63,7 +62,7 @@ var verifyIfControllerHasBeenRestarted = func(ctx context.Context, sc *godog.Sce
 		return ctx, err
 	}
 
-	podList := &v1c.PodList{}
+	podList := &corev1.PodList{}
 	err = c.List(ctx, podList, client.MatchingLabels{"app.kubernetes.io/component": "istio-operator.kyma-project.io"})
 	if err != nil {
 		return ctx, err
@@ -96,7 +95,6 @@ func forceIstioCrRemoval(ctx context.Context, istio *v1alpha1.Istio) error {
 	}
 
 	return retry.Do(func() error {
-
 		err = c.Get(ctx, client.ObjectKey{Namespace: istio.GetNamespace(), Name: istio.GetName()}, istio)
 
 		if k8serrors.IsNotFound(err) {
@@ -108,7 +106,7 @@ func forceIstioCrRemoval(ctx context.Context, istio *v1alpha1.Istio) error {
 		}
 
 		if istio.Status.State == v1alpha1.Error {
-			t.Log("Istio CR in error state, force removal")
+			t.Logf("Istio CR in error state (%s), force removal", istio.Status.Description)
 			istio.Finalizers = nil
 			err = c.Update(ctx, istio)
 			if err != nil {
@@ -118,12 +116,11 @@ func forceIstioCrRemoval(ctx context.Context, istio *v1alpha1.Istio) error {
 			return nil
 		}
 
-		return errors.New(fmt.Sprintf("istio CR in status %s found, skipping force removal", istio.Status.State))
+		return errors.New(fmt.Sprintf("istio CR in status %s found (%s), skipping force removal", istio.Status.State, istio.Status.Description))
 	}, testcontext.GetRetryOpts()...)
 }
 
 func removeObjectFromCluster(ctx context.Context, object client.Object) error {
-
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err

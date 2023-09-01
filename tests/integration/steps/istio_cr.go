@@ -50,7 +50,7 @@ func IstioCRInNamespaceHasStatus(ctx context.Context, name, namespace, status st
 			return err
 		}
 		if string(cr.Status.State) != status {
-			return fmt.Errorf("status %s of Istio CR is not equal to %s", cr.Status.State, status)
+			return fmt.Errorf("status %s of Istio CR is not equal to %s\n Description: %s", cr.Status.State, status, cr.Status.Description)
 		}
 		return nil
 	}, testcontext.GetRetryOpts()...)

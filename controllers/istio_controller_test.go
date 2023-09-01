@@ -3,10 +3,10 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/istio/operator/internal/filter"
-	"github.com/kyma-project/istio/operator/internal/reconciliations/ingress_gateway"
-	"github.com/kyma-project/istio/operator/internal/reconciliations/istio_resources"
 	"time"
+
+	"github.com/kyma-project/istio/operator/internal/filter"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio_resources"
 
 	"github.com/go-logr/logr"
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
@@ -579,7 +579,7 @@ var _ = Describe("Istio Controller", func() {
 type ingressGatewayReconciliationMock struct {
 }
 
-func (i *ingressGatewayReconciliationMock) AddReconcilePredicate(_ filter.IngressGatewayPredicate) ingress_gateway.Reconciliation {
+func (i *ingressGatewayReconciliationMock) AddReconcilePredicate(_ filter.IngressGatewayPredicate) Reconciliation {
 	return i
 }
 
@@ -590,11 +590,11 @@ func (i *ingressGatewayReconciliationMock) Reconcile(_ context.Context) describe
 type istioResourcesReconciliationMock struct {
 }
 
-func (i *istioResourcesReconciliationMock) AddReconcileResource(_ istio_resources.Resource) istio_resources.Reconciliation {
+func (i *istioResourcesReconciliationMock) AddReconcileResource(_ istio_resources.Resource) istio_resources.ResourcesReconciliation {
 	return i
 }
 
-func (i *istioResourcesReconciliationMock) Reconcile(_ context.Context) described_errors.DescribedError {
+func (i *istioResourcesReconciliationMock) Reconcile(_ context.Context, istioCR operatorv1alpha1.Istio) described_errors.DescribedError {
 	return nil
 }
 

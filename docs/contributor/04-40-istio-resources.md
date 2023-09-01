@@ -9,8 +9,3 @@ The additional Istio resources include the Kyma configuration of Istio. They con
 - Configuration for Istio Ingress Gateway, which handles incoming traffic to Kyma
 - Configuration for enabling Mutual TLS (mTLS) cluster-wide in the `STRICT` mode
 - Information about Istio [VirtualService](https://istio.io/docs/reference/config/networking/virtual-service/), which indicates whether Istio is operational.
-
-## Prerequisites
-
-Before installing Istio resources, install the following prerequisites for Kyma: [`cluster essentials`](../cluster-essentials) and [`certificates`](../certificates).
-

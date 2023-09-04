@@ -68,7 +68,7 @@ fix-template:
 
 .PHONY: enable-module
 enable-module:
-	$(KYMA) alpha enable module istio -c alpha
+	$(KYMA) alpha enable module istio -c fast
 
 .PHONY: patch-mod-mgr-role
 patch-mod-mgr-role:

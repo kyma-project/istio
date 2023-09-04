@@ -29,7 +29,7 @@ For more information, see this [PR](https://github.com/kyma-project/kyma/pull/16
 
 ##### istio-healthz Virtual Service
 
-Isito-healthz Virtual Service offers the possibility of monitoring Istio externally by exposing an endpoint. This resource is not part of Kyma Istio Operator.
+Istio-healthz Virtual Service offers the possibility of monitoring Istio externally by exposing an endpoint. This resource is not part of Kyma Istio Operator.
 Therefore, a user who needs such external monitoring must take care of this particular configuration.
 
 ##### Global mTLS PeerAuthentication

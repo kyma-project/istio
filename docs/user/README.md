@@ -8,7 +8,7 @@ Istio is an open-source Service Mesh that provides a uniform way to manage, conn
 
 Kyma Istio Operator is a component of the Kyma runtime that handles the management and configuration of Istio Service Mesh. Within Kyma Istio Operator, [Istio Controller](./00-overview/00-10-overview-istio-controller.md) is responsible for installing, uninstalling, and upgrading Istio.
 
-## Usful links
+## Useful links
 
 To learn how to use Kyma Istio Operator, read the documentation in the [user](../user/) directory. 
 

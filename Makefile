@@ -34,12 +34,6 @@ endif
 SHELL = /usr/bin/env bash -o pipefail
 .SHELLFLAGS = -ec
 
-
-# Credentials used for authenticating into the module registry
-# see `kyma alpha mod create --help for more info`
-# MODULE_CREDENTIALS ?= testuser:testpw
-
-
 # Image URL to use all building/pushing image targets
 APP_NAME = istio-manager
 
@@ -53,13 +47,6 @@ COMPONENT_CLI_VERSION ?= latest
 # It is required for upgrade integration test
 TARGET_BRANCH ?= ""
 
-# Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
-ifeq (,$(shell go env GOBIN))
-GOBIN=$(shell go env GOPATH)/bin
-else
-GOBIN=$(shell go env GOBIN)
-endif
-
 # This will change the flags of the `kyma alpha module create` command in case we spot credentials
 # Otherwise we will assume http-based local registries without authentication (e.g. for k3d)
 ifneq (,$(PROW_JOB_ID))
@@ -70,11 +57,6 @@ MODULE_CREATION_FLAGS=--registry $(MODULE_REGISTRY) --module-archive-version-ove
 else
 MODULE_CREATION_FLAGS=--registry $(MODULE_REGISTRY) --module-archive-version-overwrite -c $(MODULE_CREDENTIALS)
 endif
-
-# Setting SHELL to bash allows bash commands to be executed by recipes.
-# Options are set to exit when a recipe line exits non-zero or a piped command fails.
-SHELL = /usr/bin/env bash -o pipefail
-.SHELLFLAGS = -ec
 
 ##@ General
 

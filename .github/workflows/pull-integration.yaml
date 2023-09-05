@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/wait-for-job-succeed-or-fail
         with:
           job-name: 'pull-istio-operator-build'
@@ -36,7 +36,7 @@ jobs:
     if: github.event.pull_request.draft == false
     needs: [wait-for-image-build]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/k8s-compatibility-test
         with:
           operator-image-name: "europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}"
@@ -47,7 +47,7 @@ jobs:
     if: github.event.pull_request.draft == false
     needs: [wait-for-image-build]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - uses: ./.github/actions/upgrade-integration-test

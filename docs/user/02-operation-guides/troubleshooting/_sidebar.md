@@ -7,3 +7,4 @@
     * [Issues with Istio sidecar injection](./03-30-istio-no-sidecar.md)
     * [Incompatible Istio sidecar version after Kyma Istio Operator's upgrade](./03-40-incompatible-istio-sidecar-version.md)
     * [Istio unintentionally removed](./03-50-recovering-from-unintentional-istio-removal.md)
+    * [Kyma endpoint returns a `not found` error](./03-60-404-on-istio-gateway.md)

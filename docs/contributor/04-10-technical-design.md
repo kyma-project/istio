@@ -72,7 +72,7 @@ An upgrade of a major version fails (1.2.3 -> 2.0.0), as well as any downgrade (
 
 ### Reconciliation of Istio
 
-The reconciliation loop of Istio is based on the [Istio CR](../user/03-technical-reference/istio-custom-resource/01-30-istio-custom-resource.md) custom resource and is controlled by `IstioController`. This controller contains several self-contained components, which we have suffixed with reconciliation.
+The reconciliation loop of Istio is based on the [Istio CR](./04-20-xff-proposal.md) custom resource and is controlled by `IstioController`. This controller contains several self-contained components, which we have suffixed with reconciliation.
 We decided to split the logic in these reconciliation components to have a better extensibility and maintainability. This means each of these components must have its clearly separated responsibility
 and must work in isolation when assessing whether reconciliation is required, applying changes, and returning a status.
 The execution of the reconciliation must be fast, and we must avoid many blocking calls. Long-running tasks must be executed asynchronously, and the status must be evaluated in the next reconciliation cycle.

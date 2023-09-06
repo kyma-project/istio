@@ -5,7 +5,7 @@ package main
 import (
 	istio "istio.io/istio/operator/cmd/mesh"
 	"istio.io/istio/operator/pkg/util/clog"
-	istiolog "istio.io/pkg/log"
+	istiolog "istio.io/istio/pkg/log"
 	"os"
 )
 
@@ -28,7 +28,7 @@ func main() {
 	iopFileNames := []string{os.Args[1]}
 
 	istioLogOptions := initializeLog()
-	registeredScope := istiolog.RegisterScope("installation", "installation", 0)
+	registeredScope := istiolog.RegisterScope("installation", "installation")
 	consoleLogger := clog.NewConsoleLogger(os.Stdout, os.Stderr, registeredScope)
 	printer := istio.NewPrinterForWriter(os.Stdout)
 

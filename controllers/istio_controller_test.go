@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"k8s.io/utils/ptr"
 	"time"
 
 	"github.com/kyma-project/istio/operator/internal/filter"
@@ -15,7 +16,6 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -291,7 +291,7 @@ var _ = Describe("Istio Controller", func() {
 				},
 				Spec: operatorv1alpha1.IstioSpec{
 					Config: operatorv1alpha1.Config{
-						NumTrustedProxies: pointer.Int(2),
+						NumTrustedProxies: ptr.To(int(2)),
 					},
 				},
 			}
@@ -455,7 +455,7 @@ var _ = Describe("Istio Controller", func() {
 				},
 				Spec: operatorv1alpha1.IstioSpec{
 					Config: operatorv1alpha1.Config{
-						NumTrustedProxies: pointer.Int(2),
+						NumTrustedProxies: ptr.To(int(2)),
 					},
 				},
 			}

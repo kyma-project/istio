@@ -82,12 +82,12 @@ type Strategy struct {
 type RollingUpdate struct {
 	// +kubebuilder:validation:XIntOrString
 	// +kubebuilder:validation:Pattern=`^[0-9]+%?$`
-	// +kubebuilder:validation:XValidation:rule="(type(self) == int ? self >= 0 : self.size() >= 0)",message="must not be negative or an empty string"
+	// +kubebuilder:validation:XValidation:rule="(type(self) == int ? self >= 0 && self <= 2147483647: self.size() >= 0)",message="must not be negative, more than 2147483647 or an empty string"
 	MaxSurge *intstr.IntOrString `json:"maxSurge" protobuf:"bytes,2,opt,name=maxSurge"`
 
 	// +kubebuilder:validation:XIntOrString
 	// +kubebuilder:validation:Pattern="^((100|[0-9]{1,2})%|[0-9]+)$"
-	// +kubebuilder:validation:XValidation:rule="(type(self) == int ? self >= 0 : self.size() >= 0)",message="must not be negative or an empty string"
+	// +kubebuilder:validation:XValidation:rule="(type(self) == int ? self >= 0 && self <= 2147483647: self.size() >= 0)",message="must not be negative, more than 2147483647 or an empty string"
 	MaxUnavailable *intstr.IntOrString `json:"maxUnavailable" protobuf:"bytes,1,opt,name=maxUnavailable"`
 }
 

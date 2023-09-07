@@ -1097,9 +1097,10 @@ spec:
                                     pattern: ^[0-9]+%?$
                                     x-kubernetes-int-or-string: true
                                     x-kubernetes-validations:
-                                    - message: must not be negative or an empty string
-                                      rule: '(type(self) == int ? self >= 0 : self.size()
-                                        >= 0)'
+                                    - message: must not be negative, more than 2147483647
+                                        or an empty string
+                                      rule: '(type(self) == int ? self >= 0 && self
+                                        <= 2147483647: self.size() >= 0)'
                                   maxUnavailable:
                                     anyOf:
                                     - type: integer
@@ -1107,9 +1108,10 @@ spec:
                                     pattern: ^((100|[0-9]{1,2})%|[0-9]+)$
                                     x-kubernetes-int-or-string: true
                                     x-kubernetes-validations:
-                                    - message: must not be negative or an empty string
-                                      rule: '(type(self) == int ? self >= 0 : self.size()
-                                        >= 0)'
+                                    - message: must not be negative, more than 2147483647
+                                        or an empty string
+                                      rule: '(type(self) == int ? self >= 0 && self
+                                        <= 2147483647: self.size() >= 0)'
                                 type: object
                             required:
                             - rollingUpdate
@@ -1175,9 +1177,10 @@ spec:
                                     pattern: ^[0-9]+%?$
                                     x-kubernetes-int-or-string: true
                                     x-kubernetes-validations:
-                                    - message: must not be negative or an empty string
-                                      rule: '(type(self) == int ? self >= 0 : self.size()
-                                        >= 0)'
+                                    - message: must not be negative, more than 2147483647
+                                        or an empty string
+                                      rule: '(type(self) == int ? self >= 0 && self
+                                        <= 2147483647: self.size() >= 0)'
                                   maxUnavailable:
                                     anyOf:
                                     - type: integer
@@ -1185,9 +1188,10 @@ spec:
                                     pattern: ^((100|[0-9]{1,2})%|[0-9]+)$
                                     x-kubernetes-int-or-string: true
                                     x-kubernetes-validations:
-                                    - message: must not be negative or an empty string
-                                      rule: '(type(self) == int ? self >= 0 : self.size()
-                                        >= 0)'
+                                    - message: must not be negative, more than 2147483647
+                                        or an empty string
+                                      rule: '(type(self) == int ? self >= 0 && self
+                                        <= 2147483647: self.size() >= 0)'
                                 type: object
                             required:
                             - rollingUpdate
@@ -2417,9 +2421,10 @@ spec:
                                     pattern: ^[0-9]+%?$
                                     x-kubernetes-int-or-string: true
                                     x-kubernetes-validations:
-                                    - message: must not be negative or an empty string
-                                      rule: '(type(self) == int ? self >= 0 : self.size()
-                                        >= 0)'
+                                    - message: must not be negative, more than 2147483647
+                                        or an empty string
+                                      rule: '(type(self) == int ? self >= 0 && self
+                                        <= 2147483647: self.size() >= 0)'
                                   maxUnavailable:
                                     anyOf:
                                     - type: integer
@@ -2427,9 +2432,10 @@ spec:
                                     pattern: ^((100|[0-9]{1,2})%|[0-9]+)$
                                     x-kubernetes-int-or-string: true
                                     x-kubernetes-validations:
-                                    - message: must not be negative or an empty string
-                                      rule: '(type(self) == int ? self >= 0 : self.size()
-                                        >= 0)'
+                                    - message: must not be negative, more than 2147483647
+                                        or an empty string
+                                      rule: '(type(self) == int ? self >= 0 && self
+                                        <= 2147483647: self.size() >= 0)'
                                 type: object
                             required:
                             - rollingUpdate
@@ -2495,9 +2501,10 @@ spec:
                                     pattern: ^[0-9]+%?$
                                     x-kubernetes-int-or-string: true
                                     x-kubernetes-validations:
-                                    - message: must not be negative or an empty string
-                                      rule: '(type(self) == int ? self >= 0 : self.size()
-                                        >= 0)'
+                                    - message: must not be negative, more than 2147483647
+                                        or an empty string
+                                      rule: '(type(self) == int ? self >= 0 && self
+                                        <= 2147483647: self.size() >= 0)'
                                   maxUnavailable:
                                     anyOf:
                                     - type: integer
@@ -2505,9 +2512,10 @@ spec:
                                     pattern: ^((100|[0-9]{1,2})%|[0-9]+)$
                                     x-kubernetes-int-or-string: true
                                     x-kubernetes-validations:
-                                    - message: must not be negative or an empty string
-                                      rule: '(type(self) == int ? self >= 0 : self.size()
-                                        >= 0)'
+                                    - message: must not be negative, more than 2147483647
+                                        or an empty string
+                                      rule: '(type(self) == int ? self >= 0 && self
+                                        <= 2147483647: self.size() >= 0)'
                                 type: object
                             required:
                             - rollingUpdate

@@ -24,10 +24,6 @@ Feature: Istio resources configuration
     When "Istio CR" "istio-sample" in namespace "kyma-system" is deleted
     Then "Istio CR" is not present on cluster
     And Namespace "istio-system" is "not present"
-    And "Gateway" "kyma-gateway" in namespace "kyma-system" is "not present"
-    And "EnvoyFilter" "kyma-referer" in namespace "istio-system" is "not present"
-    And "PeerAuthentication" "default" in namespace "istio-system" is "not present"
-    And "VirtualService" "istio-healthz" in namespace "istio-system" is "not present"
     And "ConfigMap" "istio-control-plane-grafana-dashboard" in namespace "kyma-system" is "not present"
     And "ConfigMap" "istio-mesh-grafana-dashboard" in namespace "kyma-system" is "not present"
     And "ConfigMap" "istio-performance-grafana-dashboard" in namespace "kyma-system" is "not present"

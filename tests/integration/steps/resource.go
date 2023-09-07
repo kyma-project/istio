@@ -107,7 +107,7 @@ func ResourceIsReady(ctx context.Context, kind, name, namespace string) error {
 	}, testcontext.GetRetryOpts()...)
 }
 
-func ResourceIsPresent(ctx context.Context, kind, name, namespace string) error {
+func ResourceIsPresent(ctx context.Context, kind, name, namespace, present string) error {
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
@@ -133,9 +133,15 @@ func ResourceIsPresent(ctx context.Context, kind, name, namespace string) error 
 
 		err := k8sClient.Get(context.TODO(), client.ObjectKey{Namespace: namespace, Name: name}, object)
 		if err != nil {
+			if present == "not present" && k8serrors.IsNotFound(err) {
+				return nil
+			}
 			return err
 		}
 
+		if present == "not present" {
+			return fmt.Errorf("%s/%s in ns %s should have not been present", kind, name, namespace)
+		}
 		return nil
 	}, testcontext.GetRetryOpts()...)
 }

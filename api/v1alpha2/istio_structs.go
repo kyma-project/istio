@@ -82,9 +82,11 @@ type Strategy struct {
 type RollingUpdate struct {
 	// +kubebuilder:validation:XIntOrString
 	// +kubebuilder:validation:Pattern=`^[0-9]+%?$`
+	// +kubebuilder:validation:XValidation:rule="(type(self) == int ? self >= 0 : self.size() >= 0)",message="must not be negative or an empty string"
 	MaxSurge *intstr.IntOrString `json:"maxSurge" protobuf:"bytes,2,opt,name=maxSurge"`
 	// +kubebuilder:validation:XIntOrString
 	// +kubebuilder:validation:Pattern="^((100|[0-9]{1,2})%|[0-9]+)$"
+	// +kubebuilder:validation:XValidation:rule="(type(self) == int ? self >= 0 : self.size() >= 0)",message="must not be negative or an empty string"
 	MaxUnavailable *intstr.IntOrString `json:"maxUnavailable" protobuf:"bytes,1,opt,name=maxUnavailable"`
 }
 
@@ -98,6 +100,6 @@ type ResourceClaims struct {
 	// +kubebuilder:validation:Pattern=`^([0-9]+m?|[0-9]\.[0-9]{1,3})$`
 	Cpu *string `json:"cpu,omitempty"`
 
-	// +kubebuilder:validation:Pattern=`^[0-9]+(((\.[0-9]+)?(E|P|T|G|M|k|Ei|Pi|Ti|Gi|Mi|Ki)?)|(e[0-9]+))$`
+	// +kubebuilder:validation:Pattern=`^[0-9]+(((\.[0-9]+)?(E|P|T|G|M|k|Ei|Pi|Ti|Gi|Mi|Ki|m)?)|(e[0-9]+))$`
 	Memory *string `json:"memory,omitempty"`
 }

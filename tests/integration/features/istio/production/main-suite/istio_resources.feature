@@ -10,15 +10,29 @@ Feature: Istio resources configuration
   Scenario: Additional Istio resources are present
     Given Istio CR "istio-sample" is applied in namespace "kyma-system"
     When Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
-    Then "Gateway" "kyma-gateway" in namespace "kyma-system" is present
-    And "EnvoyFilter" "kyma-referer" in namespace "istio-system" is present
-    And "PeerAuthentication" "default" in namespace "istio-system" is present
-    And "VirtualService" "istio-healthz" in namespace "istio-system" is present
-    And "ConfigMap" "istio-control-plane-grafana-dashboard" in namespace "kyma-system" is present
-    And "ConfigMap" "istio-mesh-grafana-dashboard" in namespace "kyma-system" is present
-    And "ConfigMap" "istio-performance-grafana-dashboard" in namespace "kyma-system" is present
-    And "ConfigMap" "istio-service-grafana-dashboard" in namespace "kyma-system" is present
-    And "ConfigMap" "istio-workload-grafana-dashboard" in namespace "kyma-system" is present
+    Then "Gateway" "kyma-gateway" in namespace "kyma-system" is "present"
+    And "EnvoyFilter" "kyma-referer" in namespace "istio-system" is "present"
+    And "PeerAuthentication" "default" in namespace "istio-system" is "present"
+    And "VirtualService" "istio-healthz" in namespace "istio-system" is "present"
+    And "ConfigMap" "istio-control-plane-grafana-dashboard" in namespace "kyma-system" is "present"
+    And "ConfigMap" "istio-mesh-grafana-dashboard" in namespace "kyma-system" is "present"
+    And "ConfigMap" "istio-performance-grafana-dashboard" in namespace "kyma-system" is "present"
+    And "ConfigMap" "istio-service-grafana-dashboard" in namespace "kyma-system" is "present"
+    And "ConfigMap" "istio-workload-grafana-dashboard" in namespace "kyma-system" is "present"
+
+    # Uninstalling Istio
+    When "Istio CR" "istio-sample" in namespace "kyma-system" is deleted
+    Then "Istio CR" is not present on cluster
+    And Namespace "istio-system" is "not present"
+    And "Gateway" "kyma-gateway" in namespace "kyma-system" is "not present"
+    And "EnvoyFilter" "kyma-referer" in namespace "istio-system" is "not present"
+    And "PeerAuthentication" "default" in namespace "istio-system" is "not present"
+    And "VirtualService" "istio-healthz" in namespace "istio-system" is "not present"
+    And "ConfigMap" "istio-control-plane-grafana-dashboard" in namespace "kyma-system" is "not present"
+    And "ConfigMap" "istio-mesh-grafana-dashboard" in namespace "kyma-system" is "not present"
+    And "ConfigMap" "istio-performance-grafana-dashboard" in namespace "kyma-system" is "not present"
+    And "ConfigMap" "istio-service-grafana-dashboard" in namespace "kyma-system" is "not present"
+    And "ConfigMap" "istio-workload-grafana-dashboard" in namespace "kyma-system" is "not present"
 
   Scenario: Ingress Gateway and proxy sidecar allow Referer Header with fragment identifier (# character)
     Given Istio CR "istio-sample" is applied in namespace "kyma-system"

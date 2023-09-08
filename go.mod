@@ -21,8 +21,8 @@ require (
 	golang.org/x/time v0.3.0
 	google.golang.org/protobuf v1.31.0
 	gopkg.in/yaml.v3 v3.0.1
-	istio.io/api v0.0.0-20230713061407-06047cce866f
-	istio.io/client-go v1.18.1 //There was no version update on 1.18.2
+	istio.io/api v0.0.0-20230803063743-0b7b8bc2e0bb
+	istio.io/client-go v1.18.3 //There was no version update on 1.18.2
 	istio.io/istio v0.0.0-20230721203100-0183f2886bc0
 	istio.io/pkg v0.0.0-20230524020242-1015535057be
 	k8s.io/api v0.27.5

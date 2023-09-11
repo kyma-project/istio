@@ -153,7 +153,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		describedErr := described_errors.NewDescribedError(proxyErr, "Error occurred during reconciliation of Istio Sidecars")
 		return r.requeueReconciliation(ctx, istioCR, describedErr)
 	} else if warningHappened {
-		warning := described_errors.NewDescribedError(errors.New("Istio controller could not restart one or more istio-injected pods."), "Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning").SetWarning()
+		warning := described_errors.NewDescribedError(errors.New("Istio controller could not restart one or more istio-injected pods."), "Not all pods with Istio injection could be restarted. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning").SetWarning()
 		return r.requeueReconciliation(ctx, istioCR, warning)
 	}
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"k8s.io/utils/ptr"
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"time"
 
 	"github.com/kyma-project/istio/operator/internal/filter"
@@ -252,7 +251,7 @@ var _ = Describe("Istio Controller", func() {
 				},
 			}
 
-			fakeClient := fake.NewClientBuilder().WithScheme(getTestScheme()).WithRuntimeObjects(istioCR).WithStatusSubresource(istioCR).Build()
+			fakeClient := createFakeClient(istioCR)
 
 			sut := &IstioReconciler{
 				Client:                 fakeClient,

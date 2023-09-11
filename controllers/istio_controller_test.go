@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"k8s.io/utils/ptr"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"time"
 
 	"github.com/kyma-project/istio/operator/internal/filter"
@@ -13,7 +14,6 @@ import (
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/pkg/errors"
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -178,6 +178,7 @@ var _ = Describe("Istio Controller", func() {
 					DeletionTimestamp: &metav1.Time{
 						Time: time.Now(),
 					},
+					Finalizers: []string{"istios.operator.kyma-project.io/test-mock"},
 				},
 			}
 			statusMock := StatusMock{}
@@ -196,11 +197,10 @@ var _ = Describe("Istio Controller", func() {
 			}
 
 			// when
-			result, err := sut.Reconcile(context.Background(), reconcile.Request{NamespacedName: types.NamespacedName{Namespace: testNamespace, Name: istioCrName}})
+			_, err := sut.Reconcile(context.Background(), reconcile.Request{NamespacedName: types.NamespacedName{Namespace: testNamespace, Name: istioCrName}})
 
 			// then
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(result).Should(Equal(reconcile.Result{}))
 			Expect(statusMock.updatedToDeletingCalled).Should(BeTrue())
 		})
 
@@ -213,6 +213,7 @@ var _ = Describe("Istio Controller", func() {
 					DeletionTimestamp: &metav1.Time{
 						Time: time.Now(),
 					},
+					Finalizers: []string{"istios.operator.kyma-project.io/test-mock"},
 				},
 			}
 
@@ -242,19 +243,16 @@ var _ = Describe("Istio Controller", func() {
 			Expect(statusMock.updatedToDeletingCalled).Should(BeTrue())
 		})
 
-		It("Should not requeue a deleted CR when there are no finalizers", func() {
+		It("Should not requeue a CR without finalizers, because it's considered to be in deletion", func() {
 			// given
 			istioCR := &operatorv1alpha1.Istio{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      istioCrName,
 					Namespace: testNamespace,
-					DeletionTimestamp: &metav1.Time{
-						Time: time.Now(),
-					},
 				},
 			}
 
-			fakeClient := createFakeClient(istioCR)
+			fakeClient := fake.NewClientBuilder().WithScheme(getTestScheme()).WithRuntimeObjects(istioCR).WithStatusSubresource(istioCR).Build()
 
 			sut := &IstioReconciler{
 				Client:                 fakeClient,
@@ -274,9 +272,6 @@ var _ = Describe("Istio Controller", func() {
 			// then
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(result).Should(Equal(reconcile.Result{}))
-
-			err = fakeClient.Get(context.TODO(), client.ObjectKeyFromObject(istioCR), istioCR)
-			Expect(k8serrors.IsNotFound(err)).To(BeTrue())
 		})
 
 		It("Should set ready status, update lastAppliedConfiguration annotation and requeue when successfully reconciled", func() {

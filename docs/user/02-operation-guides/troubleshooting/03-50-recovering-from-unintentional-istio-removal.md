@@ -15,7 +15,7 @@ default   Warning
 ```
 ```
 kubectl get istio default -n kyma-system -o jsonpath='{.status.description}'
-Resources blocking deletion: DestinationRule:kyma-system/api-gateway-metrics;DestinationRule:kyma-system/eventing-nats;PeerAuthentication:kyma-system/eventing-controller-metrics;PeerAuthentication:kyma-system/eventing-publisher-proxy-metrics
+There are Istio resources that block deletion. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning
 ```
 
 ## Cause
@@ -43,7 +43,7 @@ For example, the issue occurs when you delete Istio, but there are still `Virtua
   spec:
     ...
   status:
-    description: 'Resources blocking deletion: DestinationRule:kyma-system/api-gateway-metrics;DestinationRule:kyma-system/eventing-nats;PeerAuthentication:kyma-system/eventing-controller-metrics;PeerAuthentication:kyma-system/eventing-publisher-proxy-metrics'
+    description: 'There are Istio resources that block deletion. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning'
     state: Warning
 ```
  2. When the finalizer is removed, the Istio CR is deleted. Other resources, such as the `istiod` deployment, remain on the cluster.

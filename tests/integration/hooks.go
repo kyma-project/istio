@@ -41,11 +41,23 @@ var testObjectsTearDown = func(ctx context.Context, sc *godog.Scenario, _ error)
 }
 
 var istioCrTearDown = func(ctx context.Context, sc *godog.Scenario, _ error) (context.Context, error) {
+
+	t, err := testcontext.GetTestingFromContext(ctx)
+	if err != nil {
+		return ctx, err
+	}
+
 	if istios, ok := testcontext.GetIstioCRsFromContext(ctx); ok {
 		// We can ignore a failed removal of the Istio CR, because we need to run force remove in any case to make sure no resource is left before the next scenario
 		for _, istio := range istios {
 			_ = retry.Do(func() error {
-				return removeObjectFromCluster(ctx, istio)
+				err := removeObjectFromCluster(ctx, istio)
+				if err != nil {
+					t.Logf("Failed to deleted Istio CR %s", istio.GetName())
+					return err
+				}
+				t.Logf("Deleted Istio CR %s", istio.GetName())
+				return nil
 			}, testcontext.GetRetryOpts()...)
 			err := forceIstioCrRemoval(ctx, istio)
 			if err != nil {

@@ -64,7 +64,7 @@ Feature: Installing and uninstalling Istio module
     And Destination rule "customer-destination-rule" in namespace "default" with host "testing-svc.default.svc.cluster.local" exists
     When "Istio CR" "istio-sample" in namespace "kyma-system" is deleted
     Then Istio CR "istio-sample" in namespace "kyma-system" has status "Warning"
-    And Istio CR "istio-sample" in namespace "kyma-system" has description "Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning"
+    And Istio CR "istio-sample" in namespace "kyma-system" has description "There are Istio resources that block deletion. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning"
     And Istio CRDs "should" be present on cluster
     And Namespace "istio-system" is "present"
     When "DestinationRule" "customer-destination-rule" in namespace "default" is deleted
@@ -95,3 +95,40 @@ Feature: Installing and uninstalling Istio module
     When Istio CR "istio-sample-new" is applied in namespace "kyma-system"
     Then Istio CR "istio-sample-new" in namespace "kyma-system" has status "Error"
     And Istio CR "istio-sample-new" in namespace "kyma-system" has description "Stopped Istio CR reconciliation: only Istio CR istio-sample in kyma-system reconciles the module"
+
+  Scenario: Istio module resources are reconciled, when they are deleted manually
+    Given Istio CR "istio-sample" is applied in namespace "kyma-system"
+    And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
+    And Namespace "istio-system" is "present"
+    And "Deployment" "istiod" in namespace "istio-system" is deleted
+    And "istiooperator" "installed-state-default-operator" in namespace "istio-system" is deleted
+    And "Deployment" "istio-ingressgateway" in namespace "istio-system" is deleted
+    And "DaemonSet" "istio-cni-node" in namespace "istio-system" is deleted
+    And Istio injection is "enabled" in namespace "default"
+    And "Gateway" "kyma-gateway" in namespace "kyma-system" is deleted
+    And "EnvoyFilter" "kyma-referer" in namespace "istio-system" is deleted
+    And "PeerAuthentication" "default" in namespace "istio-system" is deleted
+    And "VirtualService" "istio-healthz" in namespace "istio-system" is deleted
+    And "ConfigMap" "istio-control-plane-grafana-dashboard" in namespace "kyma-system" is deleted
+    And "ConfigMap" "istio-mesh-grafana-dashboard" in namespace "kyma-system" is deleted
+    And "ConfigMap" "istio-performance-grafana-dashboard" in namespace "kyma-system" is deleted
+    And "ConfigMap" "istio-service-grafana-dashboard" in namespace "kyma-system" is deleted
+    And "ConfigMap" "istio-workload-grafana-dashboard" in namespace "kyma-system" is deleted
+    And Application "test-app" is running in namespace "default"
+    # We need to update the Istio CR to trigger a reconciliation
+    And Template value "ProxyCPURequest" is set to "79m"
+    When Istio CR "istio-sample" is updated in namespace "kyma-system"
+    Then "Deployment" "istiod" in namespace "istio-system" is ready
+    And "istiooperator" "installed-state-default-operator" in namespace "istio-system" is "present"
+    And "Deployment" "istio-ingressgateway" in namespace "istio-system" is ready
+    And "DaemonSet" "istio-cni-node" in namespace "istio-system" is ready
+    And "Gateway" "kyma-gateway" in namespace "kyma-system" is "present"
+    And "EnvoyFilter" "kyma-referer" in namespace "istio-system" is "present"
+    And "PeerAuthentication" "default" in namespace "istio-system" is "present"
+    And "VirtualService" "istio-healthz" in namespace "istio-system" is "present"
+    And "ConfigMap" "istio-control-plane-grafana-dashboard" in namespace "kyma-system" is "present"
+    And "ConfigMap" "istio-mesh-grafana-dashboard" in namespace "kyma-system" is "present"
+    And "ConfigMap" "istio-performance-grafana-dashboard" in namespace "kyma-system" is "present"
+    And "ConfigMap" "istio-service-grafana-dashboard" in namespace "kyma-system" is "present"
+    And "ConfigMap" "istio-workload-grafana-dashboard" in namespace "kyma-system" is "present"
+    And Application pod "test-app" in namespace "default" has Istio proxy "present"

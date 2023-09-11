@@ -610,7 +610,7 @@ var _ = Describe("Istio Controller", func() {
 
 			Expect(fakeClient.Get(context.TODO(), client.ObjectKeyFromObject(istioCR), istioCR)).Should(Succeed())
 			Expect(istioCR.Status.State).Should(Equal(operatorv1alpha1.Warning))
-			Expect(istioCR.Status.Description).To(ContainSubstring("Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning: Istio controller could not restart one or more istio-injected pods."))
+			Expect(istioCR.Status.Description).To(ContainSubstring("Not all pods with Istio injection could be restarted. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning: Istio controller could not restart one or more istio-injected pods."))
 		})
 	})
 })

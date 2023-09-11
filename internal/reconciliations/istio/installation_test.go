@@ -1012,7 +1012,7 @@ var _ = Describe("Installation reconciliation", func() {
 		// then
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Error()).To(Equal("could not delete Istio module instance since there are 1 customer resources present"))
-		Expect(err.Description()).To(Equal("Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning"))
+		Expect(err.Description()).To(Equal("There are Istio resources that block deletion. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning"))
 		Expect(mockClient.installCalled).To(BeFalse())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 	})

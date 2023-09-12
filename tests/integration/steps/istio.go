@@ -261,6 +261,11 @@ func CreateIstioGateway(ctx context.Context, name, namespace string) (context.Co
 
 // CreateVirtualService creates a VirtualService that exposes the given service on any host
 func CreateVirtualService(ctx context.Context, name, exposedService, gateway, namespace string) (context.Context, error) {
+	return CreateVirtualServiceWithPort(ctx, name, exposedService, 8000, gateway, namespace)
+}
+
+// CreateVirtualServiceWithPort creates a VirtualService that exposes the given service and port on any host
+func CreateVirtualServiceWithPort(ctx context.Context, name, exposedService string, exposedPort int, gateway, namespace string) (context.Context, error) {
 
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
@@ -295,7 +300,7 @@ func CreateVirtualService(ctx context.Context, name, exposedService, gateway, na
 							Destination: &apinetworkingv1alpha3.Destination{
 								Host: exposedService,
 								Port: &apinetworkingv1alpha3.PortSelector{
-									Number: 8000,
+									Number: uint32(exposedPort),
 								},
 							},
 						},

@@ -36,10 +36,14 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^Istio is manually uninstalled$`, steps.UninstallIstio)
 	ctx.Step(`^Istio "([^"]*)" service has annotation "([^"]*)" on "([^"]*)" cluster$`, steps.IstioServiceHasAnnotation)
 	ctx.Step(`^Httpbin application "([^"]*)" is running in namespace "([^"]*)"$`, steps.CreateHttpbinApplication)
+	ctx.Step(`^Httpbin application "([^"]*)" is running in namespace "([^"]*)" with service port "([^"]*)"$`, steps.CreateHttpbinApplicationWithServicePort)
+	ctx.Step(`^Nginx application "([^"]*)" is running in namespace "([^"]*)" with forward to "([^"]*)"$`, steps.CreateNginxApplication)
 	ctx.Step(`^Istio gateway "([^"]*)" is configured in namespace "([^"]*)"$`, steps.CreateIstioGateway)
 	ctx.Step(`^Virtual service "([^"]*)" exposing service "([^"]*)" by gateway "([^"]*)" is configured in namespace "([^"]*)"$`, steps.CreateVirtualService)
+	ctx.Step(`^Virtual service "([^"]*)" exposing service "([^"]*)" with port "([^"]*)" by gateway "([^"]*)" is configured in namespace "([^"]*)"$`, steps.CreateVirtualServiceWithPort)
 	ctx.Step(`^Request with header X-Forwarded-For with value "([^"]*)" sent to httpbin should return X-Envoy-External-Address with value "([^"]*)"$`, steps.ValidateHeader)
 	ctx.Step(`^Request with header "([^"]*)" with value "([^"]*)" sent to httpbin should return "([^"]*)" with value "([^"]*)"$`, steps.ValidateHeader)
+	ctx.Step(`^Request to path "([^"]*)" should return "([^"]*)" with value "([^"]*)" in body$`, steps.ValidateHeaderInBody)
 	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" is "([^"]*)"`, steps.ResourceIsPresent)
 }
 

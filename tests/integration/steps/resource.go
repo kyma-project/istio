@@ -170,13 +170,23 @@ func EvaluatedClusterSizeIs(ctx context.Context, size string) error {
 	return nil
 }
 
-func NamespaceIsCreated(ctx context.Context, name string) error {
-	k8sclient, err := testcontext.GetK8sClientFromContext(ctx)
+func NamespaceIsCreated(ctx context.Context, name string) (context.Context, error) {
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
-		return err
+		return ctx, err
 	}
 
-	return k8sclient.Create(ctx, &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: name}})
+	ns := corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: name}}
+	err = retry.Do(func() error {
+		err := k8sClient.Create(ctx, &ns)
+		if err != nil {
+			return err
+		}
+		ctx = testcontext.AddCreatedTestObjectInContext(ctx, &ns)
+		return nil
+	}, testcontext.GetRetryOpts()...)
+
+	return ctx, err
 }
 
 func NamespaceIsPresent(ctx context.Context, name, shouldBePresent string) error {

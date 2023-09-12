@@ -25,7 +25,7 @@ var _ = ReportAfterSuite("custom reporter", func(report types.Report) {
 })
 
 func createFakeClient(objects ...client.Object) client.Client {
-	return fake.NewClientBuilder().WithScheme(getTestScheme()).WithObjects(objects...).Build()
+	return fake.NewClientBuilder().WithScheme(getTestScheme()).WithObjects(objects...).WithStatusSubresource(objects...).Build()
 }
 
 func getTestScheme() *runtime.Scheme {

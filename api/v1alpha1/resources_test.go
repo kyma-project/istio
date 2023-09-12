@@ -6,7 +6,7 @@ import (
 	. "github.com/onsi/gomega"
 	operatorv1alpha1 "istio.io/api/operator/v1alpha1"
 	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"os"
 	"sigs.k8s.io/yaml"
 )
@@ -60,8 +60,8 @@ var _ = Describe("GetProxyResources", func() {
 			Proxy: &v1alpha1.ProxyComponent{K8S: &v1alpha1.ProxyK8sConfig{
 				Resources: &v1alpha1.Resources{
 					Requests: &v1alpha1.ResourceClaims{
-						Cpu:    pointer.String("500m"),
-						Memory: pointer.String("500Mi"),
+						Cpu:    ptr.To(string("500m")),
+						Memory: ptr.To(string("500Mi")),
 					},
 				},
 			}},

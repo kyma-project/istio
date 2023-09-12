@@ -736,6 +736,7 @@ var _ = Describe("Installation reconciliation", func() {
 				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
 			},
 			DeletionTimestamp: &now,
+			Finalizers:        []string{"istios.operator.kyma-project.io/test-mock"},
 		},
 			Spec: operatorv1alpha1.IstioSpec{
 				Config: operatorv1alpha1.Config{
@@ -906,7 +907,7 @@ var _ = Describe("Installation reconciliation", func() {
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
 		istioNamespace := createNamespace("istio-system")
-		c := createFakeClient(&istioCr, istiod, istioNamespace)
+		c := createFakeClient(istiod, istioNamespace)
 
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
@@ -1046,7 +1047,7 @@ func createFakeClient(objects ...client.Object) client.Client {
 	err = networkingv1alpha3.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
 
-	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build()
+	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).WithStatusSubresource(objects...).Build()
 }
 
 type shouldFailFakeClientOnAnnotation struct {

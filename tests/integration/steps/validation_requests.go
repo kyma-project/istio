@@ -33,6 +33,25 @@ func ValidateHeader(ctx context.Context, givenHeaderName, givenHeaderValue, expe
 	return ctx, c.GetWithHeaders(url, headers, asserter)
 }
 
+// ValidateHeaderInBody validates that the header givenHeaderName with value givenHeaderValue is contained in the body of the response.
+func ValidateHeaderInBody(ctx context.Context, path string, expectedHeaderName, expectedHeaderValue string) (context.Context, error) {
+
+	ingressAddress, err := fetchIstioIngressGatewayAddress(ctx)
+	if err != nil {
+		return ctx, err
+	}
+
+	c := testsupport.NewHttpClientWithRetry()
+	url := fmt.Sprintf("http://%s%s", ingressAddress, path)
+	asserter := testsupport.BodyContainsAsserter{
+		Expected: []string{
+			fmt.Sprintf(`"%s": "%s"`, expectedHeaderName, expectedHeaderValue),
+		},
+	}
+
+	return ctx, c.Get(url, asserter)
+}
+
 func fetchIstioIngressGatewayAddress(ctx context.Context) (string, error) {
 
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)

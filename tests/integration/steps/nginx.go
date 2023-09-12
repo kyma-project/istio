@@ -32,7 +32,7 @@ func CreateNginxApplication(ctx context.Context, appName, namespace, forwardTo s
 		return ctx, err
 	}
 
-	ctx, err = createService(ctx, appName, namespace, err)
+	ctx, err = createService(ctx, appName, namespace)
 	if err != nil {
 		return ctx, err
 	}
@@ -40,7 +40,7 @@ func CreateNginxApplication(ctx context.Context, appName, namespace, forwardTo s
 	return ctx, nil
 }
 
-func createService(ctx context.Context, appName string, namespace string, err error) (context.Context, error) {
+func createService(ctx context.Context, appName string, namespace string) (context.Context, error) {
 	svc := corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",

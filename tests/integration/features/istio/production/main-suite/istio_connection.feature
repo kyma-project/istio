@@ -14,7 +14,7 @@ Feature: Connection in the mesh
     And Httpbin application "httpbin" is running in namespace "target" with service port "80"
     And Namespace "source" is created
     And Istio injection is "enabled" in namespace "source"
-    And Nginx application "nginx" is running in namespace "source" with forward to "http://httpbin.target.svc.cluster.local/headers"
+    And Nginx application "nginx" is running in namespace "source" with forward to "http://httpbin.target.svc.cluster.local/headers" and service port 80
     And Istio gateway "test-gateway" is configured in namespace "default"
     When Virtual service "test-vs" exposing service "nginx.source.svc.cluster.local" with port "80" by gateway "default/test-gateway" is configured in namespace "default"
     Then Request to path "/" should return "Host" with value "httpbin.target.svc.cluster.local" in body

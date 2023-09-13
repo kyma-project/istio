@@ -52,6 +52,23 @@ func ValidateHeaderInBody(ctx context.Context, path string, expectedHeaderName, 
 	return ctx, c.Get(url, asserter)
 }
 
+// ValidateResponseStatusCode validates that the response status code is the expected one.
+func ValidateResponseStatusCode(ctx context.Context, path string, expectedCode int) (context.Context, error) {
+
+	ingressAddress, err := fetchIstioIngressGatewayAddress(ctx)
+	if err != nil {
+		return ctx, err
+	}
+
+	c := testsupport.NewHttpClientWithRetry()
+	url := fmt.Sprintf("http://%s%s", ingressAddress, path)
+	asserter := testsupport.ResponseStatusCodeAsserter{
+		Code: expectedCode,
+	}
+
+	return ctx, c.Get(url, asserter)
+}
+
 func fetchIstioIngressGatewayAddress(ctx context.Context) (string, error) {
 
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)

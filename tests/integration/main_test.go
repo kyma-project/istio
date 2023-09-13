@@ -57,6 +57,7 @@ func runTestSuite(t *testing.T, scenarioInit func(ctx *godog.ScenarioContext), f
 		Randomize:      time.Now().UTC().UnixNano(),
 		DefaultContext: createDefaultContext(t),
 		Strict:         true,
+		TestingT:       t,
 	}
 	if shouldExportResults() {
 		goDogOpts.Format = "pretty,junit:junit-report.xml,cucumber:cucumber-report.json"

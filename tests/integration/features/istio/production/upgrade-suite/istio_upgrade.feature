@@ -11,7 +11,7 @@ Feature: Upgrade Istio
     And Application pod "test-app" in namespace "default" has Istio proxy "present"
     When Istio controller has been upgraded to the new version
     Then "Deployment" "istio-controller-manager" in namespace "kyma-system" is ready
-    And Istio CR "istio-sample" in namespace "kyma-system" has status "Processing"
+    And Istio CR "istio-sample" in namespace "kyma-system" status update happened in the last 20 seconds
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
     And Application "test-app" in namespace "default" has required version of proxy
     And "Deployment" "istiod" in namespace "istio-system" is ready

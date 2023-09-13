@@ -61,6 +61,7 @@ func upgradeInitScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" is ready$`, steps.ResourceIsReady)
 	ctx.Step(`^Istio CR "([^"]*)" is applied in namespace "([^"]*)"$`, t.IstioCRIsAppliedInNamespace)
 	ctx.Step(`^Istio CR "([^"]*)" in namespace "([^"]*)" has status "([^"]*)"$`, steps.IstioCRInNamespaceHasStatus)
+	ctx.Step(`^Istio CR "([^"]*)" in namespace "([^"]*)" status update happened in the last 20 seconds$`, steps.IstioCrStatusUpdateHappened)
 	ctx.Step(`^Istio injection is "([^"]*)" in namespace "([^"]*)"$`, steps.SetIstioInjection)
 	ctx.Step(`^Application "([^"]*)" is running in namespace "([^"]*)"$`, steps.CreateApplicationDeployment)
 	ctx.Step(`^Application pod "([^"]*)" in namespace "([^"]*)" has Istio proxy "([^"]*)"$`, steps.ApplicationPodShouldHaveIstioProxy)

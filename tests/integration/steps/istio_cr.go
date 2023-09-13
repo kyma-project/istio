@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"text/template"
+	"time"
 
 	"github.com/avast/retry-go"
 	istioCR "github.com/kyma-project/istio/operator/api/v1alpha1"
@@ -157,4 +159,36 @@ func createIstioCRFromTemplate(name string, namespace string, templateValues map
 	istio.Namespace = namespace
 	istio.Name = name
 	return istio, nil
+}
+
+func IstioCrStatusUpdateHappened(ctx context.Context, name, namespace string) error {
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	var cr istioCR.Istio
+	return retry.Do(func() error {
+		err := k8sClient.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, &cr)
+		if err != nil {
+			return err
+		}
+
+		for _, field := range cr.ManagedFields {
+
+			if field.Subresource == "status" && field.Operation == metav1.ManagedFieldsOperationUpdate {
+				timestamp, err := time.Parse(time.RFC3339, field.Time.UTC().Format(time.RFC3339))
+				if err != nil {
+					return err
+				}
+
+				// Check if the operation occurred within the last 20 seconds.
+				if time.Since(timestamp).Seconds() <= 20 {
+					return nil
+				}
+			}
+		}
+
+		return fmt.Errorf("no server-side update occurred for the CR '%s' within the last 20 seconds", name)
+	}, testcontext.GetRetryOpts()...)
 }

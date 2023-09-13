@@ -176,7 +176,8 @@ func IstioCrStatusUpdateHappened(ctx context.Context, name, namespace string) er
 
 		for _, field := range cr.ManagedFields {
 
-			if field.Subresource == "status" && field.Operation == metav1.ManagedFieldsOperationUpdate {
+			// We only consider an update of the status owned by the manager as relevant, since we want to verify the manager is reconciling the CR.
+			if field.Subresource == "status" && field.Manager == "manager" && field.Operation == metav1.ManagedFieldsOperationUpdate {
 				timestamp, err := time.Parse(time.RFC3339, field.Time.UTC().Format(time.RFC3339))
 				if err != nil {
 					return err

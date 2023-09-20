@@ -101,7 +101,10 @@ jobs:
                 owner: 'kyma-project',
                 repo: 'api-gateway',
                 workflow_id: 'main-integration.yaml',
-                ref: 'main'
+                ref: 'main',
+                inputs: {
+                  istio_version: ${{ needs.publish-release.needs.create-draft.outputs.release_id }}
+                }
               })
             } catch(err){
               console.error(err)

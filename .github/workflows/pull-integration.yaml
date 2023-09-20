@@ -54,3 +54,26 @@ jobs:
         with:
           operator-image-name: "europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}"
           target_branch: ${{ github.base_ref }}
+
+  # for testing
+  trigger-api-gateway-integration-tests:
+    name: Trigger API Gateway integration tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/github-script@v6
+        with:
+          script: |
+            try{
+              await github.rest.actions.createWorkflowDispatch({
+                owner: 'kyma-project',
+                repo: 'api-gateway',
+                workflow_id: 'main-integration.yaml',
+                ref: 'main',
+                inputs: {
+                  istio_version: "1.1.0"
+                }
+              })
+            } catch(err){
+              console.error(err)
+            }

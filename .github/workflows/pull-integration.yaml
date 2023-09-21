@@ -69,7 +69,7 @@ jobs:
                 owner: 'kyma-project',
                 repo: 'api-gateway',
                 workflow_id: 'main-integration.yaml',
-                ref: 'main',
+                ref: 'run-integration-tests-with-istio-module',
                 inputs: {
                   istio_version: "1.1.0"
                 }

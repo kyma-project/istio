@@ -26,6 +26,7 @@ assignees: ''
 - [ ] provide unit tests
 - [ ] provide integration tests
 - [ ] test on production-like environment
+- [ ] check outcome of all related pipelines
 - [ ] verify resource limits
 - [ ] followup issue
 - [ ] PR reviewer will verify code coverage and evaluate if it is acceptable

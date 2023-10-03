@@ -22,6 +22,8 @@ assignees: ''
 
 **DoD:**
 - [ ] Create a follow-up issue.
+- [ ] Provide unit tests.
+- [ ] Provide integration tests.
 - [ ] Provide documentation.
 - [ ] Add release notes and What's New notes for Kyma customers.
 - [ ] Test on a production-like environment.

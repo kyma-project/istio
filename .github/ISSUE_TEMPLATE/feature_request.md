@@ -21,7 +21,7 @@ assignees: ''
 <!-- Explain why we should add this feature. Provide use cases to illustrate its benefits. -->
 
 **DoD:**
-- [ ] Create a follow-up issue to check the status of customers' migration.
+- [ ] Create a follow-up issue.
 - [ ] Provide documentation.
 - [ ] Add release notes and What's New notes for Kyma customers.
 - [ ] Test on a production-like environment.

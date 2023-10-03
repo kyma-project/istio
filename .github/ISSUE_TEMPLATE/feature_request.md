@@ -29,7 +29,6 @@ assignees: ''
 - [ ] Verify resource limits.
 - [ ] Create a release and bump in Kyma.
 - [ ] As a PR reviewer, verify code coverage and evaluate if it is acceptable.
-- [ ] Create a follow-up issue.
 
 **Attachments**
 

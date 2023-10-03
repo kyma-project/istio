@@ -29,7 +29,6 @@ assignees: ''
 - [ ] Test on a production-like environment.
 - [ ] Check the outcome of all related pipelines.
 - [ ] Verify resource limits.
-- [ ] Create a release and bump in Kyma.
 - [ ] As a PR reviewer, verify code coverage and evaluate if it is acceptable.
 
 **Attachments**

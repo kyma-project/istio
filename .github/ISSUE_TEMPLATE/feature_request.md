@@ -28,7 +28,7 @@ assignees: ''
 - [ ] test on production-like environment
 - [ ] check outcome of all related pipelines
 - [ ] verify resource limits
-- [ ] followup issue
+- [ ] Create a follow-up issue.
 - [ ] PR reviewer will verify code coverage and evaluate if it is acceptable
 
 **Attachments**

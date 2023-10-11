@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/avast/retry-go"
-	"github.com/docker/distribution/reference"
+	"github.com/distribution/reference"
 	"github.com/kyma-project/istio/operator/controllers"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	"github.com/masterminds/semver"

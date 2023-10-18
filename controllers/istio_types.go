@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"context"
-	"github.com/prometheus/client_golang/prometheus"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -31,7 +30,6 @@ type IstioReconciler struct {
 	log                    logr.Logger
 	statusHandler          status
 	reconciliationInterval time.Duration
-	installationCounter    prometheus.Counter
 }
 
 type RateLimiter struct {

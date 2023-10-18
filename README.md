@@ -1,3 +1,4 @@
+[![REUSE status](https://api.reuse.software/badge/github.com/kyma-project/istio)](https://api.reuse.software/info/github.com/kyma-project/istio)
 # Istio
 
 ## What is Istio

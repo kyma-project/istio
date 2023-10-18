@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"dario.cat/mergo"
+	"github.com/imdario/mergo"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/types"
@@ -26,7 +26,7 @@ const (
 	ProductionClusterCpuThreshold      int64 = 5
 	ProductionClusterMemoryThresholdGi int64 = 10
 
-	LocalKymaDomain = "*.local.kyma.dev"
+	LocalKymaDomain = "local.kyma.dev"
 )
 
 func (s ClusterSize) String() string {
@@ -160,7 +160,7 @@ func (f ClusterFlavour) clusterConfiguration(ctx context.Context, k8sClient clie
 					"gateways": map[string]interface{}{
 						"istio-ingressgateway": map[string]interface{}{
 							"serviceAnnotations": map[string]string{
-								"dns.gardener.cloud/dnsnames": LocalKymaDomain,
+								"dns.gardener.cloud/dnsnames": fmt.Sprintf("*.%s", LocalKymaDomain),
 							},
 						},
 					},
@@ -183,7 +183,7 @@ func (f ClusterFlavour) clusterConfiguration(ctx context.Context, k8sClient clie
 		}
 		return config, nil
 	case Gardener:
-		hostDomainName, err := getHostDomainName(ctx, k8sClient)
+		domainName, err := GetDomainName(ctx, k8sClient)
 		if err != nil {
 			return ClusterConfiguration{}, err
 		}
@@ -193,7 +193,7 @@ func (f ClusterFlavour) clusterConfiguration(ctx context.Context, k8sClient clie
 					"gateways": map[string]interface{}{
 						"istio-ingressgateway": map[string]interface{}{
 							"serviceAnnotations": map[string]string{
-								"dns.gardener.cloud/dnsnames": hostDomainName,
+								"dns.gardener.cloud/dnsnames": fmt.Sprintf("*.%s", domainName),
 							},
 						},
 					},
@@ -205,13 +205,13 @@ func (f ClusterFlavour) clusterConfiguration(ctx context.Context, k8sClient clie
 	return ClusterConfiguration{}, nil
 }
 
-func getHostDomainName(ctx context.Context, k8sClient client.Client) (string, error) {
+func GetDomainName(ctx context.Context, k8sClient client.Client) (string, error) {
 	cmShootInfo := corev1.ConfigMap{}
 	err := k8sClient.Get(ctx, types.NamespacedName{Namespace: ConfigMapShootInfoNS, Name: ConfigMapShootInfoName}, &cmShootInfo)
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("*.%s", cmShootInfo.Data["domain"]), nil
+	return cmShootInfo.Data["domain"], nil
 }
 
 func MergeOverrides(template []byte, overrides ClusterConfiguration) ([]byte, error) {

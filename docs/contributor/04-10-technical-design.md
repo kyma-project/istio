@@ -2,9 +2,9 @@
 
 ## Kyma Istio Operator
 
-![Kyma IstioOperator Overview](/docs/assets/istio-operator-overview.svg)
+![Kyma IstioOperator Overview](../assets/istio-operator-overview.svg)
 
-We want to keep the Kyma Istio operator as simple as possible. That's why we decided to start with one controller that consists of several self-contained components executing reconciliation logic. The controller uses [Istio CR](/docs/contributor/04-20-xff-proposal.md) as a resource, which must be present in the `kyma-system` Namespace. It only reconciles the oldest Istio CR in the `kyma-system` Namespace, based on its creation timestamp. After this reconciliation process is completed, all other Istio CRs will be in the `error` state.
+We want to keep the Kyma Istio operator as simple as possible. That's why we decided to start with one controller that consists of several self-contained components executing reconciliation logic. The controller uses [Istio CR](../user/03-technical-reference/istio-custom-resource/01-30-istio-custom-resource.md) as a resource, which must be present in the `kyma-system` Namespace. It only reconciles the oldest Istio CR in the `kyma-system` Namespace, based on its creation timestamp. After this reconciliation process is completed, all other Istio CRs will be in the `error` state.
 
 ### Ownership of current resources in Kyma repository
 
@@ -12,9 +12,9 @@ In order to transition to a more modularised architecture, the [IstioOperator re
 the [additional istio-resources](https://github.com/kyma-project/kyma/tree/main/resources/istio-resources), and
 the [certificates](https://github.com/kyma-project/kyma/tree/main/resources/certificates) must be moved to the new modules.
 
-#### Istio Operator resource
+#### Kyma Istio Operator resource
 
-The Istio Operator resource is moved into the new Kyma Istio Operator. It is used to define default values for Istio, which the user can customise by modyfying Istio CR.
+The Kyma Istio Operator resource is moved into the new Kyma Istio Operator. It is used to define default values for Istio, which the user can customise by modyfying Istio CR.
 
 #### Istio resources
 
@@ -29,7 +29,7 @@ For more information, see this [PR](https://github.com/kyma-project/kyma/pull/16
 
 ##### istio-healthz Virtual Service
 
-Isito-healthz Virtual Service offers the possibility of monitoring Istio externally by exposing an endpoint. This resource is not part of the Istio module.
+Istio-healthz Virtual Service offers the possibility of monitoring Istio externally by exposing an endpoint. This resource is not part of Kyma Istio Operator.
 Therefore, a user who needs such external monitoring must take care of this particular configuration.
 
 ##### Global mTLS PeerAuthentication
@@ -63,7 +63,7 @@ Therefore, we have agreed that it is okay to block the reconciliation loop durin
 
 The following diagram shows the reconciliation process for installing, uninstalling, and canary upgrading (using revisions) Istio.
 
-![Istio Installation Reconciliation](/docs/assets/istio-installation-reconciliation.svg)
+![Istio Installation Reconciliation](../assets/istio-installation-reconciliation.svg)
 
 ### Istio upgrade version checking
 
@@ -72,18 +72,19 @@ An upgrade of a major version fails (1.2.3 -> 2.0.0), as well as any downgrade (
 
 ### Reconciliation of Istio
 
-The reconciliation loop of Istio is based on the [Istio CR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md) custom resource and is controlled by `IstioController`. This controller contains several self-contained components, which we have suffixed with reconciliation.
+The reconciliation loop of Istio is based on the [Istio CR](../user/03-technical-reference/istio-custom-resource/01-30-istio-custom-resource.md) and is controlled by `IstioController`. This controller contains several self-contained components, which we have suffixed with reconciliation.
 We decided to split the logic in these reconciliation components to have a better extensibility and maintainability. This means each of these components must have its clearly separated responsibility
 and must work in isolation when assessing whether reconciliation is required, applying changes, and returning a status.
 The execution of the reconciliation must be fast, and we must avoid many blocking calls. Long-running tasks must be executed asynchronously, and the status must be evaluated in the next reconciliation cycle.
 
  The following diagram shows the reconciliation loop of `IstioController`:
-![Reconciliation Loop Diagram](/docs/assets/istio-controller-reconciliation-loop.svg)
+
+![Reconciliation Loop Diagram](../assets/istio-controller-reconciliation-loop.svg)
 
 #### Interval
 
-Since the Isito module deals with security-related topics, we want to perform the reconciliation as often as possible.
-Not only do we want to reconcile when [Istio CR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md) changes, but also to verify regularly if resources remain unchanged and are in the expected state.  
+Since Kyma Istio Operator deals with security-related topics, we want to perform the reconciliation as often as possible.
+Not only do we want to reconcile when [Istio CR](../user/03-technical-reference/istio-custom-resource/01-30-istio-custom-resource.md) changes, but also to verify regularly if resources remain unchanged and are in the expected state.  
 The reconciliation frequency of a manager is determined by the [SyncPeriod](https://pkg.go.dev/sigs.k8s.io/controller-runtime/pkg/manager#Options). By default, it is set to 10 hours.
 To match the desired reconciliation interval, use one of the following options:
 
@@ -111,11 +112,11 @@ We need to make sure that each reconciliation component is completely independen
 The reason for this is that, for the sake of simplicity, we want to start with just one controller that handles all the logic to reconcile Istio. Since we have independent components, we can move them into new controllers if
 improving the performance of `IstioController` is necessary.
 
-![Controller Component Diagram](/docs/assets/controller-component-diagram.svg)
+![Controller Component Diagram](../assets/controller-component-diagram.svg)
 
 #### IstioController
 
-IstioController takes care of the entire Istio reconciliation process and is bound to [Istio CR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md).
+IstioController takes care of the entire Istio reconciliation process and is bound to [Istio CR](../user/03-technical-reference/istio-custom-resource/01-30-istio-custom-resource.md).
 Its responsibility is to control the reconciliation process by triggering the reconciliation components and passing the desired state to them.
 
 #### IstioInstallationReconciliation
@@ -136,7 +137,7 @@ This component also contains the logic to carry out Istio actions like install, 
 
 ProxySidecarReconciliation component is responsible for keeping the proxy sidecars in the desired state. It restarts Pods that are part of Service Mesh or
 that need to be added to Service Mesh.
-The desired state is represented by [Istio CR](https://github.com/kyma-project/istio/blob/main/docs/xff-proposal.md) and Istio Version coupled to the Operator.
+The desired state is represented by [Istio CR](../user/03-technical-reference/istio-custom-resource/01-30-istio-custom-resource.md) and Istio Version coupled to the Operator.
 This component carries a high risk that its execution in this controller takes too long. We need to check its performance during the implementation
 and assess whether its logic needs to be executed separately.
 

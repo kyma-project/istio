@@ -40,3 +40,16 @@ func (s BodyContainsAsserter) Assert(response http.Response) (bool, string) {
 	}
 
 }
+
+type ResponseStatusCodeAsserter struct {
+	Code int
+}
+
+func (s ResponseStatusCodeAsserter) Assert(response http.Response) (bool, string) {
+	if response.StatusCode != s.Code {
+		return false, fmt.Sprintf("Status code %d does not match expected code %d", response.StatusCode, s.Code)
+
+	}
+
+	return true, ""
+}

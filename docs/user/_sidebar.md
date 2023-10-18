@@ -1,5 +1,0 @@
-- [Istio module](/docs/user/README.md)
-- [Istio Controller overview](/docs/user/00-10-overview-istio-controller.md)
-- [Istio Controller parameters](/docs/user/01-10-istio-controller-parameters.md)
-- [Istio custom resource](/docs/user/01-20-istio-custom-resource.md)
-- [Default resource configuration](/docs/user/01-30-resource-configuration.md)

@@ -201,7 +201,7 @@ spec:
           secretName: istio-egressgateway-ca-certs
         type: ClusterIP
       istio-ingressgateway:
-        autoscaleEnabled: false
+        autoscaleEnabled: true
         env: {}
         name: istio-ingressgateway
         podAnnotations:
@@ -297,7 +297,7 @@ spec:
     istiodRemote:
       injectionURL: ""
     pilot:
-      autoscaleEnabled: false
+      autoscaleEnabled: true
       autoscaleMax: 5
       autoscaleMin: 1
       configMap: true

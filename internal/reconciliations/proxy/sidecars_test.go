@@ -62,9 +62,10 @@ var _ = Describe("Sidecars reconciliation", func() {
 			Merger:         MergerMock{},
 		}
 		// when
-		err := sidecars.Reconcile(context.TODO(), istioCr)
+		warningHappened, err := sidecars.Reconcile(context.TODO(), istioCr)
 
 		// then
+		Expect(warningHappened).To(BeFalse())
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("istio-system pods version: 1.16.0 do not match target version: 1.16.1"))
 	})

@@ -2,6 +2,7 @@ package ingress_gateway
 
 import (
 	"context"
+
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/kyma-project/istio/operator/internal/filter"
 	"github.com/kyma-project/istio/operator/pkg/lib/annotations"
@@ -18,26 +19,29 @@ const (
 	deploymentName string = "istio-ingressgateway"
 )
 
-type Reconciliation interface {
-	Reconcile(ctx context.Context) described_errors.DescribedError
+type IngressGatewayReconciler struct {
+	client     client.Client
+	predicates []filter.IngressGatewayPredicate
 }
 
-type Reconciler struct {
-	Client     client.Client
-	Predicates []filter.IngressGatewayPredicate
+func NewReconciler(client client.Client, predicates []filter.IngressGatewayPredicate) *IngressGatewayReconciler {
+	return &IngressGatewayReconciler{
+		client:     client,
+		predicates: predicates,
+	}
 }
 
-func (r Reconciler) Reconcile(ctx context.Context) described_errors.DescribedError {
+func (r *IngressGatewayReconciler) Reconcile(ctx context.Context) described_errors.DescribedError {
 	ctrl.Log.Info("Reconciling Istio ingress gateway")
 
-	podList, err := getIngressGatewayPods(ctx, r.Client)
+	podList, err := getIngressGatewayPods(ctx, r.client)
 	if err != nil {
 		return described_errors.NewDescribedError(err, "Failed to get ingress gateway pods")
 	}
 
 	mustRestart := false
 
-	for _, predicate := range r.Predicates {
+	for _, predicate := range r.predicates {
 		evaluator, err := predicate.NewIngressGatewayEvaluator(ctx)
 		if err != nil {
 			return described_errors.NewDescribedError(err, "Cannot create evaluator")
@@ -55,7 +59,7 @@ func (r Reconciler) Reconcile(ctx context.Context) described_errors.DescribedErr
 	}
 
 	if mustRestart {
-		if err := RestartIngressGateway(ctx, r.Client); err != nil {
+		if err := RestartIngressGateway(ctx, r.client); err != nil {
 			return described_errors.NewDescribedError(err, "Failed to restart ingress gateway")
 		}
 	}

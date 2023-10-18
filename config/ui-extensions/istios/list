@@ -1,6 +1,11 @@
 - name: Ready
   source: status.state
   widget: Badge
+  description: status.description
   highlights:
     positive:
       - 'Ready'
+    negative:
+      - 'Error'
+    critical:
+      - 'Warning'

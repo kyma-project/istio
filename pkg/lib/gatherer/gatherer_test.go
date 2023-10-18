@@ -348,7 +348,7 @@ func createPodWith(name, namespace, containerName, image, imageVersion string, t
 			APIVersion: "v1",
 		},
 		Status: corev1.PodStatus{
-			Phase: corev1.PodPhase(corev1.PodRunning),
+			Phase: corev1.PodRunning,
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
@@ -362,6 +362,7 @@ func createPodWith(name, namespace, containerName, image, imageVersion string, t
 	if terminating {
 		timestamp := metav1.Now()
 		pod.ObjectMeta.DeletionTimestamp = &timestamp
+		pod.Finalizers = []string{"istios.operator.kyma-project.io/test-mock"}
 	}
 	return &pod
 }

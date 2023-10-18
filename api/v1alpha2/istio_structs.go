@@ -9,6 +9,8 @@ import (
 // Config is the configuration for the Istio installation.
 type Config struct {
 	// Defines the number of trusted proxies deployed in front of the Istio gateway proxy.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=4294967295
 	NumTrustedProxies *int `json:"numTrustedProxies,omitempty"`
 }
 
@@ -55,7 +57,12 @@ type CniK8sConfig struct {
 
 // HPASpec defines configuration for HorizontalPodAutoscaler
 type HPASpec struct {
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=2147483647
 	MaxReplicas *int32 `json:"maxReplicas,omitempty"`
+
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=2147483647
 	MinReplicas *int32 `json:"minReplicas,omitempty"`
 }
 
@@ -74,8 +81,12 @@ type Strategy struct {
 // RollingUpdate defines configuration for rolling updates: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#rolling-update-deployment
 type RollingUpdate struct {
 	// +kubebuilder:validation:XIntOrString
+	// +kubebuilder:validation:Pattern=`^[0-9]+%?$`
+	// +kubebuilder:validation:XValidation:rule="(type(self) == int ? self >= 0 && self <= 2147483647: self.size() >= 0)",message="must not be negative, more than 2147483647 or an empty string"
 	MaxSurge *intstr.IntOrString `json:"maxSurge" protobuf:"bytes,2,opt,name=maxSurge"`
 	// +kubebuilder:validation:XIntOrString
+	// +kubebuilder:validation:Pattern="^((100|[0-9]{1,2})%|[0-9]+)$"
+	// +kubebuilder:validation:XValidation:rule="(type(self) == int ? self >= 0 && self <= 2147483647: self.size() >= 0)",message="must not be negative, more than 2147483647 or an empty string"
 	MaxUnavailable *intstr.IntOrString `json:"maxUnavailable" protobuf:"bytes,1,opt,name=maxUnavailable"`
 }
 
@@ -86,6 +97,9 @@ type Resources struct {
 }
 
 type ResourceClaims struct {
-	Cpu    *string `json:"cpu,omitempty"`
+	// +kubebuilder:validation:Pattern=`^([0-9]+m?|[0-9]\.[0-9]{1,3})$`
+	Cpu *string `json:"cpu,omitempty"`
+
+	// +kubebuilder:validation:Pattern=`^[0-9]+(((\.[0-9]+)?(E|P|T|G|M|k|Ei|Pi|Ti|Gi|Mi|Ki|m)?)|(e[0-9]+))$`
 	Memory *string `json:"memory,omitempty"`
 }

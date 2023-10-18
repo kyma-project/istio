@@ -3,19 +3,22 @@ package istio_resources
 import (
 	"context"
 	_ "embed"
+	"time"
+
 	"github.com/kyma-project/istio/operator/internal/filter"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/yaml"
-	"time"
 )
 
 //go:embed envoy_filter_allow_partial_referer.yaml
-var manifest []byte
+var manifest_ef_allow_partial_referer []byte
 
 const EnvoyFilterAnnotation = "istios.operator.kyma-project.io/updatedAt"
 
@@ -47,9 +50,9 @@ func newEnvoyFilterEvaluator(ctx context.Context, k8sClient client.Client) (Envo
 	return EnvoyFilterEvaluator{envoyUpdateTime: updateTime}, nil
 }
 
-func (e EnvoyFilterAllowPartialReferer) apply(ctx context.Context, k8sClient client.Client) (controllerutil.OperationResult, error) {
+func (e EnvoyFilterAllowPartialReferer) apply(ctx context.Context, k8sClient client.Client, _ metav1.OwnerReference, _ map[string]string) (controllerutil.OperationResult, error) {
 	var envoyFilter unstructured.Unstructured
-	err := yaml.Unmarshal(manifest, &envoyFilter)
+	err := yaml.Unmarshal(manifest_ef_allow_partial_referer, &envoyFilter)
 	if err != nil {
 		return controllerutil.OperationResultNone, err
 	}
@@ -63,13 +66,23 @@ func (e EnvoyFilterAllowPartialReferer) apply(ctx context.Context, k8sClient cli
 	if err != nil {
 		return controllerutil.OperationResultNone, err
 	}
-	var ok bool
-	if envoyFilter.GetAnnotations() != nil {
-		_, ok = envoyFilter.GetAnnotations()[EnvoyFilterAnnotation]
+
+	var efaFound, daFound = false, false
+	annotations := envoyFilter.GetAnnotations()
+	if annotations != nil {
+		_, efaFound = annotations[EnvoyFilterAnnotation]
+		_, daFound = annotations[istio.DisclaimerKey]
 	}
 
-	if result != controllerutil.OperationResultNone || envoyFilter.GetAnnotations() == nil || !ok {
+	if result != controllerutil.OperationResultNone || !efaFound {
 		err := annotateWithTimestamp(ctx, envoyFilter, k8sClient)
+		if err != nil {
+			return controllerutil.OperationResultNone, err
+		}
+	}
+
+	if !daFound {
+		err := annotateWithDisclaimer(ctx, envoyFilter, k8sClient)
 		if err != nil {
 			return controllerutil.OperationResultNone, err
 		}
@@ -79,7 +92,7 @@ func (e EnvoyFilterAllowPartialReferer) apply(ctx context.Context, k8sClient cli
 }
 
 func (EnvoyFilterAllowPartialReferer) Name() string {
-	return "partial referer envoy filter"
+	return "EnvoyFilter/kyma-referer"
 }
 
 func (e EnvoyFilterEvaluator) RequiresProxyRestart(p v1.Pod) bool {
@@ -92,26 +105,14 @@ func (e EnvoyFilterEvaluator) RequiresIngressGatewayRestart(p v1.Pod) bool {
 }
 
 // Checks whether the pod CreationTimestamp is older than EnvoyFilterAnnotation
-// If EnvoyFilterAnnotation returns false
+// If EnvoyFilterAnnotation doesn't exist returns false
 func podIsOlder(pod v1.Pod, envoyTime time.Time) bool {
 	return !pod.CreationTimestamp.IsZero() && !envoyTime.IsZero() && pod.CreationTimestamp.Compare(envoyTime) <= 0
 }
 
-func annotateWithTimestamp(ctx context.Context, filter unstructured.Unstructured, k8sClient client.Client) error {
-	annotations := filter.GetAnnotations()
-	if annotations == nil {
-		annotations = make(map[string]string)
-	}
-	annotations[EnvoyFilterAnnotation] = time.Now().Format(time.RFC3339)
-	filter.SetAnnotations(annotations)
-
-	err := k8sClient.Update(ctx, &filter)
-	return err
-}
-
 func getUpdateTime(ctx context.Context, k8sClient client.Client) (time.Time, error) {
 	var object unstructured.Unstructured
-	err := yaml.Unmarshal(manifest, &object)
+	err := yaml.Unmarshal(manifest_ef_allow_partial_referer, &object)
 	if err != nil {
 		return time.Time{}, err
 	}
@@ -128,4 +129,16 @@ func getUpdateTime(ctx context.Context, k8sClient client.Client) (time.Time, err
 	} else {
 		return time.Time{}, nil
 	}
+}
+
+func annotateWithTimestamp(ctx context.Context, filter unstructured.Unstructured, k8sClient client.Client) error {
+	annotations := filter.GetAnnotations()
+	if annotations == nil {
+		annotations = make(map[string]string)
+	}
+	annotations[EnvoyFilterAnnotation] = time.Now().Format(time.RFC3339)
+	filter.SetAnnotations(annotations)
+
+	err := k8sClient.Update(ctx, &filter)
+	return err
 }

@@ -20,6 +20,7 @@ import (
 	"flag"
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	"os"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"time"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -32,6 +33,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	componentv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
@@ -87,12 +89,18 @@ func main() {
 		FailureMaxDelay: flagVar.failureMaxDelay,
 	}
 
+	webhookServer := webhook.NewServer(webhook.Options{
+		Port: 9443,
+	})
+
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme:                 scheme,
-		MetricsBindAddress:     flagVar.metricsAddr,
-		Port:                   9443,
+		Scheme: scheme,
+		Metrics: metricsserver.Options{
+			BindAddress: flagVar.metricsAddr,
+		},
+		WebhookServer:          webhookServer,
 		HealthProbeBindAddress: flagVar.probeAddr,
 		LeaderElection:         flagVar.enableLeaderElection,
 		LeaderElectionID:       "76223278.kyma-project.io",

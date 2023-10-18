@@ -30,13 +30,11 @@ import (
 )
 
 const (
-	istioVersion         string = "1.16.1"
-	istioImageBase       string = "distroless"
-	resourceListPath     string = "test/test_controlled_resource_list.yaml"
-	testKey              string = "key"
-	testValue            string = "value"
-	istioDisclaimerKey   string = "istios.operator.kyma-project.io/managed-by-disclaimer"
-	istioDisclaimerValue string = "DO NOT EDIT - This resource is managed by Kyma.\nAny modifications are discarded and the resource is reverted to the original state."
+	istioVersion     string = "1.16.1"
+	istioImageBase   string = "distroless"
+	resourceListPath string = "test/test_controlled_resource_list.yaml"
+	testKey          string = "key"
+	testValue        string = "value"
 )
 
 var istioTag = fmt.Sprintf("%s-%s", istioVersion, istioImageBase)
@@ -166,7 +164,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(ns.Labels).To(HaveKeyWithValue(testKey, testValue))
 		Expect(ns.Annotations).To(HaveKeyWithValue(testKey, testValue))
 		Expect(ns.Labels).To(HaveKeyWithValue("namespaces.warden.kyma-project.io/validate", "enabled"))
-		Expect(ns.Annotations).To(HaveKeyWithValue(istioDisclaimerKey, istioDisclaimerValue))
+		Expect(ns.Annotations).To(HaveKeyWithValue(istio.DisclaimerKey, istio.DisclaimerValue))
 	})
 
 	It("should fail if after install and update Istio pods do not match target version", func() {
@@ -738,6 +736,7 @@ var _ = Describe("Installation reconciliation", func() {
 				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
 			},
 			DeletionTimestamp: &now,
+			Finalizers:        []string{"istios.operator.kyma-project.io/test-mock"},
 		},
 			Spec: operatorv1alpha1.IstioSpec{
 				Config: operatorv1alpha1.Config{
@@ -908,7 +907,7 @@ var _ = Describe("Installation reconciliation", func() {
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
 		istioNamespace := createNamespace("istio-system")
-		c := createFakeClient(&istioCr, istiod, istioNamespace)
+		c := createFakeClient(istiod, istioNamespace)
 
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
@@ -1014,7 +1013,7 @@ var _ = Describe("Installation reconciliation", func() {
 		// then
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Error()).To(Equal("could not delete Istio module instance since there are 1 customer resources present"))
-		Expect(err.Description()).To(Equal("Resources blocking deletion: VirtualService:mock-ns/mock-vs"))
+		Expect(err.Description()).To(Equal("There are Istio resources that block deletion. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning"))
 		Expect(mockClient.installCalled).To(BeFalse())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 	})
@@ -1048,7 +1047,7 @@ func createFakeClient(objects ...client.Object) client.Client {
 	err = networkingv1alpha3.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
 
-	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build()
+	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).WithStatusSubresource(objects...).Build()
 }
 
 type shouldFailFakeClientOnAnnotation struct {

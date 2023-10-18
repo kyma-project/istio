@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/avast/retry-go"
-	"github.com/docker/distribution/reference"
+	"github.com/distribution/reference"
 	"github.com/kyma-project/istio/operator/controllers"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	"github.com/masterminds/semver"
@@ -13,7 +13,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
 )
@@ -36,7 +36,7 @@ func CreateApplicationDeployment(ctx context.Context, appName, namespace string)
 			Namespace: namespace,
 		},
 		Spec: v1.DeploymentSpec{
-			Replicas: pointer.Int32(1),
+			Replicas: ptr.To(int32(1)),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"app": appName,
@@ -230,6 +230,11 @@ func ApplicationPodShouldHaveIstioProxyInRequiredVersion(ctx context.Context, ap
 
 // CreateHttpbinApplication creates a deployment and a service for the httpbin application
 func CreateHttpbinApplication(ctx context.Context, appName, namespace string) (context.Context, error) {
+	return CreateHttpbinApplicationWithServicePort(ctx, appName, namespace, 8000)
+}
+
+// CreateHttpbinApplication creates a deployment and a service with the given http port for the httpbin application
+func CreateHttpbinApplicationWithServicePort(ctx context.Context, appName, namespace string, port int) (context.Context, error) {
 	ctx, err := CreateApplicationDeployment(ctx, appName, namespace)
 	if err != nil {
 		return ctx, err
@@ -256,8 +261,8 @@ func CreateHttpbinApplication(ctx context.Context, appName, namespace string) (c
 			Ports: []corev1.ServicePort{
 				{
 					Name:       "http",
-					Port:       8000,
-					TargetPort: intstr.FromInt(80),
+					Port:       int32(port),
+					TargetPort: intstr.FromInt32(80),
 				},
 			},
 		},

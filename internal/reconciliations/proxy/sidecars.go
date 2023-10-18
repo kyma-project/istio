@@ -16,7 +16,7 @@ import (
 )
 
 type SidecarsReconciliation interface {
-	Reconcile(ctx context.Context, istioCr v1alpha1.Istio) error
+	Reconcile(ctx context.Context, istioCr v1alpha1.Istio) (bool, error)
 	AddReconcilePredicate(predicate filter.SidecarProxyPredicate)
 }
 
@@ -34,48 +34,49 @@ const (
 )
 
 // Reconcile runs Proxy Reset action, which checks if any of sidecars need a restart and proceed with rollout.
-func (s *Sidecars) Reconcile(ctx context.Context, istioCr v1alpha1.Istio) error {
+func (s *Sidecars) Reconcile(ctx context.Context, istioCr v1alpha1.Istio) (bool, error) {
 	expectedImage := pods.SidecarImage{Repository: imageRepository, Tag: fmt.Sprintf("%s-%s", s.IstioVersion, s.IstioImageBase)}
 	s.Log.Info("Running proxy sidecar reset", "expected image", expectedImage)
 
 	version, err := gatherer.GetIstioPodsVersion(ctx, s.Client)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	if s.IstioVersion != version {
-		return fmt.Errorf("istio-system pods version: %s do not match target version: %s", version, s.IstioVersion)
+		return false, fmt.Errorf("istio-system pods version: %s do not match target version: %s", version, s.IstioVersion)
 	}
 
 	cSize, err := clusterconfig.EvaluateClusterSize(context.Background(), s.Client)
 	if err != nil {
 		s.Log.Error(err, "Error occurred during evaluation of cluster size")
-		return err
+		return false, err
 	}
 
 	ctrl.Log.Info("Installing istio with", "profile", cSize.String())
 
 	iop, err := s.Merger.GetIstioOperator(cSize.DefaultManifestPath())
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	expectedResources, err := istioCr.GetProxyResources(iop)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	warnings, err := sidecars.ProxyReset(ctx, s.Client, expectedImage, expectedResources, s.Predicates, &s.Log)
 	if err != nil {
-		return err
+		return false, err
 	}
 	if len(warnings) > 0 {
 		for _, w := range warnings {
 			s.Log.Info("Proxy reset warning:", "name", w.Name, "namespace", w.Namespace, "kind", w.Kind, "message", w.Message)
 		}
+		return true, nil
 	}
 
-	return nil
+	return false, nil
 }
 
 func (s *Sidecars) AddReconcilePredicate(predicate filter.SidecarProxyPredicate) {

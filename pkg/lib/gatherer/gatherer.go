@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/distribution/reference"
 
-	"github.com/docker/distribution/reference"
 	"github.com/masterminds/semver"
 	"golang.org/x/exp/slices"
 

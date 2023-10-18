@@ -3,19 +3,18 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/istio/operator/internal/filter"
-	"github.com/kyma-project/istio/operator/internal/reconciliations/ingress_gateway"
-	"github.com/kyma-project/istio/operator/internal/reconciliations/istio_resources"
+	"k8s.io/utils/ptr"
 	"time"
+
+	"github.com/kyma-project/istio/operator/internal/filter"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio_resources"
 
 	"github.com/go-logr/logr"
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/pkg/errors"
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -178,6 +177,7 @@ var _ = Describe("Istio Controller", func() {
 					DeletionTimestamp: &metav1.Time{
 						Time: time.Now(),
 					},
+					Finalizers: []string{"istios.operator.kyma-project.io/test-mock"},
 				},
 			}
 			statusMock := StatusMock{}
@@ -196,11 +196,10 @@ var _ = Describe("Istio Controller", func() {
 			}
 
 			// when
-			result, err := sut.Reconcile(context.Background(), reconcile.Request{NamespacedName: types.NamespacedName{Namespace: testNamespace, Name: istioCrName}})
+			_, err := sut.Reconcile(context.Background(), reconcile.Request{NamespacedName: types.NamespacedName{Namespace: testNamespace, Name: istioCrName}})
 
 			// then
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(result).Should(Equal(reconcile.Result{}))
 			Expect(statusMock.updatedToDeletingCalled).Should(BeTrue())
 		})
 
@@ -213,6 +212,7 @@ var _ = Describe("Istio Controller", func() {
 					DeletionTimestamp: &metav1.Time{
 						Time: time.Now(),
 					},
+					Finalizers: []string{"istios.operator.kyma-project.io/test-mock"},
 				},
 			}
 
@@ -242,15 +242,12 @@ var _ = Describe("Istio Controller", func() {
 			Expect(statusMock.updatedToDeletingCalled).Should(BeTrue())
 		})
 
-		It("Should not requeue a deleted CR when there are no finalizers", func() {
+		It("Should not requeue a CR without finalizers, because it's considered to be in deletion", func() {
 			// given
 			istioCR := &operatorv1alpha1.Istio{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      istioCrName,
 					Namespace: testNamespace,
-					DeletionTimestamp: &metav1.Time{
-						Time: time.Now(),
-					},
 				},
 			}
 
@@ -274,9 +271,6 @@ var _ = Describe("Istio Controller", func() {
 			// then
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(result).Should(Equal(reconcile.Result{}))
-
-			err = fakeClient.Get(context.TODO(), client.ObjectKeyFromObject(istioCR), istioCR)
-			Expect(k8serrors.IsNotFound(err)).To(BeTrue())
 		})
 
 		It("Should set ready status, update lastAppliedConfiguration annotation and requeue when successfully reconciled", func() {
@@ -291,7 +285,7 @@ var _ = Describe("Istio Controller", func() {
 				},
 				Spec: operatorv1alpha1.IstioSpec{
 					Config: operatorv1alpha1.Config{
-						NumTrustedProxies: pointer.Int(2),
+						NumTrustedProxies: ptr.To(int(2)),
 					},
 				},
 			}
@@ -455,7 +449,7 @@ var _ = Describe("Istio Controller", func() {
 				},
 				Spec: operatorv1alpha1.IstioSpec{
 					Config: operatorv1alpha1.Config{
-						NumTrustedProxies: pointer.Int(2),
+						NumTrustedProxies: ptr.To(int(2)),
 					},
 				},
 			}
@@ -573,13 +567,52 @@ var _ = Describe("Istio Controller", func() {
 			Expect(istioCR.Status.State).Should(Equal(operatorv1alpha1.Error))
 			Expect(istioCR.Status.Description).To(ContainSubstring("Unable to list Istio CRs"))
 		})
+
+		It("Should set a warning if warning happened during sidecars reconciliation", func() {
+			// given
+			istioCR := &operatorv1alpha1.Istio{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:              istioCrName,
+					Namespace:         testNamespace,
+					UID:               "1",
+					CreationTimestamp: metav1.Unix(1494505756, 0),
+					Finalizers: []string{
+						"istios.operator.kyma-project.io/istio-installation",
+					},
+				},
+			}
+
+			fakeClient := createFakeClient(istioCR)
+			sut := &IstioReconciler{
+				Client:                 fakeClient,
+				Scheme:                 getTestScheme(),
+				istioInstallation:      &istioInstallationReconciliationMock{},
+				proxySidecars:          &proxySidecarsReconciliationMock{warning: true},
+				istioResources:         &istioResourcesReconciliationMock{},
+				ingressGateway:         &ingressGatewayReconciliationMock{},
+				log:                    logr.Discard(),
+				statusHandler:          newStatusHandler(fakeClient),
+				reconciliationInterval: testReconciliationInterval,
+			}
+
+			// when
+			result, err := sut.Reconcile(context.Background(), reconcile.Request{NamespacedName: types.NamespacedName{Namespace: testNamespace, Name: istioCrName}})
+
+			// then
+			Expect(err).To(HaveOccurred())
+			Expect(result.Requeue).To(BeFalse())
+
+			Expect(fakeClient.Get(context.TODO(), client.ObjectKeyFromObject(istioCR), istioCR)).Should(Succeed())
+			Expect(istioCR.Status.State).Should(Equal(operatorv1alpha1.Warning))
+			Expect(istioCR.Status.Description).To(ContainSubstring("Not all pods with Istio injection could be restarted. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning: Istio controller could not restart one or more istio-injected pods."))
+		})
 	})
 })
 
 type ingressGatewayReconciliationMock struct {
 }
 
-func (i *ingressGatewayReconciliationMock) AddReconcilePredicate(_ filter.IngressGatewayPredicate) ingress_gateway.Reconciliation {
+func (i *ingressGatewayReconciliationMock) AddReconcilePredicate(_ filter.IngressGatewayPredicate) Reconciliation {
 	return i
 }
 
@@ -590,11 +623,11 @@ func (i *ingressGatewayReconciliationMock) Reconcile(_ context.Context) describe
 type istioResourcesReconciliationMock struct {
 }
 
-func (i *istioResourcesReconciliationMock) AddReconcileResource(_ istio_resources.Resource) istio_resources.Reconciliation {
+func (i *istioResourcesReconciliationMock) AddReconcileResource(_ istio_resources.Resource) istio_resources.ResourcesReconciliation {
 	return i
 }
 
-func (i *istioResourcesReconciliationMock) Reconcile(_ context.Context) described_errors.DescribedError {
+func (i *istioResourcesReconciliationMock) Reconcile(_ context.Context, istioCR operatorv1alpha1.Istio) described_errors.DescribedError {
 	return nil
 }
 
@@ -619,14 +652,15 @@ func (i *istioInstallationReconciliationMock) Reconcile(_ context.Context, istio
 }
 
 type proxySidecarsReconciliationMock struct {
-	err error
+	warning bool
+	err     error
 }
 
 func (p *proxySidecarsReconciliationMock) AddReconcilePredicate(_ filter.SidecarProxyPredicate) {
 }
 
-func (p *proxySidecarsReconciliationMock) Reconcile(_ context.Context, _ operatorv1alpha1.Istio) error {
-	return p.err
+func (p *proxySidecarsReconciliationMock) Reconcile(_ context.Context, _ operatorv1alpha1.Istio) (bool, error) {
+	return p.warning, p.err
 }
 
 type StatusMock struct {

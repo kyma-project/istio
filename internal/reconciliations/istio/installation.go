@@ -4,10 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/kyma-project/istio/operator/internal/webhooks"
-	"k8s.io/client-go/util/retry"
-	"strings"
-
 	"github.com/thoas/go-funk"
+	"k8s.io/client-go/util/retry"
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
@@ -129,11 +127,12 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 		}
 
 		if len(clientResources) > 0 {
-			clientResourcesList := strings.Join(
-				funk.Map(clientResources, func(a resources.Resource) string { return fmt.Sprintf("%s:%s/%s", a.GVK.Kind, a.Namespace, a.Name) }).([]string), ";")
+			funk.ForEach(clientResources, func(a resources.Resource) {
+				ctrl.Log.Info("Customer resource is blocking Istio deletion", a.GVK.Kind, fmt.Sprintf("%s/%s", a.Namespace, a.Name))
+			})
 
 			return istioCR, described_errors.NewDescribedError(fmt.Errorf("could not delete Istio module instance since there are %d customer resources present", len(clientResources)),
-				fmt.Sprintf("Resources blocking deletion: %s", clientResourcesList)).DisableErrorWrap().SetWarning()
+				"There are Istio resources that block deletion. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning").DisableErrorWrap().SetWarning()
 		}
 
 		err = i.IstioClient.Uninstall(ctx)

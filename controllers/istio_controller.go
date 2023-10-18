@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
 	"time"
 
 	"github.com/kyma-project/istio/operator/internal/filter"
@@ -55,7 +56,7 @@ const (
 
 var IstioTag = fmt.Sprintf("%s-%s", IstioVersion, IstioImageBase)
 
-func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *IstioReconciler {
+func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration, installationCounter prometheus.Counter) *IstioReconciler {
 	merger := manifest.NewDefaultIstioMerger()
 
 	efReferer := istio_resources.NewEnvoyFilterAllowPartialReferer(mgr.GetClient())
@@ -80,6 +81,7 @@ func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *I
 		log:                    mgr.GetLogger(),
 		statusHandler:          newStatusHandler(mgr.GetClient()),
 		reconciliationInterval: reconciliationInterval,
+		installationCounter:    installationCounter,
 	}
 }
 
@@ -127,6 +129,8 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			return ctrl.Result{}, err
 		}
 	}
+
+	r.installationCounter.Inc()
 
 	istioCR, installationErr := r.istioInstallation.Reconcile(ctx, istioCR, IstioResourceListDefaultPath)
 	if installationErr != nil {

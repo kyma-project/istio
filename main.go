@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+	"github.com/kyma-project/istio/operator/internal/metrics"
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	"os"
 	"time"
@@ -102,7 +103,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = controllers.NewReconciler(mgr, flagVar.reconciliationInterval).SetupWithManager(mgr, rateLimiter); err != nil {
+	if err = controllers.NewReconciler(mgr, flagVar.reconciliationInterval, metrics.CreateInstallationsCounter()).SetupWithManager(mgr, rateLimiter); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Istio")
 		os.Exit(1)
 	}

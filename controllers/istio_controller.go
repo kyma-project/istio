@@ -58,6 +58,7 @@ var IstioTag = fmt.Sprintf("%s-%s", IstioVersion, IstioImageBase)
 
 func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *IstioReconciler {
 	merger := manifest.NewDefaultIstioMerger()
+	metrics.Initialise()
 
 	efReferer := istio_resources.NewEnvoyFilterAllowPartialReferer(mgr.GetClient())
 

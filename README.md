@@ -20,7 +20,7 @@ Kyma Istio Operator is a component of the Kyma runtime that handles the manageme
 
 ### Procedure
 
-1. Create kyma-system namespace:
+1. Create the `kyma-system` namespace:
 
    ```bash
    kubectl create namespace kyma-system

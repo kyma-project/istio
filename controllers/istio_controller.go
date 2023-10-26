@@ -59,6 +59,7 @@ func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *I
 	merger := manifest.NewDefaultIstioMerger()
 
 	efReferer := istio_resources.NewEnvoyFilterAllowPartialReferer(mgr.GetClient())
+	//istioResources := istio_resources.CreateIstioResources(isAws())
 
 	istioResources := []istio_resources.Resource{efReferer}
 	istioResources = append(istioResources, istio_resources.NewGatewayKyma(mgr.GetClient()))

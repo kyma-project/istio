@@ -7,7 +7,6 @@ import (
 	"github.com/kyma-project/istio/operator/internal/resources"
 	"text/template"
 
-	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -55,7 +54,7 @@ func (GatewayKyma) apply(ctx context.Context, k8sClient client.Client, _ metav1.
 
 	var daFound bool
 	if resource.GetAnnotations() != nil {
-		_, daFound = resource.GetAnnotations()[istio.DisclaimerKey]
+		_, daFound = resource.GetAnnotations()[resources.DisclaimerKey]
 	}
 	if !daFound {
 		err := resources.AnnotateWithDisclaimer(ctx, resource, k8sClient)

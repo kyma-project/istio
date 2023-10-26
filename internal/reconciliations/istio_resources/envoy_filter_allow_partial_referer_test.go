@@ -5,7 +5,6 @@ import (
 	"github.com/kyma-project/istio/operator/internal/resources"
 	"time"
 
-	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
@@ -42,7 +41,7 @@ var _ = Describe("Apply", func() {
 
 		Expect(s.Items[0].Annotations).To(Not(BeNil()))
 		Expect(s.Items[0].Annotations[EnvoyFilterAnnotation]).To(Not(BeNil()))
-		Expect(s.Items[0].Annotations[istio.DisclaimerKey]).To(Not(BeNil()))
+		Expect(s.Items[0].Annotations[resources.DisclaimerKey]).To(Not(BeNil()))
 	})
 
 	It("should return not changed and annotate with timestamp if no change is needed", func() {
@@ -69,7 +68,7 @@ var _ = Describe("Apply", func() {
 
 		Expect(s.Items[0].Annotations).To(Not(BeNil()))
 		Expect(s.Items[0].Annotations[EnvoyFilterAnnotation]).To(Not(BeNil()))
-		Expect(s.Items[0].Annotations[istio.DisclaimerKey]).To(Not(BeNil()))
+		Expect(s.Items[0].Annotations[resources.DisclaimerKey]).To(Not(BeNil()))
 	})
 
 	It("should return updated and annotate with timestamp if change is needed", func() {
@@ -97,7 +96,7 @@ var _ = Describe("Apply", func() {
 
 		Expect(s.Items[0].Annotations).To(Not(BeNil()))
 		Expect(s.Items[0].Annotations[EnvoyFilterAnnotation]).To(Not(BeNil()))
-		Expect(s.Items[0].Annotations[istio.DisclaimerKey]).To(Not(BeNil()))
+		Expect(s.Items[0].Annotations[resources.DisclaimerKey]).To(Not(BeNil()))
 	})
 })
 

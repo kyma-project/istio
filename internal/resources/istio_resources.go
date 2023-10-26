@@ -2,7 +2,6 @@ package resources
 
 import (
 	"context"
-	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -16,7 +15,7 @@ func ApplyResource(ctx context.Context, k8sClient client.Client, manifest []byte
 		return controllerutil.OperationResultNone, err
 	}
 
-	resource, result, err := CreateOrUpdateResource(ctx, k8sClient, resource, owner)
+	resource, result, err := createOrUpdateResource(ctx, k8sClient, resource, owner)
 	if err != nil {
 		return controllerutil.OperationResultNone, err
 	}
@@ -42,7 +41,7 @@ func unmarshalManifest(manifest []byte) (unstructured.Unstructured, error) {
 	return resource, nil
 }
 
-func CreateOrUpdateResource(ctx context.Context, k8sClient client.Client, resource unstructured.Unstructured, owner *metav1.OwnerReference) (unstructured.Unstructured, controllerutil.OperationResult, error) {
+func createOrUpdateResource(ctx context.Context, k8sClient client.Client, resource unstructured.Unstructured, owner *metav1.OwnerReference) (unstructured.Unstructured, controllerutil.OperationResult, error) {
 	spec, specExist := resource.Object["spec"]
 	data, dataExist := resource.Object["data"]
 	result, err := controllerutil.CreateOrUpdate(ctx, k8sClient, &resource, func() error {
@@ -61,25 +60,4 @@ func CreateOrUpdateResource(ctx context.Context, k8sClient client.Client, resour
 	})
 
 	return resource, result, err
-}
-
-func hasManagedByDisclaimer(resource unstructured.Unstructured) bool {
-	if resource.GetAnnotations() != nil {
-		_, daFound := resource.GetAnnotations()[istio.DisclaimerKey]
-		return daFound
-	}
-
-	return false
-}
-
-func AnnotateWithDisclaimer(ctx context.Context, resource unstructured.Unstructured, k8sClient client.Client) error {
-	annotations := resource.GetAnnotations()
-	if annotations == nil {
-		annotations = make(map[string]string)
-	}
-	annotations[istio.DisclaimerKey] = istio.DisclaimerValue
-	resource.SetAnnotations(annotations)
-
-	err := k8sClient.Update(ctx, &resource)
-	return err
 }

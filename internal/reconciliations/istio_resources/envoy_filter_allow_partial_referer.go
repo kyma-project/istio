@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/kyma-project/istio/operator/internal/filter"
-	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -72,7 +71,7 @@ func (e EnvoyFilterAllowPartialReferer) apply(ctx context.Context, k8sClient cli
 	annotations := envoyFilter.GetAnnotations()
 	if annotations != nil {
 		_, efaFound = annotations[EnvoyFilterAnnotation]
-		_, daFound = annotations[istio.DisclaimerKey]
+		_, daFound = annotations[resources.DisclaimerKey]
 	}
 
 	if result != controllerutil.OperationResultNone || !efaFound {

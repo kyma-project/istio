@@ -11,6 +11,7 @@ const (
 	DisclaimerValue = "DO NOT EDIT - This resource is managed by Kyma.\nAny modifications are discarded and the resource is reverted to the original state."
 )
 
+// AnnotateWithDisclaimer adds the managed-by-disclaimer annotation to the given resource and updates it in the cluster.
 func AnnotateWithDisclaimer(ctx context.Context, resource unstructured.Unstructured, k8sClient client.Client) error {
 	annotations := resource.GetAnnotations()
 	if annotations == nil {

@@ -19,11 +19,15 @@ import (
 
 var _ = Describe("Disclaimer annotation", func() {
 	It("Should annotate with disclaimer when there was no such annotation", func() {
-		client := createFakeClient()
+
 		unstr := unstructured.Unstructured{Object: map[string]interface{}{}}
 		unstr.SetName("test")
-		err := resources.AnnotateWithDisclaimer(context.Background(), unstr, client)
-		Expect(err).ToNot(HaveOccurred())
+		unstr.SetKind("ConfigMap")
+		unstr.SetAPIVersion("v1")
+
+		client := createFakeClient(&unstr)
+
+		Expect(resources.AnnotateWithDisclaimer(context.Background(), unstr, client)).Should(Succeed())
 
 		Expect(client.Get(context.Background(), ctrlClient.ObjectKey{Name: unstr.GetName()}, &unstr)).To(Succeed())
 		anns := unstr.GetAnnotations()

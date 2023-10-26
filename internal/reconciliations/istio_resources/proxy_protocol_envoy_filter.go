@@ -23,3 +23,7 @@ func NewProxyProtocolEnvoyFilter(k8sClient client.Client) ProxyProtocolEnvoyFilt
 func (ProxyProtocolEnvoyFilter) apply(ctx context.Context, k8sClient client.Client, _ metav1.OwnerReference, _ map[string]string) (controllerutil.OperationResult, error) {
 	return resources.Apply(ctx, k8sClient, proxyProtocolEnvoyFilter, nil)
 }
+
+func (ProxyProtocolEnvoyFilter) Name() string {
+	return "EnvoyFilter/proxy-protocol"
+}

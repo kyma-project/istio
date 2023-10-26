@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/pkg/errors"
+	"os"
 	"time"
 
 	"github.com/kyma-project/istio/operator/internal/filter"
@@ -58,18 +59,12 @@ var IstioTag = fmt.Sprintf("%s-%s", IstioVersion, IstioImageBase)
 func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *IstioReconciler {
 	merger := manifest.NewDefaultIstioMerger()
 
+	istioResources, err := istio_resources.Get(context.Background(), mgr.GetClient())
+	if err != nil {
+		mgr.GetLogger().Error(err, "Could not create Reconciler. Failed to get Istio resources")
+		os.Exit(1)
+	}
 	efReferer := istio_resources.NewEnvoyFilterAllowPartialReferer(mgr.GetClient())
-	//istioResources := istio_resources.CreateIstioResources(isAws())
-
-	istioResources := []istio_resources.Resource{efReferer}
-	istioResources = append(istioResources, istio_resources.NewGatewayKyma(mgr.GetClient()))
-	istioResources = append(istioResources, istio_resources.NewVirtualServiceHealthz(mgr.GetClient()))
-	istioResources = append(istioResources, istio_resources.NewPeerAuthenticationMtls(mgr.GetClient()))
-	istioResources = append(istioResources, istio_resources.NewConfigMapControlPlane(mgr.GetClient()))
-	istioResources = append(istioResources, istio_resources.NewConfigMapMesh(mgr.GetClient()))
-	istioResources = append(istioResources, istio_resources.NewConfigMapPerformance(mgr.GetClient()))
-	istioResources = append(istioResources, istio_resources.NewConfigMapService(mgr.GetClient()))
-	istioResources = append(istioResources, istio_resources.NewConfigMapWorkload(mgr.GetClient()))
 
 	return &IstioReconciler{
 		Client:                 mgr.GetClient(),

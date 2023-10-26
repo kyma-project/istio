@@ -1,4 +1,4 @@
-package istio_resources
+package resources
 
 import (
 	"context"
@@ -10,19 +10,19 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-func applyResource(ctx context.Context, k8sClient client.Client, manifest []byte, owner *metav1.OwnerReference) (controllerutil.OperationResult, error) {
+func ApplyResource(ctx context.Context, k8sClient client.Client, manifest []byte, owner *metav1.OwnerReference) (controllerutil.OperationResult, error) {
 	resource, err := unmarshalManifest(manifest)
 	if err != nil {
 		return controllerutil.OperationResultNone, err
 	}
 
-	resource, result, err := createOrUpdateResource(ctx, k8sClient, resource, owner)
+	resource, result, err := CreateOrUpdateResource(ctx, k8sClient, resource, owner)
 	if err != nil {
 		return controllerutil.OperationResultNone, err
 	}
 
 	if !hasManagedByDisclaimer(resource) {
-		err := annotateWithDisclaimer(ctx, resource, k8sClient)
+		err := AnnotateWithDisclaimer(ctx, resource, k8sClient)
 		if err != nil {
 			return controllerutil.OperationResultNone, err
 		}
@@ -42,7 +42,7 @@ func unmarshalManifest(manifest []byte) (unstructured.Unstructured, error) {
 	return resource, nil
 }
 
-func createOrUpdateResource(ctx context.Context, k8sClient client.Client, resource unstructured.Unstructured, owner *metav1.OwnerReference) (unstructured.Unstructured, controllerutil.OperationResult, error) {
+func CreateOrUpdateResource(ctx context.Context, k8sClient client.Client, resource unstructured.Unstructured, owner *metav1.OwnerReference) (unstructured.Unstructured, controllerutil.OperationResult, error) {
 	spec, specExist := resource.Object["spec"]
 	data, dataExist := resource.Object["data"]
 	result, err := controllerutil.CreateOrUpdate(ctx, k8sClient, &resource, func() error {
@@ -72,7 +72,7 @@ func hasManagedByDisclaimer(resource unstructured.Unstructured) bool {
 	return false
 }
 
-func annotateWithDisclaimer(ctx context.Context, resource unstructured.Unstructured, k8sClient client.Client) error {
+func AnnotateWithDisclaimer(ctx context.Context, resource unstructured.Unstructured, k8sClient client.Client) error {
 	annotations := resource.GetAnnotations()
 	if annotations == nil {
 		annotations = make(map[string]string)

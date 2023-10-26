@@ -2,6 +2,7 @@ package istio_resources
 
 import (
 	"context"
+	"github.com/kyma-project/istio/operator/internal/resources"
 
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	. "github.com/onsi/ginkgo/v2"
@@ -22,7 +23,7 @@ var _ = Describe("Apply", func() {
 	}
 
 	It("should return created if no resource was present", func() {
-		client := createFakeClient()
+		client := resources.createFakeClient()
 		sample := NewPeerAuthenticationMtls(client)
 
 		//when
@@ -47,7 +48,7 @@ var _ = Describe("Apply", func() {
 		err := yaml.Unmarshal(manifest_pa_mtls, &p)
 		Expect(err).To(Not(HaveOccurred()))
 
-		client := createFakeClient(&p)
+		client := resources.createFakeClient(&p)
 
 		sample := NewPeerAuthenticationMtls(client)
 
@@ -74,7 +75,7 @@ var _ = Describe("Apply", func() {
 		Expect(err).To(Not(HaveOccurred()))
 
 		p.Spec.Mtls.Mode = 0
-		client := createFakeClient(&p)
+		client := resources.createFakeClient(&p)
 
 		sample := NewPeerAuthenticationMtls(client)
 

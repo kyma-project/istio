@@ -3,6 +3,7 @@ package istio_resources
 import (
 	"bytes"
 	"context"
+	"github.com/kyma-project/istio/operator/internal/resources"
 	"text/template"
 
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
@@ -27,7 +28,7 @@ var _ = Describe("Apply", func() {
 
 	It("should return created if no resource was present", func() {
 		//given
-		client := createFakeClient()
+		client := resources.createFakeClient()
 		sample := NewVirtualServiceHealthz(client)
 
 		//when
@@ -59,7 +60,7 @@ var _ = Describe("Apply", func() {
 		err = yaml.Unmarshal(resourceBuffer.Bytes(), &p)
 		Expect(err).To(Not(HaveOccurred()))
 
-		client := createFakeClient(&p)
+		client := resources.createFakeClient(&p)
 		sample := NewVirtualServiceHealthz(client)
 
 		//when
@@ -92,7 +93,7 @@ var _ = Describe("Apply", func() {
 		Expect(err).To(Not(HaveOccurred()))
 
 		p.Spec.Hosts = append(p.Spec.Hosts, "new-host.com")
-		client := createFakeClient(&p)
+		client := resources.createFakeClient(&p)
 
 		sample := NewVirtualServiceHealthz(client)
 

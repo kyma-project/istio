@@ -3,6 +3,7 @@ package istio_resources
 import (
 	"context"
 	_ "embed"
+	"github.com/kyma-project/istio/operator/internal/resources"
 	"time"
 
 	"github.com/kyma-project/istio/operator/internal/filter"
@@ -82,7 +83,7 @@ func (e EnvoyFilterAllowPartialReferer) apply(ctx context.Context, k8sClient cli
 	}
 
 	if !daFound {
-		err := annotateWithDisclaimer(ctx, envoyFilter, k8sClient)
+		err := resources.AnnotateWithDisclaimer(ctx, envoyFilter, k8sClient)
 		if err != nil {
 			return controllerutil.OperationResultNone, err
 		}

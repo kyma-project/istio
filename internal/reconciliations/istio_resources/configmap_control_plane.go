@@ -3,6 +3,7 @@ package istio_resources
 import (
 	"context"
 	_ "embed"
+	"github.com/kyma-project/istio/operator/internal/resources"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -21,7 +22,7 @@ func NewConfigMapControlPlane(k8sClient client.Client) ConfigMapControlPlane {
 }
 
 func (ConfigMapControlPlane) apply(ctx context.Context, k8sClient client.Client, owner metav1.OwnerReference, _ map[string]string) (controllerutil.OperationResult, error) {
-	return applyResource(ctx, k8sClient, manifest_cm_control_plane, &owner)
+	return resources.ApplyResource(ctx, k8sClient, manifest_cm_control_plane, &owner)
 }
 
 func (ConfigMapControlPlane) Name() string {

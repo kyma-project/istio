@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	_ "embed"
+	"github.com/kyma-project/istio/operator/internal/resources"
 	"text/template"
 
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
@@ -57,7 +58,7 @@ func (GatewayKyma) apply(ctx context.Context, k8sClient client.Client, _ metav1.
 		_, daFound = resource.GetAnnotations()[istio.DisclaimerKey]
 	}
 	if !daFound {
-		err := annotateWithDisclaimer(ctx, resource, k8sClient)
+		err := resources.AnnotateWithDisclaimer(ctx, resource, k8sClient)
 		if err != nil {
 			return controllerutil.OperationResultNone, err
 		}

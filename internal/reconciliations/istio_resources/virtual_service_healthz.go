@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	_ "embed"
+	"github.com/kyma-project/istio/operator/internal/resources"
 	"text/template"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,7 +35,7 @@ func (VirtualServiceHealthz) apply(ctx context.Context, k8sClient client.Client,
 		return controllerutil.OperationResultNone, err
 	}
 
-	return applyResource(ctx, k8sClient, resourceBuffer.Bytes(), nil)
+	return resources.ApplyResource(ctx, k8sClient, resourceBuffer.Bytes(), nil)
 }
 
 func (VirtualServiceHealthz) Name() string {

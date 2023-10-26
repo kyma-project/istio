@@ -1,6 +1,7 @@
 package clusterconfig_test
 
 import (
+	"context"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -9,8 +10,10 @@ import (
 var _ = Describe("Hyperscaler", func() {
 	Context("IsHyperscalerAWS", func() {
 		It("should be true if hyperscaler is AWS", func() {
+			// given
+			k8sClient := createFakeClient()
 			// when
-			isAws, err := clusterconfig.IsHyperscalerAWS()
+			isAws, err := clusterconfig.IsHyperscalerAWS(context.Background(), k8sClient)
 
 			// then
 			Expect(err).ToNot(HaveOccurred())

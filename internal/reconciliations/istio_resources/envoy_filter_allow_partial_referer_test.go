@@ -24,7 +24,7 @@ var _ = Describe("Apply", func() {
 	}
 
 	It("should return created and annotate with timestamp if no resource was present", func() {
-		client := resources.createFakeClient()
+		client := createFakeClient()
 		sample := NewEnvoyFilterAllowPartialReferer(client)
 
 		//when

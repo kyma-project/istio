@@ -35,7 +35,7 @@ func (VirtualServiceHealthz) apply(ctx context.Context, k8sClient client.Client,
 		return controllerutil.OperationResultNone, err
 	}
 
-	return resources.ApplyResource(ctx, k8sClient, resourceBuffer.Bytes(), nil)
+	return resources.Apply(ctx, k8sClient, resourceBuffer.Bytes(), nil)
 }
 
 func (VirtualServiceHealthz) Name() string {

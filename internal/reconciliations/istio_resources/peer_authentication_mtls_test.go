@@ -22,7 +22,7 @@ var _ = Describe("Apply", func() {
 	}
 
 	It("should return created if no resource was present", func() {
-		client := resources.createFakeClient()
+		client := createFakeClient()
 		sample := NewPeerAuthenticationMtls(client)
 
 		//when

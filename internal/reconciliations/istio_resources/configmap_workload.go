@@ -22,7 +22,7 @@ func NewConfigMapWorkload(k8sClient client.Client) ConfigMapWorkload {
 }
 
 func (ConfigMapWorkload) apply(ctx context.Context, k8sClient client.Client, owner metav1.OwnerReference, _ map[string]string) (controllerutil.OperationResult, error) {
-	return resources.ApplyResource(ctx, k8sClient, manifest_cm_workload, &owner)
+	return resources.Apply(ctx, k8sClient, manifest_cm_workload, &owner)
 }
 
 func (ConfigMapWorkload) Name() string {

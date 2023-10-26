@@ -22,7 +22,7 @@ func NewConfigMapService(k8sClient client.Client) ConfigMapService {
 }
 
 func (ConfigMapService) apply(ctx context.Context, k8sClient client.Client, owner metav1.OwnerReference, _ map[string]string) (controllerutil.OperationResult, error) {
-	return resources.ApplyResource(ctx, k8sClient, manifest_cm_service, &owner)
+	return resources.Apply(ctx, k8sClient, manifest_cm_service, &owner)
 }
 
 func (ConfigMapService) Name() string {

@@ -22,7 +22,7 @@ func NewPeerAuthenticationMtls(k8sClient client.Client) PeerAuthenticationMtls {
 }
 
 func (PeerAuthenticationMtls) apply(ctx context.Context, k8sClient client.Client, _ metav1.OwnerReference, _ map[string]string) (controllerutil.OperationResult, error) {
-	return resources.ApplyResource(ctx, k8sClient, manifest_pa_mtls, nil)
+	return resources.Apply(ctx, k8sClient, manifest_pa_mtls, nil)
 }
 
 func (PeerAuthenticationMtls) Name() string {

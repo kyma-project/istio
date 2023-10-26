@@ -22,7 +22,7 @@ func NewConfigMapControlPlane(k8sClient client.Client) ConfigMapControlPlane {
 }
 
 func (ConfigMapControlPlane) apply(ctx context.Context, k8sClient client.Client, owner metav1.OwnerReference, _ map[string]string) (controllerutil.OperationResult, error) {
-	return resources.ApplyResource(ctx, k8sClient, manifest_cm_control_plane, &owner)
+	return resources.Apply(ctx, k8sClient, manifest_cm_control_plane, &owner)
 }
 
 func (ConfigMapControlPlane) Name() string {

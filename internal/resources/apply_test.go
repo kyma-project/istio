@@ -19,7 +19,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
-var _ = Describe("Reconcilation", func() {
+var _ = Describe("Create resources", func() {
 	numTrustedProxies := 1
 	istioCR := operatorv1alpha1.Istio{
 		ObjectMeta: metav1.ObjectMeta{
@@ -35,25 +35,7 @@ var _ = Describe("Reconcilation", func() {
 		},
 	}
 
-	It("should succeed creating envoy filter referer", func() {
-		client := createFakeClient()
-
-		sample := istio_resources.NewEnvoyFilterAllowPartialReferer(client)
-		reconciler := istio_resources.NewReconciler(client, []istio_resources.Resource{sample})
-
-		//when
-		err := reconciler.Reconcile(context.TODO(), istioCR)
-
-		//then
-		Expect(err).To(Not(HaveOccurred()))
-
-		var s networkingv1alpha3.EnvoyFilterList
-		listErr := client.List(context.TODO(), &s)
-		Expect(listErr).To(Not(HaveOccurred()))
-		Expect(s.Items).To(HaveLen(1))
-	})
-
-	It("should succeed creating gateway kyna", func() {
+	It("should succeed creating gateway kyma", func() {
 		client := createFakeClient()
 
 		sample := istio_resources.NewGatewayKyma(client)

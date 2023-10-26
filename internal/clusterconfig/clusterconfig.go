@@ -8,7 +8,6 @@ import (
 	"github.com/imdario/mergo"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 )
@@ -16,9 +15,6 @@ import (
 type ClusterSize int
 
 const (
-	ConfigMapShootInfoName = "shoot-info"
-	ConfigMapShootInfoNS   = "kube-system"
-
 	UnknownSize ClusterSize = iota
 	Evaluation
 	Production
@@ -203,15 +199,6 @@ func (f ClusterFlavour) clusterConfiguration(ctx context.Context, k8sClient clie
 		return config, nil
 	}
 	return ClusterConfiguration{}, nil
-}
-
-func GetDomainName(ctx context.Context, k8sClient client.Client) (string, error) {
-	cmShootInfo := corev1.ConfigMap{}
-	err := k8sClient.Get(ctx, types.NamespacedName{Namespace: ConfigMapShootInfoNS, Name: ConfigMapShootInfoName}, &cmShootInfo)
-	if err != nil {
-		return "", err
-	}
-	return cmShootInfo.Data["domain"], nil
 }
 
 func MergeOverrides(template []byte, overrides ClusterConfiguration) ([]byte, error) {

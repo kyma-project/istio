@@ -1,8 +1,9 @@
-package resources
+package resources_test
 
 import (
 	"context"
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
+	"github.com/kyma-project/istio/operator/internal/resources"
 	networkingv1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -21,12 +22,12 @@ var _ = Describe("Disclaimer annotation", func() {
 		client := createFakeClient()
 		unstr := unstructured.Unstructured{Object: map[string]interface{}{}}
 		unstr.SetName("test")
-		err := AnnotateWithDisclaimer(context.Background(), unstr, client)
+		err := resources.AnnotateWithDisclaimer(context.Background(), unstr, client)
 		Expect(err).ToNot(HaveOccurred())
 
-		_ = client.Get(context.Background(), ctrlClient.ObjectKey{Name: unstr.GetName()}, &unstr)
+		Expect(client.Get(context.Background(), ctrlClient.ObjectKey{Name: unstr.GetName()}, &unstr)).To(Succeed())
 		anns := unstr.GetAnnotations()
-		Expect(anns[DisclaimerKey]).To(Equal(DisclaimerValue))
+		Expect(anns[resources.DisclaimerKey]).To(Equal(resources.DisclaimerValue))
 	})
 })
 

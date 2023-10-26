@@ -1,10 +1,8 @@
-package resources
+package istio_resources
 
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/istio/operator/internal/reconciliations/istio_resources"
-
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	. "github.com/onsi/ginkgo/v2"
@@ -19,7 +17,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
-var _ = Describe("Create resources", func() {
+var _ = Describe("Reconciliation", func() {
 	numTrustedProxies := 1
 	istioCR := operatorv1alpha1.Istio{
 		ObjectMeta: metav1.ObjectMeta{
@@ -35,11 +33,29 @@ var _ = Describe("Create resources", func() {
 		},
 	}
 
+	It("should succeed creating envoy filter referer", func() {
+		client := createFakeClient()
+
+		sample := NewEnvoyFilterAllowPartialReferer(client)
+		reconciler := NewReconciler(client, []Resource{sample})
+
+		//when
+		err := reconciler.Reconcile(context.TODO(), istioCR)
+
+		//then
+		Expect(err).To(Not(HaveOccurred()))
+
+		var s networkingv1alpha3.EnvoyFilterList
+		listErr := client.List(context.TODO(), &s)
+		Expect(listErr).To(Not(HaveOccurred()))
+		Expect(s.Items).To(HaveLen(1))
+	})
+
 	It("should succeed creating gateway kyma", func() {
 		client := createFakeClient()
 
-		sample := istio_resources.NewGatewayKyma(client)
-		reconciler := istio_resources.NewReconciler(client, []istio_resources.Resource{sample})
+		sample := NewGatewayKyma(client)
+		reconciler := NewReconciler(client, []Resource{sample})
 
 		//when
 		err := reconciler.Reconcile(context.TODO(), istioCR)
@@ -57,8 +73,8 @@ var _ = Describe("Create resources", func() {
 	It("should succeed creating virtual service healthz", func() {
 		client := createFakeClient()
 
-		sample := istio_resources.NewVirtualServiceHealthz(client)
-		reconciler := istio_resources.NewReconciler(client, []istio_resources.Resource{sample})
+		sample := NewVirtualServiceHealthz(client)
+		reconciler := NewReconciler(client, []Resource{sample})
 
 		//when
 		err := reconciler.Reconcile(context.TODO(), istioCR)
@@ -76,8 +92,8 @@ var _ = Describe("Create resources", func() {
 	It("should succeed creating peer authentication mtls", func() {
 		client := createFakeClient()
 
-		sample := istio_resources.NewPeerAuthenticationMtls(client)
-		reconciler := istio_resources.NewReconciler(client, []istio_resources.Resource{sample})
+		sample := NewPeerAuthenticationMtls(client)
+		reconciler := NewReconciler(client, []Resource{sample})
 
 		//when
 		err := reconciler.Reconcile(context.TODO(), istioCR)
@@ -94,13 +110,13 @@ var _ = Describe("Create resources", func() {
 	It("should succeed creating config maps for dashboards", func() {
 		client := createFakeClient()
 
-		resources := []istio_resources.Resource{}
-		resources = append(resources, istio_resources.NewConfigMapControlPlane(client))
-		resources = append(resources, istio_resources.NewConfigMapMesh(client))
-		resources = append(resources, istio_resources.NewConfigMapPerformance(client))
-		resources = append(resources, istio_resources.NewConfigMapService(client))
-		resources = append(resources, istio_resources.NewConfigMapWorkload(client))
-		reconciler := istio_resources.NewReconciler(client, resources)
+		resources := []Resource{}
+		resources = append(resources, NewConfigMapControlPlane(client))
+		resources = append(resources, NewConfigMapMesh(client))
+		resources = append(resources, NewConfigMapPerformance(client))
+		resources = append(resources, NewConfigMapService(client))
+		resources = append(resources, NewConfigMapWorkload(client))
+		reconciler := NewReconciler(client, resources)
 
 		//when
 		err := reconciler.Reconcile(context.TODO(), istioCR)

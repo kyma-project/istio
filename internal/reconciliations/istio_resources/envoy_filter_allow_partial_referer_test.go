@@ -50,7 +50,7 @@ var _ = Describe("Apply", func() {
 		err := yaml.Unmarshal(manifest_ef_allow_partial_referer, &filter)
 		Expect(err).To(Not(HaveOccurred()))
 
-		client := resources.createFakeClient(&filter)
+		client := createFakeClient(&filter)
 
 		sample := NewEnvoyFilterAllowPartialReferer(client)
 
@@ -78,7 +78,7 @@ var _ = Describe("Apply", func() {
 		Expect(err).To(Not(HaveOccurred()))
 
 		filter.Spec.Priority = 2
-		client := resources.createFakeClient(&filter)
+		client := createFakeClient(&filter)
 
 		sample := NewEnvoyFilterAllowPartialReferer(client)
 
@@ -118,7 +118,7 @@ var _ = Describe("RequiresProxyRestart", func() {
 		pod.CreationTimestamp = metav1.Time{Time: t}
 		pod2.CreationTimestamp = metav1.Time{Time: t}
 
-		client := resources.createFakeClient(pod, pod2)
+		client := createFakeClient(pod, pod2)
 
 		sample := NewEnvoyFilterAllowPartialReferer(client)
 		changed, err := sample.apply(context.TODO(), client, owner, templateValues)
@@ -143,7 +143,7 @@ var _ = Describe("RequiresProxyRestart", func() {
 		Expect(err).To(Not(HaveOccurred()))
 		pod.CreationTimestamp = metav1.Time{Time: t}
 
-		client := resources.createFakeClient(pod)
+		client := createFakeClient(pod)
 
 		sample := NewEnvoyFilterAllowPartialReferer(client)
 		changed, err := sample.apply(context.TODO(), client, owner, templateValues)
@@ -176,7 +176,7 @@ var _ = Describe("RequiresProxyRestart", func() {
 		Expect(err).To(Not(HaveOccurred()))
 		pod.CreationTimestamp = metav1.Time{Time: t}
 
-		client := resources.createFakeClient(pod)
+		client := createFakeClient(pod)
 
 		sample := NewEnvoyFilterAllowPartialReferer(client)
 		changed, err := sample.apply(context.TODO(), client, owner, templateValues)
@@ -199,7 +199,7 @@ var _ = Describe("RequiresProxyRestart", func() {
 		Expect(err).To(Not(HaveOccurred()))
 		pod.CreationTimestamp = metav1.Time{Time: t}
 
-		client := resources.createFakeClient(pod)
+		client := createFakeClient(pod)
 
 		sample := NewEnvoyFilterAllowPartialReferer(client)
 		changed, err := sample.apply(context.TODO(), client, owner, templateValues)

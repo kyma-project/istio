@@ -27,7 +27,7 @@ var _ = Describe("Apply", func() {
 
 	It("should return created if no resource was present", func() {
 		//given
-		client := resources.createFakeClient()
+		client := createFakeClient()
 		sample := NewGatewayKyma(client)
 
 		//when
@@ -59,7 +59,7 @@ var _ = Describe("Apply", func() {
 		err = yaml.Unmarshal(resourceBuffer.Bytes(), &p)
 		Expect(err).To(Not(HaveOccurred()))
 
-		client := resources.createFakeClient(&p)
+		client := createFakeClient(&p)
 
 		sample := NewGatewayKyma(client)
 
@@ -93,7 +93,7 @@ var _ = Describe("Apply", func() {
 		Expect(err).To(Not(HaveOccurred()))
 
 		p.Spec.Servers[0].Port.Number = 4443
-		client := resources.createFakeClient(&p)
+		client := createFakeClient(&p)
 
 		sample := NewGatewayKyma(client)
 

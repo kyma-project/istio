@@ -23,7 +23,7 @@ var _ = Describe("Apply", func() {
 
 	It("should return created if no resource was present", func() {
 		//given
-		client := resources.createFakeClient()
+		client := createFakeClient()
 		sample := NewConfigMapPerformance(client)
 
 		//when
@@ -48,7 +48,7 @@ var _ = Describe("Apply", func() {
 		err := yaml.Unmarshal(manifest_cm_performance, &p)
 		Expect(err).To(Not(HaveOccurred()))
 
-		client := resources.createFakeClient(&p)
+		client := createFakeClient(&p)
 
 		sample := NewConfigMapPerformance(client)
 

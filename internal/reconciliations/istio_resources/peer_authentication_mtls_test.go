@@ -47,7 +47,7 @@ var _ = Describe("Apply", func() {
 		err := yaml.Unmarshal(manifest_pa_mtls, &p)
 		Expect(err).To(Not(HaveOccurred()))
 
-		client := resources.createFakeClient(&p)
+		client := createFakeClient(&p)
 
 		sample := NewPeerAuthenticationMtls(client)
 
@@ -74,7 +74,7 @@ var _ = Describe("Apply", func() {
 		Expect(err).To(Not(HaveOccurred()))
 
 		p.Spec.Mtls.Mode = 0
-		client := resources.createFakeClient(&p)
+		client := createFakeClient(&p)
 
 		sample := NewPeerAuthenticationMtls(client)
 

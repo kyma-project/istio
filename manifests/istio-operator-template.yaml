@@ -230,6 +230,7 @@ spec:
           secretName: istio-ingressgateway-ca-certs
         serviceAnnotations:
           dns.gardener.cloud/class: garden
+          service.beta.kubernetes.io/aws-load-balancer-protocol: "*"
           service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: "4000"
           istios.operator.kyma-project.io/managed-by-disclaimer: |
             DO NOT EDIT - This resource is managed by Kyma.

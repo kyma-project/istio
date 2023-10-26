@@ -3,6 +3,7 @@ package clusterconfig
 import (
 	"context"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"strings"
 )
 
 func IsHyperscalerAWS(ctx context.Context, k8sClient client.Client) (bool, error) {
@@ -11,5 +12,5 @@ func IsHyperscalerAWS(ctx context.Context, k8sClient client.Client) (bool, error
 		return false, err
 	}
 
-	return p == "AWS", nil
+	return strings.ToLower(p) == "aws", nil
 }

@@ -11,7 +11,7 @@ import (
 
 var _ = Describe("Hyperscaler", func() {
 	Context("IsHyperscalerAWS", func() {
-		It("should be true if hyperscaler is AWS", func() {
+		It("should be true if hyperscaler is aws", func() {
 			// given
 			cm := v1.ConfigMap{
 				ObjectMeta: metav1.ObjectMeta{Name: clusterconfig.ConfigMapShootInfoName, Namespace: clusterconfig.ConfigMapShootInfoNS},
@@ -27,7 +27,7 @@ var _ = Describe("Hyperscaler", func() {
 			Expect(isAws).To(BeTrue())
 		})
 
-		It("should be false if hyperscaler is not AWS", func() {
+		It("should be false if hyperscaler is not aws", func() {
 			// given
 			cm := v1.ConfigMap{
 				ObjectMeta: metav1.ObjectMeta{Name: clusterconfig.ConfigMapShootInfoName, Namespace: clusterconfig.ConfigMapShootInfoNS},

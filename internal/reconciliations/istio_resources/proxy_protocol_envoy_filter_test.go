@@ -1,1 +1,0 @@
-package istio_resources

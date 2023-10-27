@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/pkg/errors"
-	"os"
 	"time"
 
 	"github.com/kyma-project/istio/operator/internal/filter"
@@ -59,11 +58,6 @@ var IstioTag = fmt.Sprintf("%s-%s", IstioVersion, IstioImageBase)
 func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *IstioReconciler {
 	merger := manifest.NewDefaultIstioMerger()
 
-	istioResources, err := istio_resources.Get(context.Background(), mgr.GetClient())
-	if err != nil {
-		mgr.GetLogger().Error(err, "Could not create Reconciler. Failed to get Istio resources")
-		os.Exit(1)
-	}
 	efReferer := istio_resources.NewEnvoyFilterAllowPartialReferer(mgr.GetClient())
 
 	return &IstioReconciler{
@@ -71,7 +65,7 @@ func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *I
 		Scheme:                 mgr.GetScheme(),
 		istioInstallation:      &istio.Installation{Client: mgr.GetClient(), IstioClient: istio.NewIstioClient(), IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Merger: &merger},
 		proxySidecars:          &proxy.Sidecars{IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Log: mgr.GetLogger(), Client: mgr.GetClient(), Merger: &merger, Predicates: []filter.SidecarProxyPredicate{efReferer}},
-		istioResources:         istio_resources.NewReconciler(mgr.GetClient(), istioResources),
+		istioResources:         istio_resources.NewReconciler(mgr.GetClient()),
 		ingressGateway:         ingress_gateway.NewReconciler(mgr.GetClient(), []filter.IngressGatewayPredicate{efReferer}),
 		log:                    mgr.GetLogger(),
 		statusHandler:          newStatusHandler(mgr.GetClient()),
@@ -136,7 +130,13 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, nil
 	}
 
-	resourcesErr := r.istioResources.Reconcile(ctx, istioCR)
+	istioResources, err := istio_resources.Get(ctx, r.Client)
+	if err != nil {
+		r.log.Error(err, "Failed to initialise Istio resources")
+		return r.requeueReconciliation(ctx, istioCR, described_errors.NewDescribedError(err, "Istio controller failed to initialise Istio resources"))
+	}
+
+	resourcesErr := r.istioResources.Reconcile(ctx, istioCR, istioResources)
 	if resourcesErr != nil {
 		return r.requeueReconciliation(ctx, istioCR, resourcesErr)
 	}

@@ -14,19 +14,17 @@ import (
 )
 
 type ResourcesReconciliation interface {
-	Reconcile(ctx context.Context, istioCR v1alpha1.Istio) described_errors.DescribedError
+	Reconcile(ctx context.Context, istioCR v1alpha1.Istio, resources []Resource) described_errors.DescribedError
 }
 
 type ResourcesReconciler struct {
 	client         client.Client
-	resources      []Resource
 	templateValues map[string]string
 }
 
-func NewReconciler(client client.Client, resources []Resource) *ResourcesReconciler {
+func NewReconciler(client client.Client) *ResourcesReconciler {
 	return &ResourcesReconciler{
-		client:    client,
-		resources: resources,
+		client: client,
 	}
 }
 
@@ -35,7 +33,7 @@ type Resource interface {
 	apply(ctx context.Context, k8sClient client.Client, owner metav1.OwnerReference, templateValues map[string]string) (controllerutil.OperationResult, error)
 }
 
-func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha1.Istio) described_errors.DescribedError {
+func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha1.Istio, resources []Resource) described_errors.DescribedError {
 	ctrl.Log.Info("Reconciling istio resources")
 
 	err := r.getTemplateValues(ctx, istioCR)
@@ -50,7 +48,7 @@ func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha1.Is
 		UID:        istioCR.UID,
 	}
 
-	for _, resource := range r.resources {
+	for _, resource := range resources {
 		ctrl.Log.Info("Reconciling istio resource", "name", resource.Name())
 		result, err := resource.apply(ctx, r.client, owner, r.templateValues)
 

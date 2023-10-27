@@ -254,6 +254,11 @@ istio-integration-test: install deploy
 	# Increased TEST_REQUEST_TIMEOUT to 300s to avoid timeouts on newly created k3s clusters on Prow
 	cd tests/integration && TEST_REQUEST_TIMEOUT=300s && EXPORT_RESULT=true go test -v -timeout 35m -run TestIstioMain
 
+.PHONY: aws-integration-test
+aws-integration-test: install deploy
+	# Increased TEST_REQUEST_TIMEOUT to 600s to avoid timeouts on Gardener clusters
+	cd tests/integration && TEST_REQUEST_TIMEOUT=600s && EXPORT_RESULT=true go test -v -timeout 35m -run TestAws
+
 .PHONY: deploy-latest-release
 deploy-latest-release:
 	cd tests/integration && ./scripts/deploy-latest-release-to-cluster.sh $(TARGET_BRANCH)

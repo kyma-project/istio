@@ -24,6 +24,7 @@ const (
 	evaluationEnv string = "TEST_EVALUATION"
 
 	productionMainSuitePath    string = "features/istio/production/main-suite"
+	productionAwsSuitePath     string = "features/istio/production/aws-suite"
 	productionUpgradeSuitePath string = "features/istio/production/upgrade-suite"
 	evaluationPath             string = "features/istio/evaluation"
 )
@@ -44,6 +45,11 @@ func TestIstioMain(t *testing.T) {
 func TestIstioUpgrade(t *testing.T) {
 	suiteName := "Istio Upgrade"
 	runTestSuite(t, upgradeInitScenario, productionUpgradeSuitePath, suiteName)
+}
+
+func TestAws(t *testing.T) {
+	suiteName := "AWS"
+	runTestSuite(t, initScenario, productionAwsSuitePath, suiteName)
 }
 
 func runTestSuite(t *testing.T, scenarioInit func(ctx *godog.ScenarioContext), featurePath string, suiteName string) {

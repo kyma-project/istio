@@ -3,7 +3,6 @@ package istio_resources
 import (
 	"context"
 	"fmt"
-
 	"github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
@@ -19,12 +18,14 @@ type ResourcesReconciliation interface {
 
 type ResourcesReconciler struct {
 	client         client.Client
+	awsClient      clusterconfig.AwsClientInterface
 	templateValues map[string]string
 }
 
-func NewReconciler(client client.Client) *ResourcesReconciler {
+func NewReconciler(client client.Client, awsClient clusterconfig.AwsClientInterface) *ResourcesReconciler {
 	return &ResourcesReconciler{
-		client: client,
+		client:    client,
+		awsClient: awsClient,
 	}
 }
 
@@ -38,7 +39,7 @@ func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha1.Is
 
 	// We get the istio resources in the reconciliation instead of the initialisation of the reconciler, because we need to fetch information from the cluster using the kube client.
 	// During the creation of the reconciler the manager is not initialised yet and therefore the kube client cannot be used, yet.
-	resources, err := getResources(ctx, r.client)
+	resources, err := getResources(r.client, r.awsClient)
 	if err != nil {
 		ctrl.Log.Error(err, "Failed to initialise Istio resources")
 		return described_errors.NewDescribedError(err, "Istio controller failed to initialise Istio resources")
@@ -95,7 +96,7 @@ func (r *ResourcesReconciler) getTemplateValues(ctx context.Context, istioCR v1a
 }
 
 // getResources returns all Istio resources required for the reconciliation specific for the given hyperscaler.
-func getResources(ctx context.Context, k8sClient client.Client) ([]Resource, error) {
+func getResources(k8sClient client.Client, awsClient clusterconfig.AwsClientInterface) ([]Resource, error) {
 
 	istioResources := []Resource{NewEnvoyFilterAllowPartialReferer(k8sClient)}
 	istioResources = append(istioResources, NewGatewayKyma(k8sClient))
@@ -107,10 +108,7 @@ func getResources(ctx context.Context, k8sClient client.Client) ([]Resource, err
 	istioResources = append(istioResources, NewConfigMapService(k8sClient))
 	istioResources = append(istioResources, NewConfigMapWorkload(k8sClient))
 
-	isAws, err := clusterconfig.IsHyperscalerAWS(ctx, k8sClient)
-	if err != nil {
-		return nil, err
-	}
+	isAws := clusterconfig.IsHyperscalerAWS(awsClient)
 
 	if isAws {
 		istioResources = append(istioResources, NewProxyProtocolEnvoyFilter(k8sClient))

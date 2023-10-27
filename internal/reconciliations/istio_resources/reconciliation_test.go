@@ -19,6 +19,14 @@ import (
 	"strings"
 )
 
+type awsClientMock struct {
+	isAws bool
+}
+
+func (ac *awsClientMock) IsAws() bool {
+	return ac.isAws
+}
+
 var _ = Describe("Reconciliation", func() {
 	numTrustedProxies := 1
 	istioCR := operatorv1alpha1.Istio{
@@ -36,8 +44,10 @@ var _ = Describe("Reconciliation", func() {
 	}
 
 	It("should succeed creating envoy filter referer", func() {
+		//given
 		client := createFakeClient()
-		reconciler := NewReconciler(client)
+		ac := &awsClientMock{isAws: false}
+		reconciler := NewReconciler(client, ac)
 
 		//when
 		err := reconciler.Reconcile(context.TODO(), istioCR)
@@ -52,8 +62,10 @@ var _ = Describe("Reconciliation", func() {
 	})
 
 	It("should succeed creating gateway kyma", func() {
+		//given
 		client := createFakeClient()
-		reconciler := NewReconciler(client)
+		ac := &awsClientMock{isAws: false}
+		reconciler := NewReconciler(client, ac)
 
 		//when
 		err := reconciler.Reconcile(context.TODO(), istioCR)
@@ -69,8 +81,10 @@ var _ = Describe("Reconciliation", func() {
 	})
 
 	It("should succeed creating virtual service healthz", func() {
+		//given
 		client := createFakeClient()
-		reconciler := NewReconciler(client)
+		ac := &awsClientMock{isAws: false}
+		reconciler := NewReconciler(client, ac)
 
 		//when
 		err := reconciler.Reconcile(context.TODO(), istioCR)
@@ -86,8 +100,10 @@ var _ = Describe("Reconciliation", func() {
 	})
 
 	It("should succeed creating peer authentication mtls", func() {
+		//given
 		client := createFakeClient()
-		reconciler := NewReconciler(client)
+		ac := &awsClientMock{isAws: false}
+		reconciler := NewReconciler(client, ac)
 
 		//when
 		err := reconciler.Reconcile(context.TODO(), istioCR)
@@ -102,8 +118,10 @@ var _ = Describe("Reconciliation", func() {
 	})
 
 	It("should succeed creating config maps for dashboards", func() {
+		//given
 		client := createFakeClient()
-		reconciler := NewReconciler(client)
+		ac := &awsClientMock{isAws: false}
+		reconciler := NewReconciler(client, ac)
 
 		//when
 		err := reconciler.Reconcile(context.TODO(), istioCR)
@@ -136,8 +154,10 @@ var _ = Describe("Reconciliation", func() {
 	Context("proxy-protocol EnvoyFilter", func() {
 
 		It("should be created when hyperscaler is AWS", func() {
-			client := createFakeClient(createAwsShootInfo())
-			reconciler := NewReconciler(client)
+			//given
+			client := createFakeClient()
+			ac := &awsClientMock{isAws: true}
+			reconciler := NewReconciler(client, ac)
 
 			//when
 			err := reconciler.Reconcile(context.TODO(), istioCR)
@@ -150,8 +170,10 @@ var _ = Describe("Reconciliation", func() {
 		})
 
 		It("should not be created when hyperscaler is not AWS", func() {
+			//given
 			client := createFakeClient(createGcpShootInfo())
-			reconciler := NewReconciler(client)
+			ac := &awsClientMock{isAws: false}
+			reconciler := NewReconciler(client, ac)
 
 			//when
 			err := reconciler.Reconcile(context.TODO(), istioCR)
@@ -185,10 +207,6 @@ func createFakeClient(objects ...ctrlclient.Object) ctrlclient.Client {
 
 func createGcpShootInfo() *corev1.ConfigMap {
 	return createShootInfoConfigMap("gcp")
-}
-
-func createAwsShootInfo() *corev1.ConfigMap {
-	return createShootInfoConfigMap("aws")
 }
 
 func createShootInfoConfigMap(provider string) *corev1.ConfigMap {

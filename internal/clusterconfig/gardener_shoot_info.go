@@ -20,14 +20,6 @@ func GetDomainName(ctx context.Context, k8sClient client.Client) (string, error)
 	return cmShootInfo.Data["domain"], nil
 }
 
-func getProvider(ctx context.Context, k8sClient client.Client) (string, error) {
-	cmShootInfo, err := getShootInfoConfigMap(ctx, k8sClient)
-	if err != nil {
-		return "", err
-	}
-	return cmShootInfo.Data["provider"], nil
-}
-
 func getShootInfoConfigMap(ctx context.Context, k8sClient client.Client) (v1.ConfigMap, error) {
 	cm := v1.ConfigMap{}
 	err := k8sClient.Get(ctx, types.NamespacedName{Namespace: ConfigMapShootInfoNS, Name: ConfigMapShootInfoName}, &cm)

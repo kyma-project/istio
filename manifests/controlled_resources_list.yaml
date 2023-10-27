@@ -19,6 +19,8 @@ resources:
         namespace: "istio-system"
       - name: "kyma-referer"
         namespace: "istio-system"
+      - name: "proxy-protocol"
+        namespace: "istio-system"
   - GroupVersionKind:
       group: networking.istio.io
       version: v1alpha3

@@ -44,5 +44,17 @@ var _ = Describe("Hyperscaler", func() {
 			Expect(isAws).To(BeFalse())
 		})
 
+		It("should be false if doesn't run on Gardener, because shoot-info doesn't exist", func() {
+			// given
+			k8sClient := createFakeClient()
+
+			// when
+			isAws, err := clusterconfig.IsHyperscalerAWS(context.Background(), k8sClient)
+
+			// then
+			Expect(err).ToNot(HaveOccurred())
+			Expect(isAws).To(BeFalse())
+		})
+
 	})
 })

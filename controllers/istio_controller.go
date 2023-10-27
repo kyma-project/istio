@@ -130,13 +130,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, nil
 	}
 
-	istioResources, err := istio_resources.Get(ctx, r.Client)
-	if err != nil {
-		r.log.Error(err, "Failed to initialise Istio resources")
-		return r.requeueReconciliation(ctx, istioCR, described_errors.NewDescribedError(err, "Istio controller failed to initialise Istio resources"))
-	}
-
-	resourcesErr := r.istioResources.Reconcile(ctx, istioCR, istioResources)
+	resourcesErr := r.istioResources.Reconcile(ctx, istioCR)
 	if resourcesErr != nil {
 		return r.requeueReconciliation(ctx, istioCR, resourcesErr)
 	}

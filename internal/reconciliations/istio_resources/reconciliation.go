@@ -14,7 +14,7 @@ import (
 )
 
 type ResourcesReconciliation interface {
-	Reconcile(ctx context.Context, istioCR v1alpha1.Istio, resources []Resource) described_errors.DescribedError
+	Reconcile(ctx context.Context, istioCR v1alpha1.Istio) described_errors.DescribedError
 }
 
 type ResourcesReconciler struct {
@@ -33,10 +33,18 @@ type Resource interface {
 	apply(ctx context.Context, k8sClient client.Client, owner metav1.OwnerReference, templateValues map[string]string) (controllerutil.OperationResult, error)
 }
 
-func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha1.Istio, resources []Resource) described_errors.DescribedError {
+func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha1.Istio) described_errors.DescribedError {
 	ctrl.Log.Info("Reconciling istio resources")
 
-	err := r.getTemplateValues(ctx, istioCR)
+	// We get the istio resources in the reconciliation instead of the initialisation of the reconciler, because we need to fetch information from the cluster using the kube client.
+	// During the creation of the reconciler the manager is not initialised yet and therefore the kube client cannot be used, yet.
+	resources, err := getResources(ctx, r.client)
+	if err != nil {
+		ctrl.Log.Error(err, "Failed to initialise Istio resources")
+		return described_errors.NewDescribedError(err, "Istio controller failed to initialise Istio resources")
+	}
+
+	err = r.getTemplateValues(ctx, istioCR)
 	if err != nil {
 		return described_errors.NewDescribedError(err, "Could not get template values for istio resources")
 	}
@@ -84,4 +92,29 @@ func (r *ResourcesReconciler) getTemplateValues(ctx context.Context, istioCR v1a
 	}
 
 	return nil
+}
+
+// getResources returns all Istio resources required for the reconciliation specific for the given hyperscaler.
+func getResources(ctx context.Context, k8sClient client.Client) ([]Resource, error) {
+
+	istioResources := []Resource{NewEnvoyFilterAllowPartialReferer(k8sClient)}
+	istioResources = append(istioResources, NewGatewayKyma(k8sClient))
+	istioResources = append(istioResources, NewVirtualServiceHealthz(k8sClient))
+	istioResources = append(istioResources, NewPeerAuthenticationMtls(k8sClient))
+	istioResources = append(istioResources, NewConfigMapControlPlane(k8sClient))
+	istioResources = append(istioResources, NewConfigMapMesh(k8sClient))
+	istioResources = append(istioResources, NewConfigMapPerformance(k8sClient))
+	istioResources = append(istioResources, NewConfigMapService(k8sClient))
+	istioResources = append(istioResources, NewConfigMapWorkload(k8sClient))
+
+	isAws, err := clusterconfig.IsHyperscalerAWS(ctx, k8sClient)
+	if err != nil {
+		return nil, err
+	}
+
+	if isAws {
+		istioResources = append(istioResources, NewProxyProtocolEnvoyFilter(k8sClient))
+	}
+
+	return istioResources, nil
 }

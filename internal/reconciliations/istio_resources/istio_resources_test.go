@@ -52,25 +52,6 @@ var _ = Describe("Reconcilation", func() {
 		Expect(s.Items).To(HaveLen(1))
 	})
 
-	It("should succeed creating gateway kyna", func() {
-		client := createFakeClient()
-
-		sample := NewGatewayKyma(client)
-		reconciler := NewReconciler(client, []Resource{sample})
-
-		//when
-		err := reconciler.Reconcile(context.TODO(), istioCR)
-
-		//then
-		Expect(err).To(Not(HaveOccurred()))
-
-		var s networkingv1alpha3.GatewayList
-		listErr := client.List(context.TODO(), &s)
-		Expect(listErr).To(Not(HaveOccurred()))
-		Expect(s.Items).To(HaveLen(1))
-		Expect(s.Items[0].Spec.Servers[0].Hosts[0]).To(Equal(fmt.Sprintf("*.%s", clusterconfig.LocalKymaDomain)))
-	})
-
 	It("should succeed creating virtual service healthz", func() {
 		client := createFakeClient()
 

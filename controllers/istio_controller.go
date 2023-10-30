@@ -61,7 +61,6 @@ func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *I
 	efReferer := istio_resources.NewEnvoyFilterAllowPartialReferer(mgr.GetClient())
 
 	istioResources := []istio_resources.Resource{efReferer}
-	istioResources = append(istioResources, istio_resources.NewGatewayKyma(mgr.GetClient()))
 	istioResources = append(istioResources, istio_resources.NewVirtualServiceHealthz(mgr.GetClient()))
 	istioResources = append(istioResources, istio_resources.NewPeerAuthenticationMtls(mgr.GetClient()))
 	istioResources = append(istioResources, istio_resources.NewConfigMapControlPlane(mgr.GetClient()))

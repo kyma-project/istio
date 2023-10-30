@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: vulncheck
       uses: golang/govulncheck-action@7da72f730e37eeaad891fcff0a532d27ed737cd4

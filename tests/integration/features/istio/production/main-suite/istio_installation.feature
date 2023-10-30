@@ -105,7 +105,6 @@ Feature: Installing and uninstalling Istio module
     And "Deployment" "istio-ingressgateway" in namespace "istio-system" is deleted
     And "DaemonSet" "istio-cni-node" in namespace "istio-system" is deleted
     And Istio injection is "enabled" in namespace "default"
-    And "Gateway" "kyma-gateway" in namespace "kyma-system" is deleted
     And "EnvoyFilter" "kyma-referer" in namespace "istio-system" is deleted
     And "PeerAuthentication" "default" in namespace "istio-system" is deleted
     And "VirtualService" "istio-healthz" in namespace "istio-system" is deleted
@@ -122,7 +121,6 @@ Feature: Installing and uninstalling Istio module
     And "istiooperator" "installed-state-default-operator" in namespace "istio-system" is "present"
     And "Deployment" "istio-ingressgateway" in namespace "istio-system" is ready
     And "DaemonSet" "istio-cni-node" in namespace "istio-system" is ready
-    And "Gateway" "kyma-gateway" in namespace "kyma-system" is "present"
     And "EnvoyFilter" "kyma-referer" in namespace "istio-system" is "present"
     And "PeerAuthentication" "default" in namespace "istio-system" is "present"
     And "VirtualService" "istio-healthz" in namespace "istio-system" is "present"

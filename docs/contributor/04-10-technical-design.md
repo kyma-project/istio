@@ -27,11 +27,6 @@ It still needs to be decided who will have ownership of the dashboards. To make 
 We do not consider Istio ServiceMonitor in the design, because this resource is planned to be replaced.
 For more information, see this [PR](https://github.com/kyma-project/kyma/pull/16247).
 
-##### istio-healthz Virtual Service
-
-Istio-healthz Virtual Service offers the possibility of monitoring Istio externally by exposing an endpoint. This resource is not part of Kyma Istio Operator.
-Therefore, a user who needs such external monitoring must take care of this particular configuration.
-
 ##### Global mTLS PeerAuthentication
 
 Global mTLS PeerAuthentication is tightly coupled with the Istio installation. Therefore, it should be reconciled by the operator.

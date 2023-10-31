@@ -18,14 +18,14 @@ type ResourcesReconciliation interface {
 
 type ResourcesReconciler struct {
 	client         client.Client
-	awsClient      clusterconfig.AwsClientInterface
+	hsClient       clusterconfig.HyperscalerClient
 	templateValues map[string]string
 }
 
-func NewReconciler(client client.Client, awsClient clusterconfig.AwsClientInterface) *ResourcesReconciler {
+func NewReconciler(client client.Client, hsClient clusterconfig.HyperscalerClient) *ResourcesReconciler {
 	return &ResourcesReconciler{
-		client:    client,
-		awsClient: awsClient,
+		client:   client,
+		hsClient: hsClient,
 	}
 }
 
@@ -37,9 +37,7 @@ type Resource interface {
 func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha1.Istio) described_errors.DescribedError {
 	ctrl.Log.Info("Reconciling istio resources")
 
-	// We get the istio resources in the reconciliation instead of the initialisation of the reconciler, because we need to fetch information from the cluster using the kube client.
-	// During the creation of the reconciler the manager is not initialised yet and therefore the kube client cannot be used, yet.
-	resources, err := getResources(r.client, r.awsClient)
+	resources, err := getResources(r.client, r.hsClient)
 	if err != nil {
 		ctrl.Log.Error(err, "Failed to initialise Istio resources")
 		return described_errors.NewDescribedError(err, "Istio controller failed to initialise Istio resources")
@@ -96,7 +94,7 @@ func (r *ResourcesReconciler) getTemplateValues(ctx context.Context, istioCR v1a
 }
 
 // getResources returns all Istio resources required for the reconciliation specific for the given hyperscaler.
-func getResources(k8sClient client.Client, awsClient clusterconfig.AwsClientInterface) ([]Resource, error) {
+func getResources(k8sClient client.Client, hsClient clusterconfig.HyperscalerClient) ([]Resource, error) {
 
 	istioResources := []Resource{NewEnvoyFilterAllowPartialReferer(k8sClient)}
 	istioResources = append(istioResources, NewGatewayKyma(k8sClient))
@@ -108,7 +106,7 @@ func getResources(k8sClient client.Client, awsClient clusterconfig.AwsClientInte
 	istioResources = append(istioResources, NewConfigMapService(k8sClient))
 	istioResources = append(istioResources, NewConfigMapWorkload(k8sClient))
 
-	isAws := clusterconfig.IsHyperscalerAWS(awsClient)
+	isAws := hsClient.IsAws()
 
 	if isAws {
 		istioResources = append(istioResources, NewProxyProtocolEnvoyFilter(k8sClient))

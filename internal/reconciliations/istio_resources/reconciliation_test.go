@@ -19,12 +19,12 @@ import (
 	"strings"
 )
 
-type awsClientMock struct {
+type hyperscalerClientMock struct {
 	isAws bool
 }
 
-func (ac *awsClientMock) IsAws() bool {
-	return ac.isAws
+func (hc *hyperscalerClientMock) IsAws() bool {
+	return hc.isAws
 }
 
 var _ = Describe("Reconciliation", func() {
@@ -46,8 +46,8 @@ var _ = Describe("Reconciliation", func() {
 	It("should succeed creating envoy filter referer", func() {
 		//given
 		client := createFakeClient()
-		ac := &awsClientMock{isAws: false}
-		reconciler := NewReconciler(client, ac)
+		hc := &hyperscalerClientMock{isAws: false}
+		reconciler := NewReconciler(client, hc)
 
 		//when
 		err := reconciler.Reconcile(context.TODO(), istioCR)
@@ -64,8 +64,8 @@ var _ = Describe("Reconciliation", func() {
 	It("should succeed creating gateway kyma", func() {
 		//given
 		client := createFakeClient()
-		ac := &awsClientMock{isAws: false}
-		reconciler := NewReconciler(client, ac)
+		hc := &hyperscalerClientMock{isAws: false}
+		reconciler := NewReconciler(client, hc)
 
 		//when
 		err := reconciler.Reconcile(context.TODO(), istioCR)
@@ -83,8 +83,8 @@ var _ = Describe("Reconciliation", func() {
 	It("should succeed creating virtual service healthz", func() {
 		//given
 		client := createFakeClient()
-		ac := &awsClientMock{isAws: false}
-		reconciler := NewReconciler(client, ac)
+		hc := &hyperscalerClientMock{isAws: false}
+		reconciler := NewReconciler(client, hc)
 
 		//when
 		err := reconciler.Reconcile(context.TODO(), istioCR)
@@ -102,8 +102,8 @@ var _ = Describe("Reconciliation", func() {
 	It("should succeed creating peer authentication mtls", func() {
 		//given
 		client := createFakeClient()
-		ac := &awsClientMock{isAws: false}
-		reconciler := NewReconciler(client, ac)
+		hc := &hyperscalerClientMock{isAws: false}
+		reconciler := NewReconciler(client, hc)
 
 		//when
 		err := reconciler.Reconcile(context.TODO(), istioCR)
@@ -120,8 +120,8 @@ var _ = Describe("Reconciliation", func() {
 	It("should succeed creating config maps for dashboards", func() {
 		//given
 		client := createFakeClient()
-		ac := &awsClientMock{isAws: false}
-		reconciler := NewReconciler(client, ac)
+		hc := &hyperscalerClientMock{isAws: false}
+		reconciler := NewReconciler(client, hc)
 
 		//when
 		err := reconciler.Reconcile(context.TODO(), istioCR)
@@ -156,8 +156,8 @@ var _ = Describe("Reconciliation", func() {
 		It("should be created when hyperscaler is AWS", func() {
 			//given
 			client := createFakeClient()
-			ac := &awsClientMock{isAws: true}
-			reconciler := NewReconciler(client, ac)
+			hc := &hyperscalerClientMock{isAws: true}
+			reconciler := NewReconciler(client, hc)
 
 			//when
 			err := reconciler.Reconcile(context.TODO(), istioCR)
@@ -172,8 +172,8 @@ var _ = Describe("Reconciliation", func() {
 		It("should not be created when hyperscaler is not AWS", func() {
 			//given
 			client := createFakeClient(createGcpShootInfo())
-			ac := &awsClientMock{isAws: false}
-			reconciler := NewReconciler(client, ac)
+			hc := &hyperscalerClientMock{isAws: false}
+			reconciler := NewReconciler(client, hc)
 
 			//when
 			err := reconciler.Reconcile(context.TODO(), istioCR)

@@ -1,23 +1,23 @@
 package clusterconfig_test
 
 import (
+	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"net/http"
+	"net/http/httptest"
 )
-
-type hyperscalerClientMock struct {
-	isAws bool
-}
-
-func (hc *hyperscalerClientMock) IsAws() bool {
-	return hc.isAws
-}
 
 var _ = Describe("Hyperscaler", func() {
 	Context("IsHyperscalerAWS", func() {
 		It("should be true if hyperscaler is aws", func() {
 			// given
-			hc := &hyperscalerClientMock{isAws: true}
+			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			}))
+			defer ts.Close()
+
+			hc := clusterconfig.NewHyperscalerClient(ts.Client(), ts.URL)
 			// when
 			isAws := hc.IsAws()
 
@@ -27,7 +27,12 @@ var _ = Describe("Hyperscaler", func() {
 
 		It("should be false if hyperscaler is not aws", func() {
 			// given
-			hc := &hyperscalerClientMock{isAws: false}
+			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusNotFound)
+			}))
+			defer ts.Close()
+
+			hc := clusterconfig.NewHyperscalerClient(ts.Client(), ts.URL)
 
 			// when
 			isAws := hc.IsAws()

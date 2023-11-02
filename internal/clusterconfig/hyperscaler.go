@@ -2,27 +2,28 @@ package clusterconfig
 
 import (
 	"net/http"
-	"time"
 )
 
-const awsMetadataHost = "http://169.254.169.254/latest/meta-data/"
+const AwsMetadataHost = "http://169.254.169.254/latest/meta-data/"
 
-type HyperscalerClient interface {
+type Hyperscaler interface {
 	IsAws() bool
 }
 
-type Hyperscaler struct {
-	http *http.Client
+type HyperscalerClient struct {
+	http            *http.Client
+	awsMetadataHost string
 }
 
-func NewHyperscalerClient() *Hyperscaler {
-	return &Hyperscaler{
-		&http.Client{Timeout: 1 * time.Second},
+func NewHyperscalerClient(client *http.Client, awsMetadataHost string) *HyperscalerClient {
+	return &HyperscalerClient{
+		client,
+		awsMetadataHost,
 	}
 }
 
-func (hs *Hyperscaler) IsAws() bool {
-	r, err := hs.http.Get(awsMetadataHost)
+func (hs *HyperscalerClient) IsAws() bool {
+	r, err := hs.http.Get(hs.awsMetadataHost)
 	if err != nil {
 		return false
 	}

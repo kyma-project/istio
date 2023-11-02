@@ -18,11 +18,11 @@ type ResourcesReconciliation interface {
 
 type ResourcesReconciler struct {
 	client         client.Client
-	hsClient       clusterconfig.HyperscalerClient
+	hsClient       clusterconfig.Hyperscaler
 	templateValues map[string]string
 }
 
-func NewReconciler(client client.Client, hsClient clusterconfig.HyperscalerClient) *ResourcesReconciler {
+func NewReconciler(client client.Client, hsClient clusterconfig.Hyperscaler) *ResourcesReconciler {
 	return &ResourcesReconciler{
 		client:   client,
 		hsClient: hsClient,
@@ -94,7 +94,7 @@ func (r *ResourcesReconciler) getTemplateValues(ctx context.Context, istioCR v1a
 }
 
 // getResources returns all Istio resources required for the reconciliation specific for the given hyperscaler.
-func getResources(k8sClient client.Client, hsClient clusterconfig.HyperscalerClient) ([]Resource, error) {
+func getResources(k8sClient client.Client, hsClient clusterconfig.Hyperscaler) ([]Resource, error) {
 
 	istioResources := []Resource{NewEnvoyFilterAllowPartialReferer(k8sClient)}
 	istioResources = append(istioResources, NewGatewayKyma(k8sClient))

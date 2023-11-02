@@ -29,6 +29,6 @@ However, if a resource is a job, a ReplicaSet that is not managed by any deploym
 |   `Error`    | An error occurred during reconciliation.     |
 |  `Warning`   | Controller is misconfigured.                 |
 
-## XFF HTTP header
+## X-Forwarded-For HTTP header
 
-Currently, XFF header is supported only on the AWS clusters.
+The **X-Forwarded-For** (XFF) header is only supported on AWS clusters.

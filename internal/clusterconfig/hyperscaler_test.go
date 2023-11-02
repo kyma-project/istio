@@ -17,7 +17,10 @@ var _ = Describe("Hyperscaler", func() {
 			}))
 			defer ts.Close()
 
-			hc := clusterconfig.NewHyperscalerClient(ts.Client(), ts.URL)
+			hc := &clusterconfig.HyperscalerClient{
+				ts.Client(),
+				ts.URL,
+			}
 			// when
 			isAws := hc.IsAws()
 
@@ -32,7 +35,10 @@ var _ = Describe("Hyperscaler", func() {
 			}))
 			defer ts.Close()
 
-			hc := clusterconfig.NewHyperscalerClient(ts.Client(), ts.URL)
+			hc := &clusterconfig.HyperscalerClient{
+				ts.Client(),
+				ts.URL,
+			}
 
 			// when
 			isAws := hc.IsAws()

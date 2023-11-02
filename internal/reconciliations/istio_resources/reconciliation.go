@@ -97,8 +97,6 @@ func (r *ResourcesReconciler) getTemplateValues(ctx context.Context, istioCR v1a
 func getResources(k8sClient client.Client, hsClient clusterconfig.Hyperscaler) ([]Resource, error) {
 
 	istioResources := []Resource{NewEnvoyFilterAllowPartialReferer(k8sClient)}
-	istioResources = append(istioResources, NewGatewayKyma(k8sClient))
-	istioResources = append(istioResources, NewVirtualServiceHealthz(k8sClient))
 	istioResources = append(istioResources, NewPeerAuthenticationMtls(k8sClient))
 	istioResources = append(istioResources, NewConfigMapControlPlane(k8sClient))
 	istioResources = append(istioResources, NewConfigMapMesh(k8sClient))

@@ -2,7 +2,6 @@ package istio_resources
 
 import (
 	"context"
-	"fmt"
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	. "github.com/onsi/ginkgo/v2"
@@ -59,44 +58,6 @@ var _ = Describe("Reconciliation", func() {
 		listErr := client.List(context.TODO(), &s)
 		Expect(listErr).To(Not(HaveOccurred()))
 		Expect(s.Items).To(HaveLen(1))
-	})
-
-	It("should succeed creating gateway kyma", func() {
-		//given
-		client := createFakeClient()
-		hc := &hyperscalerClientMock{isAws: false}
-		reconciler := NewReconciler(client, hc)
-
-		//when
-		err := reconciler.Reconcile(context.TODO(), istioCR)
-
-		//then
-		Expect(err).To(Not(HaveOccurred()))
-
-		var s networkingv1alpha3.GatewayList
-		listErr := client.List(context.TODO(), &s)
-		Expect(listErr).To(Not(HaveOccurred()))
-		Expect(s.Items).To(HaveLen(1))
-		Expect(s.Items[0].Spec.Servers[0].Hosts[0]).To(Equal(fmt.Sprintf("*.%s", clusterconfig.LocalKymaDomain)))
-	})
-
-	It("should succeed creating virtual service healthz", func() {
-		//given
-		client := createFakeClient()
-		hc := &hyperscalerClientMock{isAws: false}
-		reconciler := NewReconciler(client, hc)
-
-		//when
-		err := reconciler.Reconcile(context.TODO(), istioCR)
-
-		//then
-		Expect(err).To(Not(HaveOccurred()))
-
-		var s networkingv1beta1.VirtualServiceList
-		listErr := client.List(context.TODO(), &s)
-		Expect(listErr).To(Not(HaveOccurred()))
-		Expect(s.Items).To(HaveLen(1))
-		Expect(s.Items[0].Spec.Hosts[0]).To(Equal(fmt.Sprintf("healthz.%s", clusterconfig.LocalKymaDomain)))
 	})
 
 	It("should succeed creating peer authentication mtls", func() {

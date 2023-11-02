@@ -67,7 +67,7 @@ func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *I
 		Scheme:                 mgr.GetScheme(),
 		istioInstallation:      &istio.Installation{Client: mgr.GetClient(), IstioClient: istio.NewIstioClient(), IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Merger: &merger},
 		proxySidecars:          &proxy.Sidecars{IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Log: mgr.GetLogger(), Client: mgr.GetClient(), Merger: &merger, Predicates: []filter.SidecarProxyPredicate{efReferer}},
-		istioResources:         istio_resources.NewReconciler(mgr.GetClient(), clusterconfig.NewHyperscalerClient(&http.Client{Timeout: 1 * time.Second}, clusterconfig.AwsMetadataHost)),
+		istioResources:         istio_resources.NewReconciler(mgr.GetClient(), clusterconfig.NewHyperscalerClient(&http.Client{Timeout: 1 * time.Second})),
 		ingressGateway:         ingress_gateway.NewReconciler(mgr.GetClient(), []filter.IngressGatewayPredicate{efReferer}),
 		log:                    mgr.GetLogger(),
 		statusHandler:          newStatusHandler(mgr.GetClient()),

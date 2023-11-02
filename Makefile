@@ -111,7 +111,7 @@ build: generate fmt vet ## Build manager binary.
 	go build -o bin/manager main.go
 
 .PHONY: run
-run: manifests build ## Run a controller from your host.
+run: manifests install create-kyma-system-ns build ## Run a controller from your host.
 	ISTIO_INSTALL_BIN_PATH=$(ISTIO_INSTALL_BIN_PATH) go run ./main.go
 
 .PHONY: docker-build
@@ -138,6 +138,10 @@ ifndef ignore-not-found
   ignore-not-found = false
 endif
 
+.PHONY: create-kyma-system-ns
+create-kyma-system-ns:
+	kubectl create namespace kyma-system --dry-run=client -o yaml | kubectl apply -f -
+
 .PHONY: install
 install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
 	$(KUSTOMIZE) build config/crd | kubectl apply -f -
@@ -147,7 +151,7 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 	$(KUSTOMIZE) build config/crd | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
 
 .PHONY: deploy
-deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+deploy: create-kyma-system-ns manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 
@@ -260,7 +264,7 @@ aws-integration-test: install deploy
 	cd tests/integration && TEST_REQUEST_TIMEOUT=600s && EXPORT_RESULT=true go test -v -timeout 35m -run TestAws
 
 .PHONY: deploy-latest-release
-deploy-latest-release:
+deploy-latest-release: create-kyma-system-ns
 	cd tests/integration && ./scripts/deploy-latest-release-to-cluster.sh $(TARGET_BRANCH)
 
 # Latest release deployed on cluster is a prerequisite, it is handled by deploy-latest-release target

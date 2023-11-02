@@ -11,19 +11,19 @@ type Hyperscaler interface {
 }
 
 type HyperscalerClient struct {
-	http            *http.Client
-	awsMetadataHost string
+	HttpClient      *http.Client
+	AwsMetadataHost string
 }
 
-func NewHyperscalerClient(client *http.Client, awsMetadataHost string) *HyperscalerClient {
+func NewHyperscalerClient(client *http.Client) *HyperscalerClient {
 	return &HyperscalerClient{
 		client,
-		awsMetadataHost,
+		AwsMetadataHost,
 	}
 }
 
 func (hs *HyperscalerClient) IsAws() bool {
-	r, err := hs.http.Get(hs.awsMetadataHost)
+	r, err := hs.HttpClient.Get(hs.AwsMetadataHost)
 	if err != nil {
 		return false
 	}

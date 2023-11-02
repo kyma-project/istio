@@ -10,12 +10,12 @@ require (
 	github.com/coreos/go-semver v0.3.1
 	github.com/cucumber/godog v0.13.0
 	github.com/distribution/reference v0.5.0
-	github.com/go-logr/logr v1.2.4
+	github.com/go-logr/logr v1.3.0
 	github.com/imdario/mergo v1.0.0
 	github.com/masterminds/semver v1.5.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/onsi/ginkgo/v2 v2.13.0
-	github.com/onsi/gomega v1.28.1
+	github.com/onsi/gomega v1.29.0
 	github.com/pkg/errors v0.9.1
 	github.com/thoas/go-funk v0.9.3
 	github.com/vrischmann/envconfig v1.3.0
@@ -34,7 +34,7 @@ require (
 	k8s.io/kubectl v0.28.3
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b
 	sigs.k8s.io/controller-runtime v0.16.0 // Since we are using the Istio library directly, we should also use the controller-runtime version that is used by Istio.
-	sigs.k8s.io/yaml v1.3.0
+	sigs.k8s.io/yaml v1.4.0
 )
 
 require (

@@ -59,5 +59,5 @@ export CLUSTER_NAME
 ./tests/integration/scripts/provision-gardener.sh
 ./tests/integration/scripts/jobguard.sh
 
-make deploy #IMG COMING FROM ENV FROM JOB CONF?
+# this make target should have deploy as a prerequisite target
 make "$1"

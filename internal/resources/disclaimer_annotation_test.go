@@ -33,6 +33,33 @@ var _ = Describe("Disclaimer annotation", func() {
 		anns := unstr.GetAnnotations()
 		Expect(anns[resources.DisclaimerKey]).To(Equal(resources.DisclaimerValue))
 	})
+
+	It("should return true if there is managed by disclaimer annotation", func() {
+
+		unstr := unstructured.Unstructured{Object: map[string]interface{}{}}
+		unstr.SetName("test")
+		unstr.SetKind("ConfigMap")
+		unstr.SetAPIVersion("v1")
+
+		client := createFakeClient(&unstr)
+
+		Expect(resources.AnnotateWithDisclaimer(context.Background(), unstr, client)).Should(Succeed())
+		Expect(client.Get(context.Background(), ctrlClient.ObjectKey{Name: unstr.GetName()}, &unstr)).To(Succeed())
+		Expect(resources.HasManagedByDisclaimer(unstr)).To(BeTrue())
+	})
+
+	It("should return false if there is no managed by disclaimer annotation", func() {
+
+		unstr := unstructured.Unstructured{Object: map[string]interface{}{}}
+		unstr.SetName("test")
+		unstr.SetKind("ConfigMap")
+		unstr.SetAPIVersion("v1")
+
+		client := createFakeClient(&unstr)
+
+		Expect(client.Get(context.Background(), ctrlClient.ObjectKey{Name: unstr.GetName()}, &unstr)).To(Succeed())
+		Expect(resources.HasManagedByDisclaimer(unstr)).To(BeFalse())
+	})
 })
 
 func createFakeClient(objects ...ctrlClient.Object) ctrlClient.Client {

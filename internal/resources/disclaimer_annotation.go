@@ -24,7 +24,7 @@ func AnnotateWithDisclaimer(ctx context.Context, resource unstructured.Unstructu
 	return err
 }
 
-func hasManagedByDisclaimer(resource unstructured.Unstructured) bool {
+func HasManagedByDisclaimer(resource unstructured.Unstructured) bool {
 	if resource.GetAnnotations() != nil {
 		_, daFound := resource.GetAnnotations()[DisclaimerKey]
 		return daFound

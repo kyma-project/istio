@@ -10,6 +10,8 @@ import (
 	"istio.io/client-go/pkg/apis/security/v1beta1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	ctrlClient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/yaml"
@@ -36,7 +38,10 @@ var _ = Describe("Apply", func() {
 		var pa v1beta1.PeerAuthentication
 		Expect(yaml.Unmarshal(resourceWithSpec, &pa)).Should(Succeed())
 		Expect(k8sClient.Get(context.Background(), ctrlClient.ObjectKeyFromObject(&pa), &pa)).Should(Succeed())
-		_, ok := pa.GetAnnotations()[resources.DisclaimerKey]
+		um, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&pa)
+		unstr := unstructured.Unstructured{Object: um}
+		Expect(err).ToNot(HaveOccurred())
+		ok := resources.HasManagedByDisclaimer(unstr)
 		Expect(ok).To(BeTrue())
 	})
 
@@ -60,7 +65,10 @@ var _ = Describe("Apply", func() {
 
 		Expect(k8sClient.Get(context.Background(), ctrlClient.ObjectKeyFromObject(&pa), &pa)).Should(Succeed())
 		Expect(pa.Spec.Mtls.Mode).To(Equal(v1beta12.PeerAuthentication_MutualTLS_PERMISSIVE))
-		_, ok := pa.GetAnnotations()[resources.DisclaimerKey]
+		um, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&pa)
+		unstr := unstructured.Unstructured{Object: um}
+		Expect(err).ToNot(HaveOccurred())
+		ok := resources.HasManagedByDisclaimer(unstr)
 		Expect(ok).To(BeTrue())
 	})
 
@@ -85,7 +93,10 @@ var _ = Describe("Apply", func() {
 		Expect(k8sClient.Get(context.Background(), ctrlClient.ObjectKeyFromObject(&cm), &cm)).Should(Succeed())
 		Expect(cm.Data["some"]).To(Equal("new-data"))
 
-		_, ok := cm.GetAnnotations()[resources.DisclaimerKey]
+		um, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&cm)
+		unstr := unstructured.Unstructured{Object: um}
+		Expect(err).ToNot(HaveOccurred())
+		ok := resources.HasManagedByDisclaimer(unstr)
 		Expect(ok).To(BeTrue())
 	})
 

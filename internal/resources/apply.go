@@ -23,7 +23,7 @@ func Apply(ctx context.Context, k8sClient client.Client, manifest []byte, owner 
 		return controllerutil.OperationResultNone, err
 	}
 
-	if !hasManagedByDisclaimer(resource) {
+	if !HasManagedByDisclaimer(resource) {
 		err := AnnotateWithDisclaimer(ctx, resource, k8sClient)
 		if err != nil {
 			return controllerutil.OperationResultNone, err

@@ -56,7 +56,7 @@ export PATH="${PATH}:${PWD}"
 CLUSTER_NAME=$(LC_ALL=C tr -dc 'a-z' < /dev/urandom | head -c10)
 export CLUSTER_NAME
 
-./tests/integration/scripts/provision-gardener.sh
+./tests/integration/scripts/provison-gardener.sh
 ./tests/integration/scripts/jobguard.sh
 
 # this make target should have deploy as a prerequisite target

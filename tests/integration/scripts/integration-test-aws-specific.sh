@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
 
-#
-##Description: This scripts installs and tests api-gateway custom domain test as well as gateway test using the CLI on a real Gardener AWS cluster.
-## exit on error, and raise error when variable is not set when used
-
 set -e
 
 export MACHINE_TYPE="m5.xlarge"

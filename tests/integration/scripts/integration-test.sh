@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-#Description: This scripts installs and test Kyma using the CLI on a real Gardener cluster.
-#
 #Expected arguments:
 # - $1 - make target to run integration tests
 #Expected common vars:

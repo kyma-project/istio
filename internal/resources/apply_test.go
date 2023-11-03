@@ -81,6 +81,7 @@ var _ = Describe("Apply", func() {
 		cm.Data["some"] = "new-data"
 		var resourceWithUpdatedData []byte
 		resourceWithUpdatedData, err := yaml.Marshal(&cm)
+
 		Expect(err).ShouldNot(HaveOccurred())
 
 		// when

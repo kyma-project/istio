@@ -28,7 +28,7 @@ For example, the issue occurs when you delete Istio, but there are still `Virtua
 ## Remedy
 
  1. Edit the Istio CR and remove the finalizer.
-```
+  ```
   kubectl edit istio -n kyma-system default
   ```
   ```diff

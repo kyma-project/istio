@@ -6,11 +6,13 @@
 
 The configuration specifies the following parameters and their values:
 
-| Parameter | Description | Value|
-|-----| ---| -----|
-| **spec.servers.port** | The ports gateway listens on.  Port `80` is automatically redirected to `443`.| `443`, `80`.|
-| **spec.servers.tls.minProtocolVersion** | The minimum protocol version required by the TLS connection. | `TLSV1_2` protocol version. `TLSV1_0` and `TLSV1_1` are rejected. |
-| **spec.servers.tls.cipherSuites** | Accepted cypher suites. | `ECDHE-RSA-CHACHA20-POLY1305`, `ECDHE-RSA-AES256-GCM-SHA384`, `ECDHE-RSA-AES256-SHA`, `ECDHE-RSA-AES128-GCM-SHA256`, `ECDHE-RSA-AES128-SHA`|
+| Parameter                               | Description                                                                    | Values                                                                                                                                      |
+|-----------------------------------------|--------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| **spec.servers.port**                   | The ports gateway listens on.  Port `80` is automatically redirected to `443`. | `443`, `80`                                                                                                                                 |
+| **spec.servers.tls.minProtocolVersion** | The minimum protocol version required by the TLS connection.                   | `TLSV1_2` protocol version. `TLSV1_0` and `TLSV1_1` are rejected.                                                                           |
+| **spec.servers.tls.cipherSuites**       | Accepted cypher suites.                                                        | `ECDHE-RSA-CHACHA20-POLY1305`, `ECDHE-RSA-AES256-GCM-SHA384`, `ECDHE-RSA-AES256-SHA`, `ECDHE-RSA-AES128-GCM-SHA256`, `ECDHE-RSA-AES128-SHA` |
+
+
 
 ## TLS management
 
@@ -20,6 +22,6 @@ If you don't want to use your custom certificate, you can choose between a self-
 
 ## Egress
 
-Currently no Egress limitations are implemented, meaning that all applications deployed in the Kyma cluster can access outside resources without limitations.
+Currently, no Egress limitations are implemented, meaning that all applications deployed in the Kyma cluster can access outside resources without limitations.
 
 >**NOTE:** In the case of connection problems with external services, it may be required to create a [Service Entry](https://istio.io/latest/docs/reference/config/networking/service-entry/) object to register the service.

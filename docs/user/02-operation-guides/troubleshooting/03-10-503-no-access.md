@@ -10,7 +10,7 @@ This behavior might be caused by a configuration error in Istio Ingress Gateway.
 
 ## Remedy
 
-To fix this problem, restart the Pods of the Gateway.
+To fix this problem, restart the Pods of Istio Ingress Gateway.
 
 1. List all available endpoints:
 

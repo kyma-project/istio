@@ -3,6 +3,7 @@ package istio_test
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/istio/operator/internal/resources"
 	"time"
 
 	"github.com/pkg/errors"
@@ -164,7 +165,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(ns.Labels).To(HaveKeyWithValue(testKey, testValue))
 		Expect(ns.Annotations).To(HaveKeyWithValue(testKey, testValue))
 		Expect(ns.Labels).To(HaveKeyWithValue("namespaces.warden.kyma-project.io/validate", "enabled"))
-		Expect(ns.Annotations).To(HaveKeyWithValue(istio.DisclaimerKey, istio.DisclaimerValue))
+		Expect(ns.Annotations).To(HaveKeyWithValue(resources.DisclaimerKey, resources.DisclaimerValue))
 	})
 
 	It("should fail if after install and update Istio pods do not match target version", func() {

@@ -627,7 +627,7 @@ func (i *istioResourcesReconciliationMock) AddReconcileResource(_ istio_resource
 	return i
 }
 
-func (i *istioResourcesReconciliationMock) Reconcile(_ context.Context, istioCR operatorv1alpha1.Istio) described_errors.DescribedError {
+func (i *istioResourcesReconciliationMock) Reconcile(_ context.Context, _ operatorv1alpha1.Istio) described_errors.DescribedError {
 	return nil
 }
 

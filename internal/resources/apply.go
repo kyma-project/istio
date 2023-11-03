@@ -1,8 +1,7 @@
-package istio_resources
+package resources
 
 import (
 	"context"
-	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -10,7 +9,10 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-func applyResource(ctx context.Context, k8sClient client.Client, manifest []byte, owner *metav1.OwnerReference) (controllerutil.OperationResult, error) {
+// Apply creates or updates a resource in the given manifest in the cluster. The resource is annotated with a disclaimer.
+// If the owner is provided, a OwnerReference is added to the resource. The function returns the operation result depending on the action taken.
+// The function supports update operations on resources with spec and data fields.
+func Apply(ctx context.Context, k8sClient client.Client, manifest []byte, owner *metav1.OwnerReference) (controllerutil.OperationResult, error) {
 	resource, err := unmarshalManifest(manifest)
 	if err != nil {
 		return controllerutil.OperationResultNone, err
@@ -21,8 +23,8 @@ func applyResource(ctx context.Context, k8sClient client.Client, manifest []byte
 		return controllerutil.OperationResultNone, err
 	}
 
-	if !hasManagedByDisclaimer(resource) {
-		err := annotateWithDisclaimer(ctx, resource, k8sClient)
+	if !HasManagedByDisclaimer(resource) {
+		err := AnnotateWithDisclaimer(ctx, resource, k8sClient)
 		if err != nil {
 			return controllerutil.OperationResultNone, err
 		}
@@ -61,25 +63,4 @@ func createOrUpdateResource(ctx context.Context, k8sClient client.Client, resour
 	})
 
 	return resource, result, err
-}
-
-func hasManagedByDisclaimer(resource unstructured.Unstructured) bool {
-	if resource.GetAnnotations() != nil {
-		_, daFound := resource.GetAnnotations()[istio.DisclaimerKey]
-		return daFound
-	}
-
-	return false
-}
-
-func annotateWithDisclaimer(ctx context.Context, resource unstructured.Unstructured, k8sClient client.Client) error {
-	annotations := resource.GetAnnotations()
-	if annotations == nil {
-		annotations = make(map[string]string)
-	}
-	annotations[istio.DisclaimerKey] = istio.DisclaimerValue
-	resource.SetAnnotations(annotations)
-
-	err := k8sClient.Update(ctx, &resource)
-	return err
 }

@@ -19,7 +19,9 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/pkg/errors"
+	"net/http"
 	"time"
 
 	"github.com/kyma-project/istio/operator/internal/filter"
@@ -60,20 +62,12 @@ func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *I
 
 	efReferer := istio_resources.NewEnvoyFilterAllowPartialReferer(mgr.GetClient())
 
-	istioResources := []istio_resources.Resource{efReferer}
-	istioResources = append(istioResources, istio_resources.NewPeerAuthenticationMtls(mgr.GetClient()))
-	istioResources = append(istioResources, istio_resources.NewConfigMapControlPlane(mgr.GetClient()))
-	istioResources = append(istioResources, istio_resources.NewConfigMapMesh(mgr.GetClient()))
-	istioResources = append(istioResources, istio_resources.NewConfigMapPerformance(mgr.GetClient()))
-	istioResources = append(istioResources, istio_resources.NewConfigMapService(mgr.GetClient()))
-	istioResources = append(istioResources, istio_resources.NewConfigMapWorkload(mgr.GetClient()))
-
 	return &IstioReconciler{
 		Client:                 mgr.GetClient(),
 		Scheme:                 mgr.GetScheme(),
 		istioInstallation:      &istio.Installation{Client: mgr.GetClient(), IstioClient: istio.NewIstioClient(), IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Merger: &merger},
 		proxySidecars:          &proxy.Sidecars{IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Log: mgr.GetLogger(), Client: mgr.GetClient(), Merger: &merger, Predicates: []filter.SidecarProxyPredicate{efReferer}},
-		istioResources:         istio_resources.NewReconciler(mgr.GetClient(), istioResources),
+		istioResources:         istio_resources.NewReconciler(mgr.GetClient(), clusterconfig.NewHyperscalerClient(&http.Client{Timeout: 1 * time.Second})),
 		ingressGateway:         ingress_gateway.NewReconciler(mgr.GetClient(), []filter.IngressGatewayPredicate{efReferer}),
 		log:                    mgr.GetLogger(),
 		statusHandler:          newStatusHandler(mgr.GetClient()),

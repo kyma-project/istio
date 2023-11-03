@@ -3,7 +3,6 @@ package istio_resources
 import (
 	"context"
 	"fmt"
-
 	"github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
@@ -19,14 +18,14 @@ type ResourcesReconciliation interface {
 
 type ResourcesReconciler struct {
 	client         client.Client
-	resources      []Resource
+	hsClient       clusterconfig.Hyperscaler
 	templateValues map[string]string
 }
 
-func NewReconciler(client client.Client, resources []Resource) *ResourcesReconciler {
+func NewReconciler(client client.Client, hsClient clusterconfig.Hyperscaler) *ResourcesReconciler {
 	return &ResourcesReconciler{
-		client:    client,
-		resources: resources,
+		client:   client,
+		hsClient: hsClient,
 	}
 }
 
@@ -38,7 +37,13 @@ type Resource interface {
 func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha1.Istio) described_errors.DescribedError {
 	ctrl.Log.Info("Reconciling istio resources")
 
-	err := r.getTemplateValues(ctx, istioCR)
+	resources, err := getResources(r.client, r.hsClient)
+	if err != nil {
+		ctrl.Log.Error(err, "Failed to initialise Istio resources")
+		return described_errors.NewDescribedError(err, "Istio controller failed to initialise Istio resources")
+	}
+
+	err = r.getTemplateValues(ctx, istioCR)
 	if err != nil {
 		return described_errors.NewDescribedError(err, "Could not get template values for istio resources")
 	}
@@ -50,7 +55,7 @@ func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha1.Is
 		UID:        istioCR.UID,
 	}
 
-	for _, resource := range r.resources {
+	for _, resource := range resources {
 		ctrl.Log.Info("Reconciling istio resource", "name", resource.Name())
 		result, err := resource.apply(ctx, r.client, owner, r.templateValues)
 
@@ -86,4 +91,24 @@ func (r *ResourcesReconciler) getTemplateValues(ctx context.Context, istioCR v1a
 	}
 
 	return nil
+}
+
+// getResources returns all Istio resources required for the reconciliation specific for the given hyperscaler.
+func getResources(k8sClient client.Client, hsClient clusterconfig.Hyperscaler) ([]Resource, error) {
+
+	istioResources := []Resource{NewEnvoyFilterAllowPartialReferer(k8sClient)}
+	istioResources = append(istioResources, NewPeerAuthenticationMtls(k8sClient))
+	istioResources = append(istioResources, NewConfigMapControlPlane(k8sClient))
+	istioResources = append(istioResources, NewConfigMapMesh(k8sClient))
+	istioResources = append(istioResources, NewConfigMapPerformance(k8sClient))
+	istioResources = append(istioResources, NewConfigMapService(k8sClient))
+	istioResources = append(istioResources, NewConfigMapWorkload(k8sClient))
+
+	isAws := hsClient.IsAws()
+
+	if isAws {
+		istioResources = append(istioResources, NewProxyProtocolEnvoyFilter(k8sClient))
+	}
+
+	return istioResources, nil
 }

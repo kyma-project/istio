@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/avast/retry-go"
+	"github.com/kyma-project/istio/operator/tests/integration/pkg/ip"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	"github.com/kyma-project/istio/operator/tests/integration/testsupport"
 	"github.com/pkg/errors"
@@ -100,7 +101,13 @@ func fetchIstioIngressGatewayAddress(ctx context.Context) (string, error) {
 			if len(svc.Status.LoadBalancer.Ingress) == 0 {
 				return errors.New("no ingress ip found")
 			} else {
-				ingressIp = svc.Status.LoadBalancer.Ingress[0].IP
+				lbIp, err := ip.GetLoadBalancerIp(svc.Status.LoadBalancer.Ingress[0])
+				if err != nil {
+					return err
+				}
+
+				ingressIp = lbIp.String()
+
 				for _, port := range svc.Spec.Ports {
 					if port.Name == "http2" {
 						ingressPort = port.Port

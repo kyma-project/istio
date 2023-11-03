@@ -28,3 +28,7 @@ However, if a resource is a job, a ReplicaSet that is not managed by any deploym
 |  `Deleting`  | Controller is uninstalling Istio.            |
 |   `Error`    | An error occurred during reconciliation.     |
 |  `Warning`   | Controller is misconfigured.                 |
+
+## X-Forwarded-For HTTP header
+
+The **X-Forwarded-For** (XFF) header is only supported on AWS clusters.

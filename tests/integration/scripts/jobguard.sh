@@ -1,7 +1,6 @@
 #!/bin/bash
 
 set -e
-WAIT_FOR_JOB_NAME
 
 WAIT_FOR_JOB_NAME=${WAIT_FOR_JOB_NAME:-"(post-.*-build)|(pull-.*-build)"}
 TIMEOUT=${JOBGUARD_TIMEOUT:-"10m"}

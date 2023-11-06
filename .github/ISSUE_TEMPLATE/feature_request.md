@@ -26,6 +26,7 @@ assignees: ''
 - [ ] Provide integration tests.
 - [ ] Provide documentation.
 - [ ] Test on a production-like environment.
+- [ ] Solution works for open source as well.
 - [ ] Check the outcome of all related pipelines.
 - [ ] Verify resource limits.
 - [ ] As a PR reviewer, verify code coverage and evaluate if it is acceptable.

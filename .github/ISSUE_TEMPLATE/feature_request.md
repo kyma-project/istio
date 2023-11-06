@@ -29,7 +29,7 @@ assignees: ''
 - [ ] Check the outcome of all related pipelines.
 - [ ] Verify resource limits.
 - [ ] As a PR reviewer, verify code coverage and evaluate if it is acceptable.
-- [ ] Create a release and bump in Kyma.
+- [ ] Create a release.
 - [ ] Add release notes and What's New notes for Kyma customers.
 
 **Attachments**

@@ -14,6 +14,11 @@
 # exit on error, and raise error when variable is not set when used
 set -e
 
+if [ -z "$1" ]; then
+  echo "Make target to run integration tests is required as first parameter, but not provided"
+  exit 2
+fi
+
 function check_required_vars() {
   local requiredVarMissing=false
   for var in "$@"; do

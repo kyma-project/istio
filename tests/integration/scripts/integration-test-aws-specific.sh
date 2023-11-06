@@ -11,4 +11,4 @@ export GARDENER_PROVIDER="aws"
 export GARDENER_REGION="eu-north-1"
 export GARDENER_ZONES="eu-north-1b,eu-north-1c,eu-north-1a"
 
-./tests/integration/scripts/integration-test.sh aws-integration-test
+./tests/integration/scripts/integration-test-gardener.sh aws-integration-test

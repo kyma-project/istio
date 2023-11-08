@@ -6,7 +6,7 @@ function check_istio_status () {
 	local number=1
 	while [[ $number -le 100 ]] ; do
 		echo ">--> checking kyma status #$number"
-		local STATUS=$(kubectl get istio default -o jsonpath='{.status.state}')
+		local STATUS=$(kubectl -n kyma-system get istio default -o jsonpath='{.status.state}')
 		echo "istio status: ${STATUS:='UNKNOWN'}"
 		[[ "$STATUS" == "Ready" ]] && return 0
 		sleep 5

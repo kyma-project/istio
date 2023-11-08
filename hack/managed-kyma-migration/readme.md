@@ -4,9 +4,9 @@
 
 ## Scenarios
 
-### Provisioning of API Gateway CR using Lifecycle Manager in a new cluster
+### Provisioning of Istio CR using Lifecycle Manager in a new cluster
 
-If there is no Istio custom resource (CR), then Lifecycle Manager provisions the default API Gateway CR defined in the Istio ModuleTemplate. The migration
+If there is no Istio custom resource (CR), then Lifecycle Manager provisions the default Istio CR defined in the Istio ModuleTemplate. The migration
 adds the Istio module to the Kyma CR.
 
 ### Provisioning of Istio CR using Lifecycle Manager in a cluster with existing modules
@@ -58,7 +58,7 @@ Executing `kcp taskrun` requires the path to the kubeconfig file of the correspo
    ```shell
    kcp taskrun --gardener-kubeconfig {PATH TO GARDENER PROJECT KUBECONFIG} -t all -- ./managed-kyma-migration.sh
    ```
-4. Verify that the migration worked as expected by checking the status of APIGateway manifests on Control Plane.
+4. Verify that the migration worked as expected by checking the status of Istio manifests on Control Plane.
    ```shell
    kubectl get manifests -n kcp-system -o custom-columns=NAME:metadata.name,STATE:status.state | grep istio
    ```
@@ -76,7 +76,7 @@ Perform the rollout to Stage together with the SRE team. Since they have already
 1. Apply the ModuleTemplate for both `fast` and `regular` channels to Stage Control Plane.
 2. Verify that the ModuleTemplate in the `fast` and `regular` channels is available in SAP BTP, Kyma runtime clusters of the Stage environment.
 3. Use `kcp login` to log in to Stage, select a few SAP BTP, Kyma runtime clusters on `Kyma-Test/Kyma-Integration`, and run `managed-kyma-migration.sh` on them using `kcp taskrun`.
-4. Verify if the migration was successful on the SAP BTP, Kyma runtime clusters by checking the status of APIGateway CR and the reconciler's components.
+4. Verify if the migration was successful on the SAP BTP, Kyma runtime clusters by checking the status of Istio CR and the reconciler's components.
 5. Run `managed-kyma-migration.sh` for all SKRs in `Kyma-Test` and `Kyma-Integration` global accounts.
 6. Verify if the migration worked as expected.
 7. Run `managed-kyma-migration.sh` for the whole Canary landscape.

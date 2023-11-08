@@ -1,100 +1,64 @@
-# Managed Kyma migration
-> **NOTE**: This documentation is relevant for managed Kyma only and does not apply to OS Kyma.
+# SAP BTP, Kyma runtime migration
 
-## Prerequisites
-- The Kyma reconciler will stop the reconciliation of the Istio module when the `istios.operator.kyma-project.io` is available in version `v1alpha2` on the SKR, since
-  version `v1alpha1` is already available on the SKRs. The `v1alpha2` configuration was added with this [PR](https://github.com/kyma-project/control-plane/pull/2847).
+> **NOTE**: This documentation is relevant for SAP BTP, Kyma runtime only and does not apply to open-source Kyma.
 
 ## Scenarios
 
-### Istio CR created by the customer exists on SKR
-If the Istio CR is already present, avoid overwriting existing configuration. Do not create 
-the default Istio CR, but use the existing CR. The migration adds the Istio module to the Kyma CR with `customResourcePolicy` set to `Ignore`.
+### Provisioning of API Gateway CR using Lifecycle Manager in a new cluster
 
-### Provisioning of Istio CR via Lifecycle-Manager in a new cluster
-If there is no Istio CR, then Lifecycle Manager provisions the default Istio CR defined in the Istio module. The migration
+If there is no Istio custom resource (CR), then Lifecycle Manager provisions the default API Gateway CR defined in the Istio ModuleTemplate. The migration
 adds the Istio module to the Kyma CR.
 
-### Provisioning of Istio CR via Lifecycle Manager in a cluster with existing modules
-If there is no Istio CR, then Lifecycle Manager provisions the default Istio CR defined in the Istio module. The migration
+### Provisioning of Istio CR using Lifecycle Manager in a cluster with existing modules
+
+If there is no Istio CR, then Lifecycle Manager provisions the default Istio CR defined in the Istio ModuleTemplate. The migration
 adds the Istio module to the Kyma CR without overwriting existing module configuration.
 
 ## Migration test process
 
 ### Test scenarios
-1. Set `metadata.name` in the module template to `istio-regular`.
-2. Set `spec.channel` in the module template to `regular`.
-3. Apply the module template to DEV Control Plane.
 
-#### SKR with existing Istio CR
-1. Create Dev SKR.
-2. Create Istio CR on SKR.
-   ```yaml 
-   apiVersion: operator.kyma-project.io/v1alpha1
-   kind: Istio
-   metadata:
-     name: default
-     namespace: kyma-system 
-     labels:
-       app.kubernetes.io/name: default
-   spec:
-     config:
-       numTrustedProxies: 1
-   ```
-3. Execute the migration.
-4. Verify that `istio-manager` is installed and the Istio CR's status is `Ready`.
-5. Verify that the Kyma reconciler does not reconcile the Istio component anymore.
-   ```shell
-   # List reconciliations to get the last scheduling ID
-   kcp rc -c {SHOOT}
-   # List reconciled components
-   kcp rc info -i {SCHEDULING ID}
-   ```
+Apply the ModuleTemplate for both `fast` and `regular` channels to Dev Control Plane.
 
-#### SKR without existing Istio CR
-1. Create Dev SKR.
+#### SAP BTP, Kyma runtime clusters without existing modules
+
+1. Create a Dev SAP BTP, Kyma runtime cluster.
 2. Execute the migration.
-3. Verify that `istio-manager` is installed and the Istio CR's status is `Ready`.
-4. Verify that the Kyma reconciler does not reconcile the Istio component anymore.
-   ```shell
-   # List reconciliations to get the last scheduling ID
-   kcp rc -c {SHOOT}
-   # List reconciled components
-   kcp rc info -i {SCHEDULING ID}
-   ```
+3. Verify that `istio-controller-manager` is installed and the Istio CR's status is `Ready`.
 
-#### SKR with an existing module
-1. Create Dev SKR.
+#### SAP BTP, Kyma runtime cluster with an existing module
+
+1. Create a Dev SAP BTP, Kyma runtime cluster.
 2. Add the Keda module to the Kyma CR.
    ```yaml
    spec:
      modules:
-     - name: keda
+       - name: keda
    ```
 3. Execute the migration.
-4. Verify that `istio-manager` is installed and the Istio CR's status is `Ready`.
-5. Verify that the Kyma reconciler does not reconcile the Istio component anymore.
-   ```shell
-   # List reconciliations to get the last scheduling ID
-   kcp rc -c {SHOOT}
-   # List reconciled components
-   kcp rc info -i {SCHEDULING ID}
-   ```   
+4. Verify that `istio-controller-manager` is installed and the Istio CR's status is `Ready`.
 
 ## Module's rollout and migration
 
 ### Preparations
-1. Executing `kcp taskrun` requires the path to the kubeconfig file of the corresponding Gardener project and permissions to list/get shoots.
-2. Set `metadata.name` in the module template to `istio-regular`.
-3. Set `spec.channel` in the module template to `regular`.
+
+Executing `kcp taskrun` requires the path to the kubeconfig file of the corresponding Gardener project and permissions to list/get shoots.
 
 ### Dev
-1. Apply the module template to Dev Control Plane.
-2. `kcp login` to Dev and run the migration script on all SKRs. To do that, you can use the following command:
-   ```shell 
-   kcp taskrun --gardener-kubeconfig {PATH TO GARDENER PROJECT KUBECONFIG} --gardener-namespace kyma-dev -t all -- ./migrate.sh
+
+#### Prerequisites
+
+- Reconciliation is disabled for the Dev environment. See PR #4485 in the `kyma/management-plane-config` repository.
+
+#### Migration procedure
+
+1. Apply the ModuleTemplate for both `fast` and `regular` channels to Dev Control Plane.
+2. Verify that the ModuleTemplate in the `fast` and `regular` channels is available on SAP BTP, Kyma runtime clusters of the Dev environment.
+3. Use `kcp login` to log in to Dev and run the migration script on all SAP BTP, Kyma runtime clusters. To do that, you can use the following command:
+   ```shell
+   kcp taskrun --gardener-kubeconfig {PATH TO GARDENER PROJECT KUBECONFIG} -t all -- ./managed-kyma-migration.sh
    ```
-3. Verify that the migration worked as expected by checking the status of Istio manifests on Control Plane.
+4. Verify that the migration worked as expected by checking the status of APIGateway manifests on Control Plane.
    ```shell
    kubectl get manifests -n kcp-system -o custom-columns=NAME:metadata.name,STATE:status.state | grep istio
    ```
@@ -103,10 +67,37 @@ adds the Istio module to the Kyma CR without overwriting existing module configu
 
 Perform the rollout to Stage together with the SRE team. Since they have already performed the rollout for other modules, they might suggest a different rollout strategy.
 
-1. Apply the module template to Stage Control Plane.
-2. `kcp login` to Stage, select some SKRs on `Kyma-Test/Kyma-Integration`, and run `migrate.sh` on them using `kcp taskrun`.
-3. Verify if the migration was successful on the SKRs by checking the status of Istio CR and the reconciler's components.
-4. Run `migrate.sh` for all SKRs in Kyma-Test and Kyma-Integration global accounts.
-5. Verify if the migration worked as expected.
-6. Run `migrate.sh` for the whole Canary landscape.
+#### Prerequisites
+
+- Reconciliation is disabled for the Stage environment. See PR #4486 to the `kyma/management-plane-config` repository.
+
+#### Migration procedure
+
+1. Apply the ModuleTemplate for both `fast` and `regular` channels to Stage Control Plane.
+2. Verify that the ModuleTemplate in the `fast` and `regular` channels is available in SAP BTP, Kyma runtime clusters of the Stage environment.
+3. Use `kcp login` to log in to Stage, select a few SAP BTP, Kyma runtime clusters on `Kyma-Test/Kyma-Integration`, and run `managed-kyma-migration.sh` on them using `kcp taskrun`.
+4. Verify if the migration was successful on the SAP BTP, Kyma runtime clusters by checking the status of APIGateway CR and the reconciler's components.
+5. Run `managed-kyma-migration.sh` for all SKRs in `Kyma-Test` and `Kyma-Integration` global accounts.
+6. Verify if the migration worked as expected.
+7. Run `managed-kyma-migration.sh` for the whole Canary landscape.
+8. Verify if the migration worked as expected.
+
+### Prod
+
+Perform the rollout to Prod together with the SRE team. Since they have already performed the rollout for other modules, they might suggest a different rollout strategy.
+
+#### Prerequisites
+
+- Reconciliation is disabled for the Prod environment. See PR #4487 to the `kyma/management-plane-config` repository.
+
+#### Migration procedure
+
+1. Commit the module manifest to the `regular` and `fast` channels in the `kyma/module-manifests` internal repository.
+2. Verify that the ModuleTemplates are present in the `kyma/kyma-modules` internal repository.
+3. Verify that the ModuleTemplate in both channels are available on `Prod` environment SKRs.
+4. Use `kcp login` to log in to Prod, select some SAP BTP, Kyma runtime clusters on `Kyma-Test/Kyma-Integration`, and run `managed-kyma-migration.sh` on them using `kcp taskrun`.
+5. Verify if the migration was successful on the SAP BTP, Kyma runtime clusters by checking the status of Istio CR and the reconciler's components.
+6. Run `managed-kyma-migration.sh` for all SAP BTP, Kyma runtime clusters in Trial global accounts.
 7. Verify if the migration worked as expected.
+8. Run `managed-kyma-migration.sh` for the whole Factory landscape.
+9. Verify if the migration worked as expected.

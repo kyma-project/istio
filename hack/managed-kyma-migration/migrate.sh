@@ -1,6 +1,21 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-set -e
+set -eo pipefail
+
+function check_apigateway_status () {
+	local number=1
+	while [[ $number -le 100 ]] ; do
+		echo ">--> checking kyma status #$number"
+		local STATUS=$(kubectl get apigateway default -o jsonpath='{.status.state}')
+		echo "apigateway status: ${STATUS:='UNKNOWN'}"
+		[[ "$STATUS" == "Ready" ]] && return 0
+		sleep 5
+        	((number = number + 1))
+	done
+
+	kubectl get all --all-namespaces
+	exit 1
+}
 
 # Verify Istio module template is available on cluster
 istio_module_template_count=$(kubectl get moduletemplates.operator.kyma-project.io -A --output json | jq '.items | map(. | select(.spec.data.kind=="Istio")) | length')
@@ -25,8 +40,7 @@ fi
 istio_crs_count=$(kubectl get istios -n kyma-system --output json | jq '.items | length')
 
 if [ "$istio_crs_count" -gt 1 ]; then
-  echo "Multiple Istio CRs found, canceling migration"
-  exit 1
+  echo "WARNING: Multiple Istio CRs found"
 fi
 
 kyma_cr_modules=$(kubectl get kyma "$kyma_cr_name" -n kyma-system -o json | jq '.spec.modules')
@@ -35,13 +49,10 @@ if [ "$kyma_cr_modules" == "null" ]; then
   kubectl patch kyma "$kyma_cr_name" -n kyma-system --type='json' -p='[{"op": "add", "path": "/spec/modules", "value": [] }]'
 fi
 
-if [ "$istio_crs_count" -gt 0 ]; then
-  echo "Istio CR found, proceeding with migration by adding Istio module to Kyma CR $kyma_cr_name and setting customResourcePolicy to Ignore"
-  kubectl patch kyma "$kyma_cr_name" -n kyma-system --type='json' -p='[{"op": "add", "path": "/spec/modules/-", "value": {"name": "istio", "customResourcePolicy": "Ignore"} }]'
-else
-  echo "No Istio CR found, proceeding with migration by adding Istio module to Kyma CR $kyma_cr_name"
-  kubectl patch kyma "$kyma_cr_name" -n kyma-system --type='json' -p='[{"op": "add", "path": "/spec/modules/-", "value": {"name": "istio"} }]'
-fi
+echo "Proceeding with migration by adding Istio module to Kyma CR $kyma_cr_name"
+kubectl patch kyma "$kyma_cr_name" -n kyma-system --type='json' -p='[{"op": "add", "path": "/spec/modules/-", "value": {"name": "istio"} }]'
+
+check_apigateway_status
 
 echo "Istio CR migration completed successfully"
 exit 0

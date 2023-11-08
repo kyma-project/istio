@@ -2,12 +2,12 @@
 
 set -eo pipefail
 
-function check_apigateway_status () {
+function check_istio_status () {
 	local number=1
 	while [[ $number -le 100 ]] ; do
 		echo ">--> checking kyma status #$number"
-		local STATUS=$(kubectl get apigateway default -o jsonpath='{.status.state}')
-		echo "apigateway status: ${STATUS:='UNKNOWN'}"
+		local STATUS=$(kubectl get istio default -o jsonpath='{.status.state}')
+		echo "istio status: ${STATUS:='UNKNOWN'}"
 		[[ "$STATUS" == "Ready" ]] && return 0
 		sleep 5
         	((number = number + 1))
@@ -52,7 +52,7 @@ fi
 echo "Proceeding with migration by adding Istio module to Kyma CR $kyma_cr_name"
 kubectl patch kyma "$kyma_cr_name" -n kyma-system --type='json' -p='[{"op": "add", "path": "/spec/modules/-", "value": {"name": "istio"} }]'
 
-check_apigateway_status
+check_istio_status
 
 echo "Istio CR migration completed successfully"
 exit 0

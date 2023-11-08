@@ -4,6 +4,8 @@ Enabling automatic sidecar injection allows `istiod` to watch all Pod creation o
 
 You can enable sidecar proxy injection for either an entire Namespace or a single Deployment.
 
+>**WARNING:** Adding the `istio-injection=enabled` label on the Namespace level results in injecting sidecars to all Pods inside of the Namespace.
+
 * Follow the steps to enable sidecar proxy injection for a Namespace:
   
   <!-- tabs:start -->
@@ -22,8 +24,8 @@ You can enable sidecar proxy injection for either an entire Namespace or a singl
   2. Click the blue **Edit** button.
   3. In the **UI Form** section, toggle the switch to set the **istio-injection** label value to `enabled` for the Namespace.
   4. Click **Update**.
-
-     <!-- tabs:end --><br>
+  
+  <!-- tabs:end -->
 
 * Follow the steps to enable sidecar proxy injection for a Deployment:
 
@@ -48,37 +50,3 @@ You can enable sidecar proxy injection for either an entire Namespace or a singl
   <!-- tabs:end -->
 
 Note that if the sidecar proxy injection is disabled at the Namespace level or the `sidecar.istio.io/inject` label on a Pod is set to `false`, the sidecar proxy is not injected.
-
-## Check whether your workloads have automatic Istio sidecar injection enabled
-
-Check whether your workloads have automatic Istio sidecar injection enabled by running [the script](../../../assets/sidecar-analysis.sh). You can either pass the **namespace** parameter to the script or run it with no parameter.
-
-* If you don't provide any parameter, the execution output contains Pods from all Namespaces that don't have automatic Istio sidecar injection enabled. The script outputs the information in the format of `{namespace}/{pod}`. Run:
-
-    ```bash
-    ./sidecar-analysis.sh
-    ```
-  
-  You get an output similar to this one:
-
-    ```
-    Pods out of istio mesh:
-      In namespace labeled with "istio-injection=disabled":
-        - sidecar-disabled/some-pod
-      In namespace labeled with "istio-injection=enabled" with pod labeled with "sidecar.istio.io/inject=false":
-        - sidecar-enabled/some-pod
-      In not labeled ns with pod not labeled with "sidecar.istio.io inject=true":
-        - no-label/some-pod
-    ```
-
-*  If you pass a parameter, only the Pods from the specified Namespace are analyzed. The script outputs the information in the format of `{pod}` if run for a specific Namespace. Run:
-
-    ```bash
-    ./sidecar-analysis.sh {namespace}
-    ```
-  You get an output similar to this one:
-
-  ```
-  Pods out of istio mesh in namespace {namespace-name}:
-    - some-pod
-  ```

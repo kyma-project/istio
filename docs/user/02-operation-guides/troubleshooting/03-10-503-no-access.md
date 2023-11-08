@@ -12,19 +12,76 @@ This behavior might be caused by a configuration error in Istio Ingress Gateway.
 
 To fix this problem, restart the Pods of Istio Ingress Gateway.
 
+<!-- tabs:start -->
+
+#### **kubectl**
+
 1. List all available endpoints:
 
     ```bash
     kubectl get virtualservice --all-namespaces
     ```
 
-2. Restart the Pods of Istio Ingress Gateway to force them to recreate their configuration:
+2. Delete the Pods of Istio Ingress Gateway to trigger the recreation of their configuration:
 
      ```bash
      kubectl delete pod -l app=istio-ingressgateway -n istio-system
      ```
 
+#### **Kyma Dashboard**
+
+1. Go to the `istio-system` namespace.
+2. Navigate to the **Workloads** section on the left-hand side and click on **Pods**.
+3. Utilize the search function to filter for all Pods labeled with `app=istio-ingressgateway`.
+4. Delete each of the Pods that are displayed in order to trigger the recreation of their configuration.
+
+<!-- tabs:end -->
+
 If the restart doesn't help, change the image of Istio Ingress Gateway to allow further investigation. Kyma Istio Operator uses distroless Istio images that are more secure, but you cannot execute commands inside them. Follow these steps:
+
+1. Edit the Istio Ingress Gateway Deployment:
+
+   <!-- tabs:start -->
+
+   #### **kubectl**
+   1. Run the following command:
+      ```bash
+      kubectl edit deployment -n istio-system istio-ingressgateway
+      ```
+   2. Find the `istio-proxy` container and delete the `-distroless` suffix.
+   
+   #### **Kyma Dashboard**
+
+   1. Go to the `istio-system` namespace.
+   2. Navigate to the **Workloads** section on the left-hand side and select **Deployments**.
+   3. Choose `istio-ingressgateway` and click the blue **Edit** button.
+   4. Under the Containers toggle find the `istio-proxy` container. Delete the `-distroless` suffix from its **Docker image** field.
+   5. Click **Update**.
+
+   <!-- tabs:end -->
+
+
+2. Check all ports used by Istio Ingress Gateway:
+
+   <!-- tabs:start -->
+
+   #### **kubectl**
+   Run the following command:
+
+   ```bash
+   kubectl exec -ti -n istio-system $(kubectl get pod -l app=istio-ingressgateway -n istio-system -o name) -c istio-proxy -- netstat -lptnu
+    ```
+
+   #### **Kyma Dashboard**
+
+
+   <!-- tabs:end -->
+
+
+
+---
+
+#### **kubectl**
 
 1. Edit the Istio Ingress Gateway Deployment:
 
@@ -52,6 +109,18 @@ If the restart doesn't help, change the image of Istio Ingress Gateway to allow 
     kubectl get secrets -n istio-system kyma-gateway-certs -oyaml
     kubectl get secrets -n istio-system kyma-gateway-certs-cacert -oyaml
     ```
+
+#### **Kyma Dashboard**
+
+1. Go to the `istio-system` namespace.
+2. Navigate to the **Workloads** section on the left-hand side and select **Deployments**.
+3. Choose `istio-ingressgateway` and click the blue **Edit** button.
+4. Under the Containers toggle find the `istio-proxy` container. Delete the `-distroless` suffix from its **Docker image** field.
+5. Click **Update**.
+
+
+<!-- tabs:end -->
+
 
 6. To regenerate a corrupted certificate, follow the tutorial to [Set up or update a custom domain TLS certificate in Kyma](https://kyma-project.io/docs/kyma/latest/03-tutorials/00-security/sec-01-tls-certificates-security/). If you are running Kyma provisioned through Gardener, follow the [Gardener troubleshooting guide](https://kyma-project.io/docs/kyma/latest/04-operation-guides/troubleshooting/security/sec-01-certificates-gardener/) instead.
 

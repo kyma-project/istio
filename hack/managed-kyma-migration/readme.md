@@ -72,7 +72,7 @@ Perform the rollout to Stage together with the SRE team. Since they have already
 - Reconciliation is disabled for the Stage environment. See PR #4486 to the `kyma/management-plane-config` repository.
 
 #### Migration procedure
-1. Push the module to experimental channel in kyma/module-manifests repository.
+1. Push the module to `experimental` channel in `kyma/module-manifests `repository.
 2. Test that experimental channeldeploys as expected by manually enabling it on a Stage managed cluster
 3. Apply the ModuleTemplate for both `fast` and `regular` channels to Stage Control Plane.
 4. Verify that the ModuleTemplate in the `fast` and `regular` channels is available in SAP BTP, Kyma runtime clusters of the Stage environment.

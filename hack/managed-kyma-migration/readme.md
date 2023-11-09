@@ -72,15 +72,16 @@ Perform the rollout to Stage together with the SRE team. Since they have already
 - Reconciliation is disabled for the Stage environment. See PR #4486 to the `kyma/management-plane-config` repository.
 
 #### Migration procedure
-
-1. Apply the ModuleTemplate for both `fast` and `regular` channels to Stage Control Plane.
-2. Verify that the ModuleTemplate in the `fast` and `regular` channels is available in SAP BTP, Kyma runtime clusters of the Stage environment.
-3. Use `kcp login` to log in to Stage, select a few SAP BTP, Kyma runtime clusters on `Kyma-Test/Kyma-Integration`, and run `managed-kyma-migration.sh` on them using `kcp taskrun`.
-4. Verify if the migration was successful on the SAP BTP, Kyma runtime clusters by checking the status of Istio CR and the reconciler's components.
-5. Run `managed-kyma-migration.sh` for all SKRs in `Kyma-Test` and `Kyma-Integration` global accounts.
-6. Verify if the migration worked as expected.
-7. Run `managed-kyma-migration.sh` for the whole Canary landscape.
+1. Push the module to experimental channel in kyma/module-manifests repository.
+2. Test that experimental channeldeploys as expected by manually enabling it on a Stage managed cluster
+3. Apply the ModuleTemplate for both `fast` and `regular` channels to Stage Control Plane.
+4. Verify that the ModuleTemplate in the `fast` and `regular` channels is available in SAP BTP, Kyma runtime clusters of the Stage environment.
+5. Use `kcp login` to log in to Stage, select a few SAP BTP, Kyma runtime clusters on `Kyma-Test/Kyma-Integration`, and run `managed-kyma-migration.sh` on them using `kcp taskrun`.
+6. Verify if the migration was successful on the SAP BTP, Kyma runtime clusters by checking the status of Istio CR and the reconciler's components.
+7. Run `managed-kyma-migration.sh` for all SKRs in `Kyma-Test` and `Kyma-Integration` global accounts.
 8. Verify if the migration worked as expected.
+9. Run `managed-kyma-migration.sh` for the whole Canary landscape.
+10. Verify if the migration worked as expected.
 
 ### Prod
 

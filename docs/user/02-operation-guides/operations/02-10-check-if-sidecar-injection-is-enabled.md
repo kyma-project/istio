@@ -1,6 +1,6 @@
 # Check if you have Istio sidecar proxy injection enabled
 
-## Check if sidecar injection is enabled in the Pod's Namespace.
+## Check if sidecar injection is enabled in the Pod's Namespace
 
 <!-- tabs:start -->
 
@@ -21,7 +21,7 @@ If the command does not return `enabled`, the sidecar injection is disabled in t
 
 <!-- tabs:end -->
 
-## Check if sidecar injection is enabled in the Pod's Deployment.
+## Check if sidecar injection is enabled in the Pod's Deployment
 
 <!-- tabs:start -->
 
@@ -37,7 +37,7 @@ Sidecar injection is disabled if the output does not contain the `sidecar.istio.
 #### **Kyma Dashboard**
 
 1. Go to the Deployment's Namespace.
-2. Navigate to the **Workloads** section on the left-hand side and select **Deployments**.
+2. On the left-hand side sidebar, find the **Workloads** section and select **Deployments**.
 3. Utilize the search function to filter for all Deployments labeled with `istio-injection=enabled`.
 ![Search for a Deployment with enabled sidecar injection](../../../assets/search-for-deployment-with-enabled-injection.png)
 

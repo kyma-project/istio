@@ -73,7 +73,7 @@ Perform the rollout to Stage together with the SRE team. Since they have already
 
 #### Migration procedure
 1. Push the module to `experimental` channel in `kyma/module-manifests `repository.
-2. Test that experimental channeldeploys as expected by manually enabling it on a Stage managed cluster
+2. Test that experimental channel deploys as expected by manually enabling it on a Stage managed cluster
 3. Apply the ModuleTemplate for both `fast` and `regular` channels to Stage Control Plane.
 4. Verify that the ModuleTemplate in the `fast` and `regular` channels is available in SAP BTP, Kyma runtime clusters of the Stage environment.
 5. Use `kcp login` to log in to Stage, select a few SAP BTP, Kyma runtime clusters on `Kyma-Test/Kyma-Integration`, and run `managed-kyma-migration.sh` on them using `kcp taskrun`.

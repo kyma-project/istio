@@ -4,10 +4,16 @@
 
 ## Scenarios
 
+### Note about clusters with existing Istio CR
+
+If there is already Istio CR on the cluster, with name different from `default`, the new Istio CR managed by the Lifecycle Manager will end up in the Error state.
+Consider running rename-to-default.sh script to move your custom Istio CR configuration to the new default one. It will also remove the old custom Istio CR during the execution.
+
 ### Provisioning of Istio CR using Lifecycle Manager in a new cluster
 
 If there is no Istio custom resource (CR), then Lifecycle Manager provisions the default Istio CR defined in the Istio ModuleTemplate. The migration
 adds the Istio module to the Kyma CR.
+
 
 ### Provisioning of Istio CR using Lifecycle Manager in a cluster with existing modules
 
@@ -23,9 +29,8 @@ Apply the ModuleTemplate for both `fast` and `regular` channels to Dev Control P
 #### SAP BTP, Kyma runtime clusters without existing modules
 
 1. Create a Dev SAP BTP, Kyma runtime cluster.
-2. If the cluster contains custom Istio CR with name different from default then before executing migration script run rename-to-default.sh
-3. Execute the migration.
-4. Verify that `istio-controller-manager` is installed and the Istio CR's status is `Ready`.
+2. Execute the migration.
+3. Verify that `istio-controller-manager` is installed and the Istio CR's status is `Ready`.
 
 #### SAP BTP, Kyma runtime cluster with an existing module
 
@@ -36,9 +41,8 @@ Apply the ModuleTemplate for both `fast` and `regular` channels to Dev Control P
      modules:
        - name: keda
    ```
-3. If the cluster contains custom Istio CR with name different from default then before executing migration script run rename-to-default.sh
-4. Execute the migration.
-5. Verify that `istio-controller-manager` is installed and the Istio CR's status is `Ready`.
+3. Execute the migration.
+4. Verify that `istio-controller-manager` is installed and the Istio CR's status is `Ready`.
 
 ## Module's rollout and migration
 

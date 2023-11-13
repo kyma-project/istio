@@ -2,21 +2,6 @@
 
 set -eo pipefail
 
-function check_istio_status () {
-	local number=1
-	while [[ $number -le 100 ]] ; do
-		echo ">--> checking kyma status #$number"
-		local STATUS=$(kubectl -n kyma-system get istio default -o jsonpath='{.status.state}')
-		echo "istio status: ${STATUS:='UNKNOWN'}"
-		[[ "$STATUS" == "Ready" ]] && return 0
-		sleep 5
-        	((number = number + 1))
-	done
-
-	kubectl get all --all-namespaces
-	exit 1
-}
-
 # Verify Istio module template is available on cluster
 istio_module_template_count=$(kubectl get moduletemplates.operator.kyma-project.io -A --output json | jq '.items | map(. | select(.spec.data.kind=="Istio")) | length')
 
@@ -52,7 +37,24 @@ fi
 echo "Proceeding with migration by adding Istio module to Kyma CR $kyma_cr_name"
 kubectl patch kyma "$kyma_cr_name" -n kyma-system --type='json' -p='[{"op": "add", "path": "/spec/modules/-", "value": {"name": "istio"} }]'
 
-check_istio_status
+number=1
+while [[ $number -le 100 ]]; do
+  echo ">--> checking kyma status #$number"
+  STATUS=$(kubectl -n kyma-system get istio default -o jsonpath='{.status.state}' || echo " failed retrieving default Istio CR")
+  ISTIO_CR_COUNT=$(kubectl get istios -n kyma-system --output json | jq '.items | length')
+  echo "istio status: ${STATUS:='UNKNOWN'}"
 
-echo "Istio CR migration completed successfully"
-exit 0
+  if [ "$STATUS" == "Ready" ]; then
+    echo "Migration successful"
+    exit 0
+  elif [ "$STATUS" == "Error" ] && [ "$ISTIO_CR_COUNT" -gt 1 ]; then
+    echo "More than one Istio CR present on the cluster. Script rename-to-default.sh might be required."
+    exit 1
+  fi
+
+  sleep 5
+  ((number = number + 1))
+done
+
+echo "Migration failed"
+exit 2

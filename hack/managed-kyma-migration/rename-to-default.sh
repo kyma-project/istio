@@ -1,9 +1,17 @@
 #!/usr/bin/env bash
+
+# Script needs to be used when Istio CustomResource is in Ready state. If Istio is currently in Processing, script will fail fast, as we cannot determine which Istio is being currently reconciled
+
 set -eo pipefail
 
 kubectl scale -n kyma-system deployment/istio-controller-manager --replicas 0
 
 istio_ready=$(kubectl get istio -n kyma-system --output json | jq '.items[] | select((.status.state=="Ready") or (.status.state=="Warning"))')
+
+if [ "$istio_ready" == "" ]; then
+  echo "No 'Ready' istio found. Make sure that your Istio CustomResource is not in 'Processing'"
+  exit 0
+fi
 
 ready_istio_name=$(echo "$istio_ready" | jq '.metadata.name')
 

@@ -23,8 +23,9 @@ Apply the ModuleTemplate for both `fast` and `regular` channels to Dev Control P
 #### SAP BTP, Kyma runtime clusters without existing modules
 
 1. Create a Dev SAP BTP, Kyma runtime cluster.
-2. Execute the migration.
-3. Verify that `istio-controller-manager` is installed and the Istio CR's status is `Ready`.
+2. If the cluster contains custom Istio CR with name different from default then before executing migration script run rename-to-default.sh
+3. Execute the migration.
+4. Verify that `istio-controller-manager` is installed and the Istio CR's status is `Ready`.
 
 #### SAP BTP, Kyma runtime cluster with an existing module
 
@@ -35,8 +36,9 @@ Apply the ModuleTemplate for both `fast` and `regular` channels to Dev Control P
      modules:
        - name: keda
    ```
-3. Execute the migration.
-4. Verify that `istio-controller-manager` is installed and the Istio CR's status is `Ready`.
+3. If the cluster contains custom Istio CR with name different from default then before executing migration script run rename-to-default.sh
+4. Execute the migration.
+5. Verify that `istio-controller-manager` is installed and the Istio CR's status is `Ready`.
 
 ## Module's rollout and migration
 
@@ -48,7 +50,7 @@ Executing `kcp taskrun` requires the path to the kubeconfig file of the correspo
 
 #### Prerequisites
 
-- Reconciliation is disabled for the Dev environment. See PR #4485 in the `kyma/management-plane-config` repository.
+- Reconciliation is disabled for the Dev environment. See PR #4600 in the `kyma/management-plane-config` repository.
 
 #### Migration procedure
 
@@ -69,7 +71,7 @@ Perform the rollout to Stage together with the SRE team. Since they have already
 
 #### Prerequisites
 
-- Reconciliation is disabled for the Stage environment. See PR #4486 to the `kyma/management-plane-config` repository.
+- Reconciliation is disabled for the Stage environment. See PR #4601 to the `kyma/management-plane-config` repository.
 
 #### Migration procedure
 1. Push the module to `experimental` channel in `kyma/module-manifests `repository.
@@ -89,7 +91,7 @@ Perform the rollout to Prod together with the SRE team. Since they have already 
 
 #### Prerequisites
 
-- Reconciliation is disabled for the Prod environment. See PR #4487 to the `kyma/management-plane-config` repository.
+- Reconciliation is disabled for the Prod environment. See PR #4602 to the `kyma/management-plane-config` repository.
 
 #### Migration procedure
 

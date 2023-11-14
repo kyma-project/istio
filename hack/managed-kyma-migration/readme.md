@@ -88,7 +88,7 @@ Perform the rollout to Stage together with the SRE team. Since they have already
 8. Verify if the migration worked as expected.
 9. Run `managed-kyma-migration.sh` for the whole Canary landscape.
 10. Verify if the migration worked as expected.
-
+11. If script failed with following log: `More than one Istio CR present on the cluster. Script rename-to-default.sh might be required`, contact the customer to agree on solution. We propose to execute rename-to-default.sh script.
 ### Prod
 
 Perform the rollout to Prod together with the SRE team. Since they have already performed the rollout for other modules, they might suggest a different rollout strategy.
@@ -108,3 +108,4 @@ Perform the rollout to Prod together with the SRE team. Since they have already 
 7. Verify if the migration worked as expected.
 8. Run `managed-kyma-migration.sh` for the whole Factory landscape.
 9. Verify if the migration worked as expected.
+10. If script failed with following log: `More than one Istio CR present on the cluster. Script rename-to-default.sh might be required`, contact the customer to agree on solution. We propose to execute rename-to-default.sh script 

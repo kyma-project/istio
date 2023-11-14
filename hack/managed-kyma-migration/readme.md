@@ -79,16 +79,18 @@ Perform the rollout to Stage together with the SRE team. Since they have already
 
 #### Migration procedure
 1. Push the module to `experimental` channel in `kyma/module-manifests `repository.
-2. Test that experimental channel deploys as expected by manually enabling it on a Stage managed cluster
-3. Apply the ModuleTemplate for both `fast` and `regular` channels to Stage Control Plane.
-4. Verify that the ModuleTemplate in the `fast` and `regular` channels is available in SAP BTP, Kyma runtime clusters of the Stage environment.
-5. Use `kcp login` to log in to Stage, select a few SAP BTP, Kyma runtime clusters on `Kyma-Test/Kyma-Integration`, and run `managed-kyma-migration.sh` on them using `kcp taskrun`.
-6. Verify if the migration was successful on the SAP BTP, Kyma runtime clusters by checking the status of Istio CR and the reconciler's components.
-7. Run `managed-kyma-migration.sh` for all SKRs in `Kyma-Test` and `Kyma-Integration` global accounts.
-8. Verify if the migration worked as expected.
-9. Run `managed-kyma-migration.sh` for the whole Canary landscape.
-10. Verify if the migration worked as expected.
-11. If script failed with following log: `More than one Istio CR present on the cluster. Script rename-to-default.sh might be required`, contact the customer to agree on solution. We propose to execute rename-to-default.sh script.
+2. Create a cluster on the stage to test the experimental channel.
+3. Test that experimental channel deploys as expected by manually enabling it on a Stage managed cluster
+4. Apply the ModuleTemplate for both `fast` and `regular` channels to Stage Control Plane.
+5. Verify that the ModuleTemplate in the `fast` and `regular` channels is available in SAP BTP, Kyma runtime clusters of the Stage environment.
+6. Use `kcp login` to log in to Stage, select a few SAP BTP, Kyma runtime clusters on `Kyma-Test/Kyma-Integration`, and run `managed-kyma-migration.sh` on them using `kcp taskrun`.
+7. Verify if the migration was successful on the SAP BTP, Kyma runtime clusters by checking the status of Istio CR and the reconciler's components.
+8. Run `managed-kyma-migration.sh` for all SKRs in `Kyma-Test` and `Kyma-Integration` global accounts.
+9. Verify if the migration worked as expected.
+10. Run `managed-kyma-migration.sh` for the whole Canary landscape.
+11. Verify if the migration worked as expected.
+12. If script failed with following log: `More than one Istio CR present on the cluster. Script rename-to-default.sh might be required`, contact the customer to agree on solution. We propose to execute rename-to-default.sh script.
+13. Don't forget to remove cluster from step 2 after all.
 ### Prod
 
 Perform the rollout to Prod together with the SRE team. Since they have already performed the rollout for other modules, they might suggest a different rollout strategy.

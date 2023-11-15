@@ -12,6 +12,10 @@ updates:
       include: "scope"
     ignore:
       - dependency-name: "sigs.k8s.io/controller-runtime"
+        # We want to ignore istio dependencies, since the upgrade process is always a manual process, and we never used the dependabot PRs.
+      - dependency-name: "istio.io/client-go"
+      - dependency-name: "istio.io/api"
+      - dependency-name: "istio.io/istio"
     groups:
       k8s-dependencies:
         patterns:
@@ -41,6 +45,10 @@ updates:
       - dependency-name: "sigs.k8s.io/controller-runtime"
       - dependency-name: "*"
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      # We want to ignore istio dependencies, since the upgrade process is always a manual process, and we never used the dependabot PRs.
+      - dependency-name: "istio.io/client-go"
+      - dependency-name: "istio.io/api"
+      - dependency-name: "istio.io/istio"
     groups:
       k8s-dependencies:
         patterns:

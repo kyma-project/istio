@@ -60,11 +60,12 @@ Executing `kcp taskrun` requires the path to the kubeconfig file of the correspo
 
 1. Apply the ModuleTemplate for both `fast` and `regular` channels to Dev Control Plane.
 2. Verify that the ModuleTemplate in the `fast` and `regular` channels is available on SAP BTP, Kyma runtime clusters of the Dev environment.
-3. Use `kcp login` to log in to Dev and run the migration script on all SAP BTP, Kyma runtime clusters. To do that, you can use the following command:
+3. Merge PR (#4624) in `kyma/management-plane-config` responsible for setting Istio as a default module on dev.
+4. Use `kcp login` to log in to Dev and run the migration script on all SAP BTP, Kyma runtime clusters. To do that, you can use the following command:
    ```shell
    kcp taskrun --gardener-kubeconfig {PATH TO GARDENER PROJECT KUBECONFIG} -t all -- ./managed-kyma-migration.sh
    ```
-4. Verify that the migration worked as expected by checking the status of Istio manifests on Control Plane.
+5. Verify that the migration worked as expected by checking the status of Istio manifests on Control Plane.
    ```shell
    kubectl get manifests -n kcp-system -o custom-columns=NAME:metadata.name,STATE:status.state | grep istio
    ```
@@ -84,14 +85,15 @@ Perform the rollout to Stage together with the SRE team. Since they have already
 4. Create a cluster on the stage to test the experimental channel and test if Istio Module is deployed with Istio CR with status Ready.
 5. Apply manually the ModuleTemplate for both `fast` and `regular` channels to Stage Control Plane.
 6. Verify that the ModuleTemplate in the `fast` and `regular` channels is available in SAP BTP, Kyma runtime clusters of the Stage environment.
-7. Use `kcp login` to log in to Stage, select a few SAP BTP, Kyma runtime clusters on `Kyma-Test/Kyma-Integration`, and run `managed-kyma-migration.sh` on them using `kcp taskrun`.
-8. Verify if the migration was successful on the SAP BTP, Kyma runtime clusters by checking the status of Istio CR and the reconciler's components.
-9. Run `managed-kyma-migration.sh` for all SKRs in `Kyma-Test` and `Kyma-Integration` global accounts.
-10. Verify if the migration worked as expected.
-11. Run `managed-kyma-migration.sh` for the whole Canary landscape.
-12. Verify if the migration worked as expected.
-13. If script failed with following log: `More than one Istio CR present on the cluster. Script rename-to-default.sh might be required`, contact the customer to agree on solution. We propose to execute rename-to-default.sh script.
-14. Don't forget to remove cluster from step 2 after all.
+7. Merge PR (#4626) in `kyma/management-plane-config` responsible for setting Istio as a default module on stage.
+8. Use `kcp login` to log in to Stage, select a few SAP BTP, Kyma runtime clusters on `Kyma-Test/Kyma-Integration`, and run `managed-kyma-migration.sh` on them using `kcp taskrun`.
+9. Verify if the migration was successful on the SAP BTP, Kyma runtime clusters by checking the status of Istio CR and the reconciler's components.
+10. Run `managed-kyma-migration.sh` for all SKRs in `Kyma-Test` and `Kyma-Integration` global accounts.
+11. Verify if the migration worked as expected.
+12. Run `managed-kyma-migration.sh` for the whole Canary landscape.
+13. Verify if the migration worked as expected.
+14. If script failed with following log: `More than one Istio CR present on the cluster. Script rename-to-default.sh might be required`, contact the customer to agree on solution. We propose to execute rename-to-default.sh script.
+15. Don't forget to remove cluster from step 2 after all.
 
 ### Prod
 
@@ -107,10 +109,11 @@ Perform the rollout to Prod together with the SRE team. Since they have already 
 2. Push kustomization change for `fast` and `regular` in `kyma/kyma-modules` repository (PR #401)
 3. Verify that the ModuleTemplates are present in the `kyma/kyma-modules` internal repository.
 4. Verify that the ModuleTemplate in both channels are available on `Prod` environment SKRs.
-5. Use `kcp login` to log in to Prod, select some SAP BTP, Kyma runtime clusters on `Kyma-Test/Kyma-Integration`, and run `managed-kyma-migration.sh` on them using `kcp taskrun`.
-6. Verify if the migration was successful on the SAP BTP, Kyma runtime clusters by checking the status of Istio CR and the reconciler's components.
-7. Run `managed-kyma-migration.sh` for all SAP BTP, Kyma runtime clusters in Trial global accounts.
-8. Verify if the migration worked as expected.
-9. Run `managed-kyma-migration.sh` for the whole Factory landscape.
-10. Verify if the migration worked as expected.
-11. If script failed with following log: `More than one Istio CR present on the cluster. Script rename-to-default.sh might be required`, contact the customer to agree on solution. We propose to execute rename-to-default.sh script.
+5. Merge PR (#4627) in `kyma/management-plane-config` responsible for setting Istio as a default module on prod.
+6. Use `kcp login` to log in to Prod, select some SAP BTP, Kyma runtime clusters on `Kyma-Test/Kyma-Integration`, and run `managed-kyma-migration.sh` on them using `kcp taskrun`.
+7. Verify if the migration was successful on the SAP BTP, Kyma runtime clusters by checking the status of Istio CR and the reconciler's components.
+8. Run `managed-kyma-migration.sh` for all SAP BTP, Kyma runtime clusters in Trial global accounts.
+9. Verify if the migration worked as expected.
+10. Run `managed-kyma-migration.sh` for the whole Factory landscape.
+11. Verify if the migration worked as expected.
+12. If script failed with following log: `More than one Istio CR present on the cluster. Script rename-to-default.sh might be required`, contact the customer to agree on solution. We propose to execute rename-to-default.sh script.

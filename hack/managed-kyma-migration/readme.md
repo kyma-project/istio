@@ -39,7 +39,7 @@ Apply the ModuleTemplate for both `fast` and `regular` channels to Dev Control P
    ```yaml
    spec:
      modules:
-       - name: keda
+     - name: keda
    ```
 3. Execute the migration.
 4. Verify that `istio-controller-manager` is installed and the Istio CR's status is `Ready`.
@@ -78,19 +78,21 @@ Perform the rollout to Stage together with the SRE team. Since they have already
 - Reconciliation is disabled for the Stage environment. See PR #4601 to the `kyma/management-plane-config` repository.
 
 #### Migration procedure
-1. Push the module to `experimental` channel in `kyma/module-manifests `repository.
-2. Create a cluster on the stage to test the experimental channel.
-3. Test that experimental channel deploys as expected by manually enabling it on a Stage managed cluster
-4. Apply the ModuleTemplate for both `fast` and `regular` channels to Stage Control Plane.
-5. Verify that the ModuleTemplate in the `fast` and `regular` channels is available in SAP BTP, Kyma runtime clusters of the Stage environment.
-6. Use `kcp login` to log in to Stage, select a few SAP BTP, Kyma runtime clusters on `Kyma-Test/Kyma-Integration`, and run `managed-kyma-migration.sh` on them using `kcp taskrun`.
-7. Verify if the migration was successful on the SAP BTP, Kyma runtime clusters by checking the status of Istio CR and the reconciler's components.
-8. Run `managed-kyma-migration.sh` for all SKRs in `Kyma-Test` and `Kyma-Integration` global accounts.
-9. Verify if the migration worked as expected.
-10. Run `managed-kyma-migration.sh` for the whole Canary landscape.
-11. Verify if the migration worked as expected.
-12. If script failed with following log: `More than one Istio CR present on the cluster. Script rename-to-default.sh might be required`, contact the customer to agree on solution. We propose to execute rename-to-default.sh script.
-13. Don't forget to remove cluster from step 2 after all.
+1. Push module to `experimental` channel in `kyma/module-manifests `repository (PR #162).
+2. Push the kustomization change for `experimental` in `kyma/kyma-modules` repository (PR #400)
+3. Verify that the ModuleTemplate is present in the `kyma/kyma-modules` internal repository.
+4. Create a cluster on the stage to test the experimental channel and test if Istio Module is deployed with Istio CR with status Ready.
+5. Apply manually the ModuleTemplate for both `fast` and `regular` channels to Stage Control Plane.
+6. Verify that the ModuleTemplate in the `fast` and `regular` channels is available in SAP BTP, Kyma runtime clusters of the Stage environment.
+7. Use `kcp login` to log in to Stage, select a few SAP BTP, Kyma runtime clusters on `Kyma-Test/Kyma-Integration`, and run `managed-kyma-migration.sh` on them using `kcp taskrun`.
+8. Verify if the migration was successful on the SAP BTP, Kyma runtime clusters by checking the status of Istio CR and the reconciler's components.
+9. Run `managed-kyma-migration.sh` for all SKRs in `Kyma-Test` and `Kyma-Integration` global accounts.
+10. Verify if the migration worked as expected.
+11. Run `managed-kyma-migration.sh` for the whole Canary landscape.
+12. Verify if the migration worked as expected.
+13. If script failed with following log: `More than one Istio CR present on the cluster. Script rename-to-default.sh might be required`, contact the customer to agree on solution. We propose to execute rename-to-default.sh script.
+14. Don't forget to remove cluster from step 2 after all.
+
 ### Prod
 
 Perform the rollout to Prod together with the SRE team. Since they have already performed the rollout for other modules, they might suggest a different rollout strategy.
@@ -101,13 +103,14 @@ Perform the rollout to Prod together with the SRE team. Since they have already 
 
 #### Migration procedure
 
-1. Commit the module manifest to the `regular` and `fast` channels in the `kyma/module-manifests` internal repository.
-2. Verify that the ModuleTemplates are present in the `kyma/kyma-modules` internal repository.
-3. Verify that the ModuleTemplate in both channels are available on `Prod` environment SKRs.
-4. Use `kcp login` to log in to Prod, select some SAP BTP, Kyma runtime clusters on `Kyma-Test/Kyma-Integration`, and run `managed-kyma-migration.sh` on them using `kcp taskrun`.
-5. Verify if the migration was successful on the SAP BTP, Kyma runtime clusters by checking the status of Istio CR and the reconciler's components.
-6. Run `managed-kyma-migration.sh` for all SAP BTP, Kyma runtime clusters in Trial global accounts.
-7. Verify if the migration worked as expected.
-8. Run `managed-kyma-migration.sh` for the whole Factory landscape.
-9. Verify if the migration worked as expected.
-10. If script failed with following log: `More than one Istio CR present on the cluster. Script rename-to-default.sh might be required`, contact the customer to agree on solution. We propose to execute rename-to-default.sh script 
+1. Push the module manifest to the `regular` and `fast` channels in the `kyma/module-manifests` internal repository (PR #163, #164).
+2. Push kustomization change for `fast` and `regular` in `kyma/kyma-modules` repository (PR #401)
+3. Verify that the ModuleTemplates are present in the `kyma/kyma-modules` internal repository.
+4. Verify that the ModuleTemplate in both channels are available on `Prod` environment SKRs.
+5. Use `kcp login` to log in to Prod, select some SAP BTP, Kyma runtime clusters on `Kyma-Test/Kyma-Integration`, and run `managed-kyma-migration.sh` on them using `kcp taskrun`.
+6. Verify if the migration was successful on the SAP BTP, Kyma runtime clusters by checking the status of Istio CR and the reconciler's components.
+7. Run `managed-kyma-migration.sh` for all SAP BTP, Kyma runtime clusters in Trial global accounts.
+8. Verify if the migration worked as expected.
+9. Run `managed-kyma-migration.sh` for the whole Factory landscape.
+10. Verify if the migration worked as expected.
+11. If script failed with following log: `More than one Istio CR present on the cluster. Script rename-to-default.sh might be required`, contact the customer to agree on solution. We propose to execute rename-to-default.sh script.

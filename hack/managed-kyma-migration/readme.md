@@ -52,23 +52,23 @@ Executing `kcp taskrun` requires the path to the kubeconfig file of the correspo
 
 ### Dev
 
-#### Prerequisites
-
-- Reconciliation is disabled for the Dev environment. See PR #4600 in the `kyma/management-plane-config` repository.
-
 #### Migration procedure
 
-1. Apply the ModuleTemplate for both `fast` and `regular` channels to Dev Control Plane.
-2. Verify that the ModuleTemplate in the `fast` and `regular` channels is available on SAP BTP, Kyma runtime clusters of the Dev environment.
-3. Merge PR (#4624) in `kyma/management-plane-config` responsible for setting Istio as a default module on dev.
-4. Use `kcp login` to log in to Dev and run the migration script on all SAP BTP, Kyma runtime clusters. To do that, you can use the following command:
+1. Push module to `experimental` channel in `kyma/module-manifests `repository (PR #162).
+2. Push the kustomization change for `experimental` in `kyma/kyma-modules` repository (PR #400)
+3. Verify that the ModuleTemplate is present in the `kyma/kyma-modules` internal repository.
+4. Apply the ModuleTemplate for `fast` and `regular` channels to Dev Control Plane.
+5. Verify that the ModuleTemplate in the `experimental`, `fast` and `regular` channels is available on SAP BTP, Kyma runtime clusters of the Dev environment.
+6. Merge PR (#4624) in `kyma/management-plane-config` responsible for disabling Istio reconciliation and setting Istio as a default module on dev. Depending on the outcome adjust this those actions to one PR for the stage and prod.
+7. Use `kcp login` to log in to Dev and run the migration script on all SAP BTP, Kyma runtime clusters. To do that, you can use the following command:
    ```shell
    kcp taskrun --gardener-kubeconfig {PATH TO GARDENER PROJECT KUBECONFIG} -t all -- ./managed-kyma-migration.sh
    ```
-5. Verify that the migration worked as expected by checking the status of Istio manifests on Control Plane.
+8. Verify that the migration worked as expected by checking the status of Istio manifests on Control Plane.
    ```shell
    kubectl get manifests -n kcp-system -o custom-columns=NAME:metadata.name,STATE:status.state | grep istio
    ```
+9. If there are APIGateway CR is in the warning state enable Istio Module in the Kyma CR (you can check it easily on the new monitoring dashboard).
 
 ### Stage
 

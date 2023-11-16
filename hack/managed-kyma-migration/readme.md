@@ -56,11 +56,12 @@ Executing `kcp taskrun` requires the path to the kubeconfig file of the correspo
 
 1. Push module to `experimental` channel in `kyma/module-manifests `repository (PR #162).
 2. Push the kustomization change for `experimental` in `kyma/kyma-modules` repository (PR #400)
-3. Verify that the ModuleTemplate is present in the `kyma/kyma-modules` internal repository.
-4. Apply the ModuleTemplate for `fast` and `regular` channels to Dev Control Plane.
+3. Verify that the ModuleTemplate is present in the experimental channel in the `kyma/kyma-modules` internal repository.
+4. Create ModuleTemplate for `fast` and `regular` by adapting the `metadata.name` and `spec.channel` of the `experimental` ModuleTemplate. In this way, we ensure that we also use a ModuleTemplate created by the submission pipeline for the fast and regular channel.
+5. Apply the ModuleTemplate for `fast` and `regular` channels to Dev Control Plane.
 5. Verify that the ModuleTemplate in the `experimental`, `fast` and `regular` channels is available on SAP BTP, Kyma runtime clusters of the Dev environment.
 6. Merge PR (#4624) in `kyma/management-plane-config` responsible for disabling Istio reconciliation and setting Istio as a default module on dev. Depending on the outcome adjust this those actions to one PR for the stage and prod.
-7. Use `kcp login` to log in to Dev and run the migration script on all SAP BTP, Kyma runtime clusters. To do that, you can use the following command:
+7. Get permissions to execute scripts for `kcp taskrun` and use `kcp login` to log in to Dev and run the migration script on all SAP BTP, Kyma runtime clusters. To do that, you can use the following command:
    ```shell
    kcp taskrun --gardener-kubeconfig {PATH TO GARDENER PROJECT KUBECONFIG} -t all -- ./managed-kyma-migration.sh
    ```
@@ -68,7 +69,8 @@ Executing `kcp taskrun` requires the path to the kubeconfig file of the correspo
    ```shell
    kubectl get manifests -n kcp-system -o custom-columns=NAME:metadata.name,STATE:status.state | grep istio
    ```
-9. If there are APIGateway CR is in the warning state enable Istio Module in the Kyma CR (you can check it easily on the new monitoring dashboard).
+9. Verify that no APIGateway module is in Warning state. This can be done by using the [API-Gateway Monitoring Dashboard](https://plutono.cp.dev.kyma.cloud.sap/d/6meO06VSk/modules-api-gateway?orgId=1).
+10. If there are APIGateway CRs in the warning state, the cluster might have been created without Istio Module. In this case it needs to be enabled in the Kyma CR manually.
 
 ### Stage
 

@@ -86,11 +86,16 @@ because Istio module is not a default module at this time and Istio component is
 3. Trigger SRE to disable reconciliation for kyma-integration Global Account. This is necessary, because we didn't disable istio module reconciliation, yet.
 4. Execute migration script `migration-testing/migrate-local-moduletemplate.sh` that uses local module template for fast channel to migrate kyma-integration Global Account
    ```shell
-   kcp taskrun -p 16 --gardener-kubeconfig {PATH TO GARDENER PROJECT KUBECONFIG} -t account="d4037436-f01a-4adc-aa2b-52836f459bfe" -- ./migrate-local-moduletemplate.sh 
+   kcp taskrun -p 16 --gardener-kubeconfig {PATH TO GARDENER PROJECT KUBECONFIG} -t account="$GLOBAL_ACCOUNT_KYMA_INTEGRATION" -- ./migrate-local-moduletemplate.sh 
    ```
-5. Verify test migration of kyma-integration Global Account was successful. The following script will print out clusters that are not ready:
+5. Verify that the number of Istio manifests on Stage Control Plane is equal or higher (because of test clusters from step 1) to the number of runtimes on Stage for kyma-integration Global Account. First returns the number of runtimes, second the number of manifests.
    ```shell
-   kcp taskrun -p 16 --gardener-kubeconfig {PATH TO GARDENER PROJECT KUBECONFIG} -t account="d4037436-f01a-4adc-aa2b-52836f459bfe" -- kubectl get istio -n kyma-system default 2>/dev/null | grep -v Ready | grep -v "NAME"
+   kcp rt -o json | jq '.totalCount'
+   kubectl get manifests -n kcp-system -o custom-columns=NAME:metadata.name,STATE:status.state | grep istio | grep -v "NAMESPACE" | wc -l
+   ```
+6. Verify test migration of kyma-integration Global Account was successful by checking the status of Istio manifests on Stage Control Plane. The following script will print out istio manifests that are not Ready.
+   ```shell
+   kubectl get manifests -n kcp-system -o custom-columns=NAME:metadata.name,STATE:status.state | grep istio | grep -v Ready
    ```
 
 ##### Migration rollout (done by SRE)
@@ -104,11 +109,18 @@ because Istio module is not a default module at this time and Istio component is
 ##### Verify migration
 1. Wait for SRE to finish the migration for all clusters
 2. Check the [Istio Module](https://plutono.cp.stage.kyma.cloud.sap/d/hTm72lVIz/modules-istio?orgId=1) and [API Gateway Module](https://plutono.cp.stage.kyma.cloud.sap/d/6meO06VSk/modules-api-gateway?orgId=1) status on the dashboards
-3. Run the script following script to verify on every SKR that the migration was successful:
+3. Verify that the number of Istio manifests on Stage Control Plane is equal to the number of runtimes on Stage. First returns the number of runtimes, second the number of manifests.
+   ```shell
+   kcp rt --account "$GLOBAL_ACCOUNT_KYMA_INTEGRATION" -o json | jq '.totalCount'
+   kubectl get manifests -n kcp-system -o custom-columns=NAME:metadata.name,STATE:status.state | grep istio | grep -v "NAMESPACE" | wc -l
+   ```
+4. Verify the migration was successful by checking the status of Istio manifests on Stage Control Plane. The following script will print out istio manifests that are not Ready.
+   ```shell
+   kubectl get manifests -n kcp-system -o custom-columns=NAME:metadata.name,STATE:status.state | grep istio | grep -v Ready
+   ```
+5. Migrate istio module in kyma-integration Global Account to default channel and remove remote module template used for migration testing
   TODO: Add script
-4. Migrate istio module in kyma-integration Global Account to default channel and remove remote module template used for migration testing
-  TODO: Add script
-5. Trigger SRE to enable reconciliation for kyma-integration Global Account.
+6. Trigger SRE to enable reconciliation for kyma-integration Global Account.
 
 
 ### Prod
@@ -120,16 +132,21 @@ because Istio module is not a default module at this time and Istio component is
 3. Trigger SRE to disable reconciliation for kyma-integration Global Account. This is necessary, because we didn't disable istio module reconciliation, yet.
 4. Execute migration script `migration-testing/migrate-local-moduletemplate.sh` that uses local module template for fast channel to migrate kyma-integration Global Account
       ```shell
-   kcp taskrun -p 16 --gardener-kubeconfig {PATH TO GARDENER PROJECT KUBECONFIG} -t account="8a200117-40d9-414a-bef2-b9a7ab9d3643" -- ./migrate-local-moduletemplate.sh 
+   kcp taskrun -p 16 --gardener-kubeconfig {PATH TO GARDENER PROJECT KUBECONFIG} -t account="$GLOBAL_ACCOUNT_KYMA_INTEGRATION" -- ./migrate-local-moduletemplate.sh 
    ```
-5. Verify test migration of kyma-integration Global Account was successful. The following script will print out clusters that are not ready:
+5. Verify that the number of Istio manifests on Prod Control Plane is equal or higher (because of test clusters from step 1) to the number of runtimes on Prod for kyma-integration Global Account. First returns the number of runtimes, second the number of manifests.
    ```shell
-   kcp taskrun -p 16 --gardener-kubeconfig {PATH TO GARDENER PROJECT KUBECONFIG} -t account="8a200117-40d9-414a-bef2-b9a7ab9d3643" -- kubectl get istio -n kyma-system default 2>/dev/null | grep -v Ready | grep -v "NAME"
+   kcp rt --account "$GLOBAL_ACCOUNT_KYMA_INTEGRATION" -o json | jq '.totalCount'
+   kubectl get manifests -n kcp-system -o custom-columns=NAME:metadata.name,STATE:status.state | grep istio | grep -v "NAMESPACE" | wc -l
    ```
-6. Push the module manifest to the `regular` and `fast` channels in the `kyma/module-manifests` internal repository (PR #163, #164).
-7. Push kustomization change for `fast` and `regular` in `kyma/kyma-modules` repository (PR #401)
-8. Verify that the ModuleTemplates are present in the `kyma/kyma-modules` internal repository.
-9. Verify that the ModuleTemplate in both channels are available on `Prod` environment SKRs.
+6. Verify test migration of kyma-integration Global Account was successful by checking the status of Istio manifests on Prod Control Plane. The following script will print out istio manifests that are not Ready.
+   ```shell
+   kubectl get manifests -n kcp-system -o custom-columns=NAME:metadata.name,STATE:status.state | grep istio | grep -v Ready
+   ```
+7. Push the module manifest to the `regular` and `fast` channels in the `kyma/module-manifests` internal repository (PR #163, #164).
+8. Push kustomization change for `fast` and `regular` in `kyma/kyma-modules` repository (PR #401)
+9. Verify that the ModuleTemplates are present in the `kyma/kyma-modules` internal repository.
+10. Verify that the ModuleTemplate in both channels are available on `Prod` environment SKRs.
 
 ##### Migration rollout (done by SRE)
 1. Merge PR (#4627) in `kyma/management-plane-config` responsible for disabling Istio reconciliation and setting Istio as a default module
@@ -140,11 +157,18 @@ because Istio module is not a default module at this time and Istio component is
 ##### Verify migration
 1. Wait for SRE to finish the migration for all clusters
 2. Check the [Istio Module](https://plutono.cp.kyma.cloud.sap/d/hTm72lVIz/modules-istio?orgId=1) and [API Gateway Module](https://plutono.cp.kyma.cloud.sap/d/6meO06VSk/modules-api-gateway?orgId=1) status on the dashboards
-3. Run the script following script to verify on every SKR that the migration was successful:
+3. Verify that the number of Istio manifests on Prod Control Plane is equal to the number of runtimes on Prod. First returns the number of runtimes, second the number of manifests.
+   ```shell
+   kcp rt -o json | jq '.totalCount'
+   kubectl get manifests -n kcp-system -o custom-columns=NAME:metadata.name,STATE:status.state | grep istio | grep -v "NAMESPACE" | wc -l
+   ```
+4. Verify the migration was successful by checking the status of Istio manifests on Prod Control Plane. The following script will print out istio manifests that are not Ready.
+   ```shell
+   kubectl get manifests -n kcp-system -o custom-columns=NAME:metadata.name,STATE:status.state | grep istio | grep -v Ready
+   ```
+5. Migrate istio module in kyma-integration Global Account to default channel and remove remote module template used for migration testing
    TODO: Add script
-4. Migrate istio module in kyma-integration Global Account to default channel and remove remote module template used for migration testing
-   TODO: Add script
-5. Trigger SRE to enable reconciliation for kyma-integration Global Account.
+6. Trigger SRE to enable reconciliation for kyma-integration Global Account.
 
 ##### Clean up
 1. Remove the experimental ModuleTemplate.

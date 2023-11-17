@@ -42,6 +42,11 @@ fi
 
 number=1
 while [[ $number -le 100 ]]; do
+  replicas=$(kubectl get -n kyma-system deployment istio-controller-manager -o json | jq '.status.replicas')
+  readyReplicas=$(kubectl get -n kyma-system deployment istio-controller-manager -o json | jq '.status.readyReplicas')
+  if [ "$readyReplicas" -ne "$replicas" ]; then
+    continue
+  fi
   STATUS=$(kubectl -n kyma-system get istio default -o jsonpath='{.status.state}' || echo " failed retrieving default Istio CR")
   ISTIO_CR_COUNT=$(kubectl get istios -n kyma-system --output json | jq '.items | length')
 

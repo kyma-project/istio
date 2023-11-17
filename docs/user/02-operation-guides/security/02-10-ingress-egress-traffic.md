@@ -6,12 +6,11 @@
 
 The configuration specifies the following parameters and their values:
 
-| Parameter                               | Description                                                                    | Values                                                                                                                                      |
-|-----------------------------------------|--------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| **spec.servers.port**                   | The ports gateway listens on.  Port `80` is automatically redirected to `443`. | `443`, `80`                                                                                                                                 |
-| **spec.servers.tls.minProtocolVersion** | The minimum protocol version required by the TLS connection.                   | `TLSV1_2` protocol version. `TLSV1_0` and `TLSV1_1` are rejected.                                                                           |
-| **spec.servers.tls.cipherSuites**       | Accepted cypher suites.                                                        | `ECDHE-RSA-CHACHA20-POLY1305`, `ECDHE-RSA-AES256-GCM-SHA384`, `ECDHE-RSA-AES256-SHA`, `ECDHE-RSA-AES128-GCM-SHA256`, `ECDHE-RSA-AES128-SHA` |
-
+| Parameter                               | Description                                                                    | Values                                                                                      |
+|-----------------------------------------|--------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------|
+| **spec.servers.port**                   | The ports gateway listens on.  Port `80` is automatically redirected to `443`. | `443`, `80`                                                                                 |
+| **spec.servers.tls.minProtocolVersion** | The minimum protocol version required by the TLS connection.                   | `TLSV1_2` protocol version. `TLSV1_0` and `TLSV1_1` are rejected.                           |
+| **spec.servers.tls.cipherSuites**       | Accepted cypher suites.                                                        | `ECDHE-RSA-CHACHA20-POLY1305`, `ECDHE-RSA-AES256-GCM-SHA384`, `ECDHE-RSA-AES128-GCM-SHA256` |
 
 
 ## TLS management

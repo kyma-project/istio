@@ -55,7 +55,7 @@ Executing `kcp taskrun` requires the path to the kubeconfig file of the correspo
 #### Migration procedure
 
 1. Push module to `experimental` channel in `kyma/module-manifests `repository (PR #162).
-2. Push the kustomization change for `experimental` in `kyma/kyma-modules` repository (PR #400)
+2. Push the kustomization change for `experimental` in `kyma/kyma-modules` repository (PR #403)
 3. Verify that the ModuleTemplate is present in the experimental channel in the `kyma/kyma-modules` internal repository.
 4. Create ModuleTemplate for `fast` and `regular` by adapting the `metadata.name` and `spec.channel` of the `experimental` ModuleTemplate. In this way, we ensure that we also use a ModuleTemplate created by the submission pipeline for the fast and regular channel.
 5. Apply the ModuleTemplate for `fast` and `regular` channels to Dev Control Plane.

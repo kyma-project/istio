@@ -72,41 +72,39 @@ Executing `kcp taskrun` requires the path to the kubeconfig file of the correspo
 9. Verify that no APIGateway module is in Warning state. This can be done by using the [API-Gateway Monitoring Dashboard](https://plutono.cp.dev.kyma.cloud.sap/d/6meO06VSk/modules-api-gateway?orgId=1).
 10. If there are APIGateway CRs in the warning state, the cluster might have been created without Istio Module. In this case it needs to be enabled in the Kyma CR manually.
 
+
 ### Stage
 
-Perform the rollout to Stage together with the SRE team. Since they have already performed the rollout for other modules, they might suggest a different rollout strategy.
-
+Note: We don't disable Istio reconciliation at the beginning because there would be a time window between that and setting Istio as a default module in which new clusters would not work out of the box (no istio there).
 #### Prerequisites
 
 - Reconciliation is disabled for the Stage environment. See PR #4601 to the `kyma/management-plane-config` repository.
+- Prepare migration command for Kyma Integration Test Service accounts, make sure to have privileges to execute that.
 
 #### Migration procedure
-1. Push module to `experimental` channel in `kyma/module-manifests `repository (PR #162).
-2. Push the kustomization change for `experimental` in `kyma/kyma-modules` repository (PR #400)
-3. Verify that the ModuleTemplate is present in the `kyma/kyma-modules` internal repository.
-4. Create a cluster on the stage to test the experimental channel and test if Istio Module is deployed with Istio CR with status Ready.
-5. Apply manually the ModuleTemplate for both `fast` and `regular` channels to Stage Control Plane.
-6. Verify that the ModuleTemplate in the `fast` and `regular` channels is available in SAP BTP, Kyma runtime clusters of the Stage environment.
-7. Merge PR (#4626) in `kyma/management-plane-config` responsible for setting Istio as a default module on stage.
-8. Use `kcp login` to log in to Stage, select a few SAP BTP, Kyma runtime clusters on `Kyma-Test/Kyma-Integration`, and run `managed-kyma-migration.sh` on them using `kcp taskrun`.
-9. Verify if the migration was successful on the SAP BTP, Kyma runtime clusters by checking the status of Istio CR and the reconciler's components.
-10. Run `managed-kyma-migration.sh` for all SKRs in `Kyma-Test` and `Kyma-Integration` global accounts.
-11. Verify if the migration worked as expected.
-12. Run `managed-kyma-migration.sh` for the whole Canary landscape.
-13. Verify if the migration worked as expected.
-14. If script failed with following log: `More than one Istio CR present on the cluster. Script rename-to-default.sh might be required`, contact the customer to agree on solution. We propose to execute rename-to-default.sh script.
-15. Don't forget to remove cluster from step 2 after all.
+We skip the new cluster here because we would end up in the error state because there is no Istio, there is api gateway and reconciliation is not disabled yet
+explain why we disable reconciliation later
+If we would disable Istio reconciliation at the beginning the new clusters created in the time window between making Istio a default module for stage environment would end up not working because of lack of the Istio Module there.
+Execute migration script + post tests on testing stage cluster
+1. Test already existing clusters if Istio Module is deployed with Istio CR with status Ready. Upgrade, experimental channel, SRE disable reconciliation per this one testing cluster + 2nd script with hardcoded given cluster
+2. Execute migration command for Kyma Integration Test Service account to experimental Istio
+3. Apply manually the ModuleTemplate for both `fast` and `regular` channels to Stage Control Plane.
+4. Verify that the ModuleTemplate in the `fast` and `regular` channels is available in SAP BTP, Kyma runtime clusters of the Stage environment.
+5. Disable Istio reconciliation for the Stage environment. See PR #4601 to the `kyma/management-plane-config` repository. If possible depending on the dev migration output try to combine it in one PR with the next step.
+6. Merge PR (#4626) in `kyma/management-plane-config` responsible for setting Istio as a default module on stage. + best if we can disable reconciliation together (Depending on what happens on dev)
+7. Use `kcp login` to log in to Stage, select a few SAP BTP, Kyma runtime clusters on `Kyma-Test/Kyma-Integration`, and run `managed-kyma-migration.sh` on them using `kcp taskrun`. // run global migration script for default channel
+8. Verify if the migration was successful on the SAP BTP, Kyma runtime clusters by checking the status of Istio CR and the reconciler's components. // Check dashboard + smart small taskrun to verify that
+9. If script failed with following log: `More than one Istio CR present on the cluster. Script rename-to-default.sh might be required`, contact the customer to agree on solution. We propose to execute rename-to-default.sh script.
+10. Migrate Kyma Integration to default channel
 
 ### Prod
-
-Perform the rollout to Prod together with the SRE team. Since they have already performed the rollout for other modules, they might suggest a different rollout strategy.
 
 #### Prerequisites
 
 - Reconciliation is disabled for the Prod environment. See PR #4602 to the `kyma/management-plane-config` repository.
 
 #### Migration procedure
-
+This should be exactly like stage except merging channels, Verify if experimental is available in prod if it's not then we adjust step with testing kyma integration. Then we would use moduletemplateref - it means 3rd script
 1. Push the module manifest to the `regular` and `fast` channels in the `kyma/module-manifests` internal repository (PR #163, #164).
 2. Push kustomization change for `fast` and `regular` in `kyma/kyma-modules` repository (PR #401)
 3. Verify that the ModuleTemplates are present in the `kyma/kyma-modules` internal repository.

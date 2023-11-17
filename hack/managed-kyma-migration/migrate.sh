@@ -39,10 +39,8 @@ kubectl patch kyma "$kyma_cr_name" -n kyma-system --type='json' -p='[{"op": "add
 
 number=1
 while [[ $number -le 100 ]]; do
-  echo ">--> checking kyma status #$number"
   STATUS=$(kubectl -n kyma-system get istio default -o jsonpath='{.status.state}' || echo " failed retrieving default Istio CR")
   ISTIO_CR_COUNT=$(kubectl get istios -n kyma-system --output json | jq '.items | length')
-  echo "istio status: ${STATUS:='UNKNOWN'}"
 
   if [ "$STATUS" == "Ready" ]; then
     echo "Migration successful"

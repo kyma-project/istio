@@ -63,7 +63,7 @@ Executing `kcp taskrun` requires the path to the kubeconfig file of the correspo
 7. Merge PR (#4624) in `kyma/management-plane-config` responsible for disabling Istio reconciliation and setting Istio as a default module on dev. Depending on the outcome adjust this those actions to one PR for the stage and prod.
 8. Get permissions to execute scripts for `kcp taskrun` and use `kcp login` to log in to Dev and run the migration script on all SAP BTP, Kyma runtime clusters. To do that, you can use the following command:
    ```shell
-   kcp taskrun --gardener-kubeconfig {PATH TO GARDENER PROJECT KUBECONFIG} -t all -- ./managed-kyma-migration.sh
+   kcp taskrun --gardener-kubeconfig {PATH TO GARDENER PROJECT KUBECONFIG} -t all -- ./migrate.sh
    ```
 9. Verify that the migration worked as expected by checking the status of Istio manifests on Control Plane.
    ```shell
@@ -82,7 +82,7 @@ During this time new clusters can not be created successfully, since Istio as a 
 ##### Test migration
 1. Execute migration script `migration-testing/migrate-local-moduletemplate.sh` that uses local module template for fast channel to migrate Service Account provided for Upgrade testing. At this point we want to skip the installation test on a new cluster, 
 because Istio module is not a default module at this time and Istio component is still installed by the reconciler.
-2. Get privileges(CAM-profile) to execute migration script using taskrun for kyma-integration Global Account
+2. Get privileges(CAM L3 Operator Test) to execute migration script using taskrun for kyma-integration Global Account
 3. Trigger SRE to disable reconciliation for kyma-integration Global Account. This is necessary, because we didn't disable istio module reconciliation, yet.
 4. Execute migration script `migration-testing/migrate-local-moduletemplate.sh` that uses local module template for fast channel to migrate kyma-integration Global Account
    ```shell
@@ -128,7 +128,7 @@ because Istio module is not a default module at this time and Istio component is
 ##### Test migration
 1. Execute migration script `migration-testing/migrate-local-moduletemplate.sh` that uses local module template for fast channel to migrate Service Account provided for Upgrade testing. At this point we want to skip the installation test on a new cluster,
    because Istio module is not a default module at this time and Istio component is still installed by the reconciler.
-2. Get privileges (CAM-profile) to execute migration script using taskrun for kyma-integration Global Account
+2. Get privileges(CAM L3 Operator Prod) to execute migration script using taskrun for kyma-integration Global Account
 3. Trigger SRE to disable reconciliation for kyma-integration Global Account. This is necessary, because we didn't disable istio module reconciliation, yet.
 4. Execute migration script `migration-testing/migrate-local-moduletemplate.sh` that uses local module template for fast channel to migrate kyma-integration Global Account
       ```shell

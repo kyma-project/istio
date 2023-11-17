@@ -1,0 +1,121 @@
+apiVersion: operator.kyma-project.io/v1beta2
+kind: ModuleTemplate
+metadata:
+  name: istio-fast
+  namespace: kcp-system
+  labels:
+    "operator.kyma-project.io/managed-by": "lifecycle-manager"
+    "operator.kyma-project.io/module-name": "istio"
+  annotations:
+    "operator.kyma-project.io/doc-url": "https://kyma-project.io/#/istio/user/README"
+    "operator.kyma-project.io/is-cluster-scoped": "false"
+    "operator.kyma-project.io/module-version": "1.1.2"
+spec:
+  channel: fast
+  data:
+    apiVersion: operator.kyma-project.io/v1alpha2
+    kind: Istio
+    metadata:
+      name: default
+      namespace: kyma-system
+      labels:
+        app.kubernetes.io/name: default
+  descriptor:
+    component:
+      componentReferences: []
+      labels:
+        - name: security.kyma-project.io/scan
+          value: enabled
+          version: v1
+      name: kyma-project.io/module/istio
+      provider: '{"name":"kyma-project.io","labels":[{"name":"kyma-project.io/built-by","value":"cli","version":"v1"}]}'
+      repositoryContexts:
+        - baseUrl: europe-docker.pkg.dev/kyma-project/modules-internal
+          componentNameMapping: urlPath
+          type: OCIRegistry
+      resources:
+        - access:
+            imageReference: europe-docker.pkg.dev/kyma-project/prod/istio-manager:1.1.2
+            type: ociRegistry
+          labels:
+            - name: scan.security.kyma-project.io/type
+              value: third-party-image
+              version: v1
+          name: istio-manager
+          relation: external
+          type: ociImage
+          version: 1.1.2
+        - access:
+            imageReference: europe-docker.pkg.dev/kyma-project/prod/external/istio/install-cni:1.19.3-distroless
+            type: ociRegistry
+          labels:
+            - name: scan.security.kyma-project.io/type
+              value: third-party-image
+              version: v1
+          name: install-cni
+          relation: external
+          type: ociImage
+          version: 1.19.3-distroless
+        - access:
+            imageReference: europe-docker.pkg.dev/kyma-project/prod/external/istio/proxyv2:1.19.3-distroless
+            type: ociRegistry
+          labels:
+            - name: scan.security.kyma-project.io/type
+              value: third-party-image
+              version: v1
+          name: proxyv2
+          relation: external
+          type: ociImage
+          version: 1.19.3-distroless
+        - access:
+            imageReference: europe-docker.pkg.dev/kyma-project/prod/external/istio/pilot:1.19.3-distroless
+            type: ociRegistry
+          labels:
+            - name: scan.security.kyma-project.io/type
+              value: third-party-image
+              version: v1
+          name: pilot
+          relation: external
+          type: ociImage
+          version: 1.19.3-distroless
+        - access:
+            globalAccess:
+              digest: sha256:e18f3de4328047e3b707de7f136210d5854ed343b9b912d49ea639ac8e1c736f
+              mediaType: application/octet-stream
+              ref: europe-docker.pkg.dev/kyma-project/modules-internal/component-descriptors/kyma-project.io/module/istio
+              size: 209689
+              type: ociBlob
+            localReference: sha256:e18f3de4328047e3b707de7f136210d5854ed343b9b912d49ea639ac8e1c736f
+            mediaType: application/octet-stream
+            type: localBlob
+          name: raw-manifest
+          relation: local
+          type: yaml
+          version: 1.1.2
+      sources:
+        - access:
+            commit: a215754e90eac30430ac2b896944b825ef1d20aa
+            repoUrl: https://github.com/kyma-project/istio.git
+            type: gitHub
+          labels:
+            - name: git.kyma-project.io/ref
+              value: HEAD
+              version: v1
+            - name: scan.security.kyma-project.io/dev-branch
+              value: ""
+              version: v1
+            - name: scan.security.kyma-project.io/rc-tag
+              value: ""
+              version: v1
+            - name: scan.security.kyma-project.io/language
+              value: golang-mod
+              version: v1
+            - name: scan.security.kyma-project.io/exclude
+              value: '**/tests/**,**/test/**,**/*_test.go'
+              version: v1
+          name: module-sources
+          type: Github
+          version: 1.1.2
+      version: 1.1.2
+    meta:
+      schemaVersion: v2

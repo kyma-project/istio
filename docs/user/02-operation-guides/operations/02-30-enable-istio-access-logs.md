@@ -2,8 +2,8 @@
 title: Enable Istio access logs
 ---
 
-You can enable [Istio access logs](https://istio.io/latest/docs/tasks/observability/logs/access-log/) to provide fine-grained details about the access to workloads that are part of the Istio service mesh. This can help in indicating the four “golden signals” of monitoring (latency, traffic, errors, and saturation), and troubleshooting anomalies.
-The Istio setup shipped with Kyma provides a pre-configured [extension provider](https://istio.io/latest/docs/tasks/observability/telemetry) for access logs which will configure the istio-proxies to print access logs to stdout using JSON format. It uses a configuration similar to the following one:
+You can enable [Istio access logs](https://istio.io/latest/docs/tasks/observability/logs/access-log/) to provide fine-grained details about the access to workloads that are part of the Istio service mesh. This can help indicate the four “golden signals” of monitoring (latency, traffic, errors, and saturation) and troubleshooting anomalies.
+The Istio setup shipped with Kyma provides a pre-configured [extension provider](https://istio.io/latest/docs/tasks/observability/telemetry) for access logs, which will configure the istio-proxies to print access logs to stdout using JSON format. It uses a configuration similar to the following one:
 
 ```yaml
   extensionProviders:
@@ -23,7 +23,7 @@ The [log format](https://github.com/kyma-project/kyma/blob/main/resources/istio/
 
 ## Configuration
 
-Use the Telemetry API to selectively enable Istio access logs. You can enable access logs for an entire Namespace, for a selective workload, or on Istio Gateway scope.
+Use the Telemetry API to selectively enable Istio access logs. You can enable access logs for an entire Namespace, for a selective workload, or on the Istio Gateway scope.
 
 ### Configure Istio access logs for the entire Namespace
 

@@ -80,16 +80,18 @@ During this time new clusters can not be created successfully, since Istio as a 
 
 #### Migration procedure
 ##### Test migration
-  TODO: Add name of the script that "uses local module template for fast channel" in Step 1 and 4
-1. Execute migration script that uses local module template for fast channel to migrate Service Account provided for Upgrade testing. At this point we want to skip the installation test on a new cluster, 
+1. Execute migration script `migration-testing/migrate-local-moduletemplate.sh` that uses local module template for fast channel to migrate Service Account provided for Upgrade testing. At this point we want to skip the installation test on a new cluster, 
 because Istio module is not a default module at this time and Istio component is still installed by the reconciler.
 2. Get privileges(CAM-profile) to execute migration script using taskrun for kyma-integration Global Account
 3. Trigger SRE to disable reconciliation for kyma-integration Global Account. This is necessary, because we didn't disable istio module reconciliation, yet.
-4. Execute migration script that uses local module template for fast channel to migrate kyma-integration Global Account
+4. Execute migration script `migration-testing/migrate-local-moduletemplate.sh` that uses local module template for fast channel to migrate kyma-integration Global Account
    ```shell
-   kcp taskrun --gardener-kubeconfig {PATH TO GARDENER PROJECT KUBECONFIG} -t account="d4037436-f01a-4adc-aa2b-52836f459bfe" -- ./add-correct-script-path.sh 
+   kcp taskrun -p 16 --gardener-kubeconfig {PATH TO GARDENER PROJECT KUBECONFIG} -t account="d4037436-f01a-4adc-aa2b-52836f459bfe" -- ./migrate-local-moduletemplate.sh 
    ```
-5. Verify test migration of kyma-integration Global Account was successful.
+5. Verify test migration of kyma-integration Global Account was successful. The following script will print out clusters that are not ready:
+   ```shell
+   kcp taskrun -p 16 --gardener-kubeconfig {PATH TO GARDENER PROJECT KUBECONFIG} -t account="d4037436-f01a-4adc-aa2b-52836f459bfe" -- kubectl get istio -n kyma-system default 2>/dev/null | grep -v Ready | grep -v "NAME"
+   ```
 
 ##### Migration rollout (done by SRE)
 1. Apply manually the ModuleTemplate for both `fast` and `regular` channels to Stage Control Plane.
@@ -112,16 +114,18 @@ because Istio module is not a default module at this time and Istio component is
 ### Prod
 
 ##### Test migration
-TODO: Add name of the script that "uses local module template for fast channel" in Step 1 and 4
-1. Execute migration script that uses local module template for fast channel to migrate Service Account provided for Upgrade testing. At this point we want to skip the installation test on a new cluster,
+1. Execute migration script `migration-testing/migrate-local-moduletemplate.sh` that uses local module template for fast channel to migrate Service Account provided for Upgrade testing. At this point we want to skip the installation test on a new cluster,
    because Istio module is not a default module at this time and Istio component is still installed by the reconciler.
 2. Get privileges (CAM-profile) to execute migration script using taskrun for kyma-integration Global Account
 3. Trigger SRE to disable reconciliation for kyma-integration Global Account. This is necessary, because we didn't disable istio module reconciliation, yet.
-4. Execute migration script that uses local module template for fast channel to migrate kyma-integration Global Account
+4. Execute migration script `migration-testing/migrate-local-moduletemplate.sh` that uses local module template for fast channel to migrate kyma-integration Global Account
       ```shell
-   kcp taskrun --gardener-kubeconfig {PATH TO GARDENER PROJECT KUBECONFIG} -t account="8a200117-40d9-414a-bef2-b9a7ab9d3643" -- ./add-correct-script-path.sh 
+   kcp taskrun -p 16 --gardener-kubeconfig {PATH TO GARDENER PROJECT KUBECONFIG} -t account="8a200117-40d9-414a-bef2-b9a7ab9d3643" -- ./migrate-local-moduletemplate.sh 
    ```
-5. Verify test migration of kyma-integration Global Account was successful.
+5. Verify test migration of kyma-integration Global Account was successful. The following script will print out clusters that are not ready:
+   ```shell
+   kcp taskrun -p 16 --gardener-kubeconfig {PATH TO GARDENER PROJECT KUBECONFIG} -t account="8a200117-40d9-414a-bef2-b9a7ab9d3643" -- kubectl get istio -n kyma-system default 2>/dev/null | grep -v Ready | grep -v "NAME"
+   ```
 6. Push the module manifest to the `regular` and `fast` channels in the `kyma/module-manifests` internal repository (PR #163, #164).
 7. Push kustomization change for `fast` and `regular` in `kyma/kyma-modules` repository (PR #401)
 8. Verify that the ModuleTemplates are present in the `kyma/kyma-modules` internal repository.

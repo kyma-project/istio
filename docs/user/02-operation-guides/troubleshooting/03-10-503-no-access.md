@@ -87,7 +87,7 @@ If the restart doesn't help, change the image of Istio Ingress Gateway to allow 
    #### **kubectl**
    Run the following command:
    ```bash
-   kubectl logs -n istio-system -l app=istio-ingressgateway -c ingress-sds
+   kubectl logs -n istio-system -l app=istio-ingressgateway -c istio-proxy
    ```
    
    #### **Kyma Dashboard**

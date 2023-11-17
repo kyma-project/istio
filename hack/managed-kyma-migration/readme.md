@@ -80,13 +80,16 @@ During this time new clusters can not be created successfully, since Istio as a 
 
 #### Migration procedure
 ##### Test migration
-  TODO: Add name of the script that "uses local module template for fast channel" in Step 1 and 2
+  TODO: Add name of the script that "uses local module template for fast channel" in Step 1 and 4
 1. Execute migration script that uses local module template for fast channel to migrate Service Account provided for Upgrade testing. At this point we want to skip the installation test on a new cluster, 
 because Istio module is not a default module at this time and Istio component is still installed by the reconciler.
-2. Get privileges to execute migration script using taskrun for kyma-integration Global Account
+2. Get privileges(CAM-profile) to execute migration script using taskrun for kyma-integration Global Account
 3. Trigger SRE to disable reconciliation for kyma-integration Global Account. This is necessary, because we didn't disable istio module reconciliation, yet.
 4. Execute migration script that uses local module template for fast channel to migrate kyma-integration Global Account
-  TODO: Add kcp taskrun command
+   ```shell
+   kcp taskrun --gardener-kubeconfig {PATH TO GARDENER PROJECT KUBECONFIG} -t account="d4037436-f01a-4adc-aa2b-52836f459bfe" -- ./add-correct-script-path.sh 
+   ```
+5. Verify test migration of kyma-integration Global Account was successful.
 
 ##### Migration rollout (done by SRE)
 1. Apply manually the ModuleTemplate for both `fast` and `regular` channels to Stage Control Plane.
@@ -102,23 +105,27 @@ because Istio module is not a default module at this time and Istio component is
 3. Run the script following script to verify on every SKR that the migration was successful:
   TODO: Add script
 4. Migrate istio module in kyma-integration Global Account to default channel and remove remote module template used for migration testing
+  TODO: Add script
 5. Trigger SRE to enable reconciliation for kyma-integration Global Account.
 
 
 ### Prod
 
 ##### Test migration
-TODO: Add name of the script that "uses local module template for fast channel" in Step 1 and 2
+TODO: Add name of the script that "uses local module template for fast channel" in Step 1 and 4
 1. Execute migration script that uses local module template for fast channel to migrate Service Account provided for Upgrade testing. At this point we want to skip the installation test on a new cluster,
    because Istio module is not a default module at this time and Istio component is still installed by the reconciler.
-2. Get privileges to execute migration script using taskrun for kyma-integration Global Account
+2. Get privileges (CAM-profile) to execute migration script using taskrun for kyma-integration Global Account
 3. Trigger SRE to disable reconciliation for kyma-integration Global Account. This is necessary, because we didn't disable istio module reconciliation, yet.
 4. Execute migration script that uses local module template for fast channel to migrate kyma-integration Global Account
-   TODO: Add kcp taskrun command
-5. Push the module manifest to the `regular` and `fast` channels in the `kyma/module-manifests` internal repository (PR #163, #164).
-6. Push kustomization change for `fast` and `regular` in `kyma/kyma-modules` repository (PR #401)
-7. Verify that the ModuleTemplates are present in the `kyma/kyma-modules` internal repository.
-8. Verify that the ModuleTemplate in both channels are available on `Prod` environment SKRs.
+      ```shell
+   kcp taskrun --gardener-kubeconfig {PATH TO GARDENER PROJECT KUBECONFIG} -t account="8a200117-40d9-414a-bef2-b9a7ab9d3643" -- ./add-correct-script-path.sh 
+   ```
+5. Verify test migration of kyma-integration Global Account was successful.
+6. Push the module manifest to the `regular` and `fast` channels in the `kyma/module-manifests` internal repository (PR #163, #164).
+7. Push kustomization change for `fast` and `regular` in `kyma/kyma-modules` repository (PR #401)
+8. Verify that the ModuleTemplates are present in the `kyma/kyma-modules` internal repository.
+9. Verify that the ModuleTemplate in both channels are available on `Prod` environment SKRs.
 
 ##### Migration rollout (done by SRE)
 1. Merge PR (#4627) in `kyma/management-plane-config` responsible for disabling Istio reconciliation and setting Istio as a default module
@@ -132,5 +139,10 @@ TODO: Add name of the script that "uses local module template for fast channel" 
 3. Run the script following script to verify on every SKR that the migration was successful:
    TODO: Add script
 4. Migrate istio module in kyma-integration Global Account to default channel and remove remote module template used for migration testing
+   TODO: Add script
 5. Trigger SRE to enable reconciliation for kyma-integration Global Account.
+
+##### Clean up
+1. Remove the experimental ModuleTemplate.
+TODO: Clarify how the process will look like.
 

@@ -21,13 +21,6 @@ if [  "$istio_module_count" -gt 0 ]; then
   exit 0
 fi
 
-# Check if Istio CR is already present on Kubernetes cluster
-istio_crs_count=$(kubectl get istios -n kyma-system --output json | jq '.items | length')
-
-if [ "$istio_crs_count" -gt 1 ]; then
-  echo "WARNING: Multiple Istio CRs found"
-fi
-
 kyma_cr_modules=$(kubectl get kyma "$kyma_cr_name" -n kyma-system -o json | jq '.spec.modules')
 if [ "$kyma_cr_modules" == "null" ]; then
   echo "No modules defined on Kyma CR yet, initializing modules array"

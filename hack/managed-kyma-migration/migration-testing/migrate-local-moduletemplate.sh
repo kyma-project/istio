@@ -34,17 +34,13 @@ kubectl apply -f ./module-template-migration-test-fast.yaml
 echo "Proceeding with migration by adding Istio module to Kyma CR $kyma_cr_name"
 kubectl patch kyma "$kyma_cr_name" -n kyma-system --type='json' -p='[{"op": "add", "path": "/spec/modules/-", "value": {"name": "istio", "remoteModuleTemplateRef": "kyma-system/istio-migration-test-fast"} }]'
 
-# Check if there is more than one Istio CR present on the cluster
-istio_crs_count=$(kubectl get istios -n kyma-system --output json | jq '.items | length')
-if [ "$istio_crs_count" -gt 1 ]; then
-  echo "WARNING: Multiple Istio CRs found"
-fi
-
 number=1
 while [[ $number -le 100 ]]; do
   replicas=$(kubectl get -n kyma-system deployment istio-controller-manager -o json | jq '.status.replicas')
   readyReplicas=$(kubectl get -n kyma-system deployment istio-controller-manager -o json | jq '.status.readyReplicas')
   if [ "$readyReplicas" -ne "$replicas" ]; then
+    ((number = number + 1))
+    echo "Istio Deployment not ready yet."
     continue
   fi
   STATUS=$(kubectl -n kyma-system get istio default -o jsonpath='{.status.state}' || echo " failed retrieving default Istio CR")

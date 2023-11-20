@@ -3,10 +3,12 @@
 package main
 
 import (
+	"os"
+
 	istio "istio.io/istio/operator/cmd/mesh"
 	"istio.io/istio/operator/pkg/util/clog"
+	"istio.io/istio/pkg/kube"
 	istiolog "istio.io/istio/pkg/log"
-	"os"
 )
 
 func initializeLog() *istiolog.Options {
@@ -32,10 +34,22 @@ func main() {
 	consoleLogger := clog.NewConsoleLogger(os.Stdout, os.Stderr, registeredScope)
 	printer := istio.NewPrinterForWriter(os.Stdout)
 
+	kubeClient, err := kube.NewDefaultClient()
+	if err != nil {
+		consoleLogger.LogAndError("Failed to create Istio default client: ", err)
+		os.Exit(1)
+	}
+
+	cliClient, err := kube.NewCLIClient(kube.NewClientConfigForRestConfig(kubeClient.RESTConfig()), "")
+	if err != nil {
+		consoleLogger.LogAndError("Failed to create Istio CLI client: ", err)
+		os.Exit(1)
+	}
+
 	// We don't want to verify after installation, because it is unreliable
 	installArgs := &istio.InstallArgs{SkipConfirmation: true, Verify: false, InFilenames: iopFileNames}
 
-	if err := istio.Install(&istio.RootArgs{}, installArgs, istioLogOptions, os.Stdout, consoleLogger, printer); err != nil {
+	if err := istio.Install(cliClient, &istio.RootArgs{}, installArgs, istioLogOptions, os.Stdout, consoleLogger, printer); err != nil {
 		consoleLogger.LogAndError("Istio install error: ", err)
 		os.Exit(1)
 	}

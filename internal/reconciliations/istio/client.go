@@ -3,21 +3,25 @@ package istio
 import (
 	"context"
 	"fmt"
-	"github.com/pkg/errors"
 	"os"
 	"os/exec"
 	"sync"
 	"time"
 
+	"github.com/pkg/errors"
+
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	"istio.io/api/operator/v1alpha1"
+	"istio.io/istio/istioctl/pkg/install/k8sversion"
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	"istio.io/istio/operator/pkg/cache"
 	"istio.io/istio/operator/pkg/helmreconciler"
 	"istio.io/istio/operator/pkg/translate"
 	"istio.io/istio/operator/pkg/util/progress"
 	"istio.io/istio/pkg/config/constants"
+	"istio.io/istio/pkg/kube"
 	v1 "k8s.io/api/core/v1"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -69,10 +73,18 @@ func (c *IstioClient) Uninstall(ctx context.Context) error {
 		return fmt.Errorf("could not configure logs: %s", err)
 	}
 
-	// We can use the default client and don't want to override it, so we can pass empty strings for kubeConfigPath and context.
-	kubeClient, client, err := istio.KubernetesClients("", "", c.consoleLogger)
+	kubeClient, err := kube.NewDefaultClient()
 	if err != nil {
-		return fmt.Errorf("could not construct k8s clients logs: %s", err)
+		return fmt.Errorf("failed to create default istio kube client: %v", err)
+	}
+
+	if err := k8sversion.IsK8VersionSupported(kubeClient, c.consoleLogger); err != nil {
+		return fmt.Errorf("check minimum supported Kubernetes version: %v", err)
+	}
+
+	client, err := client.New(kubeClient.RESTConfig(), client.Options{Scheme: kube.IstioScheme})
+	if err != nil {
+		return fmt.Errorf("failed to create k8s REST client: %v", err)
 	}
 
 	cache.FlushObjectCaches()

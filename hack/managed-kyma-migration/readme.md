@@ -102,7 +102,6 @@ because Istio module is not a default module at this time and Istio component is
 1. Apply manually the ModuleTemplate for both `fast` and `regular` channels to Stage Control Plane.
 2. Verify that the ModuleTemplate in the `fast` and `regular` channels is available in SAP BTP, Kyma runtime clusters of the Stage environment.
 3. Merge PR (#4626) in `kyma/management-plane-config` responsible for disabling Istio reconciliation and setting Istio as a default module
-   TODO: Update PR to contain disabling istio and making it default module. This is dependent on the outcome of the dev migration.
 4. Execute migration script `migrate.sh` for default channel migration on all clusters
 5. If script failed with following log: `More than one Istio CR present on the cluster. Script rename-to-default.sh might be required`, contact the customer to agree on solution. We propose to execute rename-to-default.sh script.
 

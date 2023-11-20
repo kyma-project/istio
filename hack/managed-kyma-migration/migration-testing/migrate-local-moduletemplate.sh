@@ -33,7 +33,7 @@ kubectl apply -f ./module-template-migration-test-fast.yaml
 
 echo "Proceeding with migration by adding Istio module to Kyma CR $kyma_cr_name"
 kubectl patch kyma "$kyma_cr_name" -n kyma-system --type='json' -p='[{"op": "add", "path": "/spec/modules/-", "value": {"name": "istio", "remoteModuleTemplateRef": "kyma-system/istio-migration-test-fast"} }]'
-echo "Now we are giving 15 sec of sleep for LM to update Istio Deployment. Thank you for your patient."
+# Now we are giving 15 sec of sleep for LM to update Istio Deployment.
 sleep 15
 
 number=1
@@ -41,6 +41,7 @@ while [[ $number -le 100 ]]; do
   replicas=$(kubectl get -n kyma-system deployment istio-controller-manager -o json | jq '.status.replicas')
   readyReplicas=$(kubectl get -n kyma-system deployment istio-controller-manager -o json | jq '.status.readyReplicas')
   if [ "$readyReplicas" -ne "$replicas" ]; then
+    sleep 5
     ((number = number + 1))
     echo "Istio Deployment not ready yet."
     sleep 5

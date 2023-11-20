@@ -9,7 +9,7 @@ kyma_cr_name=$(kubectl get kyma -n kyma-system --no-headers -o custom-columns=":
 istio_module_count=$(kubectl get kyma "$kyma_cr_name" -n kyma-system -o json | jq '.spec.modules | if . == null then [] else . end | map(. | select(.name=="istio")) | length')
 
 # Check if there is Istio in KymaCR set to remoteModuleRefTemplate, since we don't want to affect any other clusters containing Istio
-kyma_contains_local_moduletemplate_config=$(kubectl get -n kyma-system kyma default -o json | jq '.spec.modules.[] | select(.remoteModuleTemplateRef == "kyma-system/istio-migration-test-fast") | any')
+kyma_contains_local_moduletemplate_config=$(kubectl get -n kyma-system kyma default -o json | jq '.spec.modules[] | select(.remoteModuleTemplateRef == "kyma-system/istio-migration-test-fast") | any')
 
 # Reverting KymaCR
 if [  "$istio_module_count" -eq 0 ]; then

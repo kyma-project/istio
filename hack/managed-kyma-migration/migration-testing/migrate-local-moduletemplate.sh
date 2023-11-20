@@ -41,6 +41,7 @@ while [[ $number -le 100 ]]; do
   if [ "$readyReplicas" -ne "$replicas" ]; then
     ((number = number + 1))
     echo "Istio Deployment not ready yet."
+    sleep 5
     continue
   fi
   STATUS=$(kubectl -n kyma-system get istio default -o jsonpath='{.status.state}' || echo " failed retrieving default Istio CR")

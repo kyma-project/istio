@@ -102,8 +102,9 @@ because Istio module is not a default module at this time and Istio component is
 1. Apply manually the ModuleTemplate for both `fast` and `regular` channels to Stage Control Plane.
 2. Verify that the ModuleTemplate in the `fast` and `regular` channels is available in SAP BTP, Kyma runtime clusters of the Stage environment.
 3. Merge PR (#4626) in `kyma/management-plane-config` responsible for disabling Istio reconciliation and setting Istio as a default module
-4. Execute migration script `migrate.sh` for default channel migration on all clusters
-5. If script failed with following log: `More than one Istio CR present on the cluster. Script rename-to-default.sh might be required`, contact the customer to agree on solution. We propose to execute rename-to-default.sh script.
+4. Execute [enable-module](https://github.tools.sap/kyma/runtime-ops/blob/main/tasks/enable-module.sh) script for istio to run default channel migration on all clusters
+5. Execute post migration script `post-enable-module.sh` to verify migration.
+6. If script failed with following log: `More than one Istio CR present on the cluster. Script rename-to-default.sh might be required`, contact the customer to agree on solution. We propose to execute rename-to-default.sh script.
 
 ##### Verify migration
 1. Wait for SRE to finish the migration for all clusters
@@ -148,8 +149,9 @@ because Istio module is not a default module at this time and Istio component is
 
 ##### Migration rollout (done by SRE)
 1. Merge PR (#4627) in `kyma/management-plane-config` responsible for disabling Istio reconciliation and setting Istio as a default module
-2. Execute migration script `migrate.sh` for default channel migration on all clusters
-3. If script failed with following log: `More than one Istio CR present on the cluster. Script rename-to-default.sh might be required`, contact the customer to agree on solution. We propose to execute rename-to-default.sh script.
+2. Execute [enable-module](https://github.tools.sap/kyma/runtime-ops/blob/main/tasks/enable-module.sh) script for istio to run default channel migration on all clusters
+3. Execute post migration script `post-enable-module.sh` to verify migration.
+4. If script failed with following log: `More than one Istio CR present on the cluster. Script rename-to-default.sh might be required`, contact the customer to agree on solution. We propose to execute rename-to-default.sh script.
 
 ##### Verify migration
 1. Wait for SRE to finish the migration for all clusters

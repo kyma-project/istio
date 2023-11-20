@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# This script is deprecated, because most of the logic is already covered by enable-module.sh script linked in the readme.
 set -eo pipefail
 
 # Verify Istio module template is available on cluster

@@ -31,7 +31,7 @@ func NewReconciler(client client.Client, hsClient clusterconfig.Hyperscaler) *Re
 
 type Resource interface {
 	Name() string
-	apply(ctx context.Context, k8sClient client.Client, owner metav1.OwnerReference, templateValues map[string]string) (controllerutil.OperationResult, error)
+	reconcile(ctx context.Context, k8sClient client.Client, owner metav1.OwnerReference, templateValues map[string]string) (controllerutil.OperationResult, error)
 }
 
 func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha1.Istio) described_errors.DescribedError {
@@ -57,7 +57,7 @@ func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha1.Is
 
 	for _, resource := range resources {
 		ctrl.Log.Info("Reconciling istio resource", "name", resource.Name())
-		result, err := resource.apply(ctx, r.client, owner, r.templateValues)
+		result, err := resource.reconcile(ctx, r.client, owner, r.templateValues)
 
 		if err != nil {
 			return described_errors.NewDescribedError(err, fmt.Sprintf("Could not reconcile istio resource %s", resource.Name()))

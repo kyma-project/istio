@@ -2,16 +2,18 @@ package istio_resources
 
 import (
 	"context"
-	_ "embed"
-	"github.com/kyma-project/istio/operator/internal/resources"
+	v1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-//go:embed configmap_service.yaml
-var manifest_cm_service []byte
+const (
+	serviceDashboardName      = "istio-service-grafana-dashboard"
+	serviceDashboardNamespace = "kyma-system"
+)
 
 type ConfigMapService struct {
 	k8sClient client.Client
@@ -21,8 +23,19 @@ func NewConfigMapService(k8sClient client.Client) ConfigMapService {
 	return ConfigMapService{k8sClient: k8sClient}
 }
 
-func (ConfigMapService) apply(ctx context.Context, k8sClient client.Client, owner metav1.OwnerReference, _ map[string]string) (controllerutil.OperationResult, error) {
-	return resources.Apply(ctx, k8sClient, manifest_cm_service, &owner)
+func (ConfigMapService) reconcile(ctx context.Context, k8sClient client.Client, _ metav1.OwnerReference, _ map[string]string) (controllerutil.OperationResult, error) {
+	err := k8sClient.Delete(ctx, &v1.ConfigMap{ObjectMeta: metav1.ObjectMeta{
+		Name:      serviceDashboardName,
+		Namespace: serviceDashboardNamespace,
+	}})
+
+	if err != nil {
+		if k8serrors.IsNotFound(err) {
+			return controllerutil.OperationResultNone, nil
+		}
+		return "", err
+	}
+	return "deleted", nil
 }
 
 func (ConfigMapService) Name() string {

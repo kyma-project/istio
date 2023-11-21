@@ -54,7 +54,6 @@ func NewIstioClient() *IstioClient {
 }
 
 func (c *IstioClient) Install(mergedIstioOperatorPath string) error {
-
 	err := installIstioInExternalProcess(mergedIstioOperatorPath)
 
 	if err != nil {
@@ -65,7 +64,6 @@ func (c *IstioClient) Install(mergedIstioOperatorPath string) error {
 }
 
 func (c *IstioClient) Uninstall(ctx context.Context) error {
-
 	// We don't use any revision capabilities yet
 	defaultRevision := ""
 

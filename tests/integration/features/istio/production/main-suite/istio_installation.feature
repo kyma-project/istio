@@ -107,11 +107,6 @@ Feature: Installing and uninstalling Istio module
     And Istio injection is "enabled" in namespace "default"
     And "EnvoyFilter" "kyma-referer" in namespace "istio-system" is deleted
     And "PeerAuthentication" "default" in namespace "istio-system" is deleted
-    And "ConfigMap" "istio-control-plane-grafana-dashboard" in namespace "kyma-system" is deleted
-    And "ConfigMap" "istio-mesh-grafana-dashboard" in namespace "kyma-system" is deleted
-    And "ConfigMap" "istio-performance-grafana-dashboard" in namespace "kyma-system" is deleted
-    And "ConfigMap" "istio-service-grafana-dashboard" in namespace "kyma-system" is deleted
-    And "ConfigMap" "istio-workload-grafana-dashboard" in namespace "kyma-system" is deleted
     And Application "test-app" is running in namespace "default"
     # We need to update the Istio CR to trigger a reconciliation
     And Template value "ProxyCPURequest" is set to "79m"
@@ -122,9 +117,4 @@ Feature: Installing and uninstalling Istio module
     And "DaemonSet" "istio-cni-node" in namespace "istio-system" is ready
     And "EnvoyFilter" "kyma-referer" in namespace "istio-system" is "present"
     And "PeerAuthentication" "default" in namespace "istio-system" is "present"
-    And "ConfigMap" "istio-control-plane-grafana-dashboard" in namespace "kyma-system" is "present"
-    And "ConfigMap" "istio-mesh-grafana-dashboard" in namespace "kyma-system" is "present"
-    And "ConfigMap" "istio-performance-grafana-dashboard" in namespace "kyma-system" is "present"
-    And "ConfigMap" "istio-service-grafana-dashboard" in namespace "kyma-system" is "present"
-    And "ConfigMap" "istio-workload-grafana-dashboard" in namespace "kyma-system" is "present"
     And Application pod "test-app" in namespace "default" has Istio proxy "present"

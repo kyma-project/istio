@@ -25,6 +25,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	istio "istio.io/istio/operator/cmd/mesh"
@@ -73,18 +74,26 @@ func (c *IstioClient) Uninstall(ctx context.Context) error {
 		return fmt.Errorf("could not configure logs: %s", err)
 	}
 
-	kubeClient, err := kube.NewDefaultClient()
+	rc, err := kube.DefaultRestConfig("", "", func(config *rest.Config) {
+		config.QPS = 50
+		config.Burst = 100
+	})
 	if err != nil {
-		return fmt.Errorf("failed to create default istio kube client: %v", err)
+		return fmt.Errorf("failed to create default REST config: %v", err)
+	}
+
+	kubeClient, err := kube.NewClient(kube.NewClientConfigForRestConfig(rc), "")
+	if err != nil {
+		return fmt.Errorf("failed to create Istio kube client: %v", err)
 	}
 
 	if err := k8sversion.IsK8VersionSupported(kubeClient, c.consoleLogger); err != nil {
-		return fmt.Errorf("check minimum supported Kubernetes version: %v", err)
+		return fmt.Errorf("check failed for minimum supported Kubernetes version: %v", err)
 	}
 
 	client, err := client.New(kubeClient.RESTConfig(), client.Options{Scheme: kube.IstioScheme})
 	if err != nil {
-		return fmt.Errorf("failed to create k8s REST client: %v", err)
+		return fmt.Errorf("failed to create Kubernetes ctrl client: %v", err)
 	}
 
 	cache.FlushObjectCaches()

@@ -1,20 +1,15 @@
 #!/usr/bin/env bash
 
-# This script is deprecated, because most of the logic is already covered by enable-module.sh script linked in the readme.
 set -eo pipefail
 
-# Verify Istio module template is available on cluster
-istio_module_template_count=$(kubectl get moduletemplates.operator.kyma-project.io -A --output json | jq '.items | map(. | select(.spec.data.kind=="Istio")) | length')
-
-if [ "$istio_module_template_count" -eq 0 ]; then
-  echo "Istio module template is not available on cluster"
-  exit 1
-fi
+# Since we are using relative paths in this script we need to change directory to the script's to not depend on current working directory during the execution
+script_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
+cd "$script_path"
 
 # Fetch Kyma CR name managed by lifecycle-manager
 kyma_cr_name=$(kubectl get kyma -n kyma-system --no-headers -o custom-columns=":metadata.name")
 
-# Fetch all modules, if modules is not defined, fallback to an empty array and count the number modules that have the name "istio"
+# Check if Istio is already present on Kyma CR
 istio_module_count=$(kubectl get kyma "$kyma_cr_name" -n kyma-system -o json | jq '.spec.modules | if . == null then [] else . end | map(. | select(.name=="istio")) | length')
 
 if [  "$istio_module_count" -gt 0 ]; then
@@ -22,19 +17,36 @@ if [  "$istio_module_count" -gt 0 ]; then
   exit 0
 fi
 
+# Fetch all modules, if modules is not defined, fallback to an empty array and count the number modules that have the name "istio"
+
 kyma_cr_modules=$(kubectl get kyma "$kyma_cr_name" -n kyma-system -o json | jq '.spec.modules')
 if [ "$kyma_cr_modules" == "null" ]; then
   echo "No modules defined on Kyma CR yet, initializing modules array"
   kubectl patch kyma "$kyma_cr_name" -n kyma-system --type='json' -p='[{"op": "add", "path": "/spec/modules", "value": [] }]'
 fi
 
+(kubectl get -n kyma-system moduletemplate istio-migration-test-fast 2>/dev/null && (echo "Testing module template already on the cluster" ; exit 1)) || echo "Testing ModuleTemplate not found yet. Proceeding to apply one."
+
+echo "Applying local ModuleTemplate with fast channel to the cluster"
+echo "$script_path"
+kubectl apply -f ./module-template-migration-test-fast.yaml
+
 echo "Proceeding with migration by adding Istio module to Kyma CR $kyma_cr_name"
-kubectl patch kyma "$kyma_cr_name" -n kyma-system --type='json' -p='[{"op": "add", "path": "/spec/modules/-", "value": {"name": "istio"} }]'
+kubectl patch kyma "$kyma_cr_name" -n kyma-system --type='json' -p='[{"op": "add", "path": "/spec/modules/-", "value": {"name": "istio", "remoteModuleTemplateRef": "kyma-system/istio-migration-test-fast"} }]'
 # Now we are giving 15 sec of sleep for LM to update Istio Deployment.
 sleep 15
 
 number=1
 while [[ $number -le 100 ]]; do
+  replicas=$(kubectl get -n kyma-system deployment istio-controller-manager -o json | jq '.status.replicas')
+  readyReplicas=$(kubectl get -n kyma-system deployment istio-controller-manager -o json | jq '.status.readyReplicas')
+  if [ "$readyReplicas" -ne "$replicas" ]; then
+    sleep 5
+    ((number = number + 1))
+    echo "Istio Deployment not ready yet."
+    sleep 5
+    continue
+  fi
   STATUS=$(kubectl -n kyma-system get istio default -o jsonpath='{.status.state}' || echo " failed retrieving default Istio CR")
   ISTIO_CR_COUNT=$(kubectl get istios -n kyma-system --output json | jq '.items | length')
 

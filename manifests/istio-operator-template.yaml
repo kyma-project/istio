@@ -277,8 +277,8 @@ spec:
         logLevel: warning
         privileged: false
         readinessInitialDelaySeconds: 5
-        readinessPeriodSeconds: 5
-        readinessFailureThreshold: 40
+        readinessPeriodSeconds: 15
+        readinessFailureThreshold: 4
         startupProbe:
           enabled: true
           failureThreshold: 600

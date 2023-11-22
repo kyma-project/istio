@@ -21,7 +21,7 @@ func NewPeerAuthenticationMtls(k8sClient client.Client) PeerAuthenticationMtls {
 	return PeerAuthenticationMtls{k8sClient: k8sClient}
 }
 
-func (PeerAuthenticationMtls) apply(ctx context.Context, k8sClient client.Client, _ metav1.OwnerReference, _ map[string]string) (controllerutil.OperationResult, error) {
+func (PeerAuthenticationMtls) reconcile(ctx context.Context, k8sClient client.Client, _ metav1.OwnerReference, _ map[string]string) (controllerutil.OperationResult, error) {
 	return resources.Apply(ctx, k8sClient, manifest_pa_mtls, nil)
 }
 

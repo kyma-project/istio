@@ -50,7 +50,7 @@ func newEnvoyFilterEvaluator(ctx context.Context, k8sClient client.Client) (Envo
 	return EnvoyFilterEvaluator{envoyUpdateTime: updateTime}, nil
 }
 
-func (e EnvoyFilterAllowPartialReferer) apply(ctx context.Context, k8sClient client.Client, _ metav1.OwnerReference, _ map[string]string) (controllerutil.OperationResult, error) {
+func (e EnvoyFilterAllowPartialReferer) reconcile(ctx context.Context, k8sClient client.Client, _ metav1.OwnerReference, _ map[string]string) (controllerutil.OperationResult, error) {
 	var envoyFilter unstructured.Unstructured
 	err := yaml.Unmarshal(manifest_ef_allow_partial_referer, &envoyFilter)
 	if err != nil {

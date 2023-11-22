@@ -2,14 +2,11 @@ package istio_resources
 
 import (
 	"context"
-	"github.com/kyma-project/istio/operator/internal/resources"
-
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/yaml"
 )
 
 var _ = Describe("Apply", func() {
@@ -21,50 +18,47 @@ var _ = Describe("Apply", func() {
 		UID:        "owner-uid",
 	}
 
-	It("should return created if no resource was present", func() {
+	It("should return unchanged if no resource was present", func() {
 		//given
 		client := createFakeClient()
 		sample := NewConfigMapControlPlane(client)
 
 		//when
-		changed, err := sample.apply(context.TODO(), client, owner, templateValues)
+		changed, err := sample.reconcile(context.TODO(), client, owner, templateValues)
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))
-		Expect(changed).To(Equal(controllerutil.OperationResultCreated))
+		Expect(changed).To(Equal(controllerutil.OperationResultNone))
 
 		var s corev1.ConfigMapList
 		listErr := client.List(context.TODO(), &s)
 		Expect(listErr).To(Not(HaveOccurred()))
-		Expect(s.Items).To(HaveLen(1))
-
-		Expect(s.Items[0].Annotations).To(Not(BeNil()))
-		Expect(s.Items[0].Annotations[resources.DisclaimerKey]).To(Not(BeNil()))
+		Expect(s.Items).To(HaveLen(0))
 	})
 
-	It("should return updated if reapplied", func() {
+	It("should return deleted if present", func() {
 		//given
-		var p corev1.ConfigMap
-		err := yaml.Unmarshal(manifest_cm_control_plane, &p)
-		Expect(err).To(Not(HaveOccurred()))
+		p := corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      controlPlaneDashboardName,
+				Namespace: controlPlaneDashboardNamespace,
+			},
+		}
 
 		client := createFakeClient(&p)
 
 		sample := NewConfigMapControlPlane(client)
 
 		//when
-		changed, err := sample.apply(context.TODO(), client, owner, templateValues)
+		changed, err := sample.reconcile(context.TODO(), client, owner, templateValues)
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))
-		Expect(changed).To(Equal(controllerutil.OperationResultUpdated))
+		Expect(changed).To(BeEquivalentTo("deleted"))
 
 		var s corev1.ConfigMapList
 		listErr := client.List(context.TODO(), &s)
 		Expect(listErr).To(Not(HaveOccurred()))
-		Expect(s.Items).To(HaveLen(1))
-
-		Expect(s.Items[0].Annotations).To(Not(BeNil()))
-		Expect(s.Items[0].Annotations[resources.DisclaimerKey]).To(Not(BeNil()))
+		Expect(s.Items).To(HaveLen(0))
 	})
 })

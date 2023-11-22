@@ -20,7 +20,7 @@ func NewProxyProtocolEnvoyFilter(k8sClient client.Client) ProxyProtocolEnvoyFilt
 	return ProxyProtocolEnvoyFilter{k8sClient: k8sClient}
 }
 
-func (ProxyProtocolEnvoyFilter) apply(ctx context.Context, k8sClient client.Client, _ metav1.OwnerReference, _ map[string]string) (controllerutil.OperationResult, error) {
+func (ProxyProtocolEnvoyFilter) reconcile(ctx context.Context, k8sClient client.Client, _ metav1.OwnerReference, _ map[string]string) (controllerutil.OperationResult, error) {
 	return resources.Apply(ctx, k8sClient, proxyProtocolEnvoyFilter, nil)
 }
 

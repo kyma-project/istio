@@ -12,11 +12,11 @@ Feature: Istio resources configuration
     When Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
     And "EnvoyFilter" "kyma-referer" in namespace "istio-system" is "present"
     And "PeerAuthentication" "default" in namespace "istio-system" is "present"
-    And "ConfigMap" "istio-control-plane-grafana-dashboard" in namespace "kyma-system" is "present"
-    And "ConfigMap" "istio-mesh-grafana-dashboard" in namespace "kyma-system" is "present"
-    And "ConfigMap" "istio-performance-grafana-dashboard" in namespace "kyma-system" is "present"
-    And "ConfigMap" "istio-service-grafana-dashboard" in namespace "kyma-system" is "present"
-    And "ConfigMap" "istio-workload-grafana-dashboard" in namespace "kyma-system" is "present"
+    And "ConfigMap" "istio-control-plane-grafana-dashboard" in namespace "kyma-system" is "not present"
+    And "ConfigMap" "istio-mesh-grafana-dashboard" in namespace "kyma-system" is "not present"
+    And "ConfigMap" "istio-performance-grafana-dashboard" in namespace "kyma-system" is "not present"
+    And "ConfigMap" "istio-service-grafana-dashboard" in namespace "kyma-system" is "not present"
+    And "ConfigMap" "istio-workload-grafana-dashboard" in namespace "kyma-system" is "not present"
 
     # Uninstalling Istio
     When "Istio CR" "istio-sample" in namespace "kyma-system" is deleted

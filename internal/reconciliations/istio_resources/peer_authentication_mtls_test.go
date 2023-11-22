@@ -26,7 +26,7 @@ var _ = Describe("Apply", func() {
 		sample := NewPeerAuthenticationMtls(client)
 
 		//when
-		changed, err := sample.apply(context.TODO(), client, owner, templateValues)
+		changed, err := sample.reconcile(context.TODO(), client, owner, templateValues)
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))
@@ -52,7 +52,7 @@ var _ = Describe("Apply", func() {
 		sample := NewPeerAuthenticationMtls(client)
 
 		//when
-		changed, err := sample.apply(context.TODO(), client, owner, templateValues)
+		changed, err := sample.reconcile(context.TODO(), client, owner, templateValues)
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))
@@ -79,7 +79,7 @@ var _ = Describe("Apply", func() {
 		sample := NewPeerAuthenticationMtls(client)
 
 		//when
-		changed, err := sample.apply(context.TODO(), client, owner, templateValues)
+		changed, err := sample.reconcile(context.TODO(), client, owner, templateValues)
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))

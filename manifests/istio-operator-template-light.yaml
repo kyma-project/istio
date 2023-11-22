@@ -263,9 +263,9 @@ spec:
         includeIPRanges: '*'
         logLevel: warning
         privileged: false
-        readinessFailureThreshold: 4
-        readinessInitialDelaySeconds: 0
-        readinessPeriodSeconds: 15
+        readinessInitialDelaySeconds: 5
+        readinessPeriodSeconds: 5
+        readinessFailureThreshold: 40
         startupProbe:
           enabled: true
           failureThreshold: 600

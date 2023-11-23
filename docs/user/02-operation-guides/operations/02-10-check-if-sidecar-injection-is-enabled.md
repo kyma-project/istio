@@ -1,5 +1,7 @@
 # Check if you have Istio sidecar proxy injection enabled
 
+
+
 ## Check if sidecar injection is enabled in the Pod's Namespace
 
 <!-- tabs:start -->

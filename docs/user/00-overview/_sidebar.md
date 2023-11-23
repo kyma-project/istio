@@ -1,7 +1,5 @@
 * [Home](/)
 * [Kyma Components](/01-overview/README.md)
-  * [API Exposure](/01-overview/api-exposure/README.md)
-  * [Eventing](/01-overview/eventing/README.md)
   * [Istio](./README.md)
     * [Istio Controller](./00-10-overview-istio-controller.md)
     * [Istio Service Mesh](./00-20-overview-service-mesh.md)

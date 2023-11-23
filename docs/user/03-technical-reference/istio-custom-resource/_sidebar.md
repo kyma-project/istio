@@ -3,7 +3,4 @@
   * [Custom resources](/05-technical-reference/00-custom-resources/README.md)
     * [Application](/05-technical-reference/00-custom-resources/ac-01-application.md)
     * [CompassConnection](/05-technical-reference/00-custom-resources/ra-01-compassconnection.md)
-    * [APIRule](/05-technical-reference/00-custom-resources/apix-01-apirule.md)
-    * [Subscription](/05-technical-reference/00-custom-resources/evnt-01-subscription.md)
-    * [EventingBackend](/05-technical-reference/00-custom-resources/evnt-02-eventingbackend.md)
     * [Istio](./01-30-istio-custom-resource.md)

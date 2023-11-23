@@ -27,7 +27,7 @@ You can enable sidecar proxy injection for either an entire Namespace or a singl
   
   <!-- tabs:end -->
 
-* Follow the steps to enable sidecar proxy injection for a Deployment:
+* Follow the steps to enable sidecar proxy injection for a Pod:
 
   <!-- tabs:start -->
 
@@ -36,15 +36,15 @@ You can enable sidecar proxy injection for either an entire Namespace or a singl
   Use the following command:
   
   ```bash
-  kubectl label deployment {YOUR_DEPLOYMENT} istio-injection=enabled
+  kubectl patch -n {YOUR_NAMESPACE} deployments/{YOUR_DEPLOYMENT} -p '{"spec":{"template":{"metadata":{"labels":{"sidecar.istio.io/inject":"true"}}}}}'
   ```
 
   #### **Kyma Dashboard**
 
-  1. Select the Namespace of the Deployment for which you want to enable sidecar proxy injection.
-  2. Locate and select the Deployment.
-  3. Click the blue **Edit** button.
-  4. In the `UI Form` section, toggle the switch to set the **istio-injection** label value to `enabled` for the Deployment.
+  1. Select the Namespace of the Pod's Deployment.
+  2. Navigate to the **Workloads** section on the left-hand side and select **Deployments**.
+  3. Select the Pod's Deployment and click the **Edit** button.
+  4. In the `UI Form` section, toggle the switch to set the **istio-injection** label value to `enabled` for the Deployment's Pods.
   5. Click **Update**.
 
   <!-- tabs:end -->

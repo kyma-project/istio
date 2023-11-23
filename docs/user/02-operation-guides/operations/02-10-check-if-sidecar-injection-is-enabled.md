@@ -62,7 +62,7 @@ You can also check whether your workloads have automatic Istio sidecar injection
         - sidecar-disabled/some-pod
       In namespace labeled with "istio-injection=enabled" with pod labeled with "sidecar.istio.io/inject=false":
         - sidecar-enabled/some-pod
-      In not labeled ns with pod not labeled with "sidecar.istio.io inject=true":
+      In not labeled ns with pod not labeled with "sidecar.istio.io/inject=true":
         - no-label/some-pod
     ```
 

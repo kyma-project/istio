@@ -265,7 +265,7 @@ spec:
         privileged: false
         readinessInitialDelaySeconds: 5
         readinessPeriodSeconds: 15
-        readinessFailureThreshold: 4
+        readinessFailureThreshold: 14
         startupProbe:
           enabled: true
           failureThreshold: 600

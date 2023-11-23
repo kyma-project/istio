@@ -19,10 +19,11 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/istio/operator/internal/clusterconfig"
-	"github.com/pkg/errors"
 	"net/http"
 	"time"
+
+	"github.com/kyma-project/istio/operator/internal/clusterconfig"
+	"github.com/pkg/errors"
 
 	"github.com/kyma-project/istio/operator/internal/filter"
 
@@ -50,7 +51,7 @@ import (
 
 const (
 	namespace                    = "kyma-system"
-	IstioVersion                 = "1.19.3"
+	IstioVersion                 = "1.20.0"
 	IstioImageBase               = "distroless"
 	IstioResourceListDefaultPath = "manifests/controlled_resources_list.yaml"
 )

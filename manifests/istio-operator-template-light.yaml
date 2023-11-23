@@ -263,9 +263,12 @@ spec:
         includeIPRanges: '*'
         logLevel: warning
         privileged: false
-        readinessFailureThreshold: 40
         readinessInitialDelaySeconds: 5
-        readinessPeriodSeconds: 5
+        readinessPeriodSeconds: 15
+        readinessFailureThreshold: 14
+        startupProbe:
+          enabled: true
+          failureThreshold: 600
         resources:
           limits:
             cpu: 250m

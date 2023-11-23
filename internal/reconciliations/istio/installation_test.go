@@ -3,8 +3,9 @@ package istio_test
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/istio/operator/internal/resources"
 	"time"
+
+	"github.com/kyma-project/istio/operator/internal/resources"
 
 	"github.com/pkg/errors"
 
@@ -248,12 +249,11 @@ var _ = Describe("Installation reconciliation", func() {
 		// given
 
 		newNumTrustedProxies := 3
-		numTrustedProxies := 1
 		istioCr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",
 			ResourceVersion: "1",
 			Annotations: map[string]string{
-				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"NumTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
+				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"NumTrustedProxies":1},"IstioTag":"%s"}`, istioTag),
 			},
 		},
 			Spec: operatorv1alpha1.IstioSpec{
@@ -344,12 +344,11 @@ var _ = Describe("Installation reconciliation", func() {
 		// given
 
 		newNumTrustedProxies := 3
-		numTrustedProxies := 1
 		istioCr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",
 			ResourceVersion: "1",
 			Annotations: map[string]string{
-				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"NumTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
+				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"NumTrustedProxies":1},"IstioTag":"%s"}`, istioTag),
 			},
 		},
 			Spec: operatorv1alpha1.IstioSpec{
@@ -729,12 +728,11 @@ var _ = Describe("Installation reconciliation", func() {
 		// given
 		now := metav1.NewTime(time.Now())
 		newNumTrustedProxies := 3
-		numTrustedProxies := 1
 		istioCr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",
 			ResourceVersion: "1",
 			Annotations: map[string]string{
-				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
+				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":1},"IstioTag":"%s"}`, istioTag),
 			},
 			DeletionTimestamp: &now,
 			Finalizers:        []string{"istios.operator.kyma-project.io/test-mock"},

@@ -36,10 +36,12 @@ Sidecar injection is disabled if the output does not contain the `sidecar.istio.
 
 #### **Kyma Dashboard**
 
-1. Go to the Deployment's Namespace.
+1. Select the Namespace of the Pod's Deployment.
 2. On the left-hand side sidebar, find the **Workloads** section and select **Deployments**.
-3. Utilize the search function to filter for all Deployments labeled with `istio-injection=enabled`.
-![Search for a Deployment with enabled sidecar injection](../../../assets/search-for-deployment-with-enabled-injection.png)
+3. Select the Pod's Deployment and click the **Edit** button.
+4. In the `UI Form` section, check if the `Enable Sidecar Injection` toggle is switched.
+
+![Check the Enable Istio sidecar toggle](./../../../assets/enable-sidecar-toggle.svg)
 
 <!-- tabs:end -->
 

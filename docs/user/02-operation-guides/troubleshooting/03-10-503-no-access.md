@@ -34,6 +34,7 @@ To fix this problem, restart the Pods of Istio Ingress Gateway.
 2. On the left-hand side sidebar, find the **Workloads** section and select **Pods**.
 3. Use the search function to filter for all Pods labeled with `app=istio-ingressgateway`.
 4. Delete each of the displayed Pods in order to trigger the recreation of their configuration.
+   ![Delete Pods with `app=istio-ingressgateway` label](../../../assets/delete-istio-ingressgateway-pods.svg)
 
 <!-- tabs:end -->
 
@@ -56,11 +57,11 @@ If the restart doesn't help, follow these steps:
       ```
 
    #### **Kyma Dashboard**
-   1. Go to the `istio-system` Namespace.
-   2. On the left-hand side sidebar, find the **Workloads** section and select **Pods**.
-   3. Search for a Pod labeled with `app=istio-ingressgateway` and click on its name.
+   3. Go to the `istio-system` Namespace.
+   4. On the left-hand side sidebar, find the **Workloads** section and select **Pods**.
+   5. Search for a Pod labeled with `app=istio-ingressgateway` and click on its name.
    ![Search for a Pod with `app=istio-ingressgateway` label](../../../assets/search-for-istio-ingress-gateway.svg)
-   4. Scroll down to find the `Containers` section and check which ports the `istio-proxy` container uses.
+   6. Scroll down to find the `Containers` section and check which ports the `istio-proxy` container uses.
    ![Check ports used by istio-proxy](../../../assets/check-istio-proxy-ports.svg)
    <!-- tabs:end -->
 

@@ -40,8 +40,7 @@ Sidecar injection is disabled if the output does not contain the `sidecar.istio.
 2. On the left-hand side sidebar, find the **Workloads** section and select **Deployments**.
 3. Select the Pod's Deployment and click the **Edit** button.
 4. In the `UI Form` section, check if the `Enable Sidecar Injection` toggle is switched.
-
-![Check the Enable Istio sidecar toggle](./../../../assets/sidecar-injection-toggle-deployment.svg)
+    ![Check the Enable Istio sidecar toggle](./../../../assets/sidecar-injection-toggle-deployment.svg)
 
 <!-- tabs:end -->
 

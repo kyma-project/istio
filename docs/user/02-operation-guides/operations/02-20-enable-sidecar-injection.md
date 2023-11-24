@@ -45,7 +45,7 @@ You can enable sidecar proxy injection for either an entire Namespace or a singl
   1. Select the Namespace of the Pod's Deployment.
   2. On the left-hand side sidebar, find the **Workloads** section and select **Deployments**.
   3. Select the Pod's Deployment and click the **Edit** button.
-  4. In the `UI Form` section, toggle the switch to set the **istio-injection** label value to `enabled` for the Deployment's Pods.
+  4. In the `UI Form` section, toggle the switch to set the **sidecar.istio.io/inject** label to `true`.
   ![Switch the toggle to enable Istio sidecar injection](./../../../assets/sidecar-injection-toggle-deployment.svg)
   1. Click **Update**.
 

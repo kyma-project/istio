@@ -17,7 +17,7 @@ If the command does not return `enabled`, the sidecar injection is disabled in t
 1. Go to the Pod's Namespace.
 2. Verify if the `Labels` section contains `istio-injection=enabled`. If the section doesn't contain the label, the sidecar injection is disabled in this Namespace.
    Here's an example of a Namespace where the Istio sidecar proxy injection is enabled:
-   ![Namespace with enabled istio sidecar injection](../../../assets/namespace-with-enabled-istio-sidecar.png)
+   ![Namespace with enabled istio sidecar injection](../../../assets/namespace-with-enabled-istio-sidecar.svg)
 
 <!-- tabs:end -->
 

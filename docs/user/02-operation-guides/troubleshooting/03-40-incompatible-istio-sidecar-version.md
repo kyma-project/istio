@@ -2,7 +2,7 @@
 
 ## Symptom
 
-You upgraded Kyma Istio Oprator, and mesh connectivity is broken.
+You upgraded Kyma Istio Operator, and mesh connectivity is broken.
 
 ## Cause
 

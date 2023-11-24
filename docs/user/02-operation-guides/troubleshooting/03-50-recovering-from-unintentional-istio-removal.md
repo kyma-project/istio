@@ -77,4 +77,4 @@ For example, the issue occurs when you delete Istio, but there are still Virtual
 
 3. Reapply the Istio CR to install Istio once again.
 
-By completing the steps, the Kyma Istio Operator's reconciliation is triggered again. The Istio CR should return to the `READY` state within a few seconds.
+By completing the steps, the Kyma Istio Operator's reconciliation is triggered again. The Istio CR should return to the `Ready` state within a few seconds.

@@ -46,6 +46,8 @@ jobs:
     needs: [istio-upgrade-integration-test]
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Notify
         uses: ./.github/actions/slack-notification-failed-workflow
         with:

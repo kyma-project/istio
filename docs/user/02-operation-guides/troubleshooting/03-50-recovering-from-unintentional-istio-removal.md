@@ -77,8 +77,4 @@ For example, the issue occurs when you delete Istio, but there are still Virtual
 
 3. Reapply the Istio CR to install Istio once again.
 
-   ```bash
-   kubectl apply -f https://github.com/kyma-project/istio/releases/latest/download/istio-default-cr.yaml
-   ```
-
 By completing the steps, the Kyma Istio Operator's reconciliation is triggered again. The Istio CR should return to the `READY` state within a few seconds.

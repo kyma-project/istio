@@ -1,7 +1,5 @@
 # Check if you have Istio sidecar proxy injection enabled
 
-
-
 ## Check if sidecar injection is enabled in the Pod's Namespace
 
 <!-- tabs:start -->
@@ -17,19 +15,19 @@ If the command does not return `enabled`, the sidecar injection is disabled in t
 #### **Kyma Dashboard**
 
 1. Go to the Pod's Namespace.
-2. Verify if the labels section contains `istio-injection=enabled`. If the section doesn't contain the label, the sidecar injection is disabled in this Namespace.
+2. Verify if the `Labels` section contains `istio-injection=enabled`. If the section doesn't contain the label, the sidecar injection is disabled in this Namespace.
    Here's an example of a Namespace where the Istio sidecar proxy injection is enabled:
    ![Namespace with enabled istio sidecar injection](../../../assets/namespace-with-enabled-istio-sidecar.png)
 
 <!-- tabs:end -->
 
-## Check if sidecar injection is enabled in the Pod's Deployment
+## Check if sidecar injection is enabled for the Pod's Deployment
 
 <!-- tabs:start -->
 
 #### **kubectl**
 
-Run the following command to check if a Deployment is labeled with `istio-injection=enabled`:
+Run the following command:
 
     ```bash
     kubectl get deployments {DEPLOYMENT_NAME} -n {NAMESPACE} -o jsonpath='{ .spec.template.metadata.labels }'
@@ -43,7 +41,7 @@ Sidecar injection is disabled if the output does not contain the `sidecar.istio.
 3. Select the Pod's Deployment and click the **Edit** button.
 4. In the `UI Form` section, check if the `Enable Sidecar Injection` toggle is switched.
 
-![Check the Enable Istio sidecar toggle](./../../../assets/enable-sidecar-toggle.svg)
+![Check the Enable Istio sidecar toggle](./../../../assets/sidecar-injection-toggle-deployment.svg)
 
 <!-- tabs:end -->
 
@@ -70,7 +68,7 @@ You can also check whether your workloads have automatic Istio sidecar injection
         - no-label/some-pod
     ```
 
-*  If you pass a parameter, only the Pods from the specified Namespace are analyzed. The script outputs the information in the format of `{POD}` if run for a specific Namespace. Run:
+*  If you pass a parameter, only the Pods from the specified Namespace are analyzed. The script outputs the information in the format of `{POD}`. Run:
 
     ```bash
     ./sidecar-analysis.sh {NAMESPACE}

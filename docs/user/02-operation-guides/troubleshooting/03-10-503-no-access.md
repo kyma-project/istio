@@ -30,37 +30,42 @@ To fix this problem, restart the Pods of Istio Ingress Gateway.
 
 #### **Kyma Dashboard**
 
-1. Go to the `istio-system` namespace.
-2. Navigate to the **Workloads** section on the left-hand side and click on **Pods**.
+1. Go to the `istio-system` Namespace.
+2. On the left-hand side sidebar, find the **Workloads** section and select **Pods**.
 3. Use the search function to filter for all Pods labeled with `app=istio-ingressgateway`.
-4. Delete each of the Pods that are displayed in order to trigger the recreation of their configuration.
+4. Delete each of the displayed Pods in order to trigger the recreation of their configuration.
 
 <!-- tabs:end -->
 
 If the restart doesn't help, follow these steps:
 
-1. List all the Pods of Istio Ingress Gateway:
+1. Check all ports used by Istio Ingress Gateway:
 
-   ```bash
-   kubectl get pod -l app=istio-ingressgateway -n istio-system -o name
-   ```
+   <!-- tabs:start -->
+   #### **kubectl**
+   1. List all the Pods of Istio Ingress Gateway:
+
+      ```bash
+      kubectl get pod -l app=istio-ingressgateway -n istio-system -o name
+      ```
    
-2. Replace `{ISTIO_INGRESS_GATEWAY_POD_NAME}` with a name of a listed Pod and check the ports that the `istio-proxy` container uses:
+   2. Replace `{ISTIO_INGRESS_GATEWAY_POD_NAME}` with a name of a listed Pod and check the ports that the `istio-proxy` container uses:
 
-   ```bash
-   kubectl get -n istio-system pod {ISTIO_INGRESS_GATEWAY_POD_NAME} -o jsonpath='{.spec.containers[*].ports[*].containerPort}'
-   ```
+      ```bash
+      kubectl get -n istio-system pod {ISTIO_INGRESS_GATEWAY_POD_NAME} -o jsonpath='{.spec.containers[*].ports[*].containerPort}'
+      ```
 
    #### **Kyma Dashboard**
-   1. Go to the `istio-system` namespace.
-   2. Navigate to the **Workloads** section on the left-hand side and select **Pods**.
-   3. Search for a Pod labeled with `app=istio-ingressgateway` and click on the Pod's name.
+   1. Go to the `istio-system` Namespace.
+   2. On the left-hand side sidebar, find the **Workloads** section and select **Pods**.
+   3. Search for a Pod labeled with `app=istio-ingressgateway` and click on its name.
    ![Search for a Pod with `app=istio-ingressgateway` label](../../../assets/search-for-istio-ingress-gateway.svg)
    4. Scroll down to find the `Containers` section and check which ports the `istio-proxy` container uses.
    ![Check ports used by istio-proxy](../../../assets/check-istio-proxy-ports.svg)
+   <!-- tabs:end -->
 
 
-2. If the ports `80` and `443` are not used, check the logs of the Istio Ingress Gateway container for errors related to certificates.
+2. If the ports `80` and `443` are not used, check the logs of the `istio-proxy` container for errors related to certificates.
 
    <!-- tabs:start -->
    #### **kubectl**

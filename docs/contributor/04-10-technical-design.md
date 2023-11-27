@@ -8,7 +8,7 @@ To understand the reasons for the technical design of the Kyma Istio Operator, r
 
 The following diagram illustrates the Kyma Istio Operator and its components:
 
-![Kyma IstioOperator Overview](../assets/istio-operator-overview.svg)
+![Kyma Istio Operator Overview](../assets/istio-operator-overview.svg)
 
 ## Istio CR
 

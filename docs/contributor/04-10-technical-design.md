@@ -10,7 +10,7 @@ TODO: Update
 The following diagram illustrates the Kyma Istio Operator and its components:
 ![Kyma IstioOperator Overview](../assets/istio-operator-overview.svg)
 TODO: Update/move
-![Reconciliation Loop Diagram](../assets/istio-controller-reconciliation-loop.svg)
+
 
 ## Istio Controller
 
@@ -40,12 +40,14 @@ When [Istio CR](../user/03-technical-reference/istio-custom-resource/01-30-istio
 Before deleting the [Istio CR](../user/03-technical-reference/istio-custom-resource/01-30-istio-custom-resource.md), the default behavior is to uninstall all Istio components, but only if there are no customer-created Istio resources on the cluster. This behavior is known as the blocking deletion strategy. If any such resources are found, they are listed in the logs of the controller, and the [Istio CR](../user/03-technical-reference/istio-custom-resource/01-30-istio-custom-resource.md)'s status is set to `Warning` to indicate that there are resources blocking the deletion.
 The `istios.operator.kyma-project.io/istio-installation` finalizer protects the deletion of the [Istio CR](../user/03-technical-reference/istio-custom-resource/01-30-istio-custom-resource.md). Once no more customer-created Istio resources that are blocking the deletion of the [Istio CR](../user/03-technical-reference/istio-custom-resource/01-30-istio-custom-resource.md), the Istio CR is deleted.
 
+As part of the reconciliation loop, the controller invokes the reconciliation components.
+The reconciliation loop is illustrated in the following diagram:
+
+![Istio Controller Reconciliation Loop Diagram](../assets/istio-controller-reconciliation-loop.svg)
+
 ## Reconciliation components
 
 Each reconciliation component must be completely independent and can calculate what to do during the reconciliation independently of the reconciliation of other components and based only on the state in a cluster and [Istio CR](../user/03-technical-reference/istio-custom-resource/01-30-istio-custom-resource.md).
-
-TODO: Update
-![Controller Component Diagram](../assets/controller-component-diagram.svg)
 
 ### Istio InstallationReconciliation
 
@@ -74,11 +76,6 @@ and to decide whether a certain configuration has been changed that results in a
 The component also detects changes in the `numTrustedProxies` configuration and restarts the Istio Ingress Gateway accordingly. 
 Whenever a change in the `numTrustedProxies` configuration is detected, the Pods in the `istio-system/istio-ingressgateway` deployment are restarted.
 
-### IngressGatewayReconciler
-
-The IngressGatewayReconciler component is responsible for restarting Istio Ingress Gateway. The component consumes a list of [Restart Predicates](#restart-predicates) that specify when the Ingress Gateway should be restarted.
-To understand the reasons for the predicates, refer to the [Architecture Decision Record](https://github.com/kyma-project/istio/issues/278).
-
 ### Istio ResourcesReconciliation
 
 Istio ResourcesReconciliation is a component responsible for applying resources dependent on Istio, such as VirtualService or EnvoyFilter, and ensuring that the state of the Istio service mesh is configured correctly based on those resources.
@@ -100,6 +97,11 @@ The following triggers for a restart are be covered by this component:
 - Restart Pods with proxy sidecar after an Istio version update.
 - Restart Pods with proxy sidecar when proxy resources change.
 - Restart Pods if they match [Restart Predicates](#restart-predicates) that the [Istio ResourcesReconciliation component](#istio-resourcesreconciliation) specifies (for example, being up-to-date with EnvoyFilter)
+
+### IngressGatewayReconciler
+
+The IngressGatewayReconciler component is responsible for restarting Istio Ingress Gateway. The component consumes a list of [Restart Predicates](#restart-predicates) that specify when the Ingress Gateway should be restarted.
+To understand the reasons for the predicates, refer to the [Architecture Decision Record](https://github.com/kyma-project/istio/issues/278).
 
 ## Restart Predicates
 

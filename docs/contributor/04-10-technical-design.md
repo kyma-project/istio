@@ -9,8 +9,6 @@ To understand the reasons for the technical design of the Kyma Istio Operator, r
 TODO: Update
 The following diagram illustrates the Kyma Istio Operator and its components:
 ![Kyma IstioOperator Overview](../assets/istio-operator-overview.svg)
-TODO: Update/move
-
 
 ## Istio Controller
 
@@ -60,12 +58,6 @@ The Istio installation, upgrade and uninstallation is performed using the [Istio
 The installation of Istio is executed as a synchronous and blocking call that checks the proper status of the installation. This means that the reconciliation loop is blocked until Istio is installed.  
 For each reconciliation the Istio installation is checked and if it is not installed, the installation is executed.
 As part of the installation, this component adds the finalizer `istios.operator.kyma-project.io/istio-installation` to Istio CR, which is only removed after a successful uninstallation of Istio.
-
-TODO: Update
-The following diagram shows the reconciliation process for installing, uninstalling, and canary upgrading (using revisions) Istio.
-
-
-![Istio Installation Reconciliation](../assets/istio-installation-reconciliation.svg)
 
 #### Istio CR lastAppliedConfiguration
 The component adds the `operator.kyma-project.io/lastAppliedConfiguration` annotation to the [Istio CR](../user/03-technical-reference/istio-custom-resource/01-30-istio-custom-resource.md) and

@@ -6,7 +6,6 @@ The Kyma Istio Operator implements one controller that consists of several self-
 have a better extensibility and maintainability. This means each of these components must have its clearly separated responsibility and must work in isolation when assessing whether reconciliation is required, applying changes, and returning a status.
 To understand the reasons for the technical design of the Kyma Istio Operator, refer to the [Architecture Decision Record](https://github.com/kyma-project/istio/issues/135).
 
-TODO: Update
 The following diagram illustrates the Kyma Istio Operator and its components:
 ![Kyma IstioOperator Overview](../assets/istio-operator-overview.svg)
 

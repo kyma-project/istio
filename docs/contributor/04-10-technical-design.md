@@ -7,25 +7,33 @@ have a better extensibility and maintainability. This means each of these compon
 To understand the reasons for the technical design of the Kyma Istio Operator, refer to the [Architecture Decision Record](https://github.com/kyma-project/istio/issues/135).
 
 The following diagram illustrates the Kyma Istio Operator and its components:
+
 ![Kyma IstioOperator Overview](../assets/istio-operator-overview.svg)
 
-## Istio Controller
+## Istio CR
 
-The Istio Controller is a [Kubernetes controller](https://kubernetes.io/docs/concepts/architecture/controller/), which is implemented using the [Kubebuilder](https://book.kubebuilder.io/) framework.
-The controller is responsible for handling the [Istio CR](../user/03-technical-reference/istio-custom-resource/01-30-istio-custom-resource.md).
+The [Istio CR](../user/03-technical-reference/istio-custom-resource/01-30-istio-custom-resource.md) a namespace-scoped resource that is used to manage the Istio installation. The reason for Istio CR being namespace-scoped is that it was created and used before the Kyma Istio Operator was introduced.
+There is no advantage to the Istio CR being namespace-scoped as the Kyma Istio Operator only supports one Istio CR per cluster. However, it is not possible to change it to cluster-scoped without breaking changes.
 
-### Istio version
+If multiple Istio CRs exist on the cluster, the Kyma Istio operator will only use the oldest Istio CR for reconciliation and put the other Istio CRs in an error state.
+
+## Istio version
 
 The version of Istio is coupled to the version of the Kyma Istio Operator. This means that a particular version of the operator is responsible for a particular version of Istio and a new version of the operator is released to support a new version of Istio.
 Upgrading to a new version of the operator will automatically update Istio if the version of Istio has changed in the new operator version.
 
-### Version upgrade
+## Version upgrade
 
 The Istio version upgrade is limited to supporting only one minor version (1.2.3 -> 1.3.0). This implies that this is also relevant when upgrading the Kyma Istio Operator to a new version.
 This means that when upgrading the operator to a new version, a minor version of the operator can only be skipped if the difference between the Istio versions in the new operator version is no more than one minor version.
 
 If the difference between the current and the target version of Istio is greater than one minor version (1.2.3 -> 1.4.0), the reconciliation will fail.
 The same applies to major version upgrades (1.2.3 -> 2.0.0) and downgrades (1.2.3 -> 1.2.2).
+
+## Istio Controller
+
+The Istio Controller is a [Kubernetes controller](https://kubernetes.io/docs/concepts/architecture/controller/), which is implemented using the [Kubebuilder](https://book.kubebuilder.io/) framework.
+The controller is responsible for handling the [Istio CR](../user/03-technical-reference/istio-custom-resource/01-30-istio-custom-resource.md).
 
 ### Reconciliation
 The [Istio CR](../user/03-technical-reference/istio-custom-resource/01-30-istio-custom-resource.md) is reconciled with each change to the **Spec** field. If no changes have been made, the reconciliation process occurs at the default interval of 10 hours.

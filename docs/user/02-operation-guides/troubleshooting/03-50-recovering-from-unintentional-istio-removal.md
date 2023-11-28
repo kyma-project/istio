@@ -41,11 +41,11 @@ For example, the issue occurs when you delete Istio, but there are still Virtual
     <!-- tabs:start -->
     #### **kubectl**
 
-    Run the following command to edit the Istio CR:
+    1. To edit the Istio CR, run:
     ```
     kubectl edit istio -n kyma-system default
     ```
-    Remove the indicated lines:
+    2. Remove the indicated lines:
     ```diff
     apiVersion: operator.kyma-project.io/v1alpha1
     kind: Istio

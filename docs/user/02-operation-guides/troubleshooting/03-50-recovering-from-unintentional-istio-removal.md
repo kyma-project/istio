@@ -65,7 +65,7 @@ For example, the issue occurs when you delete Istio, but there are still Virtual
     
     #### **Kyma Dashboard**
 
-   1. Go to the kyma-system Namespace. 
+   1. Go to the `kyma-system` Namespace. 
    2. In the **Kyma** section, choose **Istio**.
    3. Select your Istio instance and click **Edit**.
    4. Switch to the **YAML** section and remove the indicated lines:
@@ -73,7 +73,7 @@ For example, the issue occurs when you delete Istio, but there are still Virtual
    <!-- tabs:end -->
 
 
-2. When the finalizer is removed, the Istio CR is deleted. Other resources, such as the `istiod` deployment, remain on the cluster.
+2. When the finalizer is removed, the Istio CR is deleted. Other resources, such as the `istiod` Deployment, remain on the cluster.
 
 3. Reapply the Istio CR to install Istio once again.
 

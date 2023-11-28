@@ -4,7 +4,7 @@ Enabling automatic sidecar injection allows `istiod` to watch all Pod creation o
 
 You can enable sidecar proxy injection for either an entire Namespace or a single Deployment. If the sidecar proxy injection is disabled at the Namespace level, or the `sidecar.istio.io/inject` label on a Pod is set to `false`, the sidecar proxy is not injected.
 
->**WARNING:** Adding the `istio-injection=enabled` label on the Namespace level results in injecting sidecars to all Pods inside of the Namespace. 
+>**NOTE:** Adding the `istio-injection=enabled` label on the Namespace level results in injecting sidecars to all Pods inside of the Namespace. 
 
 * To enable sidecar proxy injection for a Namespace, you can use either kubectl or Kyma dashboard:
   

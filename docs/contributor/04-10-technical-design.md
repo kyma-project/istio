@@ -28,7 +28,7 @@ The Istio version upgrade is limited to supporting only one minor version (1.2.3
 This means that when upgrading the operator to a new version, a minor version of the operator can only be skipped if the difference between the Istio versions in the new operator version is no more than one minor version.
 
 If the difference between the current and the target version of Istio is greater than one minor version (1.2.3 -> 1.4.0), the reconciliation will fail.
-The same applies to major version upgrades (1.2.3 -> 2.0.0) and downgrades (1.2.3 -> 1.2.2).
+The reconciliation will also fail for major version upgrades (1.2.3 -> 2.0.0) and version downgrades, as these are also not supported.
 
 ## Istio Controller
 

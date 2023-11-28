@@ -10,4 +10,4 @@ By default, Kyma Istio Operator has sidecar injection disabled - there is no aut
 
 ## Remedy
 
-Use this [guide](../operations/02-10-check-if-sidecar-injection-is-enabled.md) to check if your Pod and its Namespace have Istio sidecar injected. Learn how to [enable Istio sidecar proxy injection](../operations/02-20-enable-sidecar-injection.md).
+To check if your Pod and its Namespace have Istio sidecar injected, read [Check if you have Istio sidecar proxy injection enabled](../operations/02-10-check-if-sidecar-injection-is-enabled.md). Learn how to [enable Istio sidecar proxy injection](../operations/02-20-enable-sidecar-injection.md).

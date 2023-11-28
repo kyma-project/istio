@@ -22,7 +22,7 @@ To fix this problem, restart the Pods of Istio Ingress Gateway.
     kubectl get virtualservice --all-namespaces
     ```
 
-2. Delete the Pods of Istio Ingress Gateway to trigger the recreation of their configuration:
+2. To trigger the recreation of their configuration, delete the Pods of Istio Ingress Gateway:
 
      ```bash
      kubectl delete pod -l app=istio-ingressgateway -n istio-system
@@ -31,9 +31,9 @@ To fix this problem, restart the Pods of Istio Ingress Gateway.
 #### **Kyma Dashboard**
 
 1. Go to the `istio-system` Namespace.
-2. On the left-hand side sidebar, find the **Workloads** section and select **Pods**.
+2. In the **Workloads** section, select **Pods**.
 3. Use the search function to filter for all Pods labeled with `app=istio-ingressgateway`.
-4. Delete each of the displayed Pods in order to trigger the recreation of their configuration.
+4. To trigger the recreation of their configuration, delete each of the displayed Pods.
    ![Delete Pods with `app=istio-ingressgateway` label](../../../assets/delete-istio-ingressgateway-pods.svg)
 
 <!-- tabs:end -->
@@ -58,7 +58,7 @@ If the restart doesn't help, follow these steps:
 
    #### **Kyma Dashboard**
    1. Go to the `istio-system` Namespace.
-   2. On the left-hand side sidebar, find the **Workloads** section and select **Pods**.
+   2. In the **Workloads** section, select **Pods**.
    3. Search for a Pod labeled with `app=istio-ingressgateway` and click on its name.
    ![Search for a Pod with `app=istio-ingressgateway` label](../../../assets/search-for-istio-ingress-gateway.svg)
    4. Scroll down to find the `Containers` section and check which ports the `istio-proxy` container uses.
@@ -76,7 +76,7 @@ If the restart doesn't help, follow these steps:
    ```
    
    #### **Kyma Dashboard**
-   Click on the **View Logs** button.
+   Click **View Logs**.
    ![View logs of the istio-proxy-container](../../../assets/view-istio-proxy-logs.svg)
 
    <!-- tabs:end -->

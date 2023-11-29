@@ -75,14 +75,14 @@ func (e EnvoyFilterAllowPartialReferer) reconcile(ctx context.Context, k8sClient
 	}
 
 	if result != controllerutil.OperationResultNone || !efaFound {
-		err := annotateWithTimestamp(ctx, envoyFilter, k8sClient)
+		err := annotateWithTimestamp(ctx, &envoyFilter, k8sClient)
 		if err != nil {
 			return controllerutil.OperationResultNone, err
 		}
 	}
 
 	if !daFound {
-		err := resources.AnnotateWithDisclaimer(ctx, envoyFilter, k8sClient)
+		err = resources.AnnotateWithDisclaimer(ctx, &envoyFilter, k8sClient)
 		if err != nil {
 			return controllerutil.OperationResultNone, err
 		}
@@ -131,7 +131,7 @@ func getUpdateTime(ctx context.Context, k8sClient client.Client) (time.Time, err
 	}
 }
 
-func annotateWithTimestamp(ctx context.Context, filter unstructured.Unstructured, k8sClient client.Client) error {
+func annotateWithTimestamp(ctx context.Context, filter *unstructured.Unstructured, k8sClient client.Client) error {
 	annotations := filter.GetAnnotations()
 	if annotations == nil {
 		annotations = make(map[string]string)
@@ -139,6 +139,6 @@ func annotateWithTimestamp(ctx context.Context, filter unstructured.Unstructured
 	annotations[EnvoyFilterAnnotation] = time.Now().Format(time.RFC3339)
 	filter.SetAnnotations(annotations)
 
-	err := k8sClient.Update(ctx, &filter)
+	err := k8sClient.Update(ctx, filter)
 	return err
 }

@@ -27,7 +27,7 @@ var _ = Describe("Disclaimer annotation", func() {
 
 		client := createFakeClient(&unstr)
 
-		Expect(resources.AnnotateWithDisclaimer(context.Background(), unstr, client)).Should(Succeed())
+		Expect(resources.AnnotateWithDisclaimer(context.Background(), &unstr, client)).Should(Succeed())
 
 		Expect(client.Get(context.Background(), ctrlClient.ObjectKey{Name: unstr.GetName()}, &unstr)).To(Succeed())
 		anns := unstr.GetAnnotations()
@@ -43,7 +43,7 @@ var _ = Describe("Disclaimer annotation", func() {
 
 		client := createFakeClient(&unstr)
 
-		Expect(resources.AnnotateWithDisclaimer(context.Background(), unstr, client)).Should(Succeed())
+		Expect(resources.AnnotateWithDisclaimer(context.Background(), &unstr, client)).Should(Succeed())
 		Expect(client.Get(context.Background(), ctrlClient.ObjectKey{Name: unstr.GetName()}, &unstr)).To(Succeed())
 		Expect(resources.HasManagedByDisclaimer(unstr)).To(BeTrue())
 	})

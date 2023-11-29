@@ -12,7 +12,7 @@ const (
 )
 
 // AnnotateWithDisclaimer adds the managed-by-disclaimer annotation to the given resource and updates it in the cluster.
-func AnnotateWithDisclaimer(ctx context.Context, resource unstructured.Unstructured, k8sClient client.Client) error {
+func AnnotateWithDisclaimer(ctx context.Context, resource *unstructured.Unstructured, k8sClient client.Client) error {
 	annotations := resource.GetAnnotations()
 	if annotations == nil {
 		annotations = make(map[string]string)
@@ -20,7 +20,7 @@ func AnnotateWithDisclaimer(ctx context.Context, resource unstructured.Unstructu
 	annotations[DisclaimerKey] = DisclaimerValue
 	resource.SetAnnotations(annotations)
 
-	err := k8sClient.Update(ctx, &resource)
+	err := k8sClient.Update(ctx, resource)
 	return err
 }
 

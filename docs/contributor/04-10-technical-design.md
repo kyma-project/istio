@@ -14,6 +14,7 @@ The following diagram illustrates the Kyma Istio Operator and its components:
 
 The [Istio CR](../user/03-technical-reference/istio-custom-resource/01-30-istio-custom-resource.md) a namespace-scoped resource that is used to manage the Istio installation. The reason for Istio CR being namespace-scoped is that it was created and used before the Kyma Istio Operator was introduced.
 There is no advantage to the Istio CR being namespace-scoped as the Kyma Istio Operator only supports one Istio CR per cluster. However, it is not possible to change it to cluster-scoped without breaking changes.
+For this reason, only Istio CRs in the kyma-system namespace are reconciled. Istio CRs in other namespaces are set to an error status and the reconciliation is stopped.
 
 If multiple Istio CRs exist on the cluster, the Kyma Istio operator will only use the oldest Istio CR for reconciliation and put the other Istio CRs in an error state.
 
@@ -33,7 +34,7 @@ The reconciliation will also fail for major version upgrades (1.2.3 -> 2.0.0) an
 ## Istio Controller
 
 The Istio Controller is a [Kubernetes controller](https://kubernetes.io/docs/concepts/architecture/controller/), which is implemented using the [Kubebuilder](https://book.kubebuilder.io/) framework.
-The controller is responsible for handling the [Istio CR](../user/03-technical-reference/istio-custom-resource/01-30-istio-custom-resource.md).
+The controller is responsible for handling the [Istio CR](../user/03-technical-reference/istio-custom-resource/01-30-istio-custom-resource.md). The controller reconciles only Istio CRs in the kyma-system namespace.
 
 ### Reconciliation
 The [Istio CR](../user/03-technical-reference/istio-custom-resource/01-30-istio-custom-resource.md) is reconciled with each change to the **Spec** field. If no changes have been made, the reconciliation process occurs at the default interval of 10 hours.

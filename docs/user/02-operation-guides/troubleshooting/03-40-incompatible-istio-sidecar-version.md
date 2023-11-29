@@ -2,7 +2,7 @@
 
 ## Symptom
 
-You upgraded Kyma Istio Oprator, and mesh connectivity is broken.
+You upgraded Kyma Istio Operator, and mesh connectivity is broken.
 
 ## Cause
 
@@ -24,7 +24,6 @@ To learn if any Pods or workloads require a manual restart, follow these steps:
       export PILOT_ISTIO_VERSION=$(kubectl get deployment istiod -n istio-system -o json | jq '.spec.template.spec.containers | .[].image' | sed 's/[^:"]*[:]//' | sed 's/["]//g')
       ```
 2. Get the list of objects which require rollout. Find all Pods with outdated sidecars. The returned list follows the `name/namespace` format. The empty output means that there is no Pod that requires migration. To find all outdated Pods, run:
-
 
    ```bash
    COMMON_ISTIO_PROXY_IMAGE_PREFIX="europe-docker.pkg.dev/kyma-project/prod/external/istio/proxyv2"

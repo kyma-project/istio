@@ -1,5 +1,5 @@
 # Istio unintentionally removed
-Follow the steps outlined in this troubleshooting guide if you unintentionally deleted Istio and want to restore the system to its normal state without losing any user-created resources. However, if you intended to delete Istio, the symptoms described in this document are expected, and you must clean up the orphaned resources by yourself.
+Follow the steps outlined in this troubleshooting guide if you unintentionally deleted Istio and want to restore the system to its normal state without losing any user-created resources. However, if you intended to delete Istio, the symptoms described in this document are expected, and you must clean up the orphaned resources by yourself. To check which resources are blocking the deletion, see the logs of the `manager` container.
 
 ## Symptom
 

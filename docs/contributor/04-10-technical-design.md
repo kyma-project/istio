@@ -2,162 +2,108 @@
 
 ## Kyma Istio Operator
 
-![Kyma IstioOperator Overview](../assets/istio-operator-overview.svg)
+Kyma Istio Operator implements one controller that consists of several self-contained reconciliation components. Splitting the logic into reconciliation components allows for 
+better extensibility and maintainability. To achieve this requirement, each component must have its clearly separated responsibility and work in isolation when assessing whether reconciliation is required, applying changes, and returning a status.
+To understand the reasons behind the technical design of the Kyma Istio Operator, refer to the [Architecture Decision Record](https://github.com/kyma-project/istio/issues/135).
 
-We want to keep the Kyma Istio operator as simple as possible. That's why we decided to start with one controller that consists of several self-contained components executing reconciliation logic. The controller uses [Istio CR](../user/03-technical-reference/istio-custom-resource/01-30-istio-custom-resource.md) as a resource, which must be present in the `kyma-system` Namespace. It only reconciles the oldest Istio CR in the `kyma-system` Namespace, based on its creation timestamp. After this reconciliation process is completed, all other Istio CRs will be in the `error` state.
+The following diagram illustrates Kyma Istio Operator and its components:
 
-### Ownership of current resources in Kyma repository
+![Kyma Istio Operator Overview](../assets/istio-operator-overview.svg)
 
-In order to transition to a more modularised architecture, the [IstioOperator resource](https://github.com/kyma-project/kyma/tree/main/resources/istio),
-the [additional istio-resources](https://github.com/kyma-project/kyma/tree/main/resources/istio-resources), and
-the [certificates](https://github.com/kyma-project/kyma/tree/main/resources/certificates) must be moved to the new modules.
+## Istio custom resource
 
-#### Kyma Istio Operator resource
+The [Istio custom resource (CR)](../user/03-technical-reference/istio-custom-resource/01-30-istio-custom-resource.md) is a resource used to manage the Istio installation. The Istio CR is namespace-scoped because it was created and used before the introduction of Kyma Istio Operator.
+However, the namespace-scoped approach has no particular benefit since the Kyma Istio Operator only supports a single Istio CR per cluster. Despite this, it is not possible to transition to a cluster-scoped model without introducing breaking changes.
+As a consequence, only the oldest Istio CR in the `kyma-system` namespace is reconciled. Kyma Istio Operator does not reconcile other CRs in the `kyma-system` namespace or any CRs in other namespaces. Instead, it sets their status to 'Error'.
 
-The Kyma Istio Operator resource is moved into the new Kyma Istio Operator. It is used to define default values for Istio, which the user can customise by modyfying Istio CR.
 
-#### Istio resources
+## Istio version
 
-##### Istio Grafana dashboards
+The version of Istio is coupled to the version of Kyma Istio Operator. This means that each particular version of Kyma Istio Operator is released to support only a specific version of Istio.
+If you upgrade Kyma Istio Operator to a new version, it automatically updates Istio as well, provided that a more recent Istio version is part of the Kyma Istio Operator's release.
 
-It still needs to be decided who will have ownership of the dashboards. To make the right choice, such aspects as the change interval or relevance of Istio version updates should be considered.
+## Version upgrade
 
-##### Istio ServiceMonitor
+You can upgrade Istio only by one minor version (for example, 1.2.3 -> 1.3.0). This requirement is also relevant when upgrading Kyma Istio Operator.
+It is only allowed to skip a version of Kyma Istio Operator if the difference between the minor version of Istio it contains and the minor version of Istio you're using is not greater than one.
 
-We do not consider Istio ServiceMonitor in the design, because this resource is planned to be replaced.
-For more information, see this [PR](https://github.com/kyma-project/kyma/pull/16247).
+If the difference is greater than one minor version (for example, 1.2.3 -> 1.4.0), the reconciliation fails.
+The same happens if you try to update the major version (1.2.3 -> 2.0.0) or downgrade the version. Such scenarios are not supported.
 
-##### Global mTLS PeerAuthentication
+## Istio Controller
 
-Global mTLS PeerAuthentication is tightly coupled with the Istio installation. Therefore, it should be reconciled by the operator.
+Istio Controller is a [Kubernetes controller](https://kubernetes.io/docs/concepts/architecture/controller/) implemented using the [Kubebuilder](https://book.kubebuilder.io/) framework.
+Istio Controller manages and reconciles Istio CRs, which are in the `kyma-system` namespace.
 
-##### Kyma Gateway
+### Reconciliation
+The Istio CR is reconciled with each change to the **Spec** field. If you do not modify the field, the reconciliation process occurs at the default interval of 10 hours.
+To adjust this interval, use [Istio Controller parameters](../user/03-technical-reference/configuration-parameters/01-10-istio-controller-parameters.md).
+If the reconciliation process fails, [Kubernetes controller-runtime](https://pkg.go.dev/sigs.k8s.io/controller-runtime) uses exponential backoff requeue.
 
-Kyma Gateway is moved to the API Gateway, as it is a default gateway we provide, and its responsibilities are more closely connected
-to API Gateway than to Istio. Since API Gateway is already dependent on Istio, we do not add any additional dependency by moving it.
+When Istio CR is deleted, Istio Controller uninstalls all Istio components. However, the uninstallation process can only proceed if there are no customer-created resources on the cluster.
 
-#### Certificate resources
+Otherwise, Istio Controller logs the list of resources blocking the deletion and sets the Istio CR’s status to `Warning`.
+The `istios.operator.kyma-project.io/istio-installation` finalizer protects the deletion of the Istio CR until you clean up all the orphaned resources. This behavior is known as the blocking deletion strategy.
 
-Certificate resources are moved to API Gateway, as they are tightly coupled with the Kyma Gateway resource.
+As part of the reconciliation loop, the controller invokes the reconciliation components.
+See the diagram:
 
-### Handling of Istio version
+![Istio Controller Reconciliation Loop Diagram](../assets/istio-controller-reconciliation-loop.svg)
 
-We don't want to expose the version. That means that the version of Istio is coupled with the version of the operator. The benefit of this solution is,
-that it gives us full control of the versioning and enables us to hide this complexity from the user.
-If we want to release a new Istio version, we have to release a new version of the operator as well.
+## Reconciliation components
 
-### Installation of Istio
+Each reconciliation component must operate independently and make its own calculations without relying on the reconciliation of other components. It should only consider the state in a cluster and the Istio CR.
 
-The Istio installation, upgrade and uninstallation are performed using the [Istio Go module](https://github.com/istio/istio).
-The evaluation of Istio's installation options in an operator was done in this [PR](https://github.tools.sap/xf-goat/kyma-istio-operator). The result was that the best way for our use case is to utilize the
-[Istio Go module](https://github.com/istio/istio) directly.
-In the sample implementation, the [istio.Install function](https://github.tools.sap/xf-goat/kyma-istio-operator/blob/ec0f99786408407b4a6d8b79abe3af6c389cd35d/controllers/servicemesh_controller.go#L73) is used for installation.
-The installation of Istio is executed as a synchronous and blocking call that checks the proper status of the installation. This means that the reconciliation loop is blocked until Istio is installed.  
-The installation or upgrade scenario is not often executed. The call to the `Install` function should be protected by checks so that it is only executed when necessary.
-Therefore, we have agreed that it is okay to block the reconciliation loop during the installation of Istio.
+### Istio InstallationReconciliation
 
-The following diagram shows the reconciliation process for installing, uninstalling, and canary upgrading (using revisions) Istio.
+Istio InstallationReconciliation is responsible for managing the installation of Istio. This component creates the [IstioOperator CR](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/) and uses it to apply changes to the Istio installation.
+To create the IstioOperator CR, it merges Istio CR with IstioOperator, which contains the default values for Kyma.
 
-![Istio Installation Reconciliation](../assets/istio-installation-reconciliation.svg)
+#### Istio installation
 
-### Istio upgrade version checking
+Istio InstallationReconciliation performs the Istio installation, upgrade, and uninstallation using the [Istio Go module](https://github.com/istio/istio).
+It executes the installation of Istio as a synchronous and blocking call that checks the proper status of the installation. The reconciliation loop is blocked until Istio is installed. 
+During each reconciliation, the component checks the installation of Istio. If Istio is not installed, it triggers the execution of the installation process.
+As part of the installation, this component adds the finalizer `istios.operator.kyma-project.io/istio-installation` to Istio CR. This finalizer is only removed after Istio is successfully uninstalled.
 
-You can upgrade Istio only by one minor version (1.2.3 -> 1.3.0). Reconciliation fails if the difference between current and target minor versions is greater than one (1.2.3 -> 1.4.0).
-An upgrade of a major version fails (1.2.3 -> 2.0.0), as well as any downgrade (1.2.3 -> 1.2.2).
+#### Istio CR lastAppliedConfiguration
+Istio InstallationReconciliation adds the `operator.kyma-project.io/lastAppliedConfiguration` annotation to the Istio CR and
+updates it after each successful reconciliation. This annotation allows for comparing the current state of the Istio CR with its previous state.
+If the component detects a change to a specific configuration, it performs corresponding actions, such as restarting the Istio Gateway.
 
-### Reconciliation of Istio
+#### Istio Ingress Gateway restart
+Istio InstallationReconciliation monitors changes in the `numTrustedProxies` configuration and restarts the Istio Ingress Gateway accordingly.
+Whenever the component detects a change in the `numTrustedProxies` configuration, it restarts the Pods within the `istio-system/istio-ingressgateway` Deployment.
 
-The reconciliation loop of Istio is based on the [Istio CR](../user/03-technical-reference/istio-custom-resource/01-30-istio-custom-resource.md) and is controlled by `IstioController`. This controller contains several self-contained components, which we have suffixed with reconciliation.
-We decided to split the logic in these reconciliation components to have a better extensibility and maintainability. This means each of these components must have its clearly separated responsibility
-and must work in isolation when assessing whether reconciliation is required, applying changes, and returning a status.
-The execution of the reconciliation must be fast, and we must avoid many blocking calls. Long-running tasks must be executed asynchronously, and the status must be evaluated in the next reconciliation cycle.
+### Istio ResourcesReconciliation
 
- The following diagram shows the reconciliation loop of `IstioController`:
+Istio ResourcesReconciliation is responsible for applying resources dependent on Istio, such as VirtualService or EnvoyFilter, and ensuring that the state of the Istio service mesh is configured correctly based on these resources.
+To maintain the correct state, the component provides [Restart Predicates](#restart-predicates) on a per-resource basis, which the [IngressGatewayReconciler](#ingressgatewayreconciler) and [ProxySidecarReconciliation](#proxysidecarreconciliation) components consume.
 
-![Reconciliation Loop Diagram](../assets/istio-controller-reconciliation-loop.svg)
+When the Istio InstallationReconciliation component reconciles resources that are not Istio resources, it sets their OwnerReference to the Istio CR.
+As a result, if you remove the Istio CR, any associated resources that would normally remain on the cluster are also deleted.
 
-#### Interval
+### ProxySidecarReconciliation
 
-Since Kyma Istio Operator deals with security-related topics, we want to perform the reconciliation as often as possible.
-Not only do we want to reconcile when [Istio CR](../user/03-technical-reference/istio-custom-resource/01-30-istio-custom-resource.md) changes, but also to verify regularly if resources remain unchanged and are in the expected state.  
-The reconciliation frequency of a manager is determined by the [SyncPeriod](https://pkg.go.dev/sigs.k8s.io/controller-runtime/pkg/manager#Options). By default, it is set to 10 hours.
-To match the desired reconciliation interval, use one of the following options:
+The ProxySidecarReconciliation component is responsible for keeping the proxy sidecars in the desired state. It restarts Pods that are part of the service mesh or
+that must be added to the service mesh.
+The Istio CR and [Istio Version](#istio-version) represent the desired state.
 
-- Change the `SyncPeriod`, so it matches the desired value.
-- Always return `RequeueAfter` in the result of the Reconcile function to trigger the next reconciliation:
-
-```go
-func Reconcile(ctx context.Context, o reconcile.Request) (reconcile.Result, error) {
- // Implement business logic of reading and writing objects here
- return reconcile.Result{RequeueAfter: : 5 * time.Minute}, nil
-}
-```
-
-The time needed to perform the reconciliation can vary a lot, so choosing an appropriate interval might be challenging. Small changes may only require
-restarting the sidecar proxies or the Ingress gateway. Therefore, they are much faster than a new installation or a Canary upgrade.
-
-We can start with using `SyncPeriod` set to 5 minutes. For now, we only want to have a single controller, so it is not a problem to start with a higher time-based reconciliation. When we add more controllers we can use `RequeueAfter`
-in order to trigger them at different intervals, or to have a different interval while a long-running process like installation is executed.
-
-The queuing of reconciliation requests is handled by [controller-runtime](https://pkg.go.dev/sigs.k8s.io/controller-runtime) and is out of scope of this design.
-
-### Components
-
-We need to make sure that each reconciliation component is completely independent and can calculate what to do during the reconciliation independently of the reconciliation of other components and based only on the state in a cluster.
-The reason for this is that, for the sake of simplicity, we want to start with just one controller that handles all the logic to reconcile Istio. Since we have independent components, we can move them into new controllers if
-improving the performance of `IstioController` is necessary.
-
-![Controller Component Diagram](../assets/controller-component-diagram.svg)
-
-#### IstioController
-
-IstioController takes care of the entire Istio reconciliation process and is bound to [Istio CR](../user/03-technical-reference/istio-custom-resource/01-30-istio-custom-resource.md).
-Its responsibility is to control the reconciliation process by triggering the reconciliation components and passing the desired state to them.
-
-#### IstioInstallationReconciliation
-
-This component decides if an installation, upgrade, or uninstallation of Istio in a cluster must be done. It also creates the [IstioOperator CR](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/)
-which is used to apply changes to the Istio installation. The applied `IstioOperator CR` is created by merging `Istio CR` with IstioOperator containing Kyma default values.
-
-The component also detects changes in the `numTrustedProxies` configuration and restarts the Istio Ingress Gateway accordingly. Whenever a change in the `numTrustedProxies` configuration is detected, the Pods in the `istio-system/istio-ingressgateway` deployment are restarted. To determine the current state of the applied Istio configuration, the component reads the `operator.kyma-project.io/lastAppliedConfiguration` annotation from the Istio CR. This annotation is updated after a successful `IstioInstallationReconciliation` run.
-
-To reset the deployment, apply the annotation `istio-operator.kyma-project.io/restartedAt` with a current timestamp in **spec.template.annotations** of the `istio-system/istio-ingressgateway` deployment.
-
-##### IstioClient
-
-IstioClient encapsulates a specific version of the [Istio Go module](https://github.com/istio/istio) and is used to implement calls to Istio API.
-This component also contains the logic to carry out Istio actions like install, upgrade and uninstall (described [here](#installation-of-istio)).
-
-#### ProxySidecarReconciliation
-
-ProxySidecarReconciliation component is responsible for keeping the proxy sidecars in the desired state. It restarts Pods that are part of Service Mesh or
-that need to be added to Service Mesh.
-The desired state is represented by [Istio CR](../user/03-technical-reference/istio-custom-resource/01-30-istio-custom-resource.md) and Istio Version coupled to the Operator.
-This component carries a high risk that its execution in this controller takes too long. We need to check its performance during the implementation
-and assess whether its logic needs to be executed separately.
-
-For now, the following scenarios must be covered by this component:
+This component covers the following restart triggers:
 
 - Restart Pods with proxy sidecar when CNI config changes.
 - Restart Pods with proxy sidecar after an Istio version update.
 - Restart Pods with proxy sidecar when proxy resources change.
-- Restart Pods if they match predicates that the IstioResourcesReconciliation component specifies (for example, being up-to-date with EnvoyFilter)
+- Restart Pods if they match [Restart Predicates](#restart-predicates) that the [Istio ResourcesReconciliation component](#istio-resourcesreconciliation) specifies (for example, being up-to-date with EnvoyFilter).
 
-#### IstioResourcesReconciliation
+### IngressGatewayReconciler
 
-IstioResourcesReconciliation is a component responsible for applying resources dependent on Istio, such as VirtualService or EnvoyFilter, and ensuring that the state of the Istio service mesh is configured correctly based on those resources.
-To maintain the correct state, the IstioResourcesReconciliation component provides predicates on a per-resource basis, which are consumed by the IstioIngressGatewayReconciliation and ProxySidecarReconciliation components. The predicates specify when the aforementioned components should be restarted.
-For cases where it isn't trivial to check whether the configuration has been applied to the cluster state, a timestamp-based approach is used. For example, the `envoy_filter_allow_partial_referer` resource is annotated with the `istios.operator.kyma-project.io/updatedAt` annotation, which includes the timestamp of its last update. The predicate initiates a restart of the sidecar and Ingress Gateway if the target had been created prior to this timestamp.
+IngressGatewayReconciler is responsible for restarting Istio Ingress Gateway. The component consumes a list of [Restart Predicates](#restart-predicates) that determine when the restart should occur.
 
-#### IstioIngressGatewayReconciliation
+## Restart Predicates
 
-The IstioIngressGatewayReconciliation component is responsible for bringing Istio Ingress Gateway to the desired state.
+The [IngressGatewayReconciler](#ingressgatewayreconciler) and [ProxySidecarReconciliation](#proxysidecarreconciliation) components use Restart Predicates.
+Depending on the implemented interfaces, a predicate can trigger a restart of Ingress Gateways, Proxy Sidecars, or both Ingress Gateways and Proxy Sidecars.
 
-## Istio component uninstallation
-
-When Istio Custom Resource is deleted, the default behavior is to uninstall all Istio components, but only if there are no customer-created resources on the cluster. This behavior is known as the blocking deletion strategy.
-
-## Scenario: Users bring their own Istio installation
-
-In this scenario, API Gateway supports the defined Istio versions. The user can then install one of the supported Istio versions.
-There should be documentation explaining what needs to be configured to expose a ServiceMonitor for the monitoring module.
+For cases where it isn't trivial to check whether the configuration has been applied to the cluster state, Restart Predicates use a timestamp-based approach. For example, the `envoy_filter_allow_partial_referer` resource has the `istios.operator.kyma-project.io/updatedAt` annotation, which includes the timestamp of its last update.
+The predicate initiates a restart of the sidecar and Ingress Gateway if the target was created before this timestamp.

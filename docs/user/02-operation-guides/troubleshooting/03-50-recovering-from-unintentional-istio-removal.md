@@ -38,7 +38,7 @@ For example, the issue occurs when you delete Istio, but there are still Virtual
 
 1. Edit the Istio CR and remove the finalizer.
 
-  <!-- tabs:start -->
+<!-- tabs:start -->
   #### **kubectl**
 
   1. To edit the Istio CR, run:
@@ -69,8 +69,8 @@ For example, the issue occurs when you delete Istio, but there are still Virtual
   2. In the **Kyma** section, choose **Istio**.
   3. Select your Istio instance and click **Edit**.
   4. Switch to the **YAML** section and remove the indicated lines:
-
-  <!-- tabs:end -->
+    ![Remove the finalizers from the Istio CR](../../../assets/istio-cr-delete-finalizers.svg)
+<!-- tabs:end -->
 
 
 2. When the finalizer is removed, the Istio CR is deleted. Other resources, such as the `istiod` Deployment, remain on the cluster.

@@ -42,35 +42,35 @@ For example, the issue occurs when you delete Istio, but there are still Virtual
     #### **kubectl**
 
     1. To edit the Istio CR, run:
-    ```
-    kubectl edit istio -n kyma-system default
-    ```
+        ```
+        kubectl edit istio -n kyma-system default
+        ```
     2. Remove the indicated lines:
-    ```diff
-    apiVersion: operator.kyma-project.io/v1alpha1
-    kind: Istio
-    metadata:
-    < finalizers:
-    < - istios.operator.kyma-project.io/istio-installation
-      generation: 3
-      labels:
-        ...
-      name: default
-      namespace: kyma-system
-        ...
-      status:
-        description: 'There are Istio resources that block deletion. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning'
-        state: Warning
-    ```
+        ```diff
+        apiVersion: operator.kyma-project.io/v1alpha1
+        kind: Istio
+        metadata:
+        < finalizers:
+        < - istios.operator.kyma-project.io/istio-installation
+          generation: 3
+          labels:
+            ...
+          name: default
+          namespace: kyma-system
+            ...
+          status:
+            description: 'There are Istio resources that block deletion. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning'
+            state: Warning
+        ```
     
     #### **Kyma Dashboard**
 
-   1. Go to the `kyma-system` Namespace. 
-   2. In the **Kyma** section, choose **Istio**.
-   3. Select your Istio instance and click **Edit**.
-   4. Switch to the **YAML** section and remove the indicated lines:
-   ![Remove the finalizers from the Istio CR](../../../assets/istio-cr-delete-finalizers.svg)
-   <!-- tabs:end -->
+    1. Go to the `kyma-system` Namespace. 
+    2. In the **Kyma** section, choose **Istio**.
+    3. Select your Istio instance and click **Edit**.
+    4. Switch to the **YAML** section and remove the indicated lines:
+      ![Remove the finalizers from the Istio CR](../../../assets/istio-cr-delete-finalizers.svg)
+    <!-- tabs:end -->
 
 
 2. When the finalizer is removed, the Istio CR is deleted. Other resources, such as the `istiod` Deployment, remain on the cluster.

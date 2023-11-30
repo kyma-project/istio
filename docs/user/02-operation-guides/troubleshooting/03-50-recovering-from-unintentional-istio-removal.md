@@ -69,7 +69,7 @@ For example, the issue occurs when you delete Istio, but there are still Virtual
   2. In the **Kyma** section, choose **Istio**.
   3. Select your Istio instance and click **Edit**.
   4. Switch to the **YAML** section and remove the indicated lines:
-    ![Remove the finalizers from the Istio CR](../../../assets/istio-cr-delete-finalizers.svg)
+
   <!-- tabs:end -->
 
 

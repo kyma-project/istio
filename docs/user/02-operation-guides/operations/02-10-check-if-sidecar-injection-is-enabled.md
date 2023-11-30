@@ -7,9 +7,9 @@
 #### **kubectl**
 To check if the Pod's Namespace is labeled with `istio-injection=enabled`, run:
 
-    ```bash
-    kubectl get namespaces {NAMESPACE} -o jsonpath='{ .metadata.labels.istio-injection }'
-    ```
+  ```bash
+  kubectl get namespaces {NAMESPACE} -o jsonpath='{ .metadata.labels.istio-injection }'
+  ```
 If the command does not return `enabled`, the sidecar injection is disabled in this Namespace.
 
 #### **Kyma Dashboard**
@@ -29,9 +29,9 @@ If the command does not return `enabled`, the sidecar injection is disabled in t
 
 To check if sidecar injection is enabled, run:
 
-    ```bash
-    kubectl get deployments {DEPLOYMENT_NAME} -n {NAMESPACE} -o jsonpath='{ .spec.template.metadata.labels }'
-    ```
+  ```bash
+  kubectl get deployments {DEPLOYMENT_NAME} -n {NAMESPACE} -o jsonpath='{ .spec.template.metadata.labels }'
+  ```
 If the output does not contain the `sidecar.istio.io/inject:true` line, sidecar injection is disabled.
 
 #### **Kyma Dashboard**

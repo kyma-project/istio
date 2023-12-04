@@ -15,7 +15,7 @@ The configuration specifies the following parameters and their values:
 
 ## TLS management
 
-Kyma employs the Bring Your Own Domain/Certificates model that requires you to supply the domain, certificate, and key during installation. Read the tutorial to learn how to [set up or update your custom domain TLS certificate in Kyma](https://kyma-project.io/docs/kyma/latest/03-tutorials/00-security/sec-01-tls-certificates-security/).
+Kyma employs the Bring Your Own Domain/Certificates model that requires you to supply the domain, certificate, and key during installation.
 
 If you don't want to use your custom certificate, you can choose between a self-signed certificate or one managed by the Gardener [Certificate Management](https://github.com/gardener/cert-management) component.
 

@@ -12,7 +12,7 @@ The following diagram illustrates Kyma Istio Operator and its components:
 
 ## Istio custom resource
 
-The [Istio custom resource (CR)](../user/03-technical-reference/istio-custom-resource/01-30-istio-custom-resource.md) is a resource used to manage the Istio installation. The Istio CR is namespace-scoped because it was created and used before the introduction of Kyma Istio Operator.
+The [Istio custom resource (CR)](../user/custom-resources/04-00-istio-custom-resource.md) is a resource used to manage the Istio installation. The Istio CR is namespace-scoped because it was created and used before the introduction of Kyma Istio Operator.
 However, the namespace-scoped approach has no particular benefit since the Kyma Istio Operator only supports a single Istio CR per cluster. Despite this, it is not possible to transition to a cluster-scoped model without introducing breaking changes.
 As a consequence, only the oldest Istio CR in the `kyma-system` namespace is reconciled. Kyma Istio Operator does not reconcile other CRs in the `kyma-system` namespace or any CRs in other namespaces. Instead, it sets their status to 'Error'.
 
@@ -37,7 +37,7 @@ Istio Controller manages and reconciles Istio CRs, which are in the `kyma-system
 
 ### Reconciliation
 The Istio CR is reconciled with each change to the **Spec** field. If you do not modify the field, the reconciliation process occurs at the default interval of 10 hours.
-To adjust this interval, use [Istio Controller parameters](../user/03-technical-reference/configuration-parameters/01-10-istio-controller-parameters.md).
+To adjust this interval, use [Istio Controller parameters](../user/technical-reference/05-00-istio-controller-parameters.md).
 If the reconciliation process fails, [Kubernetes controller-runtime](https://pkg.go.dev/sigs.k8s.io/controller-runtime) uses exponential backoff requeue.
 
 When Istio CR is deleted, Istio Controller uninstalls all Istio components. However, the uninstallation process can only proceed if there are no customer-created resources on the cluster.

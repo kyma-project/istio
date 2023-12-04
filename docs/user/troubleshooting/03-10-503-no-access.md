@@ -34,7 +34,7 @@ To fix this problem, restart the Pods of Istio Ingress Gateway.
 2. In the **Workloads** section, select **Pods**.
 3. Use the search function to filter for all Pods labeled with `app=istio-ingressgateway`.
 4. To trigger the recreation of their configuration, delete each of the displayed Pods.
-   ![Delete Pods with `app=istio-ingressgateway` label](../../../assets/delete-istio-ingressgateway-pods.svg)
+   ![Delete Pods with `app=istio-ingressgateway` label](../../assets/delete-istio-ingressgateway-pods.svg)
 
 <!-- tabs:end -->
 
@@ -57,12 +57,12 @@ If the restart doesn't help, follow these steps:
       ```
 
    #### **Kyma Dashboard**
-   1. Go to the `istio-system` Namespace.
-   2. In the **Workloads** section, select **Pods**.
-   3. Search for a Pod labeled with `app=istio-ingressgateway` and click on its name.
-   ![Search for a Pod with `app=istio-ingressgateway` label](../../../assets/search-for-istio-ingress-gateway.svg)
-   4. Scroll down to find the `Containers` section and check which ports the `istio-proxy` container uses.
-   ![Check ports used by istio-proxy](../../../assets/check-istio-proxy-ports.svg)
+   3. Go to the `istio-system` Namespace.
+   4. In the **Workloads** section, select **Pods**.
+   5. Search for a Pod labeled with `app=istio-ingressgateway` and click on its name.
+   ![Search for a Pod with `app=istio-ingressgateway` label](../../assets/search-for-istio-ingress-gateway.svg)
+   6. Scroll down to find the `Containers` section and check which ports the `istio-proxy` container uses.
+   ![Check ports used by istio-proxy](../../assets/check-istio-proxy-ports.svg)
    <!-- tabs:end -->
 
 
@@ -77,9 +77,9 @@ If the restart doesn't help, follow these steps:
    
    #### **Kyma Dashboard**
    Click **View Logs**.
-   ![View logs of the istio-proxy-container](../../../assets/view-istio-proxy-logs.svg)
+   ![View logs of the istio-proxy-container](../../assets/view-istio-proxy-logs.svg)
 
    <!-- tabs:end -->
 
 
-4. To make sure that a corrupted certificate is regenerated, verify if the **spec.enableKymaGateway** field of your APIGateway custom resource is set to `true`. If you are running Kyma provisioned through Gardener, follow the [Gardener troubleshooting guide](https://kyma-project.io/docs/kyma/latest/04-operation-guides/troubleshooting/security/sec-01-certificates-gardener/) instead.
+3. To make sure that a corrupted certificate is regenerated, verify if the **spec.enableKymaGateway** field of your APIGateway custom resource is set to `true`. If you are running Kyma provisioned through Gardener, follow the [Gardener troubleshooting guide](https://kyma-project.io/docs/kyma/latest/04-operation-guides/troubleshooting/security/sec-01-certificates-gardener/) instead.

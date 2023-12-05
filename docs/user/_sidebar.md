@@ -6,7 +6,7 @@
 * [Istio Setup](./00-40-overview-istio-setup.md)
 * [Resource configuration](./00-50-resource-configuration.md) 
 * [Istio Custom Resource](./custom-resources/04-00-istio-custom-resource.md)
-* [Operation Guides](/user/operation-guides/README.md)
+* [Operation Guides](user/operation-guides/README.md)
   * [Check Istio Sidecar](02-10-check-if-sidecar-injection-is-enabled.md)
   * [Enable Istio Sidecar](02-20-enable-sidecar-injection.md)
   * [Enable Istio Access Logs](02-30-enable-istio-access-logs.md)

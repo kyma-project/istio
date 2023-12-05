@@ -7,6 +7,5 @@
 * [Resource configuration](./00-50-resource-configuration.md) 
 * [Istio Custom Resource](./custom-resources/04-00-istio-custom-resource.md)
 * [Operation Guides](./operation-guides/README.md)
-  * [x](./operation-guides/02-10-check-if-sidecar-injection-is-enabled.md)
 * [Technical Reference](./technical-reference/README.md)
 * [Troubleshooting](./troubleshooting/README.md)

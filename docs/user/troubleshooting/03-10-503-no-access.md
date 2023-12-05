@@ -57,11 +57,11 @@ If the restart doesn't help, follow these steps:
       ```
 
    #### **Kyma Dashboard**
-   3. Go to the `istio-system` Namespace.
-   4. In the **Workloads** section, select **Pods**.
-   5. Search for a Pod labeled with `app=istio-ingressgateway` and click on its name.
+   1. Go to the `istio-system` Namespace.
+   2. In the **Workloads** section, select **Pods**.
+   3. Search for a Pod labeled with `app=istio-ingressgateway` and click on its name.
    ![Search for a Pod with `app=istio-ingressgateway` label](../../assets/search-for-istio-ingress-gateway.svg)
-   6. Scroll down to find the `Containers` section and check which ports the `istio-proxy` container uses.
+   4. Scroll down to find the `Containers` section and check which ports the `istio-proxy` container uses.
    ![Check ports used by istio-proxy](../../assets/check-istio-proxy-ports.svg)
    <!-- tabs:end -->
 

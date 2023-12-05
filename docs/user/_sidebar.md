@@ -8,4 +8,4 @@
 * [Istio Custom Resource](./custom-resources/04-00-istio-custom-resource.md)
 * [Operation Guides](./operation-guides/README.md)
 * [Technical Reference](./technical-reference/README.md)
-* [Troubleshooting](./istio/user/troubleshooting/README.md)
+* [Troubleshooting](./troubleshooting/README.md)

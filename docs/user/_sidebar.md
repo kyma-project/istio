@@ -5,7 +5,7 @@
 * [Istio Sidecars](./00-30-overview-istio-sidecars.md)
 * [Istio Setup](./00-40-overview-istio-setup.md)
 * [Resource configuration](./00-50-resource-configuration.md) 
-* [Istio Custom Resource](./custom-resources/04-00-istio-custom-resource.md)
+* [Istio Custom Resource](./04-00-istio-custom-resource.md)
 * [Operation Guides](./operation-guides/README.md)
 * [Technical Reference](./technical-reference/README.md)
 * [Troubleshooting](./troubleshooting/README.md)

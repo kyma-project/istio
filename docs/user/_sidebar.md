@@ -10,7 +10,7 @@
   * [Check Istio Sidecar](02-10-check-if-sidecar-injection-is-enabled.md)
   * [Enable Istio Sidecar](02-20-enable-sidecar-injection.md)
   * [Enable Istio Access Logs](02-30-enable-istio-access-logs.md)
-* [Technical Reference](/user/technical-reference/README.md)
+* [Technical Reference](/docs/user/technical-reference/README.md)
   * [Istio Controller Parameters](05-00-istio-controller-parameters.md)
 * [Troubleshooting](./troubleshooting/README.md)
   * [No Access](03-10-503-no-access.md)

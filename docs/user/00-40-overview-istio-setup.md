@@ -14,3 +14,4 @@ These configuration changes are applied to customize Istio:
 - Ingress Gateway is expanded to handle ports `80`, `443`, and `31400` for local Kyma deployments.
 - The use of HTTP 1.0 is enabled in the outbound HTTP listeners by the `PILOT_HTTP10` flag set in the Istiod component environment variables.
 - The [Istio custom resource (CR)](../custom-resources/04-00-istio-custom-resource.md) defines the kind of data used to manage Istio.
+- No Egress limitations are implemented - all applications deployed in the Kyma cluster can access outside resources without limitations.

@@ -3,5 +3,3 @@ kind: Istio
 metadata:
   name: default
   namespace: kyma-system
-  labels:
-    app.kubernetes.io/name: default

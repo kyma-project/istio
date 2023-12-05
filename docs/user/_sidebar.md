@@ -1,6 +1,6 @@
 * [Home](/)
 * [Istio module](./README.md)
-* [Overview](/istio/user/00-overview/README.md)
+* [Overview](/00-overview/README.md)
 * [Istio Custom Resource](/istio/custom-resources/04-00-istio-custom-resource.md)
 * [Operation Guides](/istio/operation-guides/README.md)
   * [Check Istio Sidecar](/istio/operation-guides/02-10-check-if-sidecar-injection-is-enabled.md)

@@ -12,7 +12,7 @@ The following diagram illustrates Kyma Istio Operator and its components:
 
 ## Istio custom resource
 
-The [Istio custom resource (CR)](../user/custom-resources/04-00-istio-custom-resource.md) is a resource used to manage the Istio installation. The Istio CR is namespace-scoped because it was created and used before the introduction of Kyma Istio Operator.
+The [Istio custom resource (CR)](../user/04-00-istio-custom-resource.md) is a resource used to manage the Istio installation. The Istio CR is namespace-scoped because it was created and used before the introduction of Kyma Istio Operator.
 However, the namespace-scoped approach has no particular benefit since the Kyma Istio Operator only supports a single Istio CR per cluster. Despite this, it is not possible to transition to a cluster-scoped model without introducing breaking changes.
 As a consequence, only the oldest Istio CR in the `kyma-system` namespace is reconciled. Kyma Istio Operator does not reconcile other CRs in the `kyma-system` namespace or any CRs in other namespaces. Instead, it sets their status to 'Error'.
 

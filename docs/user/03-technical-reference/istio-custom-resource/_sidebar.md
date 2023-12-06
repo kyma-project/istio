@@ -1,6 +1,0 @@
-* [Home](/)
-* [Technical Reference](/05-technical-reference/README.md)
-  * [Custom resources](/05-technical-reference/00-custom-resources/README.md)
-    * [Application](/05-technical-reference/00-custom-resources/ac-01-application.md)
-    * [CompassConnection](/05-technical-reference/00-custom-resources/ra-01-compassconnection.md)
-    * [Istio](./01-30-istio-custom-resource.md)

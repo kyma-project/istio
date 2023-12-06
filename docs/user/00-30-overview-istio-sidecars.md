@@ -32,7 +32,7 @@ To improve the resiliency of your applications, you can use [mirroring](https://
 
 Application resiliency is an important topic within traffic management. Traditionally, resiliency features like timeouts, retries, and circuit breakers were implemented by application libraries. However, with service mesh, you can delegate such tasks to the mesh, and the same configuration options will work regardless of the programming language of your application. You can read more about it in [Network resilience and testing](https://istio.io/latest/docs/concepts/traffic-management/#network-resilience-and-testing).
 
-## Tutorials and troubleshooting
+## Operation guides and troubleshooting
 
-Learn how to [enable automatic Istio sidecar proxy injection](../02-operation-guides/operations/02-20-enable-sidecar-injection.md). 
-Follow the troubleshooting guides if you experience [issues with Istio sidecar injection](../02-operation-guides/troubleshooting/03-30-istio-no-sidecar.md) or have [incompatible Istio sidecar version after Kyma Istio Operator's upgrade](../02-operation-guides/troubleshooting/03-40-incompatible-istio-sidecar-version.md).
+[Check if you have automatic Istio sidecar proxy injection enabled](./operation-guides/02-10-check-if-sidecar-injection-is-enabled.md) and earn how to [enable automatic Istio sidecar proxy injection](./operation-guides/02-20-enable-sidecar-injection.md). 
+Follow the troubleshooting guides if you experience [issues with Istio sidecar injection](./troubleshooting/03-30-istio-no-sidecar.md) or have [incompatible Istio sidecar version after Kyma Istio Operator's upgrade](./troubleshooting/03-40-incompatible-istio-sidecar-version.md).

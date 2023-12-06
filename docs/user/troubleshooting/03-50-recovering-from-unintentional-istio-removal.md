@@ -24,7 +24,7 @@ There are Istio resources that block deletion. Please take a look at kyma-system
 ```
 #### **Kyma Dashboard**
 
-![Istio CR in the Warning state](../../../assets/istio-cr-warning-state.svg)
+![Istio CR in the Warning state](../../assets/istio-cr-warning-state.svg)
 <!-- tabs:end -->
 
 ## Cause
@@ -69,12 +69,12 @@ For example, the issue occurs when you delete Istio, but there are still Virtual
   2. In the **Kyma** section, choose **Istio**.
   3. Select your Istio instance and click **Edit**.
   4. Switch to the **YAML** section and remove the indicated lines:
-    ![Remove the finalizers from the Istio CR](../../../assets/istio-cr-delete-finalizers.svg)
+    ![Remove the finalizers from the Istio CR](../../assets/istio-cr-delete-finalizers.svg)
 <!-- tabs:end -->
 
 
-2. When the finalizer is removed, the Istio CR is deleted. Other resources, such as the `istiod` Deployment, remain on the cluster.
+1. When the finalizer is removed, the Istio CR is deleted. Other resources, such as the `istiod` Deployment, remain on the cluster.
 
-3. Reapply the Istio CR to install Istio once again.
+2. Reapply the Istio CR to install Istio once again.
 
 By completing the steps, the Kyma Istio Operator's reconciliation is triggered again. The Istio CR should return to the `Ready` state within a few seconds.

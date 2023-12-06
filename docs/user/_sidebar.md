@@ -1,4 +1,4 @@
-* [Go Back](/)
+* [Home](/)
 * [Istio module](/istio/user/README.md)
 * [Istio Controller](/istio/user/00-10-overview-istio-controller.md)
 * [Istio Service Mesh](/istio/user/00-20-overview-service-mesh.md)

@@ -87,17 +87,17 @@ in front of the Istio Gateway proxy, so that the client address can be extracted
         "show_env": "true"
       },
       "headers": {
-        "Accept": ...,
-        "Host": ...,
-        "User-Agent": ...,
-        "X-Envoy-Attempt-Count": ...,
+        "Accept": "...",
+        "Host": "...",
+        "User-Agent": "...",
+        "X-Envoy-Attempt-Count": "...",
         "X-Envoy-External-Address": "165.1.187.197",
-        "X-Forwarded-Client-Cert": ...,
+        "X-Forwarded-Client-Cert": "...",
         "X-Forwarded-For": "165.1.187.197",
-        "X-Forwarded-Proto": ...,
-        "X-Request-Id": ...
+        "X-Forwarded-Proto": "...",
+        "X-Request-Id": "..."
       },
       "origin": "165.1.187.197",
-      "url": ...
+      "url": "..."
     }
     ``` 

@@ -34,7 +34,7 @@ in front of the Istio Gateway proxy, so that the client address can be extracted
    1. Navigate to the `Cluster Details`
    2. Open the `istio` module configuration
    3. Click `Edit`
-   4. Add the numTrustedProxies:
+   4. Add the numTrustedProxies:  
       ![Add the numTrustedProxies](./assets/01-00-num-trusted-proxies-ui.svg)
 <!-- tabs:end -->
 

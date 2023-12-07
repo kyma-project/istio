@@ -10,39 +10,39 @@ the [IETF’s RFC documentation](https://datatracker.ietf.org/doc/html/rfc7239) 
 ## Prerequisites
 
 * An AWS cluster
-* An enabled Istio module or an installed [Kyma Istio Operator](../../../README.md#install-kyma-istio-operator-and-istio-from-the-latest-release)
-* An enabled API Gateway module or an installed [Kyma API Gateway Operator](https://github.com/kyma-project/api-gateway#installation). Alternatively, a [custom Istio Gateway](https://kyma-project.io/#/api-gateway/user/tutorials/01-20-set-up-tls-gateway) can be used.
+* The Istio module enabled or [Kyma Istio Operator](../../../README.md#install-kyma-istio-operator-and-istio-from-the-latest-release) installed
+* The API Gateway module enabled or [Kyma API Gateway Operator](https://github.com/kyma-project/api-gateway#installation) installed. Alternatively, you can use [custom Istio Gateway](https://kyma-project.io/#/api-gateway/user/tutorials/01-20-set-up-tls-gateway).
 
 ## Steps
 
-### Configure the number of trusted proxies in the Istio CR
+### Configure the number of trusted proxies in the Istio custom resource
 
 Applications rely on reverse proxies to forward the client IP address in a request using the XFF header. However, due to 
-the variety of network topologies, configuration property numTrustedProxies must be specified with the number of trusted proxies deployed 
-in front of the Istio Gateway proxy, so that the client address can be extracted correctly.
+the variety of network topologies, you must specify the configuration property **numTrustedProxies**, so that the client address can be extracted correctly. This property indicates the number of trusted proxies deployed
+in front of the Istio Gateway proxy.
 
-1. Add the numTrustedProxies to Istio CR:
+Add **numTrustedProxies** to the Istio custom resource (CR):
 
 <!-- tabs:start -->
    #### **kubectl**
-   1. Add the numTrustedProxies to Istio CR:
+  Run the following command:
       ```bash
       kubectl patch istios/default -n kyma-system --type merge -p '{"spec":{"config":{"numTrustedProxies": 1}}}'
       ```
 
    #### **Kyma Dashboard**
-   1. Navigate to the `Cluster Details`
-   2. Open the `istio` module configuration
-   3. Click `Edit`
-   4. Add the numTrustedProxies:  
+   1. Navigate to `Cluster Details`.
+   2. Open the Istio module's configuration.
+   3. Click **Edit**.
+   4. Add the number of trusted proxies and click **Update**.
       ![Add the numTrustedProxies](./assets/01-00-num-trusted-proxies-ui.svg)
 <!-- tabs:end -->
 
 
 ### Create a workload for verification
 
-1. Create a HttpBin workload as described in the [Create a workload tutorial](https://kyma-project.io/#/api-gateway/user/tutorials/01-00-create-workload).
-2. Expose the HttpBin workload using a Virtual Service.
+1. [Create an HttpBin workload](https://kyma-project.io/#/api-gateway/user/tutorials/01-00-create-workload).
+2. Expose the HttpBin workload using a VirtualService.
     ```bash
     export DOMAIN_TO_EXPOSE_WORKLOADS={KYMA_DOMAIN_NAME}
     export GATEWAY=kyma-system/kyma-gateway
@@ -71,16 +71,16 @@ in front of the Istio Gateway proxy, so that the client address can be extracted
     ```
 
 ### Verify the X-Forwarded-For and X-Envoy-External-Address header
-1. Get you public IP address, for example by using the following command:
+1. Get your public IP address.
     ```bash
     curl -s https://api.ipify.org
     ```
 
-2. Send a request to the HttpBin workload using the following command:
+2. Send a request to the HttpBin workload.
     ```bash
     curl -s "https://httpbin.$DOMAIN_TO_EXPOSE_WORKLOADS/get?show_env=true"
     ```
-3. Verify that the response contains the `X-Forwarded-For` and `X-Envoy-External-Address` header with your public IP address, for example:
+3. Verify that the response contains the **X-Forwarded-For** and **X-Envoy-External-Address** headers with your public IP address, for example:
     ```json
     {
       "args": {

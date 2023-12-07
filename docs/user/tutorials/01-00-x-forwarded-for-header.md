@@ -10,7 +10,8 @@ the [IETF’s RFC documentation](https://datatracker.ietf.org/doc/html/rfc7239) 
 ## Prerequisites
 
 * An AWS cluster
-* [Istio module latest release version installed](../../../README.md#install-kyma-istio-operator-and-istio-from-the-latest-release)
+* An enabled Istio module or an installed [Kyma Istio Operator](../../../README.md#install-kyma-istio-operator-and-istio-from-the-latest-release)
+* An enabled API Gateway module or an installed [Kyma API Gateway Operator](https://github.com/kyma-project/api-gateway#installation). Alternatively, a [custom Istio Gateway](https://kyma-project.io/#/api-gateway/user/tutorials/01-20-set-up-tls-gateway) can be used.
 
 ## Steps
 
@@ -22,18 +23,81 @@ in front of the Istio Gateway proxy, so that the client address can be extracted
 
 1. Add the numTrustedProxies to Istio CR:
 
-   <!-- tabs:start -->
+<!-- tabs:start -->
    #### **kubectl**
-    1. Add the numTrustedProxies to Istio CR:
-    
-        ```bash
-        kubectl patch istios -n kyma-system default --type merge -p '{"spec":{"config":{"numTrustedProxies":2}}}'
-        ```
+   1. Add the numTrustedProxies to Istio CR:
+      ```bash
+      kubectl patch istios/default -n kyma-system --type merge -p '{"spec":{"config":{"numTrustedProxies": 1}}}'
+      ```
 
    #### **Kyma Dashboard**
-    1. Navigate to the `Cluster Details`
-    2. Open the `istio` module configuration
-    3. Click `Edit`
-    4. Add the numTrustedProxies:
-    ![Add the numTrustedProxies](./assets/01-00-num-trusted-proxies-ui.svg)
-    <!-- tabs:end -->
+   1. Navigate to the `Cluster Details`
+   2. Open the `istio` module configuration
+   3. Click `Edit`
+   4. Add the numTrustedProxies:
+      ![Add the numTrustedProxies](./assets/01-00-num-trusted-proxies-ui.svg)
+<!-- tabs:end -->
+
+
+### Create a workload for verification
+
+1. Create a HttpBin workload as described in the [Create a workload tutorial](https://kyma-project.io/#/api-gateway/user/tutorials/01-00-create-workload).
+2. Expose the HttpBin workload using a Virtual Service.
+    ```bash
+    export DOMAIN_TO_EXPOSE_WORKLOADS={KYMA_DOMAIN_NAME}
+    export GATEWAY=kyma-system/kyma-gateway
+
+    cat <<EOF | kubectl apply -f -
+    apiVersion: networking.istio.io/v1alpha3
+    kind: VirtualService
+    metadata:
+      name: httpbin
+      namespace: $NAMESPACE
+    spec:
+      hosts:
+      - "httpbin.$DOMAIN_TO_EXPOSE_WORKLOADS"
+      gateways:
+      - $GATEWAY
+      http:
+      - match:
+        - uri:
+            prefix: /
+        route:
+        - destination:
+            port:
+              number: 8000
+            host: httpbin.$NAMESPACE.svc.cluster.local
+    EOF
+    ```
+
+### Verify the X-Forwarded-For and X-Envoy-External-Address header
+1. Get you public IP address, for example by using the following command:
+    ```bash
+    curl -s https://api.ipify.org
+    ```
+
+2. Send a request to the HttpBin workload using the following command:
+    ```bash
+    curl -s "https://httpbin.$DOMAIN_TO_EXPOSE_WORKLOADS/get?show_env=true"
+    ```
+3. Verify that the response contains the `X-Forwarded-For` and `X-Envoy-External-Address` header with your public IP address, for example:
+    ```json
+    {
+      "args": {
+        "show_env": "true"
+      },
+      "headers": {
+        "Accept": ...,
+        "Host": ...,
+        "User-Agent": ...,
+        "X-Envoy-Attempt-Count": ...,
+        "X-Envoy-External-Address": "165.1.187.197",
+        "X-Forwarded-Client-Cert": ...,
+        "X-Forwarded-For": "165.1.187.197",
+        "X-Forwarded-Proto": ...,
+        "X-Request-Id": ...
+      },
+      "origin": "165.1.187.197",
+      "url": ...
+    }
+    ``` 

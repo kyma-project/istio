@@ -19,9 +19,6 @@ OS_TYPE ?= $(shell uname)
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.24.2
 
-# Istio install binary path for temp workaround (localhost execution)
-ISTIO_INSTALL_BIN_PATH = ./bin/istio_install
-
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
 GOBIN=$(shell go env GOPATH)/bin
@@ -107,12 +104,11 @@ test: manifests generate fmt vet envtest ## Run tests.
 
 .PHONY: build
 build: generate fmt vet ## Build manager binary.
-	go build -o $(ISTIO_INSTALL_BIN_PATH) cmd/istio-install/main.go
 	go build -o bin/manager main.go
 
 .PHONY: run
 run: manifests install create-kyma-system-ns build ## Run a controller from your host.
-	ISTIO_INSTALL_BIN_PATH=$(ISTIO_INSTALL_BIN_PATH) go run ./main.go
+	go run ./main.go
 
 .PHONY: docker-build
 docker-build: ## Build docker image with the manager.

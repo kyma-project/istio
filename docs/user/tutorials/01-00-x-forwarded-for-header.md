@@ -20,10 +20,20 @@ Applications rely on reverse proxies to forward the client IP address in a reque
 the variety of network topologies, configuration property numTrustedProxies must be specified with the number of trusted proxies deployed 
 in front of the Istio Gateway proxy, so that the client address can be extracted correctly.
 
-1. Add numTrustedProxies to Istio CR:
+1. Add the numTrustedProxies to Istio CR:
 
-    ```yaml
-    context:
-        cluster: {YOUR_CLUSTER_NAME}
-        user: oidc
-    ```
+   <!-- tabs:start -->
+   #### **kubectl**
+    1. Add the numTrustedProxies to Istio CR:
+    
+        ```bash
+        kubectl patch istios -n kyma-system default --type merge -p '{"spec":{"config":{"numTrustedProxies":2}}}'
+        ```
+
+   #### **Kyma Dashboard**
+    1. Navigate to the `Cluster Details`
+    2. Open the `istio` module configuration
+    3. Click `Edit`
+    4. Add the numTrustedProxies:
+    ![Add the numTrustedProxies](./assets/01-00-num-trusted-proxies-ui.svg)
+    <!-- tabs:end -->

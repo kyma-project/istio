@@ -42,12 +42,14 @@ Run the following command:
 
 ### Create a workload for verification
 
-1. [Create a HttpBin workload](https://kyma-project.io/#/api-gateway/user/tutorials/01-00-create-workload).
-2. Expose the HttpBin workload using a VirtualService.
+1. [Create an HttpBin workload](https://kyma-project.io/#/api-gateway/user/tutorials/01-00-create-workload).
+2. Export the following values as environment variables.
     ```bash
     export DOMAIN_TO_EXPOSE_WORKLOADS={GATEWAY_DOMAIN}
     export GATEWAY={GATEWAY_NAMESPACE}/GATEWAY_NAME}
-
+   ```
+3. Expose the HttpBin workload using a VirtualService.
+    ```bash
     cat <<EOF | kubectl apply -f -
     apiVersion: networking.istio.io/v1alpha3
     kind: VirtualService

@@ -24,18 +24,19 @@ in front of the Istio Gateway proxy.
 Add **numTrustedProxies** to the Istio custom resource (CR):
 
 <!-- tabs:start -->
-   #### **kubectl**
-  Run the following command:
-      ```bash
-      kubectl patch istios/default -n kyma-system --type merge -p '{"spec":{"config":{"numTrustedProxies": 1}}}'
-      ```
+#### **kubectl**
+Run the following command:
 
-   #### **Kyma Dashboard**
-   1. Navigate to `Cluster Details`.
-   2. Open the Istio module's configuration.
-   3. Click **Edit**.
-   4. Add the number of trusted proxies and click **Update**.
-      ![Add the numTrustedProxies](./assets/01-00-num-trusted-proxies-ui.svg)
+  ```bash
+  kubectl patch istios/default -n kyma-system --type merge -p '{"spec":{"config":{"numTrustedProxies": 1}}}'
+  ```
+
+#### **Kyma Dashboard**
+1. Navigate to `Cluster Details`.
+2. Open the Istio module's configuration.
+3. Click **Edit**.
+4. Add the number of trusted proxies and click **Update**.
+   ![Add the numTrustedProxies](./assets/01-00-num-trusted-proxies-ui.svg)
 <!-- tabs:end -->
 
 

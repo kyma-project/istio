@@ -11,7 +11,7 @@ the [IETF’s RFC documentation](https://datatracker.ietf.org/doc/html/rfc7239) 
 
 * An AWS cluster
 * The Istio module enabled or [Kyma Istio Operator](../../../README.md#install-kyma-istio-operator-and-istio-from-the-latest-release) installed
-* The API Gateway module enabled or [Kyma API Gateway Operator](https://github.com/kyma-project/api-gateway#installation) installed. Alternatively, you can use [custom Istio Gateway](https://kyma-project.io/#/api-gateway/user/tutorials/01-20-set-up-tls-gateway).
+* An [Istio Gateway](https://kyma-project.io/#/api-gateway/user/tutorials/01-20-set-up-tls-gateway)
 
 ## Steps
 
@@ -41,11 +41,11 @@ Add **numTrustedProxies** to the Istio custom resource (CR):
 
 ### Create a workload for verification
 
-1. [Create an HttpBin workload](https://kyma-project.io/#/api-gateway/user/tutorials/01-00-create-workload).
+1. [Create a HttpBin workload](https://kyma-project.io/#/api-gateway/user/tutorials/01-00-create-workload).
 2. Expose the HttpBin workload using a VirtualService.
     ```bash
-    export DOMAIN_TO_EXPOSE_WORKLOADS={KYMA_DOMAIN_NAME}
-    export GATEWAY=kyma-system/kyma-gateway
+    export DOMAIN_TO_EXPOSE_WORKLOADS={GATEWAY_DOMAIN}
+    export GATEWAY={GATEWAY_NAMESPACE}/GATEWAY_NAME}
 
     cat <<EOF | kubectl apply -f -
     apiVersion: networking.istio.io/v1alpha3

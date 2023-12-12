@@ -137,6 +137,7 @@ endif
 .PHONY: create-kyma-system-ns
 create-kyma-system-ns:
 	kubectl create namespace kyma-system --dry-run=client -o yaml | kubectl apply -f -
+	kubectl label namespace kyma-system istio-injection=enabled --overwrite
 
 .PHONY: install
 install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.

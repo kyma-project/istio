@@ -20,10 +20,11 @@ Kyma Istio Operator is a component of the Kyma runtime that handles the manageme
 
 ### Procedure
 
-1. Create the `kyma-system` namespace:
+1. Create the `kyma-system` namespace and label it with `istio-injection=enabled`:
 
    ```bash
    kubectl create namespace kyma-system
+   kubectl label namespace kyma-system istio-injection=enabled --overwrite
    ```
 
 2. To install Istio, you must install the latest version of Kyma Istio Operator and Istio CRD first. Run:

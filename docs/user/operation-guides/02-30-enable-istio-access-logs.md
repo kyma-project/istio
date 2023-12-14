@@ -23,11 +23,11 @@ The [log format](https://github.com/kyma-project/kyma/blob/main/resources/istio/
 
 ## Configuration
 
-Use the Telemetry API to selectively enable Istio access logs. You can enable access logs for an entire Namespace, for a selective workload, or on the Istio Gateway scope.
+Use the Telemetry API to selectively enable Istio access logs. You can enable access logs for an entire namespace, for a selective workload, or on the Istio Gateway scope.
 
 ### Configure Istio access logs for the entire Namespace
 
-1. In the following sample configuration, replace `{YOUR_NAMESPACE}` with your Namespace.
+1. In the following sample configuration, replace `{YOUR_NAMESPACE}` with your namespace.
 2. To apply the configuration, run `kubectl apply`.
 
 ```yaml
@@ -45,7 +45,7 @@ spec:
 ### Configure Istio access logs for a selective workload
 
 To configure label-based selection of workloads, use a [selector](https://istio.io/latest/docs/reference/config/type/workload-selector/#WorkloadSelector).
-1. In the following sample configuration, replace `{YOUR_NAMESPACE}` and `{YOUR_LABEL}` with your Namespace and the label of the workload, respectively.
+1. In the following sample configuration, replace `{YOUR_NAMESPACE}` and `{YOUR_LABEL}` with your namespace and the label of the workload, respectively.
 2. To apply the configuration, run `kubectl apply`.
 
 ```yaml

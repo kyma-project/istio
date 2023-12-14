@@ -10,19 +10,19 @@ The following diagram illustrates Kyma Istio Operator and its components:
 
 ![Kyma Istio Operator Overview](../assets/istio-operator-overview.svg)
 
-## Istio custom resource
+## Istio Custom Resource
 
 The [Istio custom resource (CR)](../user/04-00-istio-custom-resource.md) is a resource used to manage the Istio installation. The Istio CR is namespace-scoped because it was created and used before the introduction of Kyma Istio Operator.
 However, the namespace-scoped approach has no particular benefit since the Kyma Istio Operator only supports a single Istio CR per cluster. Despite this, it is not possible to transition to a cluster-scoped model without introducing breaking changes.
 As a consequence, only the oldest Istio CR in the `kyma-system` namespace is reconciled. Kyma Istio Operator does not reconcile other CRs in the `kyma-system` namespace or any CRs in other namespaces. Instead, it sets their status to 'Error'.
 
 
-## Istio version
+## Istio Version
 
 The version of Istio is coupled to the version of Kyma Istio Operator. This means that each particular version of Kyma Istio Operator is released to support only a specific version of Istio.
 If you upgrade Kyma Istio Operator to a new version, it automatically updates Istio as well, provided that a more recent Istio version is part of the Kyma Istio Operator's release.
 
-## Version upgrade
+## Version Upgrade
 
 You can upgrade Istio only by one minor version (for example, 1.2.3 -> 1.3.0). This requirement is also relevant when upgrading Kyma Istio Operator.
 It is only allowed to skip a version of Kyma Istio Operator if the difference between the minor version of Istio it contains and the minor version of Istio you're using is not greater than one.
@@ -50,7 +50,7 @@ See the diagram:
 
 ![Istio Controller Reconciliation Loop Diagram](../assets/istio-controller-reconciliation-loop.svg)
 
-## Reconciliation components
+## Reconciliation Components
 
 Each reconciliation component must operate independently and make its own calculations without relying on the reconciliation of other components. It should only consider the state in a cluster and the Istio CR.
 
@@ -59,7 +59,7 @@ Each reconciliation component must operate independently and make its own calcul
 Istio InstallationReconciliation is responsible for managing the installation of Istio. This component creates the [IstioOperator CR](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/) and uses it to apply changes to the Istio installation.
 To create the IstioOperator CR, it merges Istio CR with IstioOperator, which contains the default values for Kyma.
 
-#### Istio installation
+#### Istio Installation
 
 Istio InstallationReconciliation performs the Istio installation, upgrade, and uninstallation using the [Istio Go module](https://github.com/istio/istio).
 It executes the installation of Istio as a synchronous and blocking call that checks the proper status of the installation. The reconciliation loop is blocked until Istio is installed. 
@@ -71,7 +71,7 @@ Istio InstallationReconciliation adds the `operator.kyma-project.io/lastAppliedC
 updates it after each successful reconciliation. This annotation allows for comparing the current state of the Istio CR with its previous state.
 If the component detects a change to a specific configuration, it performs corresponding actions, such as restarting the Istio Gateway.
 
-#### Istio Ingress Gateway restart
+#### Istio Ingress Gateway Restart
 Istio InstallationReconciliation monitors changes in the `numTrustedProxies` configuration and restarts the Istio Ingress Gateway accordingly.
 Whenever the component detects a change in the `numTrustedProxies` configuration, it restarts the Pods within the `istio-system/istio-ingressgateway` Deployment.
 

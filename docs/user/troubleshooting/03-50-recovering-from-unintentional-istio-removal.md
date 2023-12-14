@@ -65,7 +65,7 @@ For example, the issue occurs when you delete Istio, but there are still Virtual
     
   #### **Kyma Dashboard**
 
-  1. Go to the `kyma-system` Namespace. 
+  1. Go to the `kyma-system` namespace. 
   2. In the **Kyma** section, choose **Istio**.
   3. Select your Istio instance and click **Edit**.
   4. Switch to the **YAML** section and remove the indicated lines:

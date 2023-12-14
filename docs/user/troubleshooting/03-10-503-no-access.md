@@ -30,7 +30,7 @@ To fix this problem, restart the Pods of Istio Ingress Gateway.
 
 #### **Kyma Dashboard**
 
-1. Go to the `istio-system` Namespace.
+1. Go to the `istio-system` namespace.
 2. In the **Workloads** section, select **Pods**.
 3. Use the search function to filter for all Pods labeled with `app=istio-ingressgateway`.
 4. To trigger the recreation of their configuration, delete each of the displayed Pods.
@@ -57,7 +57,7 @@ If the restart doesn't help, follow these steps:
       ```
 
    #### **Kyma Dashboard**
-   1. Go to the `istio-system` Namespace.
+   1. Go to the `istio-system` namespace.
    2. In the **Workloads** section, select **Pods**.
    3. Search for a Pod labeled with `app=istio-ingressgateway` and click on its name.
    ![Search for a Pod with `app=istio-ingressgateway` label](../../assets/search-for-istio-ingress-gateway.svg)

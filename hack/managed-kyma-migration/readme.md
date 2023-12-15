@@ -1,38 +1,38 @@
-# SAP BTP, Kyma runtime migration
+# SAP BTP, Kyma runtime Migration
 
 > **NOTE**: This documentation is relevant for SAP BTP, Kyma runtime only and does not apply to open-source Kyma.
 
 ## Scenarios
 
-### Note about clusters with existing Istio CR
+### Note About Clusters with Existing Istio CR
 
 If there is already Istio CR on the cluster, with name different from `default`, the new Istio CR managed by the Lifecycle Manager will end up in the Error state.
 Consider running rename-to-default.sh script to move your custom Istio CR configuration to the new default one. It will also remove the old custom Istio CR during the execution.
 
-### Provisioning of Istio CR using Lifecycle Manager in a new cluster
+### Provisioning of Istio CR Using Lifecycle Manager in a New Cluster
 
 If there is no Istio custom resource (CR), then Lifecycle Manager provisions the default Istio CR defined in the Istio ModuleTemplate. The migration
 adds the Istio module to the Kyma CR.
 
 
-### Provisioning of Istio CR using Lifecycle Manager in a cluster with existing modules
+### Provisioning of Istio CR Using Lifecycle Manager in a Cluster with Existing Modules
 
 If there is no Istio CR, then Lifecycle Manager provisions the default Istio CR defined in the Istio ModuleTemplate. The migration
 adds the Istio module to the Kyma CR without overwriting existing module configuration.
 
-## Migration test process
+## Migration Test Process
 
-### Test scenarios
+### Test Scenarios
 
 Apply the ModuleTemplate for both `fast` and `regular` channels to Dev Control Plane.
 
-#### SAP BTP, Kyma runtime clusters without existing modules
+#### SAP BTP, Kyma Runtime Clusters Without Existing Modules
 
 1. Create a Dev SAP BTP, Kyma runtime cluster.
 2. Execute the migration.
 3. Verify that `istio-controller-manager` is installed and the Istio CR's status is `Ready`.
 
-#### SAP BTP, Kyma runtime cluster with an existing module
+#### SAP BTP, Kyma Runtime Cluster with an Existing Module
 
 1. Create a Dev SAP BTP, Kyma runtime cluster.
 2. Add the Keda module to the Kyma CR.
@@ -44,7 +44,7 @@ Apply the ModuleTemplate for both `fast` and `regular` channels to Dev Control P
 3. Execute the migration.
 4. Verify that `istio-controller-manager` is installed and the Istio CR's status is `Ready`.
 
-## Module's rollout and migration
+## Module's Rollout and Migration
 
 ### Preparations
 
@@ -52,7 +52,7 @@ Executing `kcp taskrun` requires the path to the kubeconfig file of the correspo
 
 ### Dev
 
-#### Migration procedure
+#### Migration Procedure
 
 1. Push module to `experimental` channel in `kyma/module-manifests `repository (PR #162).
 2. Push the kustomization change for `experimental` in `kyma/kyma-modules` repository (PR #403)
@@ -78,8 +78,8 @@ Executing `kcp taskrun` requires the path to the kubeconfig file of the correspo
 We don't want to disable Istio reconciliation at the beginning of the rollout, because there would be a big time window between stopping the istio reconciliation and setting Istio as a default module.
 During this time new clusters can not be created successfully, since Istio as a dependency for API-Gateway module is missing.
 
-#### Migration procedure
-##### Test migration
+#### Migration Procedure
+##### Test Migration
 1. Execute migration script `migration-testing/migrate-local-moduletemplate.sh` that uses local module template for fast channel to migrate Service Account provided for Upgrade testing. At this point we want to skip the installation test on a new cluster, 
 because Istio module is not a default module at this time and Istio component is still installed by the reconciler.
 2. Get privileges(CAM L3 Operator Test) to execute migration script using taskrun for kyma-integration Global Account
@@ -98,7 +98,7 @@ because Istio module is not a default module at this time and Istio component is
    kubectl get manifests -n kcp-system -o custom-columns=NAME:metadata.name,STATE:status.state | grep istio | grep -v Ready
    ```
 
-##### Migration rollout (done by SRE)
+##### Migration Rollout (Done by SRE)
 1. Apply manually the ModuleTemplate for both `fast` and `regular` channels to Stage Control Plane.
 2. Verify that the ModuleTemplate in the `fast` and `regular` channels is available in SAP BTP, Kyma runtime clusters of the Stage environment.
 3. Merge PR (#4626) in `kyma/management-plane-config` responsible for disabling Istio reconciliation and setting Istio as a default module
@@ -106,7 +106,7 @@ because Istio module is not a default module at this time and Istio component is
 5. Execute post migration script `post-enable-module.sh` to verify migration.
 6. If script failed with following log: `More than one Istio CR present on the cluster. Script rename-to-default.sh might be required`, contact the customer to agree on solution. We propose to execute rename-to-default.sh script.
 
-##### Verify migration
+##### Verify Migration
 1. Wait for SRE to finish the migration for all clusters
 2. Check the [Istio Module](https://plutono.cp.stage.kyma.cloud.sap/d/hTm72lVIz/modules-istio?orgId=1) and [API Gateway Module](https://plutono.cp.stage.kyma.cloud.sap/d/6meO06VSk/modules-api-gateway?orgId=1) status on the dashboards
 3. Verify that the number of Istio manifests on Stage Control Plane is equal to the number of runtimes on Stage. First returns the number of runtimes, second the number of manifests.
@@ -124,7 +124,7 @@ because Istio module is not a default module at this time and Istio component is
 
 ### Prod
 
-##### Test migration
+##### Test Migration
 1. Execute migration script `migration-testing/migrate-local-moduletemplate.sh` that uses local module template for fast channel to migrate Service Account provided for Upgrade testing. At this point we want to skip the installation test on a new cluster,
    because Istio module is not a default module at this time and Istio component is still installed by the reconciler.
 2. Get privileges(CAM L3 Operator Prod) to execute migration script using taskrun for kyma-integration Global Account
@@ -147,13 +147,13 @@ because Istio module is not a default module at this time and Istio component is
 9. Verify that the ModuleTemplates are present in the `kyma/kyma-modules` internal repository.
 10. Verify that the ModuleTemplate in both channels are available on `Prod` environment SKRs.
 
-##### Migration rollout (done by SRE)
+##### Migration Rollout (Done by SRE)
 1. Merge PR (#4627) in `kyma/management-plane-config` responsible for disabling Istio reconciliation and setting Istio as a default module
 2. Execute `enable-module.sh` script from runtime-ops repository for istio to run default channel migration on all clusters
 3. Execute post migration script `post-enable-module.sh` to verify migration.
 4. If script failed with following log: `More than one Istio CR present on the cluster. Script rename-to-default.sh might be required`, contact the customer to agree on solution. We propose to execute rename-to-default.sh script.
 
-##### Verify migration
+##### Verify Migration
 1. Wait for SRE to finish the migration for all clusters
 2. Check the [Istio Module](https://plutono.cp.kyma.cloud.sap/d/hTm72lVIz/modules-istio?orgId=1) and [API Gateway Module](https://plutono.cp.kyma.cloud.sap/d/6meO06VSk/modules-api-gateway?orgId=1) status on the dashboards
 3. Verify that the number of Istio manifests on Prod Control Plane is equal to the number of runtimes on Prod. First returns the number of runtimes, second the number of manifests.
@@ -168,7 +168,7 @@ because Istio module is not a default module at this time and Istio component is
 5. Migrate istio module in kyma-integration Global Account to default channel and remove remote module template used for migration testing by executing the script `migration-testing/revert-local-moduletemplate.sh`
 6. Trigger SRE to enable reconciliation for kyma-integration Global Account.
 
-##### Clean up
+##### Clean Up
 1. Remove the experimental ModuleTemplate.
 TODO: Clarify how the process will look like.
 

@@ -2,7 +2,7 @@
 
 ## What Is Istio?
 
-<img src="../assets/istio-whitelogo-bluebackground-framed.svg" alt="Istio logo" style="height: 100px; width:100px;"/>
+<img src="/istio/assets/istio-whitelogo-bluebackground-framed.svg" alt="Istio logo" style="height: 100px; width:100px;"/>
 dd
 Istio is an open-source service mesh that provides a uniform way to manage, connect, and secure microservices. It helps to manage traffic, enhance security capabilities, and provide telemetry data for understanding service behavior. To learn more, read the [Istio documentation](https://istio.io/latest/).
 

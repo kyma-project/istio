@@ -1,4 +1,4 @@
-# Operation guides
+# Operation Guides
 
 Browse the Istio operation guides to learn how to:
 - [Check if you have Istio sidecar proxy injection enabled](./02-10-check-if-sidecar-injection-is-enabled.md)

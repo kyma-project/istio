@@ -1,6 +1,6 @@
-# Check if you have Istio sidecar proxy injection enabled
+# Check If You Have Istio Sidecar Proxy Injection Enabled
 
-## Check if sidecar injection is enabled in the Pod's Namespace
+## Check If Sidecar Injection Is Enabled in the Pod's Namespace
 
 <!-- tabs:start -->
 
@@ -21,7 +21,7 @@ If the command does not return `enabled`, the sidecar injection is disabled in t
 
 <!-- tabs:end -->
 
-## Check if sidecar injection is enabled for the Pod's Deployment
+## Check If Sidecar Injection Is Enabled for the Pod's Deployment
 
 <!-- tabs:start -->
 
@@ -45,7 +45,7 @@ If the output does not contain the `sidecar.istio.io/inject:true` line, sidecar 
 <!-- tabs:end -->
 
 
-## List all Pods with sidecar injection enabled
+## List All Pods with Sidecar Injection Enabled
 
 You can also check whether your workloads have automatic Istio sidecar injection enabled by running [the script](../../assets/sidecar-analysis.sh). Either pass the **namespace** parameter to the script or run it with no parameter.
 

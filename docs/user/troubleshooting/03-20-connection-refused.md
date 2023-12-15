@@ -1,4 +1,4 @@
-# Connection refused errors
+# Connection Refused Errors
 
 ## Symptom
 

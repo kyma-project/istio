@@ -1,4 +1,4 @@
-# Issues with Istio sidecar injection
+# Issues with Istio Sidecar Injection
 
 ## Symptom
 

@@ -1,4 +1,4 @@
-# Forward Client IP in X-Forwarded-For header
+# Forward Client IP in X-Forwarded-For Header
 
 Many applications need to know the client IP address of an originating request to behave properly. Usual use-cases include workloads that require the 
 client IP address to restrict their access. The ability to provide client attributes to services has long been a staple of reverse proxies. 
@@ -15,13 +15,13 @@ the [IETF’s RFC documentation](https://datatracker.ietf.org/doc/html/rfc7239) 
 
 ## Steps
 
-### Configure the number of trusted proxies in the Istio custom resource
+### Configure the Number of Trusted Proxies in the Istio Custom Resource
 
 Applications rely on reverse proxies to forward the client IP address in a request using the XFF header. However, due to 
 the variety of network topologies, you must specify the configuration property **numTrustedProxies**, so that the client address can be extracted correctly. This property indicates the number of trusted proxies deployed
 in front of the Istio Gateway proxy.
 
-Add **numTrustedProxies** to the Istio custom resource (CR):
+Add **numTrustedProxies** to the Istio custom resource:
 
 <!-- tabs:start -->
 #### **kubectl**
@@ -40,7 +40,7 @@ Run the following command:
 <!-- tabs:end -->
 
 
-### Create a workload for verification
+### Create a Workload for Verification
 
 1. [Create an HttpBin workload](https://kyma-project.io/#/api-gateway/user/tutorials/01-00-create-workload).
 2. Export the following values as environment variables.
@@ -73,7 +73,7 @@ Run the following command:
     EOF
     ```
 
-### Verify the X-Forwarded-For and X-Envoy-External-Address header
+### Verify the X-Forwarded-For and X-Envoy-External-Address Headers
 1. Get your public IP address.
     ```bash
     curl -s https://api.ipify.org

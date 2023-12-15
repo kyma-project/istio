@@ -1,4 +1,4 @@
-# Istio unintentionally removed
+# Istio Unintentionally Removed
 Follow the steps outlined in this troubleshooting guide if you unintentionally deleted Istio and want to restore the system to its normal state without losing any user-created resources. However, if you intended to delete Istio, the symptoms described in this document are expected, and you must clean up the orphaned resources by yourself. To check which resources are blocking the deletion, see the logs of the `manager` container.
 
 ## Symptom
@@ -6,7 +6,7 @@ Follow the steps outlined in this troubleshooting guide if you unintentionally d
 * The Istio custom resource (CR) is in the `Warning` state.
 
 
-### Typical log output / error messages
+### Typical Log Output or Error Messages
 
 <!-- tabs:start -->
 #### **kubectl**

@@ -3,6 +3,7 @@ package istio_resources
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
@@ -56,16 +57,16 @@ func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha1.Is
 	}
 
 	for _, resource := range resources {
-		ctrl.Log.Info("Reconciling istio resource", "name", resource.Name())
+		ctrl.Log.Info("Reconciling Istio resource", "name", resource.Name())
 		result, err := resource.reconcile(ctx, r.client, owner, r.templateValues)
 
 		if err != nil {
-			return described_errors.NewDescribedError(err, fmt.Sprintf("Could not reconcile istio resource %s", resource.Name()))
+			return described_errors.NewDescribedError(err, fmt.Sprintf("Could not reconcile Istio resource %s", resource.Name()))
 		}
-		ctrl.Log.Info("Reconciled istio resource", "name", resource.Name(), "result", result)
+		ctrl.Log.Info("Reconciled Istio resource", "name", resource.Name(), "result", result)
 	}
 
-	ctrl.Log.Info("Successfully reconciled istio resources")
+	ctrl.Log.Info("Successfully reconciled Istio resources")
 
 	return nil
 }
@@ -95,7 +96,6 @@ func (r *ResourcesReconciler) getTemplateValues(ctx context.Context, istioCR v1a
 
 // getResources returns all Istio resources required for the reconciliation specific for the given hyperscaler.
 func getResources(k8sClient client.Client, hsClient clusterconfig.Hyperscaler) ([]Resource, error) {
-
 	istioResources := []Resource{NewEnvoyFilterAllowPartialReferer(k8sClient)}
 	istioResources = append(istioResources, NewPeerAuthenticationMtls(k8sClient))
 	istioResources = append(istioResources, NewConfigMapControlPlane(k8sClient))

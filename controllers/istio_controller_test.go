@@ -3,8 +3,9 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"k8s.io/utils/ptr"
 	"time"
+
+	"k8s.io/utils/ptr"
 
 	"github.com/kyma-project/istio/operator/internal/filter"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio_resources"
@@ -679,7 +680,7 @@ func (s *StatusMock) updateToProcessing(_ context.Context, _ string, _ *operator
 	return s.processingError
 }
 
-func (s *StatusMock) updateToError(_ context.Context, _ described_errors.DescribedError, _ *operatorv1alpha1.Istio) error {
+func (s *StatusMock) updateToError(_ context.Context, _ described_errors.DescribedError, _ operatorv1alpha1.ConditionReason, _ *operatorv1alpha1.Istio) error {
 	s.updatedToErrorCalled = true
 	return s.errorError
 }

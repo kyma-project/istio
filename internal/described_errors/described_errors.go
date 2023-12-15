@@ -1,6 +1,8 @@
 package described_errors
 
-import "github.com/pkg/errors"
+import (
+	"github.com/pkg/errors"
+)
 
 type Level int
 

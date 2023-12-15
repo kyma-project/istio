@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	. "github.com/onsi/ginkgo/v2"
@@ -120,7 +121,7 @@ var _ = Describe("status", func() {
 			describedError := described_errors.NewDescribedError(errors.New("error happened"), "Something")
 
 			// when
-			err := handler.updateToError(context.TODO(), describedError, &cr)
+			err := handler.updateToError(context.TODO(), describedError, "", &cr)
 
 			// then
 			Expect(err).ToNot(HaveOccurred())
@@ -142,7 +143,7 @@ var _ = Describe("status", func() {
 			describedError := described_errors.NewDescribedError(errors.New("error happened"), "Something").SetWarning()
 
 			// when
-			err := handler.updateToError(context.TODO(), describedError, &cr)
+			err := handler.updateToError(context.TODO(), describedError, "", &cr)
 
 			// then
 			Expect(err).ToNot(HaveOccurred())

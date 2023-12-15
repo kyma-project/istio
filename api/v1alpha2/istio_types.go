@@ -21,6 +21,8 @@ import (
 )
 
 type State string
+type ConditionType string
+type ConditionReason string
 
 // Valid IstioCR States.
 const (
@@ -29,7 +31,50 @@ const (
 	Error      State = "Error"
 	Deleting   State = "Deleting"
 	Warning    State = "Warning"
+
+	ConditionTypeReady ConditionType = "Ready"
+
+	ConditionReasonReconcileSucceeded           ConditionReason = "ReconcileSucceeded"
+	ConditionReasonUpdateCheckSucceeded         ConditionReason = "UpdateCheckSucceeded"
+	ConditionReasonUpdateDone                   ConditionReason = "UpdateDone"
+	ConditionReasonProcessing                   ConditionReason = "Processing"
+	ConditionReasonUpdateCheck                  ConditionReason = "UpdateCheck"
+	ConditionReasonIstioCustomResourcesDangling ConditionReason = "IstioCustomResourcesDangling"
+	ConditionReasonCustomResourceMisconfigured  ConditionReason = "CustomResourceMisconfigured"
+	ConditionReasonDeleting                     ConditionReason = "Deleting"
+	ConditionReasonIstioInstallationFailed      ConditionReason = "IstioInstallationFailed"
+	ConditionReasonOlderCRExists                ConditionReason = "OlderCRExists"
+
+	ConditionReasonReconcileSucceededMessage           = "Reconciled successfully"
+	ConditionReasonUpdateCheckSucceededMessage         = "Update not required"
+	ConditionReasonUpdateDoneMessage                   = "Update done"
+	ConditionReasonProcessingMessage                   = "Istio installation is proceeding"
+	ConditionReasonUpdateCheckMessage                  = "Checking if update is required"
+	ConditionReasonIstioCustomResourcesDanglingMessage = "Istio deletion blocked because of existing Istio resources that are not default"
+	ConditionReasonCustomResourceMisconfiguredMessage  = "Configuration present on Istio Custom Resource is not correct"
+	ConditionReasonDeletingMessage                     = "Proceeding with uninstallation and deletion of Istio"
+	ConditionReasonIstioInstallationFailedMessage      = "Failure during execution of Istio installation"
+	ConditionReasonOlderCRExistsMessage                = "This CR is not the oldest one so does not represent the module State"
 )
+
+type ConditionMeta struct {
+	Type    ConditionType
+	Status  metav1.ConditionStatus
+	Message string
+}
+
+var ConditionReasons = map[ConditionReason]ConditionMeta{
+	ConditionReasonReconcileSucceeded:           {Type: ConditionTypeReady, Status: metav1.ConditionTrue, Message: ConditionReasonReconcileSucceededMessage},
+	ConditionReasonUpdateCheckSucceeded:         {Type: ConditionTypeReady, Status: metav1.ConditionTrue, Message: ConditionReasonUpdateCheckSucceededMessage},
+	ConditionReasonUpdateDone:                   {Type: ConditionTypeReady, Status: metav1.ConditionTrue, Message: ConditionReasonUpdateDoneMessage},
+	ConditionReasonProcessing:                   {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonProcessingMessage},
+	ConditionReasonUpdateCheck:                  {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonUpdateCheckMessage},
+	ConditionReasonIstioCustomResourcesDangling: {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonIstioCustomResourcesDanglingMessage},
+	ConditionReasonCustomResourceMisconfigured:  {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonCustomResourceMisconfiguredMessage},
+	ConditionReasonDeleting:                     {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonDeletingMessage},
+	ConditionReasonIstioInstallationFailed:      {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonIstioInstallationFailedMessage},
+	ConditionReasonOlderCRExists:                {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonOlderCRExistsMessage},
+}
 
 // Defines the desired specification for installing or updating Istio.
 type IstioSpec struct {
@@ -77,4 +122,19 @@ type IstioStatus struct {
 
 func init() {
 	SchemeBuilder.Register(&Istio{}, &IstioList{})
+}
+
+func ConditionFromReason(reason ConditionReason) *metav1.Condition {
+	conditionMeta, found := ConditionReasons[reason]
+	if found {
+		return &metav1.Condition{
+			Type:               string(conditionMeta.Type),
+			Status:             conditionMeta.Status,
+			LastTransitionTime: metav1.Now(),
+			Reason:             string(reason),
+			Message:            conditionMeta.Message,
+			ObservedGeneration: 0,
+		}
+	}
+	return nil
 }

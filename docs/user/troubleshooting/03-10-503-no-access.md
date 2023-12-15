@@ -49,7 +49,7 @@ If the restart doesn't help, follow these steps:
       ```bash
       kubectl get pod -l app=istio-ingressgateway -n istio-system -o name
       ```
-   
+
    2. Replace `{ISTIO_INGRESS_GATEWAY_POD_NAME}` with a name of a listed Pod and check the ports that the `istio-proxy` container uses:
 
       ```bash
@@ -74,7 +74,7 @@ If the restart doesn't help, follow these steps:
    ```bash
    kubectl logs -n istio-system -l app=istio-ingressgateway -c istio-proxy
    ```
-   
+
    #### **Kyma Dashboard**
    Click **View Logs**.
    ![View logs of the istio-proxy-container](../../assets/view-istio-proxy-logs.svg)

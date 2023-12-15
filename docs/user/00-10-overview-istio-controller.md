@@ -29,6 +29,21 @@ However, if a resource is a job, a ReplicaSet that is not managed by any deploym
 |   `Error`    | An error occurred during reconciliation.     |
 |  `Warning`   | Controller is misconfigured.                 |
 
+Conditions:
+
+| CR state   | Condition type | Condition status | Condition reason             | Remark                                                                          |
+|------------|----------------|------------------|------------------------------|---------------------------------------------------------------------------------|
+| Ready      | Ready          | true             | ReconcileSucceeded           | Reconciled successfully                                                         |
+| Ready      | Ready          | true             | UpdateCheckSucceeded         | Update not required                                                             |
+| Ready      | Ready          | true             | UpdateDone                   | Update done                                                                     |
+| Processing | Ready          | false            | Processing                   | Istio installation is proceeding                                                |
+| Processing | Ready          | false            | UpdateCheck                  | Checking if update is required                                                  |
+| Warning    | Ready          | false            | IstioCustomResourcesDangling | Istio deletion blocked because of existing Istio resources that are not default |
+| Warning    | Ready          | false            | CustomResourceMisconfigured  | Configuration present on Istio Custom Resource is not correct                   |
+| Deleting   | Ready          | false            | Deleting                     | Proceeding with uninstallation and deletion of Istio                            |
+| Error      | Ready          | false            | IstioInstallationFailed      | Failure during execution of Istio installation                                  |
+| Error      | Ready          | false            | OlderCRExists                | This CR is not the oldest one so does not represent the module State            |
+
 ## X-Forwarded-For HTTP header
 
 The **X-Forwarded-For** (XFF) header is only supported on AWS clusters.

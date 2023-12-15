@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"k8s.io/client-go/util/retry"
@@ -26,7 +27,6 @@ type StatusHandler struct {
 }
 
 func (d StatusHandler) update(ctx context.Context, istioCR *operatorv1alpha1.Istio) error {
-
 	newStatus := istioCR.Status
 
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {

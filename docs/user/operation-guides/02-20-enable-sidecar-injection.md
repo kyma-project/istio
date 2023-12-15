@@ -1,6 +1,6 @@
 # Enable Automatic Istio Sidecar Proxy Injection
 
-Enabling automatic sidecar injection allows `istiod` to watch all Pod creation operations on all namespaces, which should be part of Istio Service Mesh, and inject the newly created Pods with a sidecar proxy.
+Enabling automatic sidecar injection allows `istiod` to watch all Pod creation operations on all namespaces, which should be part of the Istio service mesh, and inject the newly created Pods with a sidecar proxy.
 
 You can enable sidecar proxy injection for either an entire namespace or a single Deployment. If the sidecar proxy injection is disabled at the namespace level, or the `sidecar.istio.io/inject` label on a Pod is set to `false`, the sidecar proxy is not injected.
 

@@ -74,7 +74,7 @@ var _ = Describe("Istio Controller", func() {
 			err = client.Get(context.TODO(), types.NamespacedName{Name: "default"}, &processedIstioCR)
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(processedIstioCR.Status.State).To(Equal(operatorv1alpha1.Error))
-			Expect(processedIstioCR.Status.Description).To(Equal("Stopped Istio CR reconciliation: istio CR is not in kyma-system namespace"))
+			Expect(processedIstioCR.Status.Description).To(Equal("Stopped Istio CR reconciliation: Istio CR is not in kyma-system namespace"))
 		})
 
 		It("Should not return an error when CR was not found", func() {

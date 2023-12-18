@@ -10,6 +10,8 @@
   * [Check Istio Sidecar](02-10-check-if-sidecar-injection-is-enabled.md)
   * [Enable Istio Sidecar](02-20-enable-sidecar-injection.md)
   * [Enable Istio Access Logs](02-30-enable-istio-access-logs.md)
+* [Tutorials](/istio/user/tutorials/README.md)
+  * [Forward Client IP](/istio/user/tutorials/01-00-x-forwarded-for-header.md)
 * [Technical Reference](/istio/user/technical-reference/README.md)
   * [Istio Controller Parameters](05-00-istio-controller-parameters.md)
 * [Troubleshooting](/istio/user/troubleshooting/README.md)

@@ -6,20 +6,20 @@ Istio Controller is part of Kyma Istio Operator. Its role is to manage the insta
 - Installing, upgrading, and uninstalling Istio
 - Restarting workloads that have a proxy sidecar to ensure that these workloads are using the correct Istio version.
 
-## Istio version
+## Istio Version
 
 The version of Istio is dependent on the version of Istio Controller that you use. This means that if a new version of Istio Controller introduces a new version of Istio, deploying the controller will automatically trigger an upgrade of Istio.
 
-## Istio CR
+## Istio Custom Resource
 
 The `istios.operator.kyma-project.io` CustomResourceDefinition (CRD) describes the Istio CR that is used to manage the Istio installation. To learn more, read the [Istio CR documentation](04-00-istio-custom-resource.md).
 
-## Restart of workloads with enabled sidecar injection
+## Restart of Workloads with Enabled Sidecar Injection
 
 When the Istio version is updated or the configuration of the proxies is changed, the Pods that have Istio injection enabled are automatically restarted. This is possible for all resources that allow for a rolling restart. If Istio is uninstalled, the workloads are restarted again to remove the sidecars.
 However, if a resource is a job, a ReplicaSet that is not managed by any deployment, or a Pod that is not managed by any other resource, the restart cannot be performed automatically. In such cases, a warning is logged, and you must manually restart the resources.
 
-## Status codes
+## Status Codes
 
 |     Code     | Description                                  |
 |:------------:|:---------------------------------------------|
@@ -29,6 +29,6 @@ However, if a resource is a job, a ReplicaSet that is not managed by any deploym
 |   `Error`    | An error occurred during reconciliation.     |
 |  `Warning`   | Controller is misconfigured.                 |
 
-## X-Forwarded-For HTTP header
+## X-Forwarded-For HTTP Header
 
 The **X-Forwarded-For** (XFF) header is only supported on AWS clusters.

@@ -1,9 +1,9 @@
-# Default Istio setup
+# Default Istio Setup
 
 This document provides an overview of the default setup for Istio. Kyma Istio Operator uses the [Istio library](https://github.com/istio/istio/tree/master/operator) for installing Istio. Within Kyma Istio Operator, components like Istiod (Pilot) and Ingress Gateway are enabled by default.
 
 
-## Istio component-specific configuration
+## Istio Module-Specific Configuration
 
 These configuration changes are applied to customize Istio:
 

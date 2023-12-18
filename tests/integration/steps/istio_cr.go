@@ -77,6 +77,58 @@ func IstioCRInNamespaceHasDescription(ctx context.Context, name, namespace, desc
 	}, testcontext.GetRetryOpts()...)
 }
 
+func IstioCRInNamespaceHasConditionMessage(ctx context.Context, name, namespace, message string) error {
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	var cr istioCR.Istio
+	return retry.Do(func() error {
+		err := k8sClient.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, &cr)
+		if err != nil {
+			return err
+		}
+		var conditionMessages []string
+		for _, condition := range *cr.Status.Conditions {
+			if condition.Message == message {
+				return nil
+			} else {
+				// TODO: Should we fail here as there is a different condition than expected?
+				conditionMessages = append(conditionMessages, condition.Message)
+			}
+		}
+
+		return fmt.Errorf("condition messages %s of Istio CR is not equal to %s", conditionMessages, message)
+	}, testcontext.GetRetryOpts()...)
+}
+
+func IstioCRInNamespaceHasConditionReason(ctx context.Context, name, namespace, reason string) error {
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	var cr istioCR.Istio
+	return retry.Do(func() error {
+		err := k8sClient.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, &cr)
+		if err != nil {
+			return err
+		}
+		var conditionMessages []string
+		for _, condition := range *cr.Status.Conditions {
+			if condition.Reason == reason {
+				return nil
+			} else {
+				// TODO: Should we fail here as there is a different condition than expected?
+				conditionMessages = append(conditionMessages, condition.Reason)
+			}
+		}
+
+		return fmt.Errorf("condition messages %s of Istio CR is not equal to %s", conditionMessages, reason)
+	}, testcontext.GetRetryOpts()...)
+}
+
 type TemplatedIstioCr struct {
 	templateValues map[string]string
 }

@@ -270,7 +270,6 @@ istio-upgrade-integration-test: deploy-latest-release generate-integration-test-
 	# Increased TEST_REQUEST_TIMEOUT to 300s to avoid timeouts on newly created k3s clusters on Prow
 	cd tests/integration &&  TEST_REQUEST_TIMEOUT=300s && EXPORT_RESULT=true go test -v -timeout 10m -run TestIstioUpgrade
 
-
 .PHONY: gardener-istio-integration-test
 gardener-istio-integration-test:
 	./hack/ci/gardener-integration.sh

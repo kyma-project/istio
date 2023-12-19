@@ -1,27 +1,27 @@
-# Check if you have Istio sidecar proxy injection enabled
+# Check If You Have Istio Sidecar Proxy Injection Enabled
 
-## Check if sidecar injection is enabled in the Pod's Namespace
+## Check If Sidecar Injection Is Enabled in the Pod's Namespace
 
 <!-- tabs:start -->
 
 #### **kubectl**
-To check if the Pod's Namespace is labeled with `istio-injection=enabled`, run:
+To check if the Pod's namespace is labeled with `istio-injection=enabled`, run:
 
   ```bash
   kubectl get namespaces {NAMESPACE} -o jsonpath='{ .metadata.labels.istio-injection }'
   ```
-If the command does not return `enabled`, the sidecar injection is disabled in this Namespace.
+If the command does not return `enabled`, the sidecar injection is disabled in this namespace.
 
 #### **Kyma Dashboard**
 
-1. Go to the Pod's Namespace.
-2. Verify if the `Labels` section contains `istio-injection=enabled`. If the section doesn't contain the label, the sidecar injection is disabled in this Namespace.
-   Here's an example of a Namespace where the Istio sidecar proxy injection is enabled:
+1. Go to the Pod's namespace.
+2. Verify if the `Labels` section contains `istio-injection=enabled`. If the section doesn't contain the label, the sidecar injection is disabled in this namespace.
+   Here's an example of a namespace where the Istio sidecar proxy injection is enabled:
    ![Namespace with enabled Istio sidecar injection](../../assets/namespace-with-enabled-istio-sidecar.svg)
 
 <!-- tabs:end -->
 
-## Check if sidecar injection is enabled for the Pod's Deployment
+## Check If Sidecar Injection Is Enabled for the Pod's Deployment
 
 <!-- tabs:start -->
 
@@ -36,7 +36,7 @@ If the output does not contain the `sidecar.istio.io/inject:true` line, sidecar 
 
 #### **Kyma Dashboard**
 
-1. Select the Namespace of the Pod's Deployment.
+1. Select the namespace of the Pod's Deployment.
 2. In the **Workloads** section, select **Deployments**.
 3. Select the Pod's Deployment and click **Edit**.
 4. In the `UI Form` section, check if the `Enable Sidecar Injection` toggle is switched.
@@ -45,11 +45,11 @@ If the output does not contain the `sidecar.istio.io/inject:true` line, sidecar 
 <!-- tabs:end -->
 
 
-## List all Pods with sidecar injection enabled
+## List All Pods with Sidecar Injection Enabled
 
 You can also check whether your workloads have automatic Istio sidecar injection enabled by running [the script](../../assets/sidecar-analysis.sh). Either pass the **namespace** parameter to the script or run it with no parameter.
 
-* If you don't provide any parameter, the execution output contains Pods from all Namespaces that don't have automatic Istio sidecar injection enabled. The script outputs the information in the format of `{NAMESPACE}/{POD}`. Run:
+* If you don't provide any parameter, the execution output contains Pods from all namespaces that don't have automatic Istio sidecar injection enabled. The script outputs the information in the format of `{NAMESPACE}/{POD}`. Run:
 
     ```bash
     ./sidecar-analysis.sh
@@ -67,7 +67,7 @@ You can also check whether your workloads have automatic Istio sidecar injection
         - no-label/some-pod
     ```
 
-*  If you pass a parameter, only the Pods from the specified Namespace are analyzed. The script outputs the information in the format of `{POD}`. Run:
+*  If you pass a parameter, only the Pods from the specified namespace are analyzed. The script outputs the information in the format of `{POD}`. Run:
 
     ```bash
     ./sidecar-analysis.sh {NAMESPACE}

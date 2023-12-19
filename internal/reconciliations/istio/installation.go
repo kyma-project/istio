@@ -23,7 +23,7 @@ import (
 )
 
 type InstallationReconciliation interface {
-	Reconcile(ctx context.Context, istioCR operatorv1alpha1.Istio, statusHandler status.Status, istioResourceListPath string) (operatorv1alpha1.Istio, described_errors.DescribedError)
+	Reconcile(ctx context.Context, istioCR operatorv1alpha1.Istio, statusHandler status.Status, istioResourceListPath string) described_errors.DescribedError
 }
 
 type Installation struct {
@@ -40,29 +40,30 @@ const (
 )
 
 // Reconcile runs Istio reconciliation to install, upgrade or uninstall Istio and returns the updated Istio CR.
-func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.Istio, statusHandler status.Status, istioResourceListPath string) (operatorv1alpha1.Istio, described_errors.DescribedError) {
+func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.Istio, statusHandler status.Status, istioResourceListPath string) described_errors.DescribedError {
 	istioTag := fmt.Sprintf("%s-%s", i.IstioVersion, i.IstioImageBase)
 
+	statusHandler.UpdateToProcessing(ctx, &istioCR, "Check if should install Istio", operatorv1alpha1.ConditionReasonIstioInstallCheck)
 	shouldInstallIstio, err := shouldInstall(istioCR, istioTag)
+
 	if err != nil {
 		ctrl.Log.Error(err, "Error evaluating Istio CR changes")
-		return istioCR, described_errors.NewDescribedError(err, "Istio version check failed")
+		return described_errors.NewDescribedError(err, "Istio install check failed")
 	}
 
 	if shouldInstallIstio {
-		ctrl.Log.Info("Starting istio install", "istio version", i.IstioVersion, "istio image", i.IstioImageBase)
+		ctrl.Log.Info("Starting Istio install", "istio version", i.IstioVersion, "istio image", i.IstioImageBase)
 
 		if !hasInstallationFinalizer(istioCR) {
-			controllerutil.AddFinalizer(&istioCR, installationFinalizer)
-			if err := i.Client.Update(ctx, &istioCR); err != nil {
+			if err = addInstallationFinalizer(ctx, i.Client, &istioCR); err != nil {
 				ctrl.Log.Error(err, "Failed to add Istio installation finalizer")
-				return istioCR, described_errors.NewDescribedError(err, "Could not add finalizer")
+				return described_errors.NewDescribedError(err, "Could not add finalizer")
 			}
 		}
 
 		clusterConfiguration, err := clusterconfig.EvaluateClusterConfiguration(ctx, i.Client)
 		if err != nil {
-			return istioCR, described_errors.NewDescribedError(err, "Could not evaluate cluster flavour")
+			return described_errors.NewDescribedError(err, "Could not evaluate cluster flavour")
 		}
 
 		// As we define default IstioOperator values in a templated manifest, we need to apply the istio version and values from
@@ -72,14 +73,15 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 		cSize, err := clusterconfig.EvaluateClusterSize(context.Background(), i.Client)
 		if err != nil {
 			ctrl.Log.Error(err, "Error occurred during evaluation of cluster size")
-			return istioCR, described_errors.NewDescribedError(err, "Could not evaluate cluster size")
+			return described_errors.NewDescribedError(err, "Could not evaluate cluster size")
 		}
 
-		ctrl.Log.Info("Installing istio with", "profile", cSize.String())
+		ctrl.Log.Info("Installing Istio with", "profile", cSize.String())
+		statusHandler.UpdateToProcessing(ctx, &istioCR, "Installing Istio", operatorv1alpha1.ConditionReasonIstioInstalling)
 
 		mergedIstioOperatorPath, err := i.Merger.Merge(cSize.DefaultManifestPath(), &istioCR, templateData, clusterConfiguration)
 		if err != nil {
-			return istioCR, described_errors.NewDescribedError(err, "Could not get configuration from Istio Operator file")
+			return described_errors.NewDescribedError(err, "Could not get configuration from Istio Operator file")
 		}
 
 		err = i.IstioClient.Install(mergedIstioOperatorPath)
@@ -90,42 +92,43 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 				ctrl.Log.Error(err2, "Error occurred when tried to clean conflicted webhooks")
 			}
 
-			return istioCR, described_errors.NewDescribedError(err, "Could not install Istio")
+			return described_errors.NewDescribedError(err, "Could not install Istio")
 		}
 
 		err = addWardenValidationAndDisclaimer(ctx, i.Client)
 		if err != nil {
-			return istioCR, described_errors.NewDescribedError(err, "Could not add warden validation label")
+			return described_errors.NewDescribedError(err, "Could not add warden validation label")
 		}
 
 		version, err := gatherer.GetIstioPodsVersion(ctx, i.Client)
 		if err != nil {
-			return istioCR, described_errors.NewDescribedError(err, "Could not get Istio sidecar version on cluster")
+			return described_errors.NewDescribedError(err, "Could not get Istio sidecar version on cluster")
 		}
 
 		if i.IstioVersion != version {
-			return istioCR, described_errors.NewDescribedError(fmt.Errorf("istio-system pods version: %s do not match target version: %s", version, i.IstioVersion), "Istio installation failed")
+			return described_errors.NewDescribedError(fmt.Errorf("istio-system pods version: %s do not match target version: %s", version, i.IstioVersion), "Istio installation failed")
 		}
 
-		ctrl.Log.Info("Istio install completed")
+		ctrl.Log.Info("Istio installation completed")
+		statusHandler.UpdateToProcessing(ctx, &istioCR, "Istio installed", operatorv1alpha1.ConditionReasonIstioInstallDone)
 
 		err = restartIngressGatewayIfNeeded(ctx, i.Client, istioCR)
 		if err != nil {
-			return istioCR, described_errors.NewDescribedError(err, "Could not restart Istio Ingress GW deployment")
+			return described_errors.NewDescribedError(err, "Could not restart Istio Ingress GW deployment")
 		}
 
 		// We use the installation finalizer to track if the deletion was already executed so can make the uninstallation process more reliable.
 	} else if shouldDelete(istioCR) && hasInstallationFinalizer(istioCR) {
-		ctrl.Log.Info("Starting istio uninstall")
+		ctrl.Log.Info("Starting Istio uninstall")
 
 		istioResourceFinder, err := resources.NewIstioResourcesFinderFromConfigYaml(ctx, i.Client, ctrl.Log, istioResourceListPath)
 		if err != nil {
-			return istioCR, described_errors.NewDescribedError(err, "Could not read customer resources finder configuration")
+			return described_errors.NewDescribedError(err, "Could not read customer resources finder configuration")
 		}
 
 		clientResources, err := istioResourceFinder.FindUserCreatedIstioResources()
 		if err != nil {
-			return istioCR, described_errors.NewDescribedError(err, "Could not get customer resources from the cluster")
+			return described_errors.NewDescribedError(err, "Could not get customer resources from the cluster")
 		}
 
 		if len(clientResources) > 0 {
@@ -133,18 +136,20 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 				ctrl.Log.Info("Customer resource is blocking Istio deletion", a.GVK.Kind, fmt.Sprintf("%s/%s", a.Namespace, a.Name))
 			})
 
-			return istioCR, described_errors.NewDescribedError(fmt.Errorf("could not delete Istio module instance since there are %d customer resources present", len(clientResources)),
+			return described_errors.NewDescribedError(fmt.Errorf("could not delete Istio module instance since there are %d customer resources present", len(clientResources)),
 				"There are Istio resources that block deletion. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning").DisableErrorWrap().SetWarning()
 		}
 
+		statusHandler.UpdateToProcessing(ctx, &istioCR, "Uninstalling Istio", operatorv1alpha1.ConditionReasonIstioUninstalling)
+
 		err = i.IstioClient.Uninstall(ctx)
 		if err != nil {
-			return istioCR, described_errors.NewDescribedError(err, "Could not uninstall istio")
+			return described_errors.NewDescribedError(err, "Could not uninstall istio")
 		}
 
 		warnings, err := sidecarRemover.RemoveSidecars(ctx, i.Client, &ctrl.Log)
 		if err != nil {
-			return istioCR, described_errors.NewDescribedError(err, "Could not remove istio sidecars")
+			return described_errors.NewDescribedError(err, "Could not remove istio sidecars")
 		}
 
 		if len(warnings) > 0 {
@@ -155,17 +160,38 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 
 		if err := removeInstallationFinalizer(ctx, i.Client, &istioCR); err != nil {
 			ctrl.Log.Error(err, "Error happened during istio installation finalizer removal")
-			return istioCR, described_errors.NewDescribedError(err, "Could not remove finalizer")
+			return described_errors.NewDescribedError(err, "Could not remove finalizer")
 		}
 
 		ctrl.Log.Info("Istio uninstall completed")
+		statusHandler.UpdateToProcessing(ctx, &istioCR, "Istio uninstalled", operatorv1alpha1.ConditionReasonIstioUninstallDone)
+	} else {
+		statusHandler.UpdateToProcessing(ctx, &istioCR, "Check if should install Istio", operatorv1alpha1.ConditionReasonIstioInstallNotNeeded)
 	}
 
-	return istioCR, nil
+	return nil
 }
 
 func hasInstallationFinalizer(istioCR operatorv1alpha1.Istio) bool {
 	return controllerutil.ContainsFinalizer(&istioCR, installationFinalizer)
+}
+
+func addInstallationFinalizer(ctx context.Context, apiClient client.Client, istioCR *operatorv1alpha1.Istio) error {
+	ctrl.Log.Info("Adding Istio installation finalizer")
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		if getErr := apiClient.Get(ctx, client.ObjectKeyFromObject(istioCR), istioCR); getErr != nil {
+			return getErr
+		}
+
+		if controllerutil.AddFinalizer(istioCR, installationFinalizer) {
+			if updateErr := apiClient.Update(ctx, istioCR); updateErr != nil {
+				return updateErr
+			}
+		}
+		fmt.Printf("Finalizers %v", istioCR.Finalizers)
+		ctrl.Log.Info("Successfully added Istio installation finalizer")
+		return nil
+	})
 }
 
 func removeInstallationFinalizer(ctx context.Context, apiClient client.Client, istioCR *operatorv1alpha1.Istio) error {
@@ -175,14 +201,13 @@ func removeInstallationFinalizer(ctx context.Context, apiClient client.Client, i
 			return getErr
 		}
 
-		controllerutil.RemoveFinalizer(istioCR, installationFinalizer)
-		if updateErr := apiClient.Update(ctx, istioCR); updateErr != nil {
-			return updateErr
+		if controllerutil.RemoveFinalizer(istioCR, installationFinalizer) {
+			if updateErr := apiClient.Update(ctx, istioCR); updateErr != nil {
+				return updateErr
+			}
 		}
 
 		ctrl.Log.Info("Successfully removed Istio installation finalizer")
-
 		return nil
 	})
-
 }

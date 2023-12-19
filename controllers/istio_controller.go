@@ -109,7 +109,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 
 	if istioCR.DeletionTimestamp.IsZero() {
-		if err := r.statusHandler.UpdateToProcessing(ctx, &istioCR, "Reconciling Istio resources", operatorv1alpha1.ConditionReasonProcessingMessage); err != nil {
+		if err := r.statusHandler.UpdateToProcessing(ctx, &istioCR, "Reconciling Istio resources", operatorv1alpha1.ConditionReasonReconciling); err != nil {
 			r.log.Error(err, "Update status to processing failed")
 			// We don't update the status to error, because the status update already failed and to avoid another status update error we simply requeue the request.
 			return ctrl.Result{}, err
@@ -122,9 +122,14 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		}
 	}
 
-	istioCR, installationErr := r.istioInstallation.Reconcile(ctx, istioCR, r.statusHandler, IstioResourceListDefaultPath)
+	installationErr := r.istioInstallation.Reconcile(ctx, istioCR, r.statusHandler, IstioResourceListDefaultPath)
 	if installationErr != nil {
-		return r.requeueReconciliation(ctx, istioCR, installationErr, operatorv1alpha1.ConditionReasonIstioInstallationFailed)
+		return r.requeueReconciliation(ctx, istioCR, installationErr, operatorv1alpha1.ConditionReasonIstioInstallUninstallFailed)
+	}
+
+	// Refresh Istio CR
+	if err := r.Client.Get(ctx, req.NamespacedName, &istioCR); err != nil {
+		return r.requeueReconciliation(ctx, istioCR, described_errors.NewDescribedError(err, "Unable to get Istio CR"), operatorv1alpha1.ConditionReasonReconcileFailed)
 	}
 
 	// If there are no finalizers left, we must assume that the resource is deleted and therefore must stop the reconciliation

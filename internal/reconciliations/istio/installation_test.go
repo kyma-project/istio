@@ -65,7 +65,6 @@ var _ = Describe("Installation reconciliation", func() {
 		istioNamespace := createNamespace("istio-system")
 		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway"}}
 		c := createFakeClient(&istioCr, istiod, istioNamespace, igwDeployment)
-
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
 			Client:         c,
@@ -77,7 +76,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
+		err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -108,7 +107,6 @@ var _ = Describe("Installation reconciliation", func() {
 		istioNamespace := createNamespace("istio-system")
 		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway"}}
 		c := createFakeClient(&istioCr, istiod, istioNamespace, igwDeployment)
-
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
 			Client:         c,
@@ -120,13 +118,16 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
+		err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
+		currentIstioCR := operatorv1alpha1.Istio{}
+		c.Get(context.TODO(), types.NamespacedName{Namespace: istioCr.Namespace, Name: istioCr.Name}, &currentIstioCR)
+
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
-		Expect(returnedIstioCr.Status.State).To(Equal(operatorv1alpha1.Processing))
+		Expect(currentIstioCR.Status.State).To(Equal(operatorv1alpha1.Processing))
 	})
 
 	It("should label and annotate istio-system namespace after Istio installation without overriding existing labels and annotations", func() {
@@ -148,7 +149,6 @@ var _ = Describe("Installation reconciliation", func() {
 		istioNamespace := createNamespace("istio-system")
 		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway"}}
 		c := createFakeClient(&istioCr, istiod, istioNamespace, igwDeployment)
-
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
 			Client:         c,
@@ -160,7 +160,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
+		err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -197,25 +197,28 @@ var _ = Describe("Installation reconciliation", func() {
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.0")
 		istioNamespace := createNamespace("istio-system")
 		mockClient := mockLibraryClient{}
+		c := createFakeClient(&istioCr, istiod, istioNamespace)
 		installation := istio.Installation{
-			Client:         createFakeClient(&istioCr, istiod, istioNamespace),
+			Client:         c,
 			IstioClient:    &mockClient,
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
 		}
-		c := createFakeClient(&istioCr)
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
+		err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
+		currentIstioCR := operatorv1alpha1.Istio{}
+		c.Get(context.TODO(), types.NamespacedName{Namespace: istioCr.Namespace, Name: istioCr.Name}, &currentIstioCR)
+
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("istio-system pods version: 1.16.0 do not match target version: 1.16.1"))
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
-		Expect(returnedIstioCr.Status.State).To(Equal(operatorv1alpha1.Processing))
+		Expect(currentIstioCR.Status.State).To(Equal(operatorv1alpha1.Processing))
 	})
 
 	It("should add installation finalizer when Istio is installed", func() {
@@ -238,23 +241,26 @@ var _ = Describe("Installation reconciliation", func() {
 		istioNamespace := createNamespace("istio-system")
 		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway"}}
 		mockClient := mockLibraryClient{}
+		c := createFakeClient(&istioCr, istiod, istioNamespace, igwDeployment)
 		installation := istio.Installation{
-			Client:         createFakeClient(&istioCr, istiod, istioNamespace, igwDeployment),
+			Client:         c,
 			IstioClient:    &mockClient,
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
 		}
-		c := createFakeClient(&istioCr)
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
+		err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
+		currentIstioCR := operatorv1alpha1.Istio{}
+		c.Get(context.TODO(), types.NamespacedName{Namespace: istioCr.Namespace, Name: istioCr.Name}, &currentIstioCR)
+
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(mockClient.installCalled).To(BeTrue())
-		Expect(returnedIstioCr.Finalizers).To(ContainElement("istios.operator.kyma-project.io/istio-installation"))
+		Expect(currentIstioCR.Finalizers).To(ContainElement("istios.operator.kyma-project.io/istio-installation"))
 	})
 
 	It("should execute install to upgrade istio and update Istio CR status when NumTrustedProxies has changed and restart Istio GW", func() {
@@ -292,13 +298,16 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
+		err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
+		currentIstioCR := operatorv1alpha1.Istio{}
+		c.Get(context.TODO(), types.NamespacedName{Namespace: istioCr.Namespace, Name: istioCr.Name}, &currentIstioCR)
+
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
-		Expect(returnedIstioCr.Status.State).To(Equal(operatorv1alpha1.Processing))
+		Expect(currentIstioCR.Status.State).To(Equal(operatorv1alpha1.Processing))
 
 		igwDeployment = &appsv1.Deployment{}
 		Expect(c.Get(context.TODO(), types.NamespacedName{Namespace: "istio-system", Name: "istio-ingressgateway"}, igwDeployment)).Should(Succeed())
@@ -331,7 +340,6 @@ var _ = Describe("Installation reconciliation", func() {
 		istioNamespace := createNamespace("istio-system")
 		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway"}}
 		c := createFakeClient(&istioCr, istiod, istioNamespace, igwDeployment)
-
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
 			Client:         c,
@@ -343,13 +351,16 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
+		err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
+		currentIstioCR := operatorv1alpha1.Istio{}
+		c.Get(context.TODO(), types.NamespacedName{Namespace: istioCr.Namespace, Name: istioCr.Name}, &currentIstioCR)
+
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
-		Expect(returnedIstioCr.Status.State).To(Equal(operatorv1alpha1.Processing))
+		Expect(currentIstioCR.Status.State).To(Equal(operatorv1alpha1.Processing))
 
 		currentIGWDeployment := appsv1.Deployment{}
 		Expect(c.Get(context.TODO(), types.NamespacedName{Namespace: "istio-system", Name: "istio-ingressgateway"}, &currentIGWDeployment)).Should(Succeed())
@@ -400,13 +411,16 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
+		err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
+		currentIstioCR := operatorv1alpha1.Istio{}
+		c.Get(context.TODO(), types.NamespacedName{Namespace: istioCr.Namespace, Name: istioCr.Name}, &currentIstioCR)
+
 		Expect(err).Should(HaveOccurred())
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
-		Expect(returnedIstioCr.Status.State).To(Equal(operatorv1alpha1.Processing))
+		Expect(currentIstioCR.Status.State).To(Equal(operatorv1alpha1.Processing))
 
 		igwDeployment = &appsv1.Deployment{}
 		Expect(c.Get(context.TODO(), types.NamespacedName{Namespace: "istio-system", Name: "istio-ingressgateway"}, igwDeployment)).Should(Succeed())
@@ -439,7 +453,6 @@ var _ = Describe("Installation reconciliation", func() {
 		istioNamespace := createNamespace("istio-system")
 		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway"}}
 		c := createFakeClient(&istioCr, istiod, istioNamespace, igwDeployment)
-
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
 			Client:         c,
@@ -451,13 +464,16 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
+		err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
+		currentIstioCR := operatorv1alpha1.Istio{}
+		c.Get(context.TODO(), types.NamespacedName{Namespace: istioCr.Namespace, Name: istioCr.Name}, &currentIstioCR)
+
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
-		Expect(returnedIstioCr.Status.State).To(Equal(operatorv1alpha1.Processing))
+		Expect(currentIstioCR.Status.State).To(Equal(operatorv1alpha1.Processing))
 	})
 
 	It("should not execute install to downgrade istio", func() {
@@ -481,23 +497,23 @@ var _ = Describe("Installation reconciliation", func() {
 
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
 		mockClient := mockLibraryClient{}
+		c := createFakeClient(&istioCr, istiod)
 		installation := istio.Installation{
-			Client:         createFakeClient(&istioCr, istiod),
+			Client:         c,
 			IstioClient:    &mockClient,
 			IstioVersion:   istioVersionDowngrade,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
 		}
-		c := createFakeClient(&istioCr)
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
+		err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Error()).To(Equal("target Istio version (1.16.0-distroless) is lower than current version (1.16.1-distroless) - downgrade not supported"))
-		Expect(err.Description()).To(Equal("Istio version check failed: target Istio version (1.16.0-distroless) is lower than current version (1.16.1-distroless) - downgrade not supported"))
+		Expect(err.Description()).To(Equal("Istio install check failed: target Istio version (1.16.0-distroless) is lower than current version (1.16.1-distroless) - downgrade not supported"))
 		Expect(mockClient.installCalled).To(BeFalse())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 	})
@@ -523,23 +539,23 @@ var _ = Describe("Installation reconciliation", func() {
 
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
 		mockClient := mockLibraryClient{}
+		c := createFakeClient(&istioCr, istiod)
 		installation := istio.Installation{
-			Client:         createFakeClient(&istioCr, istiod),
+			Client:         c,
 			IstioClient:    &mockClient,
 			IstioVersion:   istioVersionTwoMinor,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
 		}
-		c := createFakeClient(&istioCr)
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
+		err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Error()).To(Equal("target Istio version (1.18.0-distroless) is higher than current Istio version (1.16.1-distroless) - the difference between versions exceed one minor version"))
-		Expect(err.Description()).To(Equal("Istio version check failed: target Istio version (1.18.0-distroless) is higher than current Istio version (1.16.1-distroless) - the difference between versions exceed one minor version"))
+		Expect(err.Description()).To(Equal("Istio install check failed: target Istio version (1.18.0-distroless) is higher than current Istio version (1.16.1-distroless) - the difference between versions exceed one minor version"))
 		Expect(mockClient.installCalled).To(BeFalse())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 	})
@@ -565,23 +581,23 @@ var _ = Describe("Installation reconciliation", func() {
 
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
 		mockClient := mockLibraryClient{}
+		c := createFakeClient(&istioCr, istiod)
 		installation := istio.Installation{
-			Client:         createFakeClient(&istioCr, istiod),
+			Client:         c,
 			IstioClient:    &mockClient,
 			IstioVersion:   istioVersionOneMajor,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
 		}
-		c := createFakeClient(&istioCr)
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
+		err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Error()).To(Equal("target Istio version (2.0.0-distroless) is different than current Istio version (1.16.1-distroless) - major version upgrade is not supported"))
-		Expect(err.Description()).To(Equal("Istio version check failed: target Istio version (2.0.0-distroless) is different than current Istio version (1.16.1-distroless) - major version upgrade is not supported"))
+		Expect(err.Description()).To(Equal("Istio install check failed: target Istio version (2.0.0-distroless) is different than current Istio version (1.16.1-distroless) - major version upgrade is not supported"))
 		Expect(mockClient.installCalled).To(BeFalse())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 	})
@@ -606,7 +622,6 @@ var _ = Describe("Installation reconciliation", func() {
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.17.0")
 		istioNamespace := createNamespace("istio-system")
 		c := createFakeClient(&istioCr, istiod, istioNamespace)
-
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
 			Client:         c,
@@ -618,12 +633,12 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
+		err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Error()).To(Equal("fake is not in dotted-tri format"))
-		Expect(err.Description()).To(Equal("Istio version check failed: fake is not in dotted-tri format"))
+		Expect(err.Description()).To(Equal("Istio install check failed: fake is not in dotted-tri format"))
 		Expect(mockClient.installCalled).To(BeFalse())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 	})
@@ -648,7 +663,6 @@ var _ = Describe("Installation reconciliation", func() {
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "fake")
 		istioNamespace := createNamespace("istio-system")
 		c := createFakeClient(&istioCr, istiod, istioNamespace)
-
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
 			Client:         c,
@@ -660,7 +674,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
+		err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -690,7 +704,6 @@ var _ = Describe("Installation reconciliation", func() {
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "fake")
 		istioNamespace := createNamespace("istio-system")
 		c := createFakeClient(&istioCr, istiod, istioNamespace)
-
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
 			Client:         c,
@@ -704,7 +717,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
+		err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -734,7 +747,6 @@ var _ = Describe("Installation reconciliation", func() {
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.17.0")
 		istioNamespace := createNamespace("istio-system")
 		c := createFakeClient(&istioCr, istiod, istioNamespace)
-
 		mockClient := mockLibraryClient{
 			installError: errors.New("installation failed"),
 		}
@@ -748,7 +760,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
+		err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -781,7 +793,6 @@ var _ = Describe("Installation reconciliation", func() {
 		istioNamespace := createNamespace("istio-system")
 		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway"}}
 		c := createFakeClient(&istioCr, istiod, istioNamespace, igwDeployment)
-
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
 			Client:         c,
@@ -793,7 +804,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
+		err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -822,7 +833,6 @@ var _ = Describe("Installation reconciliation", func() {
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
 		istioNamespace := createNamespace("istio-system")
 		c := createFakeClient(&istioCr, istiod, istioNamespace)
-
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
 			Client:         c,
@@ -834,7 +844,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
+		err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -865,18 +875,18 @@ var _ = Describe("Installation reconciliation", func() {
 		mockClient := mockLibraryClient{
 			uninstallError: errors.New("uninstall failed"),
 		}
+		c := createFakeClient(&istioCr)
 		installation := istio.Installation{
-			Client:         createFakeClient(&istioCr),
+			Client:         c,
 			IstioClient:    &mockClient,
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
 		}
-		c := createFakeClient(&istioCr)
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
+		err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -906,7 +916,6 @@ var _ = Describe("Installation reconciliation", func() {
 		istioNamespace := createNamespace("istio-system")
 		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway"}}
 		c := createFakeClient(&istioCr, istiod, istioNamespace, igwDeployment)
-
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
 			Client:         c,
@@ -918,7 +927,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
+		err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -947,7 +956,6 @@ var _ = Describe("Installation reconciliation", func() {
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
 		istioNamespace := createNamespace("istio-system")
 		c := createFakeClient(istiod, istioNamespace)
-
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
 			Client:         c,
@@ -959,7 +967,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
+		err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -994,7 +1002,6 @@ var _ = Describe("Installation reconciliation", func() {
 				Namespace: "istio-system",
 			},
 		})
-
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
 			Client:         c,
@@ -1006,7 +1013,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
+		err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -1035,23 +1042,23 @@ var _ = Describe("Installation reconciliation", func() {
 		}
 
 		mockClient := mockLibraryClient{}
+		c := createFakeClient(&istioCr, &networkingv1alpha3.VirtualService{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "mock-vs",
+				Namespace: "mock-ns",
+			},
+		})
 		installation := istio.Installation{
-			Client: createFakeClient(&istioCr, &networkingv1alpha3.VirtualService{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "mock-vs",
-					Namespace: "mock-ns",
-				},
-			}),
+			Client:         c,
 			IstioClient:    &mockClient,
 			IstioVersion:   istioVersion,
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
 		}
-		c := createFakeClient(&istioCr)
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
+		err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).Should(HaveOccurred())

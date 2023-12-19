@@ -85,7 +85,7 @@ func (d StatusHandler) UpdateToError(ctx context.Context, istioCR *operatorv1alp
 
 func (d StatusHandler) UpdateToDeleting(ctx context.Context, istioCR *operatorv1alpha1.Istio) error {
 	istioCR.Status.State = operatorv1alpha1.Deleting
-	istioCR.Status.Description = "Removing Istio resources"
+	istioCR.Status.Description = "Deleting Istio resources"
 
 	d.updateCondition(istioCR, operatorv1alpha1.ConditionReasonDeleting, "")
 

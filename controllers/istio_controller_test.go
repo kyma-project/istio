@@ -649,8 +649,8 @@ type istioInstallationReconciliationMock struct {
 	err described_errors.DescribedError
 }
 
-func (i *istioInstallationReconciliationMock) Reconcile(_ context.Context, istioCR operatorv1alpha1.Istio, statusHandler status.Status, _ string) (operatorv1alpha1.Istio, described_errors.DescribedError) {
-	return istioCR, i.err
+func (i *istioInstallationReconciliationMock) Reconcile(_ context.Context, istioCR operatorv1alpha1.Istio, statusHandler status.Status, _ string) described_errors.DescribedError {
+	return i.err
 }
 
 type proxySidecarsReconciliationMock struct {

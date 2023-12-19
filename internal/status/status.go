@@ -1,4 +1,4 @@
-package controllers
+package status
 
 import (
 	"context"
@@ -11,14 +11,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type status interface {
-	updateToProcessing(ctx context.Context, description string, istioCR *operatorv1alpha1.Istio) error
-	updateToError(ctx context.Context, err described_errors.DescribedError, reason operatorv1alpha1.ConditionReason, istioCR *operatorv1alpha1.Istio) error
-	updateToDeleting(ctx context.Context, istioCR *operatorv1alpha1.Istio) error
-	updateToReady(ctx context.Context, istioCR *operatorv1alpha1.Istio) error
+type Status interface {
+	UpdateToProcessing(ctx context.Context, istioCR *operatorv1alpha1.Istio, description string, reason operatorv1alpha1.ConditionReason) error
+	UpdateToError(ctx context.Context, istioCR *operatorv1alpha1.Istio, err described_errors.DescribedError, reason operatorv1alpha1.ConditionReason) error
+	UpdateToDeleting(ctx context.Context, istioCR *operatorv1alpha1.Istio) error
+	UpdateToReady(ctx context.Context, istioCR *operatorv1alpha1.Istio) error
 }
 
-func newStatusHandler(client client.Client) StatusHandler {
+func NewStatusHandler(client client.Client) StatusHandler {
 	return StatusHandler{
 		client: client,
 	}
@@ -46,46 +46,6 @@ func (d StatusHandler) update(ctx context.Context, istioCR *operatorv1alpha1.Ist
 	})
 }
 
-func (d StatusHandler) updateToProcessing(ctx context.Context, description string, istioCR *operatorv1alpha1.Istio) error {
-	istioCR.Status.State = operatorv1alpha1.Processing
-	istioCR.Status.Description = description
-
-	d.updateCondition(istioCR, operatorv1alpha1.ConditionReasonProcessing, "")
-
-	return d.update(ctx, istioCR)
-}
-
-func (d StatusHandler) updateToError(ctx context.Context, err described_errors.DescribedError, reason operatorv1alpha1.ConditionReason, istioCR *operatorv1alpha1.Istio) error {
-	if err.Level() == described_errors.Warning {
-		istioCR.Status.State = operatorv1alpha1.Warning
-	} else {
-		istioCR.Status.State = operatorv1alpha1.Error
-	}
-
-	d.updateCondition(istioCR, reason, "")
-
-	istioCR.Status.Description = err.Description()
-	return d.update(ctx, istioCR)
-}
-
-func (d StatusHandler) updateToDeleting(ctx context.Context, istioCR *operatorv1alpha1.Istio) error {
-	istioCR.Status.State = operatorv1alpha1.Deleting
-	istioCR.Status.Description = "Removing Istio resources"
-
-	d.updateCondition(istioCR, operatorv1alpha1.ConditionReasonDeleting, "")
-
-	return d.update(ctx, istioCR)
-}
-
-func (d StatusHandler) updateToReady(ctx context.Context, istioCR *operatorv1alpha1.Istio) error {
-	istioCR.Status.State = operatorv1alpha1.Ready
-	istioCR.Status.Description = ""
-
-	d.updateCondition(istioCR, operatorv1alpha1.ConditionReasonReconcileSucceeded, "")
-
-	return d.update(ctx, istioCR)
-}
-
 func (d StatusHandler) updateCondition(istioCR *operatorv1alpha1.Istio, reason operatorv1alpha1.ConditionReason, customMessage string) {
 	if reason == "" {
 		return
@@ -99,4 +59,44 @@ func (d StatusHandler) updateCondition(istioCR *operatorv1alpha1.Istio, reason o
 	if condition != nil {
 		meta.SetStatusCondition(istioCR.Status.Conditions, *condition)
 	}
+}
+
+func (d StatusHandler) UpdateToProcessing(ctx context.Context, istioCR *operatorv1alpha1.Istio, description string, reason operatorv1alpha1.ConditionReason) error {
+	istioCR.Status.State = operatorv1alpha1.Processing
+	istioCR.Status.Description = description
+
+	d.updateCondition(istioCR, reason, "")
+
+	return d.update(ctx, istioCR)
+}
+
+func (d StatusHandler) UpdateToError(ctx context.Context, istioCR *operatorv1alpha1.Istio, err described_errors.DescribedError, reason operatorv1alpha1.ConditionReason) error {
+	if err.Level() == described_errors.Warning {
+		istioCR.Status.State = operatorv1alpha1.Warning
+	} else {
+		istioCR.Status.State = operatorv1alpha1.Error
+	}
+
+	d.updateCondition(istioCR, reason, "")
+
+	istioCR.Status.Description = err.Description()
+	return d.update(ctx, istioCR)
+}
+
+func (d StatusHandler) UpdateToDeleting(ctx context.Context, istioCR *operatorv1alpha1.Istio) error {
+	istioCR.Status.State = operatorv1alpha1.Deleting
+	istioCR.Status.Description = "Removing Istio resources"
+
+	d.updateCondition(istioCR, operatorv1alpha1.ConditionReasonDeleting, "")
+
+	return d.update(ctx, istioCR)
+}
+
+func (d StatusHandler) UpdateToReady(ctx context.Context, istioCR *operatorv1alpha1.Istio) error {
+	istioCR.Status.State = operatorv1alpha1.Ready
+	istioCR.Status.Description = ""
+
+	d.updateCondition(istioCR, operatorv1alpha1.ConditionReasonReconcileSucceeded, "")
+
+	return d.update(ctx, istioCR)
 }

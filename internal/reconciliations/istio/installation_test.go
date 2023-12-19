@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/kyma-project/istio/operator/internal/resources"
+	"github.com/kyma-project/istio/operator/internal/status"
 
 	"github.com/pkg/errors"
 
@@ -73,9 +74,10 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
 		}
+		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+		_, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -115,8 +117,10 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
 		}
+		statusHandler := status.NewStatusHandler(c)
+
 		// when
-		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -153,8 +157,10 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
 		}
+		statusHandler := status.NewStatusHandler(c)
+
 		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+		_, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -198,8 +204,11 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
 		}
+		c := createFakeClient(&istioCr)
+		statusHandler := status.NewStatusHandler(c)
+
 		// when
-		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -236,8 +245,11 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
 		}
+		c := createFakeClient(&istioCr)
+		statusHandler := status.NewStatusHandler(c)
+
 		// when
-		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -277,8 +289,10 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
 		}
+		statusHandler := status.NewStatusHandler(c)
+
 		// when
-		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -326,8 +340,10 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
 		}
+		statusHandler := status.NewStatusHandler(c)
+
 		// when
-		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -381,8 +397,10 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
 		}
+		statusHandler := status.NewStatusHandler(c)
+
 		// when
-		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -430,8 +448,10 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
 		}
+		statusHandler := status.NewStatusHandler(c)
+
 		// when
-		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+		returnedIstioCr, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -468,8 +488,11 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
 		}
+		c := createFakeClient(&istioCr)
+		statusHandler := status.NewStatusHandler(c)
+
 		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+		_, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -507,8 +530,11 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
 		}
+		c := createFakeClient(&istioCr)
+		statusHandler := status.NewStatusHandler(c)
+
 		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+		_, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -546,8 +572,11 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
 		}
+		c := createFakeClient(&istioCr)
+		statusHandler := status.NewStatusHandler(c)
+
 		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+		_, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -586,9 +615,10 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
 		}
+		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+		_, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -627,9 +657,10 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
 		}
+		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+		_, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -670,9 +701,10 @@ var _ = Describe("Installation reconciliation", func() {
 				mergeError: errors.New("merging failed"),
 			},
 		}
+		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+		_, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -713,8 +745,10 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
 		}
+		statusHandler := status.NewStatusHandler(c)
+
 		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+		_, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -756,8 +790,10 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
 		}
+		statusHandler := status.NewStatusHandler(c)
+
 		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+		_, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -795,9 +831,10 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
 		}
+		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+		_, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -835,9 +872,11 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
 		}
+		c := createFakeClient(&istioCr)
+		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+		_, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -876,9 +915,10 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
 		}
+		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+		_, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -916,9 +956,10 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
 		}
+		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+		_, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -962,9 +1003,10 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
 		}
+		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+		_, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -1005,9 +1047,11 @@ var _ = Describe("Installation reconciliation", func() {
 			IstioImageBase: istioImageBase,
 			Merger:         MergerMock{},
 		}
+		c := createFakeClient(&istioCr)
+		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), istioCr, resourceListPath)
+		_, err := installation.Reconcile(context.TODO(), istioCr, statusHandler, resourceListPath)
 
 		// then
 		Expect(err).Should(HaveOccurred())

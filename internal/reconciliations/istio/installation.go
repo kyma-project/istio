@@ -3,6 +3,8 @@ package istio
 import (
 	"context"
 	"fmt"
+
+	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/internal/webhooks"
 	"github.com/thoas/go-funk"
 	"k8s.io/client-go/util/retry"
@@ -21,7 +23,7 @@ import (
 )
 
 type InstallationReconciliation interface {
-	Reconcile(ctx context.Context, istioCR operatorv1alpha1.Istio, istioResourceListPath string) (operatorv1alpha1.Istio, described_errors.DescribedError)
+	Reconcile(ctx context.Context, istioCR operatorv1alpha1.Istio, statusHandler status.Status, istioResourceListPath string) (operatorv1alpha1.Istio, described_errors.DescribedError)
 }
 
 type Installation struct {
@@ -38,7 +40,7 @@ const (
 )
 
 // Reconcile runs Istio reconciliation to install, upgrade or uninstall Istio and returns the updated Istio CR.
-func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.Istio, istioResourceListPath string) (operatorv1alpha1.Istio, described_errors.DescribedError) {
+func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.Istio, statusHandler status.Status, istioResourceListPath string) (operatorv1alpha1.Istio, described_errors.DescribedError) {
 	istioTag := fmt.Sprintf("%s-%s", i.IstioVersion, i.IstioImageBase)
 
 	shouldInstallIstio, err := shouldInstall(istioCR, istioTag)

@@ -30,6 +30,7 @@ import (
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/ingress_gateway"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio_resources"
+	"github.com/kyma-project/istio/operator/internal/status"
 	"k8s.io/client-go/util/retry"
 
 	"github.com/kyma-project/istio/operator/internal/manifest"
@@ -71,7 +72,7 @@ func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *I
 		istioResources:         istio_resources.NewReconciler(mgr.GetClient(), clusterconfig.NewHyperscalerClient(&http.Client{Timeout: 1 * time.Second})),
 		ingressGateway:         ingress_gateway.NewReconciler(mgr.GetClient(), []filter.IngressGatewayPredicate{efReferer}),
 		log:                    mgr.GetLogger(),
-		statusHandler:          newStatusHandler(mgr.GetClient()),
+		statusHandler:          status.NewStatusHandler(mgr.GetClient()),
 		reconciliationInterval: reconciliationInterval,
 	}
 }
@@ -108,20 +109,20 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 
 	if istioCR.DeletionTimestamp.IsZero() {
-		if err := r.statusHandler.updateToProcessing(ctx, "Reconciling Istio resources", &istioCR); err != nil {
+		if err := r.statusHandler.UpdateToProcessing(ctx, &istioCR, "Reconciling Istio resources", operatorv1alpha1.ConditionReasonProcessingMessage); err != nil {
 			r.log.Error(err, "Update status to processing failed")
 			// We don't update the status to error, because the status update already failed and to avoid another status update error we simply requeue the request.
 			return ctrl.Result{}, err
 		}
 	} else {
-		if err := r.statusHandler.updateToDeleting(ctx, &istioCR); err != nil {
+		if err := r.statusHandler.UpdateToDeleting(ctx, &istioCR); err != nil {
 			r.log.Error(err, "Update status to deleting failed")
 			// We don't update the status to error, because the status update already failed and to avoid another status update error we simply requeue the request.
 			return ctrl.Result{}, err
 		}
 	}
 
-	istioCR, installationErr := r.istioInstallation.Reconcile(ctx, istioCR, IstioResourceListDefaultPath)
+	istioCR, installationErr := r.istioInstallation.Reconcile(ctx, istioCR, r.statusHandler, IstioResourceListDefaultPath)
 	if installationErr != nil {
 		return r.requeueReconciliation(ctx, istioCR, installationErr, operatorv1alpha1.ConditionReasonIstioInstallationFailed)
 	}
@@ -160,7 +161,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 // requeueReconciliation cancels the reconciliation and requeues the request.
 func (r *IstioReconciler) requeueReconciliation(ctx context.Context, istioCR operatorv1alpha1.Istio, err described_errors.DescribedError, reason operatorv1alpha1.ConditionReason) (ctrl.Result, error) {
-	statusUpdateErr := r.statusHandler.updateToError(ctx, err, reason, &istioCR)
+	statusUpdateErr := r.statusHandler.UpdateToError(ctx, &istioCR, err, reason)
 	if statusUpdateErr != nil {
 		r.log.Error(statusUpdateErr, "Error during updating status to error")
 	}
@@ -171,7 +172,7 @@ func (r *IstioReconciler) requeueReconciliation(ctx context.Context, istioCR ope
 
 // terminateReconciliation stops the reconciliation and does not requeue the request.
 func (r *IstioReconciler) terminateReconciliation(ctx context.Context, istioCR operatorv1alpha1.Istio, err described_errors.DescribedError, reason operatorv1alpha1.ConditionReason) (ctrl.Result, error) {
-	statusUpdateErr := r.statusHandler.updateToError(ctx, err, reason, &istioCR)
+	statusUpdateErr := r.statusHandler.UpdateToError(ctx, &istioCR, err, reason)
 	if statusUpdateErr != nil {
 		r.log.Error(statusUpdateErr, "Error during updating status to error")
 		// In case the update of the status fails we must requeue the request, because otherwise the Error state is never visible in the CR.
@@ -201,7 +202,7 @@ func (r *IstioReconciler) finishReconcile(ctx context.Context, istioCR operatorv
 		return r.requeueReconciliation(ctx, istioCR, describedErr, operatorv1alpha1.ConditionReasonReconcileFailed)
 	}
 
-	if statusErr := r.statusHandler.updateToReady(ctx, &istioCR); statusErr != nil {
+	if statusErr := r.statusHandler.UpdateToReady(ctx, &istioCR); statusErr != nil {
 		r.log.Error(statusErr, "Error during updating status to ready")
 		return ctrl.Result{}, statusErr
 	}

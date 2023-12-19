@@ -9,6 +9,7 @@ import (
 
 	"github.com/kyma-project/istio/operator/internal/filter"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio_resources"
+	"github.com/kyma-project/istio/operator/internal/status"
 
 	"github.com/go-logr/logr"
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
@@ -54,7 +55,7 @@ var _ = Describe("Istio Controller", func() {
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
 				log:                    logr.Discard(),
-				statusHandler:          newStatusHandler(client),
+				statusHandler:          status.NewStatusHandler(client),
 				reconciliationInterval: 10 * time.Hour,
 			}
 			req := reconcile.Request{
@@ -262,7 +263,7 @@ var _ = Describe("Istio Controller", func() {
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
 				log:                    logr.Discard(),
-				statusHandler:          newStatusHandler(fakeClient),
+				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
 			}
 
@@ -301,7 +302,7 @@ var _ = Describe("Istio Controller", func() {
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
 				log:                    logr.Discard(),
-				statusHandler:          newStatusHandler(fakeClient),
+				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
 			}
 
@@ -378,7 +379,7 @@ var _ = Describe("Istio Controller", func() {
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
 				log:                    logr.Discard(),
-				statusHandler:          newStatusHandler(fakeClient),
+				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
 			}
 
@@ -419,7 +420,7 @@ var _ = Describe("Istio Controller", func() {
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
 				log:                    logr.Discard(),
-				statusHandler:          newStatusHandler(fakeClient),
+				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
 			}
 
@@ -473,7 +474,7 @@ var _ = Describe("Istio Controller", func() {
 				ingressGateway:         &ingressGatewayReconciliationMock{},
 				proxySidecars:          &proxySidecarsReconciliationMock{},
 				log:                    logr.Discard(),
-				statusHandler:          newStatusHandler(fakeClient),
+				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
 			}
 
@@ -518,7 +519,7 @@ var _ = Describe("Istio Controller", func() {
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
 				log:                    logr.Discard(),
-				statusHandler:          newStatusHandler(fakeClient),
+				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
 			}
 
@@ -553,7 +554,7 @@ var _ = Describe("Istio Controller", func() {
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
 				log:                    logr.Discard(),
-				statusHandler:          newStatusHandler(fakeClient),
+				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
 			}
 
@@ -592,7 +593,7 @@ var _ = Describe("Istio Controller", func() {
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
 				log:                    logr.Discard(),
-				statusHandler:          newStatusHandler(fakeClient),
+				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
 			}
 
@@ -648,7 +649,7 @@ type istioInstallationReconciliationMock struct {
 	err described_errors.DescribedError
 }
 
-func (i *istioInstallationReconciliationMock) Reconcile(_ context.Context, istioCR operatorv1alpha1.Istio, _ string) (operatorv1alpha1.Istio, described_errors.DescribedError) {
+func (i *istioInstallationReconciliationMock) Reconcile(_ context.Context, istioCR operatorv1alpha1.Istio, statusHandler status.Status, _ string) (operatorv1alpha1.Istio, described_errors.DescribedError) {
 	return istioCR, i.err
 }
 
@@ -675,22 +676,22 @@ type StatusMock struct {
 	updatedToErrorCalled      bool
 }
 
-func (s *StatusMock) updateToProcessing(_ context.Context, _ string, _ *operatorv1alpha1.Istio) error {
+func (s *StatusMock) UpdateToProcessing(_ context.Context, _ *operatorv1alpha1.Istio, _ string, _ operatorv1alpha1.ConditionReason) error {
 	s.updatedToProcessingCalled = true
 	return s.processingError
 }
 
-func (s *StatusMock) updateToError(_ context.Context, _ described_errors.DescribedError, _ operatorv1alpha1.ConditionReason, _ *operatorv1alpha1.Istio) error {
+func (s *StatusMock) UpdateToError(_ context.Context, _ *operatorv1alpha1.Istio, _ described_errors.DescribedError, _ operatorv1alpha1.ConditionReason) error {
 	s.updatedToErrorCalled = true
 	return s.errorError
 }
 
-func (s *StatusMock) updateToDeleting(_ context.Context, _ *operatorv1alpha1.Istio) error {
+func (s *StatusMock) UpdateToDeleting(_ context.Context, _ *operatorv1alpha1.Istio) error {
 	s.updatedToDeletingCalled = true
 	return s.deletingError
 }
 
-func (s *StatusMock) updateToReady(_ context.Context, _ *operatorv1alpha1.Istio) error {
+func (s *StatusMock) UpdateToReady(_ context.Context, _ *operatorv1alpha1.Istio) error {
 	s.updatedToReadyCalled = true
 	return s.readyError
 }

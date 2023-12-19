@@ -1,4 +1,4 @@
-package controllers
+package status
 
 import (
 	"context"
@@ -8,23 +8,28 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
+	"istio.io/client-go/pkg/apis/networking/v1alpha3"
+	securityv1beta1 "istio.io/client-go/pkg/apis/security/v1beta1"
+	"k8s.io/api/apps/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	types2 "k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
 var _ = Describe("status", func() {
-	Describe("updateToReady", func() {
-
+	Describe("UpdateToReady", func() {
 		It("Should update Istio CR status to ready", func() {
 			// given
 			cr := operatorv1alpha1.Istio{
 				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 			}
 			k8sClient := createFakeClient(&cr)
-			handler := newStatusHandler(k8sClient)
+			handler := NewStatusHandler(k8sClient)
 
 			// when
-			err := handler.updateToReady(context.TODO(), &cr)
+			err := handler.UpdateToReady(context.TODO(), &cr)
 
 			// then
 			Expect(err).ToNot(HaveOccurred())
@@ -45,10 +50,10 @@ var _ = Describe("status", func() {
 			}
 
 			k8sClient := createFakeClient(&cr)
-			handler := newStatusHandler(k8sClient)
+			handler := NewStatusHandler(k8sClient)
 
 			// when
-			err := handler.updateToReady(context.TODO(), &cr)
+			err := handler.UpdateToReady(context.TODO(), &cr)
 
 			// then
 			Expect(err).ToNot(HaveOccurred())
@@ -66,10 +71,10 @@ var _ = Describe("status", func() {
 				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 			}
 			k8sClient := createFakeClient(&cr)
-			handler := newStatusHandler(k8sClient)
+			handler := NewStatusHandler(k8sClient)
 
 			// when
-			err := handler.updateToDeleting(context.TODO(), &cr)
+			err := handler.UpdateToDeleting(context.TODO(), &cr)
 
 			// then
 			Expect(err).ToNot(HaveOccurred())
@@ -91,10 +96,10 @@ var _ = Describe("status", func() {
 				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 			}
 			k8sClient := createFakeClient(&cr)
-			handler := newStatusHandler(k8sClient)
+			handler := NewStatusHandler(k8sClient)
 
 			// when
-			err := handler.updateToProcessing(context.TODO(), "processing some stuff", &cr)
+			err := handler.UpdateToProcessing(context.TODO(), &cr, "processing some stuff", "")
 
 			// then
 			Expect(err).ToNot(HaveOccurred())
@@ -116,12 +121,12 @@ var _ = Describe("status", func() {
 				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 			}
 			k8sClient := createFakeClient(&cr)
-			handler := newStatusHandler(k8sClient)
+			handler := NewStatusHandler(k8sClient)
 
 			describedError := described_errors.NewDescribedError(errors.New("error happened"), "Something")
 
 			// when
-			err := handler.updateToError(context.TODO(), describedError, "", &cr)
+			err := handler.UpdateToError(context.TODO(), &cr, describedError, "")
 
 			// then
 			Expect(err).ToNot(HaveOccurred())
@@ -138,12 +143,12 @@ var _ = Describe("status", func() {
 				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 			}
 			k8sClient := createFakeClient(&cr)
-			handler := newStatusHandler(k8sClient)
+			handler := NewStatusHandler(k8sClient)
 
 			describedError := described_errors.NewDescribedError(errors.New("error happened"), "Something").SetWarning()
 
 			// when
-			err := handler.updateToError(context.TODO(), describedError, "", &cr)
+			err := handler.UpdateToError(context.TODO(), &cr, describedError, "")
 
 			// then
 			Expect(err).ToNot(HaveOccurred())
@@ -155,3 +160,17 @@ var _ = Describe("status", func() {
 		})
 	})
 })
+
+func createFakeClient(objects ...client.Object) client.Client {
+	return fake.NewClientBuilder().WithScheme(getTestScheme()).WithObjects(objects...).WithStatusSubresource(objects...).Build()
+}
+
+func getTestScheme() *runtime.Scheme {
+	scheme := runtime.NewScheme()
+	Expect(operatorv1alpha1.AddToScheme(scheme)).Should(Succeed())
+	Expect(v1alpha3.AddToScheme(scheme)).Should(Succeed())
+	Expect(v1beta1.AddToScheme(scheme)).Should(Succeed())
+	Expect(securityv1beta1.AddToScheme(scheme)).Should(Succeed())
+
+	return scheme
+}

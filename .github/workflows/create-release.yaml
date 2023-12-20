@@ -60,21 +60,10 @@ jobs:
         id: wait-for-build
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          statusName: "rel-istio-module-build"
-          timeoutSeconds: "1800"
-      - name: Check that build status is success
-        if: steps.wait-for-build.outputs.state != 'success'
-        run: exit 1
-
-      - uses: autotelic/action-wait-for-status-check@6556cf50c8fb6608412945382eae73581f56cbb4
-        name: Build module
-        id: wait-for-module
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
           statusName: "rel-istio-build"
           timeoutSeconds: "1800"
       - name: Check that module build status is success
-        if: steps.wait-for-module.outputs.state != 'success'
+        if: steps.wait-for-build.outputs.state != 'success'
         run: exit 1
 
       - name: Publish release assets

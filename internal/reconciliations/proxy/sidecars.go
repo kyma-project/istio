@@ -3,6 +3,7 @@ package proxy
 import (
 	"context"
 	"fmt"
+
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
@@ -53,7 +54,7 @@ func (s *Sidecars) Reconcile(ctx context.Context, istioCr v1alpha1.Istio) (bool,
 		return false, err
 	}
 
-	ctrl.Log.Info("Installing istio with", "profile", cSize.String())
+	ctrl.Log.Info("Istio proxy resetting with", "profile", cSize.String())
 
 	iop, err := s.Merger.GetIstioOperator(cSize.DefaultManifestPath())
 	if err != nil {

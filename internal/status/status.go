@@ -12,7 +12,7 @@ import (
 )
 
 type Status interface {
-	UpdateToProcessing(ctx context.Context, istioCR *operatorv1alpha1.Istio, description string, reason operatorv1alpha1.ConditionReason) error
+	UpdateToProcessing(ctx context.Context, istioCR *operatorv1alpha1.Istio, reason operatorv1alpha1.ConditionReason) error
 	UpdateToError(ctx context.Context, istioCR *operatorv1alpha1.Istio, err described_errors.DescribedError, reason operatorv1alpha1.ConditionReason) error
 	UpdateToDeleting(ctx context.Context, istioCR *operatorv1alpha1.Istio) error
 	UpdateToReady(ctx context.Context, istioCR *operatorv1alpha1.Istio) error
@@ -61,9 +61,9 @@ func (d StatusHandler) updateCondition(istioCR *operatorv1alpha1.Istio, reason o
 	}
 }
 
-func (d StatusHandler) UpdateToProcessing(ctx context.Context, istioCR *operatorv1alpha1.Istio, description string, reason operatorv1alpha1.ConditionReason) error {
+func (d StatusHandler) UpdateToProcessing(ctx context.Context, istioCR *operatorv1alpha1.Istio, reason operatorv1alpha1.ConditionReason) error {
 	istioCR.Status.State = operatorv1alpha1.Processing
-	istioCR.Status.Description = description
+	istioCR.Status.Description = "Reconciling Istio"
 
 	d.updateCondition(istioCR, reason, "")
 
@@ -77,7 +77,13 @@ func (d StatusHandler) UpdateToError(ctx context.Context, istioCR *operatorv1alp
 		istioCR.Status.State = operatorv1alpha1.Error
 	}
 
-	d.updateCondition(istioCR, reason, "")
+	if len(err.ConditionReasons()) > 0 {
+		for _, conditionReason := range err.ConditionReasons() {
+			d.updateCondition(istioCR, conditionReason, "")
+		}
+	} else {
+		d.updateCondition(istioCR, reason, "")
+	}
 
 	istioCR.Status.Description = err.Description()
 	return d.update(ctx, istioCR)
@@ -85,7 +91,7 @@ func (d StatusHandler) UpdateToError(ctx context.Context, istioCR *operatorv1alp
 
 func (d StatusHandler) UpdateToDeleting(ctx context.Context, istioCR *operatorv1alpha1.Istio) error {
 	istioCR.Status.State = operatorv1alpha1.Deleting
-	istioCR.Status.Description = "Deleting Istio resources"
+	istioCR.Status.Description = "Deleting Istio"
 
 	d.updateCondition(istioCR, operatorv1alpha1.ConditionReasonDeleting, "")
 

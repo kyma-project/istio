@@ -36,7 +36,7 @@ type Resource interface {
 }
 
 func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha1.Istio) described_errors.DescribedError {
-	ctrl.Log.Info("Reconciling istio resources")
+	ctrl.Log.Info("Reconciling Istio resources")
 
 	resources, err := getResources(r.client, r.hsClient)
 	if err != nil {

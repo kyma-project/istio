@@ -722,7 +722,7 @@ var _ = Describe("Installation reconciliation", func() {
 		// then
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Error()).To(Equal("merging failed"))
-		Expect(err.Description()).To(Equal("Could not get configuration from Istio Operator file: merging failed"))
+		Expect(err.Description()).To(Equal("Could not merge Istio operator configuration: merging failed"))
 		Expect(mockClient.installCalled).To(BeFalse())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 	})

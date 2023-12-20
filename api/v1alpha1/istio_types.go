@@ -61,26 +61,28 @@ const (
 	ConditionReasonIstioUninstallDoneMessage                          = "Uninstall done"
 	ConditionReasonIstioInstallUninstallFailed        ConditionReason = "InstallUninstallFailed"
 	ConditionReasonIstioInstallUninstallFailedMessage                 = "Failure during execution of Istio install or uninstall"
-
-	// Istio delete
-	ConditionReasonIstioCRsDangling        ConditionReason = "IstioCustomResourcesDangling"
-	ConditionReasonIstioCRsDanglingMessage                 = "Istio deletion blocked because of existing Istio resources"
+	ConditionReasonCustomResourceMisconfigured        ConditionReason = "CustomResourceMisconfigured"
+	ConditionReasonCustomResourceMisconfiguredMessage                 = "Configuration present on Istio Custom Resource is not correct"
+	ConditionReasonIstioCRsDangling                   ConditionReason = "IstioCustomResourcesDangling"
+	ConditionReasonIstioCRsDanglingMessage                            = "Istio deletion blocked because of existing Istio resources"
 
 	// Istio CRs
+	ConditionReasonIstioCRsReconciling            ConditionReason = "CustomResourcesReconciling"
+	ConditionReasonIstioCRsReconcilingMessage                     = "Istio CRs reconciliating"
 	ConditionReasonIstioCRsReconcileFailed        ConditionReason = "CustomResourcesReconcileFailed"
 	ConditionReasonIstioCRsReconcileFailedMessage                 = "Istio CRs reconciliation failed"
 
 	// proxy reset
+	ConditionReasonProxyResetReconcile              ConditionReason = "ProxyResetReconcile"
+	ConditionReasonProxyResetReconcileMessage                       = "Proxy reset reconciling"
 	ConditionReasonProxyResetReconcileFailed        ConditionReason = "ProxyResetReconcileFailed"
 	ConditionReasonProxyResetReconcileFailedMessage                 = "Proxy reset reconciliation failed"
 
 	// ingress gateway
+	ConditionReasonIngressGatewayReconcile              ConditionReason = "IngressGatewayReconcile"
+	ConditionReasonIngressGatewayReconcileMessage                       = "Istio Ingress Gateway reconciling"
 	ConditionReasonIngressGatewayReconcileFailed        ConditionReason = "IngressGatewayReconcileFailed"
 	ConditionReasonIngressGatewayReconcileFailedMessage                 = "Istio Ingress Gateway reconciliation failed"
-
-	// ??
-	ConditionReasonCustomResourceMisconfigured        ConditionReason = "CustomResourceMisconfigured"
-	ConditionReasonCustomResourceMisconfiguredMessage                 = "Configuration present on Istio Custom Resource is not correct"
 )
 
 type ConditionMeta struct {
@@ -103,16 +105,17 @@ var ConditionReasons = map[ConditionReason]ConditionMeta{
 	ConditionReasonIstioUninstalling:           {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonIstioUninstallingMessage},
 	ConditionReasonIstioUninstallDone:          {Type: ConditionTypeReady, Status: metav1.ConditionTrue, Message: ConditionReasonIstioUninstallDoneMessage},
 	ConditionReasonIstioInstallUninstallFailed: {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonIstioInstallUninstallFailedMessage},
+	ConditionReasonCustomResourceMisconfigured: {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonCustomResourceMisconfiguredMessage},
+	ConditionReasonIstioCRsDangling:            {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonIstioCRsDanglingMessage},
 
-	ConditionReasonIstioCRsDangling: {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonIstioCRsDanglingMessage},
-
+	ConditionReasonIstioCRsReconciling:     {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonIstioCRsReconcilingMessage},
 	ConditionReasonIstioCRsReconcileFailed: {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonIstioCRsReconcileFailedMessage},
 
+	ConditionReasonProxyResetReconcile:       {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonProxyResetReconcileMessage},
 	ConditionReasonProxyResetReconcileFailed: {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonProxyResetReconcileFailedMessage},
 
+	ConditionReasonIngressGatewayReconcile:       {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonIngressGatewayReconcileMessage},
 	ConditionReasonIngressGatewayReconcileFailed: {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonIngressGatewayReconcileFailedMessage},
-
-	ConditionReasonCustomResourceMisconfigured: {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonCustomResourceMisconfiguredMessage},
 }
 
 // Defines the desired specification for installing or updating Istio.

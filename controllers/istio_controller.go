@@ -109,14 +109,14 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 
 	if istioCR.DeletionTimestamp.IsZero() {
-		if err := r.statusHandler.UpdateToProcessing(ctx, &istioCR, "Reconciling Istio resources", operatorv1alpha1.ConditionReasonReconciling); err != nil {
+		if err := r.statusHandler.UpdateToProcessing(ctx, &istioCR, operatorv1alpha1.ConditionReasonReconciling); err != nil {
 			r.log.Error(err, "Update status to processing failed")
 			// We don't update the status to error, because the status update already failed and to avoid another status update error we simply requeue the request.
 			return ctrl.Result{}, err
 		}
 	} else {
 		if err := r.statusHandler.UpdateToDeleting(ctx, &istioCR); err != nil {
-			r.log.Error(err, "Update status to deleting failed")
+			r.log.Error(err, "Update status to deleting failed 0")
 			// We don't update the status to error, because the status update already failed and to avoid another status update error we simply requeue the request.
 			return ctrl.Result{}, err
 		}
@@ -139,6 +139,11 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, nil
 	}
 
+	if err := r.statusHandler.UpdateToProcessing(ctx, &istioCR, operatorv1alpha1.ConditionReasonIstioCRsReconciling); err != nil {
+		ctrl.Log.Error(err, "CR status update failed")
+		return ctrl.Result{}, err
+	}
+
 	resourcesErr := r.istioResources.Reconcile(ctx, istioCR)
 	if resourcesErr != nil {
 		return r.requeueReconciliation(ctx, istioCR, resourcesErr, operatorv1alpha1.ConditionReasonIstioCRsReconcileFailed)
@@ -147,6 +152,11 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	// We do not want to safeguard the Istio sidecar reconciliation by checking whether Istio has to be installed. The
 	// reason for this is that we want to guarantee the restart of the proxies during the next reconciliation even if an
 	// error occurs in the reconciliation of the Istio upgrade after the Istio upgrade.
+	if err := r.statusHandler.UpdateToProcessing(ctx, &istioCR, operatorv1alpha1.ConditionReasonProxyResetReconcile); err != nil {
+		ctrl.Log.Error(err, "CR status update failed")
+		return ctrl.Result{}, err
+	}
+
 	warningHappened, proxyErr := r.proxySidecars.Reconcile(ctx, istioCR)
 	if proxyErr != nil {
 		describedErr := described_errors.NewDescribedError(proxyErr, "Error occurred during reconciliation of Istio Sidecars")
@@ -154,6 +164,11 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	} else if warningHappened {
 		warning := described_errors.NewDescribedError(errors.New("Istio controller could not restart one or more istio-injected pods."), "Not all pods with Istio injection could be restarted. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning").SetWarning()
 		return r.requeueReconciliation(ctx, istioCR, warning, "")
+	}
+
+	if err := r.statusHandler.UpdateToProcessing(ctx, &istioCR, operatorv1alpha1.ConditionReasonIngressGatewayReconcile); err != nil {
+		ctrl.Log.Error(err, "CR status update failed")
+		return ctrl.Result{}, err
 	}
 
 	ingressGatewayErr := r.ingressGateway.Reconcile(ctx)

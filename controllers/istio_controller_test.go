@@ -676,7 +676,7 @@ type StatusMock struct {
 	updatedToErrorCalled      bool
 }
 
-func (s *StatusMock) UpdateToProcessing(_ context.Context, _ *operatorv1alpha1.Istio, _ string, _ operatorv1alpha1.ConditionReason) error {
+func (s *StatusMock) UpdateToProcessing(_ context.Context, _ *operatorv1alpha1.Istio, _ operatorv1alpha1.ConditionReason) error {
 	s.updatedToProcessingCalled = true
 	return s.processingError
 }

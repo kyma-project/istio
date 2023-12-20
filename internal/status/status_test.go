@@ -99,7 +99,7 @@ var _ = Describe("status", func() {
 			handler := NewStatusHandler(k8sClient)
 
 			// when
-			err := handler.UpdateToProcessing(context.TODO(), &cr, "processing some stuff", "")
+			err := handler.UpdateToProcessing(context.TODO(), &cr, "")
 
 			// then
 			Expect(err).ToNot(HaveOccurred())

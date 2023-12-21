@@ -10,7 +10,7 @@ Feature: Installing and uninstalling Istio module
   Scenario: Installation of Istio module with default values
     Given Istio CR "istio-sample" is applied in namespace "kyma-system"
     Then Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
-    And Istio CR "istio-sample" in namespace "kyma-system" has condition message "Reconciled successfully"
+    And Istio CR "istio-sample" in namespace "kyma-system" has condition message "Reconciliation succeeded"
     And Istio CR "istio-sample" in namespace "kyma-system" has condition reason "ReconcileSucceeded"
     And Istio "istio-ingressgateway" service has annotation "dns.gardener.cloud/dnsnames" on "Gardener" cluster
     And "proxy" has "requests" set to cpu - "10m" and memory - "192Mi"
@@ -89,7 +89,7 @@ Feature: Installing and uninstalling Istio module
   Scenario: Installation of Istio module with Istio CR in different namespace
     Given Istio CR "istio-sample" is applied in namespace "default"
     Then Istio CR "istio-sample" in namespace "default" has status "Error"
-    And Istio CR "istio-sample" in namespace "default" has description "Stopped Istio CR reconciliation: istio CR is not in kyma-system namespace"
+    And Istio CR "istio-sample" in namespace "default" has description "Stopped Istio CR reconciliation: Istio CR is not in kyma-system namespace"
 
   Scenario: Installation of Istio module with a second Istio CR in kyma-system namespace
     Given Istio CR "istio-sample" is applied in namespace "kyma-system"

@@ -33,7 +33,7 @@ Conditions:
 
 | CR state   | Condition type | Condition status | Condition reason             | Remark                                                                          |
 |------------|----------------|------------------|------------------------------|---------------------------------------------------------------------------------|
-| Ready      | Ready          | true             | ReconcileSucceeded           | Reconciled successfully                                                         |
+| Ready      | Ready          | true             | ReconcileSucceeded           | Reconciliation succeeded                                                        |
 | Ready      | Ready          | true             | UpdateCheckSucceeded         | Update not required                                                             |
 | Ready      | Ready          | true             | UpdateDone                   | Update done                                                                     |
 | Processing | Ready          | false            | Processing                   | Istio installation is proceeding                                                |

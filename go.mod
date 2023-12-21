@@ -29,7 +29,7 @@ require (
 	istio.io/istio v0.0.0-20231011023022-41218ffa66c1
 	k8s.io/api v0.28.4
 	k8s.io/apiextensions-apiserver v0.28.4
-	k8s.io/apimachinery v0.28.4
+	k8s.io/apimachinery v0.28.5
 	k8s.io/client-go v0.28.4
 	k8s.io/kubectl v0.28.4
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b

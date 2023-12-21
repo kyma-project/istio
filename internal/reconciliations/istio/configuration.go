@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/kyma-project/istio/operator/internal/reconciliations/ingress_gateway"
 
 	"github.com/coreos/go-semver/semver"
@@ -17,12 +18,12 @@ type appliedConfig struct {
 }
 
 // shouldDelete returns true when Istio should be deleted
-func shouldDelete(istio operatorv1alpha1.Istio) bool {
+func shouldDelete(istio *operatorv1alpha1.Istio) bool {
 	return !istio.DeletionTimestamp.IsZero()
 }
 
 // shouldInstall returns true when Istio should be installed
-func shouldInstall(istio operatorv1alpha1.Istio, istioTag string) (shouldInstall bool, err error) {
+func shouldInstall(istio *operatorv1alpha1.Istio, istioTag string) (shouldInstall bool, err error) {
 	if shouldDelete(istio) {
 		return false, nil
 	}
@@ -66,7 +67,7 @@ func UpdateLastAppliedConfiguration(istio operatorv1alpha1.Istio, istioTag strin
 	return istio, nil
 }
 
-func getLastAppliedConfiguration(istio operatorv1alpha1.Istio) (appliedConfig, error) {
+func getLastAppliedConfiguration(istio *operatorv1alpha1.Istio) (appliedConfig, error) {
 	lastAppliedConfig := appliedConfig{}
 	if len(istio.Annotations) == 0 {
 		return lastAppliedConfig, nil
@@ -106,7 +107,7 @@ func CheckIstioVersion(currentIstioVersionString, targetIstioVersionString strin
 	return nil
 }
 
-func restartIngressGatewayIfNeeded(ctx context.Context, k8sClient client.Client, istioCR operatorv1alpha1.Istio) error {
+func restartIngressGatewayIfNeeded(ctx context.Context, k8sClient client.Client, istioCR *operatorv1alpha1.Istio) error {
 	mustRestart := false
 
 	lastAppliedConfig, err := getLastAppliedConfiguration(istioCR)

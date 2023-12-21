@@ -23,7 +23,7 @@ import (
 )
 
 type InstallationReconciliation interface {
-	Reconcile(ctx context.Context, istioCR operatorv1alpha1.Istio, statusHandler status.Status, istioResourceListPath string) described_errors.DescribedError
+	Reconcile(ctx context.Context, istioCR *operatorv1alpha1.Istio, statusHandler status.Status, istioResourceListPath string) described_errors.DescribedError
 }
 
 type Installation struct {
@@ -40,7 +40,7 @@ const (
 )
 
 // Reconcile runs Istio reconciliation to install, upgrade or uninstall Istio and returns the updated Istio CR.
-func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.Istio, statusHandler status.Status, istioResourceListPath string) described_errors.DescribedError {
+func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha1.Istio, statusHandler status.Status, istioResourceListPath string) described_errors.DescribedError {
 	istioTag := fmt.Sprintf("%s-%s", i.IstioVersion, i.IstioImageBase)
 
 	shouldInstallIstio, err := shouldInstall(istioCR, istioTag)
@@ -54,7 +54,7 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 		ctrl.Log.Info("Starting Istio install", "istio version", i.IstioVersion, "istio image", i.IstioImageBase)
 
 		if !hasInstallationFinalizer(istioCR) {
-			if err = addInstallationFinalizer(ctx, i.Client, &istioCR); err != nil {
+			if err = addInstallationFinalizer(ctx, i.Client, istioCR); err != nil {
 				ctrl.Log.Error(err, "Failed to add Istio installation finalizer")
 				return described_errors.NewDescribedError(err, "Could not add finalizer")
 			}
@@ -77,7 +77,7 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 
 		ctrl.Log.Info("Installing Istio with", "profile", cSize.String())
 
-		mergedIstioOperatorPath, err := i.Merger.Merge(cSize.DefaultManifestPath(), &istioCR, templateData, clusterConfiguration)
+		mergedIstioOperatorPath, err := i.Merger.Merge(cSize.DefaultManifestPath(), istioCR, templateData, clusterConfiguration)
 		if err != nil {
 			return described_errors.NewDescribedError(err, "Could not merge Istio operator configuration", operatorv1alpha1.ConditionReasonCustomResourceMisconfigured)
 		}
@@ -109,7 +109,7 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 
 		ctrl.Log.Info("Istio installation succeeded")
 
-		if err := statusHandler.UpdateConditions(ctx, &istioCR, operatorv1alpha1.ConditionReasonIstioInstallSucceeded); err != nil {
+		if err := statusHandler.UpdateConditions(ctx, istioCR, operatorv1alpha1.ConditionReasonIstioInstallSucceeded); err != nil {
 			ctrl.Log.Error(err, "CR conditions update failed")
 			return described_errors.NewDescribedError(err, "CR status update failed")
 		}
@@ -161,24 +161,24 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 
 		ctrl.Log.Info("Istio uninstall succeeded")
 
-		if err := statusHandler.UpdateConditions(ctx, &istioCR, operatorv1alpha1.ConditionReasonIstioUninstallSucceeded); err != nil {
+		if err := statusHandler.UpdateConditions(ctx, istioCR, operatorv1alpha1.ConditionReasonIstioUninstallSucceeded); err != nil {
 			ctrl.Log.Error(err, "CR conditions update failed")
 			return described_errors.NewDescribedError(err, "CR status update failed")
 		}
 
-		if err := removeInstallationFinalizer(ctx, i.Client, &istioCR); err != nil {
+		if err := removeInstallationFinalizer(ctx, i.Client, istioCR); err != nil {
 			ctrl.Log.Error(err, "Error happened during istio installation finalizer removal")
 			return described_errors.NewDescribedError(err, "Could not remove finalizer")
 		}
 	} else {
-		statusHandler.UpdateConditions(ctx, &istioCR, operatorv1alpha1.ConditionReasonIstioInstallNotNeeded)
+		statusHandler.UpdateConditions(ctx, istioCR, operatorv1alpha1.ConditionReasonIstioInstallNotNeeded)
 	}
 
 	return nil
 }
 
-func hasInstallationFinalizer(istioCR operatorv1alpha1.Istio) bool {
-	return controllerutil.ContainsFinalizer(&istioCR, installationFinalizer)
+func hasInstallationFinalizer(istioCR *operatorv1alpha1.Istio) bool {
+	return controllerutil.ContainsFinalizer(istioCR, installationFinalizer)
 }
 
 func addInstallationFinalizer(ctx context.Context, apiClient client.Client, istioCR *operatorv1alpha1.Istio) error {

@@ -171,7 +171,9 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha1.
 			return described_errors.NewDescribedError(err, "Could not remove finalizer")
 		}
 	} else {
-		statusHandler.UpdateConditions(ctx, istioCR, operatorv1alpha1.ConditionReasonIstioInstallNotNeeded)
+		if err := statusHandler.UpdateConditions(ctx, istioCR, operatorv1alpha1.ConditionReasonIstioInstallNotNeeded); err != nil {
+			ctrl.Log.Info("CR conditions update failed, could be already deleted")
+		}
 	}
 
 	return nil

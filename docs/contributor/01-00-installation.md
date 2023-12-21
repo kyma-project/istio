@@ -1,8 +1,4 @@
 # Install Istio
-- [Install Istio](#install-istio)
-  - [Prerequisites](#prerequisites)
-  - [Install Kyma Istio Operator Manually](#install-kyma-istio-operator-manually)
-    - [Use Kyma Istio Operator to Install or Uninstall Istio](#use-kyma-istio-operator-to-install-or-uninstall-istio)
 
 ## Prerequisites
 

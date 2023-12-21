@@ -12,10 +12,11 @@ import (
 )
 
 type Status interface {
-	UpdateToProcessing(ctx context.Context, istioCR *operatorv1alpha1.Istio, reason operatorv1alpha1.ConditionReason) error
-	UpdateToError(ctx context.Context, istioCR *operatorv1alpha1.Istio, err described_errors.DescribedError, reason operatorv1alpha1.ConditionReason) error
+	UpdateToProcessing(ctx context.Context, istioCR *operatorv1alpha1.Istio) error
 	UpdateToDeleting(ctx context.Context, istioCR *operatorv1alpha1.Istio) error
 	UpdateToReady(ctx context.Context, istioCR *operatorv1alpha1.Istio) error
+	UpdateToError(ctx context.Context, istioCR *operatorv1alpha1.Istio, err described_errors.DescribedError, conditionReasons ...operatorv1alpha1.ConditionReason) error
+	UpdateConditions(ctx context.Context, istioCR *operatorv1alpha1.Istio, conditionReasons ...operatorv1alpha1.ConditionReason) error
 }
 
 func NewStatusHandler(client client.Client) StatusHandler {
@@ -61,16 +62,26 @@ func (d StatusHandler) updateCondition(istioCR *operatorv1alpha1.Istio, reason o
 	}
 }
 
-func (d StatusHandler) UpdateToProcessing(ctx context.Context, istioCR *operatorv1alpha1.Istio, reason operatorv1alpha1.ConditionReason) error {
+func (d StatusHandler) UpdateToProcessing(ctx context.Context, istioCR *operatorv1alpha1.Istio) error {
 	istioCR.Status.State = operatorv1alpha1.Processing
 	istioCR.Status.Description = "Reconciling Istio"
-
-	d.updateCondition(istioCR, reason, "")
-
 	return d.update(ctx, istioCR)
 }
 
-func (d StatusHandler) UpdateToError(ctx context.Context, istioCR *operatorv1alpha1.Istio, err described_errors.DescribedError, reason operatorv1alpha1.ConditionReason) error {
+func (d StatusHandler) UpdateToDeleting(ctx context.Context, istioCR *operatorv1alpha1.Istio) error {
+	istioCR.Status.State = operatorv1alpha1.Deleting
+	istioCR.Status.Description = "Deleting Istio"
+	return d.update(ctx, istioCR)
+}
+
+func (d StatusHandler) UpdateToReady(ctx context.Context, istioCR *operatorv1alpha1.Istio) error {
+	istioCR.Status.State = operatorv1alpha1.Ready
+	istioCR.Status.Description = ""
+	d.updateCondition(istioCR, operatorv1alpha1.ConditionReasonReconcileSucceeded, "")
+	return d.update(ctx, istioCR)
+}
+
+func (d StatusHandler) UpdateToError(ctx context.Context, istioCR *operatorv1alpha1.Istio, err described_errors.DescribedError, conditionReasons ...operatorv1alpha1.ConditionReason) error {
 	if err.Level() == described_errors.Warning {
 		istioCR.Status.State = operatorv1alpha1.Warning
 	} else {
@@ -78,31 +89,25 @@ func (d StatusHandler) UpdateToError(ctx context.Context, istioCR *operatorv1alp
 	}
 
 	if len(err.ConditionReasons()) > 0 {
-		for _, conditionReason := range err.ConditionReasons() {
-			d.updateCondition(istioCR, conditionReason, "")
-		}
-	} else {
-		d.updateCondition(istioCR, reason, "")
+		conditionReasons = err.ConditionReasons()
+	}
+	if len(conditionReasons) == 0 {
+		conditionReasons = []operatorv1alpha1.ConditionReason{operatorv1alpha1.ConditionReasonReconcileFailed}
+	}
+	for _, conditionReason := range conditionReasons {
+		d.updateCondition(istioCR, conditionReason, "")
 	}
 
 	istioCR.Status.Description = err.Description()
 	return d.update(ctx, istioCR)
 }
 
-func (d StatusHandler) UpdateToDeleting(ctx context.Context, istioCR *operatorv1alpha1.Istio) error {
-	istioCR.Status.State = operatorv1alpha1.Deleting
-	istioCR.Status.Description = "Deleting Istio"
-
-	d.updateCondition(istioCR, operatorv1alpha1.ConditionReasonDeleting, "")
-
-	return d.update(ctx, istioCR)
-}
-
-func (d StatusHandler) UpdateToReady(ctx context.Context, istioCR *operatorv1alpha1.Istio) error {
-	istioCR.Status.State = operatorv1alpha1.Ready
-	istioCR.Status.Description = ""
-
-	d.updateCondition(istioCR, operatorv1alpha1.ConditionReasonReconcileSucceeded, "")
-
-	return d.update(ctx, istioCR)
+func (d StatusHandler) UpdateConditions(ctx context.Context, istioCR *operatorv1alpha1.Istio, conditionReasons ...operatorv1alpha1.ConditionReason) error {
+	if len(conditionReasons) > 0 {
+		for _, conditionReason := range conditionReasons {
+			d.updateCondition(istioCR, conditionReason, "")
+		}
+		return d.update(ctx, istioCR)
+	}
+	return nil
 }

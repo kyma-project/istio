@@ -43,7 +43,6 @@ const (
 func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.Istio, statusHandler status.Status, istioResourceListPath string) described_errors.DescribedError {
 	istioTag := fmt.Sprintf("%s-%s", i.IstioVersion, i.IstioImageBase)
 
-	statusHandler.UpdateToProcessing(ctx, &istioCR, operatorv1alpha1.ConditionReasonIstioInstallCheck)
 	shouldInstallIstio, err := shouldInstall(istioCR, istioTag)
 
 	if err != nil {
@@ -78,11 +77,6 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 
 		ctrl.Log.Info("Installing Istio with", "profile", cSize.String())
 
-		if err := statusHandler.UpdateToProcessing(ctx, &istioCR, operatorv1alpha1.ConditionReasonIstioInstalling); err != nil {
-			ctrl.Log.Error(err, "CR status update failed")
-			return described_errors.NewDescribedError(err, "CR status update failed")
-		}
-
 		mergedIstioOperatorPath, err := i.Merger.Merge(cSize.DefaultManifestPath(), &istioCR, templateData, clusterConfiguration)
 		if err != nil {
 			return described_errors.NewDescribedError(err, "Could not merge Istio operator configuration", operatorv1alpha1.ConditionReasonCustomResourceMisconfigured)
@@ -113,10 +107,10 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 			return described_errors.NewDescribedError(fmt.Errorf("istio-system pods version: %s do not match target version: %s", version, i.IstioVersion), "Istio installation failed")
 		}
 
-		ctrl.Log.Info("Istio installation done")
+		ctrl.Log.Info("Istio installation succeeded")
 
-		if err := statusHandler.UpdateToProcessing(ctx, &istioCR, operatorv1alpha1.ConditionReasonIstioInstallDone); err != nil {
-			ctrl.Log.Error(err, "CR status update failed")
+		if err := statusHandler.UpdateConditions(ctx, &istioCR, operatorv1alpha1.ConditionReasonIstioInstallSucceeded); err != nil {
+			ctrl.Log.Error(err, "CR conditions update failed")
 			return described_errors.NewDescribedError(err, "CR status update failed")
 		}
 
@@ -149,11 +143,6 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 				operatorv1alpha1.ConditionReasonIstioCRsDangling).DisableErrorWrap().SetWarning()
 		}
 
-		if err := statusHandler.UpdateToProcessing(ctx, &istioCR, operatorv1alpha1.ConditionReasonIstioUninstalling); err != nil {
-			ctrl.Log.Error(err, "CR status update failed")
-			return described_errors.NewDescribedError(err, "CR status update failed")
-		}
-
 		err = i.IstioClient.Uninstall(ctx)
 		if err != nil {
 			return described_errors.NewDescribedError(err, "Could not uninstall istio")
@@ -170,10 +159,10 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 			}
 		}
 
-		ctrl.Log.Info("Istio uninstall done")
+		ctrl.Log.Info("Istio uninstall succeeded")
 
-		if err := statusHandler.UpdateToProcessing(ctx, &istioCR, operatorv1alpha1.ConditionReasonIstioUninstallDone); err != nil {
-			ctrl.Log.Error(err, "CR status update failed")
+		if err := statusHandler.UpdateConditions(ctx, &istioCR, operatorv1alpha1.ConditionReasonIstioUninstallSucceeded); err != nil {
+			ctrl.Log.Error(err, "CR conditions update failed")
 			return described_errors.NewDescribedError(err, "CR status update failed")
 		}
 
@@ -182,7 +171,7 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR operatorv1alpha1.I
 			return described_errors.NewDescribedError(err, "Could not remove finalizer")
 		}
 	} else {
-		statusHandler.UpdateToProcessing(ctx, &istioCR, operatorv1alpha1.ConditionReasonIstioInstallNotNeeded)
+		statusHandler.UpdateConditions(ctx, &istioCR, operatorv1alpha1.ConditionReasonIstioInstallNotNeeded)
 	}
 
 	return nil

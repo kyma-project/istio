@@ -674,16 +674,13 @@ type StatusMock struct {
 	updatedToDeletingCalled   bool
 	errorError                error
 	updatedToErrorCalled      bool
+	conditionsError           error
+	updateConditionsCalled    bool
 }
 
-func (s *StatusMock) UpdateToProcessing(_ context.Context, _ *operatorv1alpha1.Istio, _ operatorv1alpha1.ConditionReason) error {
+func (s *StatusMock) UpdateToProcessing(_ context.Context, _ *operatorv1alpha1.Istio) error {
 	s.updatedToProcessingCalled = true
 	return s.processingError
-}
-
-func (s *StatusMock) UpdateToError(_ context.Context, _ *operatorv1alpha1.Istio, _ described_errors.DescribedError, _ operatorv1alpha1.ConditionReason) error {
-	s.updatedToErrorCalled = true
-	return s.errorError
 }
 
 func (s *StatusMock) UpdateToDeleting(_ context.Context, _ *operatorv1alpha1.Istio) error {
@@ -694,4 +691,14 @@ func (s *StatusMock) UpdateToDeleting(_ context.Context, _ *operatorv1alpha1.Ist
 func (s *StatusMock) UpdateToReady(_ context.Context, _ *operatorv1alpha1.Istio) error {
 	s.updatedToReadyCalled = true
 	return s.readyError
+}
+
+func (s *StatusMock) UpdateToError(_ context.Context, _ *operatorv1alpha1.Istio, _ described_errors.DescribedError, _ ...operatorv1alpha1.ConditionReason) error {
+	s.updatedToErrorCalled = true
+	return s.errorError
+}
+
+func (s *StatusMock) UpdateConditions(_ context.Context, _ *operatorv1alpha1.Istio, _ ...operatorv1alpha1.ConditionReason) error {
+	s.updateConditionsCalled = true
+	return s.conditionsError
 }

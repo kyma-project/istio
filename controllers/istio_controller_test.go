@@ -553,8 +553,6 @@ var _ = Describe("Istio Controller", func() {
 			Expect((*updatedIstioCR.Status.Conditions)[1].Status).To(Equal(metav1.ConditionTrue))
 		})
 
-		// TODO continue here
-
 		It("Should set an error status and do not requeue an Istio CR when an older Istio CR is present", func() {
 			// given
 			oldestIstioCR := &operatorv1alpha1.Istio{
@@ -596,9 +594,19 @@ var _ = Describe("Istio Controller", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(result.Requeue).To(BeFalse())
 
-			Expect(fakeClient.Get(context.TODO(), client.ObjectKeyFromObject(newerIstioCR), newerIstioCR)).Should(Succeed())
-			Expect(newerIstioCR.Status.State).Should(Equal(operatorv1alpha1.Error))
-			Expect(newerIstioCR.Status.Description).To(ContainSubstring(fmt.Sprintf("only Istio CR %s in %s reconciles the module", istioCrName, testNamespace)))
+			updatedIstioCR := operatorv1alpha1.Istio{}
+			err = fakeClient.Get(context.TODO(), client.ObjectKeyFromObject(newerIstioCR), &updatedIstioCR)
+			Expect(err).To(Not(HaveOccurred()))
+
+			Expect(updatedIstioCR.Status.State).Should(Equal(operatorv1alpha1.Error))
+			Expect(updatedIstioCR.Status.Description).To(ContainSubstring(fmt.Sprintf("only Istio CR %s in %s reconciles the module", istioCrName, testNamespace)))
+
+			Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
+			Expect((*updatedIstioCR.Status.Conditions)).To(HaveLen(1))
+
+			Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonOlderCRExists)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 		})
 
 		It("Should set an error status and requeue an Istio CR when is unable to list Istio CRs", func() {
@@ -631,9 +639,19 @@ var _ = Describe("Istio Controller", func() {
 			Expect(err).To(HaveOccurred())
 			Expect(result.Requeue).To(BeFalse())
 
-			Expect(fakeClient.Get(context.TODO(), client.ObjectKeyFromObject(istioCR), istioCR)).Should(Succeed())
-			Expect(istioCR.Status.State).Should(Equal(operatorv1alpha1.Error))
-			Expect(istioCR.Status.Description).To(ContainSubstring("Unable to list Istio CRs"))
+			updatedIstioCR := operatorv1alpha1.Istio{}
+			err = fakeClient.Get(context.TODO(), client.ObjectKeyFromObject(istioCR), &updatedIstioCR)
+			Expect(err).To(Not(HaveOccurred()))
+
+			Expect(updatedIstioCR.Status.State).Should(Equal(operatorv1alpha1.Error))
+			Expect(updatedIstioCR.Status.Description).To(ContainSubstring("Unable to list Istio CRs"))
+
+			Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
+			Expect((*updatedIstioCR.Status.Conditions)).To(HaveLen(1))
+
+			Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonReconcileFailed)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 		})
 
 		It("Should set a warning if warning happened during sidecars reconciliation", func() {
@@ -670,9 +688,23 @@ var _ = Describe("Istio Controller", func() {
 			Expect(err).To(HaveOccurred())
 			Expect(result.Requeue).To(BeFalse())
 
-			Expect(fakeClient.Get(context.TODO(), client.ObjectKeyFromObject(istioCR), istioCR)).Should(Succeed())
-			Expect(istioCR.Status.State).Should(Equal(operatorv1alpha1.Warning))
-			Expect(istioCR.Status.Description).To(ContainSubstring("Not all pods with Istio injection could be restarted. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning: Istio controller could not restart one or more istio-injected pods."))
+			updatedIstioCR := operatorv1alpha1.Istio{}
+			err = fakeClient.Get(context.TODO(), client.ObjectKeyFromObject(istioCR), &updatedIstioCR)
+			Expect(err).To(Not(HaveOccurred()))
+
+			Expect(updatedIstioCR.Status.State).Should(Equal(operatorv1alpha1.Warning))
+			Expect(updatedIstioCR.Status.Description).To(ContainSubstring("Not all pods with Istio injection could be restarted. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning: Istio controller could not restart one or more istio-injected pods."))
+
+			Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
+			Expect((*updatedIstioCR.Status.Conditions)).To(HaveLen(2))
+
+			Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeProxySidecarRestartSucceeded)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonProxySidecarManualRestartRequired)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
+
+			Expect((*updatedIstioCR.Status.Conditions)[1].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
+			Expect((*updatedIstioCR.Status.Conditions)[1].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonReconcileFailed)))
+			Expect((*updatedIstioCR.Status.Conditions)[1].Status).To(Equal(metav1.ConditionFalse))
 		})
 	})
 })

@@ -44,6 +44,8 @@ var istioTag = fmt.Sprintf("%s-%s", istioVersion, istioImageBase)
 
 var _ = Describe("Installation reconciliation", func() {
 
+	// TODO continue here
+
 	It("should reconcile when Istio CR and Istio version didn't change", func() {
 		// given
 

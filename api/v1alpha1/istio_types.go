@@ -185,3 +185,13 @@ func ConditionFromReason(reason ConditionReason, customMessage string) *metav1.C
 	}
 	return nil
 }
+
+func HasReadyCondition(reasons []ConditionReason) bool {
+	for _, reason := range reasons {
+		condition, found := ConditionReasons[reason]
+		if found && condition.Type == ConditionTypeReady {
+			return true
+		}
+	}
+	return false
+}

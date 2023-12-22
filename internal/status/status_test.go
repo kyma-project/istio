@@ -262,6 +262,39 @@ var _ = Describe("status", func() {
 			Expect((*cr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonIstioCRsDangling)))
 			Expect((*cr.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 		})
+
+		It("Should update Istio CR status to warning and add ready condition if not provided", func() {
+			// given
+			cr := operatorv1alpha1.Istio{
+				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+			}
+			k8sClient := createFakeClient(&cr)
+			handler := NewStatusHandler(k8sClient)
+
+			describedError := described_errors.NewDescribedError(errors.New("error happened"), "Something", operatorv1alpha1.ConditionReasonProxySidecarManualRestartRequired).SetWarning()
+
+			// when
+			err := handler.UpdateToError(context.TODO(), &cr, describedError)
+
+			// then
+			Expect(err).ToNot(HaveOccurred())
+
+			err = k8sClient.Get(context.TODO(), types2.NamespacedName{Name: "test", Namespace: "default"}, &cr)
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(cr.Status.State).To(Equal(operatorv1alpha1.Warning))
+			Expect(cr.Status.Description).To(Equal("Something: error happened"))
+
+			Expect(cr.Status.Conditions).ToNot(BeNil())
+			Expect((*cr.Status.Conditions)).To(HaveLen(2))
+			Expect((*cr.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeProxySidecarRestartSucceeded)))
+			Expect((*cr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonProxySidecarManualRestartRequired)))
+			Expect((*cr.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
+
+			Expect((*cr.Status.Conditions)[1].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
+			Expect((*cr.Status.Conditions)[1].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonReconcileFailed)))
+			Expect((*cr.Status.Conditions)[1].Status).To(Equal(metav1.ConditionFalse))
+		})
 	})
 
 	Describe("UpdateConditions", func() {

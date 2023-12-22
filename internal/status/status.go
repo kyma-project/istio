@@ -91,8 +91,8 @@ func (d StatusHandler) UpdateToError(ctx context.Context, istioCR *operatorv1alp
 	if len(err.ConditionReasons()) > 0 {
 		conditionReasons = err.ConditionReasons()
 	}
-	if len(conditionReasons) == 0 {
-		conditionReasons = []operatorv1alpha1.ConditionReason{operatorv1alpha1.ConditionReasonReconcileFailed}
+	if !operatorv1alpha1.HasReadyCondition(conditionReasons) {
+		conditionReasons = append(conditionReasons, operatorv1alpha1.ConditionReasonReconcileFailed)
 	}
 	for _, conditionReason := range conditionReasons {
 		d.updateCondition(istioCR, conditionReason, "")

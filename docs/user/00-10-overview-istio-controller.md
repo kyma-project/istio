@@ -32,3 +32,8 @@ However, if a resource is a job, a ReplicaSet that is not managed by any deploym
 ## X-Forwarded-For HTTP Header
 
 The **X-Forwarded-For** (XFF) header is only supported on AWS clusters.
+
+The X-Forwarded-For header conveys the client IP address and the chain of intermediary proxies traversed by the request to reach the Istio Service Mesh.
+The header might not include all IP addresses if an intermediary proxy does not support modifying the header.
+Due to [technical limitations of AWS Classic ELBs](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-proxy-protocol.html#proxy-protocol) when using an IPv4 connection the header does not include the public of the load balancer in front of the Istio Ingress Gateway.
+Moreover, the Istio Ingress Gateway Envoy will not append the private IP address of the load balancer to the X-Forwarded-For header, effectively removing this information from the request.

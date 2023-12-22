@@ -553,6 +553,8 @@ var _ = Describe("Istio Controller", func() {
 			Expect((*updatedIstioCR.Status.Conditions)[1].Status).To(Equal(metav1.ConditionTrue))
 		})
 
+		// TODO continue here
+
 		It("Should set an error status and do not requeue an Istio CR when an older Istio CR is present", func() {
 			// given
 			oldestIstioCR := &operatorv1alpha1.Istio{

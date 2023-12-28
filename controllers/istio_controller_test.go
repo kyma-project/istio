@@ -375,9 +375,9 @@ var _ = Describe("Istio Controller", func() {
 			Expect(result).Should(Equal(reconcile.Result{}))
 			Expect(statusMock.updatedToReadyCalled).Should(BeTrue())
 			Expect(statusMock.updateConditionsCalled).Should(BeTrue())
-			Expect(statusMock.GetConditions()).Should(Equal([]operatorv1alpha1.ConditionReasonWithMessage{
-				operatorv1alpha1.NewConditionReasonWithMessage(operatorv1alpha1.ConditionReasonProxySidecarRestartSucceeded),
-				operatorv1alpha1.NewConditionReasonWithMessage(operatorv1alpha1.ConditionReasonIngressGatewayReconcileSucceeded),
+			Expect(statusMock.GetConditions()).Should(Equal([]operatorv1alpha1.ReasonWithMessage{
+				operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonProxySidecarRestartSucceeded),
+				operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonIngressGatewayReconcileSucceeded),
 			}))
 		})
 
@@ -775,12 +775,12 @@ type StatusMock struct {
 	updatedToErrorCalled      bool
 	conditionsError           error
 	updateConditionsCalled    bool
-	conditionReasons          []operatorv1alpha1.ConditionReasonWithMessage
+	conditionReasons          []operatorv1alpha1.ReasonWithMessage
 }
 
 func NewStatusMock() *StatusMock {
 	return &StatusMock{
-		conditionReasons: []operatorv1alpha1.ConditionReasonWithMessage{},
+		conditionReasons: []operatorv1alpha1.ReasonWithMessage{},
 	}
 }
 
@@ -799,18 +799,18 @@ func (s *StatusMock) UpdateToReady(_ context.Context, _ *operatorv1alpha1.Istio)
 	return s.readyError
 }
 
-func (s *StatusMock) UpdateToError(_ context.Context, _ *operatorv1alpha1.Istio, _ described_errors.DescribedError, conditionReasons ...operatorv1alpha1.ConditionReasonWithMessage) error {
+func (s *StatusMock) UpdateToError(_ context.Context, _ *operatorv1alpha1.Istio, _ described_errors.DescribedError, conditionReasons ...operatorv1alpha1.ReasonWithMessage) error {
 	s.updatedToErrorCalled = true
 	s.conditionReasons = append(s.conditionReasons, conditionReasons...)
 	return s.errorError
 }
 
-func (s *StatusMock) UpdateConditions(_ context.Context, _ *operatorv1alpha1.Istio, conditionReasons ...operatorv1alpha1.ConditionReasonWithMessage) error {
+func (s *StatusMock) UpdateConditions(_ context.Context, _ *operatorv1alpha1.Istio, conditionReasons ...operatorv1alpha1.ReasonWithMessage) error {
 	s.updateConditionsCalled = true
 	s.conditionReasons = append(s.conditionReasons, conditionReasons...)
 	return s.conditionsError
 }
 
-func (s *StatusMock) GetConditions() []operatorv1alpha1.ConditionReasonWithMessage {
+func (s *StatusMock) GetConditions() []operatorv1alpha1.ReasonWithMessage {
 	return s.conditionReasons
 }

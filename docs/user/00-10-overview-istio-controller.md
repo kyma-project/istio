@@ -31,18 +31,24 @@ However, if a resource is a job, a ReplicaSet that is not managed by any deploym
 
 Conditions:
 
-| CR state   | Condition type | Condition status | Condition reason             | Remark                                                                          |
-|------------|----------------|------------------|------------------------------|---------------------------------------------------------------------------------|
-| Ready      | Ready          | true             | ReconcileSucceeded           | Reconciliation succeeded                                                        |
-| Ready      | Ready          | true             | UpdateCheckSucceeded         | Update not required                                                             |
-| Ready      | Ready          | true             | UpdateDone                   | Update done                                                                     |
-| Processing | Ready          | false            | Processing                   | Istio installation is proceeding                                                |
-| Processing | Ready          | false            | UpdateCheck                  | Checking if update is required                                                  |
-| Warning    | Ready          | false            | IstioCustomResourcesDangling | Istio deletion blocked because of existing Istio resources that are not default |
-| Warning    | Ready          | false            | CustomResourceMisconfigured  | Configuration present on Istio Custom Resource is not correct                   |
-| Deleting   | Ready          | false            | Deleting                     | Proceeding with uninstallation and deletion of Istio                            |
-| Error      | Ready          | false            | IstioInstallationFailed      | Failure during execution of Istio installation                                  |
-| Error      | Ready          | false            | OlderCRExists                | This CR is not the oldest one so does not represent the module State            |
+| CR state   | Type                         | Status | Reason                            | Message                                                                                  |
+|------------|------------------------------|--------|-----------------------------------|------------------------------------------------------------------------------------------|
+| Ready      | Ready                        | True   | ReconcileSucceeded                | Reconciliation succeeded                                                                 |
+| Error      | Ready                        | False  | ReconcileFailed                   | Reconciliation failed                                                                    |
+| Error      | Ready                        | False  | OlderCRExists                     | This Istio custom resource is not the oldest one and does not represent the module state |
+| Processing | Ready                        | False  | IstioInstallNotNeeded             | Istio installation is not needed                                                         |
+| Processing | Ready                        | False  | IstioInstallSucceeded             | Istio installation succeeded                                                             |
+| Processing | Ready                        | False  | IstioUninstallSucceeded           | Istio uninstallation succeded                                                            |
+| Error      | Ready                        | False  | IstioInstallUninstallFailed       | Istio install or uninstall failed                                                        |
+| Error      | Ready                        | False  | IstioCustomResourceMisconfigured  | Istio custom resource has invalid configuration                                          |
+| Warning    | Ready                        | False  | IstioCustomResourcesDangling      | Istio deletion blocked because of existing Istio custom resources                        |
+| Processing | Ready                        | False  | CustomResourcesReconcileSucceeded | Custom resources reconciliation succeeded                                                |
+| Error      | Ready                        | False  | CustomResourcesReconcileFailed    | Custom resources reconciliation failed                                                   |
+| Processing | ProxySidecarRestartSucceeded | True   | ProxySidecarRestartSucceeded      | Proxy sidecar restart succeeded                                                          |
+| Error      | ProxySidecarRestartSucceeded | False  | ProxySidecarRestartFailed         | Proxy sidecar restart failed                                                             |
+| Warning    | ProxySidecarRestartSucceeded | False  | ProxySidecarManualRestartRequired | Proxy sidecar manual restart is required for some workloads                              |
+| Processing | Ready                        | False  | IngressGatewayReconcileSucceeded  | Istio Ingress Gateway reconciliation succeeded                                           |
+| Error      | Ready                        | False  | IngressGatewayReconcileFailed     | Istio Ingress Gateway reconciliation failed                                              |
 
 ## X-Forwarded-For HTTP Header
 

@@ -17,7 +17,7 @@ type DescribedError interface {
 	Description() string
 	Error() string
 	Level() Level
-	ConditionReasons() []operatorv1alpha1.ConditionReasonWithMessage
+	ConditionReasons() []operatorv1alpha1.ReasonWithMessage
 }
 
 type DefaultDescribedError struct {
@@ -25,10 +25,10 @@ type DefaultDescribedError struct {
 	description string
 	wrapError   bool
 	level       Level
-	reasons     []operatorv1alpha1.ConditionReasonWithMessage
+	reasons     []operatorv1alpha1.ReasonWithMessage
 }
 
-func NewDescribedError(err error, description string, reasons ...operatorv1alpha1.ConditionReasonWithMessage) DefaultDescribedError {
+func NewDescribedError(err error, description string, reasons ...operatorv1alpha1.ReasonWithMessage) DefaultDescribedError {
 	return DefaultDescribedError{
 		err:         err,
 		description: description,
@@ -64,6 +64,6 @@ func (d DefaultDescribedError) Level() Level {
 	return d.level
 }
 
-func (d DefaultDescribedError) ConditionReasons() []operatorv1alpha1.ConditionReasonWithMessage {
+func (d DefaultDescribedError) ConditionReasons() []operatorv1alpha1.ReasonWithMessage {
 	return d.reasons
 }

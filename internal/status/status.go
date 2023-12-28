@@ -15,8 +15,8 @@ type Status interface {
 	UpdateToProcessing(ctx context.Context, istioCR *operatorv1alpha1.Istio) error
 	UpdateToDeleting(ctx context.Context, istioCR *operatorv1alpha1.Istio) error
 	UpdateToReady(ctx context.Context, istioCR *operatorv1alpha1.Istio) error
-	UpdateToError(ctx context.Context, istioCR *operatorv1alpha1.Istio, err described_errors.DescribedError, conditionReasons ...operatorv1alpha1.ConditionReasonWithMessage) error
-	UpdateConditions(ctx context.Context, istioCR *operatorv1alpha1.Istio, conditionReasons ...operatorv1alpha1.ConditionReasonWithMessage) error
+	UpdateToError(ctx context.Context, istioCR *operatorv1alpha1.Istio, err described_errors.DescribedError, conditionReasons ...operatorv1alpha1.ReasonWithMessage) error
+	UpdateConditions(ctx context.Context, istioCR *operatorv1alpha1.Istio, conditionReasons ...operatorv1alpha1.ReasonWithMessage) error
 }
 
 func NewStatusHandler(client client.Client) StatusHandler {
@@ -81,7 +81,7 @@ func (d StatusHandler) UpdateToReady(ctx context.Context, istioCR *operatorv1alp
 	return d.update(ctx, istioCR)
 }
 
-func (d StatusHandler) UpdateToError(ctx context.Context, istioCR *operatorv1alpha1.Istio, err described_errors.DescribedError, conditionReasons ...operatorv1alpha1.ConditionReasonWithMessage) error {
+func (d StatusHandler) UpdateToError(ctx context.Context, istioCR *operatorv1alpha1.Istio, err described_errors.DescribedError, conditionReasons ...operatorv1alpha1.ReasonWithMessage) error {
 	if err.Level() == described_errors.Warning {
 		istioCR.Status.State = operatorv1alpha1.Warning
 	} else {
@@ -92,7 +92,7 @@ func (d StatusHandler) UpdateToError(ctx context.Context, istioCR *operatorv1alp
 		conditionReasons = append(conditionReasons, err.ConditionReasons()...)
 	}
 	if !operatorv1alpha1.HasReadyCondition(conditionReasons) {
-		conditionReasons = append(conditionReasons, operatorv1alpha1.NewConditionReasonWithMessage(operatorv1alpha1.ConditionReasonReconcileFailed))
+		conditionReasons = append(conditionReasons, operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonReconcileFailed))
 	}
 	for _, reason := range conditionReasons {
 		d.updateCondition(istioCR, reason.Reason, reason.Message)
@@ -102,7 +102,7 @@ func (d StatusHandler) UpdateToError(ctx context.Context, istioCR *operatorv1alp
 	return d.update(ctx, istioCR)
 }
 
-func (d StatusHandler) UpdateConditions(ctx context.Context, istioCR *operatorv1alpha1.Istio, conditionReasons ...operatorv1alpha1.ConditionReasonWithMessage) error {
+func (d StatusHandler) UpdateConditions(ctx context.Context, istioCR *operatorv1alpha1.Istio, conditionReasons ...operatorv1alpha1.ReasonWithMessage) error {
 	if len(conditionReasons) > 0 {
 		for _, conditionReason := range conditionReasons {
 			d.updateCondition(istioCR, conditionReason.Reason, conditionReason.Message)

@@ -16,6 +16,7 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" is ready`, steps.ResourceIsReady)
 	ctx.Step(`^Istio CRD is installed$`, steps.IstioCRDIsInstalled)
 	ctx.Step(`^Istio CR "([^"]*)" in namespace "([^"]*)" has status "([^"]*)"$`, steps.IstioCRInNamespaceHasStatus)
+	ctx.Step(`^Istio CR "([^"]*)" in namespace "([^"]*)" has condition with reason "([^"]*)" of type "([^"]*)" and status "([^"]*)"$`, steps.IstioCRInNamespaceHasStatusCondition)
 	ctx.Step(`^Istio CR "([^"]*)" in namespace "([^"]*)" has description "([^"]*)"$`, steps.IstioCRInNamespaceHasDescription)
 	ctx.Step(`^Istio CR "([^"]*)" in namespace "([^"]*)" has condition message "([^"]*)"$`, steps.IstioCRInNamespaceHasConditionMessage)
 	ctx.Step(`^Istio CR "([^"]*)" in namespace "([^"]*)" has condition reason "([^"]*)"$`, steps.IstioCRInNamespaceHasConditionReason)

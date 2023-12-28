@@ -28,6 +28,7 @@ type Sidecars struct {
 	Log            logr.Logger
 	Client         client.Client
 	Merger         manifest.Merger
+	ProxyResetter  sidecars.ProxyResetter
 	Predicates     []filter.SidecarProxyPredicate
 }
 
@@ -56,18 +57,16 @@ func (s *Sidecars) Reconcile(ctx context.Context, istioCr v1alpha1.Istio) (strin
 	}
 
 	ctrl.Log.Info("Istio proxy resetting with", "profile", cSize.String())
-
 	iop, err := s.Merger.GetIstioOperator(cSize.DefaultManifestPath())
 	if err != nil {
 		return "", err
 	}
-
 	expectedResources, err := istioCr.GetProxyResources(iop)
 	if err != nil {
 		return "", err
 	}
 
-	warnings, err := sidecars.ProxyReset(ctx, s.Client, expectedImage, expectedResources, s.Predicates, &s.Log)
+	warnings, err := s.ProxyResetter.ProxyReset(ctx, s.Client, expectedImage, expectedResources, s.Predicates, &s.Log)
 	if err != nil {
 		return "", err
 	}

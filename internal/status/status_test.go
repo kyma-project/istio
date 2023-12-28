@@ -158,7 +158,7 @@ var _ = Describe("status", func() {
 			describedError := described_errors.NewDescribedError(errors.New("error happened"), "Something")
 
 			// when
-			err := handler.UpdateToError(context.TODO(), &cr, describedError, operatorv1alpha1.ConditionReasonReconcileFailed)
+			err := handler.UpdateToError(context.TODO(), &cr, describedError, operatorv1alpha1.NewConditionReasonWithMessage(operatorv1alpha1.ConditionReasonReconcileFailed))
 
 			// then
 			Expect(err).ToNot(HaveOccurred())
@@ -187,7 +187,7 @@ var _ = Describe("status", func() {
 			describedError := described_errors.NewDescribedError(errors.New("error happened"), "Something").SetWarning()
 
 			// when
-			err := handler.UpdateToError(context.TODO(), &cr, describedError, operatorv1alpha1.ConditionReasonReconcileFailed)
+			err := handler.UpdateToError(context.TODO(), &cr, describedError, operatorv1alpha1.NewConditionReasonWithMessage(operatorv1alpha1.ConditionReasonReconcileFailed))
 
 			// then
 			Expect(err).ToNot(HaveOccurred())
@@ -242,10 +242,10 @@ var _ = Describe("status", func() {
 			k8sClient := createFakeClient(&cr)
 			handler := NewStatusHandler(k8sClient)
 
-			describedError := described_errors.NewDescribedError(errors.New("error happened"), "Something", operatorv1alpha1.ConditionReasonIstioCRsDangling).SetWarning()
+			describedError := described_errors.NewDescribedError(errors.New("error happened"), "Something", operatorv1alpha1.NewConditionReasonWithMessage(operatorv1alpha1.ConditionReasonIstioCRsDangling)).SetWarning()
 
 			// when
-			err := handler.UpdateToError(context.TODO(), &cr, describedError, operatorv1alpha1.ConditionReasonReconcileFailed)
+			err := handler.UpdateToError(context.TODO(), &cr, describedError, operatorv1alpha1.NewConditionReasonWithMessage(operatorv1alpha1.ConditionReasonReconcileFailed))
 
 			// then
 			Expect(err).ToNot(HaveOccurred())
@@ -271,7 +271,7 @@ var _ = Describe("status", func() {
 			k8sClient := createFakeClient(&cr)
 			handler := NewStatusHandler(k8sClient)
 
-			describedError := described_errors.NewDescribedError(errors.New("error happened"), "Something", operatorv1alpha1.ConditionReasonProxySidecarManualRestartRequired).SetWarning()
+			describedError := described_errors.NewDescribedError(errors.New("error happened"), "Something", operatorv1alpha1.NewConditionReasonWithMessage(operatorv1alpha1.ConditionReasonProxySidecarManualRestartRequired)).SetWarning()
 
 			// when
 			err := handler.UpdateToError(context.TODO(), &cr, describedError)
@@ -307,7 +307,9 @@ var _ = Describe("status", func() {
 			handler := NewStatusHandler(k8sClient)
 
 			// when
-			err := handler.UpdateConditions(context.TODO(), &cr, operatorv1alpha1.ConditionReasonReconcileSucceeded, operatorv1alpha1.ConditionReasonProxySidecarManualRestartRequired)
+			err := handler.UpdateConditions(context.TODO(), &cr,
+				operatorv1alpha1.NewConditionReasonWithMessage(operatorv1alpha1.ConditionReasonReconcileSucceeded),
+				operatorv1alpha1.NewConditionReasonWithMessage(operatorv1alpha1.ConditionReasonProxySidecarManualRestartRequired))
 
 			// then
 			Expect(err).ToNot(HaveOccurred())

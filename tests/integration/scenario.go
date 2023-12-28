@@ -18,8 +18,6 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^Istio CR "([^"]*)" in namespace "([^"]*)" has status "([^"]*)"$`, steps.IstioCRInNamespaceHasStatus)
 	ctx.Step(`^Istio CR "([^"]*)" in namespace "([^"]*)" has condition with reason "([^"]*)" of type "([^"]*)" and status "([^"]*)"$`, steps.IstioCRInNamespaceHasStatusCondition)
 	ctx.Step(`^Istio CR "([^"]*)" in namespace "([^"]*)" has description "([^"]*)"$`, steps.IstioCRInNamespaceHasDescription)
-	ctx.Step(`^Istio CR "([^"]*)" in namespace "([^"]*)" has condition message "([^"]*)"$`, steps.IstioCRInNamespaceHasConditionMessage)
-	ctx.Step(`^Istio CR "([^"]*)" in namespace "([^"]*)" has condition reason "([^"]*)"$`, steps.IstioCRInNamespaceHasConditionReason)
 	ctx.Step(`^Template value "([^"]*)" is set to "([^"]*)"$`, t.SetTemplateValue)
 	ctx.Step(`^Istio CR "([^"]*)" is applied in namespace "([^"]*)"$`, t.IstioCRIsAppliedInNamespace)
 	ctx.Step(`^Istio CR "([^"]*)" is updated in namespace "([^"]*)"$`, t.IstioCRIsUpdatedInNamespace)

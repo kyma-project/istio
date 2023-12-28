@@ -24,6 +24,22 @@ type State string
 type ConditionType string
 type ConditionReason string
 
+type ConditionReasonWithMessage struct {
+	Reason  ConditionReason
+	Message string
+}
+
+func NewConditionReasonWithMessage(reason ConditionReason, customMessage ...string) ConditionReasonWithMessage {
+	message := ""
+	if len(customMessage) > 0 {
+		message = customMessage[0]
+	}
+	return ConditionReasonWithMessage{
+		Reason:  reason,
+		Message: message,
+	}
+}
+
 // Valid IstioCR States.
 const (
 	Ready      State = "Ready"
@@ -186,9 +202,9 @@ func ConditionFromReason(reason ConditionReason, customMessage string) *metav1.C
 	return nil
 }
 
-func HasReadyCondition(reasons []ConditionReason) bool {
+func HasReadyCondition(reasons []ConditionReasonWithMessage) bool {
 	for _, reason := range reasons {
-		condition, found := ConditionReasons[reason]
+		condition, found := ConditionReasons[reason.Reason]
 		if found && condition.Type == ConditionTypeReady {
 			return true
 		}

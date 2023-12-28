@@ -71,18 +71,12 @@ func IstioCRInNamespaceHasStatusCondition(ctx context.Context, name, namespace, 
 		if err != nil {
 			return err
 		}
-		found := false
 		for _, condition := range *cr.Status.Conditions {
 			if condition.Reason == reason && condition.Type == conditionType && string(condition.Status) == status {
-				found = true
-				break
+				return nil
 			}
 		}
-		if !found {
-			return fmt.Errorf("status condition reason %s (type: %s, status: %s) not found", reason, conditionType, status)
-		}
-
-		return nil
+		return fmt.Errorf("status condition reason %s of type %s and status %s not found", reason, conditionType, status)
 	}, testcontext.GetRetryOpts()...)
 }
 
@@ -102,58 +96,6 @@ func IstioCRInNamespaceHasDescription(ctx context.Context, name, namespace, desc
 			return fmt.Errorf("description %s of Istio CR is not equal to %s", cr.Status.Description, desc)
 		}
 		return nil
-	}, testcontext.GetRetryOpts()...)
-}
-
-func IstioCRInNamespaceHasConditionMessage(ctx context.Context, name, namespace, message string) error {
-	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
-	if err != nil {
-		return err
-	}
-
-	var cr istioCR.Istio
-	return retry.Do(func() error {
-		err := k8sClient.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, &cr)
-		if err != nil {
-			return err
-		}
-		var conditionMessages []string
-		for _, condition := range *cr.Status.Conditions {
-			if condition.Message == message {
-				return nil
-			} else {
-				// TODO: Should we fail here as there is a different condition than expected?
-				conditionMessages = append(conditionMessages, condition.Message)
-			}
-		}
-
-		return fmt.Errorf("condition messages %s of Istio CR is not equal to %s", conditionMessages, message)
-	}, testcontext.GetRetryOpts()...)
-}
-
-func IstioCRInNamespaceHasConditionReason(ctx context.Context, name, namespace, reason string) error {
-	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
-	if err != nil {
-		return err
-	}
-
-	var cr istioCR.Istio
-	return retry.Do(func() error {
-		err := k8sClient.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, &cr)
-		if err != nil {
-			return err
-		}
-		var conditionMessages []string
-		for _, condition := range *cr.Status.Conditions {
-			if condition.Reason == reason {
-				return nil
-			} else {
-				// TODO: Should we fail here as there is a different condition than expected?
-				conditionMessages = append(conditionMessages, condition.Reason)
-			}
-		}
-
-		return fmt.Errorf("condition messages %s of Istio CR is not equal to %s", conditionMessages, reason)
 	}, testcontext.GetRetryOpts()...)
 }
 

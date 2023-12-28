@@ -2,6 +2,8 @@ package proxy_test
 
 import (
 	"context"
+	"testing"
+
 	"github.com/go-logr/logr"
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
@@ -18,7 +20,6 @@ import (
 	"k8s.io/kubectl/pkg/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	"testing"
 )
 
 const (
@@ -37,8 +38,7 @@ var _ = ReportAfterSuite("custom reporter", func(report types.Report) {
 })
 
 var _ = Describe("Sidecars reconciliation", func() {
-
-	It("should fail proxy reset if Istio pods do not match target version", func() {
+	It("Should fail proxy reset if Istio pods do not match target version", func() {
 		// given
 
 		numTrustedProxies := 1
@@ -62,10 +62,10 @@ var _ = Describe("Sidecars reconciliation", func() {
 			Merger:         MergerMock{},
 		}
 		// when
-		warningHappened, err := sidecars.Reconcile(context.TODO(), istioCr)
+		warningMessage, err := sidecars.Reconcile(context.TODO(), istioCr)
 
 		// then
-		Expect(warningHappened).To(BeFalse())
+		Expect(warningMessage).To(Equal(""))
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("istio-system pods version: 1.16.0 do not match target version: 1.16.1"))
 	})

@@ -375,9 +375,9 @@ var _ = Describe("Istio Controller", func() {
 			Expect(result).Should(Equal(reconcile.Result{}))
 			Expect(statusMock.updatedToReadyCalled).Should(BeTrue())
 			Expect(statusMock.updateConditionsCalled).Should(BeTrue())
-			Expect(statusMock.GetConditions()).Should(Equal([]operatorv1alpha1.ConditionReason{
-				operatorv1alpha1.ConditionReasonProxySidecarRestartSucceeded,
-				operatorv1alpha1.ConditionReasonIngressGatewayReconcileSucceeded,
+			Expect(statusMock.GetConditions()).Should(Equal([]operatorv1alpha1.ConditionReasonWithMessage{
+				operatorv1alpha1.NewConditionReasonWithMessage(operatorv1alpha1.ConditionReasonProxySidecarRestartSucceeded),
+				operatorv1alpha1.NewConditionReasonWithMessage(operatorv1alpha1.ConditionReasonIngressGatewayReconcileSucceeded),
 			}))
 		})
 
@@ -673,7 +673,7 @@ var _ = Describe("Istio Controller", func() {
 				Client:                 fakeClient,
 				Scheme:                 getTestScheme(),
 				istioInstallation:      &istioInstallationReconciliationMock{},
-				proxySidecars:          &proxySidecarsReconciliationMock{warning: true},
+				proxySidecars:          &proxySidecarsReconciliationMock{warningMessage: "blah"},
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
 				log:                    logr.Discard(),
@@ -752,15 +752,15 @@ func (i *istioInstallationReconciliationMock) Reconcile(_ context.Context, istio
 }
 
 type proxySidecarsReconciliationMock struct {
-	warning bool
-	err     error
+	warningMessage string
+	err            error
 }
 
 func (p *proxySidecarsReconciliationMock) AddReconcilePredicate(_ filter.SidecarProxyPredicate) {
 }
 
-func (p *proxySidecarsReconciliationMock) Reconcile(_ context.Context, _ operatorv1alpha1.Istio) (bool, error) {
-	return p.warning, p.err
+func (p *proxySidecarsReconciliationMock) Reconcile(_ context.Context, _ operatorv1alpha1.Istio) (string, error) {
+	return p.warningMessage, p.err
 }
 
 type StatusMock struct {
@@ -774,12 +774,12 @@ type StatusMock struct {
 	updatedToErrorCalled      bool
 	conditionsError           error
 	updateConditionsCalled    bool
-	conditionReasons          []operatorv1alpha1.ConditionReason
+	conditionReasons          []operatorv1alpha1.ConditionReasonWithMessage
 }
 
 func NewStatusMock() *StatusMock {
 	return &StatusMock{
-		conditionReasons: []operatorv1alpha1.ConditionReason{},
+		conditionReasons: []operatorv1alpha1.ConditionReasonWithMessage{},
 	}
 }
 
@@ -798,18 +798,18 @@ func (s *StatusMock) UpdateToReady(_ context.Context, _ *operatorv1alpha1.Istio)
 	return s.readyError
 }
 
-func (s *StatusMock) UpdateToError(_ context.Context, _ *operatorv1alpha1.Istio, _ described_errors.DescribedError, conditionReasons ...operatorv1alpha1.ConditionReason) error {
+func (s *StatusMock) UpdateToError(_ context.Context, _ *operatorv1alpha1.Istio, _ described_errors.DescribedError, conditionReasons ...operatorv1alpha1.ConditionReasonWithMessage) error {
 	s.updatedToErrorCalled = true
 	s.conditionReasons = append(s.conditionReasons, conditionReasons...)
 	return s.errorError
 }
 
-func (s *StatusMock) UpdateConditions(_ context.Context, _ *operatorv1alpha1.Istio, conditionReasons ...operatorv1alpha1.ConditionReason) error {
+func (s *StatusMock) UpdateConditions(_ context.Context, _ *operatorv1alpha1.Istio, conditionReasons ...operatorv1alpha1.ConditionReasonWithMessage) error {
 	s.updateConditionsCalled = true
 	s.conditionReasons = append(s.conditionReasons, conditionReasons...)
 	return s.conditionsError
 }
 
-func (s *StatusMock) GetConditions() []operatorv1alpha1.ConditionReason {
+func (s *StatusMock) GetConditions() []operatorv1alpha1.ConditionReasonWithMessage {
 	return s.conditionReasons
 }

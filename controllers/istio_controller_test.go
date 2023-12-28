@@ -673,7 +673,7 @@ var _ = Describe("Istio Controller", func() {
 				Client:                 fakeClient,
 				Scheme:                 getTestScheme(),
 				istioInstallation:      &istioInstallationReconciliationMock{},
-				proxySidecars:          &proxySidecarsReconciliationMock{warningMessage: "blah"},
+				proxySidecars:          &proxySidecarsReconciliationMock{warningMessage: "The sidecars of the following workloads could not be restarted: default/httpbin, default/nginx and 3 additional workloads."},
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
 				log:                    logr.Discard(),
@@ -700,6 +700,7 @@ var _ = Describe("Istio Controller", func() {
 
 			Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeProxySidecarRestartSucceeded)))
 			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonProxySidecarManualRestartRequired)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Message).To(Equal("The sidecars of the following workloads could not be restarted: default/httpbin, default/nginx and 3 additional workloads."))
 			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 
 			Expect((*updatedIstioCR.Status.Conditions)[1].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))

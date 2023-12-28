@@ -16,12 +16,8 @@ export KUBECONFIG=$(k3d kubeconfig merge kyma)
 make create-namespace
 
 echo "Apply istio"
-kubectl apply -f https://github.com/kyma-project/istio/releases/latest/download/istio-manager.yaml
-kubectl apply -f https://github.com/kyma-project/istio/releases/latest/download/istio-default-cr.yaml
-
-echo "Apply api-gateway"
 make deploy
-kubectl apply -f https://github.com/kyma-project/api-gateway/releases/latest/download/apigateway-default-cr.yaml
+kubectl apply -f https://github.com/kyma-project/istio/releases/latest/download/istio-default-cr.yaml
 
 echo "Apply gardener resources"
 echo "Certificates"

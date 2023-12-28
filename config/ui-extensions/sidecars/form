@@ -23,9 +23,6 @@
         - TCP
         - TLS
       placeholder: Type or choose an option
-    - path: targetPort
-      simple: true
-      placeholder: Enter the target port number
 - path: spec.egress[].bind
   placeholder: Enter the IPv4 or IPv6
   simple: true
@@ -70,9 +67,6 @@
         - TLS
       required: true
       placeholder: Type or choose an option
-    - path: targetPort
-      simple: true
-      placeholder: Enter the target port number
 - path: spec.ingress[].bind
   placeholder: Enter the IPv4 or IPv6
   simple: true

@@ -10,7 +10,7 @@ require (
 	github.com/coreos/go-semver v0.3.1
 	github.com/cucumber/godog v0.13.0
 	github.com/distribution/reference v0.5.0
-	github.com/go-logr/logr v1.3.0
+	github.com/go-logr/logr v1.4.1
 	github.com/imdario/mergo v1.0.0
 	github.com/masterminds/semver v1.5.0
 	github.com/mitchellh/mapstructure v1.5.0
@@ -22,7 +22,7 @@ require (
 	gitlab.com/rodrigoodhin/gocure v0.0.0-20220718065339-f14dfe79276a
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
 	golang.org/x/time v0.5.0
-	google.golang.org/protobuf v1.31.0
+	google.golang.org/protobuf v1.32.0
 	gopkg.in/yaml.v3 v3.0.1
 	istio.io/api v1.20.0-rc.0
 	istio.io/client-go v1.20.0-rc.0

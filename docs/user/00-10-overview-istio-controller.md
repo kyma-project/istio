@@ -46,4 +46,13 @@ Conditions:
 
 ## X-Forwarded-For HTTP Header
 
-The **X-Forwarded-For** (XFF) header is only supported on AWS clusters.
+>**NOTE:** The **X-Forwarded-For** (XFF) header is only supported on AWS clusters.
+
+The XFF header conveys the client IP address and the chain of intermediary proxies that the request traversed to reach the Istio service mesh.
+The header might not include all IP addresses if an intermediary proxy does not support modifying the header.
+Due to [technical limitations of AWS Classic ELBs](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-proxy-protocol.html#proxy-protocol), when using an IPv4 connection, the header does not include the public IP of the load balancer in front of Istio Ingress Gateway.
+Moreover, Istio Ingress Gateway Envoy does not append the private IP address of the load balancer to the XFF header, effectively removing this information from the request.
+
+## TLS termination
+The `istio-ingressgateway` Service creates a Layer 4 load balancer, that does not terminate TLS connections. Within the Istio service mesh,
+the TLS termination process is handled by the Ingress Gateway Envoy proxy, which serves as a middleman between the incoming traffic and the backend services.

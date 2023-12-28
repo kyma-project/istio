@@ -89,7 +89,7 @@ func (d StatusHandler) UpdateToError(ctx context.Context, istioCR *operatorv1alp
 	}
 
 	if len(err.ConditionReasons()) > 0 {
-		conditionReasons = err.ConditionReasons()
+		conditionReasons = append(conditionReasons, err.ConditionReasons()...)
 	}
 	if !operatorv1alpha1.HasReadyCondition(conditionReasons) {
 		conditionReasons = append(conditionReasons, operatorv1alpha1.ConditionReasonReconcileFailed)

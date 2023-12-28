@@ -229,3 +229,8 @@ istio-upgrade-integration-test: deploy-latest-release generate-integration-test-
 .PHONY: gardener-istio-integration-test
 gardener-istio-integration-test:
 	./hack/ci/gardener-integration.sh
+
+.PHONY: create-namespace
+create-namespace:
+	kubectl create namespace kyma-system
+	kubectl label namespace kyma-system istio-injection=enabled --overwrite

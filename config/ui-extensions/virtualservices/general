@@ -1,0 +1,11 @@
+resource:
+  kind: VirtualService
+  group: networking.istio.io
+  version: v1beta1
+urlPath: virtualservices
+category: Istio
+name: Virtual Services
+scope: namespace
+description: >-
+  {{[VirtualService](https://istio.io/latest/docs/reference/config/networking/virtual-service/)}}
+  describes a configuration that affects traffic routing. .

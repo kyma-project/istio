@@ -232,5 +232,5 @@ gardener-istio-integration-test:
 
 .PHONY: create-namespace
 create-namespace:
-	kubectl create namespace kyma-system
+	kubectl create namespace kyma-system --dry-run=client -o yaml | kubectl apply -f -
 	kubectl label namespace kyma-system istio-injection=enabled --overwrite

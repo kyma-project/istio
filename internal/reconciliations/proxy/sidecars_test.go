@@ -78,7 +78,7 @@ var _ = Describe("Sidecars reconciliation", func() {
 		Expect(err.Error()).To(ContainSubstring("istio-system pods version: 1.16.0 do not match target version: 1.16.1"))
 	})
 
-	It("Should succeed proxy reset even if some proxies could not be reset but return a warning", func() {
+	It("Should succeed proxy reset even if more than 5 proxies could not be reset and will return a warning", func() {
 		// given
 
 		numTrustedProxies := 1
@@ -133,7 +133,50 @@ var _ = Describe("Sidecars reconciliation", func() {
 		warningMessage, err := sidecars.Reconcile(context.TODO(), istioCr)
 
 		// then
-		Expect(warningMessage).To(Equal("The sidecars of the following workloads could not be restarted: ns1/name1,ns2/name2,ns3/name3,ns4/name4,ns5/name5 and 1 additional workloads."))
+		Expect(warningMessage).To(Equal("The sidecars of the following workloads could not be restarted: ns1/name1, ns2/name2, ns3/name3, ns4/name4, ns5/name5 and 1 additional workload(s)"))
+		Expect(err).ShouldNot(HaveOccurred())
+	})
+
+	It("Should succeed proxy reset even if less than 5 proxies could not be reset and will return a warning", func() {
+		// given
+
+		numTrustedProxies := 1
+		istioCr := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+			Name:            "default",
+			ResourceVersion: "1",
+			Annotations:     map[string]string{},
+		},
+			Spec: operatorv1alpha1.IstioSpec{
+				Config: operatorv1alpha1.Config{
+					NumTrustedProxies: &numTrustedProxies,
+				},
+			},
+		}
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.1")
+		sidecars := proxy.Sidecars{
+			Log:            logr.Discard(),
+			Client:         createFakeClient(&istioCr, istiod),
+			IstioVersion:   istioVersion,
+			IstioImageBase: istioImageBase,
+			ProxyResetter: &proxyResetterMock{
+				restartWarnings: []restart.RestartWarning{
+					{
+						Name:      "name1",
+						Namespace: "ns1",
+					},
+					{
+						Name:      "name2",
+						Namespace: "ns2",
+					},
+				},
+			},
+			Merger: MergerMock{},
+		}
+		// when
+		warningMessage, err := sidecars.Reconcile(context.TODO(), istioCr)
+
+		// then
+		Expect(warningMessage).To(Equal("The sidecars of the following workloads could not be restarted: ns1/name1, ns2/name2"))
 		Expect(err).ShouldNot(HaveOccurred())
 	})
 })

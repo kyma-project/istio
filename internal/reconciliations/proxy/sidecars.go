@@ -80,8 +80,12 @@ func (s *Sidecars) Reconcile(ctx context.Context, istioCr v1alpha1.Istio) (strin
 			}
 			s.Log.Info("Proxy reset warning:", "name", w.Name, "namespace", w.Namespace, "kind", w.Kind, "message", w.Message)
 		}
-		return fmt.Sprintf("The sidecars of the following workloads could not be restarted: %s and %d additional workloads.",
-			strings.Join(pods, ","), warningsCount-len(pods)), nil
+		warningMessage := fmt.Sprintf("The sidecars of the following workloads could not be restarted: %s",
+			strings.Join(pods, ", "))
+		if warningsCount-len(pods) > 0 {
+			warningMessage += fmt.Sprintf(" and %d additional workload(s)", warningsCount-len(pods))
+		}
+		return warningMessage, nil
 	}
 
 	return "", nil

@@ -32,6 +32,18 @@ type Sidecars struct {
 	Predicates     []filter.SidecarProxyPredicate
 }
 
+func NewReconciler(istioVersion string, istioImageBase string, logger logr.Logger, client client.Client, merger manifest.Merger, resetter sidecars.ProxyResetter, predicates []filter.SidecarProxyPredicate) *Sidecars {
+	return &Sidecars{
+		IstioVersion:   istioVersion,
+		IstioImageBase: istioImageBase,
+		Log:            logger,
+		Client:         client,
+		Merger:         merger,
+		ProxyResetter:  resetter,
+		Predicates:     predicates,
+	}
+}
+
 const (
 	imageRepository string = "europe-docker.pkg.dev/kyma-project/prod/external/istio/proxyv2"
 )

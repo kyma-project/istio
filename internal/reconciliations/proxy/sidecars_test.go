@@ -61,14 +61,8 @@ var _ = Describe("Sidecars reconciliation", func() {
 			},
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.0")
-		sidecars := proxy.Sidecars{
-			Log:            logr.Discard(),
-			Client:         createFakeClient(&istioCr, istiod),
-			IstioVersion:   istioVersion,
-			IstioImageBase: istioImageBase,
-			ProxyResetter:  sidecars.NewProxyResetter(),
-			Merger:         MergerMock{},
-		}
+		sidecars := proxy.NewReconciler(istioVersion, istioImageBase, logr.Discard(), createFakeClient(&istioCr, istiod),
+			&MergerMock{}, sidecars.NewProxyResetter(), []filter.SidecarProxyPredicate{})
 		// when
 		warningMessage, err := sidecars.Reconcile(context.TODO(), istioCr)
 
@@ -94,41 +88,37 @@ var _ = Describe("Sidecars reconciliation", func() {
 			},
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.1")
-		sidecars := proxy.Sidecars{
-			Log:            logr.Discard(),
-			Client:         createFakeClient(&istioCr, istiod),
-			IstioVersion:   istioVersion,
-			IstioImageBase: istioImageBase,
-			ProxyResetter: &proxyResetterMock{
-				restartWarnings: []restart.RestartWarning{
-					{
-						Name:      "name1",
-						Namespace: "ns1",
-					},
-					{
-						Name:      "name2",
-						Namespace: "ns2",
-					},
-					{
-						Name:      "name3",
-						Namespace: "ns3",
-					},
-					{
-						Name:      "name4",
-						Namespace: "ns4",
-					},
-					{
-						Name:      "name5",
-						Namespace: "ns5",
-					},
-					{
-						Name:      "name6",
-						Namespace: "ns6",
-					},
+		proxyResetter := &proxyResetterMock{
+			restartWarnings: []restart.RestartWarning{
+				{
+					Name:      "name1",
+					Namespace: "ns1",
+				},
+				{
+					Name:      "name2",
+					Namespace: "ns2",
+				},
+				{
+					Name:      "name3",
+					Namespace: "ns3",
+				},
+				{
+					Name:      "name4",
+					Namespace: "ns4",
+				},
+				{
+					Name:      "name5",
+					Namespace: "ns5",
+				},
+				{
+					Name:      "name6",
+					Namespace: "ns6",
 				},
 			},
-			Merger: MergerMock{},
 		}
+		sidecars := proxy.NewReconciler(istioVersion, istioImageBase, logr.Discard(), createFakeClient(&istioCr, istiod),
+			&MergerMock{}, proxyResetter, []filter.SidecarProxyPredicate{})
+
 		// when
 		warningMessage, err := sidecars.Reconcile(context.TODO(), istioCr)
 
@@ -153,25 +143,21 @@ var _ = Describe("Sidecars reconciliation", func() {
 			},
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.1")
-		sidecars := proxy.Sidecars{
-			Log:            logr.Discard(),
-			Client:         createFakeClient(&istioCr, istiod),
-			IstioVersion:   istioVersion,
-			IstioImageBase: istioImageBase,
-			ProxyResetter: &proxyResetterMock{
-				restartWarnings: []restart.RestartWarning{
-					{
-						Name:      "name1",
-						Namespace: "ns1",
-					},
-					{
-						Name:      "name2",
-						Namespace: "ns2",
-					},
+		proxyResetter := &proxyResetterMock{
+			restartWarnings: []restart.RestartWarning{
+				{
+					Name:      "name1",
+					Namespace: "ns1",
+				},
+				{
+					Name:      "name2",
+					Namespace: "ns2",
 				},
 			},
-			Merger: MergerMock{},
 		}
+		sidecars := proxy.NewReconciler(istioVersion, istioImageBase, logr.Discard(), createFakeClient(&istioCr, istiod),
+			&MergerMock{}, proxyResetter, []filter.SidecarProxyPredicate{})
+
 		// when
 		warningMessage, err := sidecars.Reconcile(context.TODO(), istioCr)
 

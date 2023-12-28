@@ -116,7 +116,7 @@ context('Test Virtual Services', () => {
             .first()
             .type(HEADER_VALUE, {force: true});
 
-        cy.get('[aria-label="expand Headers"]:visible', {log: false}).click();
+        cy.get('[aria-label="expand Headers"]').first().click();
 
         // REDIRECT
         cy.get('[aria-label="expand Redirect"]', {log: false})

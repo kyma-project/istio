@@ -24,9 +24,9 @@ require (
 	golang.org/x/time v0.4.0
 	google.golang.org/protobuf v1.31.0
 	gopkg.in/yaml.v3 v3.0.1
-	istio.io/api v1.20.0-rc.0
-	istio.io/client-go v1.20.0-rc.0
-	istio.io/istio v0.0.0-20231114065328-6869a6c2371e
+	istio.io/api v1.20.1-0.20231207143627-8237149662d6
+	istio.io/client-go v1.20.1-0.20231207144227-c679b51dc0f9
+	istio.io/istio v0.0.0-20231207195727-552626bd81f6
 	k8s.io/api v0.28.5
 	k8s.io/apiextensions-apiserver v0.28.5
 	k8s.io/apimachinery v0.28.5
@@ -207,7 +207,7 @@ require (
 	k8s.io/component-base v0.28.5 // indirect
 	k8s.io/klog/v2 v2.100.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20231010175941-2dd684a91f00 // indirect
-	sigs.k8s.io/gateway-api v1.0.0 // indirect
+	sigs.k8s.io/gateway-api v1.0.1-0.20231102234152-004e14bfe016 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/kustomize/api v0.13.5-0.20230601165947-6ce0bf390ce3 // indirect
 	sigs.k8s.io/kustomize/kyaml v0.14.3 // indirect

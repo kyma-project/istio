@@ -1,14 +1,8 @@
-include .env
-
-# Module Name used for bundling the OCI Image and later on for referencing in the Kyma Modules
 MODULE_NAME ?= istio
 
 # Module Registry used for pushing the image
 MODULE_REGISTRY_PORT ?= 8888
 MODULE_REGISTRY ?= op-kcp-registry.localhost:$(MODULE_REGISTRY_PORT)/unsigned
-# Desired Channel of the Generated Module Template
-MODULE_TEMPLATE_CHANNEL ?= stable
-MODULE_CHANNEL ?= fast
 
 # Operating system architecture
 OS_ARCH ?= $(shell uname -m)
@@ -46,17 +40,6 @@ COMPONENT_CLI_VERSION ?= latest
 
 # It is required for upgrade integration test
 TARGET_BRANCH ?= ""
-
-# This will change the flags of the `kyma alpha module create` command in case we spot credentials
-# Otherwise we will assume http-based local registries without authentication (e.g. for k3d)
-ifneq (,$(PROW_JOB_ID))
-GCP_ACCESS_TOKEN=$(shell gcloud auth application-default print-access-token)
-MODULE_CREATION_FLAGS=--registry $(MODULE_REGISTRY) --module-archive-version-overwrite -c oauth2accesstoken:$(GCP_ACCESS_TOKEN)
-else ifeq (,$(MODULE_CREDENTIALS))
-MODULE_CREATION_FLAGS=--registry $(MODULE_REGISTRY) --module-archive-version-overwrite --insecure
-else
-MODULE_CREATION_FLAGS=--registry $(MODULE_REGISTRY) --module-archive-version-overwrite -c $(MODULE_CREDENTIALS)
-endif
 
 ##@ General
 
@@ -204,43 +187,15 @@ $(ENVTEST): $(LOCALBIN)
 module-image: docker-build docker-push ## Build the Module Image and push it to a registry defined in IMG_REGISTRY
 	echo "built and pushed module image $(IMG)"
 
-.PHONY: module-build
-module-build: kyma kustomize ## Build the Module and push it to a registry defined in MODULE_REGISTRY
-	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	@$(KYMA) alpha create module --kubebuilder-project --channel=${MODULE_CHANNEL} --name kyma-project.io/module/$(MODULE_NAME) --version $(MODULE_VERSION) --path . --output "template-${MODULE_CHANNEL}.yaml" $(MODULE_CREATION_FLAGS)
-
 .PHONY: generate-manifests
 generate-manifests: kustomize
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default > istio-manager.yaml
 
-##@ Tools
-
-########## Kyma CLI ###########
-KYMA_STABILITY ?= unstable
-
-# $(call os_error, os-type, os-architecture)
-define os_error
-$(error Error: unsuported platform OS_TYPE:$1, OS_ARCH:$2; to mitigate this problem set variable KYMA with absolute path to kyma-cli binary compatible with your operating system and architecture)
-endef
-
-KYMA_FILE_NAME ?= $(shell ./hack/get_kyma_file_name.sh ${OS_TYPE} ${OS_ARCH})
-
-KYMA ?= $(LOCALBIN)/kyma-$(KYMA_STABILITY)
-kyma: $(LOCALBIN) $(KYMA) ## Download kyma locally if necessary.
-$(KYMA):
-	## Detect if operating system
-	$(if $(KYMA_FILE_NAME),,$(call os_error, ${OS_TYPE}, ${OS_ARCH}))
-	test -f $@ || curl -s -Lo $(KYMA) https://storage.googleapis.com/kyma-cli-$(KYMA_STABILITY)/$(KYMA_FILE_NAME)
-	chmod 0100 $(KYMA)
-
 ########## Grafana Dashboard ###########
 .PHONY: grafana-dashboard
 grafana-dashboard: ## Generating Grafana manifests to visualize controller status.
 	cd operator && kubebuilder edit --plugins grafana.kubebuilder.io/v1-alpha
-
-.PHONY: all
-all: module-build
 
 ########## Performance Tests ###########
 .PHONY: gardener-perf-test

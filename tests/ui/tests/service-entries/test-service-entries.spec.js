@@ -1,14 +1,9 @@
 /// <reference types="cypress" />
 import 'cypress-file-upload';
 import {chooseComboboxOption} from '../../support/combobox';
-import {generateNamespaceName} from "../../support/random";
+import {generateNamespaceName, generateRandomName} from "../../support/random";
 
-const SE_NAME =
-    'test-' +
-    Math.random()
-        .toString()
-        .substr(2, 8);
-
+const SE_NAME = generateRandomName('test')
 const RESOLUTION = 'STATIC';
 const LOCATION = 'MESH_EXTERNAL';
 const HOST = 'test.com';

@@ -1,13 +1,9 @@
 /// <reference types="cypress" />
 import 'cypress-file-upload';
 import {chooseComboboxOption} from '../../support/combobox';
-import {generateNamespaceName} from "../../support/random";
+import {generateNamespaceName, generateRandomName} from "../../support/random";
 
-const SIDECAR_NAME =
-    'test-' +
-    Math.random()
-        .toString()
-        .substr(2, 8);
+const SIDECAR_NAME = generateRandomName('test')
 
 const PORT_NUMBER = '81';
 const EGRESS_NAME = 'egresshttp';

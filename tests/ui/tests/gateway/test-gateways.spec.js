@@ -3,11 +3,7 @@ import 'cypress-file-upload';
 import {chooseComboboxOption} from '../../support/combobox';
 import {generateNamespaceName, generateRandomName} from "../../support/random";
 
-const GATEWAY_NAME =
-    'test-gateway-' +
-    Math.random()
-        .toString()
-        .substr(2, 8);
+const GATEWAY_NAME = generateRandomName('test-gateway')
 
 const SERVER_NAME = GATEWAY_NAME + '-server';
 const PORT_NUMBER = 80;

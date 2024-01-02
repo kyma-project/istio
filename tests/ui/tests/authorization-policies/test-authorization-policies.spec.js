@@ -1,13 +1,9 @@
 /// <reference types="cypress" />
 import 'cypress-file-upload';
 import { chooseComboboxOption } from '../../support/combobox';
-import {generateNamespaceName} from "../../support/random";
+import {generateNamespaceName, generateRandomName} from "../../support/random";
 
-const AP_NAME =
-    'test-ap-' +
-    Math.random()
-        .toString()
-        .substr(2, 8);
+const AP_NAME = generateRandomName("test-ap")
 const ACTION = 'AUDIT';
 const METHODS = 'GET';
 const PATHS = '/user/profile/*';

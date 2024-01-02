@@ -35,16 +35,3 @@ Cypress.Commands.add('deleteNamespace', (namespaceName) => {
         .find('[data-testid="delete-confirmation"]')
         .click();
 });
-
-Cypress.Commands.add('goToNamespaceDetails', (namespaceName) => {
-  // Go to the details of namespace
-  cy.getLeftNav()
-    .contains('Namespaces')
-    .click();
-
-  cy.get('[role=row]')
-    .contains('a', namespaceName)
-    .click();
-
-  return cy.end();
-});

@@ -13,11 +13,11 @@ sudo k3d cluster create kyma --port 80:80@loadbalancer --port 443:443@loadbalanc
 
 export KUBECONFIG=$(k3d kubeconfig merge kyma)
 
-make create-namespace
+make create-kyma-system-ns
 
 echo "Apply istio"
 make deploy
-kubectl apply -f https://github.com/kyma-project/istio/releases/latest/download/istio-default-cr.yaml
+kubectl apply -f ./config/samples/operator_v1alpha2_istio.yaml
 
 echo "Apply gardener resources"
 echo "Certificates"
@@ -29,7 +29,7 @@ kubectl apply -f https://raw.githubusercontent.com/gardener/external-dns-managem
 echo "Issuers"
 kubectl apply -f https://raw.githubusercontent.com/gardener/cert-management/master/pkg/apis/cert/crds/cert.gardener.cloud_issuers.yaml
 
-cp $KUBECONFIG tests/ui/tests/fixtures/kubeconfig.yaml
+cp $KUBECONFIG tests/ui/fixtures/kubeconfig.yaml
 }
 
 function build_and_run_busola() {
@@ -50,5 +50,5 @@ echo "First process finished"
 build_and_run_busola
 echo "Second process finished"
 
-cd tests/ui/tests
+cd tests/ui
 npm ci && npm run "test:ci"

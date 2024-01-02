@@ -8,6 +8,7 @@ kyma provision k3d
 export KUBECONFIG=$(k3d kubeconfig merge kyma)
 
 echo "Apply istio"
+make create-kyma-system-ns
 kubectl apply -f https://github.com/kyma-project/istio/releases/latest/download/istio-manager.yaml
 kubectl apply -f https://github.com/kyma-project/istio/releases/latest/download/istio-default-cr.yaml
 

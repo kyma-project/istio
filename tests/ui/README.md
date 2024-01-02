@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project contains API Gateway integration tests for Kyma dashboard.
+This folder contains Istio integration tests for Kyma dashboard.
 
 ## Prerequisites
 

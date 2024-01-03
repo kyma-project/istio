@@ -51,12 +51,7 @@ var _ = Describe("status", func() {
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(cr.Status.State).To(Equal(operatorv1alpha1.Ready))
-
-			Expect(cr.Status.Conditions).ToNot(BeNil())
-			Expect((*cr.Status.Conditions)).To(HaveLen(1))
-			Expect((*cr.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
-			Expect((*cr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonReconcileSucceeded)))
-			Expect((*cr.Status.Conditions)[0].Status).To(Equal(metav1.ConditionTrue))
+			Expect(cr.Status.Conditions).To(BeNil())
 		})
 
 		It("Should reset existing status description to empty", func() {
@@ -81,12 +76,7 @@ var _ = Describe("status", func() {
 			Expect(k8sClient.Get(context.TODO(), types2.NamespacedName{Name: "test", Namespace: "default"}, &cr)).Should(Succeed())
 			Expect(cr.Status.State).To(Equal(operatorv1alpha1.Ready))
 			Expect(cr.Status.Description).To(BeEmpty())
-
-			Expect(cr.Status.Conditions).ToNot(BeNil())
-			Expect((*cr.Status.Conditions)).To(HaveLen(1))
-			Expect((*cr.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
-			Expect((*cr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonReconcileSucceeded)))
-			Expect((*cr.Status.Conditions)[0].Status).To(Equal(metav1.ConditionTrue))
+			Expect(cr.Status.Conditions).To(BeNil())
 		})
 	})
 
@@ -113,7 +103,6 @@ var _ = Describe("status", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(cr.Status.State).To(Equal(operatorv1alpha1.Deleting))
 			Expect(cr.Status.Description).ToNot(BeEmpty())
-
 			Expect(cr.Status.Conditions).To(BeNil())
 		})
 	})
@@ -141,7 +130,6 @@ var _ = Describe("status", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(cr.Status.State).To(Equal(operatorv1alpha1.Processing))
 			Expect(cr.Status.Description).To(Equal("Reconciling Istio"))
-
 			Expect(cr.Status.Conditions).To(BeNil())
 		})
 	})
@@ -158,7 +146,7 @@ var _ = Describe("status", func() {
 			describedError := described_errors.NewDescribedError(errors.New("error happened"), "Something")
 
 			// when
-			err := handler.UpdateToError(context.TODO(), &cr, describedError, operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonReconcileFailed))
+			err := handler.UpdateToError(context.TODO(), &cr, describedError)
 
 			// then
 			Expect(err).ToNot(HaveOccurred())
@@ -168,12 +156,7 @@ var _ = Describe("status", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(cr.Status.State).To(Equal(operatorv1alpha1.Error))
 			Expect(cr.Status.Description).To(Equal("Something: error happened"))
-
-			Expect(cr.Status.Conditions).ToNot(BeNil())
-			Expect((*cr.Status.Conditions)).To(HaveLen(1))
-			Expect((*cr.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
-			Expect((*cr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonReconcileFailed)))
-			Expect((*cr.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
+			Expect(cr.Status.Conditions).To(BeNil())
 		})
 
 		It("Should update Istio CR status to warning with description", func() {
@@ -187,7 +170,7 @@ var _ = Describe("status", func() {
 			describedError := described_errors.NewDescribedError(errors.New("error happened"), "Something").SetWarning()
 
 			// when
-			err := handler.UpdateToError(context.TODO(), &cr, describedError, operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonReconcileFailed))
+			err := handler.UpdateToError(context.TODO(), &cr, describedError)
 
 			// then
 			Expect(err).ToNot(HaveOccurred())
@@ -197,12 +180,7 @@ var _ = Describe("status", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(cr.Status.State).To(Equal(operatorv1alpha1.Warning))
 			Expect(cr.Status.Description).To(Equal("Something: error happened"))
-
-			Expect(cr.Status.Conditions).ToNot(BeNil())
-			Expect((*cr.Status.Conditions)).To(HaveLen(1))
-			Expect((*cr.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
-			Expect((*cr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonReconcileFailed)))
-			Expect((*cr.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
+			Expect(cr.Status.Conditions).To(BeNil())
 		})
 
 		It("Should update Istio CR status to error with default condition", func() {
@@ -226,12 +204,7 @@ var _ = Describe("status", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(cr.Status.State).To(Equal(operatorv1alpha1.Error))
 			Expect(cr.Status.Description).To(Equal("Something: error happened"))
-
-			Expect(cr.Status.Conditions).ToNot(BeNil())
-			Expect((*cr.Status.Conditions)).To(HaveLen(1))
-			Expect((*cr.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
-			Expect((*cr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonReconcileFailed)))
-			Expect((*cr.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
+			Expect(cr.Status.Conditions).To(BeNil())
 		})
 
 		It("Should update Istio CR status to warning with a speicific condition derived from the error", func() {
@@ -242,36 +215,7 @@ var _ = Describe("status", func() {
 			k8sClient := createFakeClient(&cr)
 			handler := NewStatusHandler(k8sClient)
 
-			describedError := described_errors.NewDescribedError(errors.New("error happened"), "Something", operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonIstioCRsDangling)).SetWarning()
-
-			// when
-			err := handler.UpdateToError(context.TODO(), &cr, describedError, operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonReconcileFailed))
-
-			// then
-			Expect(err).ToNot(HaveOccurred())
-
-			err = k8sClient.Get(context.TODO(), types2.NamespacedName{Name: "test", Namespace: "default"}, &cr)
-
-			Expect(err).ToNot(HaveOccurred())
-			Expect(cr.Status.State).To(Equal(operatorv1alpha1.Warning))
-			Expect(cr.Status.Description).To(Equal("Something: error happened"))
-
-			Expect(cr.Status.Conditions).ToNot(BeNil())
-			Expect((*cr.Status.Conditions)).To(HaveLen(1))
-			Expect((*cr.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
-			Expect((*cr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonIstioCRsDangling)))
-			Expect((*cr.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
-		})
-
-		It("Should update Istio CR status to warning and add ready condition if not provided", func() {
-			// given
-			cr := operatorv1alpha1.Istio{
-				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
-			}
-			k8sClient := createFakeClient(&cr)
-			handler := NewStatusHandler(k8sClient)
-
-			describedError := described_errors.NewDescribedError(errors.New("error happened"), "Something", operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonProxySidecarManualRestartRequired)).SetWarning()
+			describedError := described_errors.NewDescribedError(errors.New("error happened"), "Something").SetWarning()
 
 			// when
 			err := handler.UpdateToError(context.TODO(), &cr, describedError)
@@ -284,21 +228,36 @@ var _ = Describe("status", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(cr.Status.State).To(Equal(operatorv1alpha1.Warning))
 			Expect(cr.Status.Description).To(Equal("Something: error happened"))
+			Expect(cr.Status.Conditions).To(BeNil())
+		})
 
-			Expect(cr.Status.Conditions).ToNot(BeNil())
-			Expect((*cr.Status.Conditions)).To(HaveLen(2))
-			Expect((*cr.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeProxySidecarRestartSucceeded)))
-			Expect((*cr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonProxySidecarManualRestartRequired)))
-			Expect((*cr.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
+		It("Should update Istio CR status to warning and add ready condition if not provided", func() {
+			// given
+			cr := operatorv1alpha1.Istio{
+				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+			}
+			k8sClient := createFakeClient(&cr)
+			handler := NewStatusHandler(k8sClient)
 
-			Expect((*cr.Status.Conditions)[1].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
-			Expect((*cr.Status.Conditions)[1].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonReconcileFailed)))
-			Expect((*cr.Status.Conditions)[1].Status).To(Equal(metav1.ConditionFalse))
+			describedError := described_errors.NewDescribedError(errors.New("error happened"), "Something").SetWarning()
+
+			// when
+			err := handler.UpdateToError(context.TODO(), &cr, describedError)
+
+			// then
+			Expect(err).ToNot(HaveOccurred())
+
+			err = k8sClient.Get(context.TODO(), types2.NamespacedName{Name: "test", Namespace: "default"}, &cr)
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(cr.Status.State).To(Equal(operatorv1alpha1.Warning))
+			Expect(cr.Status.Description).To(Equal("Something: error happened"))
+			Expect(cr.Status.Conditions).To(BeNil())
 		})
 	})
 
-	Describe("UpdateConditions", func() {
-		It("Should update Istio CR status conditions", func() {
+	Describe("SetCondition", func() {
+		It("Should set Istio CR status conditions", func() {
 			// given
 			cr := operatorv1alpha1.Istio{
 				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
@@ -307,17 +266,10 @@ var _ = Describe("status", func() {
 			handler := NewStatusHandler(k8sClient)
 
 			// when
-			err := handler.UpdateConditions(context.TODO(), &cr,
-				operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonReconcileSucceeded),
-				operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonProxySidecarManualRestartRequired))
+			handler.SetCondition(&cr, operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonReconcileSucceeded))
+			handler.SetCondition(&cr, operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonProxySidecarManualRestartRequired))
 
 			// then
-			Expect(err).ToNot(HaveOccurred())
-
-			err = k8sClient.Get(context.TODO(), types2.NamespacedName{Name: "test", Namespace: "default"}, &cr)
-
-			Expect(err).ToNot(HaveOccurred())
-
 			Expect(cr.Status.Conditions).ToNot(BeNil())
 			Expect((*cr.Status.Conditions)).To(HaveLen(2))
 			Expect((*cr.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))

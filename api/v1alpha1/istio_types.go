@@ -94,13 +94,13 @@ const (
 	ConditionReasonIngressGatewayReconcileFailedMessage                    = "Istio Ingress Gateway reconciliation failed"
 )
 
-type ConditionMeta struct {
+type conditionMeta struct {
 	Type    ConditionType
 	Status  metav1.ConditionStatus
 	Message string
 }
 
-var ConditionReasons = map[ConditionReason]ConditionMeta{
+var conditionReasons = map[ConditionReason]conditionMeta{
 	ConditionReasonReconcileSucceeded: {Type: ConditionTypeReady, Status: metav1.ConditionTrue, Message: ConditionReasonReconcileSucceededMessage},
 	ConditionReasonReconcileFailed:    {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonReconcileFailedMessage},
 	ConditionReasonOlderCRExists:      {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonOlderCRExistsMessage},
@@ -186,28 +186,27 @@ func (i *Istio) HasFinalizer() bool {
 	return len(i.Finalizers) > 0
 }
 
-func ConditionFromReason(reason ConditionReason, customMessage string) *metav1.Condition {
-	condition, found := ConditionReasons[reason]
+func ConditionFromReason(reason ReasonWithMessage) *metav1.Condition {
+	condition, found := conditionReasons[reason.Reason]
 	if found {
-		if customMessage == "" {
-			customMessage = condition.Message
+		message := condition.Message
+		if reason.Message != "" {
+			message = reason.Message
 		}
 		return &metav1.Condition{
 			Type:    string(condition.Type),
 			Status:  condition.Status,
-			Reason:  string(reason),
-			Message: customMessage,
+			Reason:  string(reason.Reason),
+			Message: message,
 		}
 	}
 	return nil
 }
 
-func HasReadyCondition(reasons []ReasonWithMessage) bool {
-	for _, reason := range reasons {
-		condition, found := ConditionReasons[reason.Reason]
-		if found && condition.Type == ConditionTypeReady {
-			return true
-		}
+func IsReadyTypeCondition(reason ReasonWithMessage) bool {
+	condition, found := conditionReasons[reason.Reason]
+	if found && condition.Type == ConditionTypeReady {
+		return true
 	}
 	return false
 }

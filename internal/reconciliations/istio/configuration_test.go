@@ -31,14 +31,14 @@ var _ = Describe("Istio Configuration", func() {
 			istioCR := operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{Config: operatorv1alpha1.Config{NumTrustedProxies: &numTrustedProxies}}}
 
 			// when
-			updatedCR, err := UpdateLastAppliedConfiguration(istioCR, mockIstioTag)
+			err := UpdateLastAppliedConfiguration(&istioCR, mockIstioTag)
 
 			// then
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(updatedCR.Annotations).To(Not(BeEmpty()))
-			Expect(updatedCR.Annotations[lastAppliedConfiguration]).To(Equal(fmt.Sprintf(`{"config":{"numTrustedProxies":1},"IstioTag":"%s"}`, mockIstioTag)))
+			Expect(istioCR.Annotations).To(Not(BeEmpty()))
+			Expect(istioCR.Annotations[lastAppliedConfiguration]).To(Equal(fmt.Sprintf(`{"config":{"numTrustedProxies":1},"IstioTag":"%s"}`, mockIstioTag)))
 
-			appliedConfig, err := getLastAppliedConfiguration(&updatedCR)
+			appliedConfig, err := getLastAppliedConfiguration(&istioCR)
 
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(*appliedConfig.Config.NumTrustedProxies).To(Equal(1))

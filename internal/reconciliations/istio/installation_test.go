@@ -126,20 +126,16 @@ var _ = Describe("Installation reconciliation", func() {
 		err := installation.Reconcile(context.TODO(), &istioCR, statusHandler, resourceListPath)
 
 		// then
-		updatedIstioCR := operatorv1alpha1.Istio{}
-		errGet := c.Get(context.TODO(), client.ObjectKeyFromObject(&istioCR), &updatedIstioCR)
-		Expect(errGet).ShouldNot(HaveOccurred())
-
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
-		Expect(updatedIstioCR.Status.State).To(Equal(operatorv1alpha1.Processing))
+		Expect(istioCR.Status.State).To(Equal(operatorv1alpha1.Processing))
 
-		Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
-		Expect((*updatedIstioCR.Status.Conditions)).To(HaveLen(1))
-		Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
-		Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonIstioInstallSucceeded)))
-		Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
+		Expect(istioCR.Status.Conditions).ToNot(BeNil())
+		Expect((*istioCR.Status.Conditions)).To(HaveLen(1))
+		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
+		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonIstioInstallSucceeded)))
+		Expect((*istioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 	})
 
 	It("Should label and annotate istio-system namespace after Istio installation without overriding existing labels and annotations", func() {
@@ -225,17 +221,13 @@ var _ = Describe("Installation reconciliation", func() {
 		err := installation.Reconcile(context.TODO(), &istioCR, statusHandler, resourceListPath)
 
 		// then
-		updatedIstioCR := operatorv1alpha1.Istio{}
-		errGet := c.Get(context.TODO(), client.ObjectKeyFromObject(&istioCR), &updatedIstioCR)
-		Expect(errGet).ShouldNot(HaveOccurred())
-
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("istio-system pods version: 1.16.0 do not match target version: 1.16.1"))
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
-		Expect(updatedIstioCR.Status.State).To(Equal(operatorv1alpha1.Processing))
+		Expect(istioCR.Status.State).To(Equal(operatorv1alpha1.Processing))
 
-		Expect(updatedIstioCR.Status.Conditions).To(BeNil())
+		Expect(istioCR.Status.Conditions).To(BeNil())
 	})
 
 	It("Should add installation finalizer when Istio is installed", func() {
@@ -272,15 +264,11 @@ var _ = Describe("Installation reconciliation", func() {
 		err := installation.Reconcile(context.TODO(), &istioCR, statusHandler, resourceListPath)
 
 		// then
-		updatedIstioCR := operatorv1alpha1.Istio{}
-		errGet := c.Get(context.TODO(), client.ObjectKeyFromObject(&istioCR), &updatedIstioCR)
-		Expect(errGet).ShouldNot(HaveOccurred())
-
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(mockClient.installCalled).To(BeTrue())
-		Expect(updatedIstioCR.Finalizers).To(ContainElement("istios.operator.kyma-project.io/istio-installation"))
+		Expect(istioCR.Finalizers).To(ContainElement("istios.operator.kyma-project.io/istio-installation"))
 
-		Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
+		Expect(istioCR.Status.Conditions).ToNot(BeNil())
 	})
 
 	It("Should execute install to upgrade istio and update Istio CR status when NumTrustedProxies has changed and restart Istio GW", func() {
@@ -321,22 +309,17 @@ var _ = Describe("Installation reconciliation", func() {
 		err := installation.Reconcile(context.TODO(), &istioCR, statusHandler, resourceListPath)
 
 		// then
-		updatedIstioCR := operatorv1alpha1.Istio{}
-		errGet := c.Get(context.TODO(), client.ObjectKeyFromObject(&istioCR), &updatedIstioCR)
-		Expect(errGet).ShouldNot(HaveOccurred())
-
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
-		Expect(updatedIstioCR.Status.State).To(Equal(operatorv1alpha1.Processing))
+		Expect(istioCR.Status.State).To(Equal(operatorv1alpha1.Processing))
+		Expect(istioCR.Status.Conditions).ToNot(BeNil())
 
 		igwDeployment = &appsv1.Deployment{}
 		Expect(c.Get(context.TODO(), types.NamespacedName{Namespace: "istio-system", Name: "istio-ingressgateway"}, igwDeployment)).Should(Succeed())
 
 		hasRestartAnnotation := annotations.HasRestartAnnotation(igwDeployment.Spec.Template.Annotations)
 		Expect(hasRestartAnnotation).To(BeTrue())
-
-		Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
 	})
 
 	It("Should execute install to upgrade istio and update Istio CR status when NumTrustedProxies has not changed and do not restart Istio GW", func() {
@@ -377,20 +360,15 @@ var _ = Describe("Installation reconciliation", func() {
 		err := installation.Reconcile(context.TODO(), &istioCR, statusHandler, resourceListPath)
 
 		// then
-		updatedIstioCR := operatorv1alpha1.Istio{}
-		errGet := c.Get(context.TODO(), client.ObjectKeyFromObject(&istioCR), &updatedIstioCR)
-		Expect(errGet).ShouldNot(HaveOccurred())
-
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
-		Expect(updatedIstioCR.Status.State).To(Equal(operatorv1alpha1.Processing))
+		Expect(istioCR.Status.State).To(Equal(operatorv1alpha1.Processing))
+		Expect(istioCR.Status.Conditions).ToNot(BeNil())
 
 		currentIGWDeployment := appsv1.Deployment{}
 		Expect(c.Get(context.TODO(), types.NamespacedName{Namespace: "istio-system", Name: "istio-ingressgateway"}, &currentIGWDeployment)).Should(Succeed())
 		Expect(currentIGWDeployment.Spec.Template.Annotations["reconciler.kyma-project.io/lastRestartDate"]).To(BeEmpty())
-
-		Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
 	})
 
 	It("Should fail Istio reconciliation when NumTrustedProxies has changed and fails to restart Istio GW", func() {
@@ -440,20 +418,16 @@ var _ = Describe("Installation reconciliation", func() {
 		err := installation.Reconcile(context.TODO(), &istioCR, statusHandler, resourceListPath)
 
 		// then
-		updatedIstioCR := operatorv1alpha1.Istio{}
-		errGet := c.Get(context.TODO(), client.ObjectKeyFromObject(&istioCR), &updatedIstioCR)
-		Expect(errGet).ShouldNot(HaveOccurred())
-
 		Expect(err).Should(HaveOccurred())
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
-		Expect(updatedIstioCR.Status.State).To(Equal(operatorv1alpha1.Processing))
+		Expect(istioCR.Status.State).To(Equal(operatorv1alpha1.Processing))
 
-		Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
-		Expect((*updatedIstioCR.Status.Conditions)).To(HaveLen(1))
-		Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
-		Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonIstioInstallSucceeded)))
-		Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
+		Expect(istioCR.Status.Conditions).ToNot(BeNil())
+		Expect((*istioCR.Status.Conditions)).To(HaveLen(1))
+		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
+		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonIstioInstallSucceeded)))
+		Expect((*istioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 
 		igwDeployment = &appsv1.Deployment{}
 		Expect(c.Get(context.TODO(), types.NamespacedName{Namespace: "istio-system", Name: "istio-ingressgateway"}, igwDeployment)).Should(Succeed())
@@ -500,15 +474,10 @@ var _ = Describe("Installation reconciliation", func() {
 		err := installation.Reconcile(context.TODO(), &istioCR, statusHandler, resourceListPath)
 
 		// then
-		updatedIstioCR := operatorv1alpha1.Istio{}
-		errGet := c.Get(context.TODO(), client.ObjectKeyFromObject(&istioCR), &updatedIstioCR)
-		Expect(errGet).ShouldNot(HaveOccurred())
-
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
-		Expect(updatedIstioCR.Status.State).To(Equal(operatorv1alpha1.Processing))
-
+		Expect(istioCR.Status.State).To(Equal(operatorv1alpha1.Processing))
 		Expect(istioCR.Status.Conditions).ToNot(BeNil())
 	})
 
@@ -552,7 +521,6 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(err.Description()).To(Equal("Istio install check failed: target Istio version (1.16.0-distroless) is lower than current version (1.16.1-distroless) - downgrade not supported"))
 		Expect(mockClient.installCalled).To(BeFalse())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
-
 		Expect(istioCR.Status.Conditions).To(BeNil())
 	})
 
@@ -596,7 +564,6 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(err.Description()).To(Equal("Istio install check failed: target Istio version (1.18.0-distroless) is higher than current Istio version (1.16.1-distroless) - the difference between versions exceed one minor version"))
 		Expect(mockClient.installCalled).To(BeFalse())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
-
 		Expect(istioCR.Status.Conditions).To(BeNil())
 	})
 
@@ -640,7 +607,6 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(err.Description()).To(Equal("Istio install check failed: target Istio version (2.0.0-distroless) is different than current Istio version (1.16.1-distroless) - major version upgrade is not supported"))
 		Expect(mockClient.installCalled).To(BeFalse())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
-
 		Expect(istioCR.Status.Conditions).To(BeNil())
 	})
 
@@ -683,7 +649,6 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(err.Description()).To(Equal("Istio install check failed: fake is not in dotted-tri format"))
 		Expect(mockClient.installCalled).To(BeFalse())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
-
 		Expect(istioCR.Status.Conditions).To(BeNil())
 	})
 
@@ -726,7 +691,6 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(err.Description()).To(Equal("Could not get Istio sidecar version on cluster: Invalid Semantic Version"))
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
-
 		Expect(istioCR.Status.Conditions).To(BeNil())
 	})
 
@@ -772,7 +736,11 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(mockClient.installCalled).To(BeFalse())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 
-		Expect(istioCR.Status.Conditions).To(BeNil())
+		Expect(istioCR.Status.Conditions).ToNot(BeNil())
+		Expect((*istioCR.Status.Conditions)).To(HaveLen(1))
+		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
+		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonCustomResourceMisconfigured)))
+		Expect((*istioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 	})
 
 	It("Should fail when istio installation fails", func() {
@@ -816,7 +784,6 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(err.Description()).To(Equal("Could not install Istio: installation failed"))
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
-
 		Expect(istioCR.Status.Conditions).To(BeNil())
 	})
 
@@ -956,7 +923,6 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(err.Description()).To(Equal("Could not uninstall istio: uninstall failed"))
 		Expect(mockClient.installCalled).To(BeFalse())
 		Expect(mockClient.uninstallCalled).To(BeTrue())
-
 		Expect(istioCR.Status.Conditions).To(BeNil())
 	})
 
@@ -997,7 +963,6 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
-
 		Expect(istioCR.Status.Conditions).ToNot(BeNil())
 	})
 
@@ -1145,7 +1110,11 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(mockClient.installCalled).To(BeFalse())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 
-		Expect(istioCR.Status.Conditions).To(BeNil())
+		Expect(istioCR.Status.Conditions).ToNot(BeNil())
+		Expect((*istioCR.Status.Conditions)).To(HaveLen(1))
+		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
+		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonIstioCRsDangling)))
+		Expect((*istioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 	})
 })
 

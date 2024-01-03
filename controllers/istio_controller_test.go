@@ -374,10 +374,11 @@ var _ = Describe("Istio Controller", func() {
 			Expect(err.Error()).To(Equal("Update to ready error"))
 			Expect(result).Should(Equal(reconcile.Result{}))
 			Expect(statusMock.updatedToReadyCalled).Should(BeTrue())
-			Expect(statusMock.updateConditionsCalled).Should(BeTrue())
+			Expect(statusMock.setConditionCalled).Should(BeTrue())
 			Expect(statusMock.GetConditions()).Should(Equal([]operatorv1alpha1.ReasonWithMessage{
 				operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonProxySidecarRestartSucceeded),
 				operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonIngressGatewayReconcileSucceeded),
+				operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonReconcileSucceeded),
 			}))
 		})
 
@@ -478,12 +479,12 @@ var _ = Describe("Istio Controller", func() {
 			Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
 			Expect((*updatedIstioCR.Status.Conditions)).To(HaveLen(2))
 
-			Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeProxySidecarRestartSucceeded)))
-			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonProxySidecarRestartFailed)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonReconcileFailed)))
 			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 
-			Expect((*updatedIstioCR.Status.Conditions)[1].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
-			Expect((*updatedIstioCR.Status.Conditions)[1].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonReconcileFailed)))
+			Expect((*updatedIstioCR.Status.Conditions)[1].Type).To(Equal(string(operatorv1alpha1.ConditionTypeProxySidecarRestartSucceeded)))
+			Expect((*updatedIstioCR.Status.Conditions)[1].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonProxySidecarRestartFailed)))
 			Expect((*updatedIstioCR.Status.Conditions)[1].Status).To(Equal(metav1.ConditionFalse))
 		})
 
@@ -698,13 +699,13 @@ var _ = Describe("Istio Controller", func() {
 			Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
 			Expect((*updatedIstioCR.Status.Conditions)).To(HaveLen(2))
 
-			Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeProxySidecarRestartSucceeded)))
-			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonProxySidecarManualRestartRequired)))
-			Expect((*updatedIstioCR.Status.Conditions)[0].Message).To(Equal("The sidecars of the following workloads could not be restarted: default/httpbin, default/nginx and 3 additional workloads."))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonReconcileFailed)))
 			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 
-			Expect((*updatedIstioCR.Status.Conditions)[1].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
-			Expect((*updatedIstioCR.Status.Conditions)[1].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonReconcileFailed)))
+			Expect((*updatedIstioCR.Status.Conditions)[1].Type).To(Equal(string(operatorv1alpha1.ConditionTypeProxySidecarRestartSucceeded)))
+			Expect((*updatedIstioCR.Status.Conditions)[1].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonProxySidecarManualRestartRequired)))
+			Expect((*updatedIstioCR.Status.Conditions)[1].Message).To(Equal("The sidecars of the following workloads could not be restarted: default/httpbin, default/nginx and 3 additional workloads."))
 			Expect((*updatedIstioCR.Status.Conditions)[1].Status).To(Equal(metav1.ConditionFalse))
 		})
 	})
@@ -774,13 +775,13 @@ type StatusMock struct {
 	errorError                error
 	updatedToErrorCalled      bool
 	conditionsError           error
-	updateConditionsCalled    bool
-	conditionReasons          []operatorv1alpha1.ReasonWithMessage
+	setConditionCalled        bool
+	reasons                   []operatorv1alpha1.ReasonWithMessage
 }
 
 func NewStatusMock() *StatusMock {
 	return &StatusMock{
-		conditionReasons: []operatorv1alpha1.ReasonWithMessage{},
+		reasons: []operatorv1alpha1.ReasonWithMessage{},
 	}
 }
 
@@ -799,18 +800,16 @@ func (s *StatusMock) UpdateToReady(_ context.Context, _ *operatorv1alpha1.Istio)
 	return s.readyError
 }
 
-func (s *StatusMock) UpdateToError(_ context.Context, _ *operatorv1alpha1.Istio, _ described_errors.DescribedError, conditionReasons ...operatorv1alpha1.ReasonWithMessage) error {
+func (s *StatusMock) UpdateToError(_ context.Context, _ *operatorv1alpha1.Istio, _ described_errors.DescribedError) error {
 	s.updatedToErrorCalled = true
-	s.conditionReasons = append(s.conditionReasons, conditionReasons...)
 	return s.errorError
 }
 
-func (s *StatusMock) UpdateConditions(_ context.Context, _ *operatorv1alpha1.Istio, conditionReasons ...operatorv1alpha1.ReasonWithMessage) error {
-	s.updateConditionsCalled = true
-	s.conditionReasons = append(s.conditionReasons, conditionReasons...)
-	return s.conditionsError
+func (s *StatusMock) SetCondition(_ *operatorv1alpha1.Istio, reason operatorv1alpha1.ReasonWithMessage) {
+	s.setConditionCalled = true
+	s.reasons = append(s.reasons, reason)
 }
 
 func (s *StatusMock) GetConditions() []operatorv1alpha1.ReasonWithMessage {
-	return s.conditionReasons
+	return s.reasons
 }

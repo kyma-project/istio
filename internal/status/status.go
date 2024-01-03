@@ -2,12 +2,14 @@ package status
 
 import (
 	"context"
+	"errors"
 
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/retry"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -15,8 +17,8 @@ type Status interface {
 	UpdateToProcessing(ctx context.Context, istioCR *operatorv1alpha1.Istio) error
 	UpdateToDeleting(ctx context.Context, istioCR *operatorv1alpha1.Istio) error
 	UpdateToReady(ctx context.Context, istioCR *operatorv1alpha1.Istio) error
-	UpdateToError(ctx context.Context, istioCR *operatorv1alpha1.Istio, err described_errors.DescribedError, conditionReasons ...operatorv1alpha1.ReasonWithMessage) error
-	UpdateConditions(ctx context.Context, istioCR *operatorv1alpha1.Istio, conditionReasons ...operatorv1alpha1.ReasonWithMessage) error
+	UpdateToError(ctx context.Context, istioCR *operatorv1alpha1.Istio, err described_errors.DescribedError) error
+	SetCondition(istioCR *operatorv1alpha1.Istio, reason operatorv1alpha1.ReasonWithMessage)
 }
 
 func NewStatusHandler(client client.Client) StatusHandler {
@@ -31,35 +33,16 @@ type StatusHandler struct {
 
 func (d StatusHandler) update(ctx context.Context, istioCR *operatorv1alpha1.Istio) error {
 	newStatus := istioCR.Status
-
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		if getErr := d.client.Get(ctx, client.ObjectKeyFromObject(istioCR), istioCR); getErr != nil {
 			return getErr
 		}
-
 		istioCR.Status = newStatus
-
 		if updateErr := d.client.Status().Update(ctx, istioCR); updateErr != nil {
 			return updateErr
 		}
-
 		return nil
 	})
-}
-
-func (d StatusHandler) updateCondition(istioCR *operatorv1alpha1.Istio, reason operatorv1alpha1.ConditionReason, customMessage string) {
-	if reason == "" {
-		return
-	}
-
-	if istioCR.Status.Conditions == nil {
-		istioCR.Status.Conditions = &[]metav1.Condition{}
-	}
-
-	condition := operatorv1alpha1.ConditionFromReason(reason, customMessage)
-	if condition != nil {
-		meta.SetStatusCondition(istioCR.Status.Conditions, *condition)
-	}
 }
 
 func (d StatusHandler) UpdateToProcessing(ctx context.Context, istioCR *operatorv1alpha1.Istio) error {
@@ -77,37 +60,27 @@ func (d StatusHandler) UpdateToDeleting(ctx context.Context, istioCR *operatorv1
 func (d StatusHandler) UpdateToReady(ctx context.Context, istioCR *operatorv1alpha1.Istio) error {
 	istioCR.Status.State = operatorv1alpha1.Ready
 	istioCR.Status.Description = ""
-	d.updateCondition(istioCR, operatorv1alpha1.ConditionReasonReconcileSucceeded, "")
 	return d.update(ctx, istioCR)
 }
 
-func (d StatusHandler) UpdateToError(ctx context.Context, istioCR *operatorv1alpha1.Istio, err described_errors.DescribedError, conditionReasons ...operatorv1alpha1.ReasonWithMessage) error {
+func (d StatusHandler) UpdateToError(ctx context.Context, istioCR *operatorv1alpha1.Istio, err described_errors.DescribedError) error {
 	if err.Level() == described_errors.Warning {
 		istioCR.Status.State = operatorv1alpha1.Warning
 	} else {
 		istioCR.Status.State = operatorv1alpha1.Error
 	}
-
-	if len(err.ConditionReasons()) > 0 {
-		conditionReasons = append(conditionReasons, err.ConditionReasons()...)
-	}
-	if !operatorv1alpha1.HasReadyCondition(conditionReasons) {
-		conditionReasons = append(conditionReasons, operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonReconcileFailed))
-	}
-	for _, reason := range conditionReasons {
-		d.updateCondition(istioCR, reason.Reason, reason.Message)
-	}
-
 	istioCR.Status.Description = err.Description()
 	return d.update(ctx, istioCR)
 }
 
-func (d StatusHandler) UpdateConditions(ctx context.Context, istioCR *operatorv1alpha1.Istio, conditionReasons ...operatorv1alpha1.ReasonWithMessage) error {
-	if len(conditionReasons) > 0 {
-		for _, conditionReason := range conditionReasons {
-			d.updateCondition(istioCR, conditionReason.Reason, conditionReason.Message)
-		}
-		return d.update(ctx, istioCR)
+func (d StatusHandler) SetCondition(istioCR *operatorv1alpha1.Istio, reason operatorv1alpha1.ReasonWithMessage) {
+	if istioCR.Status.Conditions == nil {
+		istioCR.Status.Conditions = &[]metav1.Condition{}
 	}
-	return nil
+	condition := operatorv1alpha1.ConditionFromReason(reason)
+	if condition != nil {
+		meta.SetStatusCondition(istioCR.Status.Conditions, *condition)
+	} else {
+		ctrl.Log.Error(errors.New("condition not found"), "Unable to find condition from reason", "reason", reason)
+	}
 }

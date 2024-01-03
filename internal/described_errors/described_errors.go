@@ -1,7 +1,6 @@
 package described_errors
 
 import (
-	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/pkg/errors"
 )
 
@@ -17,7 +16,6 @@ type DescribedError interface {
 	Description() string
 	Error() string
 	Level() Level
-	ConditionReasons() []operatorv1alpha1.ReasonWithMessage
 }
 
 type DefaultDescribedError struct {
@@ -25,16 +23,14 @@ type DefaultDescribedError struct {
 	description string
 	wrapError   bool
 	level       Level
-	reasons     []operatorv1alpha1.ReasonWithMessage
 }
 
-func NewDescribedError(err error, description string, reasons ...operatorv1alpha1.ReasonWithMessage) DefaultDescribedError {
+func NewDescribedError(err error, description string) DefaultDescribedError {
 	return DefaultDescribedError{
 		err:         err,
 		description: description,
 		wrapError:   true,
 		level:       Error,
-		reasons:     reasons,
 	}
 }
 
@@ -62,8 +58,4 @@ func (d DefaultDescribedError) Error() string {
 
 func (d DefaultDescribedError) Level() Level {
 	return d.level
-}
-
-func (d DefaultDescribedError) ConditionReasons() []operatorv1alpha1.ReasonWithMessage {
-	return d.reasons
 }

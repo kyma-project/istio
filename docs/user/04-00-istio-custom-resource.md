@@ -48,4 +48,4 @@ This table lists all the possible parameters of the given resource together with
 | **conditions.&#x200b;message**  | string | Provides more details about the condition status change. |
 | **conditions.&#x200b;reason**  | string | Defines the reason for the condition status change. |
 | **conditions.&#x200b;status** (required) | string | Status of the condition. The value is either `True`, `False`, or `Unknown`. |
-| **conditions.&#x200b;type**  | string | Short description of the condition. |
+| **conditions.&#x200b;type**  | string | Provides a short description of the condition. |

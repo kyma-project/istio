@@ -1,0 +1,6 @@
+- name: hosts
+  source: spec.hosts
+  widget: JoinedArray
+- name: gateways
+  source: spec.gateways
+  widget: JoinedArray

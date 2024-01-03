@@ -1,0 +1,781 @@
+- simple: true
+  path: spec.host
+  name: Host
+  required: true
+- widget: FormGroup
+  path: spec.trafficPolicy
+  name: Traffic Policy
+  children:
+    - widget: FormGroup
+      path: loadBalancer
+      name: Load Balancer
+      children:
+        - var: mainloadBalancerSelector
+          name: ChooseLoadBalancerSelector
+          type: string
+          enum:
+            - simple
+            - consistentHash
+        - path: simple
+          name: Simple
+          required: true
+          visibility: $mainloadBalancerSelector = 'simple'
+        - widget: FormGroup
+          path: consistentHash
+          name: Consistent Hash
+          visibility: $mainloadBalancerSelector = 'consistentHash'
+          children:
+            - var: mainconsistentHashSelector
+              name: ChooseConsistentHashSelector
+              type: string
+              enum:
+                - httpHeaderName
+                - httpCookie
+                - useSourceIp
+                - httpQueryParameterName
+            - path: httpHeaderName
+              name: HTTP Header Name
+              required: true
+              visibility: $mainconsistentHashSelector = 'httpHeaderName'
+            - path: httpCookie
+              name: HTTP Cookie
+              widget: FormGroup
+              visibility: $mainconsistentHashSelector  = 'httpCookie'
+              children:
+                - path: name
+                  name: Name
+                  required: true
+                - path: path
+                  name: Path
+                - path: ttl
+                  name: TTL
+                  required: true
+            - path: useSourceIp
+              name: Use Source IP
+              required: true
+              visibility: $mainconsistentHashSelector = 'useSourceIp'
+            - path: httpQueryParameterName
+              name: HTTP Query Parameter Name
+              required: true
+              visibility: $mainconsistentHashSelector= 'httpQueryParameterName'
+            - path: minimumRingSize
+              name: Minimum Ring Size
+        - path: localityLbSetting
+          name: Locality LB Settings
+          widget: FormGroup
+          children:
+            - path: enabled
+              name: Enabled
+              type: boolean
+            - var: mainLbSelector
+              name: ChooseLbSelector
+              type: string
+              enum:
+                - distribute
+                - failover
+            - path: distribute
+              name: Distribute
+              widget: GenericList
+              visibility: $mainLbSelector  = 'distribute'
+            - path: distribute[].from
+              name: From
+            - path: distribute[].to
+              name: To
+              widget: KeyValuePair
+              value:
+                type: number
+            - path: failover
+              name: Failover
+              widget: GenericList
+              visibility: $mainLbSelector  = 'failover'
+            - path: failover[].from
+              name: From
+            - path: failover[].to
+              name: To
+            - path: failoverPriority
+              name: Failover Priority
+              visibility: $mainLbSelector  = 'failover'
+              widget: SimpleList
+              children:
+                - path: '[]'
+        - path: warmupDurationSecs
+          name: Warmup Duration Secs
+    - path: connectionPool
+      name: Connection Pool
+      widget: FormGroup
+      children:
+        - path: tcp
+          name: TCP
+          widget: FormGroup
+          children:
+            - path: maxConnections
+              name: Max Connections
+            - path: connectTimeout
+              name: Connect Timeout
+            - path: tcpKeepalive
+              name: TCP Keep Alive
+              widget: FormGroup
+              children:
+                - path: probes
+                  name: Probes
+                - path: time
+                  name: Time
+                - path: interval
+                  name: Interval
+        - path: http
+          name: HTTP
+          widget: FormGroup
+          children:
+            - path: http1MaxPendingRequests
+              name: HTTP1 Max Pending Requests
+            - path: http2MaxRequests
+              name: HTTP2 Max Requests
+            - path: maxRequestsPerConnection
+              name: Max Requests Per Connection
+            - path: maxRetries
+              name: Max Retries
+            - path: idleTimeout
+              name: Idle Timeout
+            - path: h2UpgradePolicy
+              name: H2 Upgrade Policy
+            - path: useClientProtocol
+              name: Use Client Protocol
+    - path: outlierDetection
+      widget: FormGroup
+      children:
+        - path: splitExternalLocalOriginErrors
+          name: Split External Local Origin Errors
+        - path: consecutiveLocalOriginFailures
+          name: Consecutive Local Origin Failures
+          type: number
+        - path: consecutiveGatewayErrors
+          name: Consecutive Gateway Errors
+          type: number
+        - path: consecutive5xxErrors
+          name: Consecutive 5xx Errors
+          type: number
+        - path: interval
+          name: Interval
+        - path: baseEjectionTime
+          name: Base Ejection Time
+        - path: maxEjectionPercent
+          name: Max Ejection Percent
+        - path: minHealthPercent
+          name: Min Health Percent
+    - path: tls
+      name: TLS
+      widget: FormGroup
+      children:
+        - path: mode
+          name: Mode
+        - path: clientCertificate
+          name: Client Certificate
+        - path: privateKey
+          name: Private Key
+        - path: caCertificates
+          name: CA Certificates
+        - path: credentialName
+          name: Credential Name
+        - path: subjectAltNames
+          name: Subject Alt Names
+          widget: SimpleList
+          children:
+            - path: '[]'
+        - path: sni
+          name: SNI
+        - path: insecureSkipVerify
+          name: Insecure Skip Verify
+    - path: portLevelSettings
+      name: Port Level Settings
+      widget: GenericList
+      children:
+        - path: '[].port.number'
+          name: Port Number
+        - widget: FormGroup
+          path: '[].loadBalancer'
+          name: Load Balancer
+          children:
+            - var: portLevelloadBalancerSelector
+              name: ChooseLoadBalancerSelector
+              type: string
+              enum:
+                - simple
+                - consistentHash
+            - path: simple
+              name: Simple
+              required: true
+              visibility: $portLevelloadBalancerSelector = 'simple'
+            - widget: FormGroup
+              path: consistentHash
+              name: Consistent Hash
+              visibility: $portLevelloadBalancerSelector = 'consistentHash'
+              children:
+                - var: portLevelconsistentHashSelector
+                  name: ChooseConsistentHashSelector
+                  type: string
+                  enum:
+                    - httpHeaderName
+                    - httpCookie
+                    - useSourceIp
+                    - httpQueryParameterName
+                - path: httpHeaderName
+                  name: HTTP Header Name
+                  required: true
+                  visibility: $portLevelconsistentHashSelector = 'httpHeaderName'
+                - path: httpCookie
+                  name: HTTP Cookie
+                  widget: FormGroup
+                  visibility: $portLevelconsistentHashSelector  = 'httpCookie'
+                  children:
+                    - path: name
+                      name: Name
+                      required: true
+                    - path: path
+                      name: Path
+                    - path: ttl
+                      name: TTL
+                      required: true
+                - path: useSourceIp
+                  name: Use Source IP
+                  required: true
+                  visibility: $portLevelconsistentHashSelector = 'useSourceIp'
+                - path: httpQueryParameterName
+                  name: HTTP Query Parameter Name
+                  required: true
+                  visibility: $portLevelconsistentHashSelector= 'httpQueryParameterName'
+                - path: minimumRingSize
+                  name: Minimum Ring Size
+            - path: localityLbSetting
+              name: Locality LB Settings
+              widget: FormGroup
+              children:
+                - path: enabled
+                  name: Enabled
+                  type: boolean
+                - var: portLevelLbSelector
+                  name: ChooseLbSelector
+                  type: string
+                  enum:
+                    - distribute
+                    - failover
+                - path: distribute
+                  name: Distribute
+                  widget: GenericList
+                  visibility: $portLevelLbSelector  = 'distribute'
+                - path: distribute[].from
+                  name: From
+                - path: distribute[].to
+                  name: To
+                  widget: KeyValuePair
+                  value:
+                    type: number
+                - path: failover
+                  name: Failover
+                  widget: GenericList
+                  visibility: $portLevelLbSelector  = 'failover'
+                - path: failover[].from
+                  name: From
+                - path: failover[].to
+                  name: To
+                - path: failoverPriority
+                  name: Failover Priority
+                  visibility: $portLevelLbSelector  = 'failover'
+                  widget: SimpleList
+                  children:
+                    - path: '[]'
+            - path: warmupDurationSecs
+              name: Warmup Duration Secs
+        - path: '[].connectionPool'
+          name: Connection Pool
+          widget: FormGroup
+          children:
+            - path: tcp
+              name: TCP
+              widget: FormGroup
+              children:
+                - path: maxConnections
+                  name: Max Connections
+                - path: connectTimeout
+                  name: Connect Timeout
+                - path: tcpKeepalive
+                  name: TCP Keep Alive
+                  widget: FormGroup
+                  children:
+                    - path: probes
+                      name: Probes
+                    - path: time
+                      name: Time
+                    - path: interval
+                      name: Interval
+            - path: http
+              name: HTTP
+              widget: FormGroup
+              children:
+                - path: http1MaxPendingRequests
+                  name: HTTP1 Max Pending Requests
+                - path: http2MaxRequests
+                  name: HTTP2 Max Requests
+                - path: maxRequestsPerConnection
+                  name: Max Requests Per Connection
+                - path: maxRetries
+                  name: Max Retries
+                - path: idleTimeout
+                  name: Idle Timeout
+                - path: h2UpgradePolicy
+                  name: H2 Upgrade Policy
+                - path: useClientProtocol
+                  name: Use Client Protocol
+        - path: '[].outlierDetection'
+          widget: FormGroup
+          children:
+            - path: splitExternalLocalOriginErrors
+              name: Split External Local Origin Errors
+            - path: consecutiveLocalOriginFailures
+              name: Consecutive Local Origin Failures
+              type: number
+            - path: consecutiveGatewayErrors
+              name: Consecutive Gateway Errors
+              type: number
+            - path: consecutive5xxErrors
+              name: Consecutive 5xx Errors
+              type: number
+            - path: interval
+              name: Interval
+            - path: baseEjectionTime
+              name: Base Ejection Time
+            - path: maxEjectionPercent
+              name: Max Ejection Percent
+            - path: minHealthPercent
+              name: Min Health Percent
+        - path: '[].tls'
+          name: TLS
+          widget: FormGroup
+          children:
+            - path: mode
+              name: Mode
+            - path: clientCertificate
+              name: Client Certificate
+            - path: privateKey
+              name: Private Key
+            - path: caCertificates
+              name: CA Certificates
+            - path: credentialName
+              name: Credential Name
+            - path: subjectAltNames
+              name: Subject Alt Names
+              widget: SimpleList
+              children:
+                - path: '[]'
+            - path: sni
+              name: SNI
+            - path: insecureSkipVerify
+              name: Insecure Skip Verify
+    - path: tunnel
+      name: Tunnel
+      widget: FormGroup
+      children:
+        - path: protocol
+          name: Protocol
+        - path: targetHost
+          name: Target Host
+        - path: targetPort
+          name: Target Port
+- path: spec.subsets
+  name: Subsets
+  widget: GenericList
+  children:
+    - path: '[].name'
+      name: Name
+    - path: '[].labels'
+      name: Labels
+      widget: KeyValuePair
+    - path: '[].trafficPolicy'
+      name: Traffic Policy
+      children:
+        - widget: FormGroup
+          path: loadBalancer
+          name: Load Balancer
+          children:
+            - var: subsetsloadBalancerSelector
+              name: ChooseLoadBalancerSelector
+              type: string
+              enum:
+                - simple
+                - consistentHash
+            - path: simple
+              name: Simple
+              required: true
+              visibility: $subsetsloadBalancerSelector = 'simple'
+            - widget: FormGroup
+              path: consistentHash
+              name: Consistent Hash
+              visibility: $subsetsloadBalancerSelector = 'consistentHash'
+              children:
+                - var: subsetsconsistentHashSelector
+                  name: ChooseConsistentHashSelector
+                  type: string
+                  enum:
+                    - httpHeaderName
+                    - httpCookie
+                    - useSourceIp
+                    - httpQueryParameterName
+                - path: httpHeaderName
+                  name: HTTP Header Name
+                  required: true
+                  visibility: $subsetsconsistentHashSelector = 'httpHeaderName'
+                - path: httpCookie
+                  name: HTTP Cookie
+                  widget: FormGroup
+                  visibility: $subsetsconsistentHashSelector  = 'httpCookie'
+                  children:
+                    - path: name
+                      name: Name
+                      required: true
+                    - path: path
+                      name: Path
+                    - path: ttl
+                      name: TTL
+                      required: true
+                - path: useSourceIp
+                  name: Use Source IP
+                  required: true
+                  visibility: $subsetsconsistentHashSelector = 'useSourceIp'
+                - path: httpQueryParameterName
+                  name: HTTP Query Parameter Name
+                  required: true
+                  visibility: $subsetsconsistentHashSelector= 'httpQueryParameterName'
+                - path: minimumRingSize
+                  name: Minimum Ring Size
+            - path: localityLbSetting
+              name: Locality LB Settings
+              widget: FormGroup
+              children:
+                - path: enabled
+                  name: Enabled
+                  type: boolean
+                - var: subsetsLbSelector
+                  name: ChooseLbSelector
+                  type: string
+                  enum:
+                    - distribute
+                    - failover
+                - path: distribute
+                  name: Distribute
+                  widget: GenericList
+                  visibility: $subsetsLbSelector  = 'distribute'
+                - path: distribute[].from
+                  name: From
+                - path: distribute[].to
+                  name: To
+                  widget: KeyValuePair
+                  value:
+                    type: number
+                - path: failover
+                  name: Failover
+                  widget: GenericList
+                  visibility: $subsetsLbSelector  = 'failover'
+                - path: failover[].from
+                  name: From
+                - path: failover[].to
+                  name: To
+                - path: failoverPriority
+                  name: Failover Priority
+                  visibility: $subsetsLbSelector  = 'failover'
+                  widget: SimpleList
+                  children:
+                    - path: '[]'
+            - path: warmupDurationSecs
+              name: Warmup Duration Secs
+        - path: connectionPool
+          name: Connection Pool
+          widget: FormGroup
+          children:
+            - path: tcp
+              name: TCP
+              widget: FormGroup
+              children:
+                - path: maxConnections
+                  name: Max Connections
+                - path: connectTimeout
+                  name: Connect Timeout
+                - path: tcpKeepalive
+                  name: TCP Keep Alive
+                  widget: FormGroup
+                  children:
+                    - path: probes
+                      name: Probes
+                    - path: time
+                      name: Time
+                    - path: interval
+                      name: Interval
+            - path: http
+              name: HTTP
+              widget: FormGroup
+              children:
+                - path: http1MaxPendingRequests
+                  name: HTTP1 Max Pending Requests
+                - path: http2MaxRequests
+                  name: HTTP2 Max Requests
+                - path: maxRequestsPerConnection
+                  name: Max Requests Per Connection
+                - path: maxRetries
+                  name: Max Retries
+                - path: idleTimeout
+                  name: Idle Timeout
+                - path: h2UpgradePolicy
+                  name: H2 Upgrade Policy
+                - path: useClientProtocol
+                  name: Use Client Protocol
+        - path: outlierDetection
+          widget: FormGroup
+          children:
+            - path: splitExternalLocalOriginErrors
+              name: Split External Local Origin Errors
+            - path: consecutiveLocalOriginFailures
+              name: Consecutive Local Origin Failures
+              type: number
+            - path: consecutiveGatewayErrors
+              name: Consecutive Gateway Errors
+              type: number
+            - path: consecutive5xxErrors
+              name: Consecutive 5xx Errors
+              type: number
+            - path: interval
+              name: Interval
+            - path: baseEjectionTime
+              name: Base Ejection Time
+            - path: maxEjectionPercent
+              name: Max Ejection Percent
+            - path: minHealthPercent
+              name: Min Health Percent
+        - path: tls
+          name: TLS
+          widget: FormGroup
+          children:
+            - path: mode
+              name: Mode
+            - path: clientCertificate
+              name: Client Certificate
+            - path: privateKey
+              name: Private Key
+            - path: caCertificates
+              name: CA Certificates
+            - path: credentialName
+              name: Credential Name
+            - path: subjectAltNames
+              name: Subject Alt Names
+              widget: SimpleList
+              children:
+                - path: '[]'
+            - path: sni
+              name: SNI
+            - path: insecureSkipVerify
+              name: Insecure Skip Verify
+        - path: portLevelSettings
+          name: Port Level Settings
+          widget: GenericList
+          children:
+            - path: '[].port.number'
+              name: Port Number
+            - widget: FormGroup
+              path: '[].loadBalancer'
+              name: Load Balancer
+              children:
+                - var: subsetPortLevelloadBalancerSelector
+                  name: ChooseLoadBalancerSelector
+                  type: string
+                  enum:
+                    - simple
+                    - consistentHash
+                - path: simple
+                  name: Simple
+                  required: true
+                  visibility: $subsetPortLevelloadBalancerSelector = 'simple'
+                - widget: FormGroup
+                  path: consistentHash
+                  name: Consistent Hash
+                  visibility: $subsetPortLevelloadBalancerSelector = 'consistentHash'
+                  children:
+                    - var: subsetPortLevelconsistentHashSelector
+                      name: ChooseConsistentHashSelector
+                      type: string
+                      enum:
+                        - httpHeaderName
+                        - httpCookie
+                        - useSourceIp
+                        - httpQueryParameterName
+                    - path: httpHeaderName
+                      name: HTTP Header Name
+                      required: true
+                      visibility: >-
+                        $subsetPortLevelconsistentHashSelector =
+                        'httpHeaderName'
+                    - path: httpCookie
+                      name: HTTP Cookie
+                      widget: FormGroup
+                      visibility: $subsetPortLevelconsistentHashSelector  = 'httpCookie'
+                      children:
+                        - path: name
+                          name: Name
+                          required: true
+                        - path: path
+                          name: Path
+                        - path: ttl
+                          name: TTL
+                          required: true
+                    - path: useSourceIp
+                      name: Use Source IP
+                      required: true
+                      visibility: $subsetPortLevelconsistentHashSelector = 'useSourceIp'
+                    - path: httpQueryParameterName
+                      name: HTTP Query Parameter Name
+                      required: true
+                      visibility: >-
+                        $subsetPortLevelconsistentHashSelector=
+                        'httpQueryParameterName'
+                    - path: minimumRingSize
+                      name: Minimum Ring Size
+                - path: localityLbSetting
+                  name: Locality LB Settings
+                  widget: FormGroup
+                  children:
+                    - path: enabled
+                      name: Enabled
+                      type: boolean
+                    - var: subsetPortLevelLbSelector
+                      name: ChooseLbSelector
+                      type: string
+                      enum:
+                        - distribute
+                        - failover
+                    - path: distribute
+                      name: Distribute
+                      widget: GenericList
+                      visibility: $subsetPortLevelLbSelector  = 'distribute'
+                    - path: distribute[].from
+                      name: From
+                    - path: distribute[].to
+                      name: To
+                      widget: KeyValuePair
+                      value:
+                        type: number
+                    - path: failover
+                      name: Failover
+                      widget: GenericList
+                      visibility: $subsetPortLevelLbSelector  = 'failover'
+                    - path: failover[].from
+                      name: From
+                    - path: failover[].to
+                      name: To
+                    - path: failoverPriority
+                      name: Failover Priority
+                      visibility: $subsetPortLevelLbSelector  = 'failover'
+                      widget: SimpleList
+                      children:
+                        - path: '[]'
+                - path: warmupDurationSecs
+                  name: Warmup Duration Secs
+            - path: '[].connectionPool'
+              name: Connection Pool
+              widget: FormGroup
+              children:
+                - path: tcp
+                  name: TCP
+                  widget: FormGroup
+                  children:
+                    - path: maxConnections
+                      name: Max Connections
+                    - path: connectTimeout
+                      name: Connect Timeout
+                    - path: tcpKeepalive
+                      name: TCP Keep Alive
+                      widget: FormGroup
+                      children:
+                        - path: probes
+                          name: Probes
+                        - path: time
+                          name: Time
+                        - path: interval
+                          name: Interval
+                - path: http
+                  name: HTTP
+                  widget: FormGroup
+                  children:
+                    - path: http1MaxPendingRequests
+                      name: HTTP1 Max Pending Requests
+                    - path: http2MaxRequests
+                      name: HTTP2 Max Requests
+                    - path: maxRequestsPerConnection
+                      name: Max Requests Per Connection
+                    - path: maxRetries
+                      name: Max Retries
+                    - path: idleTimeout
+                      name: Idle Timeout
+                    - path: h2UpgradePolicy
+                      name: H2 Upgrade Policy
+                    - path: useClientProtocol
+                      name: Use Client Protocol
+            - path: '[].outlierDetection'
+              widget: FormGroup
+              children:
+                - path: splitExternalLocalOriginErrors
+                  name: Split External Local Origin Errors
+                - path: consecutiveLocalOriginFailures
+                  name: Consecutive Local Origin Failures
+                  type: number
+                - path: consecutiveGatewayErrors
+                  name: Consecutive Gateway Errors
+                  type: number
+                - path: consecutive5xxErrors
+                  name: Consecutive 5xx Errors
+                  type: number
+                - path: interval
+                  name: Interval
+                - path: baseEjectionTime
+                  name: Base Ejection Time
+                - path: maxEjectionPercent
+                  name: Max Ejection Percent
+                - path: minHealthPercent
+                  name: Min Health Percent
+            - path: '[].tls'
+              name: TLS
+              widget: FormGroup
+              children:
+                - path: mode
+                  name: Mode
+                - path: clientCertificate
+                  name: Client Certificate
+                - path: privateKey
+                  name: Private Key
+                - path: caCertificates
+                  name: CA Certificates
+                - path: credentialName
+                  name: Credential Name
+                - path: subjectAltNames
+                  name: Subject Alt Names
+                  widget: SimpleList
+                  children:
+                    - path: '[]'
+                - path: sni
+                  name: SNI
+                - path: insecureSkipVerify
+                  name: Insecure Skip Verify
+        - path: tunnel
+          name: Tunnel
+          widget: FormGroup
+          children:
+            - path: protocol
+              name: Protocol
+            - path: targetHost
+              name: Target Host
+            - path: targetPort
+              name: Target Port
+- path: spec.exportTo
+  name: Export To
+  widget: SimpleList
+  children:
+    - path: '[]'
+- path: spec.workloadSelector.matchLabels
+  defaultExpanded: true
+  name: Workload Selector Match Labels
+  widget: KeyValuePair

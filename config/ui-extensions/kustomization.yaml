@@ -1,2 +1,8 @@
 resources:
 - istios
+- gateways
+- virtualservices
+- destinationrules
+- serviceentries
+- authorizationpolicies
+- sidecars

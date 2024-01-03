@@ -1,0 +1,24 @@
+en:
+  configuration: Configuration
+  spec.hosts: Hosts
+  spec.addresses: Addresses
+  spec.ports: Ports
+  spec.ports.number: Number
+  spec.ports.protocol: Protocol
+  spec.ports.name: Name
+  spec.ports.targetPort: Target Port
+  spec.location: Location
+  spec.resolution: Resolution
+  spec.endpoints: Endpoints
+  spec.endpoints.address: Address
+  spec.endpoints.ports: Ports
+  spec.endpoints.labels: Labels
+  spec.endpoints.network: Network
+  spec.endpoints.locality: Locality
+  spec.endpoints.weight: Weight
+  spec.endpoints.serviceAccount: Service Account
+  spec.workloadSelector: Workload Selector
+  spec.exportTo: Export To
+  spec.subjectAltNames: Subject Alt Names
+  placeholders.dropdown: Type or choose an option
+  placeholders.addreses: For example, 127.0.0.1

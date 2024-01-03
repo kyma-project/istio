@@ -1,0 +1,25 @@
+en:
+  alert.tls.https: TLS Server of mode SIMPLE or MUTUAL needs either credential name, or private key and server certificate pair.
+  spec.selector: Selector
+  spec.gateways: Gateways
+  spec.servers: Servers
+  spec.servers.port: Port
+  spec.servers.port.name: Port Name
+  spec.servers.port.protocol: Protocol
+  spec.servers.port.targetPort: Target Port
+  spec.servers.port.number: Port Number
+  spec.servers.tls: TLS
+  spec.servers.tls.mode: TLS Mode
+  spec.servers.tls.httpsRedirect: HTTP Redirect
+  spec.servers.tls.credentialName: Credential Name
+  spec.servers.tls.serverCertificate: Server Certificate
+  spec.servers.tls.privateKey: Private Key
+  spec.servers.tls.caCertificates: CA Certificate
+  spec.servers.hosts: Hosts
+  selector.matchesAllPods: Matches all Pods in the Namespace
+  placeholders.dropdown: Type or choose an option
+  placeholders.serverCertificate: Enter the certificate path
+  placeholders.privateKey: Enter the private key path
+  placeholders.caCertificates: Enter the CA certificates path
+  placeholders.hosts: For example, *.api.mydomain.com
+  inputInfo.spec.servers.port.number: Must be a on-negative number.

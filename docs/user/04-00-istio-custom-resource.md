@@ -43,7 +43,7 @@ This table lists all the possible parameters of the given resource together with
 | Parameter            | Type   | Description                                                                                                                        |
 |----------------------|--------|------------------------------------------------------------------------------------------------------------------------------------|
 | **state** (required) | string | Signifies the current state of the CR. Its value can be either `Ready`, `Processing`, `Error`, `Warning`, or `Deleting`. |
-| **conditions**  | \[\]object | Current conditions state of the CR. |
+| **conditions**  | \[\]object | Represents the current state of the CR's conditions. |
 | **conditions.&#x200b;lastTransitionTime**  | string | Defines the date of the last condition status change. |
 | **conditions.&#x200b;message**  | string | Provides more details about the condition status change. |
 | **conditions.&#x200b;reason**  | string | Defines the reason for the condition status change. |

@@ -1,0 +1,9 @@
+resource:
+  kind: DestinationRule
+  group: networking.istio.io
+  version: v1beta1
+name: Destination Rules
+category: Istio
+urlPath: destinationrules
+scope: namespace
+description: resource.description

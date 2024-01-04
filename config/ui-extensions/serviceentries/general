@@ -1,0 +1,11 @@
+resource:
+  kind: ServiceEntry
+  group: networking.istio.io
+  version: v1beta1
+urlPath: serviceentries
+category: Istio
+name: Service Entries
+scope: namespace
+description: >-
+  {{[ServiceEntry](https://istio.io/latest/docs/reference/config/networking/service-entry/)}}
+  allows for adding more entries to the internal service registry of Istio.

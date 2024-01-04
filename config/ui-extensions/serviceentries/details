@@ -1,0 +1,84 @@
+header:
+  - source: spec.location
+    name: spec.location
+  - source: spec.resolution
+    name: spec.resolution
+resourceGraph:
+  colorVariant: 2
+  dataSources:
+    - source: podSelector
+body:
+  - name: configuration
+    widget: Panel
+    source: spec
+    visibility: >-
+      $boolean($exists($value.hosts) or $exists($value.addresses) or
+      $exists($value.subjectAltNames))
+    children:
+      - name: spec.hosts
+        source: hosts
+        widget: JoinedArray
+        visibility: $exists($value)
+      - name: spec.addresses
+        source: addresses
+        widget: JoinedArray
+        visibility: $exists($value)
+      - name: spec.exportTo
+        source: exportTo
+        widget: Labels
+        placeholder: Exported to all Namespaces
+      - name: spec.subjectAltNames
+        source: subjectAltNames
+        widget: JoinedArray
+        visibility: $exists($value)
+  - name: spec.ports
+    widget: Table
+    source: spec.ports
+    visibility: $exists($value)
+    children:
+      - name: spec.ports.number
+        source: number
+        sort: true
+      - name: spec.ports.protocol
+        source: protocol
+        sort: true
+      - name: spec.ports.name
+        source: name
+        sort: true
+      - name: spec.ports.targetPort
+        source: targetPort
+        sort: true
+  - name: spec.endpoints
+    widget: Table
+    source: spec.endpoints
+    visibility: $exists($value)
+    children:
+      - name: spec.endpoints.address
+        source: address
+        sort: true
+      - name: spec.endpoints.ports
+        source: ports
+        widget: Labels
+      - name: spec.endpoints.labels
+        source: labels
+        widget: Labels
+      - name: spec.endpoints.network
+        source: network
+        sort: true
+      - name: spec.endpoints.weight
+        source: weight
+      - name: spec.endpoints.serviceAccount
+        source: serviceAccount
+  - name: spec.workloadSelector
+    widget: Panel
+    source: spec.workloadSelector.labels
+    visibility: $exists($value)
+    disablePadding: true
+    children:
+      - source: $podSelector()
+        widget: ResourceList
+        disableCreate: true
+    header:
+      - widget: Labels
+        source: spec.workloadSelector.labels
+        visibility: $exists($value)

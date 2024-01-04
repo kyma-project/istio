@@ -176,16 +176,16 @@ func hasInstallationFinalizer(istioCR *operatorv1alpha1.Istio) bool {
 func addInstallationFinalizer(ctx context.Context, apiClient client.Client, istioCR *operatorv1alpha1.Istio) error {
 	ctrl.Log.Info("Adding Istio installation finalizer")
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		currentCR := operatorv1alpha1.Istio{}
-		if err := apiClient.Get(ctx, client.ObjectKeyFromObject(istioCR), &currentCR); err != nil {
+		finalizerCR := operatorv1alpha1.Istio{}
+		if err := apiClient.Get(ctx, client.ObjectKeyFromObject(istioCR), &finalizerCR); err != nil {
 			return err
 		}
-		if controllerutil.AddFinalizer(istioCR, installationFinalizer) {
-			currentCR.Finalizers = istioCR.Finalizers
-			if err := apiClient.Update(ctx, &currentCR); err != nil {
+		if controllerutil.AddFinalizer(&finalizerCR, installationFinalizer) {
+			if err := apiClient.Update(ctx, &finalizerCR); err != nil {
 				return err
 			}
 		}
+		controllerutil.AddFinalizer(istioCR, installationFinalizer)
 		ctrl.Log.Info("Successfully added Istio installation finalizer")
 		return nil
 	})
@@ -194,16 +194,16 @@ func addInstallationFinalizer(ctx context.Context, apiClient client.Client, isti
 func removeInstallationFinalizer(ctx context.Context, apiClient client.Client, istioCR *operatorv1alpha1.Istio) error {
 	ctrl.Log.Info("Removing Istio installation finalizer")
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		currentCR := operatorv1alpha1.Istio{}
-		if err := apiClient.Get(ctx, client.ObjectKeyFromObject(istioCR), &currentCR); err != nil {
+		finalizerCR := operatorv1alpha1.Istio{}
+		if err := apiClient.Get(ctx, client.ObjectKeyFromObject(istioCR), &finalizerCR); err != nil {
 			return err
 		}
-		if controllerutil.RemoveFinalizer(istioCR, installationFinalizer) {
-			currentCR.Finalizers = istioCR.Finalizers
-			if err := apiClient.Update(ctx, &currentCR); err != nil {
+		if controllerutil.RemoveFinalizer(&finalizerCR, installationFinalizer) {
+			if err := apiClient.Update(ctx, &finalizerCR); err != nil {
 				return err
 			}
 		}
+		controllerutil.RemoveFinalizer(istioCR, installationFinalizer)
 		ctrl.Log.Info("Successfully removed Istio installation finalizer")
 		return nil
 	})

@@ -774,7 +774,6 @@ type StatusMock struct {
 	updatedToDeletingCalled   bool
 	errorError                error
 	updatedToErrorCalled      bool
-	conditionsError           error
 	setConditionCalled        bool
 	reasons                   []operatorv1alpha1.ReasonWithMessage
 }

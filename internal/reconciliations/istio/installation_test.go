@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/kyma-project/istio/operator/internal/resources"
 	"github.com/kyma-project/istio/operator/internal/status"
 
@@ -733,6 +734,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Error()).To(Equal("merging failed"))
 		Expect(err.Description()).To(Equal("Could not merge Istio operator configuration: merging failed"))
+		Expect(err.ShouldSetCondition()).To(BeFalse())
 		Expect(mockClient.installCalled).To(BeFalse())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 
@@ -1107,6 +1109,8 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Error()).To(Equal("could not delete Istio module instance since there are 1 customer resources present"))
 		Expect(err.Description()).To(Equal("There are Istio resources that block deletion. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning"))
+		Expect(err.Level()).To(Equal(described_errors.Warning))
+		Expect(err.ShouldSetCondition()).To(BeFalse())
 		Expect(mockClient.installCalled).To(BeFalse())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 

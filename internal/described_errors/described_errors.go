@@ -16,21 +16,24 @@ type DescribedError interface {
 	Description() string
 	Error() string
 	Level() Level
+	ShouldSetCondition() bool
 }
 
 type DefaultDescribedError struct {
-	err         error
-	description string
-	wrapError   bool
-	level       Level
+	err          error
+	description  string
+	wrapError    bool
+	level        Level
+	setCondition bool
 }
 
 func NewDescribedError(err error, description string) DefaultDescribedError {
 	return DefaultDescribedError{
-		err:         err,
-		description: description,
-		wrapError:   true,
-		level:       Error,
+		err:          err,
+		description:  description,
+		wrapError:    true,
+		level:        Error,
+		setCondition: true,
 	}
 }
 
@@ -41,6 +44,11 @@ func (d DefaultDescribedError) DisableErrorWrap() DefaultDescribedError {
 
 func (d DefaultDescribedError) SetWarning() DefaultDescribedError {
 	d.level = Warning
+	return d
+}
+
+func (d DefaultDescribedError) SetCondition(setCondition bool) DefaultDescribedError {
+	d.setCondition = setCondition
 	return d
 }
 
@@ -58,4 +66,8 @@ func (d DefaultDescribedError) Error() string {
 
 func (d DefaultDescribedError) Level() Level {
 	return d.level
+}
+
+func (d DefaultDescribedError) ShouldSetCondition() bool {
+	return d.setCondition
 }

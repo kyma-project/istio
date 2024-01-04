@@ -169,7 +169,9 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 // requeueReconciliation cancels the reconciliation and requeues the request.
 func (r *IstioReconciler) requeueReconciliation(ctx context.Context, istioCR *operatorv1alpha1.Istio, err described_errors.DescribedError, reason operatorv1alpha1.ReasonWithMessage) (ctrl.Result, error) {
-	r.setConditionForError(istioCR, reason)
+	if err.ShouldSetCondition() {
+		r.setConditionForError(istioCR, reason)
+	}
 	statusUpdateErr := r.statusHandler.UpdateToError(ctx, istioCR, err)
 	if statusUpdateErr != nil {
 		r.log.Error(statusUpdateErr, "Error during updating status to error")
@@ -181,7 +183,9 @@ func (r *IstioReconciler) requeueReconciliation(ctx context.Context, istioCR *op
 
 // terminateReconciliation stops the reconciliation and does not requeue the request.
 func (r *IstioReconciler) terminateReconciliation(ctx context.Context, istioCR *operatorv1alpha1.Istio, err described_errors.DescribedError, reason operatorv1alpha1.ReasonWithMessage) (ctrl.Result, error) {
-	r.setConditionForError(istioCR, reason)
+	if err.ShouldSetCondition() {
+		r.setConditionForError(istioCR, reason)
+	}
 	statusUpdateErr := r.statusHandler.UpdateToError(ctx, istioCR, err)
 	if statusUpdateErr != nil {
 		r.log.Error(statusUpdateErr, "Error during updating status to error")

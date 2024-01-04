@@ -80,7 +80,7 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha1.
 		mergedIstioOperatorPath, err := i.Merger.Merge(cSize.DefaultManifestPath(), istioCR, templateData, clusterConfiguration)
 		if err != nil {
 			statusHandler.SetCondition(istioCR, operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonCustomResourceMisconfigured))
-			return described_errors.NewDescribedError(err, "Could not merge Istio operator configuration")
+			return described_errors.NewDescribedError(err, "Could not merge Istio operator configuration").SetCondition(false)
 		}
 
 		err = i.IstioClient.Install(mergedIstioOperatorPath)
@@ -136,7 +136,7 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha1.
 			})
 			statusHandler.SetCondition(istioCR, operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonIstioCRsDangling))
 			return described_errors.NewDescribedError(fmt.Errorf("could not delete Istio module instance since there are %d customer resources present", len(clientResources)),
-				"There are Istio resources that block deletion. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning").DisableErrorWrap().SetWarning()
+				"There are Istio resources that block deletion. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning").DisableErrorWrap().SetWarning().SetCondition(false)
 		}
 
 		err = i.IstioClient.Uninstall(ctx)

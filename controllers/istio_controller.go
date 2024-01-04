@@ -169,11 +169,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 // requeueReconciliation cancels the reconciliation and requeues the request.
 func (r *IstioReconciler) requeueReconciliation(ctx context.Context, istioCR *operatorv1alpha1.Istio, err described_errors.DescribedError, reason operatorv1alpha1.ReasonWithMessage) (ctrl.Result, error) {
-	if !operatorv1alpha1.IsReadyTypeCondition(reason) {
-		r.statusHandler.SetCondition(istioCR, operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonReconcileFailed))
-	}
-
-	r.statusHandler.SetCondition(istioCR, reason)
+	r.setConditionForError(istioCR, reason)
 	statusUpdateErr := r.statusHandler.UpdateToError(ctx, istioCR, err)
 	if statusUpdateErr != nil {
 		r.log.Error(statusUpdateErr, "Error during updating status to error")
@@ -185,11 +181,7 @@ func (r *IstioReconciler) requeueReconciliation(ctx context.Context, istioCR *op
 
 // terminateReconciliation stops the reconciliation and does not requeue the request.
 func (r *IstioReconciler) terminateReconciliation(ctx context.Context, istioCR *operatorv1alpha1.Istio, err described_errors.DescribedError, reason operatorv1alpha1.ReasonWithMessage) (ctrl.Result, error) {
-	if !operatorv1alpha1.IsReadyTypeCondition(reason) {
-		r.statusHandler.SetCondition(istioCR, operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonReconcileFailed))
-	}
-
-	r.statusHandler.SetCondition(istioCR, reason)
+	r.setConditionForError(istioCR, reason)
 	statusUpdateErr := r.statusHandler.UpdateToError(ctx, istioCR, err)
 	if statusUpdateErr != nil {
 		r.log.Error(statusUpdateErr, "Error during updating status to error")
@@ -279,4 +271,11 @@ func (r *IstioReconciler) updateLastAppliedConfiguration(ctx context.Context, ob
 		}
 		return r.Client.Update(ctx, &lacIstioCR)
 	})
+}
+
+func (r *IstioReconciler) setConditionForError(istioCR *operatorv1alpha1.Istio, reason operatorv1alpha1.ReasonWithMessage) {
+	if !operatorv1alpha1.IsReadyTypeCondition(reason) {
+		r.statusHandler.SetCondition(istioCR, operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonReconcileFailed))
+	}
+	r.statusHandler.SetCondition(istioCR, reason)
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio_resources"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/proxy"
+	"github.com/kyma-project/istio/operator/internal/status"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -28,7 +29,7 @@ type IstioReconciler struct {
 	istioResources         istio_resources.ResourcesReconciliation
 	ingressGateway         Reconciliation
 	log                    logr.Logger
-	statusHandler          status
+	statusHandler          status.Status
 	reconciliationInterval time.Duration
 }
 

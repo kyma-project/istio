@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
+	"github.com/kyma-project/istio/operator/pkg/lib/sidecars"
 	"github.com/pkg/errors"
 
 	"github.com/kyma-project/istio/operator/internal/filter"
@@ -30,6 +31,7 @@ import (
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/ingress_gateway"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio_resources"
+	"github.com/kyma-project/istio/operator/internal/status"
 	"k8s.io/client-go/util/retry"
 
 	"github.com/kyma-project/istio/operator/internal/manifest"
@@ -40,6 +42,7 @@ import (
 	"golang.org/x/time/rate"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -67,11 +70,11 @@ func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *I
 		Client:                 mgr.GetClient(),
 		Scheme:                 mgr.GetScheme(),
 		istioInstallation:      &istio.Installation{Client: mgr.GetClient(), IstioClient: istio.NewIstioClient(), IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Merger: &merger},
-		proxySidecars:          &proxy.Sidecars{IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Log: mgr.GetLogger(), Client: mgr.GetClient(), Merger: &merger, Predicates: []filter.SidecarProxyPredicate{efReferer}},
+		proxySidecars:          proxy.NewReconciler(IstioVersion, IstioImageBase, mgr.GetLogger(), mgr.GetClient(), &merger, sidecars.NewProxyResetter(), []filter.SidecarProxyPredicate{efReferer}),
 		istioResources:         istio_resources.NewReconciler(mgr.GetClient(), clusterconfig.NewHyperscalerClient(&http.Client{Timeout: 1 * time.Second})),
 		ingressGateway:         ingress_gateway.NewReconciler(mgr.GetClient(), []filter.IngressGatewayPredicate{efReferer}),
 		log:                    mgr.GetLogger(),
-		statusHandler:          newStatusHandler(mgr.GetClient()),
+		statusHandler:          status.NewStatusHandler(mgr.GetClient()),
 		reconciliationInterval: reconciliationInterval,
 	}
 }
@@ -90,77 +93,86 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 
 	if istioCR.GetNamespace() != namespace {
-		errWrongNS := fmt.Errorf("istio CR is not in %s namespace", namespace)
-		return r.terminateReconciliation(ctx, istioCR, described_errors.NewDescribedError(errWrongNS, "Stopped Istio CR reconciliation"))
+		errWrongNS := fmt.Errorf("Istio CR is not in %s namespace", namespace)
+		return r.terminateReconciliation(ctx, &istioCR, described_errors.NewDescribedError(errWrongNS, "Stopped Istio CR reconciliation"),
+			operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonReconcileFailed))
 	}
 
 	existingIstioCRs := &operatorv1alpha1.IstioList{}
 	if err := r.List(ctx, existingIstioCRs, client.InNamespace(namespace)); err != nil {
-		return r.requeueReconciliation(ctx, istioCR, described_errors.NewDescribedError(err, "Unable to list Istio CRs"))
+		return r.requeueReconciliation(ctx, &istioCR, described_errors.NewDescribedError(err, "Unable to list Istio CRs"),
+			operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonReconcileFailed))
 	}
 
 	if len(existingIstioCRs.Items) > 1 {
 		oldestCr := r.getOldestCR(existingIstioCRs)
 		if istioCR.GetUID() != oldestCr.GetUID() {
 			errNotOldestCR := fmt.Errorf("only Istio CR %s in %s reconciles the module", oldestCr.GetName(), oldestCr.GetNamespace())
-			return r.terminateReconciliation(ctx, istioCR, described_errors.NewDescribedError(errNotOldestCR, "Stopped Istio CR reconciliation"))
+			return r.terminateReconciliation(ctx, &istioCR, described_errors.NewDescribedError(errNotOldestCR, "Stopped Istio CR reconciliation"),
+				operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonOlderCRExists))
 		}
 	}
 
 	if istioCR.DeletionTimestamp.IsZero() {
-		if err := r.statusHandler.updateToProcessing(ctx, "Reconciling Istio resources", &istioCR); err != nil {
+		if err := r.statusHandler.UpdateToProcessing(ctx, &istioCR); err != nil {
 			r.log.Error(err, "Update status to processing failed")
 			// We don't update the status to error, because the status update already failed and to avoid another status update error we simply requeue the request.
 			return ctrl.Result{}, err
 		}
 	} else {
-		if err := r.statusHandler.updateToDeleting(ctx, &istioCR); err != nil {
+		if err := r.statusHandler.UpdateToDeleting(ctx, &istioCR); err != nil {
 			r.log.Error(err, "Update status to deleting failed")
 			// We don't update the status to error, because the status update already failed and to avoid another status update error we simply requeue the request.
 			return ctrl.Result{}, err
 		}
 	}
 
-	istioCR, installationErr := r.istioInstallation.Reconcile(ctx, istioCR, IstioResourceListDefaultPath)
+	installationErr := r.istioInstallation.Reconcile(ctx, &istioCR, r.statusHandler, IstioResourceListDefaultPath)
 	if installationErr != nil {
-		return r.requeueReconciliation(ctx, istioCR, installationErr)
+		return r.requeueReconciliation(ctx, &istioCR, installationErr, operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonIstioInstallUninstallFailed))
 	}
 
 	// If there are no finalizers left, we must assume that the resource is deleted and therefore must stop the reconciliation
 	// to prevent accidental read or write to the resource.
-	if !istioCR.HasFinalizer() {
+	if !istioCR.HasFinalizers() {
 		r.log.Info("End reconciliation because all finalizers have been removed")
 		return ctrl.Result{}, nil
 	}
 
 	resourcesErr := r.istioResources.Reconcile(ctx, istioCR)
 	if resourcesErr != nil {
-		return r.requeueReconciliation(ctx, istioCR, resourcesErr)
+		return r.requeueReconciliation(ctx, &istioCR, resourcesErr, operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonCRsReconcileFailed))
 	}
 
 	// We do not want to safeguard the Istio sidecar reconciliation by checking whether Istio has to be installed. The
 	// reason for this is that we want to guarantee the restart of the proxies during the next reconciliation even if an
 	// error occurs in the reconciliation of the Istio upgrade after the Istio upgrade.
-	warningHappened, proxyErr := r.proxySidecars.Reconcile(ctx, istioCR)
+	warningMessage, proxyErr := r.proxySidecars.Reconcile(ctx, istioCR)
 	if proxyErr != nil {
 		describedErr := described_errors.NewDescribedError(proxyErr, "Error occurred during reconciliation of Istio Sidecars")
-		return r.requeueReconciliation(ctx, istioCR, describedErr)
-	} else if warningHappened {
+		return r.requeueReconciliation(ctx, &istioCR, describedErr, operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonProxySidecarRestartFailed))
+	} else if warningMessage != "" {
 		warning := described_errors.NewDescribedError(errors.New("Istio controller could not restart one or more istio-injected pods."), "Not all pods with Istio injection could be restarted. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning").SetWarning()
-		return r.requeueReconciliation(ctx, istioCR, warning)
+		return r.requeueReconciliation(ctx, &istioCR, warning, operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonProxySidecarManualRestartRequired, warningMessage))
 	}
+
+	r.statusHandler.SetCondition(&istioCR, operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonProxySidecarRestartSucceeded))
 
 	ingressGatewayErr := r.ingressGateway.Reconcile(ctx)
 	if ingressGatewayErr != nil {
-		return r.requeueReconciliation(ctx, istioCR, ingressGatewayErr)
+		return r.requeueReconciliation(ctx, &istioCR, ingressGatewayErr, operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonIngressGatewayReconcileFailed))
 	}
 
-	return r.finishReconcile(ctx, istioCR, IstioTag)
+	r.statusHandler.SetCondition(&istioCR, operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonIngressGatewayReconcileSucceeded))
+	return r.finishReconcile(ctx, &istioCR, IstioTag)
 }
 
 // requeueReconciliation cancels the reconciliation and requeues the request.
-func (r *IstioReconciler) requeueReconciliation(ctx context.Context, istioCR operatorv1alpha1.Istio, err described_errors.DescribedError) (ctrl.Result, error) {
-	statusUpdateErr := r.statusHandler.updateToError(ctx, err, &istioCR)
+func (r *IstioReconciler) requeueReconciliation(ctx context.Context, istioCR *operatorv1alpha1.Istio, err described_errors.DescribedError, reason operatorv1alpha1.ReasonWithMessage) (ctrl.Result, error) {
+	if err.ShouldSetCondition() {
+		r.setConditionForError(istioCR, reason)
+	}
+	statusUpdateErr := r.statusHandler.UpdateToError(ctx, istioCR, err)
 	if statusUpdateErr != nil {
 		r.log.Error(statusUpdateErr, "Error during updating status to error")
 	}
@@ -170,8 +182,11 @@ func (r *IstioReconciler) requeueReconciliation(ctx context.Context, istioCR ope
 }
 
 // terminateReconciliation stops the reconciliation and does not requeue the request.
-func (r *IstioReconciler) terminateReconciliation(ctx context.Context, istioCR operatorv1alpha1.Istio, err described_errors.DescribedError) (ctrl.Result, error) {
-	statusUpdateErr := r.statusHandler.updateToError(ctx, err, &istioCR)
+func (r *IstioReconciler) terminateReconciliation(ctx context.Context, istioCR *operatorv1alpha1.Istio, err described_errors.DescribedError, reason operatorv1alpha1.ReasonWithMessage) (ctrl.Result, error) {
+	if err.ShouldSetCondition() {
+		r.setConditionForError(istioCR, reason)
+	}
+	statusUpdateErr := r.statusHandler.UpdateToError(ctx, istioCR, err)
 	if statusUpdateErr != nil {
 		r.log.Error(statusUpdateErr, "Error during updating status to error")
 		// In case the update of the status fails we must requeue the request, because otherwise the Error state is never visible in the CR.
@@ -182,28 +197,16 @@ func (r *IstioReconciler) terminateReconciliation(ctx context.Context, istioCR o
 	return ctrl.Result{}, nil
 }
 
-func (r *IstioReconciler) finishReconcile(ctx context.Context, istioCR operatorv1alpha1.Istio, istioTag string) (ctrl.Result, error) {
-	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		if getErr := r.Client.Get(ctx, client.ObjectKeyFromObject(&istioCR), &istioCR); getErr != nil {
-			return getErr
-		}
-
-		istioCR, lastAppliedErr := istio.UpdateLastAppliedConfiguration(istioCR, istioTag)
-		if lastAppliedErr != nil {
-			return lastAppliedErr
-		}
-
-		return r.Client.Update(ctx, &istioCR)
-	})
-
-	if retryErr != nil {
-		describedErr := described_errors.NewDescribedError(retryErr, "Error updating LastAppliedConfiguration")
-		return r.requeueReconciliation(ctx, istioCR, describedErr)
+func (r *IstioReconciler) finishReconcile(ctx context.Context, istioCR *operatorv1alpha1.Istio, istioTag string) (ctrl.Result, error) {
+	if err := r.updateLastAppliedConfiguration(ctx, client.ObjectKeyFromObject(istioCR), istioTag); err != nil {
+		describedErr := described_errors.NewDescribedError(err, "Error updating LastAppliedConfiguration")
+		return r.requeueReconciliation(ctx, istioCR, describedErr, operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonReconcileFailed))
 	}
 
-	if statusErr := r.statusHandler.updateToReady(ctx, &istioCR); statusErr != nil {
-		r.log.Error(statusErr, "Error during updating status to ready")
-		return ctrl.Result{}, statusErr
+	r.statusHandler.SetCondition(istioCR, operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonReconcileSucceeded))
+	if err := r.statusHandler.UpdateToReady(ctx, istioCR); err != nil {
+		r.log.Error(err, "Error during updating status to ready")
+		return ctrl.Result{}, err
 	}
 
 	r.log.Info("Reconcile finished")
@@ -258,4 +261,25 @@ func (r *IstioReconciler) getOldestCR(istioCRs *operatorv1alpha1.IstioList) *ope
 		}
 	}
 	return &oldest
+}
+
+func (r *IstioReconciler) updateLastAppliedConfiguration(ctx context.Context, objectKey types.NamespacedName, istioTag string) error {
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		lacIstioCR := operatorv1alpha1.Istio{}
+		if err := r.Client.Get(ctx, objectKey, &lacIstioCR); err != nil {
+			return err
+		}
+		lastAppliedErr := istio.UpdateLastAppliedConfiguration(&lacIstioCR, istioTag)
+		if lastAppliedErr != nil {
+			return lastAppliedErr
+		}
+		return r.Client.Update(ctx, &lacIstioCR)
+	})
+}
+
+func (r *IstioReconciler) setConditionForError(istioCR *operatorv1alpha1.Istio, reason operatorv1alpha1.ReasonWithMessage) {
+	if !operatorv1alpha1.IsReadyTypeCondition(reason) {
+		r.statusHandler.SetCondition(istioCR, operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonReconcileFailed))
+	}
+	r.statusHandler.SetCondition(istioCR, reason)
 }

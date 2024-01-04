@@ -42,4 +42,10 @@ This table lists all the possible parameters of the given resource together with
 
 | Parameter            | Type   | Description                                                                                                                        |
 |----------------------|--------|------------------------------------------------------------------------------------------------------------------------------------|
-| **state** (required) | string | Signifies the current state of **CustomObject**. Its value can be either `Ready`, `Processing`, `Error`, `Warning`, or `Deleting`. |
+| **state** (required) | string | Signifies the current state of the CR. Its value can be either `Ready`, `Processing`, `Error`, `Warning`, or `Deleting`. |
+| **conditions**  | \[\]object | Represents the current state of the CR's conditions. |
+| **conditions.&#x200b;lastTransitionTime**  | string | Defines the date of the last condition status change. |
+| **conditions.&#x200b;message**  | string | Provides more details about the condition status change. |
+| **conditions.&#x200b;reason**  | string | Defines the reason for the condition status change. |
+| **conditions.&#x200b;status** (required) | string | Represents the status of the condition. The value is either `True`, `False`, or `Unknown`. |
+| **conditions.&#x200b;type**  | string | Provides a short description of the condition. |

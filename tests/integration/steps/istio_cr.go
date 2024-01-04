@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"text/template"
 	"time"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/avast/retry-go"
 	istioCR "github.com/kyma-project/istio/operator/api/v1alpha1"
@@ -55,6 +56,27 @@ func IstioCRInNamespaceHasStatus(ctx context.Context, name, namespace, status st
 			return fmt.Errorf("status %s of Istio CR is not equal to %s\n Description: %s", cr.Status.State, status, cr.Status.Description)
 		}
 		return nil
+	}, testcontext.GetRetryOpts()...)
+}
+
+func IstioCRInNamespaceHasStatusCondition(ctx context.Context, name, namespace, reason, conditionType, status string) error {
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	var cr istioCR.Istio
+	return retry.Do(func() error {
+		err := k8sClient.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, &cr)
+		if err != nil {
+			return err
+		}
+		for _, condition := range *cr.Status.Conditions {
+			if condition.Reason == reason && condition.Type == conditionType && string(condition.Status) == status {
+				return nil
+			}
+		}
+		return fmt.Errorf("status condition reason %s of type %s and status %s not found", reason, conditionType, status)
 	}, testcontext.GetRetryOpts()...)
 }
 

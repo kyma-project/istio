@@ -3,11 +3,13 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"k8s.io/utils/ptr"
 	"time"
+
+	"k8s.io/utils/ptr"
 
 	"github.com/kyma-project/istio/operator/internal/filter"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio_resources"
+	"github.com/kyma-project/istio/operator/internal/status"
 
 	"github.com/go-logr/logr"
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
@@ -53,7 +55,7 @@ var _ = Describe("Istio Controller", func() {
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
 				log:                    logr.Discard(),
-				statusHandler:          newStatusHandler(client),
+				statusHandler:          status.NewStatusHandler(client),
 				reconciliationInterval: 10 * time.Hour,
 			}
 			req := reconcile.Request{
@@ -69,11 +71,18 @@ var _ = Describe("Istio Controller", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(result.Requeue).To(BeFalse())
 
-			processedIstioCR := operatorv1alpha1.Istio{}
-			err = client.Get(context.TODO(), types.NamespacedName{Name: "default"}, &processedIstioCR)
+			updatedIstioCR := operatorv1alpha1.Istio{}
+			err = client.Get(context.TODO(), types.NamespacedName{Name: "default"}, &updatedIstioCR)
 			Expect(err).To(Not(HaveOccurred()))
-			Expect(processedIstioCR.Status.State).To(Equal(operatorv1alpha1.Error))
-			Expect(processedIstioCR.Status.Description).To(Equal("Stopped Istio CR reconciliation: istio CR is not in kyma-system namespace"))
+
+			Expect(updatedIstioCR.Status.State).To(Equal(operatorv1alpha1.Error))
+			Expect(updatedIstioCR.Status.Description).To(Equal("Stopped Istio CR reconciliation: Istio CR is not in kyma-system namespace"))
+
+			Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
+			Expect((*updatedIstioCR.Status.Conditions)).To(HaveLen(1))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonReconcileFailed)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 		})
 
 		It("Should not return an error when CR was not found", func() {
@@ -88,7 +97,7 @@ var _ = Describe("Istio Controller", func() {
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
 				log:                    logr.Discard(),
-				statusHandler:          &StatusMock{},
+				statusHandler:          NewStatusMock(),
 				reconciliationInterval: testReconciliationInterval,
 			}
 
@@ -109,7 +118,7 @@ var _ = Describe("Istio Controller", func() {
 				},
 			}
 
-			statusMock := StatusMock{}
+			statusMock := NewStatusMock()
 			fakeClient := createFakeClient(istioCR)
 
 			sut := &IstioReconciler{
@@ -120,7 +129,7 @@ var _ = Describe("Istio Controller", func() {
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
 				log:                    logr.Discard(),
-				statusHandler:          &statusMock,
+				statusHandler:          statusMock,
 				reconciliationInterval: testReconciliationInterval,
 			}
 
@@ -180,7 +189,7 @@ var _ = Describe("Istio Controller", func() {
 					Finalizers: []string{"istios.operator.kyma-project.io/test-mock"},
 				},
 			}
-			statusMock := StatusMock{}
+			statusMock := NewStatusMock()
 			fakeClient := createFakeClient(istioCR)
 
 			sut := &IstioReconciler{
@@ -191,7 +200,7 @@ var _ = Describe("Istio Controller", func() {
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
 				log:                    logr.Discard(),
-				statusHandler:          &statusMock,
+				statusHandler:          statusMock,
 				reconciliationInterval: testReconciliationInterval,
 			}
 
@@ -261,7 +270,7 @@ var _ = Describe("Istio Controller", func() {
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
 				log:                    logr.Discard(),
-				statusHandler:          newStatusHandler(fakeClient),
+				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
 			}
 
@@ -273,7 +282,7 @@ var _ = Describe("Istio Controller", func() {
 			Expect(result).Should(Equal(reconcile.Result{}))
 		})
 
-		It("Should set ready status, update lastAppliedConfiguration annotation and requeue when successfully reconciled", func() {
+		It("Should set Ready status, update lastAppliedConfiguration annotation and requeue when successfully reconciled", func() {
 			// given
 			istioCR := &operatorv1alpha1.Istio{
 				ObjectMeta: metav1.ObjectMeta{
@@ -300,7 +309,7 @@ var _ = Describe("Istio Controller", func() {
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
 				log:                    logr.Discard(),
-				statusHandler:          newStatusHandler(fakeClient),
+				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
 			}
 
@@ -311,9 +320,23 @@ var _ = Describe("Istio Controller", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(result).Should(Equal(reconcile.Result{RequeueAfter: testReconciliationInterval}))
 
-			Expect(fakeClient.Get(context.TODO(), client.ObjectKeyFromObject(istioCR), istioCR)).Should(Succeed())
-			Expect(istioCR.Status.State).Should(Equal(operatorv1alpha1.Ready))
-			Expect(istioCR.Annotations["operator.kyma-project.io/lastAppliedConfiguration"]).To(ContainSubstring("{\"config\":{\"numTrustedProxies\":2},"))
+			updatedIstioCR := operatorv1alpha1.Istio{}
+			err = fakeClient.Get(context.TODO(), client.ObjectKeyFromObject(istioCR), &updatedIstioCR)
+			Expect(err).To(Not(HaveOccurred()))
+
+			Expect(updatedIstioCR.Status.State).Should(Equal(operatorv1alpha1.Ready))
+			Expect(updatedIstioCR.Annotations["operator.kyma-project.io/lastAppliedConfiguration"]).To(ContainSubstring("{\"config\":{\"numTrustedProxies\":2},"))
+
+			Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
+			Expect((*updatedIstioCR.Status.Conditions)).To(HaveLen(2))
+
+			Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeProxySidecarRestartSucceeded)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonProxySidecarRestartSucceeded)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionTrue))
+
+			Expect((*updatedIstioCR.Status.Conditions)[1].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
+			Expect((*updatedIstioCR.Status.Conditions)[1].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonReconcileSucceeded)))
+			Expect((*updatedIstioCR.Status.Conditions)[1].Status).To(Equal(metav1.ConditionTrue))
 		})
 
 		It("Should return an error when update status to ready failed", func() {
@@ -351,6 +374,12 @@ var _ = Describe("Istio Controller", func() {
 			Expect(err.Error()).To(Equal("Update to ready error"))
 			Expect(result).Should(Equal(reconcile.Result{}))
 			Expect(statusMock.updatedToReadyCalled).Should(BeTrue())
+			Expect(statusMock.setConditionCalled).Should(BeTrue())
+			Expect(statusMock.GetConditions()).Should(Equal([]operatorv1alpha1.ReasonWithMessage{
+				operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonProxySidecarRestartSucceeded),
+				operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonIngressGatewayReconcileSucceeded),
+				operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonReconcileSucceeded),
+			}))
 		})
 
 		It("Should set error status and return an error when Istio installation reconciliation failed", func() {
@@ -377,7 +406,7 @@ var _ = Describe("Istio Controller", func() {
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
 				log:                    logr.Discard(),
-				statusHandler:          newStatusHandler(fakeClient),
+				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
 			}
 
@@ -389,9 +418,19 @@ var _ = Describe("Istio Controller", func() {
 			Expect(err.Error()).To(ContainSubstring("istio test error"))
 			Expect(result).Should(Equal(reconcile.Result{}))
 
-			Expect(fakeClient.Get(context.TODO(), client.ObjectKeyFromObject(istioCR), istioCR)).Should(Succeed())
-			Expect(istioCR.Status.State).Should(Equal(operatorv1alpha1.Error))
-			Expect(istioCR.Status.Description).To(ContainSubstring("test error description"))
+			updatedIstioCR := operatorv1alpha1.Istio{}
+			err = fakeClient.Get(context.TODO(), client.ObjectKeyFromObject(istioCR), &updatedIstioCR)
+			Expect(err).To(Not(HaveOccurred()))
+
+			Expect(updatedIstioCR.Status.State).Should(Equal(operatorv1alpha1.Error))
+			Expect(updatedIstioCR.Status.Description).To(ContainSubstring("test error description"))
+
+			Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
+			Expect((*updatedIstioCR.Status.Conditions)).To(HaveLen(1))
+
+			Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonIstioInstallUninstallFailed)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 		})
 
 		It("Should set error status and return an error when proxy sidecar reconciliation failed", func() {
@@ -418,7 +457,7 @@ var _ = Describe("Istio Controller", func() {
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
 				log:                    logr.Discard(),
-				statusHandler:          newStatusHandler(fakeClient),
+				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
 			}
 
@@ -430,9 +469,23 @@ var _ = Describe("Istio Controller", func() {
 			Expect(err.Error()).To(ContainSubstring("sidecar test error"))
 			Expect(result).Should(Equal(reconcile.Result{}))
 
-			Expect(fakeClient.Get(context.TODO(), client.ObjectKeyFromObject(istioCR), istioCR)).Should(Succeed())
-			Expect(istioCR.Status.State).Should(Equal(operatorv1alpha1.Error))
-			Expect(istioCR.Status.Description).To(ContainSubstring("Error occurred during reconciliation of Istio Sidecars"))
+			updatedIstioCR := operatorv1alpha1.Istio{}
+			err = fakeClient.Get(context.TODO(), client.ObjectKeyFromObject(istioCR), &updatedIstioCR)
+			Expect(err).To(Not(HaveOccurred()))
+
+			Expect(updatedIstioCR.Status.State).Should(Equal(operatorv1alpha1.Error))
+			Expect(updatedIstioCR.Status.Description).To(ContainSubstring("Error occurred during reconciliation of Istio Sidecars"))
+
+			Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
+			Expect((*updatedIstioCR.Status.Conditions)).To(HaveLen(2))
+
+			Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonReconcileFailed)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
+
+			Expect((*updatedIstioCR.Status.Conditions)[1].Type).To(Equal(string(operatorv1alpha1.ConditionTypeProxySidecarRestartSucceeded)))
+			Expect((*updatedIstioCR.Status.Conditions)[1].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonProxySidecarRestartFailed)))
+			Expect((*updatedIstioCR.Status.Conditions)[1].Status).To(Equal(metav1.ConditionFalse))
 		})
 
 		It("Should set ready status when successfully reconciled oldest Istio CR", func() {
@@ -472,7 +525,7 @@ var _ = Describe("Istio Controller", func() {
 				ingressGateway:         &ingressGatewayReconciliationMock{},
 				proxySidecars:          &proxySidecarsReconciliationMock{},
 				log:                    logr.Discard(),
-				statusHandler:          newStatusHandler(fakeClient),
+				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
 			}
 
@@ -483,8 +536,22 @@ var _ = Describe("Istio Controller", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(result.RequeueAfter).Should(Equal(testReconciliationInterval))
 
-			Expect(fakeClient.Get(context.TODO(), client.ObjectKeyFromObject(oldestIstioCR), oldestIstioCR)).Should(Succeed())
-			Expect(oldestIstioCR.Status.State).Should(Equal(operatorv1alpha1.Ready))
+			updatedIstioCR := operatorv1alpha1.Istio{}
+			err = fakeClient.Get(context.TODO(), client.ObjectKeyFromObject(oldestIstioCR), &updatedIstioCR)
+			Expect(err).To(Not(HaveOccurred()))
+
+			Expect(updatedIstioCR.Status.State).Should(Equal(operatorv1alpha1.Ready))
+
+			Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
+			Expect((*updatedIstioCR.Status.Conditions)).To(HaveLen(2))
+
+			Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeProxySidecarRestartSucceeded)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonProxySidecarRestartSucceeded)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionTrue))
+
+			Expect((*updatedIstioCR.Status.Conditions)[1].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
+			Expect((*updatedIstioCR.Status.Conditions)[1].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonReconcileSucceeded)))
+			Expect((*updatedIstioCR.Status.Conditions)[1].Status).To(Equal(metav1.ConditionTrue))
 		})
 
 		It("Should set an error status and do not requeue an Istio CR when an older Istio CR is present", func() {
@@ -517,7 +584,7 @@ var _ = Describe("Istio Controller", func() {
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
 				log:                    logr.Discard(),
-				statusHandler:          newStatusHandler(fakeClient),
+				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
 			}
 
@@ -528,9 +595,19 @@ var _ = Describe("Istio Controller", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(result.Requeue).To(BeFalse())
 
-			Expect(fakeClient.Get(context.TODO(), client.ObjectKeyFromObject(newerIstioCR), newerIstioCR)).Should(Succeed())
-			Expect(newerIstioCR.Status.State).Should(Equal(operatorv1alpha1.Error))
-			Expect(newerIstioCR.Status.Description).To(ContainSubstring(fmt.Sprintf("only Istio CR %s in %s reconciles the module", istioCrName, testNamespace)))
+			updatedIstioCR := operatorv1alpha1.Istio{}
+			err = fakeClient.Get(context.TODO(), client.ObjectKeyFromObject(newerIstioCR), &updatedIstioCR)
+			Expect(err).To(Not(HaveOccurred()))
+
+			Expect(updatedIstioCR.Status.State).Should(Equal(operatorv1alpha1.Error))
+			Expect(updatedIstioCR.Status.Description).To(ContainSubstring(fmt.Sprintf("only Istio CR %s in %s reconciles the module", istioCrName, testNamespace)))
+
+			Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
+			Expect((*updatedIstioCR.Status.Conditions)).To(HaveLen(1))
+
+			Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonOlderCRExists)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 		})
 
 		It("Should set an error status and requeue an Istio CR when is unable to list Istio CRs", func() {
@@ -552,7 +629,7 @@ var _ = Describe("Istio Controller", func() {
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
 				log:                    logr.Discard(),
-				statusHandler:          newStatusHandler(fakeClient),
+				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
 			}
 
@@ -563,9 +640,19 @@ var _ = Describe("Istio Controller", func() {
 			Expect(err).To(HaveOccurred())
 			Expect(result.Requeue).To(BeFalse())
 
-			Expect(fakeClient.Get(context.TODO(), client.ObjectKeyFromObject(istioCR), istioCR)).Should(Succeed())
-			Expect(istioCR.Status.State).Should(Equal(operatorv1alpha1.Error))
-			Expect(istioCR.Status.Description).To(ContainSubstring("Unable to list Istio CRs"))
+			updatedIstioCR := operatorv1alpha1.Istio{}
+			err = fakeClient.Get(context.TODO(), client.ObjectKeyFromObject(istioCR), &updatedIstioCR)
+			Expect(err).To(Not(HaveOccurred()))
+
+			Expect(updatedIstioCR.Status.State).Should(Equal(operatorv1alpha1.Error))
+			Expect(updatedIstioCR.Status.Description).To(ContainSubstring("Unable to list Istio CRs"))
+
+			Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
+			Expect((*updatedIstioCR.Status.Conditions)).To(HaveLen(1))
+
+			Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonReconcileFailed)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 		})
 
 		It("Should set a warning if warning happened during sidecars reconciliation", func() {
@@ -587,11 +674,11 @@ var _ = Describe("Istio Controller", func() {
 				Client:                 fakeClient,
 				Scheme:                 getTestScheme(),
 				istioInstallation:      &istioInstallationReconciliationMock{},
-				proxySidecars:          &proxySidecarsReconciliationMock{warning: true},
+				proxySidecars:          &proxySidecarsReconciliationMock{warningMessage: "The sidecars of the following workloads could not be restarted: default/httpbin, default/nginx and 3 additional workloads."},
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
 				log:                    logr.Discard(),
-				statusHandler:          newStatusHandler(fakeClient),
+				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
 			}
 
@@ -602,9 +689,24 @@ var _ = Describe("Istio Controller", func() {
 			Expect(err).To(HaveOccurred())
 			Expect(result.Requeue).To(BeFalse())
 
-			Expect(fakeClient.Get(context.TODO(), client.ObjectKeyFromObject(istioCR), istioCR)).Should(Succeed())
-			Expect(istioCR.Status.State).Should(Equal(operatorv1alpha1.Warning))
-			Expect(istioCR.Status.Description).To(ContainSubstring("Not all pods with Istio injection could be restarted. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning: Istio controller could not restart one or more istio-injected pods."))
+			updatedIstioCR := operatorv1alpha1.Istio{}
+			err = fakeClient.Get(context.TODO(), client.ObjectKeyFromObject(istioCR), &updatedIstioCR)
+			Expect(err).To(Not(HaveOccurred()))
+
+			Expect(updatedIstioCR.Status.State).Should(Equal(operatorv1alpha1.Warning))
+			Expect(updatedIstioCR.Status.Description).To(ContainSubstring("Not all pods with Istio injection could be restarted. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning: Istio controller could not restart one or more istio-injected pods."))
+
+			Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
+			Expect((*updatedIstioCR.Status.Conditions)).To(HaveLen(2))
+
+			Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonReconcileFailed)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
+
+			Expect((*updatedIstioCR.Status.Conditions)[1].Type).To(Equal(string(operatorv1alpha1.ConditionTypeProxySidecarRestartSucceeded)))
+			Expect((*updatedIstioCR.Status.Conditions)[1].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonProxySidecarManualRestartRequired)))
+			Expect((*updatedIstioCR.Status.Conditions)[1].Message).To(Equal("The sidecars of the following workloads could not be restarted: default/httpbin, default/nginx and 3 additional workloads."))
+			Expect((*updatedIstioCR.Status.Conditions)[1].Status).To(Equal(metav1.ConditionFalse))
 		})
 	})
 })
@@ -647,20 +749,20 @@ type istioInstallationReconciliationMock struct {
 	err described_errors.DescribedError
 }
 
-func (i *istioInstallationReconciliationMock) Reconcile(_ context.Context, istioCR operatorv1alpha1.Istio, _ string) (operatorv1alpha1.Istio, described_errors.DescribedError) {
-	return istioCR, i.err
+func (i *istioInstallationReconciliationMock) Reconcile(_ context.Context, istioCR *operatorv1alpha1.Istio, statusHandler status.Status, _ string) described_errors.DescribedError {
+	return i.err
 }
 
 type proxySidecarsReconciliationMock struct {
-	warning bool
-	err     error
+	warningMessage string
+	err            error
 }
 
 func (p *proxySidecarsReconciliationMock) AddReconcilePredicate(_ filter.SidecarProxyPredicate) {
 }
 
-func (p *proxySidecarsReconciliationMock) Reconcile(_ context.Context, _ operatorv1alpha1.Istio) (bool, error) {
-	return p.warning, p.err
+func (p *proxySidecarsReconciliationMock) Reconcile(_ context.Context, _ operatorv1alpha1.Istio) (string, error) {
+	return p.warningMessage, p.err
 }
 
 type StatusMock struct {
@@ -672,24 +774,41 @@ type StatusMock struct {
 	updatedToDeletingCalled   bool
 	errorError                error
 	updatedToErrorCalled      bool
+	setConditionCalled        bool
+	reasons                   []operatorv1alpha1.ReasonWithMessage
 }
 
-func (s *StatusMock) updateToProcessing(_ context.Context, _ string, _ *operatorv1alpha1.Istio) error {
+func NewStatusMock() *StatusMock {
+	return &StatusMock{
+		reasons: []operatorv1alpha1.ReasonWithMessage{},
+	}
+}
+
+func (s *StatusMock) UpdateToProcessing(_ context.Context, _ *operatorv1alpha1.Istio) error {
 	s.updatedToProcessingCalled = true
 	return s.processingError
 }
 
-func (s *StatusMock) updateToError(_ context.Context, _ described_errors.DescribedError, _ *operatorv1alpha1.Istio) error {
-	s.updatedToErrorCalled = true
-	return s.errorError
-}
-
-func (s *StatusMock) updateToDeleting(_ context.Context, _ *operatorv1alpha1.Istio) error {
+func (s *StatusMock) UpdateToDeleting(_ context.Context, _ *operatorv1alpha1.Istio) error {
 	s.updatedToDeletingCalled = true
 	return s.deletingError
 }
 
-func (s *StatusMock) updateToReady(_ context.Context, _ *operatorv1alpha1.Istio) error {
+func (s *StatusMock) UpdateToReady(_ context.Context, _ *operatorv1alpha1.Istio) error {
 	s.updatedToReadyCalled = true
 	return s.readyError
+}
+
+func (s *StatusMock) UpdateToError(_ context.Context, _ *operatorv1alpha1.Istio, _ described_errors.DescribedError) error {
+	s.updatedToErrorCalled = true
+	return s.errorError
+}
+
+func (s *StatusMock) SetCondition(_ *operatorv1alpha1.Istio, reason operatorv1alpha1.ReasonWithMessage) {
+	s.setConditionCalled = true
+	s.reasons = append(s.reasons, reason)
+}
+
+func (s *StatusMock) GetConditions() []operatorv1alpha1.ReasonWithMessage {
+	return s.reasons
 }

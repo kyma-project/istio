@@ -185,7 +185,7 @@ func addInstallationFinalizer(ctx context.Context, apiClient client.Client, isti
 				return err
 			}
 		}
-		controllerutil.AddFinalizer(istioCR, installationFinalizer)
+		istioCR.Finalizers = finalizerCR.Finalizers
 		ctrl.Log.Info("Successfully added Istio installation finalizer")
 		return nil
 	})
@@ -203,7 +203,7 @@ func removeInstallationFinalizer(ctx context.Context, apiClient client.Client, i
 				return err
 			}
 		}
-		controllerutil.RemoveFinalizer(istioCR, installationFinalizer)
+		istioCR.Finalizers = finalizerCR.Finalizers
 		ctrl.Log.Info("Successfully removed Istio installation finalizer")
 		return nil
 	})

@@ -182,7 +182,7 @@ func (i *Istio) ComponentName() string {
 	return "istio"
 }
 
-func (i *Istio) HasFinalizer() bool {
+func (i *Istio) HasFinalizers() bool {
 	return len(i.Finalizers) > 0
 }
 

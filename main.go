@@ -16,6 +16,7 @@ limitations under the License.
 
 package main
 
+
 import (
 	"flag"
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"

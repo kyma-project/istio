@@ -125,6 +125,10 @@ spec:
             Any modifications are discarded and the resource is reverted to the original state.
   hub: europe-docker.pkg.dev/kyma-project/prod/external/istio
   meshConfig:
+    tcpKeepalive:
+      interval: 1s
+      probes: 9
+      time: 30s
     defaultConfig:
       holdApplicationUntilProxyStarts: true
       proxyMetadata:

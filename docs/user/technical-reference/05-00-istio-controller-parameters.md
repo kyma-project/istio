@@ -1,12 +1,12 @@
-# Istio Controller parameters 
+# Istio Controller Parameters 
 
 You can configure [Istio Controller](../00-10-overview-istio-controller.md) using various parameters. All options are listed in this document.
 
-## Reconciliation interval
+## Reconciliation Interval
 
 By default, Kyma Istio Operator is reconciled every 10 hours or whenever the custom resource is changed. You can adjust this interval by modifying the operator's parameters. For example, you can set the **-reconciliation-interval** parameter to `120s`.
 
-## All configuration parameters
+## All Configuration Parameters
 
 | Parameter                        | Description                                                                                                                                                                                                                                                                                                  | Default   |
 |----------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------|

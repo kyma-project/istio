@@ -1,0 +1,50 @@
+header:
+  - source: spec.selector
+    widget: Labels
+    name: spec.selector
+body:
+  - widget: Table
+    source: spec.servers
+    name: spec.servers
+    children:
+      - source: port.name
+        name: spec.servers.port.name
+      - widget: JoinedArray
+        separator: break
+        source: hosts
+        name: spec.servers.hosts
+      - source: port.number
+        name: spec.servers.port.number
+      - source: port.protocol
+        name: spec.servers.port.protocol
+      - source: tls.mode
+        name: spec.servers.tls.mode
+      - widget: ResourceLink
+        source: tls.credentialName
+        name: spec.servers.tls.credentialName
+        resource:
+          name: tls.credentialName
+          namespace: '"istio-system"'
+          kind: '"Secret"'
+  - widget: Panel
+    name: spec.selector
+    disablePadding: true
+    children:
+      - source: $podSelector()
+        widget: ResourceList
+        disableCreate: true
+        visibility: $exists($root.spec.selector) and $boolean($root.spec.selector)
+      - source: spec.selector
+        widget: Panel
+        name: selector.matchesAllPods
+        visibility: $not($exists($value)) or $not($boolean($value))
+    header:
+      - source: spec.selector
+        widget: Labels
+        name: spec.selector
+        visibility: $exists($value) and $boolean($value)
+resourceGraph:
+  depth: 1
+  colorVariant: 1
+  dataSources:
+    - source: relatedVirtualServices

@@ -1,0 +1,149 @@
+header:
+  - source: spec.action
+    name: spec.action
+  - source: spec.provider
+    widget: Labels
+    name: spec.provider
+resourceGraph:
+  colorVariant: 3
+  dataSources:
+    - source: podSelector
+body:
+  - widget: Table
+    name: spec.rules
+    source: spec.rules
+    showHeader: false
+    visibility: $exists($value)
+    collapsibleTitle: '"Rule #" & $string($index + 1) & (" " & $join($keys($item), " "))'
+    collapsible:
+      - source: $item.from
+        widget: Table
+        name: spec.rules.from
+        disablePadding: true
+        showHeader: false
+        visibility: $exists($value)
+        collapsibleTitle: '"From #" & $string($index + 1) & (" " & $join($keys($item.source), " "))'
+        collapsible:
+          - source: source
+            widget: Panel
+            name: spec.rules.from.source
+            children:
+              - source: principals
+                name: spec.rules.from.source.principals
+                widget: JoinedArray
+                visibility: $exists($value)
+              - source: notPrincipals
+                name: spec.rules.from.source.notPrincipals
+                widget: Labels
+                visibility: $exists($value)
+              - source: requestPrincipals
+                name: spec.rules.from.source.requestPrincipals
+                widget: Labels
+                visibility: $exists($value)
+              - source: notRequestPrincipals
+                name: spec.rules.from.source.notRequestPrincipals
+                widget: Labels
+                visibility: $exists($value)
+              - source: namespaces
+                name: spec.rules.from.source.namespaces
+                widget: Labels
+                visibility: $exists($value)
+              - source: notNamespaces
+                name: spec.rules.from.source.notNamespaces
+                widget: Labels
+                visibility: $exists($value)
+              - source: ipBlocks
+                name: spec.rules.from.source.ipBlocks
+                widget: Labels
+                visibility: $exists($value)
+              - source: notIpBlocks
+                name: spec.rules.from.source.notIpBlocks
+                widget: Labels
+                visibility: $exists($value)
+              - source: remoteIpBlocks
+                name: spec.rules.from.source.remoteIpBlocks
+                widget: Labels
+                visibility: $exists($value)
+              - source: notRemoteIpBlocks
+                name: spec.rules.from.source.notRemoteIpBlocks
+                widget: Labels
+                visibility: $exists($value)
+      - source: $item.to
+        widget: Table
+        name: spec.rules.to
+        disablePadding: true
+        showHeader: false
+        visibility: $exists($value)
+        collapsibleTitle: '"To #" & $string($index + 1) & (" " & $join($keys($item.operation), " "))'
+        collapsible:
+          - source: operation
+            widget: Panel
+            name: spec.rules.to.operation
+            children:
+              - source: Hosts
+                name: spec.rules.to.operation.hosts
+                widget: Labels
+                visibility: $exists($value)
+              - source: notHosts
+                name: spec.rules.to.operation.notHosts
+                widget: Labels
+                visibility: $exists($value)
+              - source: ports
+                name: spec.rules.to.operation.ports
+                widget: Labels
+                visibility: $exists($value)
+              - source: notPorts
+                name: spec.rules.to.operation.notPorts
+                widget: Labels
+                visibility: $exists($value)
+              - source: methods
+                name: spec.rules.to.operation.methods
+                widget: Labels
+                visibility: $exists($value)
+              - source: notMethods
+                name: spec.rules.to.operation.notMethods
+                widget: Labels
+                visibility: $exists($value)
+              - source: paths
+                name: spec.rules.to.operation.paths
+                widget: Labels
+                visibility: $exists($value)
+              - source: notPaths
+                name: spec.rules.to.operation.notPaths
+                widget: Labels
+                visibility: $exists($value)
+      - source: when
+        widget: Table
+        name: spec.rules.when
+        visibility: $exists($value)
+        children:
+          - source: key
+            name: spec.rules.when.key
+            visibility: $exists($value)
+          - source: values
+            name: spec.rules.when.values
+            widget: JoinedArray
+            separator: break
+            visibility: $exists($value)
+          - source: notValues
+            name: spec.rules.when.notValues
+            widget: JoinedArray
+            separator: break
+            visibility: $exists($value)
+  - widget: Panel
+    name: spec.selector.matchLabels
+    disablePadding: true
+    children:
+      - source: $podSelector()
+        widget: ResourceList
+        disableCreate: true
+        visibility: $exists($root.spec.selector.matchLabels) and $boolean($root.spec.selector.matchLabels)
+      - source: spec.selector
+        widget: Panel
+        name: selector.matchesAllPods
+        visibility: $not($exists($value)) or $not($boolean($value))
+    header:
+      - source: spec.selector.matchLabels
+        widget: Labels
+        name: spec.selector.matchLabels
+        visibility: $exists($value) and $boolean($value)

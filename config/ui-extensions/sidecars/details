@@ -1,0 +1,79 @@
+header:
+  - name: Outbound Traffic Policy Mode
+    source: spec.outboundTrafficPolicy.mode
+body:
+  - widget: Table
+    source: spec.egress
+    name: Egress
+    visibility: $exists($value)
+    children:
+      - source: port
+        name: Port
+        widget: Panel
+        visibility: $exists($value)
+        children:
+          - source: number
+            name: Number
+          - source: name
+            name: Name
+          - source: protocol
+            name: Protocol
+          - source: targetPoint
+            name: Target Point
+      - source: bind
+        name: Bind
+      - source: captureMode
+        name: Capture Mode
+      - source: hosts
+        name: Hosts
+        widget: Labels
+  - widget: Table
+    source: spec.ingress
+    name: Ingress
+    visibility: $exists($value)
+    children:
+      - source: port
+        name: Port
+        widget: Panel
+        visibility: $exists($value)
+        children:
+          - source: number
+            name: Number
+          - source: name
+            name: Name
+          - source: protocol
+            name: Protocol
+          - source: targetPoint
+            name: Target Point
+          - source: $parent.tls.mode
+            name: TLS Mode
+      - source: bind
+        name: Bind
+      - source: captureMode
+        name: Capture Mode
+      - source: defaultEndpoint
+        name: Default Endpoint
+        widget: Labels
+  - widget: Panel
+    name: Workload Selector
+    disablePadding: true
+    children:
+      - source: $podSelector()
+        widget: ResourceList
+        disableCreate: true
+        isCompact: true
+        visibility: $exists($root.spec.workloadSelector.labels) and $boolean($root.spec.workloadSelector.labels)
+      - source: spec.workloadSelector.labels
+        widget: Panel
+        name: Matches all Pods in the Namespace
+        visibility: $not($exists($value)) or $not($boolean($value))
+    header:
+      - source: spec.workloadSelector.labels
+        widget: Labels
+        name: Workload Selector
+        visibility: $exists($value) and $boolean($value)
+resourceGraph:
+  depth: 1
+  colorVariant: 1
+  dataSources:
+    - source: podSelector

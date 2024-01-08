@@ -9,7 +9,7 @@ Istio is an open-source service mesh that provides a uniform way to manage, conn
 
 ## Kyma Istio Operator
 
-Kyma Istio Operator is a component of the Kyma runtime that handles the management and configuration of Istio Service Mesh. Within Kyma Istio Operator, [Istio Controller](/docs/user/00-overview/00-10-overview-istio-controller.md) is responsible for installing, uninstalling, and upgrading Istio.
+Kyma Istio Operator is a component of the Kyma runtime that handles the management and configuration of the Istio service mesh. Within Kyma Istio Operator, [Istio Controller](/docs/user/00-overview/00-10-overview-istio-controller.md) is responsible for installing, uninstalling, and upgrading Istio.
 
 ## Install Kyma Istio Operator and Istio from the latest release
 
@@ -20,10 +20,11 @@ Kyma Istio Operator is a component of the Kyma runtime that handles the manageme
 
 ### Procedure
 
-1. Create the `kyma-system` namespace:
+1. Create the `kyma-system` namespace and label it with `istio-injection=enabled`:
 
    ```bash
    kubectl create namespace kyma-system
+   kubectl label namespace kyma-system istio-injection=enabled --overwrite
    ```
 
 2. To install Istio, you must install the latest version of Kyma Istio Operator and Istio CRD first. Run:
@@ -66,5 +67,16 @@ To learn how to use Kyma Istio Operator, read the documentation in the [`user`](
 If you are interested in the detailed documentation of the Kyma Istio Operator's design and technical aspects, check the [`contributor`](/docs/contributor) directory.
 
 ## Contributing
+<!--- mandatory section - do not change this! --->
 
-To contribute to this project, follow the general [Kyma project contributing](https://github.com/kyma-project/community/blob/main/docs/contributing/02-contributing.md) guidelines.
+See the [Contributing](CONTRIBUTING.md) guidelines.
+
+## Code of Conduct
+<!--- mandatory section - do not change this! --->
+
+See the [Code of Conduct](CODE_OF_CONDUCT.md) document.
+
+## Licensing
+<!--- mandatory section - do not change this! --->
+
+See the [license](./LICENSE) file.

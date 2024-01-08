@@ -4,14 +4,9 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
-	"sync"
-	"time"
-
-	"github.com/pkg/errors"
-
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
+	"sync"
 
 	"istio.io/api/operator/v1alpha1"
 	"istio.io/istio/istioctl/pkg/install/k8sversion"
@@ -54,9 +49,30 @@ func NewIstioClient() *IstioClient {
 }
 
 func (c *IstioClient) Install(mergedIstioOperatorPath string) error {
-	err := installIstioInExternalProcess(mergedIstioOperatorPath)
 
+	rc, err := kube.DefaultRestConfig("", "", func(config *rest.Config) {
+		config.QPS = 50
+		config.Burst = 100
+	})
 	if err != nil {
+		return err
+	}
+
+	cliClient, err := kube.NewCLIClient(kube.NewClientConfigForRestConfig(rc), "")
+	if err != nil {
+		return err
+	}
+
+	if err := k8sversion.IsK8VersionSupported(cliClient, c.consoleLogger); err != nil {
+		return err
+	}
+
+	iopFileNames := make([]string, 0, 1)
+	iopFileNames = append(iopFileNames, mergedIstioOperatorPath)
+	// We don't want to verify after installation, because it is unreliable
+	installArgs := &istio.InstallArgs{SkipConfirmation: true, Verify: false, InFilenames: iopFileNames}
+
+	if err := istio.Install(cliClient, &istio.RootArgs{}, installArgs, c.istioLogOptions, os.Stdout, c.consoleLogger, c.printer); err != nil {
 		return err
 	}
 
@@ -89,7 +105,7 @@ func (c *IstioClient) Uninstall(ctx context.Context) error {
 		return fmt.Errorf("check failed for minimum supported Kubernetes version: %v", err)
 	}
 
-	client, err := client.New(kubeClient.RESTConfig(), client.Options{Scheme: kube.IstioScheme})
+	ctrlClient, err := client.New(kubeClient.RESTConfig(), client.Options{Scheme: kube.IstioScheme})
 	if err != nil {
 		return fmt.Errorf("failed to create Kubernetes ctrl client: %v", err)
 	}
@@ -103,7 +119,7 @@ func (c *IstioClient) Uninstall(ctx context.Context) error {
 	}
 
 	opts := &helmreconciler.Options{DryRun: false, Log: c.consoleLogger, ProgressLog: progress.NewLog()}
-	h, err := helmreconciler.NewHelmReconciler(client, kubeClient, iop, opts)
+	h, err := helmreconciler.NewHelmReconciler(ctrlClient, kubeClient, iop, opts)
 	if err != nil {
 		return fmt.Errorf("failed to create reconciler: %v", err)
 	}
@@ -122,7 +138,7 @@ func (c *IstioClient) Uninstall(ctx context.Context) error {
 
 	deletePolicy := metav1.DeletePropagationForeground
 	// We need to manually delete the control plane namespace from Istio because the namespace is not removed by default.
-	err = client.Delete(ctx, &v1.Namespace{
+	err = ctrlClient.Delete(ctx, &v1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: constants.IstioSystemNamespace,
 		},
@@ -135,29 +151,6 @@ func (c *IstioClient) Uninstall(ctx context.Context) error {
 	ctrl.Log.Info("Deleted istio control plane namespace", "namespace", constants.IstioSystemNamespace)
 
 	opts.ProgressLog.SetState(progress.StateUninstallComplete)
-
-	return nil
-}
-
-func installIstioInExternalProcess(mergedIstioOperatorPath string) error {
-	istioInstallPath, ok := os.LookupEnv("ISTIO_INSTALL_BIN_PATH")
-	if !ok {
-		istioInstallPath = "./istio_install"
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*6)
-	defer cancel()
-
-	cmd := exec.CommandContext(ctx, istioInstallPath, mergedIstioOperatorPath)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-
-	if err != nil {
-		// We should not return the error of the external process, because it is always "exit status 1" and we do
-		// not want to show such an error in the resource status
-		return errors.New("Istio installation resulted in an error")
-	}
 
 	return nil
 }

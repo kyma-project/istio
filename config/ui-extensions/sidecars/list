@@ -1,0 +1,5 @@
+- source: spec.outboundTrafficPolicy.mode
+  name: Outbound Traffic Policy Mode
+- source: spec.workloadSelector.labels
+  name: Workload Selector Labels
+  widget: Labels

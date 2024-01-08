@@ -1,0 +1,71 @@
+en:
+  t-name: Name
+  gateways: Gateways
+  hosts: Hosts
+  exportTo: Export to
+  summary: Summary
+  http: HTTP
+  tls: TLS
+  tcp: TCP
+  mirror: Mirror
+  mirrorPercentage: Mirror Percentage
+  timeout: Timeout
+  matches: Matches
+  uri: URI
+  scheme: Scheme
+  method: Method
+  authority: Authority
+  headers: Headers
+  port: Port
+  sourceLabels: Source Labels
+  queryParams: Query Params
+  ignoreUriCase: Ignore URI Case
+  withoutHeaders: Without Headers
+  sourceNamespace: Source Namespace
+  statPrefix: Stat Prefix
+  routes: Routes
+  destination: Destination
+  host: Host
+  subset: Subset
+  port.number: Port Number
+  weight: Weight
+  request: Request
+  response: Response
+  set: Set
+  add: Add
+  remove: Remove
+  redirect: Redirect
+  derivePort: Derive Port
+  redirectCode: Redirect Code
+  directResponse: Direct Response
+  status: Status
+  body: Body
+  string: String
+  bytes: Bytes
+  delegate: Delegate
+  namespace: Namespace
+  rewrite: Rewrite
+  retries: Retries
+  attempts: Attempts
+  perTryTimeout: Per Try Timeout
+  retryOn: Retry On
+  retryRemoteLocalities: Retry Remote Localities
+  fault: Fault
+  delay: Delay
+  fixedDelay: Fixed Delay
+  abort: Abort
+  percentage.value: Percentage Value
+  percent: Percent
+  httpStatus: HTTP Status
+  grpcStatus: GRPC Status
+  corsPolicy: CORS Policy
+  allowOrigins: Allow Origins
+  allowMethods: Allow Methods
+  allowMethods.placeholder: For example, GET
+  allowHeaders: Allow Headers
+  exposeHeaders: Expose Headers
+  maxAge: Max Age
+  maxAge.placeholder: For example, 24h
+  allowCredentials: Allow Credentials
+  destinationSubnets: Destination Subnets
+  sniHosts: SNI Hosts

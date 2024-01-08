@@ -1,4 +1,4 @@
-# Incompatible Istio sidecar version after Istio Operator's upgrade
+# Incompatible Istio Sidecar Version After Istio Operator's Upgrade
 
 ## Symptom
 

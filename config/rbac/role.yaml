@@ -54,43 +54,92 @@ rules:
   resources:
   - '*'
   verbs:
-  - '*'
+  - deletecollection
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
   - config.istio.io
   resources:
   - '*'
   verbs:
-  - '*'
+  - deletecollection
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
   - install.istio.io
   resources:
   - '*'
   verbs:
-  - '*'
+  - deletecollection
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
   - networking.istio.io
   resources:
   - '*'
   verbs:
-  - '*'
+  - deletecollection
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
   - security.istio.io
   resources:
   - '*'
   verbs:
-  - '*'
+  - deletecollection
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
   - telemetry.istio.io
   resources:
   - '*'
   verbs:
-  - '*'
+  - deletecollection
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
   - extensions.istio.io
   resources:
   - '*'
   verbs:
-  - '*'
+  - deletecollection
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 # k8s groups
 - apiGroups:
   - admissionregistration.k8s.io
@@ -98,14 +147,28 @@ rules:
   - mutatingwebhookconfigurations
   - validatingwebhookconfigurations
   verbs:
-  - '*'
+  - deletecollection
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
   - apiextensions.k8s.io
   resources:
   - customresourcedefinitions.apiextensions.k8s.io
   - customresourcedefinitions
   verbs:
-  - '*'
+  - deletecollection
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
   - apps
   - extensions
@@ -116,13 +179,27 @@ rules:
   - replicasets
   - statefulsets
   verbs:
-  - '*'
+  - deletecollection
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
   - autoscaling
   resources:
   - horizontalpodautoscalers
   verbs:
-  - '*'
+  - deletecollection
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
   - monitoring.coreos.com
   resources:
@@ -136,7 +213,14 @@ rules:
   resources:
   - poddisruptionbudgets
   verbs:
-  - '*'
+  - deletecollection
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
   - rbac.authorization.k8s.io
   resources:
@@ -145,7 +229,14 @@ rules:
   - roles
   - rolebindings
   verbs:
-  - '*'
+  - deletecollection
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
   - coordination.k8s.io
   resources:
@@ -170,4 +261,11 @@ rules:
   - serviceaccounts
   - resourcequotas
   verbs:
-  - '*'
+  - deletecollection
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch

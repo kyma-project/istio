@@ -3,12 +3,9 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
-    app.kubernetes.io/name: clusterrole
-    app.kubernetes.io/instance: istio-editor-role
+    app.kubernetes.io/name: istio-editor-role
     app.kubernetes.io/component: rbac
-    app.kubernetes.io/created-by: istio
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/managed-by: kustomize
   name: istio-editor-role
 rules:
 - apiGroups:

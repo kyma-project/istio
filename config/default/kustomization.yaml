@@ -10,7 +10,8 @@ namePrefix: istio-
 
 # Labels to add to all resources and selectors.
 commonLabels:
-  app.kubernetes.io/component: istio-operator.kyma-project.io
+  kyma-project.io/module: istio
+  app.kubernetes.io/version: 1.3.0-dev
 
 resources:
   - ../crd

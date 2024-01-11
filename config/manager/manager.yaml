@@ -5,12 +5,9 @@ metadata:
   namespace: system
   labels:
     control-plane: controller-manager
-    app.kubernetes.io/name: deployment
-    app.kubernetes.io/instance: controller-manager
+    app.kubernetes.io/name: controller-manager
     app.kubernetes.io/component: manager
-    app.kubernetes.io/created-by: istio
     app.kubernetes.io/part-of: istio
-    app.kubernetes.io/managed-by: kustomize
 spec:
   selector:
     matchLabels:

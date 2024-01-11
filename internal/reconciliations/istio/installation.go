@@ -116,6 +116,9 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha1.
 			return described_errors.NewDescribedError(err, "Could not restart Istio Ingress GW deployment")
 		}
 
+		if err := updateResourcesMetadataForSelector(ctx, i.Client); err != nil {
+			return described_errors.NewDescribedError(err, "could not update managed metadata")
+		}
 		// We use the installation finalizer to track if the deletion was already executed so can make the uninstallation process more reliable.
 	} else if shouldDelete(istioCR) && hasInstallationFinalizer(istioCR) {
 		ctrl.Log.Info("Starting Istio uninstall")

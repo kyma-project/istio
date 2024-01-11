@@ -19,6 +19,8 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/istio/operator/pkg/labels"
+	"github.com/kyma-project/istio/operator/pkg/version"
 	"net/http"
 	"time"
 
@@ -89,6 +91,9 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			return ctrl.Result{}, nil
 		}
 		r.log.Error(err, "Could not get Istio CR")
+		return ctrl.Result{}, err
+	}
+	if err := r.setLabels(ctx, &istioCR); err != nil {
 		return ctrl.Result{}, err
 	}
 
@@ -282,4 +287,11 @@ func (r *IstioReconciler) setConditionForError(istioCR *operatorv1alpha1.Istio, 
 		r.statusHandler.SetCondition(istioCR, operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonReconcileFailed))
 	}
 	r.statusHandler.SetCondition(istioCR, reason)
+}
+
+func (r *IstioReconciler) setLabels(ctx context.Context, istioCR *operatorv1alpha1.Istio) error {
+	u := istioCR.DeepCopy()
+	newLabels := labels.SetModuleLabels(u.GetLabels())
+	newLabels["app.kubernetes.io/version"] = version.Get()
+	return r.Update(ctx, u)
 }

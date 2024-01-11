@@ -4,6 +4,11 @@ kind: ClusterRole
 metadata:
   creationTimestamp: null
   name: manager-role
+  labels:
+    app.kubernetes.io/name: manager-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: istio
+    app.kubernetes.io/instance: rbac-default
 rules:
 - apiGroups:
   - ""

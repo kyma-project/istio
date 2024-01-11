@@ -1115,7 +1115,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 
 		Expect(istioCR.Status.Conditions).ToNot(BeNil())
-		Expect((*istioCR.Status.Conditions)).To(HaveLen(1))
+		Expect(*istioCR.Status.Conditions).To(HaveLen(1))
 		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
 		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonIstioCRsDangling)))
 		Expect((*istioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))

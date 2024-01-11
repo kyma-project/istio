@@ -10,7 +10,7 @@ import (
 )
 
 // Apply creates or updates a resource in the given manifest in the cluster. The resource is annotated with a disclaimer.
-// If the owner is provided, a OwnerReference is added to the resource. The function returns the operation result depending on the action taken.
+// If the owner is provided, an OwnerReference is added to the resource. The function returns the operation result depending on the action taken.
 // The function supports update operations on resources with spec and data fields.
 func Apply(ctx context.Context, k8sClient client.Client, manifest []byte, owner *metav1.OwnerReference) (controllerutil.OperationResult, error) {
 	resource, err := unmarshalManifest(manifest)

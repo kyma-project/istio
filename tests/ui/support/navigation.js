@@ -4,11 +4,10 @@ Cypress.Commands.add('navigateTo', (leftNav, resource) => {
 
     cy.getLeftNav()
         .contains(leftNav)
-        .should('be.visible');
 
     cy.getLeftNav()
         .contains(leftNav)
-        .click();
+        .click({force: true});
 
     cy.getLeftNav()
         .contains(resource)

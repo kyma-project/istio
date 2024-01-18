@@ -3,6 +3,7 @@ package test
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/istio/operator/internal/filter"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/test/helpers"
 	v1 "k8s.io/api/core/v1"
@@ -19,7 +20,8 @@ import (
 const restartAnnotationName = "istio-operator.kyma-project.io/restartedAt"
 
 func (s *scenario) aRestartHappens(sidecarImage string) error {
-	warnings, err := sidecars.ProxyReset(context.TODO(),
+	pr := sidecars.NewProxyResetter()
+	warnings, err := pr.ProxyReset(context.TODO(),
 		s.Client,
 		pods.SidecarImage{Repository: "istio/proxyv2", Tag: sidecarImage},
 		helpers.DefaultSidecarResources,
@@ -43,8 +45,8 @@ func (s *scenario) aRestartHappensWithUpdatedResources(sidecarImage string, reso
 	default:
 		return fmt.Errorf("unknown resource type %s", resourceType)
 	}
-
-	warnings, err := sidecars.ProxyReset(context.TODO(),
+	pr := sidecars.NewProxyResetter()
+	warnings, err := pr.ProxyReset(context.TODO(),
 		s.Client,
 		pods.SidecarImage{Repository: "istio/proxyv2", Tag: sidecarImage},
 		resources,

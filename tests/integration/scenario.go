@@ -48,6 +48,8 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^Request to path "([^"]*)" should have response code "([^"]*)"$`, steps.ValidateResponseStatusCode)
 	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" is "([^"]*)"`, steps.ResourceIsPresent)
 	ctx.Step(`^Request sent to exposed httpbin, should contain public client IP in "([^"]*)" header$`, steps.ValidatePublicClientIpInHeader)
+	ctx.Step(`^Access logging is enabled for the mesh using "([^"]*)" provider$`, steps.EnableAccessLogging)
+	ctx.Step(`^Envoy logs of deployment "([^"]*)" in namespace "([^"]*)" contains access log entry with "([^"]*)"$`, steps.VerifyLogEntryForDeployment)
 }
 
 func upgradeInitScenario(ctx *godog.ScenarioContext) {

@@ -14,6 +14,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
+	"log"
 	"strings"
 
 	//"k8s.io/client-go"
@@ -50,7 +51,7 @@ func EnableAccessLogging(ctx context.Context, provider string) (context.Context,
 		ctx = testcontext.AddCreatedTestObjectInContext(ctx, tm)
 		return nil
 	}, testcontext.GetRetryOpts()...)
-	return ctx, nil
+	return ctx, err
 }
 
 func VerifyLogEntryForDeployment(ctx context.Context, name, namespace, logKey string) (context.Context, error) {
@@ -58,8 +59,6 @@ func VerifyLogEntryForDeployment(ctx context.Context, name, namespace, logKey st
 	if err != nil {
 		return ctx, err
 	}
-	conf := config.GetConfigOrDie()
-	c := kubernetes.NewForConfigOrDie(conf)
 	err = retry.Do(func() error {
 
 		var dep v1.Deployment
@@ -76,12 +75,11 @@ func VerifyLogEntryForDeployment(ctx context.Context, name, namespace, logKey st
 			"app": dep.Labels["app"],
 		})
 		if err != nil {
-			println(err.Error())
 			return err
 		}
 		found := false
 		for _, pod := range pods.Items {
-			str, err := getLogsFromPodsContainer(ctx, c, pod, "istio-proxy")
+			str, err := getLogsFromPodsContainer(ctx, pod, "istio-proxy")
 			if err != nil {
 				return err
 			}
@@ -98,13 +96,21 @@ func VerifyLogEntryForDeployment(ctx context.Context, name, namespace, logKey st
 	return ctx, err
 }
 
-func getLogsFromPodsContainer(ctx context.Context, c *kubernetes.Clientset, pod v12.Pod, containerName string) (string, error) {
+func getLogsFromPodsContainer(ctx context.Context, pod v12.Pod, containerName string) (string, error) {
+	conf := config.GetConfigOrDie()
+	c := kubernetes.NewForConfigOrDie(conf)
+
 	logOpt := &v12.PodLogOptions{
 		Container: containerName,
 	}
 	req := c.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, logOpt)
 	logs, err := req.Stream(ctx)
-	defer logs.Close()
+	defer func() {
+		e := logs.Close()
+		if e != nil {
+			log.Printf("error closing logs stream: %s", err.Error())
+		}
+	}()
 	if err != nil {
 		return "", err
 	}

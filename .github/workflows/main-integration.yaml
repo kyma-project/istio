@@ -17,21 +17,11 @@ on:
       - main
 
 jobs:
-  wait-for-image-build:
-    name: Wait for image build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/wait-for-job-succeed-or-fail
-        with:
-          job-name: 'post-istio-operator-build'
-          github-auth-token: ${{ secrets.GITHUB_TOKEN }}
 
   istio-upgrade-integration-test:
     name: Istio upgrade integration test
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
-    needs: [wait-for-image-build]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -45,7 +35,6 @@ jobs:
     name: Istio integration test
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
-    needs: [wait-for-image-build]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -57,10 +46,9 @@ jobs:
           agents: 0
 
   istio-performance-test:
-    name: Istio integration test GCP
+    name: Istio performance test
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
-    needs: [wait-for-image-build]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -69,6 +57,9 @@ jobs:
         shell: bash
         env:
           GARDENER_TOKEN: ${{ secrets.GARDENER_TOKEN }}
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "1.21"
       - run: make gardener-perf-test
         shell: bash
         env:
@@ -88,7 +79,6 @@ jobs:
     name: Istio integration test GCP
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
-    needs: [wait-for-image-build]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -97,6 +87,9 @@ jobs:
         shell: bash
         env:
           GARDENER_TOKEN: ${{ secrets.GARDENER_TOKEN }}
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "1.21"
       - run: make gardener-istio-integration-test
         shell: bash
         env:
@@ -116,7 +109,7 @@ jobs:
     name: Slack Notification
     runs-on: ubuntu-latest
     if: ${{ failure() }}
-    needs: [istio-upgrade-integration-test, istio-integration-test,  istio-integration-gcp]
+    needs: [istio-upgrade-integration-test, istio-integration-test,  istio-integration-gcp, istio-performance-test]
     steps:
       - uses: actions/checkout@v4
       - name: Notify

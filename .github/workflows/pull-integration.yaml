@@ -66,6 +66,7 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/integration-test
         with:
+          evaluation: false
           operator-image-name: "europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}"
           servers-memory: "16g"
           agents: 2
@@ -80,9 +81,8 @@ jobs:
         with:
           fetch-depth: 0
       - uses: ./.github/actions/integration-test
-        env:
-          TEST_EVALUATION: TRUE
         with:
+          evaluation: true
           operator-image-name: "europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}"
           servers-memory: "4g"
           agents: 0

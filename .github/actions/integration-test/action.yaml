@@ -2,6 +2,9 @@
 name: 'Istio integration test'
 description: 'Runs Istio integration tests'
 inputs:
+  evaluation:
+    description: 'Controls whether the test should run for Evaluation or Production'
+    required: false
   operator-image-name:
     description: 'Operator image used for test'
     required: true
@@ -32,4 +35,8 @@ runs:
       shell: bash
       run: |
         kubectl config use-context k3d-test-cluster-1
-        EXPORT_RESULT=true IMG=${{ inputs.operator-image-name }} make istio-integration-test
+        if ${{ inputs.evaluation }}; then
+          EXPORT_RESULT=true IMG=${{ inputs.operator-image-name }} make istio-integration-test
+        else
+          TEST_EVALUATION=TRUE EXPORT_RESULT=true IMG=${{ inputs.operator-image-name }} make istio-integration-test
+        fi

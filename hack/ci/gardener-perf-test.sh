@@ -6,13 +6,13 @@ export CLUSTER_NAME
 function cleanup() {
     kubectl annotate shoot "${CLUSTER_NAME}" confirmation.gardener.cloud/deletion=true \
           --overwrite \
-          -n "garden-${GARDENER_KYMA_PROW_PROJECT_NAME}" \
-          --kubeconfig "${GARDENER_KYMA_PROW_KUBECONFIG}"
+          -n "garden-${GARDENER_PROJECT_NAME}" \
+          --kubeconfig "${GARDENER_KUBECONFIG}"
 
     kubectl delete shoot "${CLUSTER_NAME}" \
       --wait="false" \
-      --kubeconfig "${GARDENER_KYMA_PROW_KUBECONFIG}" \
-      -n "garden-${GARDENER_KYMA_PROW_PROJECT_NAME}"
+      --kubeconfig "${GARDENER_KUBECONFIG}" \
+      -n "garden-${GARDENER_PROJECT_NAME}"
 
     exit
 }

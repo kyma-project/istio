@@ -67,12 +67,11 @@ jobs:
       - uses: ./.github/actions/integration-test
         with:
           operator-image-name: "europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}"
-          target_branch: ${{ github.base_ref }}
-          servers-memory: "10g"
-          agents: 0
+          servers-memory: "16g"
+          agents: 2
 
   istio-integration-test-evaluation:
-    name: Istio integration test
+    name: Istio integration test evaluation
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
     needs: [wait-for-image-build]
@@ -85,6 +84,5 @@ jobs:
           TEST_EVALUATION: TRUE
         with:
           operator-image-name: "europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}"
-          target_branch: ${{ github.base_ref }}
           servers-memory: "4g"
           agents: 0

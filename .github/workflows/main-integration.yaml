@@ -38,7 +38,7 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/upgrade-integration-test
         with:
-          operator-image-name: "europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{github.sha}}"
+          operator-image-name: "europe-docker.pkg.dev/kyma-project/prod/istio-manager:v20240122-fe11aa2c"
           target_branch: ${{github.ref_name}}
 
   istio-integration-test:
@@ -52,7 +52,7 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/integration-test
         with:
-          operator-image-name: "europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{github.sha}}"
+          operator-image-name: "europe-docker.pkg.dev/kyma-project/prod/istio-manager:v20240122-fe11aa2c"
           servers-memory: "10g"
           agents: 0
 

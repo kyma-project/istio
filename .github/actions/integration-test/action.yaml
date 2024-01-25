@@ -35,7 +35,7 @@ runs:
       shell: bash
       run: |
         kubectl config use-context k3d-test-cluster-1
-        if ${{ inputs.evaluation }}; then
+        if "${{ inputs.evaluation }}" == "true"; then
           EXPORT_RESULT=true IMG=${{ inputs.operator-image-name }} make istio-integration-test
         else
           TEST_EVALUATION=TRUE EXPORT_RESULT=true IMG=${{ inputs.operator-image-name }} make istio-integration-test

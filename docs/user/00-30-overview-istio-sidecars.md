@@ -7,7 +7,7 @@ By default, Istio installed by Kyma Istio Operator is configured with automatic 
 With an Istio sidecar, the resource becomes part of the Istio service mesh, which brings the following benefits that would be complex to manage otherwise.
 
 ## Secure Communication
-
+<!-- markdown-link-check-disable-next-line -->
 In Kyma's [default Istio configuration](./00-40-overview-istio-setup.md), [peer authentication](https://istio.io/latest/docs/concepts/security/#peer-authentication) is set to cluster-wide `STRICT` mode. This ensures that your workload only accepts [mutual TLS traffic](https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/) where both client and server certificates are validated to ensure that all traffic is encrypted. This provides each service with a strong identity and a reliable system for managing keys and certificates.
 
 Another security benefit of having a sidecar proxy is that you can perform [request authentication](https://istio.io/latest/docs/reference/config/security/request_authentication/) for your service. Istio enables request authentication with JSON Web Token (JWT) validation using a custom authentication provider.

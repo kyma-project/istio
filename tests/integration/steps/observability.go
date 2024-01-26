@@ -13,6 +13,7 @@ import (
 	v12 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 	"log"
 	"strings"
@@ -54,6 +55,91 @@ func EnableAccessLogging(ctx context.Context, provider string) (context.Context,
 	return ctx, err
 }
 
+func EnableTracingAndAccessLogging(ctx context.Context, logsProvider, tracingProvider string) (context.Context, error) {
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return ctx, err
+	}
+	err = retry.Do(func() error {
+		tm := &v1alpha12.Telemetry{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "access-logs",
+				Namespace: "istio-system",
+			},
+			Spec: v1alpha1.Telemetry{
+				AccessLogging: []*v1alpha1.AccessLogging{
+					{
+						Providers: []*v1alpha1.ProviderRef{
+							{Name: logsProvider},
+						},
+					},
+				},
+				Tracing: []*v1alpha1.Tracing{
+					{
+						Providers: []*v1alpha1.ProviderRef{
+							{Name: tracingProvider},
+						},
+					},
+				},
+			},
+		}
+
+		err := k8sClient.Create(context.Background(), tm)
+		if err != nil {
+			return err
+		}
+		ctx = testcontext.AddCreatedTestObjectInContext(ctx, tm)
+		return nil
+	}, testcontext.GetRetryOpts()...)
+	return ctx, err
+}
+
+func CreateTelemetryService(ctx context.Context, collectorDepName, namespace string) (context.Context, error) {
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return ctx, err
+	}
+	err = retry.Do(func() error {
+		svc := &v12.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "telemetry-otlp-traces",
+				Namespace: namespace,
+			},
+			Spec: v12.ServiceSpec{
+				Selector: map[string]string{
+					"component": collectorDepName,
+				},
+				Ports: []v12.ServicePort{
+					{
+						Name:       "otlp-grpc",
+						Port:       4317,
+						Protocol:   "TCP",
+						TargetPort: intstr.FromInt32(4317),
+					},
+					{
+						Name:       "otlp-http",
+						Port:       4318,
+						Protocol:   "TCP",
+						TargetPort: intstr.FromInt32(4318),
+					},
+					{
+						Name: "metrics",
+						Port: 8888,
+					},
+				},
+			},
+		}
+
+		err := k8sClient.Create(context.Background(), svc)
+		if err != nil {
+			return err
+		}
+		ctx = testcontext.AddCreatedTestObjectInContext(ctx, svc)
+		return nil
+	}, testcontext.GetRetryOpts()...)
+	return ctx, err
+}
+
 func VerifyLogEntryForDeployment(ctx context.Context, name, namespace, logKey string) (context.Context, error) {
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
@@ -72,11 +158,12 @@ func VerifyLogEntryForDeployment(ctx context.Context, name, namespace, logKey st
 
 		var pods v12.PodList
 		err = k8sClient.List(ctx, &pods, client.MatchingLabels{
-			"app": dep.Labels["app"],
+			"app": name,
 		})
 		if err != nil {
 			return err
 		}
+
 		found := false
 		for _, pod := range pods.Items {
 			str, err := getLogsFromPodsContainer(ctx, pod, "istio-proxy")
@@ -86,11 +173,11 @@ func VerifyLogEntryForDeployment(ctx context.Context, name, namespace, logKey st
 			if sub := strings.Contains(str, logKey); sub {
 				found = true
 			}
-
 		}
 		if !found {
 			return errors.New("log entry not found")
 		}
+
 		return nil
 	}, testcontext.GetRetryOpts()...)
 	return ctx, err
@@ -105,15 +192,15 @@ func getLogsFromPodsContainer(ctx context.Context, pod v12.Pod, containerName st
 	}
 	req := c.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, logOpt)
 	logs, err := req.Stream(ctx)
+	if err != nil {
+		return "", err
+	}
 	defer func() {
 		e := logs.Close()
 		if e != nil {
 			log.Printf("error closing logs stream: %s", err.Error())
 		}
 	}()
-	if err != nil {
-		return "", err
-	}
 	buf := new(bytes.Buffer)
 	_, err = io.Copy(buf, logs)
 	if err != nil {

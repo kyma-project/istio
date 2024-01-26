@@ -50,6 +50,8 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^Request sent to exposed httpbin, should contain public client IP in "([^"]*)" header$`, steps.ValidatePublicClientIpInHeader)
 	ctx.Step(`^Access logging is enabled for the mesh using "([^"]*)" provider$`, steps.EnableAccessLogging)
 	ctx.Step(`^Envoy logs of deployment "([^"]*)" in namespace "([^"]*)" contains access log entry with "([^"]*)"$`, steps.VerifyLogEntryForDeployment)
+	ctx.Step(`Logging and tracing is enabled for the mesh using providers "([^"]*)" for logs and "([^"]*)" for traces$`, steps.EnableTracingAndAccessLogging)
+	ctx.Step(`Service is created for the otel collector "([^"]*)" in namespace "([^"]*)"`, steps.CreateTelemetryService)
 }
 
 func upgradeInitScenario(ctx *godog.ScenarioContext) {

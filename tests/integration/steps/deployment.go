@@ -39,12 +39,13 @@ func CreateApplicationDeployment(ctx context.Context, appName, namespace string)
 			Replicas: ptr.To(int32(1)),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"app": appName,
+					"app":       appName,
+					"component": "otel-collector",
 				},
 			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"app": appName},
+					Labels: map[string]string{"app": appName, "component": "otel-collector"},
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{

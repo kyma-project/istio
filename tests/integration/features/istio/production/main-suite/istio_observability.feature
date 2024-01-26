@@ -41,3 +41,10 @@ Feature: Observability
     And Envoy logs of deployment "istio-ingressgateway" in namespace "istio-system" contains access log entry with "route_name"
     And Envoy logs of deployment "istio-ingressgateway" in namespace "istio-system" contains access log entry with "traceparent"
     And Envoy logs of deployment "istio-ingressgateway" in namespace "istio-system" contains access log entry with "tracestate"
+
+  Scenario: Istio interacts with the otel collector service defined in meshconfig
+    Given Logging and tracing is enabled for the mesh using providers "stdout-json" for logs and "kyma-traces" for traces
+    And Httpbin application "otel-collector-mock" is running in namespace "kyma-system"
+    And Service is created for the otel collector "otel-collector" in namespace "kyma-system"
+    Then Envoy logs of deployment "otel-collector-mock" in namespace "kyma-system" contains access log entry with "method"
+    Then Envoy logs of deployment "otel-collector-mock" in namespace "kyma-system" contains access log entry with "tracestate"

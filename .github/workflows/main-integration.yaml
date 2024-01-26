@@ -53,11 +53,11 @@ jobs:
       - uses: ./.github/actions/integration-test
         with:
           operator-image-name: "europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{github.sha}}"
-          servers-memory: "10g"
-          agents: 0
+          servers-memory: "16g"
+          agents: 2
 
   istio-performance-test:
-    name: Istio integration test GCP
+    name: Istio performance test
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
     needs: [wait-for-image-build]
@@ -69,7 +69,10 @@ jobs:
         shell: bash
         env:
           GARDENER_TOKEN: ${{ secrets.GARDENER_TOKEN }}
-      - run: make gardener-perf-test
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "1.21"
+      - run: make IMG="europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{github.sha}}" gardener-perf-test
         shell: bash
         env:
           GARDENER_KUBECONFIG: "gardener_kubeconfig.yaml"
@@ -78,6 +81,7 @@ jobs:
           GARDENER_PROVIDER: "gcp"
           GARDENER_REGION: "europe-west3"
           GARDENER_ZONES: "europe-west3-c,europe-west3-b,europe-west3-a"
+          GARDENER_CLUSTER_VERSION: "1.27"
           MACHINE_TYPE: "n2-standard-4"
           DISK_SIZE: 50
           DISK_TYPE: "pd-standard"
@@ -97,7 +101,10 @@ jobs:
         shell: bash
         env:
           GARDENER_TOKEN: ${{ secrets.GARDENER_TOKEN }}
-      - run: make gardener-istio-integration-test
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "1.21"
+      - run: make IMG="europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{github.sha}}" gardener-istio-integration-test
         shell: bash
         env:
           GARDENER_KUBECONFIG: "gardener_kubeconfig.yaml"
@@ -106,17 +113,61 @@ jobs:
           GARDENER_PROVIDER: "gcp"
           GARDENER_REGION: "europe-west3"
           GARDENER_ZONES: "europe-west3-c,europe-west3-b,europe-west3-a"
+          GARDENER_CLUSTER_VERSION: "1.27"
           MACHINE_TYPE: "n2-standard-4"
           DISK_SIZE: 50
           DISK_TYPE: "pd-standard"
           SCALER_MAX: 20
           SCALER_MIN: 3
+      - uses: actions/upload-artifact@v3
+        if: always()
+        name: Export no sidecar summary
+        with:
+          name: no-sidecar
+          path: tests/performance/summary-no-sidecar.html
+      - uses: actions/upload-artifact@v3
+        if: always()
+        name: Export sidecar summary
+        with:
+          name: sidecar
+          path: tests/performance/summary-sidecar.html
+
+  istio-integration-aws:
+    name: Istio integration test AWS
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: ./tests/integration/scripts/gardener-kubeconfig.sh
+        shell: bash
+        env:
+          GARDENER_TOKEN: ${{ secrets.GARDENER_TOKEN }}
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "1.21"
+      - run: make IMG=${{ europe-docker.pkg.dev/kyma-project/prod/istio-manager:v20240122-fe11aa2c }} gardener-istio-integration-test
+        shell: bash
+        env:
+          GARDENER_KUBECONFIG: "gardener_kubeconfig.yaml"
+          GARDENER_PROJECT_NAME: "goatz"
+          GARDENER_PROVIDER_SECRET_NAME: "aws-gardener-access"
+          GARDENER_PROVIDER: "aws"
+          GARDENER_CLUSTER_VERSION: "1.27"
+          GARDENER_REGION: "eu-west-1"
+          GARDENER_ZONES: "eu-west-1b,eu-west-1c,eu-west-1a"
+          MACHINE_TYPE: "m5.xlarge"
+          DISK_SIZE: 50
+          DISK_TYPE: "gp2"
+          SCALER_MAX: 3
+          SCALER_MIN: 1
 
   slack_failed_notification:
     name: Slack Notification
     runs-on: ubuntu-latest
     if: ${{ failure() }}
-    needs: [istio-upgrade-integration-test, istio-integration-test,  istio-integration-gcp]
+    needs: [istio-upgrade-integration-test, istio-integration-test,  istio-integration-gcp, istio-performance-test, istio-integration-aws]
     steps:
       - uses: actions/checkout@v4
       - name: Notify

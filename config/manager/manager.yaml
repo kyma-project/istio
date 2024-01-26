@@ -5,8 +5,8 @@ metadata:
   namespace: system
   labels:
     control-plane: controller-manager
-    app.kubernetes.io/name: controller-manager
-    app.kubernetes.io/instance: controller-manager-default
+    app.kubernetes.io/name: istio-operator
+    app.kubernetes.io/instance: istio-operator-default
     app.kubernetes.io/component: istio-operator.kyma-project.io
     app.kubernetes.io/part-of: istio
 spec:

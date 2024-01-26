@@ -1,4 +1,4 @@
-cat <<EOF > gardener_kubeconfig.yaml
+cat <<EOF > /home/runner/work/istio/istio/gardener_kubeconfig.yaml
 apiVersion: v1
 kind: Config
 current-context: garden-goatz-cli-test

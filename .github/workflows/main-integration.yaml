@@ -56,38 +56,6 @@ jobs:
           servers-memory: "16g"
           agents: 2
 
-  istio-performance-test:
-    name: Istio performance test
-    runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
-    needs: [wait-for-image-build]
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - run: ./tests/integration/scripts/gardener-kubeconfig.sh
-        shell: bash
-        env:
-          GARDENER_TOKEN: ${{ secrets.GARDENER_TOKEN }}
-      - uses: actions/setup-go@v4
-        with:
-          go-version: "1.21"
-      - run: make IMG="europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{github.sha}}" gardener-perf-test
-        shell: bash
-        env:
-          GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"
-          GARDENER_PROJECT_NAME: "goatz"
-          GARDENER_PROVIDER_SECRET_NAME: "goat"
-          GARDENER_PROVIDER: "gcp"
-          GARDENER_REGION: "europe-west3"
-          GARDENER_ZONES: "europe-west3-c,europe-west3-b,europe-west3-a"
-          GARDENER_CLUSTER_VERSION: "1.27"
-          MACHINE_TYPE: "n2-standard-4"
-          DISK_SIZE: 50
-          DISK_TYPE: "pd-standard"
-          SCALER_MAX: 20
-          SCALER_MIN: 3
-
   istio-integration-gcp:
     name: Istio integration test GCP
     runs-on: ubuntu-latest
@@ -119,18 +87,7 @@ jobs:
           DISK_TYPE: "pd-standard"
           SCALER_MAX: 20
           SCALER_MIN: 3
-      - uses: actions/upload-artifact@v3
-        if: always()
-        name: Export no sidecar summary
-        with:
-          name: no-sidecar
-          path: tests/performance/summary-no-sidecar.html
-      - uses: actions/upload-artifact@v3
-        if: always()
-        name: Export sidecar summary
-        with:
-          name: sidecar
-          path: tests/performance/summary-sidecar.html
+
 
   istio-integration-aws:
     name: Istio integration test AWS
@@ -167,7 +124,7 @@ jobs:
     name: Slack Notification
     runs-on: ubuntu-latest
     if: ${{ failure() }}
-    needs: [istio-upgrade-integration-test, istio-integration-test,  istio-integration-gcp, istio-performance-test, istio-integration-aws]
+    needs: [istio-upgrade-integration-test, istio-integration-test,  istio-integration-gcp, istio-integration-aws]
     steps:
       - uses: actions/checkout@v4
       - name: Notify

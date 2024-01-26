@@ -107,7 +107,7 @@ jobs:
       - run: make IMG="europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{github.sha}}" gardener-istio-integration-test
         shell: bash
         env:
-          GARDENER_KUBECONFIG: "gardener_kubeconfig.yaml"
+          GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"
           GARDENER_PROJECT_NAME: "goatz"
           GARDENER_PROVIDER_SECRET_NAME: "goat"
           GARDENER_PROVIDER: "gcp"
@@ -150,7 +150,6 @@ jobs:
       - run: make IMG=${{ europe-docker.pkg.dev/kyma-project/prod/istio-manager:v20240122-fe11aa2c }} gardener-istio-integration-test
         shell: bash
         env:
-          GARDENER_KUBECONFIG: "gardener_kubeconfig.yaml"
           GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"
           GARDENER_PROJECT_NAME: "goatz"
           GARDENER_PROVIDER_SECRET_NAME: "aws-gardener-access"
@@ -164,40 +163,6 @@ jobs:
           SCALER_MAX: 3
           SCALER_MIN: 1
 
-<<<<<<< HEAD
-=======
-  istio-integration-gcp:
-    name: Istio integration test GCP
-    runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - run: ./tests/integration/scripts/gardener-kubeconfig.sh
-        shell: bash
-        env:
-          GARDENER_TOKEN: ${{ secrets.GARDENER_TOKEN }}
-      - uses: actions/setup-go@v4
-        with:
-          go-version: "1.21"
-      - run: make IMG="europe-docker.pkg.dev/kyma-project/prod/istio-manager:v20240122-fe11aa2c" gardener-istio-integration-test
-        shell: bash
-        env:
-          GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"
-          GARDENER_PROJECT_NAME: "goatz"
-          GARDENER_PROVIDER_SECRET_NAME: "goat"
-          GARDENER_PROVIDER: "gcp"
-          GARDENER_CLUSTER_VERSION: "1.27"
-          GARDENER_REGION: "europe-west3"
-          GARDENER_ZONES: "europe-west3-c,europe-west3-b,europe-west3-a"
-          MACHINE_TYPE: "n2-standard-4"
-          DISK_SIZE: 50
-          DISK_TYPE: "pd-standard"
-          SCALER_MAX: 20
-          SCALER_MIN: 3
-
->>>>>>> 8a34965 (Istio gha a (#17))
   slack_failed_notification:
     name: Slack Notification
     runs-on: ubuntu-latest

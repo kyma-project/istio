@@ -3,10 +3,8 @@ kind: PriorityClass
 metadata:
   name: kyma-priority
   labels:
-    app.kubernetes.io/name: kyma-priority
-    app.kubernetes.io/component: manager
+    app.kubernetes.io/component: operator
     app.kubernetes.io/instance: controller-manager-default
-    app.kubernetes.io/part-of: istio
 value: 2100000
 globalDefault: false
 description: "Used for Istio components that are managed by Kyma Istio Manager and must run in the cluster."

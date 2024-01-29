@@ -18,6 +18,7 @@ labels:
       app.kubernetes.io/version: VERSION
       app.kubernetes.io/part-of: istio
       app.kubernetes.io/name: istio-operator
+      app.kubernetes.io/instance: istio-operator-default
 
 resources:
   - ../crd

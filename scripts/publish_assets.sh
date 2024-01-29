@@ -10,7 +10,7 @@ set -x
 RELEASE_TAG=$1
 RELEASE_ID=$2
 
-IMG="europe-docker.pkg.dev/kyma-project/prod/istio-manager:${RELEASE_TAG}" make generate-manifests
+IMG="europe-docker.pkg.dev/kyma-project/prod/istio-manager:${RELEASE_TAG}" VERSION="${RELEASE_TAG}" make generate-manifests
 
 REPOSITORY=${REPOSITORY:-kyma-project/istio}
 GITHUB_URL=https://uploads.github.com/repos/${REPOSITORY}

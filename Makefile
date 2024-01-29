@@ -194,11 +194,6 @@ generate-manifests: kustomize
 grafana-dashboard: ## Generating Grafana manifests to visualize controller status.
 	cd operator && kubebuilder edit --plugins grafana.kubebuilder.io/v1-alpha
 
-########## Performance Tests ###########
-.PHONY: gardener-perf-test
-gardener-perf-test:
-	./hack/ci/gardener-perf-test.sh
-
 ########## Integration Tests ###########
 PULL_IMAGE_VERSION=PR-${PULL_NUMBER}
 POST_IMAGE_VERSION=v$(shell date '+%Y%m%d')-$(shell printf %.8s ${PULL_BASE_SHA})
@@ -223,6 +218,16 @@ istio-upgrade-integration-test: deploy-latest-release generate-integration-test-
 	# Increased TEST_REQUEST_TIMEOUT to 300s to avoid timeouts on newly created k3s clusters on Prow
 	cd tests/integration &&  TEST_REQUEST_TIMEOUT=300s && EXPORT_RESULT=true go test -v -timeout 10m -run TestIstioUpgrade
 
+########## Gardener specific ###########
+
 .PHONY: gardener-istio-integration-test
 gardener-istio-integration-test:
 	./hack/ci/gardener-integration.sh
+
+.PHONY: gardener-perf-test
+gardener-perf-test:
+	./hack/ci/gardener-perf-test.sh
+
+.PHONY: gardener-aws-integration-test
+gardener-aws-integration-test:
+	./hack/ci/gardener-integration-aws-specific.sh

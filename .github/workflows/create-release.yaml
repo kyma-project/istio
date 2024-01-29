@@ -43,6 +43,7 @@ jobs:
   create-draft:
     name: Create draft release
     runs-on: ubuntu-latest
+    needs: [check-prerequisites]
 
     steps:
       - name: Checkout code

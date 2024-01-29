@@ -4,7 +4,6 @@ metadata:
   labels:
     kyma-project.io/module: istio
     app.kubernetes.io/component: operator
-    app.kubernetes.io/instance: kube-rbac-proxy-default
   name: metrics-reader
 rules:
 - nonResourceURLs:

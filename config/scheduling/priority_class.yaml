@@ -4,7 +4,6 @@ metadata:
   name: kyma-priority
   labels:
     app.kubernetes.io/component: operator
-    app.kubernetes.io/instance: controller-manager-default
 value: 2100000
 globalDefault: false
 description: "Used for Istio components that are managed by Kyma Istio Manager and must run in the cluster."

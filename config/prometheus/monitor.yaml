@@ -5,7 +5,6 @@ kind: ServiceMonitor
 metadata:
   labels:
     control-plane: controller-manager
-    app.kubernetes.io/instance: controller-manager-default
     app.kubernetes.io/component: operator
   name: controller-manager-metrics-monitor
   namespace: system

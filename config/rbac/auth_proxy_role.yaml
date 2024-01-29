@@ -3,7 +3,6 @@ kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/component: operator
-    app.kubernetes.io/instance: kube-rbac-proxy-default
   name: proxy-role
 rules:
 - apiGroups:

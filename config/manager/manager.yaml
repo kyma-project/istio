@@ -5,7 +5,6 @@ metadata:
   namespace: system
   labels:
     control-plane: controller-manager
-    app.kubernetes.io/instance: istio-operator-default
     app.kubernetes.io/component: istio-operator.kyma-project.io
 spec:
   selector:
@@ -21,7 +20,6 @@ spec:
         control-plane: controller-manager
         sidecar.istio.io/inject: "false"
         app.kubernetes.io/component: istio-operator.kyma-project.io
-        app.kubernetes.io/instance: istio-operator-default
     spec:
       # TODO(user): Uncomment the following code to configure the nodeAffinity expression
       # according to the platforms which are supported by your solution. 

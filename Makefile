@@ -233,4 +233,4 @@ gardener-istio-integration-test:
 
 .PHONY: module-version
 module-version:
-	sed -i '.bak' -e 's/VERSION/$(VERSION)/g' config/default/kustomization.yaml
+	sed -i 's/VERSION/$(VERSION)/g' config/default/kustomization.yaml

@@ -3,7 +3,6 @@ kind: ClusterRoleBinding
 metadata:
   labels:
     app.kubernetes.io/component: operator
-    app.kubernetes.io/instance: kube-rbac-proxy-default
   name: proxy-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io

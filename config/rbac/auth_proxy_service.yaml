@@ -4,7 +4,6 @@ metadata:
   labels:
     control-plane: controller-manager
     app.kubernetes.io/component: operator
-    app.kubernetes.io/instance: kube-rbac-proxy-default
   name: controller-manager-metrics-service
   namespace: system
 spec:

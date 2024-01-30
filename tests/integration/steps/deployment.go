@@ -20,7 +20,7 @@ import (
 
 const applicationImage = "europe-docker.pkg.dev/kyma-project/prod/external/kennethreitz/httpbin"
 
-func CreateApplicationDeployment(ctx context.Context, appName, namespace string) (context.Context, error) {
+func CreateDeployment(ctx context.Context, appName, namespace string, container corev1.Container) (context.Context, error) {
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return ctx, err
@@ -48,10 +48,7 @@ func CreateApplicationDeployment(ctx context.Context, appName, namespace string)
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
-						{
-							Name:  appName,
-							Image: applicationImage,
-						},
+						container,
 					},
 				},
 			},
@@ -68,6 +65,15 @@ func CreateApplicationDeployment(ctx context.Context, appName, namespace string)
 	}, testcontext.GetRetryOpts()...)
 
 	return ctx, err
+}
+
+func CreateApplicationDeployment(ctx context.Context, appName, namespace string) (context.Context, error) {
+	c := corev1.Container{
+		Name:  appName,
+		Image: applicationImage,
+	}
+
+	return CreateDeployment(ctx, appName, namespace, c)
 }
 
 func ApplicationHasProxyResourcesSetToCpuAndMemory(ctx context.Context, appName, appNamespace, resourceType, cpu, memory string) error {

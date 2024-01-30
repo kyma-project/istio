@@ -69,6 +69,7 @@ Executing `kcp taskrun` requires the path to the kubeconfig file of the correspo
    ```shell
    kubectl get manifests -n kcp-system -o custom-columns=NAME:metadata.name,STATE:status.state | grep istio
    ```
+<!-- markdown-link-check-disable-next-line -->
 10. Verify that no APIGateway module is in Warning state. This can be done by using the [API-Gateway Monitoring Dashboard](https://plutono.cp.dev.kyma.cloud.sap/d/6meO06VSk/modules-api-gateway?orgId=1).
 11. If there are APIGateway CRs in the warning state, the cluster might have been created without Istio Module. In this case it needs to be enabled in the Kyma CR manually.
 
@@ -108,6 +109,7 @@ because Istio module is not a default module at this time and Istio component is
 
 ##### Verify Migration
 1. Wait for SRE to finish the migration for all clusters
+<!-- markdown-link-check-disable-next-line -->
 2. Check the [Istio Module](https://plutono.cp.stage.kyma.cloud.sap/d/hTm72lVIz/modules-istio?orgId=1) and [API Gateway Module](https://plutono.cp.stage.kyma.cloud.sap/d/6meO06VSk/modules-api-gateway?orgId=1) status on the dashboards
 3. Verify that the number of Istio manifests on Stage Control Plane is equal to the number of runtimes on Stage. First returns the number of runtimes, second the number of manifests.
    ```shell
@@ -155,6 +157,7 @@ because Istio module is not a default module at this time and Istio component is
 
 ##### Verify Migration
 1. Wait for SRE to finish the migration for all clusters
+<!-- markdown-link-check-disable-next-line -->
 2. Check the [Istio Module](https://plutono.cp.kyma.cloud.sap/d/hTm72lVIz/modules-istio?orgId=1) and [API Gateway Module](https://plutono.cp.kyma.cloud.sap/d/6meO06VSk/modules-api-gateway?orgId=1) status on the dashboards
 3. Verify that the number of Istio manifests on Prod Control Plane is equal to the number of runtimes on Prod. First returns the number of runtimes, second the number of manifests.
    ```shell

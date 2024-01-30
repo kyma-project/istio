@@ -52,6 +52,7 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^Envoy logs of deployment "([^"]*)" in namespace "([^"]*)" contains access log entry with "([^"]*)"$`, steps.VerifyLogEntryForDeployment)
 	ctx.Step(`Logging and tracing is enabled for the mesh using providers "([^"]*)" for logs and "([^"]*)" for traces$`, steps.EnableTracingAndAccessLogging)
 	ctx.Step(`Service is created for the otel collector "([^"]*)" in namespace "([^"]*)"`, steps.CreateTelemetryService)
+	ctx.Step(`OTEL Collector mock "([^"]*)" is running in namespace "([^"]*)"`, steps.CreateTelemetryCollectorMock)
 }
 
 func upgradeInitScenario(ctx *godog.ScenarioContext) {

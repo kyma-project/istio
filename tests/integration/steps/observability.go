@@ -10,18 +10,21 @@ import (
 	"istio.io/api/telemetry/v1alpha1"
 	v1alpha12 "istio.io/client-go/pkg/apis/telemetry/v1alpha1"
 	v1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	v12 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/utils/ptr"
 	"log"
 	"strings"
 
-	//"k8s.io/client-go"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 )
+
+const collectorMockImage = "europe-docker.pkg.dev/kyma-project/prod/external/kennethreitz/httpbin"
 
 func EnableAccessLogging(ctx context.Context, provider string) (context.Context, error) {
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
@@ -91,6 +94,57 @@ func EnableTracingAndAccessLogging(ctx context.Context, logsProvider, tracingPro
 		ctx = testcontext.AddCreatedTestObjectInContext(ctx, tm)
 		return nil
 	}, testcontext.GetRetryOpts()...)
+	return ctx, err
+}
+
+func CreateTelemetryCollectorMock(ctx context.Context, name, namespace string) (context.Context, error) {
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return ctx, err
+	}
+
+	dep := v1.Deployment{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "apps/v1",
+			Kind:       "Deployment",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: v1.DeploymentSpec{
+			Replicas: ptr.To(int32(1)),
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"app":       name,
+					"component": name,
+				},
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{"app": name, "component": name},
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:  name,
+							Image: collectorMockImage,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	err = retry.Do(func() error {
+		err := k8sClient.Create(context.TODO(), &dep)
+		if err != nil {
+			return err
+		}
+		ctx = testcontext.AddCreatedTestObjectInContext(ctx, &dep)
+		return nil
+	}, testcontext.GetRetryOpts()...)
+
 	return ctx, err
 }
 

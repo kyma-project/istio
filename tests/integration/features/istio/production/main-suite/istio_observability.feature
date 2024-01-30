@@ -10,7 +10,7 @@ Feature: Observability
     And Istio gateway "test-gateway" is configured in namespace "default"
     And Istio injection is "enabled" in namespace "default"
 
-  Scenario: Logs from ingress-gateway and the sidecar are present and in correct format
+  Scenario: Logs from stdout-json envoyFileAccessLog provider are in correct format
     Given Access logging is enabled for the mesh using "stdout-json" provider
     And Httpbin application "httpbin" is running in namespace "default"
     And Virtual service "httpbin" exposing service "httpbin.default.svc.cluster.local" with port "8000" by gateway "default/test-gateway" is configured in namespace "default"
@@ -42,9 +42,10 @@ Feature: Observability
     And Envoy logs of deployment "istio-ingressgateway" in namespace "istio-system" contains access log entry with "traceparent"
     And Envoy logs of deployment "istio-ingressgateway" in namespace "istio-system" contains access log entry with "tracestate"
 
-  Scenario: Istio interacts with the otel collector service defined in meshconfig
+  Scenario: Istio calls OpenTelemetry API on default service configured in kyma-traces extension provider
     Given Logging and tracing is enabled for the mesh using providers "stdout-json" for logs and "kyma-traces" for traces
-    And Httpbin application "otel-collector-mock" is running in namespace "kyma-system"
-    And Service is created for the otel collector "otel-collector" in namespace "kyma-system"
+    # For a simpler setup we use a httpbin application as OpenTelemetry collector, because we only want to verify that the OpenTelemetry API is called by checking the access logs of the httpbin.
+    And OTEL Collector mock "otel-collector-mock" is running in namespace "kyma-system"
+    And Service is created for the otel collector "otel-collector-mock" in namespace "kyma-system"
     Then Envoy logs of deployment "otel-collector-mock" in namespace "kyma-system" contains access log entry with "method"
     Then Envoy logs of deployment "otel-collector-mock" in namespace "kyma-system" contains access log entry with "tracestate"

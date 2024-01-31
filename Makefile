@@ -40,6 +40,13 @@ COMPONENT_CLI_VERSION ?= latest
 # It is required for upgrade integration test
 TARGET_BRANCH ?= ""
 
+# On Mac OS, install gsed with homebrew
+SED ?= sed
+
+ifeq ($(shell uname), Darwin)
+	SED = gsed
+endif
+
 ##@ General
 
 # The help target prints out all targets with their descriptions organized
@@ -233,4 +240,4 @@ gardener-istio-integration-test:
 
 .PHONY: module-version
 module-version:
-	sed -i 's/VERSION/$(VERSION)/g' config/default/kustomization.yaml
+	$(SED) -i 's/VERSION/$(VERSION)/g' config/default/kustomization.yaml

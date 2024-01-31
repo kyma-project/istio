@@ -48,6 +48,11 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^Request to path "([^"]*)" should have response code "([^"]*)"$`, steps.ValidateResponseStatusCode)
 	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" is "([^"]*)"`, steps.ResourceIsPresent)
 	ctx.Step(`^Request sent to exposed httpbin, should contain public client IP in "([^"]*)" header$`, steps.ValidatePublicClientIpInHeader)
+	ctx.Step(`^Access logging is enabled for the mesh using "([^"]*)" provider$`, steps.EnableAccessLogging)
+	ctx.Step(`^Log of container "([^"]*)" in deployment "([^"]*)" in namespace "([^"]*)" contains "([^"]*)"$`, steps.ContainerLogContainsString)
+	ctx.Step(`^Tracing is enabled for the mesh using provider "([^"]*)"$`, steps.EnableTracing)
+	ctx.Step(`^Service is created for the otel collector "([^"]*)" in namespace "([^"]*)"$`, steps.CreateOpenTelemetryService)
+	ctx.Step(`^OTEL Collector mock "([^"]*)" is running in namespace "([^"]*)"$`, steps.CreateTelemetryCollectorMock)
 }
 
 func upgradeInitScenario(ctx *godog.ScenarioContext) {

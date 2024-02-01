@@ -6,8 +6,6 @@ metadata:
     controller-gen.kubebuilder.io/version: v0.10.0
   creationTimestamp: null
   name: istios.operator.kyma-project.io
-  labels:
-    app.kubernetes.io/component: operator
 spec:
   group: operator.kyma-project.io
   names:

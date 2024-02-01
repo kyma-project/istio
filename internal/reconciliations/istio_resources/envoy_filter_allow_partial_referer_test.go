@@ -42,6 +42,7 @@ var _ = Describe("Apply", func() {
 		Expect(s.Items[0].Annotations).To(Not(BeNil()))
 		Expect(s.Items[0].Annotations[EnvoyFilterAnnotation]).To(Not(BeNil()))
 		Expect(s.Items[0].Annotations[resources.DisclaimerKey]).To(Not(BeNil()))
+		Expect(s.Items[0].Labels).To(HaveKeyWithValue("kyma-project.io/module", "istio"))
 	})
 
 	It("should return not changed and annotate with timestamp if no change is needed", func() {

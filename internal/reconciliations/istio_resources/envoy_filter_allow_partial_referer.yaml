@@ -3,6 +3,8 @@ kind: EnvoyFilter
 metadata:
   name: kyma-referer
   namespace: istio-system
+  labels:
+    kyma-project.io/module: istio
 spec:
   configPatches:
     - applyTo: BOOTSTRAP

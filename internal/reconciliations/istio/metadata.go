@@ -32,6 +32,8 @@ func updateResourcesMetadataForSelector(ctx context.Context, c client.Client) er
 		// apps
 		{Group: "apps", Version: "v1", Kind: "Deployment"},
 		{Group: "apps", Version: "v1", Kind: "DaemonSet"},
+		// policy
+		{Group: "policy", Version: "v1", Kind: "PodDisruptionBudget"},
 		// autoscaling
 		{Group: "autoscaling", Version: "v2", Kind: "HorizontalPodAutoscaler"},
 		// rbac

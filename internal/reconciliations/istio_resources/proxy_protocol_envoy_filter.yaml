@@ -3,6 +3,8 @@ kind: EnvoyFilter
 metadata:
   name: proxy-protocol
   namespace: istio-system
+  labels:
+    kyma-project.io/module: istio
 spec:
   configPatches:
     - applyTo: LISTENER_FILTER

@@ -2,6 +2,7 @@ package istio
 
 import (
 	"context"
+
 	"github.com/kyma-project/istio/operator/pkg/labels"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
 	appsv1 "k8s.io/api/apps/v1"
@@ -79,6 +80,11 @@ func updateResourcesMetadataForSelector(ctx context.Context, c client.Client) er
 				updateObjectLabels(&ds.ObjectMeta)
 				updateObjectLabels(&ds.Spec.Template.ObjectMeta)
 				obj = &ds
+			case "RoleBinding":
+				l := u.GetLabels()                            // forgot to set module labels
+				l["some-special-role-binding-label"] = "blah" // want to have custom rolebinding label
+				u.SetLabels(l)
+				obj = u
 			// handle without conversion
 			default:
 				l := labels.SetModuleLabels(u.GetLabels())

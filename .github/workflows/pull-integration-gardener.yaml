@@ -1,7 +1,7 @@
-# This workflow is responsible for all kinds of integration tests run on pull request to release branch.
+ # This workflow is responsible for all kinds of integration tests run on pull request to release branch.
 # Those tests depend on a container image, so in the first job we wait for the image build to succeed.
 
-name: PR Integration Release
+name: PR Gardener Integration
 
 on:
   # pull_request_target runs workflows from the base of PR
@@ -26,8 +26,6 @@ jobs:
     if: github.event.pull_request.draft == false
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - uses: ./.github/actions/wait-for-job-succeed-or-fail
         with:
           job-name: 'pull-istio-operator-build'

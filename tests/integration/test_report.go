@@ -20,10 +20,10 @@ func generateReport(suiteName string) error {
 		Config: html.Data{
 			InputJsonPath:    "cucumber-report.json",
 			OutputHtmlFolder: htmlOutputDir,
-			Title:            "Kyma Istio component tests",
+			Title:            "Kyma Istio Module tests",
 			Metadata: models.Metadata{
 				Platform:        runtime.GOOS,
-				TestEnvironment: "Gardener GCP",
+				TestEnvironment: "Istio module",
 				Parallel:        "Scenarios",
 				Executed:        "Remote",
 				AppVersion:      "main",

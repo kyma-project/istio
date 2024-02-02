@@ -18,13 +18,15 @@ package main
 
 import (
 	"flag"
-	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	"os"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"time"
+
+	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
+
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -79,6 +81,7 @@ func main() {
 	opts := zap.Options{
 		Development: true,
 	}
+
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
 

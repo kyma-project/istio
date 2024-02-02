@@ -144,17 +144,16 @@ spec:
       holdApplicationUntilProxyStarts: true
       proxyMetadata:
         BOOTSTRAP_XDS_AGENT: "true"
+      tracingServiceName: CANONICAL_NAME_ONLY
     defaultProviders:
       tracing: []
     enablePrometheusMerge: false
     enableTracing: false
     extensionProviders:
     - name: kyma-traces
-      opencensus:
-        context:
-        - W3C_TRACE_CONTEXT
-        port: 55678
-        service: telemetry-trace-collector-internal.kyma-system.svc.cluster.local
+      opentelemetry:
+          service: "telemetry-otlp-traces.kyma-system.svc.cluster.local"
+          port: 4317
     - envoyFileAccessLog:
         logFormat:
           labels: {}

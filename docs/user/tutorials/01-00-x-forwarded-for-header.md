@@ -5,7 +5,8 @@ client IP address to restrict their access. The ability to provide client attrib
 To forward client attributes to destination workloads, proxies use the X-Forwarded-For (XFF) header. For more information on XFF, see 
 the [IETF’s RFC documentation](https://datatracker.ietf.org/doc/html/rfc7239) and [Envoy documentation](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_conn_man/headers#x-forwarded-for).
 
-> **NOTE:** The X-Forwarded-For header is only supported on AWS clusters.
+> [!NOTE]
+>  The X-Forwarded-For header is only supported on AWS clusters.
 
 ## Prerequisites
 

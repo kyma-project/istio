@@ -21,4 +21,4 @@ function cleanup() {
 # Cleanup on exit, be it successful or on fail
 trap cleanup EXIT INT
 
-make install deploy istio-integration-test
+make aws-integration-test

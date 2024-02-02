@@ -1,7 +1,7 @@
 # This workflow is responsible for all kinds of integration tests run on pull request to release branch.
 # Those tests depend on a container image, so in the first job we wait for the image build to succeed.
 
-name: PR Integration Release
+name: PR Integration Gardener
 
 on:
   # pull_request_target runs workflows from the base of PR
@@ -51,7 +51,7 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: "1.21"
-      - run: make IMG="europe-docker.pkg.dev/kyma-project/prod/istio-manager:PR-{{github.event.number}}" gardener-istio-integration-test
+      - run: make IMG="europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}" gardener-istio-integration-test
         shell: bash
         env:
           GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"
@@ -84,7 +84,7 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: "1.21"
-      - run: make IMG="europe-docker.pkg.dev/kyma-project/prod/istio-manager:PR-{{github.event.number}}" gardener-aws-integration-test
+      - run: make IMG="europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}" gardener-aws-integration-test
         shell: bash
         env:
           GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"

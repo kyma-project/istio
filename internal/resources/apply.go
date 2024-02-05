@@ -2,7 +2,8 @@ package resources
 
 import (
 	"context"
-	moduleVersion "github.com/kyma-project/istio/operator/pkg/version"
+
+	"github.com/kyma-project/istio/operator/pkg/version"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -19,12 +20,7 @@ func Apply(ctx context.Context, k8sClient client.Client, manifest []byte, owner 
 		return controllerutil.OperationResultNone, err
 	}
 
-	versionedLabels := resource.GetLabels()
-	if versionedLabels == nil {
-		versionedLabels = make(map[string]string)
-	}
-	versionedLabels["app.kubernetes.io/version"] = moduleVersion.GetModuleVersion()
-	resource.SetLabels(versionedLabels)
+	ApplyVersionedLabels(&resource)
 
 	resource, result, err := createOrUpdateResource(ctx, k8sClient, resource, owner)
 	if err != nil {
@@ -39,6 +35,15 @@ func Apply(ctx context.Context, k8sClient client.Client, manifest []byte, owner 
 	}
 
 	return result, nil
+}
+
+func ApplyVersionedLabels(resource *unstructured.Unstructured) {
+	versionedLabels := resource.GetLabels()
+	if versionedLabels == nil {
+		versionedLabels = make(map[string]string)
+	}
+	versionedLabels["app.kubernetes.io/version"] = version.GetModuleVersion()
+	resource.SetLabels(versionedLabels)
 }
 
 func unmarshalManifest(manifest []byte) (unstructured.Unstructured, error) {

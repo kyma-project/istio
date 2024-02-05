@@ -3,9 +3,9 @@ package istio_resources
 import (
 	"context"
 	_ "embed"
-	"github.com/kyma-project/istio/operator/internal/resources"
-	moduleVersion "github.com/kyma-project/istio/operator/pkg/version"
 	"time"
+
+	"github.com/kyma-project/istio/operator/internal/resources"
 
 	"github.com/kyma-project/istio/operator/internal/filter"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
@@ -58,14 +58,9 @@ func (e EnvoyFilterAllowPartialReferer) reconcile(ctx context.Context, k8sClient
 		return controllerutil.OperationResultNone, err
 	}
 
-	spec := envoyFilter.Object["spec"]
-	versionedLabels := envoyFilter.GetLabels()
-	if versionedLabels == nil {
-		versionedLabels = make(map[string]string)
-	}
-	versionedLabels["app.kubernetes.io/version"] = moduleVersion.GetModuleVersion()
-	envoyFilter.SetLabels(versionedLabels)
+	resources.ApplyVersionedLabels(&envoyFilter)
 
+	spec := envoyFilter.Object["spec"]
 	result, err := controllerutil.CreateOrUpdate(ctx, k8sClient, &envoyFilter, func() error {
 		envoyFilter.Object["spec"] = spec
 		return nil

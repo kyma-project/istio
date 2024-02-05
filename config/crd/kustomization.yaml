@@ -20,5 +20,8 @@ patchesStrategicMerge:
 configurations:
 - kustomizeconfig.yaml
 
-commonLabels:
-  app.kubernetes.io/component: operator
+labels:
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/component: operator

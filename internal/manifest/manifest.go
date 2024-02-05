@@ -22,6 +22,7 @@ const (
 type TemplateData struct {
 	IstioVersion   string
 	IstioImageBase string
+	ModuleVersion  string
 }
 
 type Merger interface {
@@ -99,7 +100,7 @@ func applyIstioCR(istioCR *operatorv1alpha1.Istio, toBeInstalledIop istioOperato
 
 func parseManifestWithTemplate(templateRaw string, data TemplateData) ([]byte, error) {
 	if data.IstioVersion == "" {
-		return nil, errors.New("IstioImageBase cannot be empty")
+		return nil, errors.New("IstioVersion cannot be empty")
 	}
 
 	if data.IstioImageBase == "" {

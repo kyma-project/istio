@@ -5,6 +5,11 @@ metadata:
   namespace: istio-system
   labels:
     kyma-project.io/module: istio
+    app.kubernetes.io/component: operator
+    app.kubernetes.io/part-of: istio
+    app.kubernetes.io/version: "{{ .ModuleVersion }}"
+    app.kubernetes.io/name: istio-operator
+    app.kubernetes.io/instance: istio-operator-default
 spec:
   components:
     base:

@@ -5,15 +5,11 @@ metadata:
   namespace: system
   labels:
     control-plane: controller-manager
-    app.kubernetes.io/name: deployment
-    app.kubernetes.io/instance: controller-manager
-    app.kubernetes.io/component: manager
-    app.kubernetes.io/created-by: istio
-    app.kubernetes.io/part-of: istio
-    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/component: istio-operator.kyma-project.io
 spec:
   selector:
     matchLabels:
+      app.kubernetes.io/component: istio-operator.kyma-project.io
       control-plane: controller-manager
   replicas: 1
   template:
@@ -23,6 +19,7 @@ spec:
       labels:
         control-plane: controller-manager
         sidecar.istio.io/inject: "false"
+        app.kubernetes.io/component: istio-operator.kyma-project.io
     spec:
       # TODO(user): Uncomment the following code to configure the nodeAffinity expression
       # according to the platforms which are supported by your solution. 

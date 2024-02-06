@@ -6,3 +6,9 @@ resources:
 - serviceentries
 - authorizationpolicies
 - sidecars
+
+labels:
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/component: operator

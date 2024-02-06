@@ -2,11 +2,12 @@ package istio_resources
 
 import (
 	"context"
+
 	"github.com/kyma-project/istio/operator/internal/resources"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	securityv1beta1 "istio.io/client-go/pkg/apis/security/v1beta1"
+	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/yaml"
@@ -23,7 +24,7 @@ var _ = Describe("Apply", func() {
 
 	It("should return created if no resource was present", func() {
 		client := createFakeClient()
-		sample := NewPeerAuthenticationMtls(client)
+		sample := NewProxyProtocolEnvoyFilter(client)
 
 		//when
 		changed, err := sample.reconcile(context.TODO(), client, owner, templateValues)
@@ -32,7 +33,7 @@ var _ = Describe("Apply", func() {
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(changed).To(Equal(controllerutil.OperationResultCreated))
 
-		var s securityv1beta1.PeerAuthenticationList
+		var s networkingv1alpha3.EnvoyFilterList
 		listErr := client.List(context.TODO(), &s)
 		Expect(listErr).To(Not(HaveOccurred()))
 		Expect(s.Items).To(HaveLen(1))
@@ -52,13 +53,13 @@ var _ = Describe("Apply", func() {
 
 	It("should return not changed if no change was applied", func() {
 		//given
-		var p securityv1beta1.PeerAuthentication
-		err := yaml.Unmarshal(manifest_pa_mtls, &p)
+		var p networkingv1alpha3.EnvoyFilter
+		err := yaml.Unmarshal(proxyProtocolEnvoyFilter, &p)
 		Expect(err).To(Not(HaveOccurred()))
 
 		client := createFakeClient(&p)
 
-		sample := NewPeerAuthenticationMtls(client)
+		sample := NewProxyProtocolEnvoyFilter(client)
 
 		//when
 		changed, err := sample.reconcile(context.TODO(), client, owner, templateValues)
@@ -67,7 +68,7 @@ var _ = Describe("Apply", func() {
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(changed).To(Equal(controllerutil.OperationResultNone))
 
-		var s securityv1beta1.PeerAuthenticationList
+		var s networkingv1alpha3.EnvoyFilterList
 		listErr := client.List(context.TODO(), &s)
 		Expect(listErr).To(Not(HaveOccurred()))
 		Expect(s.Items).To(HaveLen(1))
@@ -78,14 +79,14 @@ var _ = Describe("Apply", func() {
 
 	It("should return updated if change was applied", func() {
 		//given
-		var p securityv1beta1.PeerAuthentication
-		err := yaml.Unmarshal(manifest_pa_mtls, &p)
+		var p networkingv1alpha3.EnvoyFilter
+		err := yaml.Unmarshal(proxyProtocolEnvoyFilter, &p)
 		Expect(err).To(Not(HaveOccurred()))
 
-		p.Spec.Mtls.Mode = 0
+		p.Spec.Priority = 123
 		client := createFakeClient(&p)
 
-		sample := NewPeerAuthenticationMtls(client)
+		sample := NewProxyProtocolEnvoyFilter(client)
 
 		//when
 		changed, err := sample.reconcile(context.TODO(), client, owner, templateValues)
@@ -94,7 +95,7 @@ var _ = Describe("Apply", func() {
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(changed).To(Equal(controllerutil.OperationResultUpdated))
 
-		var s securityv1beta1.PeerAuthenticationList
+		var s networkingv1alpha3.EnvoyFilterList
 		listErr := client.List(context.TODO(), &s)
 		Expect(listErr).To(Not(HaveOccurred()))
 		Expect(s.Items).To(HaveLen(1))

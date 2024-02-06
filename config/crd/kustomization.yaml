@@ -19,3 +19,9 @@ patchesStrategicMerge:
 # the following config is for teaching kustomize how to do kustomization for CRDs.
 configurations:
 - kustomizeconfig.yaml
+
+labels:
+  - includeSelectors: true
+    includeTemplates: true
+    pairs:
+      app.kubernetes.io/component: operator

@@ -2,6 +2,8 @@ package resources
 
 import (
 	"context"
+
+	"github.com/kyma-project/istio/operator/pkg/version"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -10,13 +12,15 @@ import (
 )
 
 // Apply creates or updates a resource in the given manifest in the cluster. The resource is annotated with a disclaimer.
-// If the owner is provided, a OwnerReference is added to the resource. The function returns the operation result depending on the action taken.
+// If the owner is provided, an OwnerReference is added to the resource. The function returns the operation result depending on the action taken.
 // The function supports update operations on resources with spec and data fields.
 func Apply(ctx context.Context, k8sClient client.Client, manifest []byte, owner *metav1.OwnerReference) (controllerutil.OperationResult, error) {
 	resource, err := unmarshalManifest(manifest)
 	if err != nil {
 		return controllerutil.OperationResultNone, err
 	}
+
+	ApplyVersionedLabels(&resource)
 
 	resource, result, err := createOrUpdateResource(ctx, k8sClient, resource, owner)
 	if err != nil {
@@ -31,6 +35,15 @@ func Apply(ctx context.Context, k8sClient client.Client, manifest []byte, owner 
 	}
 
 	return result, nil
+}
+
+func ApplyVersionedLabels(resource *unstructured.Unstructured) {
+	versionedLabels := resource.GetLabels()
+	if versionedLabels == nil {
+		versionedLabels = make(map[string]string)
+	}
+	versionedLabels["app.kubernetes.io/version"] = version.GetModuleVersion()
+	resource.SetLabels(versionedLabels)
 }
 
 func unmarshalManifest(manifest []byte) (unstructured.Unstructured, error) {

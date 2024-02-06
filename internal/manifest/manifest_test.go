@@ -20,6 +20,7 @@ import (
 var TestTemplateData = TemplateData{
 	IstioVersion:   "1.16.1",
 	IstioImageBase: "distroless",
+	ModuleVersion:  "dev",
 }
 
 func TestManifest(t *testing.T) {
@@ -98,7 +99,7 @@ var _ = Describe("Manifest merge", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 	})
 
-	It("should return merged configuration, with IstioVersion and IstioImageBase coming from template", func() {
+	It("should return merged configuration, with IstioVersion, IstioImageBase and ModuleVersion coming from template", func() {
 		// given
 		sut := IstioMerger{
 			workingDir: workingDir,
@@ -113,6 +114,8 @@ var _ = Describe("Manifest merge", func() {
 
 		iop := readIOP(mergedIstioOperatorPath)
 		Expect(iop.Spec.Tag.GetStringValue()).To(Equal("1.16.1-distroless"))
+		Expect(iop.GetLabels()).ToNot(BeNil())
+		Expect(iop.GetLabels()).To(HaveKeyWithValue("app.kubernetes.io/version", "dev"))
 		err = os.Remove(mergedIstioOperatorPath)
 		Expect(err).ShouldNot(HaveOccurred())
 	})

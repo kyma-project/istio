@@ -3,6 +3,7 @@ package resources_test
 import (
 	"context"
 	_ "embed"
+
 	"github.com/kyma-project/istio/operator/internal/resources"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -43,6 +44,29 @@ var _ = Describe("Apply", func() {
 		Expect(err).ToNot(HaveOccurred())
 		ok := resources.HasManagedByDisclaimer(unstr)
 		Expect(ok).To(BeTrue())
+	})
+
+	It("should create resource containing app.kubernetes.io/version label", func() {
+		// given
+		k8sClient := createFakeClient()
+
+		// when
+		res, err := resources.Apply(context.Background(), k8sClient, resourceWithSpec, nil)
+
+		// then
+		Expect(err).ToNot(HaveOccurred())
+		Expect(res).To(Equal(controllerutil.OperationResultCreated))
+
+		var pa v1beta1.PeerAuthentication
+		Expect(yaml.Unmarshal(resourceWithSpec, &pa)).Should(Succeed())
+		Expect(k8sClient.Get(context.Background(), ctrlClient.ObjectKeyFromObject(&pa), &pa)).Should(Succeed())
+		um, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&pa)
+		unstr := unstructured.Unstructured{Object: um}
+		Expect(err).ToNot(HaveOccurred())
+
+		Expect(unstr.GetLabels()).ToNot(BeNil())
+		Expect(unstr.GetLabels()).To(HaveLen(1))
+		Expect(unstr.GetLabels()).To(HaveKeyWithValue("app.kubernetes.io/version", "dev"))
 	})
 
 	It("should update resource with spec and add disclaimer", func() {

@@ -3,6 +3,7 @@ package istio
 import (
 	"context"
 	"fmt"
+	moduleVersion "github.com/kyma-project/istio/operator/pkg/version"
 
 	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/internal/webhooks"
@@ -67,7 +68,7 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha1.
 
 		// As we define default IstioOperator values in a templated manifest, we need to apply the istio version and values from
 		// Istio CR to this default configuration to get the final IstoOperator that is used for installing and updating Istio.
-		templateData := manifest.TemplateData{IstioVersion: i.IstioVersion, IstioImageBase: i.IstioImageBase}
+		templateData := manifest.TemplateData{IstioVersion: i.IstioVersion, IstioImageBase: i.IstioImageBase, ModuleVersion: moduleVersion.GetModuleVersion()}
 
 		cSize, err := clusterconfig.EvaluateClusterSize(context.Background(), i.Client)
 		if err != nil {
@@ -116,6 +117,9 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha1.
 			return described_errors.NewDescribedError(err, "Could not restart Istio Ingress GW deployment")
 		}
 
+		if err := updateResourcesMetadataForSelector(ctx, i.Client); err != nil {
+			return described_errors.NewDescribedError(err, "could not update managed metadata")
+		}
 		// We use the installation finalizer to track if the deletion was already executed so can make the uninstallation process more reliable.
 	} else if shouldDelete(istioCR) && hasInstallationFinalizer(istioCR) {
 		ctrl.Log.Info("Starting Istio uninstall")

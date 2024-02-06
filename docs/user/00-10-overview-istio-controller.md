@@ -63,3 +63,29 @@ Moreover, Istio Ingress Gateway Envoy does not append the private IP address of 
 ## TLS termination
 The `istio-ingressgateway` Service creates a Layer 4 load balancer, that does not terminate TLS connections. Within the Istio service mesh,
 the TLS termination process is handled by the Ingress Gateway Envoy proxy, which serves as a middleman between the incoming traffic and the backend services.
+
+## Labeling Resources
+
+In accordance with the decision [Consistent Labeling of Kyma Modules](https://github.com/kyma-project/community/issues/864), the Istio Operator resources use the standard Kubernetes labels:
+
+
+```yaml
+kyma-project.io/module: istio
+app.kubernetes.io/name: istio-operator
+app.kubernetes.io/instance: istio-operator-default
+app.kubernetes.io/version: "x.x.x"
+app.kubernetes.io/component: operator
+app.kubernetes.io/part-of: istio
+```
+
+All other resources, such as the external `istio` component and its respective resources, use only the Kyma module label:
+
+```yaml
+kyma-project.io/module: istio
+```
+
+Run this command to get all resources created by the Istio module:
+
+```bash
+kubectl get all|<resources-kind> -A -l kyma-project.io/module=istio
+```

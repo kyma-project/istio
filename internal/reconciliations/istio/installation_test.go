@@ -133,7 +133,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(istioCR.Status.State).To(Equal(operatorv1alpha1.Processing))
 
 		Expect(istioCR.Status.Conditions).ToNot(BeNil())
-		Expect((*istioCR.Status.Conditions)).To(HaveLen(1))
+		Expect(*istioCR.Status.Conditions).To(HaveLen(1))
 		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
 		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonIstioInstallSucceeded)))
 		Expect((*istioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
@@ -1115,10 +1115,63 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 
 		Expect(istioCR.Status.Conditions).ToNot(BeNil())
-		Expect((*istioCR.Status.Conditions)).To(HaveLen(1))
+		Expect(*istioCR.Status.Conditions).To(HaveLen(1))
 		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
 		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonIstioCRsDangling)))
 		Expect((*istioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
+	})
+
+	It("Should have all istio components labeled with kyma-project.io/module=istio label", func() {
+		numTrustedProxies := 1
+		istioCR := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+			Name:            "default",
+			ResourceVersion: "1",
+			Annotations:     map[string]string{},
+		},
+			Spec: operatorv1alpha1.IstioSpec{
+				Config: operatorv1alpha1.Config{
+					NumTrustedProxies: &numTrustedProxies,
+				},
+			},
+		}
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
+		istioNamespace := createNamespace("istio-system")
+		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway", Labels: map[string]string{"operator.istio.io/component": "IngressGateways"}}}
+		istioDaemonSet := &appsv1.DaemonSet{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-cni-node", Labels: map[string]string{"operator.istio.io/component": "Cni"}}}
+		istioConfigMap := &corev1.ConfigMap{ObjectMeta: v1.ObjectMeta{Name: "istio", Namespace: "istio-system", Labels: map[string]string{"operator.istio.io/component": "Pilot"}}}
+		c := createFakeClient(&istioCR, istiod, istioNamespace, igwDeployment, istioDaemonSet, istioConfigMap)
+		mockClient := mockLibraryClient{}
+		installation := istio.Installation{
+			Client:         c,
+			IstioClient:    &mockClient,
+			IstioVersion:   istioVersion,
+			IstioImageBase: istioImageBase,
+			Merger:         MergerMock{},
+		}
+		statusHandler := status.NewStatusHandler(c)
+
+		// when
+		err := installation.Reconcile(context.TODO(), &istioCR, statusHandler, resourceListPath)
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(mockClient.installCalled).To(BeTrue())
+		Expect(mockClient.uninstallCalled).To(BeFalse())
+
+		cm := corev1.ConfigMap{}
+		cerr := c.Get(context.TODO(), types.NamespacedName{Namespace: "istio-system", Name: "istio"}, &cm)
+		Expect(cerr).ToNot(HaveOccurred())
+		Expect(cm.Labels).To(HaveKeyWithValue("kyma-project.io/module", "istio"))
+
+		d := appsv1.Deployment{}
+		cerr = c.Get(context.TODO(), types.NamespacedName{Namespace: "istio-system", Name: "istio-ingressgateway"}, &d)
+		Expect(cerr).ToNot(HaveOccurred())
+		Expect(d.Labels).To(HaveKeyWithValue("kyma-project.io/module", "istio"))
+		Expect(d.Spec.Template.Labels).To(HaveKeyWithValue("kyma-project.io/module", "istio"))
+
+		ds := appsv1.DaemonSet{}
+		cerr = c.Get(context.TODO(), types.NamespacedName{Namespace: "istio-system", Name: "istio-cni-node"}, &ds)
+		Expect(cerr).ToNot(HaveOccurred())
+		Expect(ds.Labels).To(HaveKeyWithValue("kyma-project.io/module", "istio"))
+		Expect(ds.Spec.Template.Labels).To(HaveKeyWithValue("kyma-project.io/module", "istio"))
 	})
 })
 

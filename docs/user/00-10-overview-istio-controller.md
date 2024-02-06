@@ -65,7 +65,7 @@ the TLS termination process is handled by the Ingress Gateway Envoy proxy, which
 
 ## Labeling Resources
 
-In accordance with the decision [Consistent Labeling of Kyma Modules](https://github.com/kyma-project/community/issues/864), the istio operator resources use the standard Kubernetes labels:
+In accordance with the decision [Consistent Labeling of Kyma Modules](https://github.com/kyma-project/community/issues/864), the Istio Operator resources use the standard Kubernetes labels:
 
 
 ```yaml
@@ -83,7 +83,7 @@ All other resources, such as the external `istio` component and its respective r
 kyma-project.io/module: istio
 ```
 
-Run this command to get all resources created by the istio module:
+Run this command to get all resources created by the Istio module:
 
 ```bash
 kubectl get all|<resources-kind> -A -l kyma-project.io/module=istio

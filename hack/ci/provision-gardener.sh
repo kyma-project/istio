@@ -23,9 +23,9 @@ requiredVars=(
     GARDENER_PROVIDER
     GARDENER_REGION
     GARDENER_ZONES
-    GARDENER_KYMA_PROW_KUBECONFIG
-    GARDENER_KYMA_PROW_PROJECT_NAME
-    GARDENER_KYMA_PROW_PROVIDER_SECRET_NAME
+    GARDENER_KUBECONFIG
+    GARDENER_PROJECT_NAME
+    GARDENER_PROVIDER_SECRET_NAME
     GARDENER_CLUSTER_VERSION
     MACHINE_TYPE
     DISK_SIZE
@@ -48,10 +48,10 @@ export PATH="${PATH}:${PWD}"
 
 kyma version --client
 kyma provision gardener ${GARDENER_PROVIDER} \
-        --secret "${GARDENER_KYMA_PROW_PROVIDER_SECRET_NAME}" \
+        --secret "${GARDENER_PROVIDER_SECRET_NAME}" \
         --name "${CLUSTER_NAME}" \
-        --project "${GARDENER_KYMA_PROW_PROJECT_NAME}" \
-        --credentials "${GARDENER_KYMA_PROW_KUBECONFIG}" \
+        --project "${GARDENER_PROJECT_NAME}" \
+        --credentials "${GARDENER_KUBECONFIG}" \
         --region "${GARDENER_REGION}" \
         --zones "${GARDENER_ZONES}" \
         --type "${MACHINE_TYPE}" \

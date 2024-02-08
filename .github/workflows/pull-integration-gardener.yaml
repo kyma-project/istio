@@ -1,0 +1,101 @@
+# This workflow is responsible for all kinds of integration tests run on pull request to release branch.
+# Those tests depend on a container image, so in the first job we wait for the image build to succeed.
+
+name: PR Integration Gardener
+
+on:
+  # pull_request_target runs workflows from the base of PR
+  # It allows the workflow to get the repository secrets
+  pull_request_target:
+    types: [ synchronize, opened, reopened, ready_for_review ]
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+      - "OWNERS"
+      - "CODEOWNERS"
+      - ".github/**" #Ignoring since the build job isn't triggered on the workflow directory changes
+    branches:
+      - 'release-**'
+      - 'main'
+
+jobs:
+  wait-for-image-build:
+    name: Wait for image build
+    environment: ${{ github.event.pull_request.author_association != 'COLLABORATOR' && github.event.pull_request.author_association != 'OWNER' && 'restricted' || 'internal' }}
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/wait-for-job-succeed-or-fail
+        with:
+          job-name: 'pull-istio-operator-build'
+          github-auth-token: ${{ secrets.GITHUB_TOKEN }}
+
+
+  istio-integration-gcp:
+    name: Istio integration test GCP
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    needs: [wait-for-image-build]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - run: ./tests/integration/scripts/gardener-kubeconfig.sh
+        shell: bash
+        env:
+          GARDENER_TOKEN: ${{ secrets.GARDENER_TOKEN }}
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "1.21"
+      - run: make IMG="europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}" gardener-istio-integration-test
+        shell: bash
+        env:
+          GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"
+          GARDENER_PROJECT_NAME: "goatz"
+          GARDENER_PROVIDER_SECRET_NAME: "goat"
+          GARDENER_PROVIDER: "gcp"
+          GARDENER_REGION: "europe-west3"
+          GARDENER_ZONES: "europe-west3-c,europe-west3-b,europe-west3-a"
+          GARDENER_CLUSTER_VERSION: "1.27"
+          MACHINE_TYPE: "n2-standard-4"
+          DISK_SIZE: 50
+          DISK_TYPE: "pd-standard"
+          SCALER_MAX: 20
+          SCALER_MIN: 3
+
+  istio-integration-aws-specific:
+    name: Istio integration test AWS specific
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    needs: [wait-for-image-build]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - run: ./tests/integration/scripts/gardener-kubeconfig.sh
+        shell: bash
+        env:
+          GARDENER_TOKEN: ${{ secrets.GARDENER_TOKEN }}
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "1.21"
+      - run: make IMG="europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}" gardener-aws-integration-test
+        shell: bash
+        env:
+          GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"
+          GARDENER_PROJECT_NAME: "goatz"
+          GARDENER_PROVIDER_SECRET_NAME: "aws-gardener-access"
+          GARDENER_PROVIDER: "aws"
+          GARDENER_CLUSTER_VERSION: "1.27"
+          GARDENER_REGION: "eu-west-1"
+          GARDENER_ZONES: "eu-west-1b,eu-west-1c,eu-west-1a"
+          MACHINE_TYPE: "m5.xlarge"
+          DISK_SIZE: 50
+          DISK_TYPE: "gp2"
+          SCALER_MAX: 3
+          SCALER_MIN: 1

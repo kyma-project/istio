@@ -13,6 +13,29 @@ header:
 body:
 - widget: Tabs
   children:
+  - name: Reconciliation
+    children:
+    - source: status.conditions
+      widget: Table
+      name: Conditions
+      children:
+        - source: type
+          name: Type
+        - source: status
+          name: Status
+          widget: Badge
+          highlights:
+            success:
+              - 'True'
+            error:
+              - 'False'
+        - source: reason
+          name: Reason
+        - source: message
+          name: Message
+        - source: '$readableTimestamp(lastTransitionTime)'
+          name: Last transition
+          sort: true
   - name: General
     children:
     - widget: Panel
@@ -113,26 +136,3 @@ body:
       - source: spec.components.proxy.k8s.resources.requests.memory
         name: k8s.resources.requests.memory
         visibility: '$exists($value)'
-  - name: Reconciliation
-    children:
-    - source: status.conditions
-      widget: Table
-      name: Conditions
-      children:
-        - source: type
-          name: Type
-        - source: status
-          name: Status
-          widget: Badge
-          highlights:
-            success:
-              - 'True'
-            error:
-              - 'False'
-        - source: reason
-          name: Reason
-        - source: message
-          name: Message
-        - source: '$readableTimestamp(lastTransitionTime)'
-          name: Last transition
-          sort: true

@@ -18,7 +18,7 @@ jobs:
         shell: bash
         env:
           GARDENER_TOKEN: ${{ secrets.GARDENER_TOKEN }}
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: "1.21"
       - run: make IMG="europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{github.sha}}" gardener-perf-test

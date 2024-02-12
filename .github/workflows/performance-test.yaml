@@ -36,13 +36,13 @@ jobs:
           DISK_TYPE: "pd-standard"
           SCALER_MAX: 20
           SCALER_MIN: 3
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: always()
         name: Export no sidecar summary
         with:
           name: no-sidecar
           path: tests/performance/summary-no-sidecar.html
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: always()
         name: Export sidecar summary
         with:

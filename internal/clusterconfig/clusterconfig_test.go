@@ -2,8 +2,6 @@ package clusterconfig_test
 
 import (
 	"context"
-	"fmt"
-
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
@@ -52,13 +50,6 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 						"cni": map[string]string{
 							"cniBinDir":  "/bin",
 							"cniConfDir": "/var/lib/rancher/k3s/agent/etc/cni/net.d",
-						},
-						"gateways": map[string]interface{}{
-							"istio-ingressgateway": map[string]interface{}{
-								"serviceAnnotations": map[string]string{
-									"dns.gardener.cloud/dnsnames": fmt.Sprintf("*.%s", clusterconfig.LocalKymaDomain),
-								},
-							},
 						},
 					},
 				},
@@ -115,13 +106,8 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 					},
 				},
 			}
-			kymaGateway := corev1.ConfigMap{
-				TypeMeta:   v1.TypeMeta{},
-				ObjectMeta: v1.ObjectMeta{Name: clusterconfig.ConfigMapShootInfoName, Namespace: clusterconfig.ConfigMapShootInfoNS},
-				Data:       map[string]string{"domain": "example.com"},
-			}
 
-			client := createFakeClient(&gardenerNode, &kymaGateway)
+			client := createFakeClient(&gardenerNode)
 
 			//when
 			config, err := clusterconfig.EvaluateClusterConfiguration(context.TODO(), client)

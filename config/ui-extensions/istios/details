@@ -41,9 +41,9 @@ body:
     - widget: Panel
       name: Configuration
       children:
-        - source: spec.config.numTrustedProxies
+        - source: '$exists(spec.config.numTrustedProxies) ? spec.config.numTrustedProxies : 1'
           name: config.numTrustedProxies
-          visibility: '$exists($value)'
+
   - name: Components
     children:
     - widget: Panel

@@ -92,12 +92,7 @@ out.txt
 # module generation files
 mod
 charts
-kyma.yaml
-default.yaml
-template.yaml
-template-fast.yaml
-template-regular.yaml
-template-k3d.yaml
+istio-manager.yaml
 
 # Binaries for programs and plugins
 *.exe

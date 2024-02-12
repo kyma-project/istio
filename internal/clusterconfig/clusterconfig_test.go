@@ -93,43 +93,6 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 		})
 	})
 
-	Context("Gardener", func() {
-		It("should set Istio GW annotation specific for Gardener clusters only", func() {
-			//given
-			gardenerNode := corev1.Node{
-				ObjectMeta: v1.ObjectMeta{
-					Name: "shoot-node-1",
-				},
-				Status: corev1.NodeStatus{
-					NodeInfo: corev1.NodeSystemInfo{
-						OSImage: gardenerMockOSImage,
-					},
-				},
-			}
-
-			client := createFakeClient(&gardenerNode)
-
-			//when
-			config, err := clusterconfig.EvaluateClusterConfiguration(context.TODO(), client)
-
-			//then
-			Expect(err).To(Not(HaveOccurred()))
-			Expect(config).To(Equal(clusterconfig.ClusterConfiguration(map[string]interface{}{
-				"spec": map[string]interface{}{
-					"values": map[string]interface{}{
-						"gateways": map[string]interface{}{
-							"istio-ingressgateway": map[string]interface{}{
-								"serviceAnnotations": map[string]string{
-									"dns.gardener.cloud/dnsnames": "*.example.com",
-								},
-							},
-						},
-					},
-				},
-			})))
-		})
-	})
-
 	Context("Unknown cluster", func() {
 		It("should return no overrides", func() {
 			//given

@@ -11,20 +11,16 @@ header:
     critical:
       - 'Warning'
 body:
-- widget: Tabs
+- widget: Panel
+  name: Configuration
   children:
-  - name: General
-    children:
-    - widget: Panel
-      name: Configuration
-      children:
-        - source: spec.config.numTrustedProxies
-          name: config.numTrustedProxies
-          visibility: '$exists($value)'
-  - name: Components
-    children:
+    - source: spec.config.numTrustedProxies
+      name: config.numTrustedProxies
+      placeholder: '1'
+
     - widget: Panel
       name: Pilot
+      visibility: '$exists(spec.components.pilot.k8s.hpaSpec.minReplicas) ? true : $exists(spec.components.pilot.k8s.hpaSpec.maxReplicas) ? true : $exists(spec.components.pilot.k8s.strategy.rollingUpdate.maxSurge) ? true :  $exists(spec.components.pilot.k8s.strategy.rollingUpdate.maxUnavailable) ? true : $exists(spec.components.pilot.k8s.resources.limits.cpu) ? true : $exists(spec.components.pilot.k8s.resources.limits.memory) ? true : $exists(spec.components.pilot.k8s.resources.requests.cpu) ? true : $exists(spec.components.pilot.k8s.resources.requests.memory) ? true : false'
       children:
       - source: spec.components.pilot.k8s.hpaSpec.minReplicas
         name: k8s.hpaSpec.minReplicas
@@ -50,8 +46,10 @@ body:
       - source: spec.components.pilot.k8s.resources.requests.memory
         name: k8s.resources.requests.memory
         visibility: '$exists($value)'
+
     - widget: Panel
       name: Ingress Gateway
+      visibility: '$exists(spec.components.ingressGateway.k8s.hpaSpec.minReplicas) ? true : $exists(spec.components.ingressGateway.k8s.hpaSpec.maxReplicas) ? true : $exists(spec.components.ingressGateway.k8s.strategy.rollingUpdate.maxSurge) ? true :  $exists(spec.components.ingressGateway.k8s.strategy.rollingUpdate.maxUnavailable) ? true : $exists(spec.components.ingressGateway.k8s.resources.limits.cpu) ? true : $exists(spec.components.ingressGateway.k8s.resources.limits.memory) ? true : $exists(spec.components.ingressGateway.k8s.resources.requests.cpu) ? true : $exists(spec.components.ingressGateway.k8s.resources.requests.memory) ? true : false'
       children:
       - source: spec.components.ingressGateway.k8s.hpaSpec.minReplicas
         name: k8s.hpaSpec.minReplicas
@@ -77,8 +75,10 @@ body:
       - source: spec.components.ingressGateway.k8s.resources.requests.memory
         name: k8s.resources.requests.memory
         visibility: '$exists($value)'
+
     - widget: Panel
       name: CNI
+      visibility: '$exists(spec.components.cni.k8s.resources.limits.cpu) ? true : $exists(spec.components.cni.k8s.resources.limits.memory) ? true : $exists(spec.components.cni.k8s.resources.requests.cpu) ? true :  $exists(spec.components.cni.k8s.resources.requests.memory) ? true : $exists(spec.components.cni.k8s.affinity) ? true : false'
       children:
         - source: spec.components.cni.k8s.resources.limits.cpu
           name: k8s.resources.limits.cpu
@@ -98,8 +98,10 @@ body:
           description: "Kubernetes documentation for {{[Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity)}}"
           language: "'yaml'"
           visibility: '$exists($value)'
+
     - widget: Panel
       name: Proxy
+      visibility: '$exists(spec.components.proxy.k8s.resources.limits.cpu) ? true : $exists(spec.components.proxy.k8s.resources.limits.memory) ? true : $exists(spec.components.proxy.k8s.resources.requests.cpu) ? true :  $exists(spec.components.proxy.k8s.resources.requests.memory) ? true : false'
       children:
       - source: spec.components.proxy.k8s.resources.limits.cpu
         name: k8s.resources.limits.cpu
@@ -113,9 +115,25 @@ body:
       - source: spec.components.proxy.k8s.resources.requests.memory
         name: k8s.resources.requests.memory
         visibility: '$exists($value)'
-  - name: Reconciliation
-    children:
-    - widget: EventList
-      filter: '$matchEvents($$, $root.kind, $root.metadata.name)'
-      name: Events
-      defaultType: information
+
+- source: status.conditions
+  widget: Table
+  name: Reconciliation Conditions
+  children:
+    - source: type
+      name: Type
+    - source: status
+      name: Status
+      widget: Badge
+      highlights:
+        success:
+          - 'True'
+        error:
+          - 'False'
+    - source: reason
+      name: Reason
+    - source: message
+      name: Message
+    - source: '$readableTimestamp(lastTransitionTime)'
+      name: Last transition
+      sort: true

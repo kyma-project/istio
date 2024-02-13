@@ -20,7 +20,7 @@ body:
 
     - widget: Panel
       name: Pilot
-      visibility: '$exists(spec.components.pilot.k8s.hpaSpec.minReplicas) ? true : $exists(spec.components.pilot.k8s.hpaSpec.maxReplicas) ? true : $exists(spec.components.pilot.k8s.strategy.rollingUpdate.maxSurge) ? true :  $exists(spec.components.pilot.k8s.strategy.rollingUpdate.maxUnavailable) ? true : $exists(spec.components.pilot.k8s.resources.limits.cpu) ? true : $exists(spec.components.pilot.k8s.resources.limits.memory) ? true : $exists(spec.components.pilot.k8s.resources.requests.cpu) ? true : $exists(spec.components.pilot.k8s.resources.requests.memory) ? true : false'
+      visibility: '$exists(spec.components.pilot.k8s.hpaSpec.minReplicas) or $exists(spec.components.pilot.k8s.hpaSpec.maxReplicas) or $exists(spec.components.pilot.k8s.strategy.rollingUpdate.maxSurge) or $exists(spec.components.pilot.k8s.strategy.rollingUpdate.maxUnavailable) or $exists(spec.components.pilot.k8s.resources.limits.cpu) or $exists(spec.components.pilot.k8s.resources.limits.memory) or $exists(spec.components.pilot.k8s.resources.requests.cpu) or $exists(spec.components.pilot.k8s.resources.requests.memory)'
       children:
       - source: spec.components.pilot.k8s.hpaSpec.minReplicas
         name: k8s.hpaSpec.minReplicas
@@ -49,7 +49,7 @@ body:
 
     - widget: Panel
       name: Ingress Gateway
-      visibility: '$exists(spec.components.ingressGateway.k8s.hpaSpec.minReplicas) ? true : $exists(spec.components.ingressGateway.k8s.hpaSpec.maxReplicas) ? true : $exists(spec.components.ingressGateway.k8s.strategy.rollingUpdate.maxSurge) ? true :  $exists(spec.components.ingressGateway.k8s.strategy.rollingUpdate.maxUnavailable) ? true : $exists(spec.components.ingressGateway.k8s.resources.limits.cpu) ? true : $exists(spec.components.ingressGateway.k8s.resources.limits.memory) ? true : $exists(spec.components.ingressGateway.k8s.resources.requests.cpu) ? true : $exists(spec.components.ingressGateway.k8s.resources.requests.memory) ? true : false'
+      visibility: '$exists(spec.components.ingressGateway.k8s.hpaSpec.minReplicas) or $exists(spec.components.ingressGateway.k8s.hpaSpec.maxReplicas) or $exists(spec.components.ingressGateway.k8s.strategy.rollingUpdate.maxSurge) or  $exists(spec.components.ingressGateway.k8s.strategy.rollingUpdate.maxUnavailable) or $exists(spec.components.ingressGateway.k8s.resources.limits.cpu) or $exists(spec.components.ingressGateway.k8s.resources.limits.memory) or $exists(spec.components.ingressGateway.k8s.resources.requests.cpu) or $exists(spec.components.ingressGateway.k8s.resources.requests.memory)'
       children:
       - source: spec.components.ingressGateway.k8s.hpaSpec.minReplicas
         name: k8s.hpaSpec.minReplicas
@@ -78,7 +78,7 @@ body:
 
     - widget: Panel
       name: CNI
-      visibility: '$exists(spec.components.cni.k8s.resources.limits.cpu) ? true : $exists(spec.components.cni.k8s.resources.limits.memory) ? true : $exists(spec.components.cni.k8s.resources.requests.cpu) ? true :  $exists(spec.components.cni.k8s.resources.requests.memory) ? true : $exists(spec.components.cni.k8s.affinity) ? true : false'
+      visibility: '$exists(spec.components.cni.k8s.resources.limits.cpu) or $exists(spec.components.cni.k8s.resources.limits.memory) or $exists(spec.components.cni.k8s.resources.requests.cpu) or  $exists(spec.components.cni.k8s.resources.requests.memory) or $exists(spec.components.cni.k8s.affinity)'
       children:
         - source: spec.components.cni.k8s.resources.limits.cpu
           name: k8s.resources.limits.cpu
@@ -101,7 +101,7 @@ body:
 
     - widget: Panel
       name: Proxy
-      visibility: '$exists(spec.components.proxy.k8s.resources.limits.cpu) ? true : $exists(spec.components.proxy.k8s.resources.limits.memory) ? true : $exists(spec.components.proxy.k8s.resources.requests.cpu) ? true :  $exists(spec.components.proxy.k8s.resources.requests.memory) ? true : false'
+      visibility: '$exists(spec.components.proxy.k8s.resources.limits.cpu) or $exists(spec.components.proxy.k8s.resources.limits.memory) or $exists(spec.components.proxy.k8s.resources.requests.cpu) or  $exists(spec.components.proxy.k8s.resources.requests.memory)'
       children:
       - source: spec.components.proxy.k8s.resources.limits.cpu
         name: k8s.resources.limits.cpu

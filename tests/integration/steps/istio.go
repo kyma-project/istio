@@ -102,27 +102,6 @@ func IstioComponentHasResourcesSetToCpuAndMemory(ctx context.Context, component,
 	return nil
 }
 
-func IstioServiceHasAnnotation(ctx context.Context, serviceName, annotationName, clusterFlavour string) error {
-	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
-	if err != nil {
-		return err
-	}
-	istioService := corev1.Service{}
-	err = k8sClient.Get(context.TODO(), types.NamespacedName{Name: serviceName, Namespace: defaultIopNamespace}, &istioService)
-	if err != nil {
-		return fmt.Errorf("default Istio Gateway Service wasn't found err=%s", err)
-	}
-	flavour, err := clusterconfig.DiscoverClusterFlavour(ctx, k8sClient)
-	if err != nil {
-		return fmt.Errorf("unable to determine cluster flavour err=%s", err)
-	}
-	_, found := istioService.Annotations[annotationName]
-	if !found && flavour.String() == clusterFlavour {
-		return fmt.Errorf("expected annotation '%s' on Istio Gateway Service for %s cluster (%s) wasn't found", annotationName, clusterFlavour, flavour)
-	}
-	return nil
-}
-
 func UninstallIstio(ctx context.Context) error {
 	istioClient := istio.NewIstioClient()
 	return istioClient.Uninstall(ctx)

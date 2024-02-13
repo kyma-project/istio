@@ -98,14 +98,8 @@ func (r *ResourcesReconciler) getTemplateValues(ctx context.Context, istioCR v1a
 func getResources(k8sClient client.Client, hsClient clusterconfig.Hyperscaler) ([]Resource, error) {
 	istioResources := []Resource{NewEnvoyFilterAllowPartialReferer(k8sClient)}
 	istioResources = append(istioResources, NewPeerAuthenticationMtls(k8sClient))
-	istioResources = append(istioResources, NewConfigMapControlPlane(k8sClient))
-	istioResources = append(istioResources, NewConfigMapMesh(k8sClient))
-	istioResources = append(istioResources, NewConfigMapPerformance(k8sClient))
-	istioResources = append(istioResources, NewConfigMapService(k8sClient))
-	istioResources = append(istioResources, NewConfigMapWorkload(k8sClient))
 
 	isAws := hsClient.IsAws()
-
 	if isAws {
 		istioResources = append(istioResources, NewProxyProtocolEnvoyFilter(k8sClient))
 	}

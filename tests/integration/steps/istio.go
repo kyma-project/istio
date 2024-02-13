@@ -12,7 +12,6 @@ import (
 
 	"github.com/avast/retry-go"
 	"github.com/cucumber/godog"
-	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	"github.com/kyma-project/istio/operator/tests/integration/manifests"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"

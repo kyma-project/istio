@@ -8,7 +8,7 @@ Feature: Installing and uninstalling Istio module
     And "Deployment" "istio-controller-manager" in namespace "kyma-system" is ready
 
   Scenario: Installation of Istio module with default values
-    Given Istio CR "istio-sample" is applied in namespace "kyma-system"
+    Given Istio CR "istio-sample" from "istio_cr_template" is applied in namespace "kyma-system"
     Then Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
     And Istio CR "istio-sample" in namespace "kyma-system" has condition with reason "ReconcileSucceeded" of type "Ready" and status "True"
     And Istio "istio-ingressgateway" service has annotation "dns.gardener.cloud/dnsnames" on "Gardener" cluster
@@ -32,7 +32,7 @@ Feature: Installing and uninstalling Istio module
     And Template value "IGMemoryLimit" is set to "1200Mi"
     And Template value "IGCPURequests" is set to "80m"
     And Template value "IGMemoryRequests" is set to "200Mi"
-    When Istio CR "istio-sample" is applied in namespace "kyma-system"
+    When Istio CR "istio-sample" from "istio_cr_template" is applied in namespace "kyma-system"
     Then Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
     And Istio CR "istio-sample" in namespace "kyma-system" has condition with reason "ReconcileSucceeded" of type "Ready" and status "True"
     And Istio CRDs "should" be present on cluster
@@ -47,12 +47,12 @@ Feature: Installing and uninstalling Istio module
     And "ingress-gateway" has "requests" set to cpu - "80m" and memory - "200Mi"
 
   Scenario: Uninstallation of Istio module
-    Given Istio CR "istio-sample" is applied in namespace "kyma-system"
+    Given Istio CR "istio-sample" from "istio_cr_template" is applied in namespace "kyma-system"
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
     And Istio CR "istio-sample" in namespace "kyma-system" has condition with reason "ReconcileSucceeded" of type "Ready" and status "True"
     And Namespace "istio-system" is "present"
     And Istio injection is "enabled" in namespace "default"
-    And Application "test-app" is running in namespace "default"
+    And Application "test-app" deployment is created in namespace "default"
     And Application pod "test-app" in namespace "default" has Istio proxy "present"
     When "Istio CR" "istio-sample" in namespace "kyma-system" is deleted
     Then "Istio CR" is not present on cluster
@@ -61,7 +61,7 @@ Feature: Installing and uninstalling Istio module
     And Application pod "test-app" in namespace "default" has Istio proxy "not present"
 
   Scenario: Uninstallation respects the Istio resources created by the user
-    Given Istio CR "istio-sample" is applied in namespace "kyma-system"
+    Given Istio CR "istio-sample" from "istio_cr_template" is applied in namespace "kyma-system"
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
     And Istio CR "istio-sample" in namespace "kyma-system" has condition with reason "ReconcileSucceeded" of type "Ready" and status "True"
     And Namespace "istio-system" is "present"
@@ -78,7 +78,7 @@ Feature: Installing and uninstalling Istio module
     And Namespace "istio-system" is "not present"
 
   Scenario: Uninstallation of Istio module if Istio was manually deleted
-    Given Istio CR "istio-sample" is applied in namespace "kyma-system"
+    Given Istio CR "istio-sample" from "istio_cr_template" is applied in namespace "kyma-system"
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
     And Istio CR "istio-sample" in namespace "kyma-system" has condition with reason "ReconcileSucceeded" of type "Ready" and status "True"
     And Namespace "istio-system" is "present"
@@ -91,21 +91,21 @@ Feature: Installing and uninstalling Istio module
     And Namespace "istio-system" is "not present"
 
   Scenario: Installation of Istio module with Istio CR in different namespace
-    Given Istio CR "istio-sample" is applied in namespace "default"
+    Given Istio CR "istio-sample" from "istio_cr_template" is applied in namespace "default"
     Then Istio CR "istio-sample" in namespace "default" has status "Error"
     And Istio CR "istio-sample" in namespace "default" has condition with reason "ReconcileFailed" of type "Ready" and status "False"
     And Istio CR "istio-sample" in namespace "default" has description "Stopped Istio CR reconciliation: Istio CR is not in kyma-system namespace"
 
   Scenario: Installation of Istio module with a second Istio CR in kyma-system namespace
-    Given Istio CR "istio-sample" is applied in namespace "kyma-system"
+    Given Istio CR "istio-sample" from "istio_cr_template" is applied in namespace "kyma-system"
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
-    When Istio CR "istio-sample-new" is applied in namespace "kyma-system"
+    When Istio CR "istio-sample-new" from "istio_cr_template" is applied in namespace "kyma-system"
     Then Istio CR "istio-sample-new" in namespace "kyma-system" has status "Error"
     And Istio CR "istio-sample-new" in namespace "kyma-system" has condition with reason "OlderCRExists" of type "Ready" and status "False"
     And Istio CR "istio-sample-new" in namespace "kyma-system" has description "Stopped Istio CR reconciliation: only Istio CR istio-sample in kyma-system reconciles the module"
 
   Scenario: Istio module resources are reconciled, when they are deleted manually
-    Given Istio CR "istio-sample" is applied in namespace "kyma-system"
+    Given Istio CR "istio-sample" from "istio_cr_template" is applied in namespace "kyma-system"
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
     And Istio CR "istio-sample" in namespace "kyma-system" has condition with reason "ReconcileSucceeded" of type "Ready" and status "True"
     And Namespace "istio-system" is "present"
@@ -116,7 +116,7 @@ Feature: Installing and uninstalling Istio module
     And Istio injection is "enabled" in namespace "default"
     And "EnvoyFilter" "kyma-referer" in namespace "istio-system" is deleted
     And "PeerAuthentication" "default" in namespace "istio-system" is deleted
-    And Application "test-app" is running in namespace "default"
+    And Application "test-app" deployment is created in namespace "default"
     # We need to update the Istio CR to trigger a reconciliation
     And Template value "ProxyCPURequest" is set to "79m"
     When Istio CR "istio-sample" is updated in namespace "kyma-system"

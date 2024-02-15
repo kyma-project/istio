@@ -2,7 +2,6 @@ apiVersion: operator.kyma-project.io/v1alpha1
 kind: Istio
 metadata:
   name: istio-sample
-  namespace: kyma-system
   labels:
     app.kubernetes.io/name: istio-sample
 spec:

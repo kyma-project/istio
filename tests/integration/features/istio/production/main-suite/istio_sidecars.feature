@@ -13,7 +13,7 @@ Feature: Istio sidecar injection works properly in target namespace
     When Namespace "sidecar-disable" is created
     And Namespace "sidecar-disable" is "present"
     And Istio injection is "disabled" in namespace "sidecar-disable"
-    And Application "test-app" is running in namespace "sidecar-disable"
+    And Application "test-app" deployment is created in namespace "sidecar-disable"
     Then Application pod "test-app" in namespace "sidecar-disable" has Istio proxy "not present"
     And "Istio CR" "istio-sample" in namespace "kyma-system" is deleted
     And "Istio CR" is not present on cluster
@@ -27,7 +27,7 @@ Feature: Istio sidecar injection works properly in target namespace
     When Namespace "sidecar-enable" is created
     And Namespace "sidecar-enable" is "present"
     And Istio injection is "enabled" in namespace "sidecar-enable"
-    And Application "test-app" is running in namespace "sidecar-enable"
+    And Application "test-app" deployment is created in namespace "sidecar-enable"
     Then Application pod "test-app" in namespace "sidecar-enable" has Istio proxy "present"
     And "Istio CR" "istio-sample" in namespace "kyma-system" is deleted
     And "Istio CR" is not present on cluster
@@ -38,6 +38,6 @@ Feature: Istio sidecar injection works properly in target namespace
   Scenario: Kube-system namespace does not contain pods with sidecar
     Given Istio CR "istio-sample" is applied in namespace "kyma-system"
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
-    And Application "test-app" is running in namespace "kube-system"
+    And Application "test-app" deployment is created in namespace "kube-system"
     Then Application pod "test-app" in namespace "kube-system" has Istio proxy "not present"
     And "Deployment" "test-app" in namespace "kube-system" is deleted

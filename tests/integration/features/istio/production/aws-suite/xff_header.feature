@@ -7,7 +7,7 @@ Feature: X-Forwarded-For header
     And "Deployment" "istio-controller-manager" in namespace "kyma-system" is ready
 
   Scenario: X-Forward-For header contains public client IP
-    Given Istio CR "istio-sample" is applied in namespace "kyma-system"
+    Given Istio CR "istio-sample" from "istio_cr_template" is applied in namespace "kyma-system"
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
     And Istio injection is "enabled" in namespace "default"
     And Httpbin application "httpbin" is running in namespace "default"

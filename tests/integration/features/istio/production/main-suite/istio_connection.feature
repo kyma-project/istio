@@ -10,7 +10,7 @@ Feature: Connection in the mesh
     And "Deployment" "istio-controller-manager" in namespace "kyma-system" is ready
 
   Scenario: Access between applications in different namespaces
-    Given Istio CR "istio-sample" is applied in namespace "kyma-system"
+    Given Istio CR "istio-sample" from "istio_cr_template" is applied in namespace "kyma-system"
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
     And Namespace "target" is created
     And Istio injection is "enabled" in namespace "target"
@@ -25,7 +25,7 @@ Feature: Connection in the mesh
     Then Request to path "/" should return "Host" with value "httpbin.target.svc.cluster.local" in body
 
   Scenario: Access between applications from injection disabled namespace to injection enabled namespace is restricted
-    Given Istio CR "istio-sample" is applied in namespace "kyma-system"
+    Given Istio CR "istio-sample" from "istio_cr_template" is applied in namespace "kyma-system"
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
     And Namespace "target" is created
     And Istio injection is "enabled" in namespace "target"

@@ -6,7 +6,6 @@ import (
 )
 
 func initScenario(ctx *godog.ScenarioContext) {
-
 	ctx.After(verifyIfControllerHasBeenRestarted)
 	ctx.After(testObjectsTearDown)
 	ctx.After(istioCrTearDown)
@@ -19,8 +18,8 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^Istio CR "([^"]*)" in namespace "([^"]*)" has condition with reason "([^"]*)" of type "([^"]*)" and status "([^"]*)"$`, steps.IstioCRInNamespaceHasStatusCondition)
 	ctx.Step(`^Istio CR "([^"]*)" in namespace "([^"]*)" has description "([^"]*)"$`, steps.IstioCRInNamespaceHasDescription)
 	ctx.Step(`^Template value "([^"]*)" is set to "([^"]*)"$`, t.SetTemplateValue)
-	ctx.Step(`^Istio CR "([^"]*)" is applied in namespace "([^"]*)"$`, t.IstioCRIsAppliedInNamespace)
-	ctx.Step(`^Istio CR "([^"]*)" is updated in namespace "([^"]*)"$`, t.IstioCRIsUpdatedInNamespace)
+	ctx.Step(`^Istio CR "([^"]*)" from "([^"]*)" is applied in namespace "([^"]*)"$`, t.IstioCRIsAppliedInNamespace)
+	ctx.Step(`^Istio CR "([^"]*)" from "([^"]*)" is updated in namespace "([^"]*)"$`, t.IstioCRIsUpdatedInNamespace)
 	ctx.Step(`^Namespace "([^"]*)" is "([^"]*)"$`, steps.NamespaceIsPresent)
 	ctx.Step(`^Namespace "([^"]*)" is created$`, steps.NamespaceIsCreated)
 	ctx.Step(`^Namespace "([^"]*)" has "([^"]*)" label and "([^"]*)" annotation`, steps.NamespaceHasLabelAndAnnotation)
@@ -30,7 +29,7 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^"([^"]*)" "([^"]*)" is deleted$`, steps.ClusterResourceIsDeleted)
 	ctx.Step(`^"([^"]*)" is not present on cluster$`, steps.ResourceNotPresent)
 	ctx.Step(`^Istio injection is "([^"]*)" in namespace "([^"]*)"$`, steps.SetIstioInjection)
-	ctx.Step(`^Application "([^"]*)" is running in namespace "([^"]*)"$`, steps.CreateApplicationDeployment)
+	ctx.Step(`^Application "([^"]*)" deployment is created in namespace "([^"]*)"$`, steps.CreateApplicationDeployment)
 	ctx.Step(`^Application "([^"]*)" in namespace "([^"]*)" has proxy with "([^"]*)" set to cpu - "([^"]*)" and memory - "([^"]*)"$`, steps.ApplicationHasProxyResourcesSetToCpuAndMemory)
 	ctx.Step(`^Application pod "([^"]*)" in namespace "([^"]*)" has Istio proxy "([^"]*)"$`, steps.ApplicationPodShouldHaveIstioProxy)
 	ctx.Step(`^Destination rule "([^"]*)" in namespace "([^"]*)" with host "([^"]*)" exists$`, steps.CreateDestinationRule)
@@ -56,7 +55,6 @@ func initScenario(ctx *godog.ScenarioContext) {
 }
 
 func upgradeInitScenario(ctx *godog.ScenarioContext) {
-
 	ctx.After(verifyIfControllerHasBeenRestarted)
 	ctx.After(testObjectsTearDown)
 	ctx.After(istioCrTearDown)
@@ -66,11 +64,11 @@ func upgradeInitScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^"([^"]*)" is not present on cluster$`, steps.ResourceNotPresent)
 	ctx.Step(`^Istio CRD is installed$`, steps.IstioCRDIsInstalled)
 	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" is ready$`, steps.ResourceIsReady)
-	ctx.Step(`^Istio CR "([^"]*)" is applied in namespace "([^"]*)"$`, t.IstioCRIsAppliedInNamespace)
+	ctx.Step(`^Istio CR "([^"]*)" from "([^"]*)" is applied in namespace "([^"]*)"$`, t.IstioCRIsAppliedInNamespace)
 	ctx.Step(`^Istio CR "([^"]*)" in namespace "([^"]*)" has status "([^"]*)"$`, steps.IstioCRInNamespaceHasStatus)
 	ctx.Step(`^Istio CR "([^"]*)" in namespace "([^"]*)" status update happened in the last 20 seconds$`, steps.IstioCrStatusUpdateHappened)
 	ctx.Step(`^Istio injection is "([^"]*)" in namespace "([^"]*)"$`, steps.SetIstioInjection)
-	ctx.Step(`^Application "([^"]*)" is running in namespace "([^"]*)"$`, steps.CreateApplicationDeployment)
+	ctx.Step(`^Application "([^"]*)" deployment is created in namespace "([^"]*)"$`, steps.CreateApplicationDeployment)
 	ctx.Step(`^Application pod "([^"]*)" in namespace "([^"]*)" has Istio proxy "([^"]*)"$`, steps.ApplicationPodShouldHaveIstioProxy)
 	ctx.Step(`^Istio controller has been upgraded to the new version$`, steps.DeployIstioOperatorFromLocalManifest)
 	ctx.Step(`^Application "([^"]*)" in namespace "([^"]*)" has required version of proxy$`, steps.ApplicationPodShouldHaveIstioProxyInRequiredVersion)

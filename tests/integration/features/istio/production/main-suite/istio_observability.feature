@@ -6,7 +6,7 @@ Feature: Observability
     And Istio CRD is installed
     And Namespace "istio-system" is "not present"
     And "Deployment" "istio-controller-manager" in namespace "kyma-system" is ready
-    And Istio CR "istio-sample" is applied in namespace "kyma-system"
+    And Istio CR "istio-sample" from "istio_cr_template" is applied in namespace "kyma-system"
     And Istio injection is "enabled" in namespace "default"
 
   Scenario: Logs from stdout-json envoyFileAccessLog provider are in correct format

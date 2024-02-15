@@ -63,7 +63,7 @@ func DeployIstioOperator(ctx context.Context, manifestType, should string) error
 					return err
 				}
 			}
-
+			resource.SetResourceVersion(existingResource.GetResourceVersion())
 			err = k8sClient.Update(ctx, &resource)
 			if err != nil {
 				if expectSuccess {

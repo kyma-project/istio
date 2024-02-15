@@ -14,9 +14,24 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func DeployIstioOperatorFromLocalManifest(ctx context.Context) error {
+func DeployIstioOperator(ctx context.Context, manifestType, should string) error {
 	const manifestDirectory = "manifests"
-	const manifestFileName = "generated-operator-manifest.yaml"
+
+	var manifestFileName string
+	switch manifestType {
+	case "generated":
+		manifestFileName = "generated-operator-manifest.yaml"
+	case "failing":
+		manifestFileName = "fail-operator-manifest.yaml"
+	default:
+		return fmt.Errorf("unsupported manifest type: %s", manifestType)
+	}
+
+	expectSuccess := false
+	if should == "succeed" {
+		expectSuccess = true
+	}
+
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
@@ -49,11 +64,13 @@ func DeployIstioOperatorFromLocalManifest(ctx context.Context) error {
 				}
 			}
 
-			mergedResource := mergeResources(&existingResource, &resource)
-
-			err = k8sClient.Update(ctx, mergedResource)
+			err = k8sClient.Update(ctx, &resource)
 			if err != nil {
-				return err
+				if expectSuccess {
+					return err
+				} else {
+					return nil
+				}
 			}
 		}
 
@@ -84,27 +101,4 @@ func DeployIstioOperatorFromLocalManifest(ctx context.Context) error {
 		}
 		return nil
 	}, testcontext.GetRetryOpts()...)
-}
-
-func mergeResources(old, new *unstructured.Unstructured) *unstructured.Unstructured {
-	oldMap := old.Object
-	newMap := new.Object
-	mergeMaps(oldMap, newMap)
-	return &unstructured.Unstructured{Object: oldMap}
-}
-
-func mergeMaps(o, n map[string]any) {
-	for k, nv := range n {
-		if ov, ok := o[k]; ok {
-			ovm, oldIsMap := ov.(map[string]any)
-			nvm, newIsMap := nv.(map[string]any)
-			if oldIsMap && newIsMap {
-				mergeMaps(ovm, nvm)
-			} else {
-				o[k] = nv
-			}
-		} else {
-			o[k] = nv
-		}
-	}
 }

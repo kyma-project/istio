@@ -72,7 +72,7 @@ func upgradeInitScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^Istio injection is "([^"]*)" in namespace "([^"]*)"$`, steps.SetIstioInjection)
 	ctx.Step(`^Application "([^"]*)" is running in namespace "([^"]*)"$`, steps.CreateApplicationDeployment)
 	ctx.Step(`^Application pod "([^"]*)" in namespace "([^"]*)" has Istio proxy "([^"]*)"$`, steps.ApplicationPodShouldHaveIstioProxy)
-	ctx.Step(`^Istio controller has been upgraded to the new version$`, steps.DeployIstioOperatorFromLocalManifest)
+	ctx.Step(`^Istio controller has been upgraded with "([^"]*)" manifest and should "([^"]*)"$`, steps.DeployIstioOperator)
 	ctx.Step(`^Application "([^"]*)" in namespace "([^"]*)" has required version of proxy$`, steps.ApplicationPodShouldHaveIstioProxyInRequiredVersion)
 	ctx.Step(`^Container "([^"]*)" of "([^"]*)" "([^"]*)" in namespace "([^"]*)" has required version$`, steps.IstioResourceContainerHasRequiredVersion)
 }

@@ -108,7 +108,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		oldestCr := r.getOldestCR(existingIstioCRs)
 		if istioCR.GetUID() != oldestCr.GetUID() {
 			errNotOldestCR := fmt.Errorf("only Istio CR %s in %s reconciles the module", oldestCr.GetName(), oldestCr.GetNamespace())
-			return r.terminateReconciliation(ctx, &istioCR, described_errors.NewDescribedError(errNotOldestCR, "Stopped Istio CR reconciliation"),
+			return r.terminateReconciliation(ctx, &istioCR, described_errors.NewDescribedError(errNotOldestCR, "Stopped Istio CR reconciliation").SetWarning(),
 				operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonOlderCRExists))
 		}
 	}

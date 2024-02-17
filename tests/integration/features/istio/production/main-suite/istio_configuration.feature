@@ -15,7 +15,7 @@ Feature: Configuration of Istio module
     And Istio CR "istio-sample" from "istio_cr_template" is applied in namespace "kyma-system"
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
     And Istio injection is "enabled" in namespace "default"
-    And Application "test-app" deployment is created in namespace "default"
+    And Httpbin application "test-app" deployment is created in namespace "default"
     And Application "test-app" in namespace "default" has proxy with "requests" set to cpu - "30m" and memory - "190Mi"
     And Application "test-app" in namespace "default" has proxy with "limits" set to cpu - "700m" and memory - "700Mi"
     And "Deployment" "test-app" in namespace "default" is ready
@@ -34,7 +34,7 @@ Feature: Configuration of Istio module
     And Istio CR "istio-sample" from "istio_cr_template" is applied in namespace "kyma-system"
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
     And Istio injection is "enabled" in namespace "default"
-    And Httpbin application "httpbin" is running in namespace "default"
+    And Httpbin application "httpbin" deployment is created in namespace "default"
     And "Deployment" "httpbin" in namespace "default" is ready
     And Istio gateway "test-gateway" is configured in namespace "default"
     And Virtual service "test-vs" exposing service "httpbin.default.svc.cluster.local" by gateway "default/test-gateway" is configured in namespace "default"
@@ -48,5 +48,7 @@ Feature: Configuration of Istio module
     And Istio CR "istio-sample" from "istio_cr_ext_authz_template" is applied in namespace "kyma-system"
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
     And Istio injection is "enabled" in namespace "default"
-    And Httpbin application "httpbin" is running in namespace "default"
+    And Ext-authz application "ext-authz" deployment is created in namespace "default"
+    And "Deployment" "ext-authz" in namespace "default" is ready
+    And Httpbin application "httpbin" deployment is created in namespace "default"
     And "Deployment" "httpbin" in namespace "default" is ready

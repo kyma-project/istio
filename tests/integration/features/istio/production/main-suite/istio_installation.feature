@@ -52,7 +52,7 @@ Feature: Installing and uninstalling Istio module
     And Istio CR "istio-sample" in namespace "kyma-system" has condition with reason "ReconcileSucceeded" of type "Ready" and status "True"
     And Namespace "istio-system" is "present"
     And Istio injection is "enabled" in namespace "default"
-    And Application "test-app" deployment is created in namespace "default"
+    And Httpbin application "test-app" deployment is created in namespace "default"
     And Application pod "test-app" in namespace "default" has Istio proxy "present"
     When "Istio CR" "istio-sample" in namespace "kyma-system" is deleted
     Then "Istio CR" is not present on cluster
@@ -116,10 +116,10 @@ Feature: Installing and uninstalling Istio module
     And Istio injection is "enabled" in namespace "default"
     And "EnvoyFilter" "kyma-referer" in namespace "istio-system" is deleted
     And "PeerAuthentication" "default" in namespace "istio-system" is deleted
-    And Application "test-app" deployment is created in namespace "default"
+    And Httpbin application "test-app" deployment is created in namespace "default"
     # We need to update the Istio CR to trigger a reconciliation
     And Template value "ProxyCPURequest" is set to "79m"
-    When Istio CR "istio-sample" is updated in namespace "kyma-system"
+    When Istio CR "istio-sample" from "istio_cr_template" is updated in namespace "kyma-system"
     Then "Deployment" "istiod" in namespace "istio-system" is ready
     And "istiooperator" "installed-state-default-operator" in namespace "istio-system" is "present"
     And "Deployment" "istio-ingressgateway" in namespace "istio-system" is ready

@@ -7,7 +7,7 @@ Feature: Upgrade Istio
     And Istio CR "istio-sample" from "istio_cr_template" is applied in namespace "kyma-system"
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
     And Istio injection is "enabled" in namespace "default"
-    And Application "test-app" deployment is created in namespace "default"
+    And Httpbin application "test-app" deployment is created in namespace "default"
     And Application pod "test-app" in namespace "default" has Istio proxy "present"
     When Istio controller has been upgraded to the new version
     Then "Deployment" "istio-controller-manager" in namespace "kyma-system" is ready

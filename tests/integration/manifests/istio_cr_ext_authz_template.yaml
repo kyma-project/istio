@@ -2,7 +2,6 @@ apiVersion: operator.kyma-project.io/v1alpha1
 kind: Istio
 metadata:
   name: istio-sample
-  namespace: kyma-system
   labels:
     app.kubernetes.io/name: istio-sample
 spec:
@@ -15,7 +14,7 @@ spec:
         inCheck:
           include: ["authorization", "cookie"]
           add:
-            x-auth-request-redirect: "https://%REQ(:authority)%%REQ(x-envoy-original-path?:path)"
+            x-ext-authz: "{{.XExtAuthz}}"
         toUpstream:
           onAllow: ["authorization", "path", "x-auth-request-user", "x-auth-request-email", "x-auth-request-access-token"]
         toDownstream:

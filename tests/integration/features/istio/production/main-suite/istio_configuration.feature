@@ -52,3 +52,6 @@ Feature: Configuration of Istio module
     And "Deployment" "ext-authz" in namespace "default" is ready
     And Httpbin application "httpbin" deployment is created in namespace "default"
     And "Deployment" "httpbin" in namespace "default" is ready
+    And Sleep application "sleep" deployment is created in namespace "default"
+    And "Deployment" "sleep" in namespace "default" is ready
+    And Authorization policy "ext-authz" in namespace "default" with app selector "httpbin" is using extension provider "ext-authz" for operation "/headers"

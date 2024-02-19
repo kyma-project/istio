@@ -19,10 +19,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const httpbinImage = "europe-docker.pkg.dev/kyma-project/prod/external/kennethreitz/httpbin"
-const extAuthzImage = "gcr.io/istio-testing/ext-authz:latest"
+const (
+	httpbinImage  = "europe-docker.pkg.dev/kyma-project/prod/external/kennethreitz/httpbin"
+	curlImage     = "europe-docker.pkg.dev/kyma-project/prod/external/curlimages/curl:7.78.0"
+	extAuthzImage = "gcr.io/istio-testing/ext-authz:latest"
+)
 
-func CreateDeployment(ctx context.Context, appName, namespace string, container corev1.Container) (context.Context, error) {
+func CreateDeployment(ctx context.Context, appName, namespace string, container corev1.Container, volumes ...corev1.Volume) (context.Context, error) {
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return ctx, err
@@ -55,6 +58,10 @@ func CreateDeployment(ctx context.Context, appName, namespace string, container 
 				},
 			},
 		},
+	}
+
+	if len(volumes) > 0 {
+		dep.Spec.Template.Spec.Volumes = volumes
 	}
 
 	err = retry.Do(func() error {
@@ -266,12 +273,54 @@ func CreateExtAuthzApplication(ctx context.Context, appName, namespace string) (
 		},
 	}
 
-	ctx, err := CreateDeployment(ctx, appName, namespace, c)
+	ctx, err := CreateServiceWithPort(ctx, appName, namespace, 8000, 8000)
 	if err != nil {
 		return ctx, err
 	}
 
-	ctx, err = CreateServiceWithPort(ctx, appName, namespace, 8000, 8000)
+	ctx, err = CreateDeployment(ctx, appName, namespace, c)
+	if err != nil {
+		return ctx, err
+	}
+
+	return ctx, err
+}
+
+func CreateSleepApplication(ctx context.Context, appName, namespace string) (context.Context, error) {
+	c := corev1.Container{
+		Name:            appName,
+		Image:           curlImage,
+		Command:         []string{"/bin/sleep", "infinity"},
+		ImagePullPolicy: corev1.PullIfNotPresent,
+		VolumeMounts: []corev1.VolumeMount{
+			{
+				Name:      "secret-volume",
+				MountPath: "/etc/sleep/tls",
+			},
+		},
+	}
+
+	v := corev1.Volume{
+		Name: "secret-volume",
+		VolumeSource: corev1.VolumeSource{
+			Secret: &corev1.SecretVolumeSource{
+				SecretName: "sleep-secret",
+				Optional:   ptr.To(true),
+			},
+		},
+	}
+
+	ctx, err := CreateServiceAccount(ctx, appName, namespace)
+	if err != nil {
+		return ctx, err
+	}
+
+	ctx, err = CreateServiceWithPort(ctx, appName, namespace, 80, 80)
+	if err != nil {
+		return ctx, err
+	}
+
+	ctx, err = CreateDeployment(ctx, appName, namespace, c, v)
 	if err != nil {
 		return ctx, err
 	}
@@ -314,6 +363,35 @@ func CreateServiceWithPort(ctx context.Context, appName, namespace string, port,
 			return err
 		}
 		ctx = testcontext.AddCreatedTestObjectInContext(ctx, &svc)
+		return nil
+	}, testcontext.GetRetryOpts()...)
+
+	return ctx, err
+}
+
+func CreateServiceAccount(ctx context.Context, appName, namespace string) (context.Context, error) {
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return ctx, err
+	}
+
+	sa := corev1.ServiceAccount{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "ServiceAcount",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      appName,
+			Namespace: namespace,
+		},
+	}
+
+	err = retry.Do(func() error {
+		err := k8sClient.Create(context.TODO(), &sa)
+		if err != nil {
+			return err
+		}
+		ctx = testcontext.AddCreatedTestObjectInContext(ctx, &sa)
 		return nil
 	}, testcontext.GetRetryOpts()...)
 

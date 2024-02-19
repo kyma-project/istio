@@ -52,6 +52,8 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^Service is created for the otel collector "([^"]*)" in namespace "([^"]*)"$`, steps.CreateOpenTelemetryService)
 	ctx.Step(`^OTEL Collector mock "([^"]*)" deployment is created in namespace "([^"]*)"$`, steps.CreateTelemetryCollectorMock)
 	ctx.Step(`^Ext-authz application "([^"]*)" deployment is created in namespace "([^"]*)"$`, steps.CreateExtAuthzApplication)
+	ctx.Step(`^Sleep application "([^"]*)" deployment is created in namespace "([^"]*)"$`, steps.CreateSleepApplication)
+	ctx.Step(`^Authorization policy "([^"]*)" in namespace "([^"]*)" with app selector "([^"]*)" is using extension provider "([^"]*)" for operation "([^"]*)"$`, steps.CreateAuthorizationPolicyExtAuthz)
 }
 
 func upgradeInitScenario(ctx *godog.ScenarioContext) {

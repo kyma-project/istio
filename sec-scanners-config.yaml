@@ -11,3 +11,4 @@ whitesource:
     - "**/tests/**"
     - "**/test/**"
     - "**/*_test.go"
+rc-tag: 1.3.1

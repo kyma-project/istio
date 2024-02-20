@@ -18,6 +18,33 @@ body:
       name: config.numTrustedProxies
       placeholder: '1'
 
+    - name: config.authorizers
+      widget: Table
+      source: spec.config.authorizers
+      visibility: $exists($value)
+      collapsibleTitle: "$item.name"
+      collapsible:
+        - name: config.authorizers.headers.inCheck.add
+          source: '$each(headers.inCheck.add, function($v, $k) {$k & ": " & $v})'
+          visibility: $count(headers.inCheck.add) = 1
+        - name: config.authorizers.headers.inCheck.include
+          source: headers.inCheck.include
+          widget: JoinedArray
+        - name: config.authorizers.headers.toUpstream.onAllow
+          source: headers.toUpstream.onAllow
+          widget: JoinedArray
+        - name: config.authorizers.headers.toDownstream.onAllow
+          source: headers.toDownstream.onAllow
+          widget: JoinedArray
+        - name: config.authorizers.headers.toDownstream.onDeny
+          source: headers.toDownstream.onDeny
+          widget: JoinedArray
+      children:
+        - name: config.authorizers.service
+          source: service
+        - name: config.authorizers.port
+          source: port
+
     - widget: Panel
       name: Pilot
       visibility: '$exists(spec.components.pilot.k8s.hpaSpec.minReplicas) or $exists(spec.components.pilot.k8s.hpaSpec.maxReplicas) or $exists(spec.components.pilot.k8s.strategy.rollingUpdate.maxSurge) or $exists(spec.components.pilot.k8s.strategy.rollingUpdate.maxUnavailable) or $exists(spec.components.pilot.k8s.resources.limits.cpu) or $exists(spec.components.pilot.k8s.resources.limits.memory) or $exists(spec.components.pilot.k8s.resources.requests.cpu) or $exists(spec.components.pilot.k8s.resources.requests.memory)'

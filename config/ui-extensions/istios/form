@@ -7,9 +7,46 @@
   - path: numTrustedProxies
     simple: true
     name: config.numTrustedProxies
-    inputInfo: inputInfo.config.numTrustedProxies
     value:
       type: number
+- path: spec.config.authorizers
+  name: config.authorizers
+  widget: GenericList
+  children:
+    - path: '[].name'
+      name: config.authorizers.name
+    - path: '[].service'
+      name: config.authorizers.service
+    - path: '[].port'
+      name: config.authorizers.port
+    - path: '[].headers'
+      name: config.authorizers.headers
+      widget: FormGroup
+      children:
+      - path: 'inCheck.add'
+        name: config.authorizers.headers.inCheck.add
+        widget: KeyValuePair
+      - path: 'inCheck.include'
+        name: config.authorizers.headers.inCheck.include
+        widget: SimpleList
+        children:
+            - path: '[]'
+      - path: 'toUpstream.onAllow'
+        name: config.authorizers.headers.toUpstream.onAllow
+        widget: SimpleList
+        children:
+            - path: '[]'
+      - path: 'toDownstream.onAllow'
+        name: config.authorizers.headers.toDownstream.onAllow
+        widget: SimpleList
+        children:
+            - path: '[]'
+      - path: 'toDownstream.onDeny'
+        name: config.authorizers.headers.toDownstream.onDeny
+        widget: SimpleList
+        children:
+            - path: '[]'
+
 - path: spec.components
   name: Components
   widget: FormGroup

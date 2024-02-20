@@ -5,6 +5,7 @@ import (
 	"fmt"
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
+	moduleLabels "github.com/kyma-project/istio/operator/pkg/labels"
 	apinetworkingv1alpha3 "istio.io/api/networking/v1alpha3"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -21,9 +22,6 @@ const (
 	ServiceEntryKind       = "ServiceEntry"
 
 	HttpProtocol = "http"
-
-	ServiceEntryLabelKey   = "kyma-project.io/module"
-	ServiceEntryLabelValue = "istio"
 )
 
 type ExternalAuthorizerReconciliation interface {
@@ -59,18 +57,21 @@ func (e *ExternalAuthorizer) Reconcile(ctx context.Context, istioCR operatorv1al
 }
 
 func cleanupServiceEntries(ctx context.Context, c client.Client, authorizersNameSet map[string]bool) described_errors.DescribedError {
-	var serviceEntryList v1alpha3.ServiceEntryList
+	var serviceEntryList unstructured.UnstructuredList
+
+	serviceEntryList.SetKind(ServiceEntryKind)
+	serviceEntryList.SetAPIVersion(ServiceEntryApiVersion)
 	err := c.List(ctx, &serviceEntryList)
 	if err != nil {
 		return described_errors.NewDescribedError(err, "Could not list ServiceEntries")
 	}
 
 	for _, serviceEntry := range serviceEntryList.Items {
-		_, exists := authorizersNameSet[serviceEntry.Name]
+		_, exists := authorizersNameSet[serviceEntry.GetName()]
 		if !exists {
-			val, exists := serviceEntry.Labels[ServiceEntryLabelKey]
-			if exists && val == ServiceEntryLabelValue {
-				err = c.Delete(ctx, serviceEntry)
+			val, exists := serviceEntry.GetLabels()[moduleLabels.ModuleLabelKey]
+			if exists && val == moduleLabels.ModuleLabelValue {
+				err = c.Delete(ctx, &serviceEntry)
 				if err != nil {
 					return described_errors.NewDescribedError(err, "Could not delete ServiceEntry that was removed from authorizers")
 				}
@@ -91,7 +92,7 @@ func applyServiceEntryForAuthorizer(ctx context.Context, k8sClient client.Client
 			Name:      authorizer.Name,
 			Namespace: ServiceEntryNamespace,
 			Labels: map[string]string{
-				ServiceEntryLabelKey: ServiceEntryLabelValue,
+				moduleLabels.ModuleLabelKey: moduleLabels.ModuleLabelValue,
 			},
 		},
 		Spec: apinetworkingv1alpha3.ServiceEntry{

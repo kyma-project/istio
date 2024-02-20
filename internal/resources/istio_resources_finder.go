@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	moduleLabels "github.com/kyma-project/istio/operator/pkg/labels"
 	"os"
 	"regexp"
 
@@ -89,6 +90,10 @@ func (i *IstioResourcesFinder) FindUserCreatedIstioResources() ([]Resource, erro
 			return nil, err
 		}
 		for _, item := range u.Items {
+			val, exists := item.GetLabels()[moduleLabels.ModuleLabelKey]
+			if exists && val == moduleLabels.ModuleLabelValue {
+				continue
+			}
 			res := Resource{
 				GVK: resource.GroupVersionKind,
 				ResourceMeta: ResourceMeta{

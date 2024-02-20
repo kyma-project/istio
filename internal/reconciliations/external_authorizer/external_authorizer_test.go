@@ -2,6 +2,7 @@ package external_authorizer_test
 
 import (
 	"context"
+	"fmt"
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/external_authorizer"
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
@@ -58,6 +59,46 @@ var _ = Describe("Reconciliation", func() {
 			},
 		},
 	}
+
+	Context("Duplicated authorization name", func() {
+		It("should cause a warning state", func() {
+			//given
+			client := createFakeClient()
+			reconciler := external_authorizer.NewReconciler(client)
+
+			istioCR := operatorv1alpha2.Istio{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:            "default",
+					ResourceVersion: "1",
+					Annotations:     map[string]string{},
+					UID:             "1234",
+				},
+				Spec: operatorv1alpha2.IstioSpec{
+					Config: operatorv1alpha2.Config{
+						Authorizers: []*operatorv1alpha2.Authorizer{
+							{
+								Name:    expectedName,
+								Service: expectedService,
+								Port:    expectedPort,
+							},
+							{
+								Name:    expectedName,
+								Service: expectedService,
+								Port:    expectedPort,
+							},
+						},
+					},
+				},
+			}
+
+			//when
+			err := reconciler.Reconcile(context.TODO(), istioCR)
+
+			//then
+			Expect(err).To(HaveOccurred())
+			Expect(err.Description()).To(Equal(fmt.Sprintf("Authorizer name needs to be unique: %s is duplicated", expectedName)))
+		})
+	})
 
 	Context("ServiceEntry creation", func() {
 

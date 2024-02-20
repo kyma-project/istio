@@ -599,7 +599,7 @@ var _ = Describe("Istio Controller", func() {
 			err = fakeClient.Get(context.TODO(), client.ObjectKeyFromObject(newerIstioCR), &updatedIstioCR)
 			Expect(err).To(Not(HaveOccurred()))
 
-			Expect(updatedIstioCR.Status.State).Should(Equal(operatorv1alpha2.Error))
+			Expect(updatedIstioCR.Status.State).Should(Equal(operatorv1alpha2.Warning))
 			Expect(updatedIstioCR.Status.Description).To(ContainSubstring(fmt.Sprintf("only Istio CR %s in %s reconciles the module", istioCrName, testNamespace)))
 
 			Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())

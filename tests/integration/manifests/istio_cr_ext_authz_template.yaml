@@ -12,11 +12,6 @@ spec:
       port: "8000"
       headers:
         inCheck:
-          include: ["authorization", "cookie"]
+          include: ["X-Ext-Authz"]
           add:
-            x-ext-authz: "{{.XExtAuthz}}"
-        toUpstream:
-          onAllow: ["authorization", "path", "x-auth-request-user", "x-auth-request-email", "x-auth-request-access-token"]
-        toDownstream:
-          onAllow: ["set-cookie"]
-          onDeny: ["content-type", "set-cookie"]
+            X-Add-In-Check: "value"

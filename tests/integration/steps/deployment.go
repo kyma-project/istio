@@ -21,7 +21,6 @@ import (
 
 const (
 	httpbinImage  = "europe-docker.pkg.dev/kyma-project/prod/external/kennethreitz/httpbin"
-	curlImage     = "europe-docker.pkg.dev/kyma-project/prod/external/curlimages/curl:7.78.0"
 	extAuthzImage = "gcr.io/istio-testing/ext-authz:latest"
 )
 
@@ -279,48 +278,6 @@ func CreateExtAuthzApplication(ctx context.Context, appName, namespace string) (
 	}
 
 	ctx, err = CreateDeployment(ctx, appName, namespace, c)
-	if err != nil {
-		return ctx, err
-	}
-
-	return ctx, err
-}
-
-func CreateSleepApplication(ctx context.Context, appName, namespace string) (context.Context, error) {
-	c := corev1.Container{
-		Name:            appName,
-		Image:           curlImage,
-		Command:         []string{"/bin/sleep", "infinity"},
-		ImagePullPolicy: corev1.PullIfNotPresent,
-		VolumeMounts: []corev1.VolumeMount{
-			{
-				Name:      "secret-volume",
-				MountPath: "/etc/sleep/tls",
-			},
-		},
-	}
-
-	v := corev1.Volume{
-		Name: "secret-volume",
-		VolumeSource: corev1.VolumeSource{
-			Secret: &corev1.SecretVolumeSource{
-				SecretName: "sleep-secret",
-				Optional:   ptr.To(true),
-			},
-		},
-	}
-
-	ctx, err := CreateServiceAccount(ctx, appName, namespace)
-	if err != nil {
-		return ctx, err
-	}
-
-	ctx, err = CreateServiceWithPort(ctx, appName, namespace, 80, 80)
-	if err != nil {
-		return ctx, err
-	}
-
-	ctx, err = CreateDeployment(ctx, appName, namespace, c, v)
 	if err != nil {
 		return ctx, err
 	}

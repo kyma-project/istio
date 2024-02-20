@@ -41,7 +41,7 @@ func (e *ExternalAuthorizer) Reconcile(ctx context.Context, istioCR operatorv1al
 	for _, authorizer := range istioCR.Spec.Config.Authorizers {
 		_, exists := authorizersNameSet[authorizer.Name]
 		if exists {
-			return described_errors.NewDescribedError(fmt.Errorf("%s is dupplicated", authorizer.Name), "Authorizer name needs to be unique")
+			return described_errors.NewDescribedError(fmt.Errorf("%s is dupplicated", authorizer.Name), "Authorizer name needs to be unique").SetWarning()
 		}
 		authorizersNameSet[authorizer.Name] = true
 	}

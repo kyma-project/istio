@@ -165,12 +165,14 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return r.requeueReconciliation(ctx, &istioCR, ingressGatewayErr, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIngressGatewayReconcileFailed))
 	}
 
+	r.statusHandler.SetCondition(&istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIngressGatewayReconcileSucceeded))
+
 	externalAuthorizerErr := r.externalAuthorizer.Reconcile(ctx, istioCR)
 	if externalAuthorizerErr != nil {
 		return r.requeueReconciliation(ctx, &istioCR, externalAuthorizerErr, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonExternalAuthorizerReconcileFailed))
 	}
 
-	r.statusHandler.SetCondition(&istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIngressGatewayReconcileSucceeded))
+	r.statusHandler.SetCondition(&istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonExternalAuthorizerReconcileSucceeded))
 	return r.finishReconcile(ctx, &istioCR, IstioTag)
 }
 

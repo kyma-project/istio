@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/external_authorizer"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -28,6 +29,7 @@ type IstioReconciler struct {
 	proxySidecars          proxy.SidecarsReconciliation
 	istioResources         istio_resources.ResourcesReconciliation
 	ingressGateway         Reconciliation
+	externalAuthorizer     external_authorizer.ExternalAuthorizerReconciliation
 	log                    logr.Logger
 	statusHandler          status.Status
 	reconciliationInterval time.Duration

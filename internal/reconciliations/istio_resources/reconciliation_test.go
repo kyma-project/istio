@@ -2,7 +2,7 @@ package istio_resources
 
 import (
 	"context"
-	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -28,15 +28,15 @@ func (hc *hyperscalerClientMock) IsAws() bool {
 
 var _ = Describe("Reconciliation", func() {
 	numTrustedProxies := 1
-	istioCR := operatorv1alpha1.Istio{
+	istioCR := operatorv1alpha2.Istio{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",
 			ResourceVersion: "1",
 			Annotations:     map[string]string{},
 			UID:             "1234",
 		},
-		Spec: operatorv1alpha1.IstioSpec{
-			Config: operatorv1alpha1.Config{
+		Spec: operatorv1alpha2.IstioSpec{
+			Config: operatorv1alpha2.Config{
 				NumTrustedProxies: &numTrustedProxies,
 			},
 		},
@@ -152,7 +152,7 @@ var _ = Describe("Reconciliation", func() {
 })
 
 func createFakeClient(objects ...ctrlclient.Object) ctrlclient.Client {
-	err := operatorv1alpha1.AddToScheme(scheme.Scheme)
+	err := operatorv1alpha2.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
 	err = corev1.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())

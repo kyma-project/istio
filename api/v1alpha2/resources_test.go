@@ -1,7 +1,7 @@
-package v1alpha1_test
+package v1alpha2_test
 
 import (
-	v1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
+	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	operatorv1alpha1 "istio.io/api/operator/v1alpha1"
@@ -23,14 +23,14 @@ var _ = Describe("GetProxyResources", func() {
 		memoryRequests := "500Mi"
 		cpuLimits := "800m"
 		memoryLimits := "800Mi"
-		istioCR := v1alpha1.Istio{Spec: v1alpha1.IstioSpec{Components: &v1alpha1.Components{
-			Proxy: &v1alpha1.ProxyComponent{K8S: &v1alpha1.ProxyK8sConfig{
-				Resources: &v1alpha1.Resources{
-					Requests: &v1alpha1.ResourceClaims{
+		istioCR := v1alpha2.Istio{Spec: v1alpha2.IstioSpec{Components: &v1alpha2.Components{
+			Proxy: &v1alpha2.ProxyComponent{K8S: &v1alpha2.ProxyK8sConfig{
+				Resources: &v1alpha2.Resources{
+					Requests: &v1alpha2.ResourceClaims{
 						Cpu:    &cpuRequests,
 						Memory: &memoryRequests,
 					},
-					Limits: &v1alpha1.ResourceClaims{
+					Limits: &v1alpha2.ResourceClaims{
 						Cpu:    &cpuLimits,
 						Memory: &memoryLimits,
 					},
@@ -56,10 +56,10 @@ var _ = Describe("GetProxyResources", func() {
 			Spec: &operatorv1alpha1.IstioOperatorSpec{},
 		}
 
-		istioCR := v1alpha1.Istio{Spec: v1alpha1.IstioSpec{Components: &v1alpha1.Components{
-			Proxy: &v1alpha1.ProxyComponent{K8S: &v1alpha1.ProxyK8sConfig{
-				Resources: &v1alpha1.Resources{
-					Requests: &v1alpha1.ResourceClaims{
+		istioCR := v1alpha2.Istio{Spec: v1alpha2.IstioSpec{Components: &v1alpha2.Components{
+			Proxy: &v1alpha2.ProxyComponent{K8S: &v1alpha2.ProxyK8sConfig{
+				Resources: &v1alpha2.Resources{
+					Requests: &v1alpha2.ResourceClaims{
 						Cpu:    ptr.To(string("500m")),
 						Memory: ptr.To(string("500Mi")),
 					},
@@ -84,7 +84,7 @@ var _ = Describe("GetProxyResources", func() {
 		err = yaml.Unmarshal(manifest, &iop)
 		Expect(err).ShouldNot(HaveOccurred())
 
-		istioCR := v1alpha1.Istio{}
+		istioCR := v1alpha2.Istio{}
 
 		// when
 		result, err := istioCR.GetProxyResources(iop)

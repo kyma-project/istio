@@ -1,4 +1,4 @@
-package v1alpha1
+package v1alpha2
 
 import (
 	"encoding/json"
@@ -40,33 +40,118 @@ func (i *Istio) MergeInto(op istioOperator.IstioOperator) (istioOperator.IstioOp
 	return mergedResourcesOp, nil
 }
 
-func (i *Istio) mergeConfig(op istioOperator.IstioOperator) (istioOperator.IstioOperator, error) {
-	if i.Spec.Config.NumTrustedProxies == nil {
-		return op, nil
-	}
+type meshConfigBuilder struct {
+	c *meshv1alpha1.MeshConfig
+}
 
+func newMeshConfigBuilder(op istioOperator.IstioOperator) (*meshConfigBuilder, error) {
 	if op.Spec.MeshConfig == nil {
 		op.Spec.MeshConfig = &structpb.Struct{}
 	}
 
 	c, err := unmarshalMeshConfig(op.Spec.MeshConfig)
 	if err != nil {
-		return op, err
+		return nil, err
 	}
 
 	if c.DefaultConfig == nil {
 		c.DefaultConfig = &meshv1alpha1.ProxyConfig{}
 	}
 
+	return &meshConfigBuilder{c: c}, nil
+}
+
+func (m *meshConfigBuilder) BuildNumTrustedProxies(numTrustedProxiesPtr *int) *meshConfigBuilder {
+	var numTrustedProxies uint32
+	if numTrustedProxiesPtr == nil {
+		return m
+	}
+	numTrustedProxies = uint32(*numTrustedProxiesPtr)
+
 	// Since the gateway topology is not part of the default configuration, and we do not explicitly set it in the
 	// chart, it could be nil.
-	if c.DefaultConfig.GatewayTopology != nil {
-		c.DefaultConfig.GatewayTopology.NumTrustedProxies = uint32(*i.Spec.Config.NumTrustedProxies)
+	if m.c.DefaultConfig.GatewayTopology != nil {
+		m.c.DefaultConfig.GatewayTopology.NumTrustedProxies = numTrustedProxies
 	} else {
-		c.DefaultConfig.GatewayTopology = &meshv1alpha1.Topology{NumTrustedProxies: uint32(*i.Spec.Config.NumTrustedProxies)}
+		m.c.DefaultConfig.GatewayTopology = &meshv1alpha1.Topology{NumTrustedProxies: numTrustedProxies}
 	}
 
-	if updatedConfig, err := marshalMeshConfig(c); err != nil {
+	return m
+}
+
+func (m *meshConfigBuilder) Build() *meshv1alpha1.MeshConfig {
+	return m.c
+}
+
+func (m *meshConfigBuilder) BuildExternalAuthorizerConfiguration(authorizers []*Authorizer) *meshConfigBuilder {
+	for _, authorizer := range authorizers {
+		if authorizer != nil {
+			var authorizationProvider meshv1alpha1.MeshConfig_ExtensionProvider
+			authorizationProvider.Name = authorizer.Name
+			var envoyXAuthProvider meshv1alpha1.MeshConfig_ExtensionProvider_EnvoyExtAuthzHttp
+			envoyXAuthProvider.EnvoyExtAuthzHttp = &meshv1alpha1.MeshConfig_ExtensionProvider_EnvoyExternalAuthorizationHttpProvider{
+				Service: authorizer.Service,
+				Port:    authorizer.Port,
+			}
+
+			headers := authorizer.Headers
+			if headers != nil {
+				if headers.InCheck != nil {
+					include := headers.InCheck.Include
+					if include != nil {
+						envoyXAuthProvider.EnvoyExtAuthzHttp.IncludeRequestHeadersInCheck = append(envoyXAuthProvider.EnvoyExtAuthzHttp.IncludeRequestHeadersInCheck, include...)
+					}
+
+					add := headers.InCheck.Add
+					if add != nil {
+						envoyXAuthProvider.EnvoyExtAuthzHttp.IncludeAdditionalHeadersInCheck = make(map[string]string)
+						for k, v := range add {
+							envoyXAuthProvider.EnvoyExtAuthzHttp.IncludeAdditionalHeadersInCheck[k] = v
+						}
+					}
+				}
+
+				if headers.ToUpstream != nil {
+					onAllow := headers.ToUpstream.OnAllow
+					if onAllow != nil {
+						envoyXAuthProvider.EnvoyExtAuthzHttp.HeadersToUpstreamOnAllow = append(envoyXAuthProvider.EnvoyExtAuthzHttp.HeadersToUpstreamOnAllow, onAllow...)
+					}
+				}
+
+				if headers.ToDownstream != nil {
+					onAllow := headers.ToDownstream.OnAllow
+					if onAllow != nil {
+						envoyXAuthProvider.EnvoyExtAuthzHttp.HeadersToDownstreamOnAllow = append(envoyXAuthProvider.EnvoyExtAuthzHttp.HeadersToDownstreamOnAllow, onAllow...)
+					}
+
+					onDeny := headers.ToDownstream.OnDeny
+					if onDeny != nil {
+						envoyXAuthProvider.EnvoyExtAuthzHttp.HeadersToDownstreamOnDeny = append(envoyXAuthProvider.EnvoyExtAuthzHttp.HeadersToDownstreamOnDeny, onDeny...)
+					}
+				}
+			}
+
+			authorizationProvider.Provider = &envoyXAuthProvider
+			m.c.ExtensionProviders = append(m.c.ExtensionProviders, &authorizationProvider)
+		}
+	}
+
+	return m
+}
+
+func (i *Istio) mergeConfig(op istioOperator.IstioOperator) (istioOperator.IstioOperator, error) {
+
+	mcb, err := newMeshConfigBuilder(op)
+	if err != nil {
+		return op, err
+	}
+
+	newMeshConfig := mcb.
+		BuildNumTrustedProxies(i.Spec.Config.NumTrustedProxies).
+		BuildExternalAuthorizerConfiguration(i.Spec.Config.Authorizers).
+		Build()
+
+	if updatedConfig, err := marshalMeshConfig(newMeshConfig); err != nil {
 		return op, err
 	} else {
 		op.Spec.MeshConfig = updatedConfig

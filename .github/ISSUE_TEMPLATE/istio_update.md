@@ -8,16 +8,16 @@ assignees: ''
 ---
 **Description**
 
-Update Kyma Istio module to use new Istio version. Update Istio version and used dependencies, adjust tests and documentation if needed. Upgrade needs to be with zero downtime for production settings.
+Update the Kyma Istio module to use new Istio version. Update Istio version and used dependencies, adjust tests and documentation if needed. The upgrade needs to have zero downtime for production settings.
 
 ACs:
-- [ ] Review Istio RNs
-- [ ] Istio bumped on main and latest release branch
-- [ ] Prepare Kyma Istio RNs based on Istio RNs
-- [ ] Istio installs and upgrades to new version
+- [ ] Review Istio RNs.
+- [ ] Istio bumped on the `main` and latest release branch.
+- [ ] Prepare Kyma runtime Istio RNs based on open-source Istio RNs.
+- [ ] Istio installs and upgrades to new version.
 - [ ] Istio module upgrades with zero downtime - https://github.com/kyma-project/istio/issues/429
-- [ ] Tests and documentation updated if needed
-- [ ] Verify that sidecars are in sync with control-plane
+- [ ] Tests and documentation updated if needed.
+- [ ] Verify that sidecars are in sync with Control Plane.
 
 **DoD:**
 - [ ] Provide documentation.
@@ -25,7 +25,7 @@ ACs:
 - [ ] Verify if the solution works for both open-source Kyma and SAP BTP, Kyma runtime.
 - [ ] Check the outcome of all related pipelines.
 - [ ] As a PR reviewer, verify code coverage and evaluate if it is acceptable.
-- [ ] Add release notes
+- [ ] Add release notes.
 
 **Attachments**
 {Link to Istio release announcement from https://istio.io/latest/news/releases/}

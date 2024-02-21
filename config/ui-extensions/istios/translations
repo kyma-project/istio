@@ -1,25 +1,16 @@
 en:
   config.numTrustedProxies: Number of trusted proxies
-  inputInfo.config.numTrustedProxies: Number of trusted proxies deployed in front of the Istio gateway proxy
 
   config.authorizers: Authorizers
   config.authorizers.name: Name
-  inputInfo.config.authorizers.name: A unique name identifying the authorizer.
   config.authorizers.service: Service
-  inputInfo.config.authorizers.service: Specifies the service that implements the Envoy ext_authz HTTP authorization service. The format is [<Namespace>/]<Hostname>.
   config.authorizers.port: Port
   config.authorizers.headers: Headers
-  inputInfo.config.authorizers.port: Specifies the port of the service.
   config.authorizers.headers.inCheck.include: Forward To Authorization Request
-  inputInfo.config.authorizers.headers.inCheck.include: List of client request headers that should be included in the authorization request sent to the authorization service.
   config.authorizers.headers.inCheck.add: Add To Authorization Request
-  inputInfo.config.authorizers.headers.inCheck.add: Set of additional fixed headers that should be included in the authorization request sent to the authorization service.
   config.authorizers.headers.toUpstream.onAllow: Forward To Upstream
-  inputInfo.config.authorizers.headers.toUpstream.onAllow: List of headers from the authorization service that should be added or overridden in the original request and forwarded to the upstream when the authorization check result is allowed (HTTP code 200).
   config.authorizers.headers.toDownstream.onAllow: Forward To Downstream On Allow
-  inputInfo.config.authorizers.headers.toDownstream.onAllow: List of headers from the authorization service that should be forwarded to downstream when the authorization check result is allowed (HTTP code 200). If not specified, the original response will not be modified and forwarded to downstream as-is.
   config.authorizers.headers.toDownstream.onDeny: Forward To Downstream On Deny
-  inputInfo.config.authorizers.headers.toDownstream.onDeny: List of headers from the authorization service that should be forwarded to downstream when the authorization check result is not allowed (HTTP code other than 200). If not specified, all the authorization response headers, except *Authority (Host)* will be in the response to the downstream.
 
   k8s.hpaSpec: Horizontal Pod Autoscaler
   k8s.hpaSpec.minReplicas: Minimum number of replicas
@@ -34,11 +25,11 @@ en:
   k8s.resources.requests.cpu: CPU requests
   k8s.resources.requests.memory: Memory requests
   k8s.affinity: Affinity (YAML)
-  inputInfo.hpaSpec.minReplicas: Minimum number of replicas for this deployment
-  inputInfo.hpaSpec.maxReplicas: Maximum number of replicas for this deployment
-  inputInfo.rollingUpdate.maxSurge: Maximum number of Pods, or the percentage of Pods that can be created on top during an update
-  inputInfo.rollingUpdate.maxUnvailable: Maximum number of Pods, or the percentage of Pods that can be unavailable during an update
-  inputInfo.limits.cpu: Total CPU limits of all Pods that are in a non-terminal state must not exceed this value
-  inputInfo.limits.memory: Total memory limits of all Pods that are in a non-terminal state must not exceed this value
-  inputInfo.requests.cpu: Total CPU requests of all Pods that are in a non-terminal state must not exceed this value
-  inputInfo.requests.memory: Total memory requests of all Pods that are in a non-terminal state must not exceed this value
+  description.hpaSpec.minReplicas: Minimum number of replicas for this deployment
+  description.hpaSpec.maxReplicas: Maximum number of replicas for this deployment
+  description.rollingUpdate.maxSurge: Maximum number of Pods, or the percentage of Pods that can be created on top during an update
+  description.rollingUpdate.maxUnvailable: Maximum number of Pods, or the percentage of Pods that can be unavailable during an update
+  description.limits.cpu: Total CPU limits of all Pods that are in a non-terminal state must not exceed this value
+  description.limits.memory: Total memory limits of all Pods that are in a non-terminal state must not exceed this value
+  description.requests.cpu: Total CPU requests of all Pods that are in a non-terminal state must not exceed this value
+  description.requests.memory: Total memory requests of all Pods that are in a non-terminal state must not exceed this value

@@ -47,12 +47,7 @@ type ResponseStatusCodeAsserter struct {
 
 func (s ResponseStatusCodeAsserter) Assert(response http.Response) (bool, string) {
 	if response.StatusCode != s.Code {
-		var body []byte
-		_, err := response.Body.Read(body)
-		if err != nil {
-			return false, err.Error()
-		}
-		return false, fmt.Sprintf("Status code %d does not match expected code %d; Response: %s", response.StatusCode, s.Code, string(body))
+		return false, fmt.Sprintf("Status code %d does not match expected code %d", response.StatusCode, s.Code)
 
 	}
 

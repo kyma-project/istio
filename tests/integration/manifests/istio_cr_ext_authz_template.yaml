@@ -9,7 +9,7 @@ spec:
     authorizers:
     - name: "ext-authz"
       service: "ext-authz.{{.Namespace}}.svc.cluster.local"
-      port: "8000"
+      port: 8000
       headers:
         inCheck:
           include: ["X-Ext-Authz"]

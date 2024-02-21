@@ -73,7 +73,7 @@ For example, the issue occurs when you delete Istio, but there are still Virtual
 <!-- tabs:end -->
 
 
-1. When the finalizer is removed, the Istio CR is deleted. Other resources, such as the `istiod` Deployment, remain on the cluster.
+1. When the finalizer is removed, the Istio CR is deleted. Other resources, such as the `istiod` Deployment, remain in the cluster.
 
 2. Reapply the Istio CR to install Istio once again.
 

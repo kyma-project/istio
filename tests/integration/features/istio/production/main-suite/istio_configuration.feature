@@ -45,6 +45,7 @@ Feature: Configuration of Istio module
     Then Request with header "X-Forwarded-For" with value "10.2.1.1,10.0.0.1" sent to httpbin should return "X-Envoy-External-Address" with value "10.2.1.1"
 
   Scenario: External authorizer
+    When Template value "Namespace" is set to "default"
     And Istio CR "istio-sample" from "istio_cr_ext_authz_template" is applied in namespace "kyma-system"
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
     And Istio injection is "enabled" in namespace "default"

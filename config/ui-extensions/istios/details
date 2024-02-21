@@ -26,7 +26,7 @@ body:
       collapsible:
         - name: config.authorizers.headers.inCheck.add
           # For some reason $each doesn't return an array that works with JoinedArray widget, when we have only one element. So in this case we return an Array with one element.
-          source: '$count($keys(headers.inCheck.add)) = 1 ? $each(headers.inCheck.add, function($v, $k) {[$k & ": " & $v]}) : $each(headers.inCheck.add, function($v, $k) {$k & ": " & $v})'
+          source: '$count($keys(headers.inCheck.add)) = 1 ? $each(headers.inCheck.add, function($v, $k) {[$k & ":" & $v]}) : $each(headers.inCheck.add, function($v, $k) {$k & ":" & $v})'
           widget: JoinedArray
         - name: config.authorizers.headers.inCheck.include
           source: headers.inCheck.include

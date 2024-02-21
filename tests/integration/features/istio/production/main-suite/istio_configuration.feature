@@ -12,10 +12,10 @@ Feature: Configuration of Istio module
     And Template value "ProxyMemoryRequest" is set to "190Mi"
     And Template value "ProxyCPULimit" is set to "700m"
     And Template value "ProxyMemoryLimit" is set to "700Mi"
-    And Istio CR "istio-sample" is applied in namespace "kyma-system"
+    And Istio CR "istio-sample" from "istio_cr_template" is applied in namespace "kyma-system"
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
     And Istio injection is "enabled" in namespace "default"
-    And Application "test-app" is running in namespace "default"
+    And Httpbin application "test-app" deployment is created in namespace "default"
     And Application "test-app" in namespace "default" has proxy with "requests" set to cpu - "30m" and memory - "190Mi"
     And Application "test-app" in namespace "default" has proxy with "limits" set to cpu - "700m" and memory - "700Mi"
     And "Deployment" "test-app" in namespace "default" is ready
@@ -23,7 +23,7 @@ Feature: Configuration of Istio module
     And Template value "ProxyMemoryRequest" is set to "230Mi"
     And Template value "ProxyCPULimit" is set to "900m"
     And Template value "ProxyMemoryLimit" is set to "900Mi"
-    When Istio CR "istio-sample" is updated in namespace "kyma-system"
+    When Istio CR "istio-sample" from "istio_cr_template" is updated in namespace "kyma-system"
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
     Then "Deployment" "test-app" in namespace "default" is ready
     And Application "test-app" in namespace "default" has proxy with "requests" set to cpu - "80m" and memory - "230Mi"
@@ -31,15 +31,32 @@ Feature: Configuration of Istio module
 
   Scenario: Ingress Gateway adds correct X-Envoy-External-Address header after updating numTrustedProxies
     Given Template value "NumTrustedProxies" is set to "1"
-    And Istio CR "istio-sample" is applied in namespace "kyma-system"
+    And Istio CR "istio-sample" from "istio_cr_template" is applied in namespace "kyma-system"
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
     And Istio injection is "enabled" in namespace "default"
-    And Httpbin application "httpbin" is running in namespace "default"
+    And Httpbin application "httpbin" deployment is created in namespace "default"
     And "Deployment" "httpbin" in namespace "default" is ready
     And Istio gateway "test-gateway" is configured in namespace "default"
     And Virtual service "test-vs" exposing service "httpbin.default.svc.cluster.local" by gateway "default/test-gateway" is configured in namespace "default"
     And Request with header "X-Forwarded-For" with value "10.2.1.1,10.0.0.1" sent to httpbin should return "X-Envoy-External-Address" with value "10.0.0.1"
     When Template value "NumTrustedProxies" is set to "2"
-    And Istio CR "istio-sample" is updated in namespace "kyma-system"
+    And Istio CR "istio-sample" from "istio_cr_template" is updated in namespace "kyma-system"
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
     Then Request with header "X-Forwarded-For" with value "10.2.1.1,10.0.0.1" sent to httpbin should return "X-Envoy-External-Address" with value "10.2.1.1"
+
+  Scenario: External authorizer
+    And Istio CR "istio-sample" from "istio_cr_ext_authz_template" is applied in namespace "kyma-system"
+    And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
+    And Istio injection is "enabled" in namespace "default"
+    And Httpbin application "httpbin" deployment is created in namespace "default" with service port "80"
+    And "Deployment" "httpbin" in namespace "default" is ready
+    And Ext-authz application "ext-authz" deployment is created in namespace "default"
+    And "Deployment" "ext-authz" in namespace "default" is ready
+    And Istio gateway "test-gateway" is configured in namespace "default"
+    And Virtual service "httpbin" exposing service "httpbin.default.svc.cluster.local" with port "80" by gateway "default/test-gateway" is configured in namespace "default"
+    When Authorization policy "ext-authz" in namespace "default" with app selector "httpbin" is using extension provider "ext-authz" for operation "/headers"
+    Then Request to path "/" should have response code "200"
+    And Request with header "x-ext-authz" with value "allow" to path "/headers" should have response code "200"
+    And Log of container "ext-authz" in deployment "ext-authz" in namespace "default" contains "X-Add-In-Check:[value] X-Ext-Authz:[allow]"
+    And Request with header "x-ext-authz" with value "deny" to path "/headers" should have response code "403"
+    And Log of container "ext-authz" in deployment "ext-authz" in namespace "default" contains "X-Add-In-Check:[value] X-Ext-Authz:[deny]"

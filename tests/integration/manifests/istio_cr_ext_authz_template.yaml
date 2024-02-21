@@ -1,0 +1,17 @@
+apiVersion: operator.kyma-project.io/v1alpha1
+kind: Istio
+metadata:
+  name: istio-sample
+  labels:
+    app.kubernetes.io/name: istio-sample
+spec:
+  config:
+    authorizers:
+    - name: "ext-authz"
+      service: "ext-authz.{{.Namespace}}.svc.cluster.local"
+      port: "8000"
+      headers:
+        inCheck:
+          include: ["X-Ext-Authz"]
+          add:
+            X-Add-In-Check: "value"

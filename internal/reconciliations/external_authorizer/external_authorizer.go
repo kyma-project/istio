@@ -109,6 +109,10 @@ func applyServiceEntryForAuthorizer(ctx context.Context, k8sClient client.Client
 	}
 
 	serviceEntryMap, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&serviceEntry)
+	if err != nil {
+		return err
+	}
+
 	serviceEntryUnstructured := unstructured.Unstructured{Object: serviceEntryMap}
 	serviceEntryUnstructured.SetKind(ServiceEntryKind)
 	serviceEntryUnstructured.SetAPIVersion(ServiceEntryApiVersion)

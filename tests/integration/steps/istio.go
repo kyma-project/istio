@@ -29,7 +29,6 @@ import (
 const (
 	defaultIopName      string = "installed-state-default-operator"
 	defaultIopNamespace string = "istio-system"
-	crdListPath         string = "pkg/crds/crd_list.yaml"
 )
 
 func IstioCRDsBePresentOnCluster(ctx context.Context, should string) error {
@@ -42,7 +41,7 @@ func IstioCRDsBePresentOnCluster(ctx context.Context, should string) error {
 	if should != "should" {
 		shouldHave = false
 	}
-	lister, err := crds.NewCRDListerFromFile(k8sClient, crdListPath)
+	lister, err := crds.NewCRDListerFromFile(k8sClient, "steps/istio_crd_list.yaml")
 	if err != nil {
 		return err
 	}

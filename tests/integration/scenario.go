@@ -43,7 +43,7 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^Request with header "([^"]*)" with value "([^"]*)" sent to httpbin should return "([^"]*)" with value "([^"]*)"$`, steps.ValidateHeader)
 	ctx.Step(`^Request to path "([^"]*)" should return "([^"]*)" with value "([^"]*)" in body$`, steps.ValidateHeaderInBody)
 	ctx.Step(`^Request to path "([^"]*)" should have response code "([^"]*)"$`, steps.ValidateResponseStatusCode)
-	ctx.Step(`^Request with header "([^"]*)" with value "([^"]*)" to path "([^"]*)" should have response code "([^"]*)"$`, steps.ValidateHeaderStatusCode)
+	ctx.Step(`^Request with header "([^"]*)" with value "([^"]*)" to path "([^"]*)" should have response code "([^"]*)"$`, steps.ValidateResponseCodeForRequestWithHeader)
 	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" is "([^"]*)"`, steps.ResourceIsPresent)
 	ctx.Step(`^Request sent to exposed httpbin, should contain public client IP in "([^"]*)" header$`, steps.ValidatePublicClientIpInHeader)
 	ctx.Step(`^Access logging is enabled for the mesh using "([^"]*)" provider$`, steps.EnableAccessLogging)

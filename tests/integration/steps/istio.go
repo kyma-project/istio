@@ -17,7 +17,7 @@ import (
 	"github.com/cucumber/godog"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
-	"github.com/kyma-project/istio/operator/tests/integration/manifests"
+	crds "github.com/kyma-project/istio/operator/tests/integration/pkg/crds"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	"github.com/mitchellh/mapstructure"
 	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
@@ -29,7 +29,7 @@ import (
 const (
 	defaultIopName      string = "installed-state-default-operator"
 	defaultIopNamespace string = "istio-system"
-	crdListPath         string = "manifests/crd_list.yaml"
+	crdListPath         string = "crds/crd_list.yaml"
 )
 
 func IstioCRDsBePresentOnCluster(ctx context.Context, should string) error {
@@ -42,7 +42,7 @@ func IstioCRDsBePresentOnCluster(ctx context.Context, should string) error {
 	if should != "should" {
 		shouldHave = false
 	}
-	lister, err := manifests.NewCRDListerFromFile(k8sClient, crdListPath)
+	lister, err := crds.NewCRDListerFromFile(k8sClient, crdListPath)
 	if err != nil {
 		return err
 	}

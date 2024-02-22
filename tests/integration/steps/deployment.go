@@ -326,35 +326,6 @@ func CreateServiceWithPort(ctx context.Context, appName, namespace string, port,
 	return ctx, err
 }
 
-func CreateServiceAccount(ctx context.Context, appName, namespace string) (context.Context, error) {
-	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
-	if err != nil {
-		return ctx, err
-	}
-
-	sa := corev1.ServiceAccount{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "v1",
-			Kind:       "ServiceAcount",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      appName,
-			Namespace: namespace,
-		},
-	}
-
-	err = retry.Do(func() error {
-		err := k8sClient.Create(context.TODO(), &sa)
-		if err != nil {
-			return err
-		}
-		ctx = testcontext.AddCreatedTestObjectInContext(ctx, &sa)
-		return nil
-	}, testcontext.GetRetryOpts()...)
-
-	return ctx, err
-}
-
 func getPodList(ctx context.Context, k8sClient client.Client, podList *corev1.PodList, opts *client.ListOptions) error {
 	err := k8sClient.List(ctx, podList, opts)
 	if err != nil {

@@ -15,14 +15,12 @@ import (
 )
 
 func DeployIstioOperator(ctx context.Context, manifestType, should string) error {
-	const manifestDirectory = "manifests"
-
 	var manifestFileName string
 	switch manifestType {
 	case "generated":
-		manifestFileName = "generated-operator-manifest.yaml"
+		manifestFileName = "operator_generated_manifest.yaml"
 	case "failing":
-		manifestFileName = "fail-operator-manifest.yaml"
+		manifestFileName = "operator_failing_manifest.yaml"
 	default:
 		return fmt.Errorf("unsupported manifest type: %s", manifestType)
 	}
@@ -37,7 +35,7 @@ func DeployIstioOperator(ctx context.Context, manifestType, should string) error
 		return err
 	}
 
-	resources, err := manifestprocessor.ParseYamlFromFile(manifestFileName, manifestDirectory)
+	resources, err := manifestprocessor.ParseYamlFromFile(manifestFileName)
 	if err != nil {
 		return err
 	}

@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path"
 	"text/template"
 	"time"
 
@@ -154,8 +155,7 @@ func (t *TemplatedIstioCr) IstioCRIsUpdatedInNamespace(ctx context.Context, name
 }
 
 func createIstioCRFromTemplate(name string, templateFN string, namespace string, templateValues map[string]string) (istioCR.Istio, error) {
-	templateFileName := fmt.Sprintf("manifests/%s.yaml", templateFN)
-	istioCRYaml, err := os.ReadFile(templateFileName)
+	istioCRYaml, err := os.ReadFile(path.Join("steps", fmt.Sprintf("%s.yaml", templateFN)))
 	if err != nil {
 		return istioCR.Istio{}, err
 	}

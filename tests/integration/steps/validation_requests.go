@@ -71,7 +71,7 @@ func ValidateResponseStatusCode(ctx context.Context, path string, expectedCode i
 	return ctx, c.Get(url, asserter)
 }
 
-func ValidateHeaderStatusCode(ctx context.Context, givenHeaderName, givenHeaderValue, path string, expectedCode int) (context.Context, error) {
+func ValidateResponseCodeForRequestWithHeader(ctx context.Context, givenHeaderName, givenHeaderValue, path string, expectedCode int) (context.Context, error) {
 
 	ingressAddress, err := fetchIstioIngressGatewayAddress(ctx)
 	if err != nil {

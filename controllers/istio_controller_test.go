@@ -54,7 +54,6 @@ var _ = Describe("Istio Controller", func() {
 				proxySidecars:          &proxySidecarsReconciliationMock{},
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
-				externalAuthorizer:     &externalAuthorizerReconciliationMock{},
 				log:                    logr.Discard(),
 				statusHandler:          status.NewStatusHandler(client),
 				reconciliationInterval: 10 * time.Hour,
@@ -97,7 +96,6 @@ var _ = Describe("Istio Controller", func() {
 				proxySidecars:          &proxySidecarsReconciliationMock{},
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
-				externalAuthorizer:     &externalAuthorizerReconciliationMock{},
 				log:                    logr.Discard(),
 				statusHandler:          NewStatusMock(),
 				reconciliationInterval: testReconciliationInterval,
@@ -130,7 +128,6 @@ var _ = Describe("Istio Controller", func() {
 				proxySidecars:          &proxySidecarsReconciliationMock{},
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
-				externalAuthorizer:     &externalAuthorizerReconciliationMock{},
 				log:                    logr.Discard(),
 				statusHandler:          statusMock,
 				reconciliationInterval: testReconciliationInterval,
@@ -166,7 +163,6 @@ var _ = Describe("Istio Controller", func() {
 				proxySidecars:          &proxySidecarsReconciliationMock{},
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
-				externalAuthorizer:     &externalAuthorizerReconciliationMock{},
 				log:                    logr.Discard(),
 				statusHandler:          &statusMock,
 				reconciliationInterval: testReconciliationInterval,
@@ -203,7 +199,6 @@ var _ = Describe("Istio Controller", func() {
 				proxySidecars:          &proxySidecarsReconciliationMock{},
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
-				externalAuthorizer:     &externalAuthorizerReconciliationMock{},
 				log:                    logr.Discard(),
 				statusHandler:          statusMock,
 				reconciliationInterval: testReconciliationInterval,
@@ -242,7 +237,6 @@ var _ = Describe("Istio Controller", func() {
 				proxySidecars:          &proxySidecarsReconciliationMock{},
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
-				externalAuthorizer:     &externalAuthorizerReconciliationMock{},
 				log:                    logr.Discard(),
 				statusHandler:          &statusMock,
 				reconciliationInterval: testReconciliationInterval,
@@ -275,7 +269,6 @@ var _ = Describe("Istio Controller", func() {
 				proxySidecars:          &proxySidecarsReconciliationMock{},
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
-				externalAuthorizer:     &externalAuthorizerReconciliationMock{},
 				log:                    logr.Discard(),
 				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
@@ -315,7 +308,6 @@ var _ = Describe("Istio Controller", func() {
 				proxySidecars:          &proxySidecarsReconciliationMock{},
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
-				externalAuthorizer:     &externalAuthorizerReconciliationMock{},
 				log:                    logr.Discard(),
 				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
@@ -370,7 +362,6 @@ var _ = Describe("Istio Controller", func() {
 				proxySidecars:          &proxySidecarsReconciliationMock{},
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
-				externalAuthorizer:     &externalAuthorizerReconciliationMock{},
 				log:                    logr.Discard(),
 				statusHandler:          &statusMock,
 				reconciliationInterval: testReconciliationInterval,
@@ -387,7 +378,6 @@ var _ = Describe("Istio Controller", func() {
 			Expect(statusMock.GetConditions()).Should(Equal([]operatorv1alpha2.ReasonWithMessage{
 				operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonProxySidecarRestartSucceeded),
 				operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIngressGatewayReconcileSucceeded),
-				operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonExternalAuthorizerReconcileSucceeded),
 				operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileSucceeded),
 			}))
 		})
@@ -415,7 +405,6 @@ var _ = Describe("Istio Controller", func() {
 				proxySidecars:          &proxySidecarsReconciliationMock{},
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
-				externalAuthorizer:     &externalAuthorizerReconciliationMock{},
 				log:                    logr.Discard(),
 				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
@@ -467,7 +456,6 @@ var _ = Describe("Istio Controller", func() {
 				},
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
-				externalAuthorizer:     &externalAuthorizerReconciliationMock{},
 				log:                    logr.Discard(),
 				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
@@ -535,7 +523,6 @@ var _ = Describe("Istio Controller", func() {
 				istioInstallation:      &istioInstallationReconciliationMock{},
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
-				externalAuthorizer:     &externalAuthorizerReconciliationMock{},
 				proxySidecars:          &proxySidecarsReconciliationMock{},
 				log:                    logr.Discard(),
 				statusHandler:          status.NewStatusHandler(fakeClient),
@@ -596,7 +583,6 @@ var _ = Describe("Istio Controller", func() {
 				proxySidecars:          &proxySidecarsReconciliationMock{},
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
-				externalAuthorizer:     &externalAuthorizerReconciliationMock{},
 				log:                    logr.Discard(),
 				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
@@ -642,7 +628,6 @@ var _ = Describe("Istio Controller", func() {
 				proxySidecars:          &proxySidecarsReconciliationMock{},
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
-				externalAuthorizer:     &externalAuthorizerReconciliationMock{},
 				log:                    logr.Discard(),
 				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
@@ -692,7 +677,6 @@ var _ = Describe("Istio Controller", func() {
 				proxySidecars:          &proxySidecarsReconciliationMock{warningMessage: "The sidecars of the following workloads could not be restarted: default/httpbin, default/nginx and 3 additional workloads."},
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
-				externalAuthorizer:     &externalAuthorizerReconciliationMock{},
 				log:                    logr.Discard(),
 				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
@@ -747,7 +731,6 @@ var _ = Describe("Istio Controller", func() {
 				proxySidecars:          &proxySidecarsReconciliationMock{warningMessage: "The sidecars of the following workloads could not be restarted: default/httpbin, default/nginx and 3 additional workloads."},
 				istioResources:         &istioResourcesReconciliationMock{},
 				ingressGateway:         &ingressGatewayReconciliationMock{},
-				externalAuthorizer:     &externalAuthorizerReconciliationMock{},
 				log:                    logr.Discard(),
 				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
@@ -781,13 +764,6 @@ var _ = Describe("Istio Controller", func() {
 		})
 	})
 })
-
-type externalAuthorizerReconciliationMock struct {
-}
-
-func (i *externalAuthorizerReconciliationMock) Reconcile(_ context.Context, _ operatorv1alpha2.Istio) described_errors.DescribedError {
-	return nil
-}
 
 type ingressGatewayReconciliationMock struct {
 }
@@ -827,7 +803,7 @@ type istioInstallationReconciliationMock struct {
 	err described_errors.DescribedError
 }
 
-func (i *istioInstallationReconciliationMock) Reconcile(_ context.Context, istioCR *operatorv1alpha2.Istio, statusHandler status.Status, _ string) described_errors.DescribedError {
+func (i *istioInstallationReconciliationMock) Reconcile(_ context.Context, _ *operatorv1alpha2.Istio, _ status.Status, _ string) described_errors.DescribedError {
 	return i.err
 }
 

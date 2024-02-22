@@ -76,12 +76,6 @@ const (
 	ConditionReasonIngressGatewayReconcileSucceededMessage                 = "Istio Ingress Gateway reconciliation succeeded"
 	ConditionReasonIngressGatewayReconcileFailed           ConditionReason = "IngressGatewayReconcileFailed"
 	ConditionReasonIngressGatewayReconcileFailedMessage                    = "Istio Ingress Gateway reconciliation failed"
-
-	// external authorizer
-	ConditionReasonExternalAuthorizerReconcileSucceeded        ConditionReason = "ExternalAuthorizerReconcileSucceeded"
-	ConditionReasonExternalAuthorizerReconcileSucceededMessage                 = "External Authorizer reconciliation Succeeded"
-	ConditionReasonExternalAuthorizerReconcileFailed           ConditionReason = "ExternalAuthorizerReconcileFailed"
-	ConditionReasonExternalAuthorizerReconcileFailedMessage                    = "External Authorizer reconciliation Failed"
 )
 
 type ReasonWithMessage struct {
@@ -175,9 +169,6 @@ var conditionReasons = map[ConditionReason]conditionMeta{
 
 	ConditionReasonIngressGatewayReconcileSucceeded: {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonIngressGatewayReconcileSucceededMessage},
 	ConditionReasonIngressGatewayReconcileFailed:    {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonIngressGatewayReconcileFailedMessage},
-
-	ConditionReasonExternalAuthorizerReconcileSucceeded: {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonExternalAuthorizerReconcileSucceededMessage},
-	ConditionReasonExternalAuthorizerReconcileFailed:    {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonExternalAuthorizerReconcileFailedMessage},
 }
 
 type conditionMeta struct {

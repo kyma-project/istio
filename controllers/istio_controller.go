@@ -19,7 +19,6 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/istio/operator/internal/reconciliations/external_authorizer"
 	"net/http"
 	"time"
 
@@ -74,7 +73,6 @@ func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *I
 		proxySidecars:          proxy.NewReconciler(IstioVersion, IstioImageBase, mgr.GetLogger(), mgr.GetClient(), &merger, sidecars.NewProxyResetter(), []filter.SidecarProxyPredicate{efReferer}),
 		istioResources:         istio_resources.NewReconciler(mgr.GetClient(), clusterconfig.NewHyperscalerClient(&http.Client{Timeout: 1 * time.Second})),
 		ingressGateway:         ingress_gateway.NewReconciler(mgr.GetClient(), []filter.IngressGatewayPredicate{efReferer}),
-		externalAuthorizer:     external_authorizer.NewReconciler(mgr.GetClient()),
 		log:                    mgr.GetLogger(),
 		statusHandler:          status.NewStatusHandler(mgr.GetClient()),
 		reconciliationInterval: reconciliationInterval,
@@ -167,12 +165,6 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 	r.statusHandler.SetCondition(&istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIngressGatewayReconcileSucceeded))
 
-	externalAuthorizerErr := r.externalAuthorizer.Reconcile(ctx, istioCR)
-	if externalAuthorizerErr != nil {
-		return r.requeueReconciliation(ctx, &istioCR, externalAuthorizerErr, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonExternalAuthorizerReconcileFailed))
-	}
-
-	r.statusHandler.SetCondition(&istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonExternalAuthorizerReconcileSucceeded))
 	return r.finishReconcile(ctx, &istioCR, IstioTag)
 }
 

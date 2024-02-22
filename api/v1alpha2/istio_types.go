@@ -40,6 +40,8 @@ const (
 	ConditionReasonReconcileSucceededMessage                 = "Reconciliation succeeded"
 	ConditionReasonReconcileFailed           ConditionReason = "ReconcileFailed"
 	ConditionReasonReconcileFailedMessage                    = "Reconciliation failed"
+	ConditionReasonValidationFailed          ConditionReason = "ValidationFailed"
+	ConditionReasonValidationFailedMessage                   = "Reconciliation did not happen as Istio Custom Resource failed to validate"
 	ConditionReasonOlderCRExists             ConditionReason = "OlderCRExists"
 	ConditionReasonOlderCRExistsMessage                      = "This Istio custom resource is not the oldest one and does not represent the module state"
 

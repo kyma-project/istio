@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/istio/operator/internal/validation"
 	"net/http"
 	"time"
 
@@ -90,6 +91,11 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		}
 		r.log.Error(err, "Could not get Istio CR")
 		return ctrl.Result{}, err
+	}
+
+	err := validation.ValidateAuthorizers(istioCR)
+	if err != nil {
+		return r.terminateReconciliation(ctx, &istioCR, err, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonValidationFailed))
 	}
 
 	if istioCR.GetNamespace() != namespace {

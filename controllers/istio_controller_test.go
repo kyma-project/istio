@@ -709,59 +709,6 @@ var _ = Describe("Istio Controller", func() {
 			Expect((*updatedIstioCR.Status.Conditions)[1].Status).To(Equal(metav1.ConditionFalse))
 		})
 
-		It("Should set a warning if warning happened during external authorizer reconciliation", func() {
-			// given
-			istioCR := &operatorv1alpha2.Istio{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:              istioCrName,
-					Namespace:         testNamespace,
-					UID:               "1",
-					CreationTimestamp: metav1.Unix(1494505756, 0),
-					Finalizers: []string{
-						"istios.operator.kyma-project.io/istio-installation",
-					},
-				},
-			}
-
-			fakeClient := createFakeClient(istioCR)
-			sut := &IstioReconciler{
-				Client:                 fakeClient,
-				Scheme:                 getTestScheme(),
-				istioInstallation:      &istioInstallationReconciliationMock{},
-				proxySidecars:          &proxySidecarsReconciliationMock{warningMessage: "The sidecars of the following workloads could not be restarted: default/httpbin, default/nginx and 3 additional workloads."},
-				istioResources:         &istioResourcesReconciliationMock{},
-				ingressGateway:         &ingressGatewayReconciliationMock{},
-				log:                    logr.Discard(),
-				statusHandler:          status.NewStatusHandler(fakeClient),
-				reconciliationInterval: testReconciliationInterval,
-			}
-
-			// when
-			result, err := sut.Reconcile(context.Background(), reconcile.Request{NamespacedName: types.NamespacedName{Namespace: testNamespace, Name: istioCrName}})
-
-			// then
-			Expect(err).To(HaveOccurred())
-			Expect(result.Requeue).To(BeFalse())
-
-			updatedIstioCR := operatorv1alpha2.Istio{}
-			err = fakeClient.Get(context.TODO(), client.ObjectKeyFromObject(istioCR), &updatedIstioCR)
-			Expect(err).To(Not(HaveOccurred()))
-
-			Expect(updatedIstioCR.Status.State).Should(Equal(operatorv1alpha2.Warning))
-			Expect(updatedIstioCR.Status.Description).To(ContainSubstring("Not all pods with Istio injection could be restarted. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning: Istio controller could not restart one or more istio-injected pods."))
-
-			Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
-			Expect(*updatedIstioCR.Status.Conditions).To(HaveLen(2))
-
-			Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
-			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonReconcileFailed)))
-			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
-
-			Expect((*updatedIstioCR.Status.Conditions)[1].Type).To(Equal(string(operatorv1alpha2.ConditionTypeProxySidecarRestartSucceeded)))
-			Expect((*updatedIstioCR.Status.Conditions)[1].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonProxySidecarManualRestartRequired)))
-			Expect((*updatedIstioCR.Status.Conditions)[1].Message).To(Equal("The sidecars of the following workloads could not be restarted: default/httpbin, default/nginx and 3 additional workloads."))
-			Expect((*updatedIstioCR.Status.Conditions)[1].Status).To(Equal(metav1.ConditionFalse))
-		})
 	})
 })
 

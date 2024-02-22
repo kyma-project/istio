@@ -33,7 +33,7 @@ var _ = ReportAfterSuite("custom reporter", func(report types.Report) {
 	tests.GenerateGinkgoJunitReport("merge-api-suite", report)
 })
 
-func ToSnakeCase(str string) string {
+func toSnakeCase(str string) string {
 	matchFirstCap := regexp.MustCompile("(.)([A-Z][a-z]+)")
 	matchAllCap := regexp.MustCompile("([a-z0-9])([A-Z])")
 
@@ -45,10 +45,10 @@ func ToSnakeCase(str string) string {
 // Struct_pb uses different conventions for json tags (snake case) and unmarshalling (camel case).
 // Because of this difference, json tags need to be translated to snake_case before unmarshalling;
 // otherwise those fields would become nil.
-func JSONTagsToSnakeCase(camelCaseMarshaledJson []byte) string {
+func jsonTagsToSnakeCase(camelCaseMarshaledJson []byte) string {
 	jsonString := string(camelCaseMarshaledJson)
 	tagMatch := regexp.MustCompile(`"[^ ]*" *:`)
-	return tagMatch.ReplaceAllStringFunc(jsonString, ToSnakeCase)
+	return tagMatch.ReplaceAllStringFunc(jsonString, toSnakeCase)
 }
 
 var _ = Describe("Merge", func() {
@@ -86,7 +86,7 @@ var _ = Describe("Merge", func() {
 			for _, extensionProvider := range extensionProviders {
 				if extensionProvider.GetStructValue().Fields["name"].GetStringValue() == provName {
 					jsonAuthProvider, err := extensionProvider.GetStructValue().Fields["envoyExtAuthzHttp"].MarshalJSON()
-					jsonAuthProvider = []byte(JSONTagsToSnakeCase(jsonAuthProvider))
+					jsonAuthProvider = []byte(jsonTagsToSnakeCase(jsonAuthProvider))
 					Expect(err).ToNot(HaveOccurred())
 
 					var authProvider meshv1alpha1.MeshConfig_ExtensionProvider_EnvoyExternalAuthorizationHttpProvider
@@ -176,7 +176,7 @@ var _ = Describe("Merge", func() {
 			for _, extensionProvider := range extensionProviders {
 				if extensionProvider.GetStructValue().Fields["name"].GetStringValue() == provName {
 					jsonAuthProvider, err := extensionProvider.GetStructValue().Fields["envoyExtAuthzHttp"].MarshalJSON()
-					jsonAuthProvider = []byte(JSONTagsToSnakeCase(jsonAuthProvider))
+					jsonAuthProvider = []byte(jsonTagsToSnakeCase(jsonAuthProvider))
 					Expect(err).ToNot(HaveOccurred())
 
 					var authProvider meshv1alpha1.MeshConfig_ExtensionProvider_EnvoyExternalAuthorizationHttpProvider

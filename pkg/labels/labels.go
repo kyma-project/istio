@@ -1,5 +1,7 @@
 package labels
 
+import "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+
 const (
 	ModuleLabelKey   = "kyma-project.io/module"
 	ModuleLabelValue = "istio"
@@ -17,4 +19,9 @@ func SetModuleLabels(labels map[string]string) map[string]string {
 		labels[k] = v
 	}
 	return labels
+}
+
+func HasModuleLabels(item unstructured.Unstructured) bool {
+	val, exists := item.GetLabels()[ModuleLabelKey]
+	return exists && val == ModuleLabelValue
 }

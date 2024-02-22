@@ -28,8 +28,8 @@ ACs:
 - [ ] Add release notes.
 
 **Attachments**
-{Link to Istio release announcement from https://istio.io/latest/news/releases/}
-{Link to Istio upgrade notes from the announcement}
+{Link to the Istio release announcement from [Istio Release Announcements](https://istio.io/latest/news/releases/)}
+{Link to the Istio upgrade notes from the announcement}
 
 <!-- Estimation: 
 Patch version update: 2

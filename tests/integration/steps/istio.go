@@ -29,7 +29,7 @@ import (
 const (
 	defaultIopName      string = "installed-state-default-operator"
 	defaultIopNamespace string = "istio-system"
-	crdListPath         string = "crds/crd_list.yaml"
+	crdListPath         string = "pkg/crds/crd_list.yaml"
 )
 
 func IstioCRDsBePresentOnCluster(ctx context.Context, should string) error {

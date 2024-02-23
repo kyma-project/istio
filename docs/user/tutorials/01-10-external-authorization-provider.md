@@ -150,3 +150,9 @@ This tutorial shows how to expose and secure an HTTPBin service using an externa
           mode: SIMPLE
     EOF
     ```
+
+4. Test the configuration by sending a request to the HTTPBin Service:
+    ```
+    curl -ik https://httpbin.ps-test.goatz.shoot.canary.k8s-hana.ondemand.com/headers
+    ```
+    The response should have a status code of 302 and a `location` header with the URL of the authorization provider.

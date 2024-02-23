@@ -29,7 +29,7 @@ This tutorial shows how to expose and secure an HTTPBin service using an externa
       service:
         name: $SERVICE_NAME
         namespace: $NAMESPACE
-        port: 8000
+        port: 80
       gateway: kyma-system/kyma-gateway
       rules:
         - path: /.*
@@ -97,7 +97,7 @@ This tutorial shows how to expose and secure an HTTPBin service using an externa
         numTrustedProxies: 1
         authorizers:
         - name: "oauth2-proxy"
-          service: "custom-oauth2-proxy.default.svc.cluster.local"
+          service: "custom-oauth2-proxy.$NAMESPACE.svc.cluster.local"
           port: 80
           headers:
             inCheck:

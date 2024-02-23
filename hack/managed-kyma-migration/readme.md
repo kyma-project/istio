@@ -6,7 +6,7 @@
 
 ### Note About Clusters with Existing Istio CR
 
-If there is already Istio CR on the cluster, with name different from `default`, the new Istio CR managed by the Lifecycle Manager will end up in the Error state.
+If there is already Istio CR in the cluster, with name different from `default`, the new Istio CR managed by the Lifecycle Manager will end up in the Error state.
 Consider running rename-to-default.sh script to move your custom Istio CR configuration to the new default one. It will also remove the old custom Istio CR during the execution.
 
 ### Provisioning of Istio CR Using Lifecycle Manager in a New Cluster

@@ -8,7 +8,7 @@ To get the up-to-date CRD in the `yaml` format, run the following command:
 kubectl get crd istios.operator.kyma-project.io -o yaml
 ```
 
-You are only allowed to use one Istio CR, which you must create in the `kyma-system` namespace. If the namespace contains multiple Istio CRs, the oldest one reconciles the module. Any additional Istio CR is placed in the `Error` state.
+You are only allowed to use one Istio CR, which you must create in the `kyma-system` namespace. If the namespace contains multiple Istio CRs, the oldest one reconciles the module. Any additional Istio CR is placed in the `Warning` state.
 
 ## Specification
 

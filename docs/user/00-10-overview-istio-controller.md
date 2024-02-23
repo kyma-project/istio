@@ -35,7 +35,7 @@ Conditions:
 |------------|------------------------------|--------|-----------------------------------|------------------------------------------------------------------------------------------|
 | Ready      | Ready                        | True   | ReconcileSucceeded                | Reconciliation succeeded                                                                 |
 | Error      | Ready                        | False  | ReconcileFailed                   | Reconciliation failed                                                                    |
-| Error      | Ready                        | False  | OlderCRExists                     | This Istio custom resource is not the oldest one and does not represent the module state |
+| Warning    | Ready                        | False  | OlderCRExists                     | This Istio custom resource is not the oldest one and does not represent the module state |
 | Processing | Ready                        | False  | IstioInstallNotNeeded             | Istio installation is not needed                                                         |
 | Processing | Ready                        | False  | IstioInstallSucceeded             | Istio installation succeeded                                                             |
 | Processing | Ready                        | False  | IstioUninstallSucceeded           | Istio uninstallation succeded                                                            |

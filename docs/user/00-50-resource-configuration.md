@@ -4,7 +4,7 @@ Kyma Istio Operator provides baseline values for the Istio installation. Those v
 
 ## Cluster-Based Default Configuration
 
-Istio Controller installs Istio with a configuration that depends on the cluster capabilities. If your cluster has less than 5 total virtual CPU cores or its total memory capacity is less than 10 Gigabytes, the default setup for resources and autoscaling is lighter. If your cluster exceeds both of these thresholds, Istio is installed with the higher resource configuration.
+Istio Controller installs Istio with a configuration that depends in the cluster capabilities. If your cluster has less than 5 total virtual CPU cores or its total memory capacity is less than 10 Gigabytes, the default setup for resources and autoscaling is lighter. If your cluster exceeds both of these thresholds, Istio is installed with the higher resource configuration.
 
 ### Default Resource Configuration for Larger Clusters
 

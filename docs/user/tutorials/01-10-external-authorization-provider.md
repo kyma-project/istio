@@ -1,10 +1,11 @@
 # External authorization provider
 
-This tutorial shows how to expose and secure an HTTPBin service using an external authorization provider. This tutorial assumes usage of the Kyma domain.
+This tutorial shows how to expose and secure an HTTPBin service using an external authorization provider and the Kyma domain.
 
 ## Prerequisites
 
-* Kyma installation with the `api-gateway` and `istio` components enabled.
+* Kyma installation with the API Gateway and Istio modules enabled.
+* Manually install oauth2-proxy, for example, [using Helm](https://github.com/oauth2-proxy/manifests/tree/main/helm/oauth2-proxy).
 * Deploy [a sample HTTPBin Service](../01-00-create-workload.md).
 
 ## Steps
@@ -40,9 +41,8 @@ This tutorial shows how to expose and secure an HTTPBin service using an externa
     ```
 
 ### Install and configure oauth2-proxy
-- Manual installation of oauth2-proxy, for example [using Helm](https://github.com/oauth2-proxy/manifests/tree/main/helm/oauth2-proxy).
 
-1. Set your configuration values as environment variables:
+1. Export your configuration values as environment variables:
     ```
     export CLIENT_ID={CLIENT_ID}
     export CLIENT_SECRET={CLIENT_SECRET}
@@ -50,7 +50,7 @@ This tutorial shows how to expose and secure an HTTPBin service using an externa
     export OIDC_ISSUER_URL={OIDC_ISSUER_URL}
     ```
 
-2. Use the following command to create a `values.yaml` file with the configuration of oauth2-proxy:
+2. Create a `values.yaml` file with the configuration of oauth2-proxy:
     ```
     cat <<EOF > values.yaml
     config:
@@ -82,9 +82,9 @@ This tutorial shows how to expose and secure an HTTPBin service using an externa
     helm install custom oauth2-proxy/oauth2-proxy -f values.yaml
     ```
 
-### Configure Istio CR with an external authorization provider
+### Configure Istio Custom Resource (CR) with an External Authorization Provider
 
-1. Here is an example of Istio CR configuration with an external authorization provider:
+1. Apply Istio CR configuration with an external authorization provider. Here's an example configuration:
     ```
     cat <<EOF | kubectl apply -f -
     apiVersion: operator.kyma-project.io/v1alpha1
@@ -112,7 +112,7 @@ This tutorial shows how to expose and secure an HTTPBin service using an externa
     EOF
     ```
 
-2. Additionally, you have to create an AuthorizationPolicy CR with CUSTOM action and oauth2-proxy provider:
+2. Create an AuthorizationPolicy CR with the `CUSTOM` action and the `oauth2-proxy` provider:
     ```
     cat <<EOF | kubectl apply -f -
     apiVersion: security.istio.io/v1
@@ -135,7 +135,7 @@ This tutorial shows how to expose and secure an HTTPBin service using an externa
     EOF
     ```
 
-3. Finally, create a DestinationRule with a traffic policy for the external authorization provider:
+3. Create a DestinationRule with a traffic policy for the external authorization provider:
     ```
     cat <<EOF | kubectl apply -f -
     apiVersion: networking.istio.io/v1beta1
@@ -151,8 +151,8 @@ This tutorial shows how to expose and secure an HTTPBin service using an externa
     EOF
     ```
 
-4. Test the configuration by sending a request to the HTTPBin Service:
+4. To test the configuration, send a request to the HTTPBin Service:
     ```
     curl -ik https://httpbin.ps-test.goatz.shoot.canary.k8s-hana.ondemand.com/headers
     ```
-    The response should have a status code of 302 and a `location` header with the URL of the authorization provider.
+    The response should have the `302` status code and include the **location** header with the URL of the authorization provider.

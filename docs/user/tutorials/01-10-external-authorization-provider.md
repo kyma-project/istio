@@ -6,7 +6,8 @@ This tutorial shows how to expose and secure an HTTPBin service using an externa
 
 * Kyma installation with the Istio module enabled.
 * Manually install oauth2-proxy, for example, [using Helm](https://github.com/oauth2-proxy/manifests/tree/main/helm/oauth2-proxy).
-* Deploy [a sample HTTPBin Service](../01-00-create-workload.md).
+* [Deploy a sample HTTPBin Service](../01-00-create-workload.md).
+* [Expose the HTTPBin Service](./01-40-expose-workload-apigateway) using the Kyma domain.
 * If using a Kyma domain, API Gateway module must be enabled.
 
 ## Steps

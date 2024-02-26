@@ -7,36 +7,55 @@ This tutorial shows how to expose and secure an HTTPBin service using an externa
 * Kyma installation with the API Gateway and Istio modules enabled.
 * Manually install oauth2-proxy, for example, [using Helm](https://github.com/oauth2-proxy/manifests/tree/main/helm/oauth2-proxy).
 * Deploy [a sample HTTPBin Service](../01-00-create-workload.md).
+* If using a Kyma domain, `api-gateway` component must be enabled.
 
 ## Steps
 
 ### Expose httpbin
 
-1. Set your kyma domain address as an environment variable:
-    ```
-    export DOMAIN_TO_EXPOSE_WORKLOADS={KYMA_DOMAIN_NAME}
-    ```
+* Set up [your custom domain](../01-10-setup-custom-domain-for-workload.md) or use a Kyma domain instead.
+* Depending on whether you use your custom domain or a Kyma domain, export the necessary values as environment variables:
 
-2. Expose an instance of the HTTPBin Service by creating APIRule CR in your namespace.
+1. Follow the instructions in the tabs to expose the HTTPBin workload using a VirtualService.
+
+    <!-- tabs:start -->
+    #### **Custom Domain**
+  
+    ```bash
+    export DOMAIN_TO_EXPOSE_WORKLOADS={DOMAIN_NAME}
+    export GATEWAY=$NAMESPACE/httpbin-gateway
     ```
+    #### **Kyma Domain**
+  
+    ```bash
+    export DOMAIN_TO_EXPOSE_WORKLOADS={KYMA_DOMAIN_NAME}
+    export GATEWAY=kyma-system/kyma-gateway
+    ```
+    <!-- tabs:end -->
+
+2. Create a VirtualService:
+
+    ```shell
     cat <<EOF | kubectl apply -f -
-    apiVersion: gateway.kyma-project.io/v1beta1
-    kind: APIRule
+    apiVersion: networking.istio.io/v1alpha3
+    kind: VirtualService
     metadata:
       name: httpbin
       namespace: $NAMESPACE
     spec:
-      host: httpbin.$DOMAIN_TO_EXPOSE_WORKLOADS
-      service:
-        name: $SERVICE_NAME
-        namespace: $NAMESPACE
-        port: 80
-      gateway: kyma-system/kyma-gateway
-      rules:
-        - path: /.*
-          methods: ["GET"]
-          accessStrategies:
-            - handler: no_auth
+      hosts:
+      - "httpbin.$DOMAIN_TO_EXPOSE_WORKLOADS"
+      gateways:
+      - $GATEWAY
+      http:
+      - match:
+        - uri:
+            prefix: /
+        route:
+        - destination:
+            port:
+              number: 80
+            host: httpbin.$NAMESPACE.svc.cluster.local
     EOF
     ```
 

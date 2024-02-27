@@ -26,7 +26,7 @@ context('Test Authorization Policies', () => {
     it('Create Authorization Policy', () => {
         cy.navigateTo('Istio', 'Authorization Policies');
 
-        cy.contains('ui5-button', 'Create Authorization Policy').click();
+        cy.clickCreateButton();
 
         cy.wait(500);
 
@@ -129,6 +129,7 @@ context('Test Authorization Policies', () => {
     });
 
     it('Inspect list', () => {
-        cy.inspectList('Authorization Policies', 'test-ap');
+        cy.navigateBackTo('Authorization Policies', AP_NAME);
+        cy.checkItemOnGenericListLink(AP_NAME);
     });
 });

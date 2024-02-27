@@ -26,7 +26,7 @@ context('Test Service Entries', () => {
     it('Create a Service Entry', () => {
         cy.navigateTo('Istio', 'Service Entries');
 
-        cy.contains('ui5-button', 'Create Service Entry').click();
+        cy.clickCreateButton();
 
         cy.contains('Advanced').click();
 
@@ -86,7 +86,8 @@ context('Test Service Entries', () => {
     });
 
     it('Check the Service Entries list', () => {
-        cy.inspectList('Service Entries', SE_NAME);
+        cy.navigateBackTo('Service Entries', SE_NAME);
+        cy.checkItemOnGenericListLink(SE_NAME);
         cy.contains(RESOLUTION);
     });
 });

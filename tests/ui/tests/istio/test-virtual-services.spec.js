@@ -38,7 +38,7 @@ context('Test Virtual Services', () => {
     it('Create a Virtual Service', () => {
         cy.navigateTo('Istio', 'Virtual Services');
 
-        cy.contains('ui5-button', 'Create Virtual Service').click();
+        cy.clickCreateButton();
 
         // name
         cy.get('ui5-dialog')
@@ -164,13 +164,13 @@ context('Test Virtual Services', () => {
         cy.get('[data-testid="spec.hosts.0"]:visible')
             .find('input')
             .click()
-            .clear()
+            .clear({force: true})
             .type(HOST1, {force: true});
 
         cy.get('[data-testid="spec.hosts.1"]:visible')
             .find('input')
             .click()
-            .clear()
+            .clear({force: true})
             .type(HOST2, {force: true});
 
         // Gateways
@@ -181,7 +181,7 @@ context('Test Virtual Services', () => {
         cy.get('[data-testid="spec.gateways.0"]:visible')
             .find('input')
             .click()
-            .clear()
+            .clear({force: true})
             .type(GATEWAY, {force: true});
 
         cy.get('ui5-dialog')
@@ -196,6 +196,7 @@ context('Test Virtual Services', () => {
     });
 
     it('Inspect service list', () => {
-        cy.inspectList('Virtual Services', SERVICE_NAME);
+        cy.navigateBackTo('Virtual Services', SERVICE_NAME);
+        cy.checkItemOnGenericListLink(SERVICE_NAME);
     });
 });

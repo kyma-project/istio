@@ -30,7 +30,7 @@ context('Test Gateways', () => {
     it('Create Gateway', () => {
         cy.navigateTo('Istio', 'Gateways');
 
-        cy.contains('ui5-button', 'Create Gateway').click();
+        cy.clickCreateButton();
 
         // name
         cy.get('ui5-dialog')
@@ -120,7 +120,7 @@ context('Test Gateways', () => {
         cy.get(`ui5-combobox[data-testid="spec.servers.0.port.protocol"]`)
             .find('input')
             .click()
-            .clear()
+            .clear({force: true})
             .type('HTTPS');
 
         cy.get('ui5-li:visible')
@@ -131,7 +131,7 @@ context('Test Gateways', () => {
         cy.get('[data-testid="spec.servers.0.port.number"]:visible')
             .find('input')
             .click()
-            .clear()
+            .clear({force: true})
             .type('443');
 
         cy.get('[aria-label="expand Port"]:visible', {
@@ -164,6 +164,7 @@ context('Test Gateways', () => {
     });
 
     it('Inspect list', () => {
-        cy.inspectList('Gateways', GATEWAY_NAME);
+        cy.navigateBackTo('Gateways', GATEWAY_NAME);
+        cy.checkItemOnGenericListLink(GATEWAY_NAME);
     });
 });

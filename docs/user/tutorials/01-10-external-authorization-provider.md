@@ -30,29 +30,29 @@ This tutorial shows how to expose and secure an HTTPBin Service using an externa
 
 Create a VirtualService to expose the HTTPBin workload.
 
-    ```shell
-    cat <<EOF | kubectl apply -f -
-    apiVersion: networking.istio.io/v1alpha3
-    kind: VirtualService
-    metadata:
-      name: httpbin
-      namespace: $NAMESPACE
-    spec:
-      hosts:
-      - "httpbin.$DOMAIN_TO_EXPOSE_WORKLOADS"
-      gateways:
-      - $GATEWAY
-      http:
-      - match:
-        - uri:
-            prefix: /
-        route:
-        - destination:
-            port:
-              number: 80
-            host: httpbin.$NAMESPACE.svc.cluster.local
-    EOF
-    ```
+```
+cat <<EOF | kubectl apply -f -
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: httpbin
+  namespace: $NAMESPACE
+spec:
+  hosts:
+  - "httpbin.$DOMAIN_TO_EXPOSE_WORKLOADS"
+  gateways:
+  - $GATEWAY
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        port:
+          number: 80
+        host: httpbin.$NAMESPACE.svc.cluster.local
+EOF
+```
 
 ### Install and Configure oauth2-proxy
 

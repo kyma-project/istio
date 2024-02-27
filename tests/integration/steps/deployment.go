@@ -3,6 +3,8 @@ package steps
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/avast/retry-go"
 	"github.com/distribution/reference"
 	"github.com/kyma-project/istio/operator/controllers"
@@ -15,12 +17,14 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
 )
 
-const applicationImage = "europe-docker.pkg.dev/kyma-project/prod/external/kennethreitz/httpbin"
+const (
+	httpbinImage  = "europe-docker.pkg.dev/kyma-project/prod/external/kennethreitz/httpbin"
+	extAuthzImage = "gcr.io/istio-testing/ext-authz:latest"
+)
 
-func CreateDeployment(ctx context.Context, appName, namespace string, container corev1.Container) (context.Context, error) {
+func CreateDeployment(ctx context.Context, appName, namespace string, container corev1.Container, volumes ...corev1.Volume) (context.Context, error) {
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return ctx, err
@@ -55,6 +59,10 @@ func CreateDeployment(ctx context.Context, appName, namespace string, container 
 		},
 	}
 
+	if len(volumes) > 0 {
+		dep.Spec.Template.Spec.Volumes = volumes
+	}
+
 	err = retry.Do(func() error {
 		err := k8sClient.Create(context.TODO(), &dep)
 		if err != nil {
@@ -67,10 +75,10 @@ func CreateDeployment(ctx context.Context, appName, namespace string, container 
 	return ctx, err
 }
 
-func CreateApplicationDeployment(ctx context.Context, appName, namespace string) (context.Context, error) {
+func CreateApplicationDeployment(ctx context.Context, appName, image, namespace string) (context.Context, error) {
 	c := corev1.Container{
 		Name:  appName,
-		Image: applicationImage,
+		Image: image,
 	}
 
 	return CreateDeployment(ctx, appName, namespace, c)
@@ -241,11 +249,43 @@ func CreateHttpbinApplication(ctx context.Context, appName, namespace string) (c
 
 // CreateHttpbinApplication creates a deployment and a service with the given http port for the httpbin application
 func CreateHttpbinApplicationWithServicePort(ctx context.Context, appName, namespace string, port int) (context.Context, error) {
-	ctx, err := CreateApplicationDeployment(ctx, appName, namespace)
+	ctx, err := CreateApplicationDeployment(ctx, appName, httpbinImage, namespace)
 	if err != nil {
 		return ctx, err
 	}
 
+	ctx, err = CreateServiceWithPort(ctx, appName, namespace, port, 80)
+	if err != nil {
+		return ctx, err
+	}
+
+	return ctx, err
+}
+
+func CreateExtAuthzApplication(ctx context.Context, appName, namespace string) (context.Context, error) {
+	c := corev1.Container{
+		Name:            appName,
+		Image:           extAuthzImage,
+		ImagePullPolicy: corev1.PullIfNotPresent,
+		Ports: []corev1.ContainerPort{
+			{ContainerPort: 8000},
+		},
+	}
+
+	ctx, err := CreateServiceWithPort(ctx, appName, namespace, 8000, 8000)
+	if err != nil {
+		return ctx, err
+	}
+
+	ctx, err = CreateDeployment(ctx, appName, namespace, c)
+	if err != nil {
+		return ctx, err
+	}
+
+	return ctx, err
+}
+
+func CreateServiceWithPort(ctx context.Context, appName, namespace string, port, targetPort int) (context.Context, error) {
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return ctx, err
@@ -268,7 +308,7 @@ func CreateHttpbinApplicationWithServicePort(ctx context.Context, appName, names
 				{
 					Name:       "http",
 					Port:       int32(port),
-					TargetPort: intstr.FromInt32(80),
+					TargetPort: intstr.IntOrString{IntVal: int32(targetPort)},
 				},
 			},
 		},

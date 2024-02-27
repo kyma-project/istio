@@ -11,7 +11,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/manifest"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
@@ -48,15 +48,15 @@ var _ = Describe("Installation reconciliation", func() {
 		// given
 
 		numTrustedProxies := 1
-		istioCR := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",
 			ResourceVersion: "1",
 			Annotations: map[string]string{
 				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
 			},
 		},
-			Spec: operatorv1alpha1.IstioSpec{
-				Config: operatorv1alpha1.Config{
+			Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
 					NumTrustedProxies: &numTrustedProxies,
 				},
 			},
@@ -85,8 +85,8 @@ var _ = Describe("Installation reconciliation", func() {
 
 		Expect(istioCR.Status.Conditions).ToNot(BeNil())
 		Expect((*istioCR.Status.Conditions)).To(HaveLen(1))
-		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
-		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonIstioInstallSucceeded)))
+		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
+		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonIstioInstallSucceeded)))
 		Expect((*istioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 	})
 
@@ -94,18 +94,18 @@ var _ = Describe("Installation reconciliation", func() {
 		// given
 
 		numTrustedProxies := 1
-		istioCR := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",
 			ResourceVersion: "1",
 			Annotations:     map[string]string{},
 		},
-			Spec: operatorv1alpha1.IstioSpec{
-				Config: operatorv1alpha1.Config{
+			Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
 					NumTrustedProxies: &numTrustedProxies,
 				},
 			},
-			Status: operatorv1alpha1.IstioStatus{
-				State: operatorv1alpha1.Processing,
+			Status: operatorv1alpha2.IstioStatus{
+				State: operatorv1alpha2.Processing,
 			},
 		}
 
@@ -130,12 +130,12 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
-		Expect(istioCR.Status.State).To(Equal(operatorv1alpha1.Processing))
+		Expect(istioCR.Status.State).To(Equal(operatorv1alpha2.Processing))
 
 		Expect(istioCR.Status.Conditions).ToNot(BeNil())
 		Expect(*istioCR.Status.Conditions).To(HaveLen(1))
-		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
-		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonIstioInstallSucceeded)))
+		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
+		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonIstioInstallSucceeded)))
 		Expect((*istioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 	})
 
@@ -143,13 +143,13 @@ var _ = Describe("Installation reconciliation", func() {
 		// given
 
 		numTrustedProxies := 1
-		istioCR := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",
 			ResourceVersion: "1",
 			Annotations:     map[string]string{},
 		},
-			Spec: operatorv1alpha1.IstioSpec{
-				Config: operatorv1alpha1.Config{
+			Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
 					NumTrustedProxies: &numTrustedProxies,
 				},
 			},
@@ -190,18 +190,18 @@ var _ = Describe("Installation reconciliation", func() {
 		// given
 
 		numTrustedProxies := 1
-		istioCR := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",
 			ResourceVersion: "1",
 			Annotations:     map[string]string{},
 		},
-			Spec: operatorv1alpha1.IstioSpec{
-				Config: operatorv1alpha1.Config{
+			Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
 					NumTrustedProxies: &numTrustedProxies,
 				},
 			},
-			Status: operatorv1alpha1.IstioStatus{
-				State: operatorv1alpha1.Processing,
+			Status: operatorv1alpha2.IstioStatus{
+				State: operatorv1alpha2.Processing,
 			},
 		}
 
@@ -226,7 +226,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(err.Error()).To(ContainSubstring("istio-system pods version: 1.16.0 do not match target version: 1.16.1"))
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
-		Expect(istioCR.Status.State).To(Equal(operatorv1alpha1.Processing))
+		Expect(istioCR.Status.State).To(Equal(operatorv1alpha2.Processing))
 
 		Expect(istioCR.Status.Conditions).To(BeNil())
 	})
@@ -235,13 +235,13 @@ var _ = Describe("Installation reconciliation", func() {
 		// given
 
 		numTrustedProxies := 1
-		istioCR := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",
 			ResourceVersion: "1",
 			Annotations:     map[string]string{},
 		},
-			Spec: operatorv1alpha1.IstioSpec{
-				Config: operatorv1alpha1.Config{
+			Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
 					NumTrustedProxies: &numTrustedProxies,
 				},
 			},
@@ -276,20 +276,20 @@ var _ = Describe("Installation reconciliation", func() {
 		// given
 
 		newNumTrustedProxies := 3
-		istioCR := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",
 			ResourceVersion: "1",
 			Annotations: map[string]string{
 				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"NumTrustedProxies":1},"IstioTag":"%s"}`, istioTag),
 			},
 		},
-			Spec: operatorv1alpha1.IstioSpec{
-				Config: operatorv1alpha1.Config{
+			Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
 					NumTrustedProxies: &newNumTrustedProxies,
 				},
 			},
-			Status: operatorv1alpha1.IstioStatus{
-				State: operatorv1alpha1.Processing,
+			Status: operatorv1alpha2.IstioStatus{
+				State: operatorv1alpha2.Processing,
 			},
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
@@ -313,7 +313,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
-		Expect(istioCR.Status.State).To(Equal(operatorv1alpha1.Processing))
+		Expect(istioCR.Status.State).To(Equal(operatorv1alpha2.Processing))
 		Expect(istioCR.Status.Conditions).ToNot(BeNil())
 
 		igwDeployment = &appsv1.Deployment{}
@@ -327,20 +327,20 @@ var _ = Describe("Installation reconciliation", func() {
 		// given
 
 		numTrustedProxies := 1
-		istioCR := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",
 			ResourceVersion: "1",
 			Annotations: map[string]string{
 				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
 			},
 		},
-			Spec: operatorv1alpha1.IstioSpec{
-				Config: operatorv1alpha1.Config{
+			Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
 					NumTrustedProxies: &numTrustedProxies,
 				},
 			},
-			Status: operatorv1alpha1.IstioStatus{
-				State: operatorv1alpha1.Processing,
+			Status: operatorv1alpha2.IstioStatus{
+				State: operatorv1alpha2.Processing,
 			},
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
@@ -364,7 +364,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
-		Expect(istioCR.Status.State).To(Equal(operatorv1alpha1.Processing))
+		Expect(istioCR.Status.State).To(Equal(operatorv1alpha2.Processing))
 		Expect(istioCR.Status.Conditions).ToNot(BeNil())
 
 		currentIGWDeployment := appsv1.Deployment{}
@@ -376,20 +376,20 @@ var _ = Describe("Installation reconciliation", func() {
 		// given
 
 		newNumTrustedProxies := 3
-		istioCR := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",
 			ResourceVersion: "1",
 			Annotations: map[string]string{
 				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"NumTrustedProxies":1},"IstioTag":"%s"}`, istioTag),
 			},
 		},
-			Spec: operatorv1alpha1.IstioSpec{
-				Config: operatorv1alpha1.Config{
+			Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
 					NumTrustedProxies: &newNumTrustedProxies,
 				},
 			},
-			Status: operatorv1alpha1.IstioStatus{
-				State: operatorv1alpha1.Processing,
+			Status: operatorv1alpha2.IstioStatus{
+				State: operatorv1alpha2.Processing,
 			},
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
@@ -422,12 +422,12 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(err).Should(HaveOccurred())
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
-		Expect(istioCR.Status.State).To(Equal(operatorv1alpha1.Processing))
+		Expect(istioCR.Status.State).To(Equal(operatorv1alpha2.Processing))
 
 		Expect(istioCR.Status.Conditions).ToNot(BeNil())
 		Expect((*istioCR.Status.Conditions)).To(HaveLen(1))
-		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
-		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonIstioInstallSucceeded)))
+		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
+		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonIstioInstallSucceeded)))
 		Expect((*istioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 
 		igwDeployment = &appsv1.Deployment{}
@@ -441,20 +441,20 @@ var _ = Describe("Installation reconciliation", func() {
 		// given
 
 		numTrustedProxies := 1
-		istioCR := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",
 			ResourceVersion: "1",
 			Annotations: map[string]string{
 				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
 			},
 		},
-			Spec: operatorv1alpha1.IstioSpec{
-				Config: operatorv1alpha1.Config{
+			Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
 					NumTrustedProxies: &numTrustedProxies,
 				},
 			},
-			Status: operatorv1alpha1.IstioStatus{
-				State: operatorv1alpha1.Processing,
+			Status: operatorv1alpha2.IstioStatus{
+				State: operatorv1alpha2.Processing,
 			},
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.17.0")
@@ -478,7 +478,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
-		Expect(istioCR.Status.State).To(Equal(operatorv1alpha1.Processing))
+		Expect(istioCR.Status.State).To(Equal(operatorv1alpha2.Processing))
 		Expect(istioCR.Status.Conditions).ToNot(BeNil())
 	})
 
@@ -487,15 +487,15 @@ var _ = Describe("Installation reconciliation", func() {
 
 		istioVersionDowngrade := "1.16.0"
 		numTrustedProxies := 1
-		istioCR := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",
 			ResourceVersion: "1",
 			Annotations: map[string]string{
 				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
 			},
 		},
-			Spec: operatorv1alpha1.IstioSpec{
-				Config: operatorv1alpha1.Config{
+			Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
 					NumTrustedProxies: &numTrustedProxies,
 				},
 			},
@@ -530,15 +530,15 @@ var _ = Describe("Installation reconciliation", func() {
 
 		istioVersionTwoMinor := "1.18.0"
 		numTrustedProxies := 1
-		istioCR := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",
 			ResourceVersion: "1",
 			Annotations: map[string]string{
 				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
 			},
 		},
-			Spec: operatorv1alpha1.IstioSpec{
-				Config: operatorv1alpha1.Config{
+			Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
 					NumTrustedProxies: &numTrustedProxies,
 				},
 			},
@@ -573,15 +573,15 @@ var _ = Describe("Installation reconciliation", func() {
 
 		istioVersionOneMajor := "2.0.0"
 		numTrustedProxies := 1
-		istioCR := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",
 			ResourceVersion: "1",
 			Annotations: map[string]string{
 				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
 			},
 		},
-			Spec: operatorv1alpha1.IstioSpec{
-				Config: operatorv1alpha1.Config{
+			Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
 					NumTrustedProxies: &numTrustedProxies,
 				},
 			},
@@ -615,15 +615,15 @@ var _ = Describe("Installation reconciliation", func() {
 		// given
 
 		numTrustedProxies := 1
-		istioCR := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",
 			ResourceVersion: "1",
 			Annotations: map[string]string{
 				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
 			},
 		},
-			Spec: operatorv1alpha1.IstioSpec{
-				Config: operatorv1alpha1.Config{
+			Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
 					NumTrustedProxies: &numTrustedProxies,
 				},
 			},
@@ -657,15 +657,15 @@ var _ = Describe("Installation reconciliation", func() {
 		// given
 
 		numTrustedProxies := 1
-		istioCR := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",
 			ResourceVersion: "1",
 			Annotations: map[string]string{
 				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
 			},
 		},
-			Spec: operatorv1alpha1.IstioSpec{
-				Config: operatorv1alpha1.Config{
+			Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
 					NumTrustedProxies: &numTrustedProxies,
 				},
 			},
@@ -699,15 +699,15 @@ var _ = Describe("Installation reconciliation", func() {
 		// given
 
 		numTrustedProxies := 1
-		istioCR := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",
 			ResourceVersion: "1",
 			Annotations: map[string]string{
 				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
 			},
 		},
-			Spec: operatorv1alpha1.IstioSpec{
-				Config: operatorv1alpha1.Config{
+			Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
 					NumTrustedProxies: &numTrustedProxies,
 				},
 			},
@@ -740,8 +740,8 @@ var _ = Describe("Installation reconciliation", func() {
 
 		Expect(istioCR.Status.Conditions).ToNot(BeNil())
 		Expect((*istioCR.Status.Conditions)).To(HaveLen(1))
-		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
-		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonCustomResourceMisconfigured)))
+		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
+		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonCustomResourceMisconfigured)))
 		Expect((*istioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 	})
 
@@ -749,15 +749,15 @@ var _ = Describe("Installation reconciliation", func() {
 		// given
 
 		numTrustedProxies := 1
-		istioCR := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",
 			ResourceVersion: "1",
 			Annotations: map[string]string{
 				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
 			},
 		},
-			Spec: operatorv1alpha1.IstioSpec{
-				Config: operatorv1alpha1.Config{
+			Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
 					NumTrustedProxies: &numTrustedProxies,
 				},
 			},
@@ -793,7 +793,7 @@ var _ = Describe("Installation reconciliation", func() {
 		// given
 		now := metav1.NewTime(time.Now())
 		newNumTrustedProxies := 3
-		istioCR := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",
 			ResourceVersion: "1",
 			Annotations: map[string]string{
@@ -802,8 +802,8 @@ var _ = Describe("Installation reconciliation", func() {
 			DeletionTimestamp: &now,
 			Finalizers:        []string{"istios.operator.kyma-project.io/test-mock"},
 		},
-			Spec: operatorv1alpha1.IstioSpec{
-				Config: operatorv1alpha1.Config{
+			Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
 					NumTrustedProxies: &newNumTrustedProxies,
 				},
 			},
@@ -831,8 +831,8 @@ var _ = Describe("Installation reconciliation", func() {
 
 		Expect(istioCR.Status.Conditions).ToNot(BeNil())
 		Expect((*istioCR.Status.Conditions)).To(HaveLen(1))
-		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
-		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonIstioInstallNotNeeded)))
+		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
+		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonIstioInstallNotNeeded)))
 		Expect((*istioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 	})
 
@@ -840,7 +840,7 @@ var _ = Describe("Installation reconciliation", func() {
 		// given
 		now := metav1.NewTime(time.Now())
 		numTrustedProxies := 1
-		istioCR := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",
 			ResourceVersion: "1",
 			Annotations: map[string]string{
@@ -849,8 +849,8 @@ var _ = Describe("Installation reconciliation", func() {
 			DeletionTimestamp: &now,
 			Finalizers:        []string{"istios.operator.kyma-project.io/istio-installation"},
 		},
-			Spec: operatorv1alpha1.IstioSpec{
-				Config: operatorv1alpha1.Config{
+			Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
 					NumTrustedProxies: &numTrustedProxies,
 				},
 			},
@@ -878,8 +878,8 @@ var _ = Describe("Installation reconciliation", func() {
 
 		Expect(istioCR.Status.Conditions).ToNot(BeNil())
 		Expect((*istioCR.Status.Conditions)).To(HaveLen(1))
-		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
-		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonIstioUninstallSucceeded)))
+		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
+		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonIstioUninstallSucceeded)))
 		Expect((*istioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 	})
 
@@ -887,7 +887,7 @@ var _ = Describe("Installation reconciliation", func() {
 		// given
 		now := metav1.NewTime(time.Now())
 		numTrustedProxies := 1
-		istioCR := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",
 			ResourceVersion: "1",
 			Annotations: map[string]string{
@@ -896,8 +896,8 @@ var _ = Describe("Installation reconciliation", func() {
 			DeletionTimestamp: &now,
 			Finalizers:        []string{"istios.operator.kyma-project.io/istio-installation"},
 		},
-			Spec: operatorv1alpha1.IstioSpec{
-				Config: operatorv1alpha1.Config{
+			Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
 					NumTrustedProxies: &numTrustedProxies,
 				},
 			},
@@ -931,15 +931,15 @@ var _ = Describe("Installation reconciliation", func() {
 	It("Should install but not uninstall when Istio CR has no deletion timestamp", func() {
 		// given
 		numTrustedProxies := 1
-		istioCR := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",
 			ResourceVersion: "1",
 			Annotations: map[string]string{
 				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
 			},
 		},
-			Spec: operatorv1alpha1.IstioSpec{
-				Config: operatorv1alpha1.Config{
+			Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
 					NumTrustedProxies: &numTrustedProxies,
 				},
 			},
@@ -972,7 +972,7 @@ var _ = Describe("Installation reconciliation", func() {
 		// given
 		now := metav1.NewTime(time.Now())
 		numTrustedProxies := 1
-		istioCR := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",
 			ResourceVersion: "1",
 			Annotations: map[string]string{
@@ -980,8 +980,8 @@ var _ = Describe("Installation reconciliation", func() {
 			},
 			DeletionTimestamp: &now,
 		},
-			Spec: operatorv1alpha1.IstioSpec{
-				Config: operatorv1alpha1.Config{
+			Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
 					NumTrustedProxies: &numTrustedProxies,
 				},
 			},
@@ -1009,8 +1009,8 @@ var _ = Describe("Installation reconciliation", func() {
 
 		Expect(istioCR.Status.Conditions).ToNot(BeNil())
 		Expect((*istioCR.Status.Conditions)).To(HaveLen(1))
-		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
-		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonIstioInstallNotNeeded)))
+		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
+		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonIstioInstallNotNeeded)))
 		Expect((*istioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 	})
 
@@ -1018,7 +1018,7 @@ var _ = Describe("Installation reconciliation", func() {
 		// given
 		now := metav1.NewTime(time.Now())
 		numTrustedProxies := 1
-		istioCR := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",
 			ResourceVersion: "1",
 			Annotations: map[string]string{
@@ -1027,8 +1027,8 @@ var _ = Describe("Installation reconciliation", func() {
 			DeletionTimestamp: &now,
 			Finalizers:        []string{"istios.operator.kyma-project.io/istio-installation"},
 		},
-			Spec: operatorv1alpha1.IstioSpec{
-				Config: operatorv1alpha1.Config{
+			Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
 					NumTrustedProxies: &numTrustedProxies,
 				},
 			},
@@ -1061,8 +1061,8 @@ var _ = Describe("Installation reconciliation", func() {
 
 		Expect(istioCR.Status.Conditions).ToNot(BeNil())
 		Expect((*istioCR.Status.Conditions)).To(HaveLen(1))
-		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
-		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonIstioUninstallSucceeded)))
+		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
+		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonIstioUninstallSucceeded)))
 		Expect((*istioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 	})
 
@@ -1070,7 +1070,7 @@ var _ = Describe("Installation reconciliation", func() {
 		// given
 		now := metav1.NewTime(time.Now())
 		numTrustedProxies := 1
-		istioCR := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",
 			ResourceVersion: "1",
 			Annotations: map[string]string{
@@ -1079,8 +1079,8 @@ var _ = Describe("Installation reconciliation", func() {
 			DeletionTimestamp: &now,
 			Finalizers:        []string{"istios.operator.kyma-project.io/istio-installation"},
 		},
-			Spec: operatorv1alpha1.IstioSpec{
-				Config: operatorv1alpha1.Config{
+			Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
 					NumTrustedProxies: &numTrustedProxies,
 				},
 			},
@@ -1116,20 +1116,20 @@ var _ = Describe("Installation reconciliation", func() {
 
 		Expect(istioCR.Status.Conditions).ToNot(BeNil())
 		Expect(*istioCR.Status.Conditions).To(HaveLen(1))
-		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
-		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonIstioCRsDangling)))
+		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
+		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonIstioCRsDangling)))
 		Expect((*istioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 	})
 
 	It("Should have all istio components labeled with kyma-project.io/module=istio label", func() {
 		numTrustedProxies := 1
-		istioCR := operatorv1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",
 			ResourceVersion: "1",
 			Annotations:     map[string]string{},
 		},
-			Spec: operatorv1alpha1.IstioSpec{
-				Config: operatorv1alpha1.Config{
+			Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
 					NumTrustedProxies: &numTrustedProxies,
 				},
 			},
@@ -1194,7 +1194,7 @@ func (c *mockLibraryClient) Uninstall(_ context.Context) error {
 }
 
 func createFakeClient(objects ...client.Object) client.Client {
-	err := operatorv1alpha1.AddToScheme(scheme.Scheme)
+	err := operatorv1alpha2.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
 	err = corev1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
@@ -1262,7 +1262,7 @@ type MergerMock struct {
 	getIstioOperatorError error
 }
 
-func (m MergerMock) Merge(_ string, _ *operatorv1alpha1.Istio, _ manifest.TemplateData, _ clusterconfig.ClusterConfiguration) (string, error) {
+func (m MergerMock) Merge(_ string, _ *operatorv1alpha2.Istio, _ manifest.TemplateData, _ clusterconfig.ClusterConfiguration) (string, error) {
 	return "mocked istio operator merge result", m.mergeError
 }
 

@@ -3,15 +3,16 @@ package manifestprocessor
 import (
 	"bytes"
 	"fmt"
-	yaml3 "gopkg.in/yaml.v3"
 	"io"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"os"
 	"path"
+
+	yaml3 "gopkg.in/yaml.v3"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
-func ParseYamlFromFile(fileName string, directory string) ([]unstructured.Unstructured, error) {
-	rawData, err := os.ReadFile(path.Join(directory, fileName))
+func ParseYamlFromFile(fileName string) ([]unstructured.Unstructured, error) {
+	rawData, err := os.ReadFile(path.Join("steps", fileName))
 	if err != nil {
 		return nil, err
 	}
@@ -24,7 +25,7 @@ func ParseYamlFromFile(fileName string, directory string) ([]unstructured.Unstru
 			if err == io.EOF {
 				break
 			}
-			return nil, fmt.Errorf("Document decode failed: %w", err)
+			return nil, fmt.Errorf("document decode failed: %w", err)
 		}
 		manifests = append(manifests, unstructured.Unstructured{Object: d})
 	}

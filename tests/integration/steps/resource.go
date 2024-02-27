@@ -10,7 +10,7 @@ import (
 
 	"github.com/avast/retry-go"
 	"github.com/cucumber/godog"
-	istioCR "github.com/kyma-project/istio/operator/api/v1alpha1"
+	istioCR "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/controllers"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"

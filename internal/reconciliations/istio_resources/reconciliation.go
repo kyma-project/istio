@@ -3,8 +3,8 @@ package istio_resources
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/istio/operator/api/v1alpha2"
 
-	"github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -14,7 +14,7 @@ import (
 )
 
 type ResourcesReconciliation interface {
-	Reconcile(ctx context.Context, istioCR v1alpha1.Istio) described_errors.DescribedError
+	Reconcile(ctx context.Context, istioCR v1alpha2.Istio) described_errors.DescribedError
 }
 
 type ResourcesReconciler struct {
@@ -35,7 +35,7 @@ type Resource interface {
 	reconcile(ctx context.Context, k8sClient client.Client, owner metav1.OwnerReference, templateValues map[string]string) (controllerutil.OperationResult, error)
 }
 
-func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha1.Istio) described_errors.DescribedError {
+func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha2.Istio) described_errors.DescribedError {
 	ctrl.Log.Info("Reconciling Istio resources")
 
 	resources, err := getResources(r.client, r.hsClient)
@@ -71,7 +71,7 @@ func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha1.Is
 	return nil
 }
 
-func (r *ResourcesReconciler) getTemplateValues(ctx context.Context, istioCR v1alpha1.Istio) error {
+func (r *ResourcesReconciler) getTemplateValues(ctx context.Context, istioCR v1alpha2.Istio) error {
 	if len(r.templateValues) == 0 {
 		r.templateValues = make(map[string]string)
 	}

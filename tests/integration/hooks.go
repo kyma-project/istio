@@ -6,7 +6,7 @@ import (
 
 	"github.com/avast/retry-go"
 	"github.com/cucumber/godog"
-	"github.com/kyma-project/istio/operator/api/v1alpha1"
+	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -95,7 +95,7 @@ var verifyIfControllerHasBeenRestarted = func(ctx context.Context, sc *godog.Sce
 	return ctx, nil
 }
 
-func forceIstioCrRemoval(ctx context.Context, istio *v1alpha1.Istio) error {
+func forceIstioCrRemoval(ctx context.Context, istio *v1alpha2.Istio) error {
 	c, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
@@ -117,7 +117,7 @@ func forceIstioCrRemoval(ctx context.Context, istio *v1alpha1.Istio) error {
 			return err
 		}
 
-		if istio.Status.State == v1alpha1.Error {
+		if istio.Status.State == v1alpha2.Error {
 			t.Logf("Istio CR in error state (%s), force removal", istio.Status.Description)
 			istio.Finalizers = nil
 			err = c.Update(ctx, istio)

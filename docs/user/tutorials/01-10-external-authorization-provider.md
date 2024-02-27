@@ -1,6 +1,6 @@
 # External Authorization Provider
 
-This tutorial shows how to expose and secure an HTTPBin Service using an external authorization provider and the Kyma domain.
+This tutorial shows how to expose and secure an HTTPBin Service using an external authorization provider.
 
 ## Prerequisites
 

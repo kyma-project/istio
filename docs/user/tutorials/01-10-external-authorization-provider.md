@@ -1,40 +1,37 @@
-# External authorization provider
+# External Authorization Provider
 
-This tutorial shows how to expose and secure an HTTPBin service using an external authorization provider and the Kyma domain.
+This tutorial shows how to expose and secure an HTTPBin Service using an external authorization provider and the Kyma domain.
 
 ## Prerequisites
 
-* Kyma installation with the Istio module enabled.
+* Kyma installation with the Istio module enabled. If you use a Kyma domain, also the API Gateway module must be enabled.
 * Manually install oauth2-proxy, for example, [using Helm](https://github.com/oauth2-proxy/manifests/tree/main/helm/oauth2-proxy).
-* [Deploy a sample HTTPBin Service](../01-00-create-workload.md).
+* [Deploy a sample HTTPBin Service](https://kyma-project.io/#/api-gateway/user/tutorials/01-00-create-workload).
 * [Expose the HTTPBin Service](./01-40-expose-workload-apigateway) using the Kyma domain.
-* If using a Kyma domain, API Gateway module must be enabled.
-
-## Steps
-
-### Expose httpbin
-
-* Set up [your custom domain](../01-10-setup-custom-domain-for-workload.md) or use a Kyma domain instead.
+* Set up [your custom domain](https://kyma-project.io/#/api-gateway/user/tutorials/01-10-setup-custom-domain-for-workload) or use a Kyma domain instead.
 * Depending on whether you use your custom domain or a Kyma domain, export the necessary values as environment variables:
-
-1. Follow the instructions in the tabs to expose the HTTPBin workload using a VirtualService.
 
     <!-- tabs:start -->
     #### **Custom Domain**
-  
+
     ```bash
     export DOMAIN_TO_EXPOSE_WORKLOADS={DOMAIN_NAME}
     export GATEWAY=$NAMESPACE/httpbin-gateway
     ```
     #### **Kyma Domain**
-  
+
     ```bash
     export DOMAIN_TO_EXPOSE_WORKLOADS={KYMA_DOMAIN_NAME}
     export GATEWAY=kyma-system/kyma-gateway
     ```
     <!-- tabs:end -->
 
-2. Create a VirtualService:
+## Steps
+
+### Expose an HTTPBin Service
+
+
+Create a VirtualService to expose the HTTPBin workload.
 
     ```shell
     cat <<EOF | kubectl apply -f -
@@ -60,7 +57,7 @@ This tutorial shows how to expose and secure an HTTPBin service using an externa
     EOF
     ```
 
-### Install and configure oauth2-proxy
+### Install and Configure oauth2-proxy
 
 1. Export your configuration values as environment variables:
     ```

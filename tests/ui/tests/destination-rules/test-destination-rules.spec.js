@@ -22,7 +22,7 @@ context('Test Destination Rules', () => {
     it('Create a Destination Rule', () => {
         cy.navigateTo('Istio', 'Destination Rules');
 
-        cy.contains('ui5-button', 'Create Destination Rule').click();
+        cy.clickCreateButton();
 
         cy.get('ui5-dialog')
             .find('[aria-label="DestinationRule name"]:visible')
@@ -81,6 +81,7 @@ context('Test Destination Rules', () => {
     });
 
     it('Check the Destination Rule list', () => {
-        cy.inspectList('Destination Rules', DR_NAME);
+        cy.navigateBackTo('Destination Rules', DR_NAME);
+        cy.checkItemOnGenericListLink(DR_NAME);
     });
 });

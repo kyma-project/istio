@@ -5,7 +5,6 @@ This tutorial shows how to expose and secure an HTTPBin Service using an externa
 ## Prerequisites
 
 * Kyma installation with the Istio module enabled. If you use a Kyma domain, also the API Gateway module must be enabled.
-* [Deploy a sample HTTPBin Service](https://kyma-project.io/#/api-gateway/user/tutorials/01-00-create-workload).
 * Set up [your custom domain](https://kyma-project.io/#/api-gateway/user/tutorials/01-10-setup-custom-domain-for-workload) or use a Kyma domain instead.
 * Depending on whether you use your custom domain or a Kyma domain, export the necessary values as environment variables:
 
@@ -25,6 +24,22 @@ This tutorial shows how to expose and secure an HTTPBin Service using an externa
     <!-- tabs:end -->
 
 ## Steps
+
+### Create a workload
+
+1. Export the namespace where you want to deploy the HTTPBin Service:
+
+    ```
+    export NAMESPACE={NAMESPACE_NAME}
+    ```
+
+2. Create a namespace with istio-injection enabled and deploy the HTTPBin:
+
+    ```
+    kubectl create ns $NAMESPACE
+    kubectl label namespace $NAMESPACE istio-injection=enabled --overwrite
+    kubectl create -n $NAMESPACE -f https://raw.githubusercontent.com/istio/istio/master/samples/httpbin/httpbin.yaml
+    ```
 
 ### Expose an HTTPBin Service
 
@@ -168,8 +183,4 @@ To learn more about oauth2-proxy, [see the documentation](https://github.com/oau
     EOF
     ```
 
-4. To test the configuration, send a request to the HTTPBin Service:
-    ```
-    curl -ik https://httpbin.ps-test.goatz.shoot.canary.k8s-hana.ondemand.com/headers
-    ```
-    The response should have the `302` status code and include the **location** header with the URL of the authorization provider.
+4. To test the configuration, visit the `https://httpbin.$DOMAIN_TO_EXPOSE_WORKLOADS/headers` URL. You should be redirected to the authorization provider.

@@ -5,7 +5,10 @@ This tutorial shows how to expose and secure an HTTPBin Service using an externa
 ## Prerequisites
 
 * Kyma installation with the Istio module enabled. If you use a Kyma domain, also the API Gateway module must be enabled.
-* Set up [your custom domain](https://kyma-project.io/#/api-gateway/user/tutorials/01-10-setup-custom-domain-for-workload) or use a Kyma domain instead.
+* Prepare a domain you want to use and export its name as an environment variable:
+    ```
+    export DOMAIN_TO_EXPOSE_WORKLOADS={DOMAIN_NAME}
+    ```
 * Depending on whether you use your custom domain or a Kyma domain, export the necessary values as environment variables:
 
     <!-- tabs:start -->
@@ -25,15 +28,15 @@ This tutorial shows how to expose and secure an HTTPBin Service using an externa
 
 ## Steps
 
-### Create a workload
+### Create a Workload
 
-1. Export the namespace where you want to deploy the HTTPBin Service:
+1. Export the name of the namespace in which you want to deploy the HTTPBin Service:
 
     ```
     export NAMESPACE={NAMESPACE_NAME}
     ```
 
-2. Create a namespace with istio-injection enabled and deploy the HTTPBin:
+2. Create a namespace with Istio injection enabled and deploy the HTTPBin Service:
 
     ```
     kubectl create ns $NAMESPACE

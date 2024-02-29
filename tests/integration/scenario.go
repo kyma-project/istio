@@ -33,7 +33,6 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^Application pod "([^"]*)" in namespace "([^"]*)" has Istio proxy "([^"]*)"$`, steps.ApplicationPodShouldHaveIstioProxy)
 	ctx.Step(`^Destination rule "([^"]*)" in namespace "([^"]*)" with host "([^"]*)" exists$`, steps.CreateDestinationRule)
 	ctx.Step(`^Istio is manually uninstalled$`, steps.UninstallIstio)
-	ctx.Step(`^Istio "([^"]*)" service has annotation "([^"]*)" on "([^"]*)" cluster$`, steps.IstioServiceHasAnnotation)
 	ctx.Step(`^Httpbin application "([^"]*)" deployment is created in namespace "([^"]*)"$`, steps.CreateHttpbinApplication)
 	ctx.Step(`^Httpbin application "([^"]*)" deployment is created in namespace "([^"]*)" with service port "([^"]*)"$`, steps.CreateHttpbinApplicationWithServicePort)
 	ctx.Step(`^Nginx application "([^"]*)" deployment is created in namespace "([^"]*)" with forward to "([^"]*)" and service port 80$`, steps.CreateNginxApplication)

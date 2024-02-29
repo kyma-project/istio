@@ -2,8 +2,10 @@ package istio_resources
 
 import (
 	"context"
+
+	"strings"
+
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
@@ -15,7 +17,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	"strings"
 )
 
 type hyperscalerClientMock struct {
@@ -132,7 +133,7 @@ var _ = Describe("Reconciliation", func() {
 
 		It("should not be created when hyperscaler is not AWS", func() {
 			//given
-			client := createFakeClient(createGcpShootInfo())
+			client := createFakeClient()
 			hc := &hyperscalerClientMock{isAws: false}
 			reconciler := NewReconciler(client, hc)
 
@@ -164,15 +165,4 @@ func createFakeClient(objects ...ctrlclient.Object) ctrlclient.Client {
 	Expect(err).ShouldNot(HaveOccurred())
 
 	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build()
-}
-
-func createGcpShootInfo() *corev1.ConfigMap {
-	return createShootInfoConfigMap("gcp")
-}
-
-func createShootInfoConfigMap(provider string) *corev1.ConfigMap {
-	return &corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{Name: clusterconfig.ConfigMapShootInfoName, Namespace: clusterconfig.ConfigMapShootInfoNS},
-		Data:       map[string]string{"provider": provider},
-	}
 }

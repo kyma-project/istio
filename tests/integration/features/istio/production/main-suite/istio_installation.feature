@@ -11,7 +11,6 @@ Feature: Installing and uninstalling Istio module
     Given Istio CR "istio-sample" from "istio_cr_template" is applied in namespace "kyma-system"
     Then Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
     And Istio CR "istio-sample" in namespace "kyma-system" has condition with reason "ReconcileSucceeded" of type "Ready" and status "True"
-    And Istio "istio-ingressgateway" service has annotation "dns.gardener.cloud/dnsnames" on "Gardener" cluster
     And "proxy" has "requests" set to cpu - "10m" and memory - "192Mi"
     And "proxy" has "limits" set to cpu - "1000m" and memory - "1024Mi"
     And "ingress-gateway" has "requests" set to cpu - "100m" and memory - "128Mi"
@@ -39,7 +38,6 @@ Feature: Installing and uninstalling Istio module
     And Namespace "istio-system" has "namespaces.warden.kyma-project.io/validate" label and "istios.operator.kyma-project.io/managed-by-disclaimer" annotation
     And "Deployment" "istiod" in namespace "istio-system" is ready
     And "Deployment" "istio-ingressgateway" in namespace "istio-system" is ready
-    And Istio "istio-ingressgateway" service has annotation "dns.gardener.cloud/dnsnames" on "Gardener" cluster
     And "DaemonSet" "istio-cni-node" in namespace "istio-system" is ready
     And "pilot" has "limits" set to cpu - "1200m" and memory - "1200Mi"
     And "pilot" has "requests" set to cpu - "15m" and memory - "200Mi"

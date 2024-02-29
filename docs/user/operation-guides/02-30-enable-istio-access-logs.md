@@ -19,7 +19,8 @@ The Istio setup shipped with Kyma provides a pre-configured [extension provider]
 
 The [log format](https://github.com/kyma-project/istio/blob/main/manifests/istio-operator-template.yaml#L160) is based on the Istio default format enhanced with the attributes relevant for identifying the related trace context conform to the [w3c-tracecontext](https://www.w3.org/TR/trace-context/) protocol. See [Kyma tracing](https://kyma-project.io/#/telemetry-manager/user/03-traces) for more details on tracing. See [Istio tracing](https://kyma-project.io/#/telemetry-manager/user/03-traces?id=istio) on how to enable trace context propagation with Istio.
 
->**CAUTION:** Enabling access logs may drastically increase logs volume and might quickly fill up your log storage. Also, the provided feature uses an API in alpha state, which may change in future releases.
+> [!WARNING]
+>  Enabling access logs may drastically increase logs volume and might quickly fill up your log storage. Also, the provided feature uses an API in alpha state, which may change in future releases.
 
 ## Configuration
 
@@ -28,56 +29,91 @@ Use the Telemetry API to selectively enable Istio access logs. You can enable ac
 ### Configure Istio Access Logs for the Entire Namespace
 
 1. In the following sample configuration, replace `{YOUR_NAMESPACE}` with your namespace.
-2. To apply the configuration, run `kubectl apply`.
+1. To apply the configuration, run `kubectl apply`.
 
-```yaml
-apiVersion: telemetry.istio.io/v1alpha1
-kind: Telemetry
-metadata:
-  name: access-config
-  namespace: {YOUR_NAMESPACE}
-spec:
-  accessLogging:
-    - providers:
-      - name: stdout-json
-```
+    ```yaml
+    apiVersion: telemetry.istio.io/v1alpha1
+    kind: Telemetry
+    metadata:
+      name: access-config
+      namespace: {YOUR_NAMESPACE}
+    spec:
+      accessLogging:
+        - providers:
+          - name: stdout-json
+    ```
+1. To verify that the resource is applied, run:
+    ```yaml
+    kubectl -n {YOUR_NAMESPACE} get telemetries.telemetry.istio.io
+    ```
 
 ### Configure Istio Access Logs for a Selective Workload
 
 To configure label-based selection of workloads, use a [selector](https://istio.io/latest/docs/reference/config/type/workload-selector/#WorkloadSelector).
 1. In the following sample configuration, replace `{YOUR_NAMESPACE}` and `{YOUR_LABEL}` with your namespace and the label of the workload, respectively.
-2. To apply the configuration, run `kubectl apply`.
-
-```yaml
-apiVersion: telemetry.istio.io/v1alpha1
-kind: Telemetry
-metadata:
-  name: access-config
-  namespace: {YOUR_NAMESPACE}
-spec:
-  selector:
-    matchLabels:
-      service.istio.io/canonical-name: {YOUR_LABEL}
-  accessLogging:
-    - providers:
-      - name: stdout-json
-```
+1. To apply the configuration, run `kubectl apply`.
+    ```yaml
+    apiVersion: telemetry.istio.io/v1alpha1
+    kind: Telemetry
+    metadata:
+      name: access-config
+      namespace: {YOUR_NAMESPACE}
+    spec:
+      selector:
+        matchLabels:
+          service.istio.io/canonical-name: {YOUR_LABEL}
+      accessLogging:
+        - providers:
+          - name: stdout-json
+    ```
+1. To verify that the resource is applied, run:
+    ```yaml
+    kubectl -n {YOUR_NAMESPACE} get telemetries.telemetry.istio.io
+    ```
 
 ### Configure Istio Access Logs for a Specific Gateway
 
-Instead of enabling the access logs for all the individual proxies of the workloads you have, you can enable the logs for the proxy used by the related Istio Ingress Gateway:
+Instead of enabling the access logs for all the individual proxies of the workloads you have, you can enable the logs for the proxy used by the related Istio Ingress Gateway.
 
-```yaml
-apiVersion: telemetry.istio.io/v1alpha1
-kind: Telemetry
-metadata:
-  name: access-config
-  namespace: istio-system
-spec:
-  selector:
-    matchLabels:
-      istio: ingressgateway
-  accessLogging:
-    - providers:
-      - name: stdout-json
-```
+1. To apply the configuration, run `kubectl apply`.
+    ```yaml
+    apiVersion: telemetry.istio.io/v1alpha1
+    kind: Telemetry
+    metadata:
+      name: access-config
+      namespace: istio-system
+    spec:
+      selector:
+        matchLabels:
+          istio: ingressgateway
+      accessLogging:
+        - providers:
+          - name: stdout-json
+    ```
+1. To verify that the resource is applied, run:
+    ```yaml
+    kubectl -n istio-system get telemetries.telemetry.istio.io
+    ```
+
+### Configure Istio Access Logs for the Entire Mesh
+
+Enable access logs for all individual proxies of the workloads and Istio Ingress Gateways.
+1. To apply the configuration, run `kubectl apply`.
+    ```yaml
+    apiVersion: telemetry.istio.io/v1alpha1
+    kind: Telemetry
+    metadata:
+      name: access-config
+      namespace: istio-system
+    spec:
+      selector:
+        matchLabels:
+          istio: ingressgateway
+      accessLogging:
+        - providers:
+          - name: stdout-json
+    ```
+1. To verify that the resource is applied, run:
+    ```yaml
+    kubectl -n istio-system get telemetries.telemetry.istio.io
+    ```

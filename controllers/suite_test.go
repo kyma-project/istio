@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/tests"
 	"github.com/onsi/ginkgo/v2/types"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
@@ -33,7 +33,7 @@ func createFakeClient(objects ...client.Object) client.Client {
 
 func getTestScheme() *runtime.Scheme {
 	scheme := runtime.NewScheme()
-	Expect(operatorv1alpha1.AddToScheme(scheme)).Should(Succeed())
+	Expect(operatorv1alpha2.AddToScheme(scheme)).Should(Succeed())
 	Expect(v1alpha3.AddToScheme(scheme)).Should(Succeed())
 	Expect(v1beta1.AddToScheme(scheme)).Should(Succeed())
 	Expect(securityv1beta1.AddToScheme(scheme)).Should(Succeed())

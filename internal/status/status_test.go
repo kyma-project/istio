@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/kyma-project/istio/operator/internal/tests"
 	. "github.com/onsi/ginkgo/v2"
@@ -35,7 +35,7 @@ var _ = Describe("status", func() {
 	Describe("UpdateToReady", func() {
 		It("Should update Istio CR status to ready", func() {
 			// given
-			cr := operatorv1alpha1.Istio{
+			cr := operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 			}
 			k8sClient := createFakeClient(&cr)
@@ -50,16 +50,16 @@ var _ = Describe("status", func() {
 			err = k8sClient.Get(context.TODO(), types2.NamespacedName{Name: "test", Namespace: "default"}, &cr)
 
 			Expect(err).ToNot(HaveOccurred())
-			Expect(cr.Status.State).To(Equal(operatorv1alpha1.Ready))
+			Expect(cr.Status.State).To(Equal(operatorv1alpha2.Ready))
 			Expect(cr.Status.Conditions).To(BeNil())
 		})
 
 		It("Should reset existing status description to empty", func() {
 			// given
-			cr := operatorv1alpha1.Istio{
+			cr := operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
-				Status: operatorv1alpha1.IstioStatus{
-					State:       operatorv1alpha1.Deleting,
+				Status: operatorv1alpha2.IstioStatus{
+					State:       operatorv1alpha2.Deleting,
 					Description: "some description",
 				},
 			}
@@ -74,7 +74,7 @@ var _ = Describe("status", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(k8sClient.Get(context.TODO(), types2.NamespacedName{Name: "test", Namespace: "default"}, &cr)).Should(Succeed())
-			Expect(cr.Status.State).To(Equal(operatorv1alpha1.Ready))
+			Expect(cr.Status.State).To(Equal(operatorv1alpha2.Ready))
 			Expect(cr.Status.Description).To(BeEmpty())
 			Expect(cr.Status.Conditions).To(BeNil())
 		})
@@ -83,7 +83,7 @@ var _ = Describe("status", func() {
 	Describe("UpdateToDeleting", func() {
 		It("Should update Istio CR status to deleting", func() {
 			// given
-			cr := operatorv1alpha1.Istio{
+			cr := operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 			}
 			k8sClient := createFakeClient(&cr)
@@ -95,13 +95,13 @@ var _ = Describe("status", func() {
 			// then
 			Expect(err).ToNot(HaveOccurred())
 
-			Expect(cr.Status.State).To(Equal(operatorv1alpha1.Deleting))
+			Expect(cr.Status.State).To(Equal(operatorv1alpha2.Deleting))
 			Expect(cr.Status.Description).ToNot(BeEmpty())
 
 			err = k8sClient.Get(context.TODO(), types2.NamespacedName{Name: "test", Namespace: "default"}, &cr)
 
 			Expect(err).ToNot(HaveOccurred())
-			Expect(cr.Status.State).To(Equal(operatorv1alpha1.Deleting))
+			Expect(cr.Status.State).To(Equal(operatorv1alpha2.Deleting))
 			Expect(cr.Status.Description).ToNot(BeEmpty())
 			Expect(cr.Status.Conditions).To(BeNil())
 		})
@@ -110,7 +110,7 @@ var _ = Describe("status", func() {
 	Describe("UpdateToProcessing", func() {
 		It("Should update Istio CR status to processing with description", func() {
 			// given
-			cr := operatorv1alpha1.Istio{
+			cr := operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 			}
 			k8sClient := createFakeClient(&cr)
@@ -122,13 +122,13 @@ var _ = Describe("status", func() {
 			// then
 			Expect(err).ToNot(HaveOccurred())
 
-			Expect(cr.Status.State).To(Equal(operatorv1alpha1.Processing))
+			Expect(cr.Status.State).To(Equal(operatorv1alpha2.Processing))
 			Expect(cr.Status.Description).To(Equal("Reconciling Istio"))
 
 			err = k8sClient.Get(context.TODO(), types2.NamespacedName{Name: "test", Namespace: "default"}, &cr)
 
 			Expect(err).ToNot(HaveOccurred())
-			Expect(cr.Status.State).To(Equal(operatorv1alpha1.Processing))
+			Expect(cr.Status.State).To(Equal(operatorv1alpha2.Processing))
 			Expect(cr.Status.Description).To(Equal("Reconciling Istio"))
 			Expect(cr.Status.Conditions).To(BeNil())
 		})
@@ -137,7 +137,7 @@ var _ = Describe("status", func() {
 	Describe("UpdateToError", func() {
 		It("Should update Istio CR status to error with description", func() {
 			// given
-			cr := operatorv1alpha1.Istio{
+			cr := operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 			}
 			k8sClient := createFakeClient(&cr)
@@ -154,14 +154,14 @@ var _ = Describe("status", func() {
 			err = k8sClient.Get(context.TODO(), types2.NamespacedName{Name: "test", Namespace: "default"}, &cr)
 
 			Expect(err).ToNot(HaveOccurred())
-			Expect(cr.Status.State).To(Equal(operatorv1alpha1.Error))
+			Expect(cr.Status.State).To(Equal(operatorv1alpha2.Error))
 			Expect(cr.Status.Description).To(Equal("Something: error happened"))
 			Expect(cr.Status.Conditions).To(BeNil())
 		})
 
 		It("Should update Istio CR status to warning with description", func() {
 			// given
-			cr := operatorv1alpha1.Istio{
+			cr := operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 			}
 			k8sClient := createFakeClient(&cr)
@@ -178,14 +178,14 @@ var _ = Describe("status", func() {
 			err = k8sClient.Get(context.TODO(), types2.NamespacedName{Name: "test", Namespace: "default"}, &cr)
 
 			Expect(err).ToNot(HaveOccurred())
-			Expect(cr.Status.State).To(Equal(operatorv1alpha1.Warning))
+			Expect(cr.Status.State).To(Equal(operatorv1alpha2.Warning))
 			Expect(cr.Status.Description).To(Equal("Something: error happened"))
 			Expect(cr.Status.Conditions).To(BeNil())
 		})
 
 		It("Should update Istio CR status to error with default condition", func() {
 			// given
-			cr := operatorv1alpha1.Istio{
+			cr := operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 			}
 			k8sClient := createFakeClient(&cr)
@@ -202,14 +202,14 @@ var _ = Describe("status", func() {
 			err = k8sClient.Get(context.TODO(), types2.NamespacedName{Name: "test", Namespace: "default"}, &cr)
 
 			Expect(err).ToNot(HaveOccurred())
-			Expect(cr.Status.State).To(Equal(operatorv1alpha1.Error))
+			Expect(cr.Status.State).To(Equal(operatorv1alpha2.Error))
 			Expect(cr.Status.Description).To(Equal("Something: error happened"))
 			Expect(cr.Status.Conditions).To(BeNil())
 		})
 
 		It("Should update Istio CR status to warning with a speicific condition derived from the error", func() {
 			// given
-			cr := operatorv1alpha1.Istio{
+			cr := operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 			}
 			k8sClient := createFakeClient(&cr)
@@ -226,14 +226,14 @@ var _ = Describe("status", func() {
 			err = k8sClient.Get(context.TODO(), types2.NamespacedName{Name: "test", Namespace: "default"}, &cr)
 
 			Expect(err).ToNot(HaveOccurred())
-			Expect(cr.Status.State).To(Equal(operatorv1alpha1.Warning))
+			Expect(cr.Status.State).To(Equal(operatorv1alpha2.Warning))
 			Expect(cr.Status.Description).To(Equal("Something: error happened"))
 			Expect(cr.Status.Conditions).To(BeNil())
 		})
 
 		It("Should update Istio CR status to warning and add ready condition if not provided", func() {
 			// given
-			cr := operatorv1alpha1.Istio{
+			cr := operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 			}
 			k8sClient := createFakeClient(&cr)
@@ -250,7 +250,7 @@ var _ = Describe("status", func() {
 			err = k8sClient.Get(context.TODO(), types2.NamespacedName{Name: "test", Namespace: "default"}, &cr)
 
 			Expect(err).ToNot(HaveOccurred())
-			Expect(cr.Status.State).To(Equal(operatorv1alpha1.Warning))
+			Expect(cr.Status.State).To(Equal(operatorv1alpha2.Warning))
 			Expect(cr.Status.Description).To(Equal("Something: error happened"))
 			Expect(cr.Status.Conditions).To(BeNil())
 		})
@@ -259,25 +259,25 @@ var _ = Describe("status", func() {
 	Describe("SetCondition", func() {
 		It("Should set Istio CR status conditions", func() {
 			// given
-			cr := operatorv1alpha1.Istio{
+			cr := operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 			}
 			k8sClient := createFakeClient(&cr)
 			handler := NewStatusHandler(k8sClient)
 
 			// when
-			handler.SetCondition(&cr, operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonReconcileSucceeded))
-			handler.SetCondition(&cr, operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonProxySidecarManualRestartRequired))
+			handler.SetCondition(&cr, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileSucceeded))
+			handler.SetCondition(&cr, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonProxySidecarManualRestartRequired))
 
 			// then
 			Expect(cr.Status.Conditions).ToNot(BeNil())
 			Expect((*cr.Status.Conditions)).To(HaveLen(2))
-			Expect((*cr.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha1.ConditionTypeReady)))
-			Expect((*cr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonReconcileSucceeded)))
+			Expect((*cr.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
+			Expect((*cr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonReconcileSucceeded)))
 			Expect((*cr.Status.Conditions)[0].Status).To(Equal(metav1.ConditionTrue))
 
-			Expect((*cr.Status.Conditions)[1].Type).To(Equal(string(operatorv1alpha1.ConditionTypeProxySidecarRestartSucceeded)))
-			Expect((*cr.Status.Conditions)[1].Reason).To(Equal(string(operatorv1alpha1.ConditionReasonProxySidecarManualRestartRequired)))
+			Expect((*cr.Status.Conditions)[1].Type).To(Equal(string(operatorv1alpha2.ConditionTypeProxySidecarRestartSucceeded)))
+			Expect((*cr.Status.Conditions)[1].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonProxySidecarManualRestartRequired)))
 			Expect((*cr.Status.Conditions)[1].Status).To(Equal(metav1.ConditionFalse))
 		})
 	})
@@ -289,7 +289,7 @@ func createFakeClient(objects ...client.Object) client.Client {
 
 func getTestScheme() *runtime.Scheme {
 	scheme := runtime.NewScheme()
-	Expect(operatorv1alpha1.AddToScheme(scheme)).Should(Succeed())
+	Expect(operatorv1alpha2.AddToScheme(scheme)).Should(Succeed())
 	Expect(v1alpha3.AddToScheme(scheme)).Should(Succeed())
 	Expect(v1beta1.AddToScheme(scheme)).Should(Succeed())
 	Expect(securityv1beta1.AddToScheme(scheme)).Should(Succeed())

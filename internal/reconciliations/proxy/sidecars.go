@@ -3,10 +3,10 @@ package proxy
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"strings"
 
 	"github.com/go-logr/logr"
-	"github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/filter"
 	"github.com/kyma-project/istio/operator/internal/manifest"
@@ -18,7 +18,7 @@ import (
 )
 
 type SidecarsReconciliation interface {
-	Reconcile(ctx context.Context, istioCr v1alpha1.Istio) (string, error)
+	Reconcile(ctx context.Context, istioCr v1alpha2.Istio) (string, error)
 	AddReconcilePredicate(predicate filter.SidecarProxyPredicate)
 }
 
@@ -49,7 +49,7 @@ const (
 )
 
 // Reconcile runs Proxy Reset action, which checks if any of sidecars need a restart and proceed with rollout.
-func (s *Sidecars) Reconcile(ctx context.Context, istioCr v1alpha1.Istio) (string, error) {
+func (s *Sidecars) Reconcile(ctx context.Context, istioCr v1alpha2.Istio) (string, error) {
 	expectedImage := pods.SidecarImage{Repository: imageRepository, Tag: fmt.Sprintf("%s-%s", s.IstioVersion, s.IstioImageBase)}
 	s.Log.Info("Running proxy sidecar reset", "expected image", expectedImage)
 

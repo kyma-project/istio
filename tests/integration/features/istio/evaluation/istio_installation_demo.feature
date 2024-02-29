@@ -6,7 +6,7 @@ Feature: Installing Istio module with evaluation profile
     And "Deployment" "istio-controller-manager" in namespace "kyma-system" is ready
 
   Scenario: Installation of istio module with evaluation profile
-    When Istio CR "istio-sample" is applied in namespace "kyma-system"
+    When Istio CR "istio-sample" from "istio_cr_template" is applied in namespace "kyma-system"
     Then Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
     And Istio CR "istio-sample" in namespace "kyma-system" has condition with reason "ReconcileSucceeded" of type "Ready" and status "True"
     Then "proxy" has "requests" set to cpu - "10m" and memory - "32Mi"

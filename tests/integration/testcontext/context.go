@@ -2,9 +2,9 @@ package testcontext
 
 import (
 	"context"
+	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"testing"
 
-	"github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -12,15 +12,15 @@ import (
 // istioCrCtxKey is the key used to store the IstioCR used by a scenario in the context.Context.
 type istioCrCtxKey struct{}
 
-func GetIstioCRsFromContext(ctx context.Context) ([]*v1alpha1.Istio, bool) {
-	v, ok := ctx.Value(istioCrCtxKey{}).([]*v1alpha1.Istio)
+func GetIstioCRsFromContext(ctx context.Context) ([]*v1alpha2.Istio, bool) {
+	v, ok := ctx.Value(istioCrCtxKey{}).([]*v1alpha2.Istio)
 	return v, ok
 }
 
-func AddIstioCRIntoContext(ctx context.Context, istio *v1alpha1.Istio) context.Context {
+func AddIstioCRIntoContext(ctx context.Context, istio *v1alpha2.Istio) context.Context {
 	istios, ok := GetIstioCRsFromContext(ctx)
 	if !ok {
-		istios = []*v1alpha1.Istio{}
+		istios = []*v1alpha2.Istio{}
 	}
 	istios = append(istios, istio)
 	return context.WithValue(ctx, istioCrCtxKey{}, istios)

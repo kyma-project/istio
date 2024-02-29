@@ -11,20 +11,44 @@ header:
     critical:
       - 'Warning'
 body:
-- widget: Tabs
+- widget: Panel
+  name: Configuration
   children:
-  - name: General
-    children:
-    - widget: Panel
-      name: Configuration
+    - source: spec.config.numTrustedProxies
+      name: config.numTrustedProxies
+      placeholder: '1'
+
+    - name: config.authorizers
+      widget: Table
+      source: spec.config.authorizers
+      visibility: $exists($value)
+      collapsibleTitle: "$item.name"
+      collapsible:
+        - name: config.authorizers.headers.inCheck.add
+          # For some reason $each doesn't return an array that works with JoinedArray widget, when we have only one element. So in this case we return an Array with one element.
+          source: '$count($keys(headers.inCheck.add)) = 1 ? $each(headers.inCheck.add, function($v, $k) {[$k & ":" & $v]}) : $each(headers.inCheck.add, function($v, $k) {$k & ":" & $v})'
+          widget: JoinedArray
+        - name: config.authorizers.headers.inCheck.include
+          source: headers.inCheck.include
+          widget: JoinedArray
+        - name: config.authorizers.headers.toUpstream.onAllow
+          source: headers.toUpstream.onAllow
+          widget: JoinedArray
+        - name: config.authorizers.headers.toDownstream.onAllow
+          source: headers.toDownstream.onAllow
+          widget: JoinedArray
+        - name: config.authorizers.headers.toDownstream.onDeny
+          source: headers.toDownstream.onDeny
+          widget: JoinedArray
       children:
-        - source: spec.config.numTrustedProxies
-          name: config.numTrustedProxies
-          visibility: '$exists($value)'
-  - name: Components
-    children:
+        - name: config.authorizers.service
+          source: service
+        - name: config.authorizers.port
+          source: port
+
     - widget: Panel
       name: Pilot
+      visibility: '$exists(spec.components.pilot.k8s.hpaSpec.minReplicas) or $exists(spec.components.pilot.k8s.hpaSpec.maxReplicas) or $exists(spec.components.pilot.k8s.strategy.rollingUpdate.maxSurge) or $exists(spec.components.pilot.k8s.strategy.rollingUpdate.maxUnavailable) or $exists(spec.components.pilot.k8s.resources.limits.cpu) or $exists(spec.components.pilot.k8s.resources.limits.memory) or $exists(spec.components.pilot.k8s.resources.requests.cpu) or $exists(spec.components.pilot.k8s.resources.requests.memory)'
       children:
       - source: spec.components.pilot.k8s.hpaSpec.minReplicas
         name: k8s.hpaSpec.minReplicas
@@ -50,8 +74,10 @@ body:
       - source: spec.components.pilot.k8s.resources.requests.memory
         name: k8s.resources.requests.memory
         visibility: '$exists($value)'
+
     - widget: Panel
       name: Ingress Gateway
+      visibility: '$exists(spec.components.ingressGateway.k8s.hpaSpec.minReplicas) or $exists(spec.components.ingressGateway.k8s.hpaSpec.maxReplicas) or $exists(spec.components.ingressGateway.k8s.strategy.rollingUpdate.maxSurge) or  $exists(spec.components.ingressGateway.k8s.strategy.rollingUpdate.maxUnavailable) or $exists(spec.components.ingressGateway.k8s.resources.limits.cpu) or $exists(spec.components.ingressGateway.k8s.resources.limits.memory) or $exists(spec.components.ingressGateway.k8s.resources.requests.cpu) or $exists(spec.components.ingressGateway.k8s.resources.requests.memory)'
       children:
       - source: spec.components.ingressGateway.k8s.hpaSpec.minReplicas
         name: k8s.hpaSpec.minReplicas
@@ -77,8 +103,10 @@ body:
       - source: spec.components.ingressGateway.k8s.resources.requests.memory
         name: k8s.resources.requests.memory
         visibility: '$exists($value)'
+
     - widget: Panel
       name: CNI
+      visibility: '$exists(spec.components.cni.k8s.resources.limits.cpu) or $exists(spec.components.cni.k8s.resources.limits.memory) or $exists(spec.components.cni.k8s.resources.requests.cpu) or  $exists(spec.components.cni.k8s.resources.requests.memory) or $exists(spec.components.cni.k8s.affinity)'
       children:
         - source: spec.components.cni.k8s.resources.limits.cpu
           name: k8s.resources.limits.cpu
@@ -98,8 +126,10 @@ body:
           description: "Kubernetes documentation for {{[Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity)}}"
           language: "'yaml'"
           visibility: '$exists($value)'
+
     - widget: Panel
       name: Proxy
+      visibility: '$exists(spec.components.proxy.k8s.resources.limits.cpu) or $exists(spec.components.proxy.k8s.resources.limits.memory) or $exists(spec.components.proxy.k8s.resources.requests.cpu) or  $exists(spec.components.proxy.k8s.resources.requests.memory)'
       children:
       - source: spec.components.proxy.k8s.resources.limits.cpu
         name: k8s.resources.limits.cpu
@@ -113,9 +143,25 @@ body:
       - source: spec.components.proxy.k8s.resources.requests.memory
         name: k8s.resources.requests.memory
         visibility: '$exists($value)'
-  - name: Reconciliation
-    children:
-    - widget: EventList
-      filter: '$matchEvents($$, $root.kind, $root.metadata.name)'
-      name: Events
-      defaultType: information
+
+- source: status.conditions
+  widget: Table
+  name: Reconciliation Conditions
+  children:
+    - source: type
+      name: Type
+    - source: status
+      name: Status
+      widget: Badge
+      highlights:
+        success:
+          - 'True'
+        error:
+          - 'False'
+    - source: reason
+      name: Reason
+    - source: message
+      name: Message
+    - source: '$readableTimestamp(lastTransitionTime)'
+      name: Last transition
+      sort: true

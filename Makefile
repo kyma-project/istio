@@ -10,6 +10,8 @@ OS_ARCH ?= $(shell uname -m)
 # Operating system type
 OS_TYPE ?= $(shell uname)
 
+VERSION ?= dev
+
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.24.2
 
@@ -65,7 +67,7 @@ manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and Cust
 .PHONY: generate-integration-test-manifest
 generate-integration-test-manifest: manifests kustomize
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default -o tests/integration/manifests/generated-operator-manifest.yaml
+	$(KUSTOMIZE) build config/default -o tests/integration/steps/operator_generated_manifest.yaml
 
 .PHONY: generate
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
@@ -123,15 +125,15 @@ create-kyma-system-ns:
 	kubectl label namespace kyma-system istio-injection=enabled --overwrite
 
 .PHONY: install
-install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
+install: manifests kustomize module-version ## Install CRDs into the K8s cluster specified in ~/.kube/config.
 	$(KUSTOMIZE) build config/crd | kubectl apply -f -
 
 .PHONY: uninstall
-uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
+uninstall: manifests kustomize module-version ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
 	$(KUSTOMIZE) build config/crd | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
 
 .PHONY: deploy
-deploy: create-kyma-system-ns manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+deploy: create-kyma-system-ns manifests kustomize module-version ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 
@@ -185,7 +187,7 @@ module-image: docker-build docker-push ## Build the Module Image and push it to 
 	echo "built and pushed module image $(IMG)"
 
 .PHONY: generate-manifests
-generate-manifests: kustomize
+generate-manifests: kustomize module-version
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default > istio-manager.yaml
 
@@ -231,3 +233,11 @@ gardener-perf-test:
 .PHONY: gardener-aws-integration-test
 gardener-aws-integration-test:
 	./hack/ci/gardener-integration-aws-specific.sh
+
+.PHONY: module-version
+module-version:
+ifeq ($(OS_TYPE), Darwin)
+	sed -i'.bak' -e 's/VERSION/$(VERSION)/g' config/default/kustomization.yaml
+else
+	sed -i 's/VERSION/$(VERSION)/g' config/default/kustomization.yaml
+endif

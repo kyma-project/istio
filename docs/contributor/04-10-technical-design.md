@@ -14,7 +14,7 @@ The following diagram illustrates Kyma Istio Operator and its components:
 
 The [Istio custom resource (CR)](../user/04-00-istio-custom-resource.md) is a resource used to manage the Istio installation. The Istio CR is namespace-scoped because it was created and used before the introduction of Kyma Istio Operator.
 However, the namespace-scoped approach has no particular benefit since the Kyma Istio Operator only supports a single Istio CR per cluster. Despite this, it is not possible to transition to a cluster-scoped model without introducing breaking changes.
-As a consequence, only the oldest Istio CR in the `kyma-system` namespace is reconciled. Kyma Istio Operator does not reconcile other CRs in the `kyma-system` namespace or any CRs in other namespaces. Instead, it sets their status to 'Error'.
+As a consequence, only the oldest Istio CR in the `kyma-system` namespace is reconciled. Kyma Istio Operator does not reconcile other CRs in the `kyma-system` namespace or any CRs in other namespaces. Instead, it sets their status to 'Warning'.
 
 
 ## Istio Version
@@ -40,7 +40,7 @@ The Istio CR is reconciled with each change to the **Spec** field. If you do not
 To adjust this interval, use [Istio Controller parameters](../user/technical-reference/05-00-istio-controller-parameters.md).
 If the reconciliation process fails, [Kubernetes controller-runtime](https://pkg.go.dev/sigs.k8s.io/controller-runtime) uses exponential backoff requeue.
 
-When Istio CR is deleted, Istio Controller uninstalls all Istio components. However, the uninstallation process can only proceed if there are no customer-created resources on the cluster.
+When Istio CR is deleted, Istio Controller uninstalls all Istio components. However, the uninstallation process can only proceed if there are no customer-created resources in the cluster.
 
 Otherwise, Istio Controller logs the list of resources blocking the deletion and sets the Istio CR’s status to `Warning`.
 The `istios.operator.kyma-project.io/istio-installation` finalizer protects the deletion of the Istio CR until you clean up all the orphaned resources. This behavior is known as the blocking deletion strategy.
@@ -81,7 +81,7 @@ Istio ResourcesReconciliation is responsible for applying resources dependent on
 To maintain the correct state, the component provides [Restart Predicates](#restart-predicates) on a per-resource basis, which the [IngressGatewayReconciler](#ingressgatewayreconciler) and [ProxySidecarReconciliation](#proxysidecarreconciliation) components consume.
 
 When the Istio InstallationReconciliation component reconciles resources that are not Istio resources, it sets their OwnerReference to the Istio CR.
-As a result, if you remove the Istio CR, any associated resources that would normally remain on the cluster are also deleted.
+As a result, if you remove the Istio CR, any associated resources that would normally remain in the cluster are also deleted.
 
 ### ProxySidecarReconciliation
 

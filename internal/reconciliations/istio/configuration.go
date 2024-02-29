@@ -8,22 +8,22 @@ import (
 	"github.com/kyma-project/istio/operator/internal/reconciliations/ingress_gateway"
 
 	"github.com/coreos/go-semver/semver"
-	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type appliedConfig struct {
-	operatorv1alpha1.IstioSpec
+	operatorv1alpha2.IstioSpec
 	IstioTag string
 }
 
 // shouldDelete returns true when Istio should be deleted
-func shouldDelete(istio *operatorv1alpha1.Istio) bool {
+func shouldDelete(istio *operatorv1alpha2.Istio) bool {
 	return !istio.DeletionTimestamp.IsZero()
 }
 
 // shouldInstall returns true when Istio should be installed
-func shouldInstall(istio *operatorv1alpha1.Istio, istioTag string) (shouldInstall bool, err error) {
+func shouldInstall(istio *operatorv1alpha2.Istio, istioTag string) (shouldInstall bool, err error) {
 	if shouldDelete(istio) {
 		return false, nil
 	}
@@ -47,7 +47,7 @@ func shouldInstall(istio *operatorv1alpha1.Istio, istioTag string) (shouldInstal
 
 // UpdateLastAppliedConfiguration annotates the passed CR with LastAppliedConfiguration, which holds information about last applied
 // IstioCR spec and IstioTag (IstioVersion-IstioImageBase)
-func UpdateLastAppliedConfiguration(istioCR *operatorv1alpha1.Istio, istioTag string) error {
+func UpdateLastAppliedConfiguration(istioCR *operatorv1alpha2.Istio, istioTag string) error {
 	if len(istioCR.Annotations) == 0 {
 		istioCR.Annotations = map[string]string{}
 	}
@@ -66,7 +66,7 @@ func UpdateLastAppliedConfiguration(istioCR *operatorv1alpha1.Istio, istioTag st
 	return nil
 }
 
-func getLastAppliedConfiguration(istioCR *operatorv1alpha1.Istio) (appliedConfig, error) {
+func getLastAppliedConfiguration(istioCR *operatorv1alpha2.Istio) (appliedConfig, error) {
 	lastAppliedConfig := appliedConfig{}
 	if len(istioCR.Annotations) == 0 {
 		return lastAppliedConfig, nil
@@ -106,7 +106,7 @@ func CheckIstioVersion(currentIstioVersionString, targetIstioVersionString strin
 	return nil
 }
 
-func restartIngressGatewayIfNeeded(ctx context.Context, k8sClient client.Client, istioCR *operatorv1alpha1.Istio) error {
+func restartIngressGatewayIfNeeded(ctx context.Context, k8sClient client.Client, istioCR *operatorv1alpha2.Istio) error {
 	mustRestart := false
 
 	lastAppliedConfig, err := getLastAppliedConfiguration(istioCR)

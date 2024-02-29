@@ -9,8 +9,16 @@ namespace: kyma-system
 namePrefix: istio-
 
 # Labels to add to all resources and selectors.
-commonLabels:
-  app.kubernetes.io/component: istio-operator.kyma-project.io
+
+labels:
+  - includeSelectors: false
+    includeTemplates: true
+    pairs:
+      kyma-project.io/module: istio
+      app.kubernetes.io/version: VERSION
+      app.kubernetes.io/part-of: istio
+      app.kubernetes.io/name: istio-operator
+      app.kubernetes.io/instance: istio-operator-default
 
 resources:
   - ../crd

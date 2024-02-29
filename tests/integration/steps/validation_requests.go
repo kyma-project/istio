@@ -3,6 +3,7 @@ package steps
 import (
 	"context"
 	"fmt"
+
 	"github.com/avast/retry-go"
 	"github.com/kyma-project/istio/operator/tests/integration/pkg/ip"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
@@ -68,6 +69,25 @@ func ValidateResponseStatusCode(ctx context.Context, path string, expectedCode i
 	}
 
 	return ctx, c.Get(url, asserter)
+}
+
+func ValidateResponseCodeForRequestWithHeader(ctx context.Context, givenHeaderName, givenHeaderValue, path string, expectedCode int) (context.Context, error) {
+
+	ingressAddress, err := fetchIstioIngressGatewayAddress(ctx)
+	if err != nil {
+		return ctx, err
+	}
+
+	c := testsupport.NewHttpClientWithRetry()
+	headers := map[string]string{
+		givenHeaderName: givenHeaderValue,
+	}
+	url := fmt.Sprintf("http://%s%s", ingressAddress, path)
+	asserter := testsupport.ResponseStatusCodeAsserter{
+		Code: expectedCode,
+	}
+
+	return ctx, c.GetWithHeaders(url, headers, asserter)
 }
 
 func fetchIstioIngressGatewayAddress(ctx context.Context) (string, error) {

@@ -3,5 +3,7 @@ kind: IstioOperator
 metadata:
   name: test-operator
   namespace: istio-system
+  labels:
+    app.kubernetes.io/version: "{{ .ModuleVersion }}"
 spec:
   tag: "{{ .IstioVersion }}-{{ .IstioImageBase }}"

@@ -6,7 +6,7 @@ import (
 	"os"
 	"path"
 
-	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	"sigs.k8s.io/yaml"
@@ -22,10 +22,11 @@ const (
 type TemplateData struct {
 	IstioVersion   string
 	IstioImageBase string
+	ModuleVersion  string
 }
 
 type Merger interface {
-	Merge(baseManifestPath string, istioCR *operatorv1alpha1.Istio, templateData TemplateData, overrides clusterconfig.ClusterConfiguration) (string, error)
+	Merge(baseManifestPath string, istioCR *operatorv1alpha2.Istio, templateData TemplateData, overrides clusterconfig.ClusterConfiguration) (string, error)
 	GetIstioOperator(baseManifestPath string) (istioOperator.IstioOperator, error)
 }
 
@@ -39,7 +40,7 @@ func NewDefaultIstioMerger() IstioMerger {
 	}
 }
 
-func (m *IstioMerger) Merge(baseManifestPath string, istioCR *operatorv1alpha1.Istio, templateData TemplateData, overrides clusterconfig.ClusterConfiguration) (string, error) {
+func (m *IstioMerger) Merge(baseManifestPath string, istioCR *operatorv1alpha2.Istio, templateData TemplateData, overrides clusterconfig.ClusterConfiguration) (string, error) {
 	toBeInstalledIop, err := m.GetIstioOperator(baseManifestPath)
 	if err != nil {
 		return "", err
@@ -82,7 +83,7 @@ func (m *IstioMerger) GetIstioOperator(baseManifestPath string) (istioOperator.I
 	return toBeInstalledIop, nil
 }
 
-func applyIstioCR(istioCR *operatorv1alpha1.Istio, toBeInstalledIop istioOperator.IstioOperator) ([]byte, error) {
+func applyIstioCR(istioCR *operatorv1alpha2.Istio, toBeInstalledIop istioOperator.IstioOperator) ([]byte, error) {
 
 	_, err := istioCR.MergeInto(toBeInstalledIop)
 	if err != nil {
@@ -99,7 +100,7 @@ func applyIstioCR(istioCR *operatorv1alpha1.Istio, toBeInstalledIop istioOperato
 
 func parseManifestWithTemplate(templateRaw string, data TemplateData) ([]byte, error) {
 	if data.IstioVersion == "" {
-		return nil, errors.New("IstioImageBase cannot be empty")
+		return nil, errors.New("IstioVersion cannot be empty")
 	}
 
 	if data.IstioImageBase == "" {

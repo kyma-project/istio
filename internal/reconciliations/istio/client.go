@@ -7,6 +7,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sync"
+	"time"
 
 	"istio.io/api/operator/v1alpha1"
 	"istio.io/istio/istioctl/pkg/install/k8sversion"
@@ -70,7 +71,7 @@ func (c *IstioClient) Install(mergedIstioOperatorPath string) error {
 	iopFileNames := make([]string, 0, 1)
 	iopFileNames = append(iopFileNames, mergedIstioOperatorPath)
 	// We don't want to verify after installation, because it is unreliable
-	installArgs := &istio.InstallArgs{SkipConfirmation: true, Verify: false, InFilenames: iopFileNames}
+	installArgs := &istio.InstallArgs{ReadinessTimeout: 150 * time.Second, SkipConfirmation: true, Verify: false, InFilenames: iopFileNames}
 
 	if err := istio.Install(cliClient, &istio.RootArgs{}, installArgs, c.istioLogOptions, os.Stdout, c.consoleLogger, c.printer); err != nil {
 		return err

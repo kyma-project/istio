@@ -107,10 +107,10 @@ Cypress.Commands.add('loginAndSelectCluster', function(params) {
 
     cy.visit(`${config.clusterAddress}/clusters`)
         .get('ui5-button:visible')
-        .contains('Connect cluster')
+        .contains('Connect')
         .click();
 
-    cy.contains('Drag your file here or click to upload').attachFile(fileName, {
+    cy.get('input[type="file"]').attachFile(fileName, {
       subjectType: 'drag-n-drop',
     });
 
@@ -126,8 +126,11 @@ Cypress.Commands.add('loginAndSelectCluster', function(params) {
           .click();
     }
 
+    cy.get(`[aria-label="next-step"]:visible`)
+        .click({ force: true });
+
     cy.get(`[aria-label="last-step"]:visible`)
-        .contains('Connect cluster')
+        .contains('Connect')
         .click({ force: true });
 
     cy.url().should('match', expectedLocation);

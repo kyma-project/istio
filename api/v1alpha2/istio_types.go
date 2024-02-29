@@ -21,6 +21,8 @@ import (
 )
 
 type State string
+type ConditionType string
+type ConditionReason string
 
 // Valid IstioCR States.
 const (
@@ -29,7 +31,59 @@ const (
 	Error      State = "Error"
 	Deleting   State = "Deleting"
 	Warning    State = "Warning"
+
+	ConditionTypeReady                        ConditionType = "Ready"
+	ConditionTypeProxySidecarRestartSucceeded ConditionType = "ProxySidecarRestartSucceeded"
+
+	// general
+	ConditionReasonReconcileSucceeded        ConditionReason = "ReconcileSucceeded"
+	ConditionReasonReconcileSucceededMessage                 = "Reconciliation succeeded"
+	ConditionReasonReconcileFailed           ConditionReason = "ReconcileFailed"
+	ConditionReasonReconcileFailedMessage                    = "Reconciliation failed"
+	ConditionReasonValidationFailed          ConditionReason = "ValidationFailed"
+	ConditionReasonValidationFailedMessage                   = "Reconciliation did not happen as Istio Custom Resource failed to validate"
+	ConditionReasonOlderCRExists             ConditionReason = "OlderCRExists"
+	ConditionReasonOlderCRExistsMessage                      = "This Istio custom resource is not the oldest one and does not represent the module state"
+
+	// install / uninstall
+	ConditionReasonIstioInstallNotNeeded              ConditionReason = "IstioInstallNotNeeded"
+	ConditionReasonIstioInstallNotNeededMessage                       = "Istio installation is not needed"
+	ConditionReasonIstioInstallSucceeded              ConditionReason = "IstioInstallSucceeded"
+	ConditionReasonIstioInstallSucceededMessage                       = "Istio installation succeeded"
+	ConditionReasonIstioUninstallSucceeded            ConditionReason = "IstioUninstallSucceeded"
+	ConditionReasonIstioUninstallSucceededMessage                     = "Istio uninstallation succeded"
+	ConditionReasonIstioInstallUninstallFailed        ConditionReason = "IstioInstallUninstallFailed"
+	ConditionReasonIstioInstallUninstallFailedMessage                 = "Istio install or uninstall failed"
+	ConditionReasonCustomResourceMisconfigured        ConditionReason = "IstioCustomResourceMisconfigured"
+	ConditionReasonCustomResourceMisconfiguredMessage                 = "Istio custom resource has invalid configuration"
+	ConditionReasonIstioCRsDangling                   ConditionReason = "IstioCustomResourcesDangling"
+	ConditionReasonIstioCRsDanglingMessage                            = "Istio deletion blocked because of existing Istio custom resources"
+
+	// Istio CRs
+	ConditionReasonCRsReconcileSucceeded        ConditionReason = "CustomResourcesReconcileSucceeded"
+	ConditionReasonCRsReconcileSucceededMessage                 = "Custom resources reconciliation succeeded"
+	ConditionReasonCRsReconcileFailed           ConditionReason = "CustomResourcesReconcileFailed"
+	ConditionReasonCRsReconcileFailedMessage                    = "Custom resources reconciliation failed"
+
+	// proxy reset
+	ConditionReasonProxySidecarRestartSucceeded             ConditionReason = "ProxySidecarRestartSucceeded"
+	ConditionReasonProxySidecarRestartSucceededMessage                      = "Proxy sidecar restart succeeded"
+	ConditionReasonProxySidecarRestartFailed                ConditionReason = "ProxySidecarRestartFailed"
+	ConditionReasonProxySidecarRestartFailedMessage                         = "Proxy sidecar restart failed"
+	ConditionReasonProxySidecarManualRestartRequired        ConditionReason = "ProxySidecarManualRestartRequired"
+	ConditionReasonProxySidecarManualRestartRequiredMessage                 = "Proxy sidecar manual restart is required for some workloads"
+
+	// ingress gateway
+	ConditionReasonIngressGatewayReconcileSucceeded        ConditionReason = "IngressGatewayReconcileSucceeded"
+	ConditionReasonIngressGatewayReconcileSucceededMessage                 = "Istio Ingress Gateway reconciliation succeeded"
+	ConditionReasonIngressGatewayReconcileFailed           ConditionReason = "IngressGatewayReconcileFailed"
+	ConditionReasonIngressGatewayReconcileFailedMessage                    = "Istio Ingress Gateway reconciliation failed"
 )
+
+type ReasonWithMessage struct {
+	Reason  ConditionReason
+	Message string
+}
 
 // Defines the desired specification for installing or updating Istio.
 type IstioSpec struct {
@@ -64,7 +118,7 @@ type IstioList struct {
 
 // IstioStatus defines the observed state of IstioCR.
 type IstioStatus struct {
-	// State signifies current state of CustomObject. Value
+	// State signifies the current state of CustomObject. Value
 	// can be one of ("Ready", "Processing", "Error", "Deleting", "Warning").
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Enum=Processing;Deleting;Ready;Error;Warning

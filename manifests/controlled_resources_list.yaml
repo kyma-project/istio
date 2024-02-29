@@ -25,9 +25,6 @@ resources:
       group: networking.istio.io
       version: v1alpha3
       kind: Gateway
-    ControlledList:
-      - name: "kyma-gateway"
-        namespace: "kyma-system"
   - GroupVersionKind:
       group: install.istio.io
       version: v1alpha1

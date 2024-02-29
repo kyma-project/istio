@@ -92,12 +92,7 @@ out.txt
 # module generation files
 mod
 charts
-kyma.yaml
-default.yaml
-template.yaml
-template-fast.yaml
-template-regular.yaml
-template-k3d.yaml
+istio-manager.yaml
 
 # Binaries for programs and plugins
 *.exe
@@ -118,3 +113,6 @@ template-k3d.yaml
 # performance tests generated files
 k6_script_auth_gen.js
 summary.html
+
+# common labels template result files of make target module-version
+config/default/kustomization.yaml-e

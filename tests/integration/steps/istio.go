@@ -7,13 +7,16 @@ import (
 	"strings"
 
 	apinetworkingv1alpha3 "istio.io/api/networking/v1alpha3"
+	apisecurityv1beta1 "istio.io/api/security/v1beta1"
+	v1beta1 "istio.io/api/type/v1beta1"
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
+	securityv1beta1 "istio.io/client-go/pkg/apis/security/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/avast/retry-go"
 	"github.com/cucumber/godog"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
-	"github.com/kyma-project/istio/operator/tests/integration/manifests"
+	crds "github.com/kyma-project/istio/operator/tests/integration/pkg/crds"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	"github.com/mitchellh/mapstructure"
 	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
@@ -25,7 +28,6 @@ import (
 const (
 	defaultIopName      string = "installed-state-default-operator"
 	defaultIopNamespace string = "istio-system"
-	crdListPath         string = "manifests/crd_list.yaml"
 )
 
 func IstioCRDsBePresentOnCluster(ctx context.Context, should string) error {
@@ -38,7 +40,7 @@ func IstioCRDsBePresentOnCluster(ctx context.Context, should string) error {
 	if should != "should" {
 		shouldHave = false
 	}
-	lister, err := manifests.NewCRDListerFromFile(k8sClient, crdListPath)
+	lister, err := crds.NewCRDListerFromFile(k8sClient, "steps/istio_crd_list.yaml")
 	if err != nil {
 		return err
 	}
@@ -291,6 +293,53 @@ func CreateVirtualServiceWithPort(ctx context.Context, name, exposedService stri
 			return err
 		}
 		ctx = testcontext.AddCreatedTestObjectInContext(ctx, vs)
+		return nil
+	}, testcontext.GetRetryOpts()...)
+
+	return ctx, err
+}
+
+func CreateAuthorizationPolicyExtAuthz(ctx context.Context, name, namespace, selector, provider, operation string) (context.Context, error) {
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return ctx, err
+	}
+
+	ap := &securityv1beta1.AuthorizationPolicy{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: apisecurityv1beta1.AuthorizationPolicy{
+			Selector: &v1beta1.WorkloadSelector{
+				MatchLabels: map[string]string{"app": selector},
+			},
+			Action: apisecurityv1beta1.AuthorizationPolicy_CUSTOM,
+			ActionDetail: &apisecurityv1beta1.AuthorizationPolicy_Provider{
+				Provider: &apisecurityv1beta1.AuthorizationPolicy_ExtensionProvider{
+					Name: provider,
+				},
+			},
+			Rules: []*apisecurityv1beta1.Rule{
+				{
+					To: []*apisecurityv1beta1.Rule_To{
+						{
+							Operation: &apisecurityv1beta1.Operation{
+								Paths: []string{operation},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	err = retry.Do(func() error {
+		err := k8sClient.Create(context.TODO(), ap)
+		if err != nil {
+			return err
+		}
+		ctx = testcontext.AddCreatedTestObjectInContext(ctx, ap)
 		return nil
 	}, testcontext.GetRetryOpts()...)
 

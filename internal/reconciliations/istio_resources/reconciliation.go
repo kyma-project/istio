@@ -3,6 +3,7 @@ package istio_resources
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
@@ -62,29 +63,6 @@ func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha2.Is
 	}
 
 	ctrl.Log.Info("Successfully reconciled Istio resources")
-
-	return nil
-}
-
-func (r *ResourcesReconciler) getTemplateValues(ctx context.Context, istioCR v1alpha2.Istio) error {
-	if len(r.templateValues) == 0 {
-		r.templateValues = make(map[string]string)
-	}
-	_, found := r.templateValues["DomainName"]
-	if !found {
-		domainName := clusterconfig.LocalKymaDomain
-		flavour, err := clusterconfig.DiscoverClusterFlavour(ctx, r.client)
-		if err != nil {
-			return err
-		}
-		if flavour == clusterconfig.Gardener {
-			domainName, err = clusterconfig.GetDomainName(ctx, r.client)
-			if err != nil {
-				return err
-			}
-		}
-		r.templateValues["DomainName"] = domainName
-	}
 
 	return nil
 }

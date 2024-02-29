@@ -2,8 +2,6 @@ package clusterconfig_test
 
 import (
 	"context"
-	"fmt"
-
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
@@ -53,13 +51,6 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 							"cniBinDir":  "/bin",
 							"cniConfDir": "/var/lib/rancher/k3s/agent/etc/cni/net.d",
 						},
-						"gateways": map[string]interface{}{
-							"istio-ingressgateway": map[string]interface{}{
-								"serviceAnnotations": map[string]string{
-									"dns.gardener.cloud/dnsnames": fmt.Sprintf("*.%s", clusterconfig.LocalKymaDomain),
-								},
-							},
-						},
 					},
 				},
 			})))
@@ -94,48 +85,6 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 							"cniBinDir": "/home/kubernetes/bin",
 							"resourceQuotas": map[string]bool{
 								"enabled": true,
-							},
-						},
-					},
-				},
-			})))
-		})
-	})
-
-	Context("Gardener", func() {
-		It("should set Istio GW annotation specific for Gardener clusters only", func() {
-			//given
-			gardenerNode := corev1.Node{
-				ObjectMeta: v1.ObjectMeta{
-					Name: "shoot-node-1",
-				},
-				Status: corev1.NodeStatus{
-					NodeInfo: corev1.NodeSystemInfo{
-						OSImage: gardenerMockOSImage,
-					},
-				},
-			}
-			kymaGateway := corev1.ConfigMap{
-				TypeMeta:   v1.TypeMeta{},
-				ObjectMeta: v1.ObjectMeta{Name: clusterconfig.ConfigMapShootInfoName, Namespace: clusterconfig.ConfigMapShootInfoNS},
-				Data:       map[string]string{"domain": "example.com"},
-			}
-
-			client := createFakeClient(&gardenerNode, &kymaGateway)
-
-			//when
-			config, err := clusterconfig.EvaluateClusterConfiguration(context.TODO(), client)
-
-			//then
-			Expect(err).To(Not(HaveOccurred()))
-			Expect(config).To(Equal(clusterconfig.ClusterConfiguration(map[string]interface{}{
-				"spec": map[string]interface{}{
-					"values": map[string]interface{}{
-						"gateways": map[string]interface{}{
-							"istio-ingressgateway": map[string]interface{}{
-								"serviceAnnotations": map[string]string{
-									"dns.gardener.cloud/dnsnames": "*.example.com",
-								},
 							},
 						},
 					},

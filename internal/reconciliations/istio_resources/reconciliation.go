@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+
 	"github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
@@ -44,11 +45,6 @@ func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha1.Is
 		return described_errors.NewDescribedError(err, "Istio controller failed to initialise Istio resources")
 	}
 
-	err = r.getTemplateValues(ctx, istioCR)
-	if err != nil {
-		return described_errors.NewDescribedError(err, "Could not get template values for istio resources")
-	}
-
 	owner := metav1.OwnerReference{
 		APIVersion: istioCR.APIVersion,
 		Kind:       istioCR.Kind,
@@ -67,29 +63,6 @@ func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha1.Is
 	}
 
 	ctrl.Log.Info("Successfully reconciled Istio resources")
-
-	return nil
-}
-
-func (r *ResourcesReconciler) getTemplateValues(ctx context.Context, istioCR v1alpha1.Istio) error {
-	if len(r.templateValues) == 0 {
-		r.templateValues = make(map[string]string)
-	}
-	_, found := r.templateValues["DomainName"]
-	if !found {
-		domainName := clusterconfig.LocalKymaDomain
-		flavour, err := clusterconfig.DiscoverClusterFlavour(ctx, r.client)
-		if err != nil {
-			return err
-		}
-		if flavour == clusterconfig.Gardener {
-			domainName, err = clusterconfig.GetDomainName(ctx, r.client)
-			if err != nil {
-				return err
-			}
-		}
-		r.templateValues["DomainName"] = domainName
-	}
 
 	return nil
 }

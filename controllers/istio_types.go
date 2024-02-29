@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -23,14 +24,16 @@ type Reconciliation interface {
 type IstioReconciler struct {
 	*rest.Config // required to pass rest config to the declarative library
 	client.Client
-	Scheme                 *runtime.Scheme
-	istioInstallation      istio.InstallationReconciliation
-	proxySidecars          proxy.SidecarsReconciliation
-	istioResources         istio_resources.ResourcesReconciliation
-	ingressGateway         Reconciliation
-	log                    logr.Logger
-	statusHandler          status.Status
-	reconciliationInterval time.Duration
+	Scheme                    *runtime.Scheme
+	istioInstallation         istio.InstallationReconciliation
+	proxySidecars             proxy.SidecarsReconciliation
+	istioResources            istio_resources.ResourcesReconciliation
+	ingressGateway            Reconciliation
+	log                       logr.Logger
+	statusHandler             status.Status
+	reconciliationInterval    time.Duration
+	delayedRequeueError       *described_errors.DescribedError
+	delayedRequeueErrorReason *operatorv1alpha1.ReasonWithMessage
 }
 
 type RateLimiter struct {

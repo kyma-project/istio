@@ -14,7 +14,7 @@ import (
 )
 
 type ResourcesReconciliation interface {
-	Reconcile(ctx context.Context, istioCR v1alpha1.Istio) described_errors.DescribedError
+	Reconcile(ctx context.Context, istioCR *v1alpha1.Istio) described_errors.DescribedError
 }
 
 type ResourcesReconciler struct {
@@ -35,7 +35,7 @@ type Resource interface {
 	reconcile(ctx context.Context, k8sClient client.Client, owner metav1.OwnerReference, templateValues map[string]string) (controllerutil.OperationResult, error)
 }
 
-func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha1.Istio) described_errors.DescribedError {
+func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR *v1alpha1.Istio) described_errors.DescribedError {
 	ctrl.Log.Info("Reconciling Istio resources")
 
 	resources, err := getResources(r.client, r.hsClient)
@@ -44,7 +44,7 @@ func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha1.Is
 		return described_errors.NewDescribedError(err, "Istio controller failed to initialise Istio resources")
 	}
 
-	err = r.getTemplateValues(ctx, istioCR)
+	err = r.getTemplateValues(ctx, *istioCR)
 	if err != nil {
 		return described_errors.NewDescribedError(err, "Could not get template values for istio resources")
 	}

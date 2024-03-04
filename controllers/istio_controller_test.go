@@ -330,13 +330,14 @@ var _ = Describe("Istio Controller", func() {
 			Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
 			Expect(*updatedIstioCR.Status.Conditions).To(HaveLen(2))
 
-			Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeProxySidecarRestartSucceeded)))
-			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonProxySidecarRestartSucceeded)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonReconcileSucceeded)))
 			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionTrue))
 
-			Expect((*updatedIstioCR.Status.Conditions)[1].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
-			Expect((*updatedIstioCR.Status.Conditions)[1].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonReconcileSucceeded)))
+			Expect((*updatedIstioCR.Status.Conditions)[1].Type).To(Equal(string(operatorv1alpha2.ConditionTypeProxySidecarRestartSucceeded)))
+			Expect((*updatedIstioCR.Status.Conditions)[1].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonProxySidecarRestartSucceeded)))
 			Expect((*updatedIstioCR.Status.Conditions)[1].Status).To(Equal(metav1.ConditionTrue))
+
 		})
 
 		It("Should return an error when update status to ready failed", func() {
@@ -376,6 +377,7 @@ var _ = Describe("Istio Controller", func() {
 			Expect(statusMock.updatedToReadyCalled).Should(BeTrue())
 			Expect(statusMock.setConditionCalled).Should(BeTrue())
 			Expect(statusMock.GetConditions()).Should(Equal([]operatorv1alpha2.ReasonWithMessage{
+				operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileUnknown),
 				operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonProxySidecarRestartSucceeded),
 				operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIngressGatewayReconcileSucceeded),
 				operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileSucceeded),
@@ -545,13 +547,14 @@ var _ = Describe("Istio Controller", func() {
 			Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
 			Expect(*updatedIstioCR.Status.Conditions).To(HaveLen(2))
 
-			Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeProxySidecarRestartSucceeded)))
-			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonProxySidecarRestartSucceeded)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonReconcileSucceeded)))
 			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionTrue))
 
-			Expect((*updatedIstioCR.Status.Conditions)[1].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
-			Expect((*updatedIstioCR.Status.Conditions)[1].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonReconcileSucceeded)))
+			Expect((*updatedIstioCR.Status.Conditions)[1].Type).To(Equal(string(operatorv1alpha2.ConditionTypeProxySidecarRestartSucceeded)))
+			Expect((*updatedIstioCR.Status.Conditions)[1].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonProxySidecarRestartSucceeded)))
 			Expect((*updatedIstioCR.Status.Conditions)[1].Status).To(Equal(metav1.ConditionTrue))
+
 		})
 
 		It("Should set an error status and do not requeue an Istio CR when an older Istio CR is present", func() {

@@ -38,6 +38,8 @@ const (
 	// general
 	ConditionReasonReconcileSucceeded        ConditionReason = "ReconcileSucceeded"
 	ConditionReasonReconcileSucceededMessage                 = "Reconciliation succeeded"
+	ConditionReasonReconcileUnknown          ConditionReason = "ReconcileUnknown"
+	ConditionReasonReconcileUnknownMessage                   = "Module readiness is unknown. Either a reconciliation is progressing, or failed previously. Check status of other conditions"
 	ConditionReasonReconcileFailed           ConditionReason = "ReconcileFailed"
 	ConditionReasonReconcileFailedMessage                    = "Reconciliation failed"
 	ConditionReasonValidationFailed          ConditionReason = "ValidationFailed"

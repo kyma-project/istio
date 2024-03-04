@@ -9,7 +9,8 @@ Feature: Installing and uninstalling Istio module
 
   Scenario: Installation of Istio module with default values
     Given Istio CR "istio-sample" from "istio_cr_template" is applied in namespace "kyma-system"
-    Then Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
+    Then Istio CR "istio-sample" in namespace "kyma-system" has condition with reason "ReconcileUnknown" of type "Ready" and status "Unknown"
+    And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
     And Istio CR "istio-sample" in namespace "kyma-system" has condition with reason "ReconcileSucceeded" of type "Ready" and status "True"
     And "proxy" has "requests" set to cpu - "10m" and memory - "192Mi"
     And "proxy" has "limits" set to cpu - "1000m" and memory - "1024Mi"

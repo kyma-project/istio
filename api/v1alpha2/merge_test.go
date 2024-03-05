@@ -1,6 +1,7 @@
-package v1alpha1
+package v1alpha2
 
 import (
+	"encoding/json"
 	"github.com/kyma-project/istio/operator/internal/tests"
 	"github.com/onsi/ginkgo/v2/types"
 	operatorv1alpha1 "istio.io/api/operator/v1alpha1"
@@ -9,10 +10,13 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"regexp"
+	"strings"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	meshv1alpha1 "istio.io/api/mesh/v1alpha1"
 
 	"google.golang.org/protobuf/types/known/structpb"
 	"istio.io/api/mesh/v1alpha1"
@@ -29,7 +33,175 @@ var _ = ReportAfterSuite("custom reporter", func(report types.Report) {
 	tests.GenerateGinkgoJunitReport("merge-api-suite", report)
 })
 
+func toSnakeCase(str string) string {
+	matchFirstCap := regexp.MustCompile("(.)([A-Z][a-z]+)")
+	matchAllCap := regexp.MustCompile("([a-z0-9])([A-Z])")
+
+	snake := matchFirstCap.ReplaceAllString(str, "${1}_${2}")
+	snake = matchAllCap.ReplaceAllString(snake, "${1}_${2}")
+	return strings.ToLower(snake)
+}
+
+// Struct_pb uses different conventions for json tags (snake case) and unmarshalling (camel case).
+// Because of this difference, json tags need to be translated to snake_case before unmarshalling;
+// otherwise those fields would become nil.
+func jsonTagsToSnakeCase(camelCaseMarshaledJson []byte) string {
+	jsonString := string(camelCaseMarshaledJson)
+	tagMatch := regexp.MustCompile(`"[^ ]*" *:`)
+	return tagMatch.ReplaceAllStringFunc(jsonString, toSnakeCase)
+}
+
 var _ = Describe("Merge", func() {
+	Context("Authorizations", func() {
+		It("Should set authorizer with no headers setup", func() {
+			// given
+			m := mesh.DefaultMeshConfig()
+			meshConfig := convert(m)
+
+			iop := istioOperator.IstioOperator{
+				Spec: &operatorv1alpha1.IstioOperatorSpec{
+					MeshConfig: meshConfig,
+				},
+			}
+
+			provName := "test-authorizer"
+
+			authorizer := Authorizer{
+				Name:    provName,
+				Service: "xauth",
+				Port:    1337,
+			}
+			istioCR := Istio{Spec: IstioSpec{Config: Config{Authorizers: []*Authorizer{
+				&authorizer,
+			}}}}
+
+			// when
+			out, err := istioCR.MergeInto(iop)
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+
+			extensionProviders := out.Spec.MeshConfig.Fields["extensionProviders"].GetListValue().GetValues()
+			var foundAuthorizer bool
+			for _, extensionProvider := range extensionProviders {
+				if extensionProvider.GetStructValue().Fields["name"].GetStringValue() == provName {
+					jsonAuthProvider, err := extensionProvider.GetStructValue().Fields["envoyExtAuthzHttp"].MarshalJSON()
+					jsonAuthProvider = []byte(jsonTagsToSnakeCase(jsonAuthProvider))
+					Expect(err).ToNot(HaveOccurred())
+
+					var authProvider meshv1alpha1.MeshConfig_ExtensionProvider_EnvoyExternalAuthorizationHttpProvider
+					err = json.Unmarshal(jsonAuthProvider, &authProvider)
+					Expect(err).ToNot(HaveOccurred())
+
+					Expect(authProvider.Port).To(BeEquivalentTo(1337))
+					Expect(authProvider.Service).To(Equal("xauth"))
+
+					foundAuthorizer = true
+					break
+				}
+			}
+
+			Expect(foundAuthorizer).To(BeTrue(), "Could not find the authorizer by the name")
+		})
+
+		It("Should set headers for authorizer", func() {
+			// given
+			m := mesh.DefaultMeshConfig()
+			meshConfig := convert(m)
+
+			iop := istioOperator.IstioOperator{
+				Spec: &operatorv1alpha1.IstioOperatorSpec{
+					MeshConfig: meshConfig,
+				},
+			}
+
+			provName := "test-authorizer"
+
+			inCheckInclude := []string{
+				"authorization",
+				"test",
+			}
+
+			inCheckAdd := map[string]string{
+				"a": "a",
+				"b": "b",
+			}
+
+			toUpstreamOnAllow := []string{
+				"c",
+				"d",
+			}
+
+			toDownstreamOnAllow := []string{
+				"da",
+				"db",
+			}
+
+			toDownstreamOnDeny := []string{
+				"dc",
+				"dd",
+			}
+
+			authorizer := Authorizer{
+				Name:    provName,
+				Service: "xauth",
+				Port:    1337,
+				Headers: &Headers{
+					InCheck: &InCheck{
+						Include: inCheckInclude,
+						Add:     inCheckAdd,
+					},
+					ToUpstream: &ToUpstream{
+						OnAllow: toUpstreamOnAllow,
+					},
+					ToDownstream: &ToDownstream{
+						OnAllow: toDownstreamOnAllow,
+						OnDeny:  toDownstreamOnDeny,
+					},
+				},
+			}
+
+			istioCR := Istio{Spec: IstioSpec{Config: Config{Authorizers: []*Authorizer{
+				&authorizer,
+			}}}}
+
+			// when
+			out, err := istioCR.MergeInto(iop)
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+
+			extensionProviders := out.Spec.MeshConfig.Fields["extensionProviders"].GetListValue().GetValues()
+			var foundAuthorizer bool
+			for _, extensionProvider := range extensionProviders {
+				if extensionProvider.GetStructValue().Fields["name"].GetStringValue() == provName {
+					jsonAuthProvider, err := extensionProvider.GetStructValue().Fields["envoyExtAuthzHttp"].MarshalJSON()
+					jsonAuthProvider = []byte(jsonTagsToSnakeCase(jsonAuthProvider))
+					Expect(err).ToNot(HaveOccurred())
+
+					var authProvider meshv1alpha1.MeshConfig_ExtensionProvider_EnvoyExternalAuthorizationHttpProvider
+					err = json.Unmarshal(jsonAuthProvider, &authProvider)
+					Expect(err).ToNot(HaveOccurred())
+
+					Expect(authProvider.Port).To(BeEquivalentTo(1337))
+					Expect(authProvider.Service).To(Equal("xauth"))
+
+					Expect(authProvider.HeadersToUpstreamOnAllow).To(ConsistOf(toUpstreamOnAllow))
+					Expect(authProvider.HeadersToDownstreamOnAllow).To(ConsistOf(toDownstreamOnAllow))
+					Expect(authProvider.HeadersToDownstreamOnDeny).To(ConsistOf(toDownstreamOnDeny))
+
+					Expect(authProvider.IncludeAdditionalHeadersInCheck).To(HaveKeyWithValue("a", "a"))
+					Expect(authProvider.IncludeAdditionalHeadersInCheck).To(HaveKeyWithValue("b", "b"))
+					Expect(authProvider.IncludeRequestHeadersInCheck).To(ConsistOf(inCheckInclude))
+
+					foundAuthorizer = true
+					break
+				}
+			}
+
+			Expect(foundAuthorizer).To(BeTrue(), "Could not find the authorizer by the name")
+		})
+	})
 
 	It("Should update numTrustedProxies on IstioOperator from 1 to 5", func() {
 		// given

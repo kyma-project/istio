@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -14,11 +14,11 @@ import (
 )
 
 type Status interface {
-	UpdateToProcessing(ctx context.Context, istioCR *operatorv1alpha1.Istio) error
-	UpdateToDeleting(ctx context.Context, istioCR *operatorv1alpha1.Istio) error
-	UpdateToReady(ctx context.Context, istioCR *operatorv1alpha1.Istio) error
-	UpdateToError(ctx context.Context, istioCR *operatorv1alpha1.Istio, err described_errors.DescribedError) error
-	SetCondition(istioCR *operatorv1alpha1.Istio, reason operatorv1alpha1.ReasonWithMessage)
+	UpdateToProcessing(ctx context.Context, istioCR *operatorv1alpha2.Istio) error
+	UpdateToDeleting(ctx context.Context, istioCR *operatorv1alpha2.Istio) error
+	UpdateToReady(ctx context.Context, istioCR *operatorv1alpha2.Istio) error
+	UpdateToError(ctx context.Context, istioCR *operatorv1alpha2.Istio, err described_errors.DescribedError) error
+	SetCondition(istioCR *operatorv1alpha2.Istio, reason operatorv1alpha2.ReasonWithMessage)
 }
 
 func NewStatusHandler(client client.Client) StatusHandler {
@@ -31,7 +31,7 @@ type StatusHandler struct {
 	client client.Client
 }
 
-func (d StatusHandler) update(ctx context.Context, istioCR *operatorv1alpha1.Istio) error {
+func (d StatusHandler) update(ctx context.Context, istioCR *operatorv1alpha2.Istio) error {
 	newStatus := istioCR.Status
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		if getErr := d.client.Get(ctx, client.ObjectKeyFromObject(istioCR), istioCR); getErr != nil {
@@ -45,39 +45,39 @@ func (d StatusHandler) update(ctx context.Context, istioCR *operatorv1alpha1.Ist
 	})
 }
 
-func (d StatusHandler) UpdateToProcessing(ctx context.Context, istioCR *operatorv1alpha1.Istio) error {
-	istioCR.Status.State = operatorv1alpha1.Processing
+func (d StatusHandler) UpdateToProcessing(ctx context.Context, istioCR *operatorv1alpha2.Istio) error {
+	istioCR.Status.State = operatorv1alpha2.Processing
 	istioCR.Status.Description = "Reconciling Istio"
 	return d.update(ctx, istioCR)
 }
 
-func (d StatusHandler) UpdateToDeleting(ctx context.Context, istioCR *operatorv1alpha1.Istio) error {
-	istioCR.Status.State = operatorv1alpha1.Deleting
+func (d StatusHandler) UpdateToDeleting(ctx context.Context, istioCR *operatorv1alpha2.Istio) error {
+	istioCR.Status.State = operatorv1alpha2.Deleting
 	istioCR.Status.Description = "Deleting Istio"
 	return d.update(ctx, istioCR)
 }
 
-func (d StatusHandler) UpdateToReady(ctx context.Context, istioCR *operatorv1alpha1.Istio) error {
-	istioCR.Status.State = operatorv1alpha1.Ready
+func (d StatusHandler) UpdateToReady(ctx context.Context, istioCR *operatorv1alpha2.Istio) error {
+	istioCR.Status.State = operatorv1alpha2.Ready
 	istioCR.Status.Description = ""
 	return d.update(ctx, istioCR)
 }
 
-func (d StatusHandler) UpdateToError(ctx context.Context, istioCR *operatorv1alpha1.Istio, err described_errors.DescribedError) error {
+func (d StatusHandler) UpdateToError(ctx context.Context, istioCR *operatorv1alpha2.Istio, err described_errors.DescribedError) error {
 	if err.Level() == described_errors.Warning {
-		istioCR.Status.State = operatorv1alpha1.Warning
+		istioCR.Status.State = operatorv1alpha2.Warning
 	} else {
-		istioCR.Status.State = operatorv1alpha1.Error
+		istioCR.Status.State = operatorv1alpha2.Error
 	}
 	istioCR.Status.Description = err.Description()
 	return d.update(ctx, istioCR)
 }
 
-func (d StatusHandler) SetCondition(istioCR *operatorv1alpha1.Istio, reason operatorv1alpha1.ReasonWithMessage) {
+func (d StatusHandler) SetCondition(istioCR *operatorv1alpha2.Istio, reason operatorv1alpha2.ReasonWithMessage) {
 	if istioCR.Status.Conditions == nil {
 		istioCR.Status.Conditions = &[]metav1.Condition{}
 	}
-	condition := operatorv1alpha1.ConditionFromReason(reason)
+	condition := operatorv1alpha2.ConditionFromReason(reason)
 	if condition != nil {
 		meta.SetStatusCondition(istioCR.Status.Conditions, *condition)
 	} else {

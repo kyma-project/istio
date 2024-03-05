@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -28,7 +28,7 @@ var _ = Describe("Istio Configuration", func() {
 		It("should update lastAppliedConfiguration and is able to unmarshal it back from annotation", func() {
 			// given
 			numTrustedProxies := 1
-			istioCR := operatorv1alpha1.Istio{Spec: operatorv1alpha1.IstioSpec{Config: operatorv1alpha1.Config{NumTrustedProxies: &numTrustedProxies}}}
+			istioCR := operatorv1alpha2.Istio{Spec: operatorv1alpha2.IstioSpec{Config: operatorv1alpha2.Config{NumTrustedProxies: &numTrustedProxies}}}
 
 			// when
 			err := UpdateLastAppliedConfiguration(&istioCR, mockIstioTag)
@@ -52,7 +52,7 @@ var _ = Describe("Ingress Gateway", func() {
 			//given
 			client := createFakeClientWithDeployment()
 			newNumTrustedProxies := 2
-			istioCR := operatorv1alpha1.Istio{}
+			istioCR := operatorv1alpha2.Istio{}
 			istioCR.Spec.Config.NumTrustedProxies = &newNumTrustedProxies
 			istioCR.Annotations = map[string]string{}
 			istioCR.Annotations[lastAppliedConfiguration] = fmt.Sprintf(`{"config":{"numTrustedProxies":1},"IstioTag":"%s"}`, mockIstioTag)
@@ -71,7 +71,7 @@ var _ = Describe("Ingress Gateway", func() {
 		It("should restart when CR numTrustedProxies is nil and in lastAppliedConfig is 1", func() {
 			//given
 			client := createFakeClientWithDeployment()
-			istioCR := operatorv1alpha1.Istio{}
+			istioCR := operatorv1alpha2.Istio{}
 			istioCR.Annotations = map[string]string{}
 			istioCR.Annotations[lastAppliedConfiguration] = fmt.Sprintf(`{"config":{"numTrustedProxies":1},"IstioTag":"%s"}`, mockIstioTag)
 
@@ -90,7 +90,7 @@ var _ = Describe("Ingress Gateway", func() {
 			//given
 			client := createFakeClientWithDeployment()
 			newNumTrustedProxies := 1
-			istioCR := operatorv1alpha1.Istio{}
+			istioCR := operatorv1alpha2.Istio{}
 			istioCR.Spec.Config.NumTrustedProxies = &newNumTrustedProxies
 			istioCR.Annotations = map[string]string{}
 			istioCR.Annotations[lastAppliedConfiguration] = fmt.Sprintf(`{"config":{},"IstioTag":"%s"}`, mockIstioTag)
@@ -109,7 +109,7 @@ var _ = Describe("Ingress Gateway", func() {
 		It("should not restart when CR numTrustedProxies is the same value as in lastAppliedConfig", func() {
 			client := createFakeClientWithDeployment()
 			newNumTrustedProxies := 1
-			istioCR := operatorv1alpha1.Istio{}
+			istioCR := operatorv1alpha2.Istio{}
 			istioCR.Spec.Config.NumTrustedProxies = &newNumTrustedProxies
 			istioCR.Annotations = map[string]string{}
 			istioCR.Annotations[lastAppliedConfiguration] = fmt.Sprintf(`{"config":{"numTrustedProxies":1},"IstioTag":"%s"}`, mockIstioTag)
@@ -129,7 +129,7 @@ var _ = Describe("Ingress Gateway", func() {
 			//given
 			client := createFakeClientWithDeployment()
 			newNumTrustedProxies := 1
-			istioCR := operatorv1alpha1.Istio{}
+			istioCR := operatorv1alpha2.Istio{}
 			istioCR.Spec.Config.NumTrustedProxies = &newNumTrustedProxies
 
 			//when

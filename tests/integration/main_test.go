@@ -8,7 +8,7 @@ import (
 
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
-	iopv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
+	iopv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	networkingv1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
@@ -108,7 +108,7 @@ func createK8sClient() client.Client {
 		panic(err)
 	}
 
-	err = iopv1alpha1.AddToScheme(c.Scheme())
+	err = iopv1alpha2.AddToScheme(c.Scheme())
 	if err != nil {
 		panic(err)
 	}

@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"context"
-	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -33,7 +33,7 @@ type IstioReconciler struct {
 	statusHandler             status.Status
 	reconciliationInterval    time.Duration
 	delayedRequeueError       *described_errors.DescribedError
-	delayedRequeueErrorReason *operatorv1alpha1.ReasonWithMessage
+	delayedRequeueErrorReason *operatorv1alpha2.ReasonWithMessage
 }
 
 type RateLimiter struct {

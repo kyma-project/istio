@@ -10,7 +10,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/kyma-project/istio/operator/api/v1alpha1"
+	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -36,12 +36,12 @@ var _ = ReportAfterSuite("custom reporter", func(report types.Report) {
 var _ = Describe("Manifest merge", func() {
 
 	numTrustedProxies := 4
-	istioCR := &v1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+	istioCR := &v1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 		Name:      "istio-test",
 		Namespace: "namespace",
 	},
-		Spec: v1alpha1.IstioSpec{
-			Config: v1alpha1.Config{
+		Spec: v1alpha2.IstioSpec{
+			Config: v1alpha2.Config{
 				NumTrustedProxies: &numTrustedProxies,
 			},
 		},

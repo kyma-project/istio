@@ -5,21 +5,20 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path"
 	"text/template"
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/avast/retry-go"
-	istioCR "github.com/kyma-project/istio/operator/api/v1alpha1"
+	istioCR "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/yaml"
 )
-
-const templateFileName string = "manifests/istio_cr_template.yaml"
 
 func IstioCRDIsInstalled(ctx context.Context) error {
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
@@ -110,13 +109,13 @@ func (t *TemplatedIstioCr) SetTemplateValue(name, value string) {
 	t.templateValues[name] = value
 }
 
-func (t *TemplatedIstioCr) IstioCRIsAppliedInNamespace(ctx context.Context, name, namespace string) (context.Context, error) {
+func (t *TemplatedIstioCr) IstioCRIsAppliedInNamespace(ctx context.Context, name, templateFN, namespace string) (context.Context, error) {
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return ctx, err
 	}
 
-	istio, err := createIstioCRFromTemplate(name, namespace, t.templateValues)
+	istio, err := createIstioCRFromTemplate(name, templateFN, namespace, t.templateValues)
 	if err != nil {
 		return ctx, err
 	}
@@ -133,13 +132,13 @@ func (t *TemplatedIstioCr) IstioCRIsAppliedInNamespace(ctx context.Context, name
 	return ctx, err
 }
 
-func (t *TemplatedIstioCr) IstioCRIsUpdatedInNamespace(ctx context.Context, name, namespace string) error {
+func (t *TemplatedIstioCr) IstioCRIsUpdatedInNamespace(ctx context.Context, name, templateFN, namespace string) error {
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
 	}
 
-	istio, err := createIstioCRFromTemplate(name, namespace, t.templateValues)
+	istio, err := createIstioCRFromTemplate(name, templateFN, namespace, t.templateValues)
 	if err != nil {
 		return err
 	}
@@ -155,8 +154,8 @@ func (t *TemplatedIstioCr) IstioCRIsUpdatedInNamespace(ctx context.Context, name
 	}, testcontext.GetRetryOpts()...)
 }
 
-func createIstioCRFromTemplate(name string, namespace string, templateValues map[string]string) (istioCR.Istio, error) {
-	istioCRYaml, err := os.ReadFile(templateFileName)
+func createIstioCRFromTemplate(name string, templateFN string, namespace string, templateValues map[string]string) (istioCR.Istio, error) {
+	istioCRYaml, err := os.ReadFile(path.Join("steps", fmt.Sprintf("%s.yaml", templateFN)))
 	if err != nil {
 		return istioCR.Istio{}, err
 	}

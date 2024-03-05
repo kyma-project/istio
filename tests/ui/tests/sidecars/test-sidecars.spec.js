@@ -28,7 +28,7 @@ context('Test Sidecars', () => {
     it('Create a Sidecar', () => {
         cy.navigateTo('Istio', 'Sidecars');
 
-        cy.contains('ui5-button', 'Create Sidecar').click();
+        cy.clickCreateButton();
 
         // Name
         cy.get('ui5-dialog')
@@ -123,6 +123,7 @@ context('Test Sidecars', () => {
     });
 
     it('Check the Sidecars list', () => {
-        cy.inspectList('Sidecars', SIDECAR_NAME);
+        cy.navigateBackTo('Sidecars', SIDECAR_NAME);
+        cy.checkItemOnGenericListLink(SIDECAR_NAME);
     });
 });

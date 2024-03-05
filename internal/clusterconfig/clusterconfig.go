@@ -2,7 +2,6 @@ package clusterconfig
 
 import (
 	"context"
-	"fmt"
 	"regexp"
 
 	"github.com/imdario/mergo"
@@ -21,8 +20,6 @@ const (
 
 	ProductionClusterCpuThreshold      int64 = 5
 	ProductionClusterMemoryThresholdGi int64 = 10
-
-	LocalKymaDomain = "local.kyma.dev"
 )
 
 func (s ClusterSize) String() string {
@@ -89,8 +86,8 @@ const (
 	Gardener
 )
 
-func (s ClusterFlavour) String() string {
-	switch s {
+func (c ClusterFlavour) String() string {
+	switch c {
 	case k3d:
 		return "k3d"
 	case GKE:
@@ -108,7 +105,7 @@ func EvaluateClusterConfiguration(ctx context.Context, k8sClient client.Client) 
 	if err != nil {
 		return ClusterConfiguration{}, err
 	}
-	return flavour.clusterConfiguration(ctx, k8sClient)
+	return flavour.clusterConfiguration()
 }
 
 func DiscoverClusterFlavour(ctx context.Context, k8sClient client.Client) (ClusterFlavour, error) {
@@ -143,8 +140,8 @@ func DiscoverClusterFlavour(ctx context.Context, k8sClient client.Client) (Clust
 	return Unknown, nil
 }
 
-func (f ClusterFlavour) clusterConfiguration(ctx context.Context, k8sClient client.Client) (ClusterConfiguration, error) {
-	switch f {
+func (c ClusterFlavour) clusterConfiguration() (ClusterConfiguration, error) {
+	switch c {
 	case k3d:
 		config := map[string]interface{}{
 			"spec": map[string]interface{}{
@@ -152,13 +149,6 @@ func (f ClusterFlavour) clusterConfiguration(ctx context.Context, k8sClient clie
 					"cni": map[string]string{
 						"cniBinDir":  "/bin",
 						"cniConfDir": "/var/lib/rancher/k3s/agent/etc/cni/net.d",
-					},
-					"gateways": map[string]interface{}{
-						"istio-ingressgateway": map[string]interface{}{
-							"serviceAnnotations": map[string]string{
-								"dns.gardener.cloud/dnsnames": fmt.Sprintf("*.%s", LocalKymaDomain),
-							},
-						},
 					},
 				},
 			},
@@ -179,24 +169,7 @@ func (f ClusterFlavour) clusterConfiguration(ctx context.Context, k8sClient clie
 		}
 		return config, nil
 	case Gardener:
-		domainName, err := GetDomainName(ctx, k8sClient)
-		if err != nil {
-			return ClusterConfiguration{}, err
-		}
-		config := map[string]interface{}{
-			"spec": map[string]interface{}{
-				"values": map[string]interface{}{
-					"gateways": map[string]interface{}{
-						"istio-ingressgateway": map[string]interface{}{
-							"serviceAnnotations": map[string]string{
-								"dns.gardener.cloud/dnsnames": fmt.Sprintf("*.%s", domainName),
-							},
-						},
-					},
-				},
-			},
-		}
-		return config, nil
+		return ClusterConfiguration{}, nil
 	}
 	return ClusterConfiguration{}, nil
 }

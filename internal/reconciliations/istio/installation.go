@@ -10,7 +10,7 @@ import (
 	"github.com/thoas/go-funk"
 	"k8s.io/client-go/util/retry"
 
-	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/kyma-project/istio/operator/internal/manifest"
@@ -24,7 +24,7 @@ import (
 )
 
 type InstallationReconciliation interface {
-	Reconcile(ctx context.Context, istioCR *operatorv1alpha1.Istio, statusHandler status.Status, istioResourceListPath string) described_errors.DescribedError
+	Reconcile(ctx context.Context, istioCR *operatorv1alpha2.Istio, statusHandler status.Status, istioResourceListPath string) described_errors.DescribedError
 }
 
 type Installation struct {
@@ -41,7 +41,7 @@ const (
 )
 
 // Reconcile runs Istio reconciliation to install, upgrade or uninstall Istio and returns the updated Istio CR.
-func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha1.Istio, statusHandler status.Status, istioResourceListPath string) described_errors.DescribedError {
+func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha2.Istio, statusHandler status.Status, istioResourceListPath string) described_errors.DescribedError {
 	istioTag := fmt.Sprintf("%s-%s", i.IstioVersion, i.IstioImageBase)
 
 	shouldInstallIstio, err := shouldInstall(istioCR, istioTag)
@@ -80,7 +80,7 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha1.
 
 		mergedIstioOperatorPath, err := i.Merger.Merge(cSize.DefaultManifestPath(), istioCR, templateData, clusterConfiguration)
 		if err != nil {
-			statusHandler.SetCondition(istioCR, operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonCustomResourceMisconfigured))
+			statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonCustomResourceMisconfigured))
 			return described_errors.NewDescribedError(err, "Could not merge Istio operator configuration").SetCondition(false)
 		}
 
@@ -110,7 +110,7 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha1.
 		}
 
 		ctrl.Log.Info("Istio installation succeeded")
-		statusHandler.SetCondition(istioCR, operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonIstioInstallSucceeded))
+		statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIstioInstallSucceeded))
 
 		err = restartIngressGatewayIfNeeded(ctx, i.Client, istioCR)
 		if err != nil {
@@ -138,7 +138,7 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha1.
 			funk.ForEach(clientResources, func(a resources.Resource) {
 				ctrl.Log.Info("Customer resource is blocking Istio deletion", a.GVK.Kind, fmt.Sprintf("%s/%s", a.Namespace, a.Name))
 			})
-			statusHandler.SetCondition(istioCR, operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonIstioCRsDangling))
+			statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIstioCRsDangling))
 			return described_errors.NewDescribedError(fmt.Errorf("could not delete Istio module instance since there are %d customer resources present", len(clientResources)),
 				"There are Istio resources that block deletion. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning").DisableErrorWrap().SetWarning().SetCondition(false)
 		}
@@ -160,27 +160,27 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha1.
 		}
 
 		ctrl.Log.Info("Istio uninstall succeeded")
-		statusHandler.SetCondition(istioCR, operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonIstioUninstallSucceeded))
+		statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIstioUninstallSucceeded))
 
 		if err := removeInstallationFinalizer(ctx, i.Client, istioCR); err != nil {
 			ctrl.Log.Error(err, "Error happened during istio installation finalizer removal")
 			return described_errors.NewDescribedError(err, "Could not remove finalizer")
 		}
 	} else {
-		statusHandler.SetCondition(istioCR, operatorv1alpha1.NewReasonWithMessage(operatorv1alpha1.ConditionReasonIstioInstallNotNeeded))
+		statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIstioInstallNotNeeded))
 	}
 
 	return nil
 }
 
-func hasInstallationFinalizer(istioCR *operatorv1alpha1.Istio) bool {
+func hasInstallationFinalizer(istioCR *operatorv1alpha2.Istio) bool {
 	return controllerutil.ContainsFinalizer(istioCR, installationFinalizer)
 }
 
-func addInstallationFinalizer(ctx context.Context, apiClient client.Client, istioCR *operatorv1alpha1.Istio) error {
+func addInstallationFinalizer(ctx context.Context, apiClient client.Client, istioCR *operatorv1alpha2.Istio) error {
 	ctrl.Log.Info("Adding Istio installation finalizer")
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		finalizerCR := operatorv1alpha1.Istio{}
+		finalizerCR := operatorv1alpha2.Istio{}
 		if err := apiClient.Get(ctx, client.ObjectKeyFromObject(istioCR), &finalizerCR); err != nil {
 			return err
 		}
@@ -195,10 +195,10 @@ func addInstallationFinalizer(ctx context.Context, apiClient client.Client, isti
 	})
 }
 
-func removeInstallationFinalizer(ctx context.Context, apiClient client.Client, istioCR *operatorv1alpha1.Istio) error {
+func removeInstallationFinalizer(ctx context.Context, apiClient client.Client, istioCR *operatorv1alpha2.Istio) error {
 	ctrl.Log.Info("Removing Istio installation finalizer")
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		finalizerCR := operatorv1alpha1.Istio{}
+		finalizerCR := operatorv1alpha2.Istio{}
 		if err := apiClient.Get(ctx, client.ObjectKeyFromObject(istioCR), &finalizerCR); err != nil {
 			return err
 		}

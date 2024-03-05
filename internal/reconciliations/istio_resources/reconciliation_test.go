@@ -2,8 +2,10 @@ package istio_resources
 
 import (
 	"context"
-	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
-	"github.com/kyma-project/istio/operator/internal/clusterconfig"
+
+	"strings"
+
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
@@ -15,7 +17,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	"strings"
 )
 
 type hyperscalerClientMock struct {
@@ -28,15 +29,15 @@ func (hc *hyperscalerClientMock) IsAws() bool {
 
 var _ = Describe("Reconciliation", func() {
 	numTrustedProxies := 1
-	istioCR := operatorv1alpha1.Istio{
+	istioCR := operatorv1alpha2.Istio{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",
 			ResourceVersion: "1",
 			Annotations:     map[string]string{},
 			UID:             "1234",
 		},
-		Spec: operatorv1alpha1.IstioSpec{
-			Config: operatorv1alpha1.Config{
+		Spec: operatorv1alpha2.IstioSpec{
+			Config: operatorv1alpha2.Config{
 				NumTrustedProxies: &numTrustedProxies,
 			},
 		},
@@ -49,7 +50,7 @@ var _ = Describe("Reconciliation", func() {
 		reconciler := NewReconciler(client, hc)
 
 		//when
-		err := reconciler.Reconcile(context.Background(), &istioCR)
+		err := reconciler.Reconcile(context.Background(), istioCR)
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))
@@ -67,7 +68,7 @@ var _ = Describe("Reconciliation", func() {
 		reconciler := NewReconciler(client, hc)
 
 		//when
-		err := reconciler.Reconcile(context.Background(), &istioCR)
+		err := reconciler.Reconcile(context.Background(), istioCR)
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))
@@ -85,7 +86,7 @@ var _ = Describe("Reconciliation", func() {
 		reconciler := NewReconciler(client, hc)
 
 		//when
-		err := reconciler.Reconcile(context.Background(), &istioCR)
+		err := reconciler.Reconcile(context.Background(), istioCR)
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))
@@ -121,7 +122,7 @@ var _ = Describe("Reconciliation", func() {
 			reconciler := NewReconciler(client, hc)
 
 			//when
-			err := reconciler.Reconcile(context.Background(), &istioCR)
+			err := reconciler.Reconcile(context.Background(), istioCR)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))
@@ -132,12 +133,12 @@ var _ = Describe("Reconciliation", func() {
 
 		It("should not be created when hyperscaler is not AWS", func() {
 			//given
-			client := createFakeClient(createGcpShootInfo())
+			client := createFakeClient()
 			hc := &hyperscalerClientMock{isAws: false}
 			reconciler := NewReconciler(client, hc)
 
 			//when
-			err := reconciler.Reconcile(context.Background(), &istioCR)
+			err := reconciler.Reconcile(context.Background(), istioCR)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))
@@ -152,7 +153,7 @@ var _ = Describe("Reconciliation", func() {
 })
 
 func createFakeClient(objects ...ctrlclient.Object) ctrlclient.Client {
-	err := operatorv1alpha1.AddToScheme(scheme.Scheme)
+	err := operatorv1alpha2.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
 	err = corev1.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
@@ -164,15 +165,4 @@ func createFakeClient(objects ...ctrlclient.Object) ctrlclient.Client {
 	Expect(err).ShouldNot(HaveOccurred())
 
 	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build()
-}
-
-func createGcpShootInfo() *corev1.ConfigMap {
-	return createShootInfoConfigMap("gcp")
-}
-
-func createShootInfoConfigMap(provider string) *corev1.ConfigMap {
-	return &corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{Name: clusterconfig.ConfigMapShootInfoName, Namespace: clusterconfig.ConfigMapShootInfoNS},
-		Data:       map[string]string{"provider": provider},
-	}
 }

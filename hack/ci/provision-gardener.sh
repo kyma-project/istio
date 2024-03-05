@@ -60,6 +60,5 @@ kyma provision gardener ${GARDENER_PROVIDER} \
         --scaler-max $SCALER_MAX \
         --scaler-min $SCALER_MIN \
         --kube-version="${GARDENER_CLUSTER_VERSION}" \
-        --gardenlinux-version="${GARDENER_GARDENLINUX_VERSION}" \
         --attempts 3 \
         --verbose

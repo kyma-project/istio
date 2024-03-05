@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/pkg/errors"
 	"os"
 	"path"
 	"text/template"
@@ -69,6 +70,9 @@ func IstioCRInNamespaceHasStatusCondition(ctx context.Context, name, namespace, 
 		err := k8sClient.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, &cr)
 		if err != nil {
 			return err
+		}
+		if cr.Status.Conditions == nil {
+			return errors.New("No condition was present on Istio CR")
 		}
 		for _, condition := range *cr.Status.Conditions {
 			if condition.Reason == reason && condition.Type == conditionType && string(condition.Status) == status {

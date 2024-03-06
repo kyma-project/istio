@@ -773,6 +773,87 @@ var _ = Describe("Istio Controller", func() {
 			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonValidationFailed)))
 			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 		})
+
+		It("should update lastTransitionTime of Ready condition when reason changed", func() {
+			// given
+			istioCR := &operatorv1alpha2.Istio{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      istioCrName,
+					Namespace: testNamespace,
+					Finalizers: []string{
+						"istios.operator.kyma-project.io/istio-installation",
+					},
+				},
+			}
+
+			fakeClient := createFakeClient(istioCR)
+
+			By("Mocking Istio install reconciliation to fail")
+			reconcilerFailingOnIstioInstall := &IstioReconciler{
+				Client: fakeClient,
+				Scheme: getTestScheme(),
+				istioInstallation: &istioInstallationReconciliationMock{
+					err: described_errors.NewDescribedError(errors.New("test error"), "test error description"),
+				},
+				proxySidecars:          &proxySidecarsReconciliationMock{},
+				istioResources:         &istioResourcesReconciliationMock{},
+				ingressGateway:         &ingressGatewayReconciliationMock{},
+				log:                    logr.Discard(),
+				statusHandler:          status.NewStatusHandler(fakeClient),
+				reconciliationInterval: testReconciliationInterval,
+			}
+
+			_, err := reconcilerFailingOnIstioInstall.Reconcile(context.Background(), reconcile.Request{NamespacedName: types.NamespacedName{Namespace: testNamespace, Name: istioCrName}})
+
+			Expect(err).To(HaveOccurred())
+
+			updatedIstioCR := operatorv1alpha2.Istio{}
+			Expect(fakeClient.Get(context.Background(), client.ObjectKeyFromObject(istioCR), &updatedIstioCR)).Should(Succeed())
+
+			Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
+			Expect(*updatedIstioCR.Status.Conditions).To(HaveLen(1))
+
+			By("Verifying that Istio CR has Condition Ready with False")
+			Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonIstioInstallUninstallFailed)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
+
+			firstNotReadyTransitionTime := (*updatedIstioCR.Status.Conditions)[0].LastTransitionTime
+
+			By("Mocking Istio resources reconciliation to fail")
+			reconcilerFailingOnIstioResources := &IstioReconciler{
+				Client:            fakeClient,
+				Scheme:            getTestScheme(),
+				istioInstallation: &istioInstallationReconciliationMock{},
+				proxySidecars:     &proxySidecarsReconciliationMock{},
+				istioResources: &istioResourcesReconciliationMock{
+					err: described_errors.NewDescribedError(errors.New("test error"), "test error description"),
+				},
+				ingressGateway:         &ingressGatewayReconciliationMock{},
+				log:                    logr.Discard(),
+				statusHandler:          status.NewStatusHandler(fakeClient),
+				reconciliationInterval: testReconciliationInterval,
+			}
+
+			// when
+			_, err = reconcilerFailingOnIstioResources.Reconcile(context.Background(), reconcile.Request{NamespacedName: types.NamespacedName{Namespace: testNamespace, Name: istioCrName}})
+
+			// then
+			Expect(err).To(HaveOccurred())
+			updatedIstioCR = operatorv1alpha2.Istio{}
+			Expect(fakeClient.Get(context.Background(), client.ObjectKeyFromObject(istioCR), &updatedIstioCR)).Should(Succeed())
+
+			Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
+			Expect(*updatedIstioCR.Status.Conditions).To(HaveLen(1))
+
+			By("Verifying that the condition lastTransitionTime is also updated when only the reason has changed")
+			Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonCRsReconcileFailed)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
+
+			secondNotReadyTransitionTime := (*updatedIstioCR.Status.Conditions)[0].LastTransitionTime
+			Expect(secondNotReadyTransitionTime.Compare(firstNotReadyTransitionTime.Time) >= 0).To(BeTrue())
+		})
 	})
 })
 
@@ -788,6 +869,7 @@ func (i *ingressGatewayReconciliationMock) Reconcile(_ context.Context) describe
 }
 
 type istioResourcesReconciliationMock struct {
+	err described_errors.DescribedError
 }
 
 func (i *istioResourcesReconciliationMock) AddReconcileResource(_ istio_resources.Resource) istio_resources.ResourcesReconciliation {
@@ -795,7 +877,7 @@ func (i *istioResourcesReconciliationMock) AddReconcileResource(_ istio_resource
 }
 
 func (i *istioResourcesReconciliationMock) Reconcile(_ context.Context, _ operatorv1alpha2.Istio) described_errors.DescribedError {
-	return nil
+	return i.err
 }
 
 type shouldFailClient struct {

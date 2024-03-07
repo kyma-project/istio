@@ -1,10 +1,12 @@
-package ingress_gateway
+package restarter
 
 import (
 	"context"
+	"github.com/kyma-project/istio/operator/api/v1alpha2"
 
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/kyma-project/istio/operator/internal/filter"
+	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/pkg/lib/annotations"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -19,23 +21,25 @@ const (
 	deploymentName string = "istio-ingressgateway"
 )
 
-type IngressGatewayReconciler struct {
-	client     client.Client
-	predicates []filter.IngressGatewayPredicate
+type IngressGatewayRestarter struct {
+	client        client.Client
+	predicates    []filter.IngressGatewayPredicate
+	statusHandler status.Status
 }
 
-func NewReconciler(client client.Client, predicates []filter.IngressGatewayPredicate) *IngressGatewayReconciler {
-	return &IngressGatewayReconciler{
-		client:     client,
-		predicates: predicates,
+func NewIngressGatewayRestarter(client client.Client, predicates []filter.IngressGatewayPredicate, statusHandler status.Status) *IngressGatewayRestarter {
+	return &IngressGatewayRestarter{
+		client:        client,
+		predicates:    predicates,
+		statusHandler: statusHandler,
 	}
 }
 
-func (r *IngressGatewayReconciler) Reconcile(ctx context.Context) described_errors.DescribedError {
+func (r *IngressGatewayRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio) described_errors.DescribedError {
 	ctrl.Log.Info("Reconciling Istio ingress gateway")
-
 	podList, err := getIngressGatewayPods(ctx, r.client)
 	if err != nil {
+		r.statusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonIngressGatewayReconcileFailed))
 		return described_errors.NewDescribedError(err, "Failed to get ingress gateway pods")
 	}
 
@@ -44,6 +48,7 @@ func (r *IngressGatewayReconciler) Reconcile(ctx context.Context) described_erro
 	for _, predicate := range r.predicates {
 		evaluator, err := predicate.NewIngressGatewayEvaluator(ctx)
 		if err != nil {
+			r.statusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonIngressGatewayReconcileFailed))
 			return described_errors.NewDescribedError(err, "Cannot create evaluator")
 		}
 		for _, pod := range podList.Items {
@@ -60,10 +65,12 @@ func (r *IngressGatewayReconciler) Reconcile(ctx context.Context) described_erro
 
 	if mustRestart {
 		if err := RestartIngressGateway(ctx, r.client); err != nil {
+			r.statusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonIngressGatewayReconcileFailed))
 			return described_errors.NewDescribedError(err, "Failed to restart ingress gateway")
 		}
 	}
 
+	r.statusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonIngressGatewayReconcileSucceeded))
 	ctrl.Log.Info("Successfully reconciled Istio ingress gateway")
 	return nil
 }

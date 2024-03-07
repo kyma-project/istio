@@ -1,7 +1,9 @@
-package proxy_test
+package restarter_test
 
 import (
 	"context"
+	"github.com/kyma-project/istio/operator/internal/restarter"
+	"github.com/kyma-project/istio/operator/internal/status"
 	"os"
 	"testing"
 
@@ -10,7 +12,6 @@ import (
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/filter"
 	"github.com/kyma-project/istio/operator/internal/manifest"
-	"github.com/kyma-project/istio/operator/internal/reconciliations/proxy"
 	"github.com/kyma-project/istio/operator/internal/tests"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars"
@@ -44,7 +45,7 @@ var _ = ReportAfterSuite("custom reporter", func(report types.Report) {
 	tests.GenerateGinkgoJunitReport("merge-api-suite", report)
 })
 
-var _ = Describe("Sidecars reconciliation", func() {
+var _ = Describe("SidecarsRestarter reconciliation", func() {
 	It("Should fail proxy reset if Istio pods do not match target version", func() {
 		// given
 
@@ -61,10 +62,10 @@ var _ = Describe("Sidecars reconciliation", func() {
 			},
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.0")
-		sidecars := proxy.NewReconciler(istioVersion, istioImageBase, logr.Discard(), createFakeClient(&istioCr, istiod),
-			&MergerMock{}, sidecars.NewProxyResetter(), []filter.SidecarProxyPredicate{})
+		sidecars := restarter.NewSidecarsRestarter(istioVersion, istioImageBase, logr.Discard(), createFakeClient(&istioCr, istiod),
+			&MergerMock{}, sidecars.NewProxyResetter(), []filter.SidecarProxyPredicate{}, status.StatusHandler{})
 		// when
-		warningMessage, err := sidecars.Reconcile(context.TODO(), istioCr)
+		err := sidecars.Restart(context.Background(), istioCr)
 
 		// then
 		Expect(warningMessage).To(Equal(""))
@@ -116,11 +117,11 @@ var _ = Describe("Sidecars reconciliation", func() {
 				},
 			},
 		}
-		sidecars := proxy.NewReconciler(istioVersion, istioImageBase, logr.Discard(), createFakeClient(&istioCr, istiod),
+		sidecars := restarter.NewSidecarsRestarter(istioVersion, istioImageBase, logr.Discard(), createFakeClient(&istioCr, istiod),
 			&MergerMock{}, proxyResetter, []filter.SidecarProxyPredicate{})
 
 		// when
-		warningMessage, err := sidecars.Reconcile(context.TODO(), istioCr)
+		warningMessage, err := sidecars.Restart(context.TODO(), istioCr)
 
 		// then
 		Expect(warningMessage).To(Equal("The sidecars of the following workloads could not be restarted: ns1/name1, ns2/name2, ns3/name3, ns4/name4, ns5/name5 and 1 additional workload(s)"))
@@ -155,11 +156,11 @@ var _ = Describe("Sidecars reconciliation", func() {
 				},
 			},
 		}
-		sidecars := proxy.NewReconciler(istioVersion, istioImageBase, logr.Discard(), createFakeClient(&istioCr, istiod),
+		sidecars := restarter.NewSidecarsRestarter(istioVersion, istioImageBase, logr.Discard(), createFakeClient(&istioCr, istiod),
 			&MergerMock{}, proxyResetter, []filter.SidecarProxyPredicate{})
 
 		// when
-		warningMessage, err := sidecars.Reconcile(context.TODO(), istioCr)
+		warningMessage, err := sidecars.Restart(context.TODO(), istioCr)
 
 		// then
 		Expect(warningMessage).To(Equal("The sidecars of the following workloads could not be restarted: ns1/name1, ns2/name2"))

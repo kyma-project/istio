@@ -9,7 +9,6 @@ import (
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio_resources"
-	"github.com/kyma-project/istio/operator/internal/reconciliations/proxy"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
@@ -20,20 +19,21 @@ type Reconciliation interface {
 	Reconcile(ctx context.Context) described_errors.DescribedError
 }
 
+type Restarter interface {
+	Restart(ctx context.Context, istioCR *operatorv1alpha2.Istio) described_errors.DescribedError
+}
+
 // IstioReconciler reconciles a Istio object
 type IstioReconciler struct {
 	*rest.Config // required to pass rest config to the declarative library
 	client.Client
-	Scheme                    *runtime.Scheme
-	istioInstallation         istio.InstallationReconciliation
-	proxySidecars             proxy.SidecarsReconciliation
-	istioResources            istio_resources.ResourcesReconciliation
-	ingressGateway            Reconciliation
-	log                       logr.Logger
-	statusHandler             status.Status
-	reconciliationInterval    time.Duration
-	delayedRequeueError       *described_errors.DescribedError
-	delayedRequeueErrorReason *operatorv1alpha2.ReasonWithMessage
+	Scheme                 *runtime.Scheme
+	istioInstallation      istio.InstallationReconciliation
+	istioResources         istio_resources.ResourcesReconciliation
+	restarters             []Restarter
+	log                    logr.Logger
+	statusHandler          status.Status
+	reconciliationInterval time.Duration
 }
 
 type RateLimiter struct {

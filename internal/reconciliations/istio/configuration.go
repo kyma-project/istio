@@ -4,11 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-
-	"github.com/kyma-project/istio/operator/internal/reconciliations/ingress_gateway"
-
 	"github.com/coreos/go-semver/semver"
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/internal/restarter"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -123,7 +121,7 @@ func restartIngressGatewayIfNeeded(ctx context.Context, k8sClient client.Client,
 	}
 
 	if mustRestart {
-		err := ingress_gateway.RestartIngressGateway(ctx, k8sClient)
+		err := restarter.RestartIngressGateway(ctx, k8sClient)
 		if err != nil {
 			return err
 		}

@@ -152,10 +152,6 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return r.requeueReconciliation(ctx, &istioCR, resourcesErr, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonCRsReconcileFailed))
 	}
 
-	// We do not want to safeguard the Istio sidecar reconciliation by checking whether Istio has to be installed. The
-	// reason for this is that we want to guarantee the restart of the proxies during the next reconciliation even if an
-	// error occurs in the reconciliation of the Istio upgrade after the Istio upgrade.
-	// should we pass Istio to the restart methods to set conditions?
 	var restartersErr []described_errors.DescribedError
 	for _, res := range r.restarters {
 		restarterErr := res.Restart(ctx, &istioCR)
@@ -164,11 +160,13 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		}
 	}
 	if restartersFailureErr := detectRestartersFailure(restartersErr); restartersFailureErr != nil {
-		err := r.statusHandler.UpdateToError(ctx, &istioCR, restartersFailureErr)
-		if err != nil {
-			r.log.Error(err, "Error during updating status to error")
+		// We don't want to use the requeueReconciliation function here, since there is condition handling sindie and we
+		// first need to clean this up, before we can use it here.
+		statusUpdateErr := r.statusHandler.UpdateToError(ctx, &istioCR, restartersFailureErr)
+		if statusUpdateErr != nil {
+			r.log.Error(statusUpdateErr, "Error during updating status to error")
 		}
-		return ctrl.Result{}, err
+		return ctrl.Result{}, restartersFailureErr
 	}
 
 	return r.finishReconcile(ctx, &istioCR, IstioTag)

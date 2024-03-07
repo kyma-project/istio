@@ -2,7 +2,7 @@
 
 ## Kyma Istio Operator
 
-Kyma Istio Operator implements one controller that consists of several self-contained reconciliation components. Splitting the logic into reconciliation components allows for 
+Kyma Istio Operator implements one controller that consists of several self-contained reconciliation and restarter components. Splitting the logic into reconciliation components allows for 
 better extensibility and maintainability. To achieve this requirement, each component must have its clearly separated responsibility and work in isolation when assessing whether reconciliation is required, applying changes, and returning a status.
 To understand the reasons behind the technical design of the Kyma Istio Operator, refer to the [Architecture Decision Record](https://github.com/kyma-project/istio/issues/135).
 

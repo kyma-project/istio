@@ -170,21 +170,6 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		}
 		return ctrl.Result{}, err
 	}
-	//if len(restartersErr) > 0 {
-	//	var candidate described_errors.DescribedError
-	//	for _, err := range restartersErr {
-	//		if candidate == nil || err.Level() < candidate.Level() {
-	//			candidate = err
-	//		}
-	//	}
-	//
-	//	err := r.statusHandler.UpdateToError(ctx, &istioCR, candidate)
-	//	if err != nil {
-	//		r.log.Error(err, "Error during updating status to error")
-	//	}
-	//
-	//	return ctrl.Result{}, candidate
-	//}
 
 	return r.finishReconcile(ctx, &istioCR, IstioTag)
 }

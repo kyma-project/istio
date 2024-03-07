@@ -95,6 +95,8 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, err
 	}
 
+	r.statusHandler.SetCondition(&istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileUnknown))
+
 	err := validation.ValidateAuthorizers(istioCR)
 	if err != nil {
 		return r.terminateReconciliation(ctx, &istioCR, err, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonValidationFailed))

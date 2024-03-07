@@ -362,6 +362,7 @@ var _ = Describe("Istio Controller", func() {
 			Expect(statusMock.updatedToReadyCalled).Should(BeTrue())
 			Expect(statusMock.setConditionCalled).Should(BeTrue())
 			Expect(statusMock.GetConditions()).Should(Equal([]operatorv1alpha2.ReasonWithMessage{
+				operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileUnknown),
 				operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileSucceeded),
 			}))
 		})

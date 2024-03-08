@@ -198,9 +198,6 @@ func (r *IstioReconciler) requeueReconciliation(ctx context.Context, istioCR *op
 	return ctrl.Result{}, err
 }
 
-func (r *IstioReconciler) setRequeueAndContinue(err described_errors.DescribedError) {
-}
-
 // terminateReconciliation stops the reconciliation and does not requeue the request.
 func (r *IstioReconciler) terminateReconciliation(ctx context.Context, istioCR *operatorv1alpha2.Istio, err described_errors.DescribedError, reason operatorv1alpha2.ReasonWithMessage) (ctrl.Result, error) {
 	if err.ShouldSetCondition() {

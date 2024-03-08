@@ -57,8 +57,8 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 
 		//then
 		Expect(err).Should(Not(HaveOccurred()))
-		Expect((*istioCR.Status.Conditions)[0].Reason).Should(Equal(string(operatorv1alpha2.ConditionReasonIngressGatewayReconcileSucceeded)))
-		Expect((*istioCR.Status.Conditions)[0].Message).Should(Equal(operatorv1alpha2.ConditionReasonIngressGatewayReconcileSucceededMessage))
+		Expect((*istioCR.Status.Conditions)[0].Reason).Should(Equal(string(operatorv1alpha2.ConditionReasonIngressGatewayRestartSucceeded)))
+		Expect((*istioCR.Status.Conditions)[0].Message).Should(Equal(operatorv1alpha2.ConditionReasonIngressGatewayRestartSucceededMessage))
 	})
 
 	It("should fail restart of istio ingress-gateway when there is no Envoy Filter kyma-referer", func() {
@@ -86,7 +86,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		//then
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Level()).To(Equal(described_errors.Error))
-		Expect((*istioCR.Status.Conditions)[0].Reason).Should(Equal(string(operatorv1alpha2.ConditionReasonIngressGatewayReconcileFailed)))
-		Expect((*istioCR.Status.Conditions)[0].Message).Should(Equal(operatorv1alpha2.ConditionReasonIngressGatewayReconcileFailedMessage))
+		Expect((*istioCR.Status.Conditions)[0].Reason).Should(Equal(string(operatorv1alpha2.ConditionReasonIngressGatewayRestartFailed)))
+		Expect((*istioCR.Status.Conditions)[0].Message).Should(Equal(operatorv1alpha2.ConditionReasonIngressGatewayRestartFailedMessage))
 	})
 })

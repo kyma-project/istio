@@ -39,7 +39,7 @@ func (r *IngressGatewayRestarter) Restart(ctx context.Context, istioCR *v1alpha2
 	ctrl.Log.Info("Restarting Istio Ingress Gateway")
 	podList, err := getIngressGatewayPods(ctx, r.client)
 	if err != nil {
-		r.statusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonIngressGatewayReconcileFailed))
+		r.statusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonIngressGatewayRestartFailed))
 		return described_errors.NewDescribedError(err, "Failed to get ingress gateway pods")
 	}
 
@@ -48,7 +48,7 @@ func (r *IngressGatewayRestarter) Restart(ctx context.Context, istioCR *v1alpha2
 	for _, predicate := range r.predicates {
 		evaluator, err := predicate.NewIngressGatewayEvaluator(ctx)
 		if err != nil {
-			r.statusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonIngressGatewayReconcileFailed))
+			r.statusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonIngressGatewayRestartFailed))
 			return described_errors.NewDescribedError(err, "Cannot create evaluator")
 		}
 		for _, pod := range podList.Items {
@@ -65,12 +65,12 @@ func (r *IngressGatewayRestarter) Restart(ctx context.Context, istioCR *v1alpha2
 
 	if mustRestart {
 		if err := RestartIngressGateway(ctx, r.client); err != nil {
-			r.statusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonIngressGatewayReconcileFailed))
+			r.statusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonIngressGatewayRestartFailed))
 			return described_errors.NewDescribedError(err, "Failed to restart ingress gateway")
 		}
 	}
 
-	r.statusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonIngressGatewayReconcileSucceeded))
+	r.statusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonIngressGatewayRestartSucceeded))
 	ctrl.Log.Info("Successfully restarted Istio Ingress Gateway")
 	return nil
 }

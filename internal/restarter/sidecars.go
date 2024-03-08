@@ -120,7 +120,3 @@ func (s *SidecarsRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio
 	s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarRestartSucceeded))
 	return nil
 }
-
-func (s *SidecarsRestarter) AddReconcilePredicate(predicate filter.SidecarProxyPredicate) {
-	s.Predicates = append(s.Predicates, predicate)
-}

@@ -71,3 +71,16 @@ func (d DefaultDescribedError) Level() Level {
 func (d DefaultDescribedError) ShouldSetCondition() bool {
 	return d.setCondition
 }
+
+// GetMostSevereErr returns the most severe error from the list of errors
+func GetMostSevereErr(errs []DescribedError) DescribedError {
+	var candidate DescribedError
+	for _, err := range errs {
+		// This checks if the current error has a lower level than the candidate. This might be counterintuitive, but it's correct because
+		// levels are ordered from the most severe to the least severe. So, if the current error has a lower level than the candidate, it's more severe.
+		if candidate == nil || err.Level() < candidate.Level() {
+			candidate = err
+		}
+	}
+	return candidate
+}

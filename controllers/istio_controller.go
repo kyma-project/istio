@@ -64,7 +64,7 @@ func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *I
 
 	efReferer := istio_resources.NewEnvoyFilterAllowPartialReferer(mgr.GetClient())
 	statusHandler := status.NewStatusHandler(mgr.GetClient())
-	restarters := []Restarter{
+	restarters := []restarter.Restarter{
 		// inject status handlers here
 		restarter.NewIngressGatewayRestarter(mgr.GetClient(), []filter.IngressGatewayPredicate{efReferer}, statusHandler),
 		restarter.NewSidecarsRestarter(IstioVersion, IstioImageBase, mgr.GetLogger(), mgr.GetClient(), &merger, sidecars.NewProxyResetter(), []filter.SidecarProxyPredicate{efReferer}, statusHandler),
@@ -154,34 +154,17 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return r.requeueReconciliation(ctx, &istioCR, resourcesErr, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonCRsReconcileFailed))
 	}
 
-	var restartersErr []described_errors.DescribedError
-	for _, res := range r.restarters {
-		restarterErr := res.Restart(ctx, &istioCR)
-		if restarterErr != nil {
-			restartersErr = append(restartersErr, restarterErr)
-		}
-	}
-	if restartersFailureErr := detectRestartersFailure(restartersErr); restartersFailureErr != nil {
-		// We don't want to use the requeueReconciliation function here, since there is condition handling sindie and we
-		// first need to clean this up, before we can use it here.
-		statusUpdateErr := r.statusHandler.UpdateToError(ctx, &istioCR, restartersFailureErr)
+	if err := restarter.Restart(ctx, &istioCR, r.restarters); err != nil {
+		// We don't want to use the requeueReconciliation function here, since there is condition handling in this function, and we
+		// need to clean this up, before we can use it here as  conditions are already handled in the restarters.
+		statusUpdateErr := r.statusHandler.UpdateToError(ctx, &istioCR, err)
 		if statusUpdateErr != nil {
 			r.log.Error(statusUpdateErr, "Error during updating status to error")
 		}
-		return ctrl.Result{}, restartersFailureErr
+		return ctrl.Result{}, err
 	}
 
 	return r.finishReconcile(ctx, &istioCR, IstioTag)
-}
-
-func detectRestartersFailure(restartersErr []described_errors.DescribedError) described_errors.DescribedError {
-	var candidate described_errors.DescribedError
-	for _, err := range restartersErr {
-		if candidate == nil || err.Level() < candidate.Level() {
-			candidate = err
-		}
-	}
-	return candidate
 }
 
 // requeueReconciliation cancels the reconciliation and requeues the request.

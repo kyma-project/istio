@@ -2,31 +2,27 @@ package restarter_test
 
 import (
 	"context"
-	"github.com/kyma-project/istio/operator/internal/described_errors"
-	"github.com/kyma-project/istio/operator/internal/restarter"
-	"github.com/kyma-project/istio/operator/internal/status"
-	"istio.io/client-go/pkg/apis/networking/v1alpha3"
-	"os"
-	"testing"
-
 	"github.com/go-logr/logr"
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
+	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/kyma-project/istio/operator/internal/filter"
 	"github.com/kyma-project/istio/operator/internal/manifest"
-	"github.com/kyma-project/istio/operator/internal/tests"
+	"github.com/kyma-project/istio/operator/internal/restarter"
+	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/restart"
 	. "github.com/onsi/ginkgo/v2"
-	"github.com/onsi/ginkgo/v2/types"
 	. "github.com/onsi/gomega"
+	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/kubectl/pkg/scheme"
+	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/yaml"
@@ -36,16 +32,6 @@ const (
 	istioVersion   = "1.16.1"
 	istioImageBase = "distroless"
 )
-
-func TestProxies(t *testing.T) {
-	RegisterFailHandler(Fail)
-
-	RunSpecs(t, "Merge Suite")
-}
-
-var _ = ReportAfterSuite("custom reporter", func(report types.Report) {
-	tests.GenerateGinkgoJunitReport("merge-api-suite", report)
-})
 
 var _ = Describe("SidecarsRestarter reconciliation", func() {
 	It("Should fail proxy reset if Istio pods do not match target version", func() {

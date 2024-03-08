@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"context"
-	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/internal/restarter"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -19,10 +19,6 @@ type Reconciliation interface {
 	Reconcile(ctx context.Context) described_errors.DescribedError
 }
 
-type Restarter interface {
-	Restart(ctx context.Context, istioCR *operatorv1alpha2.Istio) described_errors.DescribedError
-}
-
 // IstioReconciler reconciles a Istio object
 type IstioReconciler struct {
 	*rest.Config // required to pass rest config to the declarative library
@@ -30,7 +26,7 @@ type IstioReconciler struct {
 	Scheme                 *runtime.Scheme
 	istioInstallation      istio.InstallationReconciliation
 	istioResources         istio_resources.ResourcesReconciliation
-	restarters             []Restarter
+	restarters             []restarter.Restarter
 	log                    logr.Logger
 	statusHandler          status.Status
 	reconciliationInterval time.Duration

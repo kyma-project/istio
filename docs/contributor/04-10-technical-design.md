@@ -93,7 +93,7 @@ The Kyma Istio Operator utilizes Restarter components to manage resource restart
 - **Status Reporting** - After execution, each component reports its status.
 - **Istio CR Status** - The overall Istio CR status is calculated from the combined status of all Restarters:
   - **Error** - Set if at least one Restarter encounters an error.
-  - **Warning** - Set if at least one Restarter issues a warning.
+  - **Warning** - Set if at least one Restarter issues a warning, and an error didn't happen.
 - **Detailed Information** - For detailed execution information, Restarters can leverage custom condition types.
 
 This approach ensures that restarts are handled efficiently and in a fault-tolerant manner, preventing a single point of failure from disrupting the overall rollout process. 

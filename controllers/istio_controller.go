@@ -65,7 +65,6 @@ func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *I
 	efReferer := istio_resources.NewEnvoyFilterAllowPartialReferer(mgr.GetClient())
 	statusHandler := status.NewStatusHandler(mgr.GetClient())
 	restarters := []restarter.Restarter{
-		// inject status handlers here
 		restarter.NewIngressGatewayRestarter(mgr.GetClient(), []filter.IngressGatewayPredicate{efReferer}, statusHandler),
 		restarter.NewSidecarsRestarter(IstioVersion, IstioImageBase, mgr.GetLogger(), mgr.GetClient(), &merger, sidecars.NewProxyResetter(), []filter.SidecarProxyPredicate{efReferer}, statusHandler),
 	}

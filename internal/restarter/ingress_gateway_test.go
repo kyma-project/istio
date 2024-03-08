@@ -17,7 +17,7 @@ import (
 )
 
 var _ = Describe("SidecarsRestarter reconciliation", func() {
-	It("should successfully restart istio ingress-gateway when it's older than EF kyma-referer", func() {
+	It("should successfully restart istio ingress-gateway when predicate requires restart", func() {
 		// given
 		istioCR := &operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",

@@ -2,8 +2,10 @@ package restarter_test
 
 import (
 	"context"
+	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/kyma-project/istio/operator/internal/restarter"
 	"github.com/kyma-project/istio/operator/internal/status"
+	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	"os"
 	"testing"
 
@@ -48,7 +50,6 @@ var _ = ReportAfterSuite("custom reporter", func(report types.Report) {
 var _ = Describe("SidecarsRestarter reconciliation", func() {
 	It("Should fail proxy reset if Istio pods do not match target version", func() {
 		// given
-
 		numTrustedProxies := 1
 		istioCr := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",
@@ -62,20 +63,22 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 			},
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.0")
-		sidecars := restarter.NewSidecarsRestarter(istioVersion, istioImageBase, logr.Discard(), createFakeClient(&istioCr, istiod),
-			&MergerMock{}, sidecars.NewProxyResetter(), []filter.SidecarProxyPredicate{}, status.StatusHandler{})
+		fakeClient := createFakeClient(&istioCr, istiod)
+		statusHandler := status.NewStatusHandler(fakeClient)
+		sidecarsRestarter := restarter.NewSidecarsRestarter(istioVersion, istioImageBase, logr.Discard(), createFakeClient(&istioCr, istiod),
+			&MergerMock{}, sidecars.NewProxyResetter(), []filter.SidecarProxyPredicate{}, statusHandler)
 		// when
-		err := sidecars.Restart(context.Background(), istioCr)
+		err := sidecarsRestarter.Restart(context.Background(), &istioCr)
 
 		// then
-		Expect(warningMessage).To(Equal(""))
 		Expect(err).Should(HaveOccurred())
+		Expect(err.Level()).To(Equal(described_errors.Error))
 		Expect(err.Error()).To(ContainSubstring("istio-system pods version: 1.16.0 do not match target version: 1.16.1"))
+		Expect((*istioCr.Status.Conditions)[0].Message).To(Equal("Proxy sidecar restart failed"))
 	})
 
 	It("Should succeed proxy reset even if more than 5 proxies could not be reset and will return a warning", func() {
 		// given
-
 		numTrustedProxies := 1
 		istioCr := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",
@@ -117,20 +120,22 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 				},
 			},
 		}
-		sidecars := restarter.NewSidecarsRestarter(istioVersion, istioImageBase, logr.Discard(), createFakeClient(&istioCr, istiod),
-			&MergerMock{}, proxyResetter, []filter.SidecarProxyPredicate{})
+		fakeClient := createFakeClient(&istioCr, istiod)
+		statusHandler := status.NewStatusHandler(fakeClient)
+		sidecarsRestarter := restarter.NewSidecarsRestarter(istioVersion, istioImageBase, logr.Discard(), createFakeClient(&istioCr, istiod),
+			&MergerMock{}, proxyResetter, []filter.SidecarProxyPredicate{}, statusHandler)
 
 		// when
-		warningMessage, err := sidecars.Restart(context.TODO(), istioCr)
+		err := sidecarsRestarter.Restart(context.Background(), &istioCr)
 
 		// then
-		Expect(warningMessage).To(Equal("The sidecars of the following workloads could not be restarted: ns1/name1, ns2/name2, ns3/name3, ns4/name4, ns5/name5 and 1 additional workload(s)"))
-		Expect(err).ShouldNot(HaveOccurred())
+		Expect(err).Should(HaveOccurred())
+		Expect(err.Level()).To(Equal(described_errors.Warning))
+		Expect((*istioCr.Status.Conditions)[0].Message).To(ContainSubstring("The sidecars of the following workloads could not be restarted: ns1/name1, ns2/name2, ns3/name3, ns4/name4, ns5/name5 and 1 additional workload(s)"))
 	})
 
 	It("Should succeed proxy reset even if less than 5 proxies could not be reset and will return a warning", func() {
 		// given
-
 		numTrustedProxies := 1
 		istioCr := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",
@@ -156,15 +161,18 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 				},
 			},
 		}
-		sidecars := restarter.NewSidecarsRestarter(istioVersion, istioImageBase, logr.Discard(), createFakeClient(&istioCr, istiod),
-			&MergerMock{}, proxyResetter, []filter.SidecarProxyPredicate{})
+		fakeClient := createFakeClient(&istioCr, istiod)
+		statusHandler := status.NewStatusHandler(fakeClient)
+		sidecarsRestarter := restarter.NewSidecarsRestarter(istioVersion, istioImageBase, logr.Discard(), createFakeClient(&istioCr, istiod),
+			&MergerMock{}, proxyResetter, []filter.SidecarProxyPredicate{}, statusHandler)
 
 		// when
-		warningMessage, err := sidecars.Restart(context.TODO(), istioCr)
+		err := sidecarsRestarter.Restart(context.Background(), &istioCr)
 
 		// then
-		Expect(warningMessage).To(Equal("The sidecars of the following workloads could not be restarted: ns1/name1, ns2/name2"))
-		Expect(err).ShouldNot(HaveOccurred())
+		Expect(err).Should(HaveOccurred())
+		Expect(err.Level()).To(Equal(described_errors.Warning))
+		Expect((*istioCr.Status.Conditions)[0].Message).To(Equal("The sidecars of the following workloads could not be restarted: ns1/name1, ns2/name2"))
 	})
 })
 
@@ -172,6 +180,8 @@ func createFakeClient(objects ...client.Object) client.Client {
 	err := operatorv1alpha2.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
 	err = corev1.AddToScheme(scheme.Scheme)
+	Expect(err).ShouldNot(HaveOccurred())
+	err = v1alpha3.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
 
 	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build()
@@ -200,6 +210,30 @@ func createPod(name, namespace, containerName, imageVersion string) *corev1.Pod 
 		},
 	}
 }
+func createPodWithCreationTimestamp(name, namespace, containerName, imageVersion string, unixTimeSec int64) *corev1.Pod {
+	return &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:              name,
+			Namespace:         namespace,
+			CreationTimestamp: metav1.Unix(unixTimeSec, 0),
+		},
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Pod",
+			APIVersion: "v1",
+		},
+		Status: corev1.PodStatus{
+			Phase: corev1.PodRunning,
+		},
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{
+				{
+					Name:  containerName,
+					Image: "image:" + imageVersion,
+				},
+			},
+		},
+	}
+}
 
 type MergerMock struct {
 }
@@ -210,7 +244,7 @@ func (m MergerMock) Merge(_ string, _ *operatorv1alpha2.Istio, _ manifest.Templa
 
 func (m MergerMock) GetIstioOperator(_ string) (istioOperator.IstioOperator, error) {
 	iop := istioOperator.IstioOperator{}
-	manifest, err := os.ReadFile("../../../manifests/istio-operator-template.yaml")
+	manifest, err := os.ReadFile("../../manifests/istio-operator-template.yaml")
 	if err == nil {
 		err = yaml.Unmarshal(manifest, &iop)
 	}
@@ -224,6 +258,6 @@ type proxyResetterMock struct {
 	restartWarnings []restart.RestartWarning
 }
 
-func (p *proxyResetterMock) ProxyReset(ctx context.Context, c client.Client, expectedImage pods.SidecarImage, expectedResources v1.ResourceRequirements, predicates []filter.SidecarProxyPredicate, logger *logr.Logger) ([]restart.RestartWarning, error) {
+func (p *proxyResetterMock) ProxyReset(_ context.Context, _ client.Client, _ pods.SidecarImage, _ v1.ResourceRequirements, _ []filter.SidecarProxyPredicate, _ *logr.Logger) ([]restart.RestartWarning, error) {
 	return p.restartWarnings, p.err
 }

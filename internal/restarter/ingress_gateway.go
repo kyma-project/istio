@@ -36,7 +36,7 @@ func NewIngressGatewayRestarter(client client.Client, predicates []filter.Ingres
 }
 
 func (r *IngressGatewayRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio) described_errors.DescribedError {
-	ctrl.Log.Info("Reconciling Istio ingress gateway")
+	ctrl.Log.Info("Restarting Istio Ingress Gateway")
 	podList, err := getIngressGatewayPods(ctx, r.client)
 	if err != nil {
 		r.statusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonIngressGatewayReconcileFailed))
@@ -71,7 +71,7 @@ func (r *IngressGatewayRestarter) Restart(ctx context.Context, istioCR *v1alpha2
 	}
 
 	r.statusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonIngressGatewayReconcileSucceeded))
-	ctrl.Log.Info("Successfully reconciled Istio ingress gateway")
+	ctrl.Log.Info("Successfully restarted Istio Ingress Gateway")
 	return nil
 }
 

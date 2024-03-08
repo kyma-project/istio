@@ -22,11 +22,6 @@ import (
 
 const errorDescription = "Error occurred during reconciliation of Istio Sidecars"
 
-type SidecarsReconciliation interface {
-	Restart(ctx context.Context, istioCr v1alpha2.Istio) (string, error)
-	AddReconcilePredicate(predicate filter.SidecarProxyPredicate)
-}
-
 type SidecarsRestarter struct {
 	IstioVersion   string
 	IstioImageBase string
@@ -116,10 +111,10 @@ func (s *SidecarsRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio
 		if warningsCount-len(pods) > 0 {
 			warningMessage += fmt.Sprintf(" and %d additional workload(s)", warningsCount-len(pods))
 		}
-		warningMsg := described_errors.NewDescribedError(errors.New("Istio controller could not restart one or more istio-injected pods."), "Not all pods with Istio injection could be restarted. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning").SetWarning()
+		warningErr := described_errors.NewDescribedError(errors.New("Istio controller could not restart one or more istio-injected pods."), "Not all pods with Istio injection could be restarted. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning").SetWarning()
 		s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarManualRestartRequired, warningMessage))
 		s.Log.Info(warningMessage)
-		return warningMsg
+		return warningErr
 	}
 
 	s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarRestartSucceeded))

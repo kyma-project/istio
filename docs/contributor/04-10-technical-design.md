@@ -85,7 +85,7 @@ As a result, if you remove the Istio CR, any associated resources that would nor
 
 ## Restarter Components
 
-The Kyma Istio Operator utilizes Restarter components to manage resource restarts. These components operate independently, adhering to several key principles:
+Kyma Istio Operator utilizes Restarter components to manage resource restarts. These components operate independently, adhering to several key principles:
 
 - **Execution Order** - They execute only after Reconciliation components complete their tasks.
 - **Independent Decisions** - Each component independently determines if a resource needs restarting based on defined Restart Predicates.
@@ -93,7 +93,7 @@ The Kyma Istio Operator utilizes Restarter components to manage resource restart
 - **Status Reporting** - After execution, each component reports its status.
 - **Istio CR Status** - The overall Istio CR status is calculated from the combined status of all Restarters:
   - **Error** - Set if at least one Restarter encounters an error.
-  - **Warning** - Set if at least one Restarter issues a warning, and an error didn't happen.
+  - **Warning** - Set if at least one Restarter issues a warning, and there are no errors.
 - **Detailed Information** - For detailed execution information, Restarters can leverage custom condition types.
 
 This approach ensures that restarts are handled efficiently and in a fault-tolerant manner, preventing a single point of failure from disrupting the overall rollout process. 

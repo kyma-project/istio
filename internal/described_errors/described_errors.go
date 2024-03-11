@@ -80,7 +80,7 @@ func GetMostSevereErr(errs []DescribedError) DescribedError {
 		if err == nil {
 			continue
 		}
-		if candidate == nil || err.hasHigherSeverity(err) {
+		if candidate == nil || err.hasHigherSeverity(candidate) {
 			candidate = err
 		}
 	}

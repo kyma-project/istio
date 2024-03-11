@@ -1,5 +1,5 @@
 ---
-title: Enable Istio access logs
+title: Enable Istio Access Logs
 ---
 
 You can enable [Istio access logs](https://istio.io/latest/docs/tasks/observability/logs/access-log/) to provide fine-grained details about the access to workloads that are part of the Istio service mesh. This can help indicate the four “golden signals” of monitoring (latency, traffic, errors, and saturation) and troubleshooting anomalies.

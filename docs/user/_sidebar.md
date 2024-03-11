@@ -12,6 +12,7 @@
   * [Enable Istio Access Logs](/istio/user/operation-guides/02-30-enable-istio-access-logs.md)
 * [Tutorials](/istio/user/tutorials/README.md)
   * [Forward Client IP](/istio/user/tutorials/01-00-x-forwarded-for-header.md)
+  * [Use External Authorization Provider](/istio/user/tutorials/01-10-external-authorization-provider.md)
 * [Technical Reference](/istio/user/technical-reference/README.md)
   * [Istio Controller Parameters](/istio/user/technical-reference/05-00-istio-controller-parameters.md)
 * [Troubleshooting](/istio/user/troubleshooting/README.md)

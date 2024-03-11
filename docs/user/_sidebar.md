@@ -15,6 +15,7 @@
   * [Use External Authorization Provider](/istio/user/tutorials/01-10-external-authorization-provider.md)
 * [Technical Reference](/istio/user/technical-reference/README.md)
   * [Istio Controller Parameters](/istio/user/technical-reference/05-00-istio-controller-parameters.md)
+  * [Istio Controller RBAC Configuration](/istio/user/technical-reference/05-10-istio-controller-rbac.md)
 * [Troubleshooting](/istio/user/troubleshooting/README.md)
   * [No Access](/istio/user/troubleshooting/03-10-503-no-access.md)
   * [Connection Refused](/istio/user/troubleshooting/03-20-connection-refused.md)

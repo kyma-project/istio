@@ -1,4 +1,4 @@
-# External Authorization Provider
+# Use an External Authorization Provider to Expose and Secure a Workload
 
 This tutorial shows how to expose and secure an HTTPBin Service using an external authorization provider.
 

@@ -1,4 +1,4 @@
-# Forward Client IP in X-Forwarded-For Header
+# Forward a Client IP in the X-Forwarded-For Header
 
 Many applications need to know the client IP address of an originating request to behave properly. Usual use-cases include workloads that require the 
 client IP address to restrict their access. The ability to provide client attributes to services has long been a staple of reverse proxies. 

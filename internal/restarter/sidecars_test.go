@@ -160,6 +160,36 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		Expect(err.Level()).To(Equal(described_errors.Warning))
 		Expect((*istioCr.Status.Conditions)[0].Message).To(Equal("The sidecars of the following workloads could not be restarted: ns1/name1, ns2/name2"))
 	})
+
+	It("Should succeed proxy reset when there is no warning or errors", func() {
+		// given
+		numTrustedProxies := 1
+		istioCr := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
+			Name:            "default",
+			ResourceVersion: "1",
+			Annotations:     map[string]string{},
+		},
+			Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
+					NumTrustedProxies: &numTrustedProxies,
+				},
+			},
+		}
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.1")
+		proxyResetter := &proxyResetterMock{}
+		fakeClient := createFakeClient(&istioCr, istiod)
+		statusHandler := status.NewStatusHandler(fakeClient)
+		sidecarsRestarter := restarter.NewSidecarsRestarter(istioVersion, istioImageBase, logr.Discard(), createFakeClient(&istioCr, istiod),
+			&MergerMock{}, proxyResetter, []filter.SidecarProxyPredicate{}, statusHandler)
+
+		// when
+		err := sidecarsRestarter.Restart(context.Background(), &istioCr)
+
+		// then
+		Expect(err).Should(Not(HaveOccurred()))
+		Expect((*istioCr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonProxySidecarRestartSucceeded)))
+		Expect((*istioCr.Status.Conditions)[0].Message).To(Equal(operatorv1alpha2.ConditionReasonProxySidecarRestartSucceededMessage))
+	})
 })
 
 func createFakeClient(objects ...client.Object) client.Client {

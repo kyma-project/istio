@@ -196,30 +196,6 @@ func createPod(name, namespace, containerName, imageVersion string) *corev1.Pod 
 		},
 	}
 }
-func createPodWithCreationTimestamp(name, namespace, containerName, imageVersion string, unixTimeSec int64) *corev1.Pod {
-	return &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:              name,
-			Namespace:         namespace,
-			CreationTimestamp: metav1.Unix(unixTimeSec, 0),
-		},
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Pod",
-			APIVersion: "v1",
-		},
-		Status: corev1.PodStatus{
-			Phase: corev1.PodRunning,
-		},
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:  containerName,
-					Image: "image:" + imageVersion,
-				},
-			},
-		},
-	}
-}
 
 type MergerMock struct {
 }

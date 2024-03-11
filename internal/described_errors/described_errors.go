@@ -17,6 +17,7 @@ type DescribedError interface {
 	Error() string
 	Level() Level
 	ShouldSetCondition() bool
+	hasHigherSeverity(err DescribedError) bool
 }
 
 type DefaultDescribedError struct {
@@ -76,11 +77,18 @@ func (d DefaultDescribedError) ShouldSetCondition() bool {
 func GetMostSevereErr(errs []DescribedError) DescribedError {
 	var candidate DescribedError
 	for _, err := range errs {
-		// This checks if the current error has a lower level than the candidate. This might be counterintuitive, but it's correct because
-		// levels are ordered from the most severe to the least severe. So, if the current error has a lower level than the candidate, it's more severe.
-		if candidate == nil || err.Level() < candidate.Level() {
+		if err == nil {
+			continue
+		}
+		if candidate == nil || err.hasHigherSeverity(err) {
 			candidate = err
 		}
 	}
 	return candidate
+}
+
+func (d DefaultDescribedError) hasHigherSeverity(err DescribedError) bool {
+	// This checks if the current error has a lower level than the candidate. This might be counterintuitive, but it's correct because
+	// levels are ordered from the most severe to the least severe. So, if the current error has a lower level than the candidate, it's more severe.
+	return d.Level() < err.Level()
 }

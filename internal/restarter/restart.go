@@ -6,6 +6,9 @@ import (
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 )
 
+// Restarter is an interface for restarting Istio components.
+// It uses predicates to evaluate if the restart is needed.
+// If the evaluation returns true, the restarter restarts the component.
 type Restarter interface {
 	Restart(ctx context.Context, istioCR *operatorv1alpha2.Istio) described_errors.DescribedError
 }

@@ -23,4 +23,15 @@ var _ = Describe("GetMostSevereErr", func() {
 
 		Expect(err).Should(BeNil())
 	})
+
+	It("should return nil if array of errors is filled with nils and errors", func() {
+		mockErr := described_errors.NewDescribedError(errors.New("error"), "")
+		err := described_errors.GetMostSevereErr([]described_errors.DescribedError{nil, mockErr, nil})
+
+		Expect(err).Should(MatchError("error"))
+	})
+	It("should return nil if array of errors is filled with nils", func() {
+		err := described_errors.GetMostSevereErr([]described_errors.DescribedError{nil, nil, nil})
+		Expect(err).Should(BeNil())
+	})
 })

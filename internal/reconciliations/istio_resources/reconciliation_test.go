@@ -50,13 +50,13 @@ var _ = Describe("Reconciliation", func() {
 		reconciler := NewReconciler(client, hc)
 
 		//when
-		err := reconciler.Reconcile(context.TODO(), istioCR)
+		err := reconciler.Reconcile(context.Background(), istioCR)
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))
 
 		var s networkingv1alpha3.EnvoyFilterList
-		listErr := client.List(context.TODO(), &s)
+		listErr := client.List(context.Background(), &s)
 		Expect(listErr).To(Not(HaveOccurred()))
 		Expect(s.Items).To(HaveLen(1))
 	})
@@ -68,13 +68,13 @@ var _ = Describe("Reconciliation", func() {
 		reconciler := NewReconciler(client, hc)
 
 		//when
-		err := reconciler.Reconcile(context.TODO(), istioCR)
+		err := reconciler.Reconcile(context.Background(), istioCR)
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))
 
 		var s securityv1beta1.PeerAuthenticationList
-		listErr := client.List(context.TODO(), &s)
+		listErr := client.List(context.Background(), &s)
 		Expect(listErr).To(Not(HaveOccurred()))
 		Expect(s.Items).To(HaveLen(1))
 	})
@@ -86,13 +86,13 @@ var _ = Describe("Reconciliation", func() {
 		reconciler := NewReconciler(client, hc)
 
 		//when
-		err := reconciler.Reconcile(context.TODO(), istioCR)
+		err := reconciler.Reconcile(context.Background(), istioCR)
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))
 
 		var s corev1.ConfigMapList
-		listErr := client.List(context.TODO(), &s)
+		listErr := client.List(context.Background(), &s)
 		Expect(listErr).To(Not(HaveOccurred()))
 
 		expectedCmNames := []string{
@@ -122,13 +122,13 @@ var _ = Describe("Reconciliation", func() {
 			reconciler := NewReconciler(client, hc)
 
 			//when
-			err := reconciler.Reconcile(context.TODO(), istioCR)
+			err := reconciler.Reconcile(context.Background(), istioCR)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))
 
 			var e networkingv1alpha3.EnvoyFilter
-			Expect(client.Get(context.TODO(), ctrlclient.ObjectKey{Name: "proxy-protocol", Namespace: "istio-system"}, &e)).Should(Succeed())
+			Expect(client.Get(context.Background(), ctrlclient.ObjectKey{Name: "proxy-protocol", Namespace: "istio-system"}, &e)).Should(Succeed())
 		})
 
 		It("should not be created when hyperscaler is not AWS", func() {
@@ -138,13 +138,13 @@ var _ = Describe("Reconciliation", func() {
 			reconciler := NewReconciler(client, hc)
 
 			//when
-			err := reconciler.Reconcile(context.TODO(), istioCR)
+			err := reconciler.Reconcile(context.Background(), istioCR)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))
 
 			var e networkingv1alpha3.EnvoyFilter
-			getErr := client.Get(context.TODO(), ctrlclient.ObjectKey{Name: "proxy-protocol", Namespace: "istio-system"}, &e)
+			getErr := client.Get(context.Background(), ctrlclient.ObjectKey{Name: "proxy-protocol", Namespace: "istio-system"}, &e)
 			Expect(getErr).To(HaveOccurred())
 			Expect(k8serrors.IsNotFound(getErr)).To(BeTrue())
 		})

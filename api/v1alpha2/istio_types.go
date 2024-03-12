@@ -76,10 +76,10 @@ const (
 	ConditionReasonProxySidecarManualRestartRequiredMessage                 = "Proxy sidecar manual restart is required for some workloads"
 
 	// ingress gateway
-	ConditionReasonIngressGatewayReconcileSucceeded        ConditionReason = "IngressGatewayReconcileSucceeded"
-	ConditionReasonIngressGatewayReconcileSucceededMessage                 = "Istio Ingress Gateway reconciliation succeeded"
-	ConditionReasonIngressGatewayReconcileFailed           ConditionReason = "IngressGatewayReconcileFailed"
-	ConditionReasonIngressGatewayReconcileFailedMessage                    = "Istio Ingress Gateway reconciliation failed"
+	ConditionReasonIngressGatewayRestartSucceeded        ConditionReason = "IngressGatewayRestartSucceeded"
+	ConditionReasonIngressGatewayRestartSucceededMessage                 = "Istio Ingress Gateway restart succeeded"
+	ConditionReasonIngressGatewayRestartFailed           ConditionReason = "IngressGatewayRestartFailed"
+	ConditionReasonIngressGatewayRestartFailedMessage                    = "Istio Ingress Gateway restart failed"
 )
 
 type ReasonWithMessage struct {

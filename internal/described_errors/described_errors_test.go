@@ -10,11 +10,35 @@ import (
 var _ = Describe("GetMostSevereErr", func() {
 
 	It("should return error with the highest severity", func() {
-		err1 := described_errors.NewDescribedError(errors.New("error"), "")
-		err2 := described_errors.NewDescribedError(errors.New("warning"), "").SetWarning()
+		err := described_errors.GetMostSevereErr([]described_errors.DescribedError{
+			described_errors.NewDescribedError(errors.New("warning"), "").SetWarning(),
+			described_errors.NewDescribedError(errors.New("error"), ""),
+			described_errors.NewDescribedError(errors.New("warning"), "").SetWarning(),
+		})
+		Expect(err).Should(MatchError("error"))
 
-		err := described_errors.GetMostSevereErr([]described_errors.DescribedError{err1, err2})
+		err = described_errors.GetMostSevereErr([]described_errors.DescribedError{
+			described_errors.NewDescribedError(errors.New("error"), ""),
+			described_errors.NewDescribedError(errors.New("warning"), "").SetWarning(),
+			described_errors.NewDescribedError(errors.New("warning"), "").SetWarning(),
+		})
+		Expect(err).Should(MatchError("error"))
 
+		err = described_errors.GetMostSevereErr([]described_errors.DescribedError{
+			described_errors.NewDescribedError(errors.New("warning"), "").SetWarning(),
+			described_errors.NewDescribedError(errors.New("warning"), "").SetWarning(),
+			described_errors.NewDescribedError(errors.New("error"), ""),
+		})
+		Expect(err).Should(MatchError("error"))
+
+		err = described_errors.GetMostSevereErr([]described_errors.DescribedError{
+			described_errors.NewDescribedError(errors.New("warning"), "").SetWarning(),
+			nil,
+			described_errors.NewDescribedError(errors.New("warning"), "").SetWarning(),
+			nil,
+			described_errors.NewDescribedError(errors.New("error"), ""),
+			described_errors.NewDescribedError(errors.New("warning"), "").SetWarning(),
+		})
 		Expect(err).Should(MatchError("error"))
 	})
 

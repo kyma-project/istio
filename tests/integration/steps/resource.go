@@ -6,18 +6,16 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"strings"
-
 	"github.com/avast/retry-go"
 	"github.com/cucumber/godog"
 	istioCR "github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/controllers"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
+	"github.com/kyma-project/istio/operator/internal/manifest"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	networkingv1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
 	securityv1beta1 "istio.io/client-go/pkg/apis/security/v1beta1"
-	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
+	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -132,7 +130,7 @@ func ResourceIsPresent(ctx context.Context, kind, name, namespace, present strin
 		case ConfigMap.String():
 			object = &corev1.ConfigMap{}
 		case IstioOperator.String():
-			object = &istioOperator.IstioOperator{}
+			object = &iopv1alpha1.IstioOperator{}
 		default:
 			return godog.ErrUndefined
 		}
@@ -343,7 +341,7 @@ func ResourceInNamespaceIsDeleted(ctx context.Context, kind, name, namespace str
 		})
 	case IstioOperator.String():
 		return retry.Do(func() error {
-			var r istioOperator.IstioOperator
+			var r iopv1alpha1.IstioOperator
 			err := k8sClient.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, &r)
 			if err != nil {
 				return err
@@ -391,7 +389,13 @@ func ResourceNotPresent(ctx context.Context, kind string) error {
 }
 
 func IstioResourceContainerHasRequiredVersion(ctx context.Context, containerName, kind, resourceName, namespace string) error {
-	requiredVersion := strings.Join([]string{controllers.IstioVersion, controllers.IstioImageBase}, "-")
+	merger := manifest.NewDefaultIstioMerger()
+	version, prerelease, err := manifest.GetIstioVersion(&merger)
+	if err != nil {
+		return err
+	}
+
+	requiredVersion := fmt.Sprintf("%s-%s", version, prerelease)
 
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {

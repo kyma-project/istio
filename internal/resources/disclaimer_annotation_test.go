@@ -18,7 +18,7 @@ import (
 )
 
 var _ = Describe("Disclaimer annotation", func() {
-	It("Should annotate with disclaimer when there was no such annotation", func() {
+	It("should annotate with disclaimer when there was no such annotation", func() {
 
 		unstr := unstructured.Unstructured{Object: map[string]interface{}{}}
 		unstr.SetName("test")

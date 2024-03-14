@@ -2,12 +2,13 @@ package restarter_test
 
 import (
 	"context"
+	"os"
+
 	"github.com/go-logr/logr"
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/kyma-project/istio/operator/internal/filter"
-	"github.com/kyma-project/istio/operator/internal/manifest"
 	"github.com/kyma-project/istio/operator/internal/restarter"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
@@ -16,25 +17,20 @@ import (
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/restart"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"google.golang.org/protobuf/types/known/structpb"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
-	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
+	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/kubectl/pkg/scheme"
-	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/yaml"
 )
 
-const (
-	istioVersion   = "1.16.1"
-	istioImageBase = "distroless"
-)
-
 var _ = Describe("SidecarsRestarter reconciliation", func() {
-	It("Should fail proxy reset if Istio pods do not match target version", func() {
+	It("should fail proxy reset if Istio pods do not match target version", func() {
 		// given
 		numTrustedProxies := 1
 		istioCr := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
@@ -51,8 +47,8 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.0")
 		fakeClient := createFakeClient(&istioCr, istiod)
 		statusHandler := status.NewStatusHandler(fakeClient)
-		sidecarsRestarter := restarter.NewSidecarsRestarter(istioVersion, istioImageBase, logr.Discard(), createFakeClient(&istioCr, istiod),
-			&MergerMock{}, sidecars.NewProxyResetter(), []filter.SidecarProxyPredicate{}, statusHandler)
+		sidecarsRestarter := restarter.NewSidecarsRestarter(logr.Discard(), createFakeClient(&istioCr, istiod),
+			&MergerMock{"1.16.1-distroless"}, sidecars.NewProxyResetter(), []filter.SidecarProxyPredicate{}, statusHandler)
 		// when
 		err := sidecarsRestarter.Restart(context.Background(), &istioCr)
 
@@ -63,7 +59,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		Expect((*istioCr.Status.Conditions)[0].Message).To(Equal("Proxy sidecar restart failed"))
 	})
 
-	It("Should succeed proxy reset even if more than 5 proxies could not be reset and will return a warning", func() {
+	It("should succeed proxy reset even if more than 5 proxies could not be reset and will return a warning", func() {
 		// given
 		numTrustedProxies := 1
 		istioCr := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
@@ -108,8 +104,8 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		}
 		fakeClient := createFakeClient(&istioCr, istiod)
 		statusHandler := status.NewStatusHandler(fakeClient)
-		sidecarsRestarter := restarter.NewSidecarsRestarter(istioVersion, istioImageBase, logr.Discard(), createFakeClient(&istioCr, istiod),
-			&MergerMock{}, proxyResetter, []filter.SidecarProxyPredicate{}, statusHandler)
+		sidecarsRestarter := restarter.NewSidecarsRestarter(logr.Discard(), createFakeClient(&istioCr, istiod),
+			&MergerMock{"1.16.1-distroless"}, proxyResetter, []filter.SidecarProxyPredicate{}, statusHandler)
 
 		// when
 		err := sidecarsRestarter.Restart(context.Background(), &istioCr)
@@ -120,7 +116,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		Expect((*istioCr.Status.Conditions)[0].Message).To(ContainSubstring("The sidecars of the following workloads could not be restarted: ns1/name1, ns2/name2, ns3/name3, ns4/name4, ns5/name5 and 1 additional workload(s)"))
 	})
 
-	It("Should succeed proxy reset even if less than 5 proxies could not be reset and will return a warning", func() {
+	It("should succeed proxy reset even if less than 5 proxies could not be reset and will return a warning", func() {
 		// given
 		numTrustedProxies := 1
 		istioCr := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
@@ -149,8 +145,8 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		}
 		fakeClient := createFakeClient(&istioCr, istiod)
 		statusHandler := status.NewStatusHandler(fakeClient)
-		sidecarsRestarter := restarter.NewSidecarsRestarter(istioVersion, istioImageBase, logr.Discard(), createFakeClient(&istioCr, istiod),
-			&MergerMock{}, proxyResetter, []filter.SidecarProxyPredicate{}, statusHandler)
+		sidecarsRestarter := restarter.NewSidecarsRestarter(logr.Discard(), createFakeClient(&istioCr, istiod),
+			&MergerMock{"1.16.1-distroless"}, proxyResetter, []filter.SidecarProxyPredicate{}, statusHandler)
 
 		// when
 		err := sidecarsRestarter.Restart(context.Background(), &istioCr)
@@ -161,7 +157,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		Expect((*istioCr.Status.Conditions)[0].Message).To(Equal("The sidecars of the following workloads could not be restarted: ns1/name1, ns2/name2"))
 	})
 
-	It("Should succeed proxy reset when there is no warning or errors", func() {
+	It("should succeed proxy reset when there is no warning or errors", func() {
 		// given
 		numTrustedProxies := 1
 		istioCr := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
@@ -179,8 +175,8 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		proxyResetter := &proxyResetterMock{}
 		fakeClient := createFakeClient(&istioCr, istiod)
 		statusHandler := status.NewStatusHandler(fakeClient)
-		sidecarsRestarter := restarter.NewSidecarsRestarter(istioVersion, istioImageBase, logr.Discard(), createFakeClient(&istioCr, istiod),
-			&MergerMock{}, proxyResetter, []filter.SidecarProxyPredicate{}, statusHandler)
+		sidecarsRestarter := restarter.NewSidecarsRestarter(logr.Discard(), createFakeClient(&istioCr, istiod),
+			&MergerMock{"1.16.1-distroless"}, proxyResetter, []filter.SidecarProxyPredicate{}, statusHandler)
 
 		// when
 		err := sidecarsRestarter.Restart(context.Background(), &istioCr)
@@ -228,18 +224,20 @@ func createPod(name, namespace, containerName, imageVersion string) *corev1.Pod 
 }
 
 type MergerMock struct {
+	tag string
 }
 
-func (m MergerMock) Merge(_ string, _ *operatorv1alpha2.Istio, _ manifest.TemplateData, _ clusterconfig.ClusterConfiguration) (string, error) {
+func (m MergerMock) Merge(_ string, _ *operatorv1alpha2.Istio, _ clusterconfig.ClusterConfiguration) (string, error) {
 	return "mocked istio operator merge result", nil
 }
 
-func (m MergerMock) GetIstioOperator(_ string) (istioOperator.IstioOperator, error) {
-	iop := istioOperator.IstioOperator{}
+func (m MergerMock) GetIstioOperator(_ string) (iopv1alpha1.IstioOperator, error) {
+	iop := iopv1alpha1.IstioOperator{}
 	manifest, err := os.ReadFile("../../manifests/istio-operator-template.yaml")
 	if err == nil {
 		err = yaml.Unmarshal(manifest, &iop)
 	}
+	iop.Spec.Tag = structpb.NewStringValue(m.tag)
 	return iop, err
 }
 

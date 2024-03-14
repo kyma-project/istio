@@ -5,12 +5,9 @@ metadata:
   namespace: istio-system
   labels:
     kyma-project.io/module: istio
-    app.kubernetes.io/component: operator
-    app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: "{{ .ModuleVersion }}"
-    app.kubernetes.io/name: istio-operator
-    app.kubernetes.io/instance: istio-operator-default
 spec:
+  hub: europe-docker.pkg.dev/kyma-project/prod/external/istio
+  tag: "1.20.3-distroless"
   components:
     base:
       enabled: true
@@ -130,7 +127,6 @@ spec:
           istios.operator.kyma-project.io/managed-by-disclaimer: |
             DO NOT EDIT - This resource is managed by Kyma.
             Any modifications are discarded and the resource is reverted to the original state.
-  hub: europe-docker.pkg.dev/kyma-project/prod/external/istio
   meshConfig:
     defaultConfig:
       holdApplicationUntilProxyStarts: true
@@ -184,7 +180,6 @@ spec:
       name: stdout-json
     trustDomain: cluster.local
   profile: default
-  tag: "{{ .IstioVersion }}-{{ .IstioImageBase }}"
   values:
     base:
       enableCRDTemplates: false

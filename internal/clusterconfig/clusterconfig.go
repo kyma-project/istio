@@ -34,16 +34,16 @@ func (s ClusterSize) String() string {
 }
 
 const (
-	productionDefaultPath string = "manifests/istio-operator-template.yaml"
-	evaluationDefaultPath string = "manifests/istio-operator-template-light.yaml"
+	ProductionManifestPath string = "manifests/istio-operator-template.yaml"
+	EvaluationManifestPath string = "manifests/istio-operator-template-light.yaml"
 )
 
-func (s ClusterSize) DefaultManifestPath() string {
+func (s ClusterSize) GetManifestPath() string {
 	switch s {
 	case Evaluation:
-		return evaluationDefaultPath
+		return EvaluationManifestPath
 	case Production:
-		return productionDefaultPath
+		return ProductionManifestPath
 	default:
 		return "Unknown"
 	}

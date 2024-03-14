@@ -3,11 +3,10 @@ package steps
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/avast/retry-go"
 	"github.com/distribution/reference"
-	"github.com/kyma-project/istio/operator/controllers"
+	"github.com/kyma-project/istio/operator/internal/manifest"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	"github.com/masterminds/semver"
 	v1 "k8s.io/api/apps/v1"
@@ -191,7 +190,13 @@ func ApplicationPodShouldHaveIstioProxy(ctx context.Context, appName, namespace,
 }
 
 func ApplicationPodShouldHaveIstioProxyInRequiredVersion(ctx context.Context, appName, namespace string) error {
-	requiredProxyVersion := strings.Join([]string{controllers.IstioVersion, controllers.IstioImageBase}, "-")
+	merger := manifest.NewDefaultIstioMerger()
+	version, prerelease, err := manifest.GetIstioVersion(&merger)
+	if err != nil {
+		return err
+	}
+
+	requiredProxyVersion := fmt.Sprintf("%s-%s", version, prerelease)
 
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {

@@ -19,7 +19,7 @@ import (
 	crds "github.com/kyma-project/istio/operator/tests/integration/pkg/crds"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	"github.com/mitchellh/mapstructure"
-	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
+	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -108,9 +108,9 @@ func UninstallIstio(ctx context.Context) error {
 	return istioClient.Uninstall(ctx)
 }
 
-func getIstioOperatorFromCluster(k8sClient client.Client) (*istioOperator.IstioOperator, error) {
+func getIstioOperatorFromCluster(k8sClient client.Client) (*iopv1alpha1.IstioOperator, error) {
 
-	iop := istioOperator.IstioOperator{}
+	iop := iopv1alpha1.IstioOperator{}
 
 	err := k8sClient.Get(context.TODO(), types.NamespacedName{Name: defaultIopName, Namespace: defaultIopNamespace}, &iop)
 	if err != nil {
@@ -125,7 +125,7 @@ type ResourceStruct struct {
 	Memory string
 }
 
-func getResourcesForComponent(operator *istioOperator.IstioOperator, component, resourceType string) (*ResourceStruct, error) {
+func getResourcesForComponent(operator *iopv1alpha1.IstioOperator, component, resourceType string) (*ResourceStruct, error) {
 	res := ResourceStruct{}
 
 	switch component {

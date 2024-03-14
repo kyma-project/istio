@@ -1,17 +1,13 @@
 package manifest
 
 import (
-	"bytes"
-	"errors"
 	"os"
 	"path"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
-	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
+	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	"sigs.k8s.io/yaml"
-
-	"text/template"
 )
 
 const (
@@ -19,15 +15,11 @@ const (
 	workingDir              = "/tmp"
 )
 
-type TemplateData struct {
-	IstioVersion   string
-	IstioImageBase string
-	ModuleVersion  string
-}
+var readFileHandle = os.ReadFile
 
 type Merger interface {
-	Merge(baseManifestPath string, istioCR *operatorv1alpha2.Istio, templateData TemplateData, overrides clusterconfig.ClusterConfiguration) (string, error)
-	GetIstioOperator(baseManifestPath string) (istioOperator.IstioOperator, error)
+	Merge(baseManifestPath string, istioCR *operatorv1alpha2.Istio, overrides clusterconfig.ClusterConfiguration) (string, error)
+	GetIstioOperator(baseManifestPath string) (iopv1alpha1.IstioOperator, error)
 }
 
 type IstioMerger struct {
@@ -40,22 +32,18 @@ func NewDefaultIstioMerger() IstioMerger {
 	}
 }
 
-func (m *IstioMerger) Merge(baseManifestPath string, istioCR *operatorv1alpha2.Istio, templateData TemplateData, overrides clusterconfig.ClusterConfiguration) (string, error) {
+func (m *IstioMerger) Merge(baseManifestPath string, istioCR *operatorv1alpha2.Istio, overrides clusterconfig.ClusterConfiguration) (string, error) {
 	toBeInstalledIop, err := m.GetIstioOperator(baseManifestPath)
 	if err != nil {
 		return "", err
 	}
+
 	mergedManifest, err := applyIstioCR(istioCR, toBeInstalledIop)
 	if err != nil {
 		return "", err
 	}
 
-	templatedManifest, err := parseManifestWithTemplate(string(mergedManifest), templateData)
-	if err != nil {
-		return "", err
-	}
-
-	manifestWithOverrides, err := clusterconfig.MergeOverrides(templatedManifest, overrides)
+	manifestWithOverrides, err := clusterconfig.MergeOverrides(mergedManifest, overrides)
 	if err != nil {
 		return "", err
 	}
@@ -69,22 +57,21 @@ func (m *IstioMerger) Merge(baseManifestPath string, istioCR *operatorv1alpha2.I
 	return mergedIstioOperatorPath, nil
 }
 
-func (m *IstioMerger) GetIstioOperator(baseManifestPath string) (istioOperator.IstioOperator, error) {
-	manifest, err := os.ReadFile(baseManifestPath)
+func (m *IstioMerger) GetIstioOperator(baseManifestPath string) (iopv1alpha1.IstioOperator, error) {
+	manifest, err := readFileHandle(baseManifestPath)
 	if err != nil {
-		return istioOperator.IstioOperator{}, err
+		return iopv1alpha1.IstioOperator{}, err
 	}
 
-	toBeInstalledIop := istioOperator.IstioOperator{}
+	toBeInstalledIop := iopv1alpha1.IstioOperator{}
 	err = yaml.Unmarshal(manifest, &toBeInstalledIop)
 	if err != nil {
-		return istioOperator.IstioOperator{}, err
+		return iopv1alpha1.IstioOperator{}, err
 	}
 	return toBeInstalledIop, nil
 }
 
-func applyIstioCR(istioCR *operatorv1alpha2.Istio, toBeInstalledIop istioOperator.IstioOperator) ([]byte, error) {
-
+func applyIstioCR(istioCR *operatorv1alpha2.Istio, toBeInstalledIop iopv1alpha1.IstioOperator) ([]byte, error) {
 	_, err := istioCR.MergeInto(toBeInstalledIop)
 	if err != nil {
 		return nil, err
@@ -96,26 +83,4 @@ func applyIstioCR(istioCR *operatorv1alpha2.Istio, toBeInstalledIop istioOperato
 	}
 
 	return outputManifest, nil
-}
-
-func parseManifestWithTemplate(templateRaw string, data TemplateData) ([]byte, error) {
-	if data.IstioVersion == "" {
-		return nil, errors.New("IstioVersion cannot be empty")
-	}
-
-	if data.IstioImageBase == "" {
-		return nil, errors.New("IstioImageBase cannot be empty")
-	}
-
-	tmpl, err := template.New("tmpl").Parse(templateRaw)
-	if err != nil {
-		return nil, err
-	}
-
-	var resource bytes.Buffer
-	err = tmpl.Execute(&resource, data)
-	if err != nil {
-		return nil, err
-	}
-	return resource.Bytes(), nil
 }

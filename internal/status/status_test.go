@@ -33,7 +33,7 @@ var _ = ReportAfterSuite("custom reporter", func(report types.Report) {
 
 var _ = Describe("status", func() {
 	Describe("UpdateToReady", func() {
-		It("Should update Istio CR status to ready", func() {
+		It("should update Istio CR status to ready", func() {
 			// given
 			cr := operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
@@ -54,7 +54,7 @@ var _ = Describe("status", func() {
 			Expect(cr.Status.Conditions).To(BeNil())
 		})
 
-		It("Should reset existing status description to empty", func() {
+		It("should reset existing status description to empty", func() {
 			// given
 			cr := operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
@@ -81,7 +81,7 @@ var _ = Describe("status", func() {
 	})
 
 	Describe("UpdateToDeleting", func() {
-		It("Should update Istio CR status to deleting", func() {
+		It("should update Istio CR status to deleting", func() {
 			// given
 			cr := operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
@@ -108,7 +108,7 @@ var _ = Describe("status", func() {
 	})
 
 	Describe("UpdateToProcessing", func() {
-		It("Should update Istio CR status to processing with description", func() {
+		It("should update Istio CR status to processing with description", func() {
 			// given
 			cr := operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
@@ -135,7 +135,7 @@ var _ = Describe("status", func() {
 	})
 
 	Describe("UpdateToError", func() {
-		It("Should update Istio CR status to error with description", func() {
+		It("should update Istio CR status to error with description", func() {
 			// given
 			cr := operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
@@ -159,7 +159,7 @@ var _ = Describe("status", func() {
 			Expect(cr.Status.Conditions).To(BeNil())
 		})
 
-		It("Should update Istio CR status to warning with description", func() {
+		It("should update Istio CR status to warning with description", func() {
 			// given
 			cr := operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
@@ -183,7 +183,7 @@ var _ = Describe("status", func() {
 			Expect(cr.Status.Conditions).To(BeNil())
 		})
 
-		It("Should update Istio CR status to error with default condition", func() {
+		It("should update Istio CR status to error with default condition", func() {
 			// given
 			cr := operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
@@ -207,7 +207,7 @@ var _ = Describe("status", func() {
 			Expect(cr.Status.Conditions).To(BeNil())
 		})
 
-		It("Should update Istio CR status to warning with a speicific condition derived from the error", func() {
+		It("should update Istio CR status to warning with a speicific condition derived from the error", func() {
 			// given
 			cr := operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
@@ -231,7 +231,7 @@ var _ = Describe("status", func() {
 			Expect(cr.Status.Conditions).To(BeNil())
 		})
 
-		It("Should update Istio CR status to warning and add ready condition if not provided", func() {
+		It("should update Istio CR status to warning and add ready condition if not provided", func() {
 			// given
 			cr := operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
@@ -257,7 +257,7 @@ var _ = Describe("status", func() {
 	})
 
 	Describe("SetCondition", func() {
-		It("Should set Istio CR status conditions", func() {
+		It("should set Istio CR status conditions", func() {
 			// given
 			cr := operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},

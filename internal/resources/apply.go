@@ -3,7 +3,7 @@ package resources
 import (
 	"context"
 
-	"github.com/kyma-project/istio/operator/pkg/version"
+	"github.com/kyma-project/istio/operator/internal/manifest"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -42,7 +42,7 @@ func ApplyVersionedLabels(resource *unstructured.Unstructured) {
 	if versionedLabels == nil {
 		versionedLabels = make(map[string]string)
 	}
-	versionedLabels["app.kubernetes.io/version"] = version.GetModuleVersion()
+	versionedLabels["app.kubernetes.io/version"] = manifest.GetModuleVersion()
 	resource.SetLabels(versionedLabels)
 }
 

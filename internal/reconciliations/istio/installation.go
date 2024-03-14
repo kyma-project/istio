@@ -3,7 +3,6 @@ package istio
 import (
 	"context"
 	"fmt"
-	moduleVersion "github.com/kyma-project/istio/operator/pkg/version"
 
 	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/internal/webhooks"
@@ -25,14 +24,14 @@ import (
 
 type InstallationReconciliation interface {
 	Reconcile(ctx context.Context, istioCR *operatorv1alpha2.Istio, statusHandler status.Status, istioResourceListPath string) described_errors.DescribedError
+	GetIstioTag() string
 }
 
 type Installation struct {
-	IstioClient    LibraryClient
-	IstioVersion   string
-	IstioImageBase string
-	Client         client.Client
-	Merger         manifest.Merger
+	IstioClient LibraryClient
+	Client      client.Client
+	Merger      manifest.Merger
+	IstioTag    string
 }
 
 const (
@@ -42,9 +41,14 @@ const (
 
 // Reconcile runs Istio reconciliation to install, upgrade or uninstall Istio and returns the updated Istio CR.
 func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha2.Istio, statusHandler status.Status, istioResourceListPath string) described_errors.DescribedError {
-	istioTag := fmt.Sprintf("%s-%s", i.IstioVersion, i.IstioImageBase)
+	version, prerelease, err := manifest.GetIstioVersion(i.Merger)
+	if err != nil {
+		ctrl.Log.Error(err, "Error getting Istio version from manifest")
+		return described_errors.NewDescribedError(err, "Could not get Istio version from manifest")
+	}
 
-	shouldInstallIstio, err := shouldInstall(istioCR, istioTag)
+	i.IstioTag = fmt.Sprintf("%s-%s", version, prerelease)
+	shouldInstallIstio, err := shouldInstall(istioCR, i.IstioTag)
 
 	if err != nil {
 		ctrl.Log.Error(err, "Error evaluating Istio CR changes")
@@ -52,7 +56,7 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha2.
 	}
 
 	if shouldInstallIstio {
-		ctrl.Log.Info("Starting Istio install", "istio version", i.IstioVersion, "istio image", i.IstioImageBase)
+		ctrl.Log.Info("Starting Istio install", "istio version", version)
 
 		if !hasInstallationFinalizer(istioCR) {
 			if err = addInstallationFinalizer(ctx, i.Client, istioCR); err != nil {
@@ -66,19 +70,15 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha2.
 			return described_errors.NewDescribedError(err, "Could not evaluate cluster flavour")
 		}
 
-		// As we define default IstioOperator values in a templated manifest, we need to apply the istio version and values from
-		// Istio CR to this default configuration to get the final IstoOperator that is used for installing and updating Istio.
-		templateData := manifest.TemplateData{IstioVersion: i.IstioVersion, IstioImageBase: i.IstioImageBase, ModuleVersion: moduleVersion.GetModuleVersion()}
-
-		cSize, err := clusterconfig.EvaluateClusterSize(context.Background(), i.Client)
+		clusterSize, err := clusterconfig.EvaluateClusterSize(context.Background(), i.Client)
 		if err != nil {
 			ctrl.Log.Error(err, "Error occurred during evaluation of cluster size")
 			return described_errors.NewDescribedError(err, "Could not evaluate cluster size")
 		}
 
-		ctrl.Log.Info("Installing Istio with", "profile", cSize.String())
+		ctrl.Log.Info("Installing Istio with", "profile", clusterSize.String())
 
-		mergedIstioOperatorPath, err := i.Merger.Merge(cSize.DefaultManifestPath(), istioCR, templateData, clusterConfiguration)
+		mergedIstioOperatorPath, err := i.Merger.Merge(clusterSize.GetManifestPath(), istioCR, clusterConfiguration)
 		if err != nil {
 			statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonCustomResourceMisconfigured))
 			return described_errors.NewDescribedError(err, "Could not merge Istio operator configuration").SetCondition(false)
@@ -100,13 +100,13 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha2.
 			return described_errors.NewDescribedError(err, "Could not add warden validation label")
 		}
 
-		version, err := gatherer.GetIstioPodsVersion(ctx, i.Client)
+		installedVersion, err := gatherer.GetIstioPodsVersion(ctx, i.Client)
 		if err != nil {
 			return described_errors.NewDescribedError(err, "Could not get Istio sidecar version on cluster")
 		}
 
-		if i.IstioVersion != version {
-			return described_errors.NewDescribedError(fmt.Errorf("istio-system pods version: %s do not match target version: %s", version, i.IstioVersion), "Istio installation failed")
+		if installedVersion != version {
+			return described_errors.NewDescribedError(fmt.Errorf("istio-system pods version: %s do not match target version: %s", installedVersion, version), "Istio installation failed")
 		}
 
 		ctrl.Log.Info("Istio installation succeeded")
@@ -171,6 +171,10 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha2.
 	}
 
 	return nil
+}
+
+func (i *Installation) GetIstioTag() string {
+	return i.IstioTag
 }
 
 func hasInstallationFinalizer(istioCR *operatorv1alpha2.Istio) bool {

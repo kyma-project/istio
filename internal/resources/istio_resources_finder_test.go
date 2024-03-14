@@ -104,7 +104,7 @@ var _ = Describe("Resources", func() {
 })
 
 var _ = Describe("NewIstioResourcesFinderFromConfigYaml", func() {
-	It("Should read configuration from yaml", func() {
+	It("should read configuration from yaml", func() {
 		config, err := NewIstioResourcesFinderFromConfigYaml(context.TODO(), nil, logr.Logger{}, "test_files/test_resources_list.yaml")
 		Expect(err).ToNot(HaveOccurred())
 		Expect(config).To(BeEquivalentTo(&IstioResourcesFinder{
@@ -132,7 +132,7 @@ var _ = Describe("NewIstioResourcesFinderFromConfigYaml", func() {
 		))
 	})
 
-	It("Should fail if the configuration contains invalid regex", func() {
+	It("should fail if the configuration contains invalid regex", func() {
 		_, err := NewIstioResourcesFinderFromConfigYaml(context.TODO(), nil, logr.Logger{}, "test_files/test_wrong_resources_list.yaml")
 		Expect(err).To(HaveOccurred())
 	})

@@ -1,27 +1,22 @@
 package manifest
 
 import (
-	"github.com/kyma-project/istio/operator/internal/tests"
-	"github.com/onsi/ginkgo/v2/types"
 	"os"
 	"path"
 	"testing"
+
+	"github.com/kyma-project/istio/operator/internal/tests"
+	"github.com/onsi/ginkgo/v2/types"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
-	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
+	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
 )
-
-var TestTemplateData = TemplateData{
-	IstioVersion:   "1.16.1",
-	IstioImageBase: "distroless",
-	ModuleVersion:  "dev",
-}
 
 func TestManifest(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -34,7 +29,6 @@ var _ = ReportAfterSuite("custom reporter", func(report types.Report) {
 })
 
 var _ = Describe("Manifest merge", func() {
-
 	numTrustedProxies := 4
 	istioCR := &v1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 		Name:      "istio-test",
@@ -50,12 +44,11 @@ var _ = Describe("Manifest merge", func() {
 
 	It("should return error when provided invalid path to default Istio Operator", func() {
 		// given
-		sut := IstioMerger{
-			workingDir: workingDir,
-		}
+		sut := IstioMerger{workingDir}
+		readFileHandle = os.ReadFile
 
 		// when
-		mergedIstioOperatorPath, err := sut.Merge("invalid/path.yaml", istioCR, TestTemplateData, clusterconfig.ClusterConfiguration{})
+		mergedIstioOperatorPath, err := sut.Merge("invalid/path.yaml", istioCR, clusterconfig.ClusterConfiguration{})
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -64,12 +57,11 @@ var _ = Describe("Manifest merge", func() {
 
 	It("should return error when provided misconfigured default Istio Operator", func() {
 		// given
-		sut := IstioMerger{
-			workingDir: workingDir,
-		}
+		sut := IstioMerger{workingDir}
+		readFileHandle = os.ReadFile
 
 		// when
-		mergedIstioOperatorPath, err := sut.Merge("test/wrong-operator.yaml", istioCR, TestTemplateData, clusterconfig.ClusterConfiguration{})
+		mergedIstioOperatorPath, err := sut.Merge("test/wrong-operator.yaml", istioCR, clusterconfig.ClusterConfiguration{})
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -78,12 +70,11 @@ var _ = Describe("Manifest merge", func() {
 
 	It("should return merged configuration, when there is a Istio CR with valid configuration and a correct Istio Operator manifest", func() {
 		// given
-		sut := IstioMerger{
-			workingDir: workingDir,
-		}
+		sut := IstioMerger{workingDir}
+		readFileHandle = os.ReadFile
 
 		// when
-		mergedIstioOperatorPath, err := sut.Merge("test/test-operator.yaml", istioCR, TestTemplateData, clusterconfig.ClusterConfiguration{})
+		mergedIstioOperatorPath, err := sut.Merge("test/test-operator.yaml", istioCR, clusterconfig.ClusterConfiguration{})
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -95,27 +86,6 @@ var _ = Describe("Manifest merge", func() {
 			GetStructValue().Fields["gatewayTopology"].GetStructValue().Fields["numTrustedProxies"].GetNumberValue()
 
 		Expect(numTrustedProxies).To(Equal(float64(4)))
-		err = os.Remove(mergedIstioOperatorPath)
-		Expect(err).ShouldNot(HaveOccurred())
-	})
-
-	It("should return merged configuration, with IstioVersion, IstioImageBase and ModuleVersion coming from template", func() {
-		// given
-		sut := IstioMerger{
-			workingDir: workingDir,
-		}
-
-		// when
-		mergedIstioOperatorPath, err := sut.Merge("test/template-operator.yaml", istioCR, TestTemplateData, clusterconfig.ClusterConfiguration{})
-
-		// then
-		Expect(err).ShouldNot(HaveOccurred())
-		Expect(mergedIstioOperatorPath).To(Equal(path.Join(workingDir, mergedIstioOperatorFile)))
-
-		iop := readIOP(mergedIstioOperatorPath)
-		Expect(iop.Spec.Tag.GetStringValue()).To(Equal("1.16.1-distroless"))
-		Expect(iop.GetLabels()).ToNot(BeNil())
-		Expect(iop.GetLabels()).To(HaveKeyWithValue("app.kubernetes.io/version", "dev"))
 		err = os.Remove(mergedIstioOperatorPath)
 		Expect(err).ShouldNot(HaveOccurred())
 	})
@@ -139,12 +109,11 @@ var _ = Describe("Manifest merge", func() {
 			},
 		}
 
-		sut := IstioMerger{
-			workingDir: workingDir,
-		}
+		sut := IstioMerger{workingDir}
+		readFileHandle = os.ReadFile
 
 		// when
-		mergedIstioOperatorPath, err := sut.Merge("test/test-operator.yaml", istioCR, TestTemplateData, clusterconfig)
+		mergedIstioOperatorPath, err := sut.Merge("test/test-operator.yaml", istioCR, clusterconfig)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -170,10 +139,12 @@ var _ = Describe("Manifest merge", func() {
 	})
 })
 
-func readIOP(istioOperatorFilePath string) istioOperator.IstioOperator {
-	iop := istioOperator.IstioOperator{}
-	manifest, err := os.ReadFile(istioOperatorFilePath)
+func readIOP(iopv1alpha1FilePath string) iopv1alpha1.IstioOperator {
+	iop := iopv1alpha1.IstioOperator{}
+
+	manifest, err := os.ReadFile(iopv1alpha1FilePath)
 	Expect(err).ShouldNot(HaveOccurred())
+
 	err = yaml.Unmarshal(manifest, &iop)
 	Expect(err).ShouldNot(HaveOccurred())
 

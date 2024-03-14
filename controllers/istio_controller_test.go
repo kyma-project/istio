@@ -3,8 +3,9 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/istio/operator/internal/restarter"
 	"time"
+
+	"github.com/kyma-project/istio/operator/internal/restarter"
 
 	"k8s.io/utils/ptr"
 
@@ -32,7 +33,7 @@ const (
 
 var _ = Describe("Istio Controller", func() {
 	Context("Reconcile", func() {
-		It("Should fail to reconcile Istio CR in different than kyma-system namespace and set error state", func() {
+		It("should fail to reconcile Istio CR in different than kyma-system namespace and set error state", func() {
 			//given
 			numTrustedProxies := 1
 			istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
@@ -84,7 +85,7 @@ var _ = Describe("Istio Controller", func() {
 			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 		})
 
-		It("Should not return an error when CR was not found", func() {
+		It("should not return an error when CR was not found", func() {
 			// given
 			apiClient := createFakeClient()
 
@@ -107,7 +108,7 @@ var _ = Describe("Istio Controller", func() {
 			Expect(result).Should(Equal(reconcile.Result{}))
 		})
 
-		It("Should call update status to processing when CR is not deleted", func() {
+		It("should call update status to processing when CR is not deleted", func() {
 			// given
 			istioCR := &operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{
@@ -139,7 +140,7 @@ var _ = Describe("Istio Controller", func() {
 			Expect(statusMock.updatedToProcessingCalled).Should(BeTrue())
 		})
 
-		It("Should return an error when update status to processing failed", func() {
+		It("should return an error when update status to processing failed", func() {
 			// given
 			istioCR := &operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{
@@ -173,7 +174,7 @@ var _ = Describe("Istio Controller", func() {
 			Expect(statusMock.updatedToProcessingCalled).Should(BeTrue())
 		})
 
-		It("Should call update status to deleting when CR is deleted", func() {
+		It("should call update status to deleting when CR is deleted", func() {
 			// given
 			istioCR := &operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{
@@ -207,7 +208,7 @@ var _ = Describe("Istio Controller", func() {
 			Expect(statusMock.updatedToDeletingCalled).Should(BeTrue())
 		})
 
-		It("Should return an error when update status to deleting failed", func() {
+		It("should return an error when update status to deleting failed", func() {
 			// given
 			istioCR := &operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{
@@ -245,7 +246,7 @@ var _ = Describe("Istio Controller", func() {
 			Expect(statusMock.updatedToDeletingCalled).Should(BeTrue())
 		})
 
-		It("Should not requeue a CR without finalizers, because it's considered to be in deletion", func() {
+		It("should not requeue a CR without finalizers, because it's considered to be in deletion", func() {
 			// given
 			istioCR := &operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{
@@ -275,7 +276,7 @@ var _ = Describe("Istio Controller", func() {
 			Expect(result).Should(Equal(reconcile.Result{}))
 		})
 
-		It("Should set Ready status, update lastAppliedConfiguration annotation and requeue when successfully reconciled", func() {
+		It("should set Ready status, update lastAppliedConfiguration annotation and requeue when successfully reconciled", func() {
 			// given
 			istioCR := &operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{
@@ -327,7 +328,7 @@ var _ = Describe("Istio Controller", func() {
 			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionTrue))
 		})
 
-		It("Should return an error when update status to ready failed", func() {
+		It("should return an error when update status to ready failed", func() {
 			// given
 			istioCR := &operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{
@@ -368,7 +369,7 @@ var _ = Describe("Istio Controller", func() {
 			}))
 		})
 
-		It("Should set error status and return an error when Istio installation reconciliation failed", func() {
+		It("should set error status and return an error when Istio installation reconciliation failed", func() {
 			// given
 			istioCR := &operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{
@@ -418,7 +419,7 @@ var _ = Describe("Istio Controller", func() {
 			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 		})
 
-		It("Should set error status and return an error when proxy sidecar reconciliation failed", func() {
+		It("should set error status and return an error when proxy sidecar reconciliation failed", func() {
 			// given
 			istioCR := &operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{
@@ -463,7 +464,7 @@ var _ = Describe("Istio Controller", func() {
 			Expect(updatedIstioCR.Status.Description).To(ContainSubstring("Error occurred during reconciliation of Istio Sidecars"))
 		})
 
-		It("Should set ready status when successfully reconciled oldest Istio CR", func() {
+		It("should set ready status when successfully reconciled oldest Istio CR", func() {
 			// given
 			oldestIstioCR := &operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{
@@ -524,7 +525,7 @@ var _ = Describe("Istio Controller", func() {
 			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionTrue))
 		})
 
-		It("Should set an warning status and do not requeue an Istio CR when an older Istio CR is present", func() {
+		It("should set an warning status and do not requeue an Istio CR when an older Istio CR is present", func() {
 			// given
 			oldestIstioCR := &operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{
@@ -579,7 +580,7 @@ var _ = Describe("Istio Controller", func() {
 			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 		})
 
-		It("Should set an error status and requeue an Istio CR when is unable to list Istio CRs", func() {
+		It("should set an error status and requeue an Istio CR when is unable to list Istio CRs", func() {
 			// given
 			istioCR := &operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{
@@ -623,7 +624,7 @@ var _ = Describe("Istio Controller", func() {
 			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 		})
 
-		It("Should set a warning if authorizer name is not unique", func() {
+		It("should set a warning if authorizer name is not unique", func() {
 			// given
 			istioCR := &operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{
@@ -916,7 +917,7 @@ var _ = Describe("Istio Controller", func() {
 				Expect(updatedIstioCR.Status.State).To(Equal(operatorv1alpha2.Error))
 			})
 
-			It("Should set status to warning if warning happened during restart", func() {
+			It("should set status to warning if warning happened during restart", func() {
 				// given
 				istioCR := &operatorv1alpha2.Istio{
 					ObjectMeta: metav1.ObjectMeta{
@@ -1007,6 +1008,10 @@ type istioInstallationReconciliationMock struct {
 
 func (i *istioInstallationReconciliationMock) Reconcile(_ context.Context, _ *operatorv1alpha2.Istio, _ status.Status, _ string) described_errors.DescribedError {
 	return i.err
+}
+
+func (i *istioInstallationReconciliationMock) GetIstioTag() string {
+	return "1.0.0-distroless"
 }
 
 type StatusMock struct {

@@ -19,18 +19,16 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/istio/operator/internal/restarter"
 	"github.com/kyma-project/istio/operator/internal/validation"
 	"net/http"
 	"time"
 
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
-	"github.com/kyma-project/istio/operator/pkg/lib/sidecars"
-	"github.com/pkg/errors"
-
 	"github.com/kyma-project/istio/operator/internal/filter"
+	"github.com/kyma-project/istio/operator/pkg/lib/sidecars"
 
 	"github.com/kyma-project/istio/operator/internal/described_errors"
-	"github.com/kyma-project/istio/operator/internal/reconciliations/ingress_gateway"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio_resources"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"k8s.io/client-go/util/retry"
@@ -39,7 +37,6 @@ import (
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
-	"github.com/kyma-project/istio/operator/internal/reconciliations/proxy"
 	"golang.org/x/time/rate"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -66,16 +63,20 @@ func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *I
 	merger := manifest.NewDefaultIstioMerger()
 
 	efReferer := istio_resources.NewEnvoyFilterAllowPartialReferer(mgr.GetClient())
+	statusHandler := status.NewStatusHandler(mgr.GetClient())
+	restarters := []restarter.Restarter{
+		restarter.NewIngressGatewayRestarter(mgr.GetClient(), []filter.IngressGatewayPredicate{efReferer}, statusHandler),
+		restarter.NewSidecarsRestarter(IstioVersion, IstioImageBase, mgr.GetLogger(), mgr.GetClient(), &merger, sidecars.NewProxyResetter(), []filter.SidecarProxyPredicate{efReferer}, statusHandler),
+	}
 
 	return &IstioReconciler{
 		Client:                 mgr.GetClient(),
 		Scheme:                 mgr.GetScheme(),
 		istioInstallation:      &istio.Installation{Client: mgr.GetClient(), IstioClient: istio.NewIstioClient(), IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Merger: &merger},
-		proxySidecars:          proxy.NewReconciler(IstioVersion, IstioImageBase, mgr.GetLogger(), mgr.GetClient(), &merger, sidecars.NewProxyResetter(), []filter.SidecarProxyPredicate{efReferer}),
 		istioResources:         istio_resources.NewReconciler(mgr.GetClient(), clusterconfig.NewHyperscalerClient(&http.Client{Timeout: 1 * time.Second})),
-		ingressGateway:         ingress_gateway.NewReconciler(mgr.GetClient(), []filter.IngressGatewayPredicate{efReferer}),
+		restarters:             restarters,
 		log:                    mgr.GetLogger(),
-		statusHandler:          status.NewStatusHandler(mgr.GetClient()),
+		statusHandler:          statusHandler,
 		reconciliationInterval: reconciliationInterval,
 	}
 }
@@ -152,26 +153,15 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return r.requeueReconciliation(ctx, &istioCR, resourcesErr, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonCRsReconcileFailed))
 	}
 
-	// We do not want to safeguard the Istio sidecar reconciliation by checking whether Istio has to be installed. The
-	// reason for this is that we want to guarantee the restart of the proxies during the next reconciliation even if an
-	// error occurs in the reconciliation of the Istio upgrade after the Istio upgrade.
-	warningMessage, proxyErr := r.proxySidecars.Reconcile(ctx, istioCR)
-	if proxyErr != nil {
-		describedErr := described_errors.NewDescribedError(proxyErr, "Error occurred during reconciliation of Istio Sidecars")
-		return r.requeueReconciliation(ctx, &istioCR, describedErr, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonProxySidecarRestartFailed))
-	} else if warningMessage != "" {
-		warning := described_errors.NewDescribedError(errors.New("Istio controller could not restart one or more istio-injected pods."), "Not all pods with Istio injection could be restarted. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning").SetWarning()
-		return r.requeueReconciliation(ctx, &istioCR, warning, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonProxySidecarManualRestartRequired, warningMessage))
+	if err := restarter.Restart(ctx, &istioCR, r.restarters); err != nil {
+		// We don't want to use the requeueReconciliation function here, since there is condition handling in this function, and we
+		// need to clean this up, before we can use it here as  conditions are already handled in the restarters.
+		statusUpdateErr := r.statusHandler.UpdateToError(ctx, &istioCR, err)
+		if statusUpdateErr != nil {
+			r.log.Error(statusUpdateErr, "Error during updating status to error")
+		}
+		return ctrl.Result{}, err
 	}
-
-	r.statusHandler.SetCondition(&istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonProxySidecarRestartSucceeded))
-
-	ingressGatewayErr := r.ingressGateway.Reconcile(ctx)
-	if ingressGatewayErr != nil {
-		return r.requeueReconciliation(ctx, &istioCR, ingressGatewayErr, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIngressGatewayReconcileFailed))
-	}
-
-	r.statusHandler.SetCondition(&istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIngressGatewayReconcileSucceeded))
 
 	return r.finishReconcile(ctx, &istioCR, IstioTag)
 }

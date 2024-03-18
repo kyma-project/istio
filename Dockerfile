@@ -16,7 +16,6 @@ COPY main.go main.go
 COPY api/ api/
 COPY controllers/ controllers/
 COPY internal/ internal/
-COPY manifests/ manifests/
 COPY pkg/ pkg/
 
 # Build
@@ -32,7 +31,6 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH:-amd64} go build -
 FROM gcr.io/distroless/static:nonroot
 WORKDIR /
 COPY --from=builder /workspace/manager .
-COPY --from=builder /workspace/manifests/ manifests
 
 USER 65532:65532
 

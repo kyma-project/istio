@@ -11,7 +11,6 @@ import (
 	iopv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
-	networkingv1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
 	securityv1beta1 "istio.io/client-go/pkg/apis/security/v1beta1"
 	telemetryv1alpha1 "istio.io/client-go/pkg/apis/telemetry/v1alpha1"
 	iopapis "istio.io/istio/operator/pkg/apis"
@@ -114,11 +113,6 @@ func createK8sClient() client.Client {
 	}
 
 	err = networkingv1alpha3.AddToScheme(c.Scheme())
-	if err != nil {
-		panic(err)
-	}
-
-	err = networkingv1beta1.AddToScheme(c.Scheme())
 	if err != nil {
 		panic(err)
 	}

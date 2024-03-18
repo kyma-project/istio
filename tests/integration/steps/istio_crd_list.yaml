@@ -3,7 +3,6 @@ CRDList:
   - "destinationrules.networking.istio.io"
   - "envoyfilters.networking.istio.io"
   - "gateways.networking.istio.io"
-  - "istiooperators.install.istio.io"
   - "peerauthentications.security.istio.io"
   - "proxyconfigs.networking.istio.io"
   - "requestauthentications.security.istio.io"

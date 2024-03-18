@@ -42,26 +42,40 @@ var _ = Describe("Manifest merge", func() {
 	}
 	workingDir := "test"
 
-	It("should return error when provided invalid path to default Istio Operator", func() {
+	It("should return error when provided invalid cluster size", func() {
 		// given
 		sut := IstioMerger{workingDir}
-		readFileHandle = os.ReadFile
 
 		// when
-		mergedIstioOperatorPath, err := sut.Merge("invalid/path.yaml", istioCR, clusterconfig.ClusterConfiguration{})
+		mergedIstioOperatorPath, err := sut.Merge(9, istioCR, clusterconfig.ClusterConfiguration{})
 
 		// then
 		Expect(err).Should(HaveOccurred())
 		Expect(mergedIstioOperatorPath).To(BeEmpty())
 	})
 
+	It("should return merged configuration, when there is a Istio CR with valid configuration and using production manifest", func() {
+		// given
+		sut := NewDefaultIstioMerger()
+
+		// when
+		mergedIstioOperatorPath, err := sut.Merge(clusterconfig.Production, istioCR, clusterconfig.ClusterConfiguration{})
+
+		// then
+		Expect(err).Should(Not(HaveOccurred()))
+		Expect(mergedIstioOperatorPath).To(Not(BeEmpty()))
+	})
+
 	It("should return error when provided misconfigured default Istio Operator", func() {
 		// given
 		sut := IstioMerger{workingDir}
-		readFileHandle = os.ReadFile
+		wrongOperator, err := os.ReadFile("test/wrong-operator.yaml")
+		productionOperator = wrongOperator
+		Expect(err).Should(Not(HaveOccurred()))
+		Expect(productionOperator).To(Not(BeEmpty()))
 
 		// when
-		mergedIstioOperatorPath, err := sut.Merge("test/wrong-operator.yaml", istioCR, clusterconfig.ClusterConfiguration{})
+		mergedIstioOperatorPath, err := sut.Merge(clusterconfig.Production, istioCR, clusterconfig.ClusterConfiguration{})
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -71,10 +85,13 @@ var _ = Describe("Manifest merge", func() {
 	It("should return merged configuration, when there is a Istio CR with valid configuration and a correct Istio Operator manifest", func() {
 		// given
 		sut := IstioMerger{workingDir}
-		readFileHandle = os.ReadFile
+		goodOperator, err := os.ReadFile("test/test-operator.yaml")
+		productionOperator = goodOperator
+		Expect(err).Should(Not(HaveOccurred()))
+		Expect(productionOperator).To(Not(BeEmpty()))
 
 		// when
-		mergedIstioOperatorPath, err := sut.Merge("test/test-operator.yaml", istioCR, clusterconfig.ClusterConfiguration{})
+		mergedIstioOperatorPath, err := sut.Merge(clusterconfig.Production, istioCR, clusterconfig.ClusterConfiguration{})
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -94,7 +111,7 @@ var _ = Describe("Manifest merge", func() {
 		// given
 		newCniBinDirPath := "overriden/path"
 
-		clusterconfig := map[string]interface{}{
+		clusterConfig := map[string]interface{}{
 			"spec": map[string]interface{}{
 				"components": map[string]interface{}{
 					"base": map[string]bool{
@@ -110,10 +127,12 @@ var _ = Describe("Manifest merge", func() {
 		}
 
 		sut := IstioMerger{workingDir}
-		readFileHandle = os.ReadFile
+		ProductionOperator, err := os.ReadFile("test/test-operator.yaml")
+		Expect(err).Should(Not(HaveOccurred()))
+		Expect(ProductionOperator).To(Not(BeEmpty()))
 
 		// when
-		mergedIstioOperatorPath, err := sut.Merge("test/test-operator.yaml", istioCR, clusterconfig)
+		mergedIstioOperatorPath, err := sut.Merge(clusterconfig.Production, istioCR, clusterConfig)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())

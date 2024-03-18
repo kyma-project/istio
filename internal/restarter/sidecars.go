@@ -45,10 +45,6 @@ func NewSidecarsRestarter(logger logr.Logger, client client.Client, merger manif
 	}
 }
 
-const (
-	imageRepository string = "europe-docker.pkg.dev/kyma-project/prod/external/istio/proxyv2"
-)
-
 // Restart runs Proxy Reset action, which checks if any of sidecars need a restart and proceed with rollout.
 func (s *SidecarsRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio) described_errors.DescribedError {
 	clusterSize, err := clusterconfig.EvaluateClusterSize(ctx, s.Client)
@@ -59,7 +55,7 @@ func (s *SidecarsRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio
 	}
 
 	ctrl.Log.Info("Istio proxy resetting with", "profile", clusterSize.String())
-	iop, err := s.Merger.GetIstioOperator(clusterSize.GetManifestPath())
+	iop, err := s.Merger.GetIstioOperator(clusterSize)
 	if err != nil {
 		s.Log.Error(err, "Failed to get IstioOperator")
 		s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarRestartFailed))

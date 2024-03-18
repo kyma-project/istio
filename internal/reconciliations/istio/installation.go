@@ -23,7 +23,7 @@ import (
 )
 
 type InstallationReconciliation interface {
-	Reconcile(ctx context.Context, istioCR *operatorv1alpha2.Istio, statusHandler status.Status, istioResourceListPath string) described_errors.DescribedError
+	Reconcile(ctx context.Context, istioCR *operatorv1alpha2.Istio, statusHandler status.Status) described_errors.DescribedError
 	GetIstioTag() string
 }
 
@@ -40,7 +40,7 @@ const (
 )
 
 // Reconcile runs Istio reconciliation to install, upgrade or uninstall Istio and returns the updated Istio CR.
-func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha2.Istio, statusHandler status.Status, istioResourceListPath string) described_errors.DescribedError {
+func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha2.Istio, statusHandler status.Status) described_errors.DescribedError {
 	version, prerelease, err := manifest.GetIstioVersion(i.Merger)
 	if err != nil {
 		ctrl.Log.Error(err, "Error getting Istio version from manifest")
@@ -78,7 +78,7 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha2.
 
 		ctrl.Log.Info("Installing Istio with", "profile", clusterSize.String())
 
-		mergedIstioOperatorPath, err := i.Merger.Merge(clusterSize.GetManifestPath(), istioCR, clusterConfiguration)
+		mergedIstioOperatorPath, err := i.Merger.Merge(clusterSize, istioCR, clusterConfiguration)
 		if err != nil {
 			statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonCustomResourceMisconfigured))
 			return described_errors.NewDescribedError(err, "Could not merge Istio operator configuration").SetCondition(false)
@@ -124,7 +124,7 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha2.
 	} else if shouldDelete(istioCR) && hasInstallationFinalizer(istioCR) {
 		ctrl.Log.Info("Starting Istio uninstall")
 
-		istioResourceFinder, err := resources.NewIstioResourcesFinderFromConfigYaml(ctx, i.Client, ctrl.Log, istioResourceListPath)
+		istioResourceFinder, err := resources.NewIstioResourcesFinder(ctx, i.Client, ctrl.Log)
 		if err != nil {
 			return described_errors.NewDescribedError(err, "Could not read customer resources finder configuration")
 		}

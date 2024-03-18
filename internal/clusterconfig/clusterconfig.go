@@ -11,15 +11,17 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+const (
+	ProductionClusterCpuThreshold      int64 = 5
+	ProductionClusterMemoryThresholdGi int64 = 10
+)
+
 type ClusterSize int
 
 const (
 	UnknownSize ClusterSize = iota
 	Evaluation
 	Production
-
-	ProductionClusterCpuThreshold      int64 = 5
-	ProductionClusterMemoryThresholdGi int64 = 10
 )
 
 func (s ClusterSize) String() string {
@@ -28,22 +30,6 @@ func (s ClusterSize) String() string {
 		return "Evaluation"
 	case Production:
 		return "Production"
-	default:
-		return "Unknown"
-	}
-}
-
-const (
-	ProductionManifestPath string = "manifests/istio-operator-template.yaml"
-	EvaluationManifestPath string = "manifests/istio-operator-template-light.yaml"
-)
-
-func (s ClusterSize) GetManifestPath() string {
-	switch s {
-	case Evaluation:
-		return EvaluationManifestPath
-	case Production:
-		return ProductionManifestPath
 	default:
 		return "Unknown"
 	}

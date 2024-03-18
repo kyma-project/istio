@@ -52,8 +52,7 @@ import (
 )
 
 const (
-	namespace                    = "kyma-system"
-	IstioResourceListDefaultPath = "manifests/controlled_resources_list.yaml"
+	namespace = "kyma-system"
 )
 
 func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *IstioReconciler {
@@ -133,7 +132,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		}
 	}
 
-	installationErr := r.istioInstallation.Reconcile(ctx, &istioCR, r.statusHandler, IstioResourceListDefaultPath)
+	installationErr := r.istioInstallation.Reconcile(ctx, &istioCR, r.statusHandler)
 	if installationErr != nil {
 		return r.requeueReconciliation(ctx, &istioCR, installationErr, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIstioInstallUninstallFailed))
 	}

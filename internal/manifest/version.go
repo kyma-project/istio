@@ -16,7 +16,7 @@ func GetModuleVersion() string {
 }
 
 func GetIstioVersion(merger Merger) (string, string, error) {
-	iop, err := merger.GetIstioOperator(clusterconfig.ProductionManifestPath)
+	iop, err := merger.GetIstioOperator(clusterconfig.Production)
 	if err != nil {
 		return "", "", err
 	}

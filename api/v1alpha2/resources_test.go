@@ -1,13 +1,14 @@
 package v1alpha2_test
 
 import (
+	"os"
+
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	operatorv1alpha1 "istio.io/api/operator/v1alpha1"
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	"k8s.io/utils/ptr"
-	"os"
 	"sigs.k8s.io/yaml"
 )
 
@@ -76,7 +77,7 @@ var _ = Describe("GetProxyResources", func() {
 
 	It("should be able to get resources from real istio operator template when IstioCR has no overrides", func() {
 		//given
-		manifest, err := os.ReadFile("../../manifests/istio-operator-template.yaml")
+		manifest, err := os.ReadFile("../../internal/manifest/istio-operator.yaml")
 		Expect(err).ShouldNot(HaveOccurred())
 
 		iop := iopv1alpha1.IstioOperator{}

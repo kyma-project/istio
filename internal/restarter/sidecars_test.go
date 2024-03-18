@@ -227,13 +227,13 @@ type MergerMock struct {
 	tag string
 }
 
-func (m MergerMock) Merge(_ string, _ *operatorv1alpha2.Istio, _ clusterconfig.ClusterConfiguration) (string, error) {
+func (m MergerMock) Merge(_ clusterconfig.ClusterSize, _ *operatorv1alpha2.Istio, _ clusterconfig.ClusterConfiguration) (string, error) {
 	return "mocked istio operator merge result", nil
 }
 
-func (m MergerMock) GetIstioOperator(_ string) (iopv1alpha1.IstioOperator, error) {
+func (m MergerMock) GetIstioOperator(_ clusterconfig.ClusterSize) (iopv1alpha1.IstioOperator, error) {
 	iop := iopv1alpha1.IstioOperator{}
-	manifest, err := os.ReadFile("../../manifests/istio-operator-template.yaml")
+	manifest, err := os.ReadFile("../../internal/manifest/istio-operator.yaml")
 	if err == nil {
 		err = yaml.Unmarshal(manifest, &iop)
 	}

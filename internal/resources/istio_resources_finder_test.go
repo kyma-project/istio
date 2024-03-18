@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/go-logr/logr"
@@ -103,9 +104,13 @@ var _ = Describe("Resources", func() {
 		))
 })
 
-var _ = Describe("NewIstioResourcesFinderFromConfigYaml", func() {
+var _ = Describe("NewIstioResourcesFinder", func() {
 	It("should read configuration from yaml", func() {
-		config, err := NewIstioResourcesFinderFromConfigYaml(context.TODO(), nil, logr.Logger{}, "test_files/test_resources_list.yaml")
+		goodResourceList, err := os.ReadFile("test_files/test_resources_list.yaml")
+		controlledResourcesList = goodResourceList
+		Expect(err).ToNot(HaveOccurred())
+		Expect(controlledResourcesList).ToNot(BeEmpty())
+		config, err := NewIstioResourcesFinder(context.TODO(), nil, logr.Logger{})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(config).To(BeEquivalentTo(&IstioResourcesFinder{
 			ctx:    context.TODO(),
@@ -133,7 +138,11 @@ var _ = Describe("NewIstioResourcesFinderFromConfigYaml", func() {
 	})
 
 	It("should fail if the configuration contains invalid regex", func() {
-		_, err := NewIstioResourcesFinderFromConfigYaml(context.TODO(), nil, logr.Logger{}, "test_files/test_wrong_resources_list.yaml")
+		wrongResourceList, err := os.ReadFile("test_files/test_wrong_resources_list.yaml")
+		controlledResourcesList = wrongResourceList
+		Expect(err).ToNot(HaveOccurred())
+		Expect(controlledResourcesList).ToNot(BeEmpty())
+		_, err = NewIstioResourcesFinder(context.TODO(), nil, logr.Logger{})
 		Expect(err).To(HaveOccurred())
 	})
 })

@@ -1006,7 +1006,7 @@ type istioInstallationReconciliationMock struct {
 	err described_errors.DescribedError
 }
 
-func (i *istioInstallationReconciliationMock) Reconcile(_ context.Context, _ *operatorv1alpha2.Istio, _ status.Status, _ string) described_errors.DescribedError {
+func (i *istioInstallationReconciliationMock) Reconcile(_ context.Context, _ *operatorv1alpha2.Istio, _ status.Status) described_errors.DescribedError {
 	return i.err
 }
 

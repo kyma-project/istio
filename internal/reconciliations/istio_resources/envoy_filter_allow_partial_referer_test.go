@@ -57,7 +57,7 @@ var _ = Describe("Apply", func() {
 	It("should return not changed and annotate with timestamp if no change is needed", func() {
 		//given
 		var filter networkingv1alpha3.EnvoyFilter
-		err := yaml.Unmarshal(manifest_ef_allow_partial_referer, &filter)
+		err := yaml.Unmarshal(efAllowPartialReferer, &filter)
 		Expect(err).To(Not(HaveOccurred()))
 
 		client := createFakeClient(&filter)
@@ -84,7 +84,7 @@ var _ = Describe("Apply", func() {
 	It("should return updated and annotate with timestamp if change is needed", func() {
 		//given
 		var filter networkingv1alpha3.EnvoyFilter
-		err := yaml.Unmarshal(manifest_ef_allow_partial_referer, &filter)
+		err := yaml.Unmarshal(efAllowPartialReferer, &filter)
 		Expect(err).To(Not(HaveOccurred()))
 
 		filter.Spec.Priority = 2

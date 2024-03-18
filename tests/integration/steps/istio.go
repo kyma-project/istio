@@ -19,7 +19,6 @@ import (
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	crds "github.com/kyma-project/istio/operator/tests/integration/pkg/crds"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
-	"github.com/mitchellh/mapstructure"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -136,16 +135,11 @@ func getResourcesForComponent(k8sClient client.Client, component, resourceType s
 		}
 
 		if resourceType == "limits" {
-
-			err := mapstructure.Decode(igDeployment.Spec.Template.Spec.Containers[0].Resources.Limits, &res)
-			if err != nil {
-				return nil, err
-			}
+			res.Memory = igDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Memory().String()
+			res.Cpu = igDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu().String()
 		} else {
-			err := mapstructure.Decode(igDeployment.Spec.Template.Spec.Containers[0].Resources.Requests, &res)
-			if err != nil {
-				return nil, err
-			}
+			res.Memory = igDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String()
+			res.Cpu = igDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu().String()
 		}
 
 		return &res, nil
@@ -170,16 +164,11 @@ func getResourcesForComponent(k8sClient client.Client, component, resourceType s
 		}
 
 		if resourceType == "limits" {
-
-			err := mapstructure.Decode(idDeployment.Spec.Template.Spec.Containers[0].Resources.Limits, &res)
-			if err != nil {
-				return nil, err
-			}
+			res.Memory = idDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Memory().String()
+			res.Cpu = idDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu().String()
 		} else {
-			err := mapstructure.Decode(idDeployment.Spec.Template.Spec.Containers[0].Resources.Requests, &res)
-			if err != nil {
-				return nil, err
-			}
+			res.Memory = idDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String()
+			res.Cpu = idDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu().String()
 		}
 
 		return &res, nil

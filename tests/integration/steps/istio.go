@@ -2,8 +2,9 @@ package steps
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"github.com/pkg/errors"
+	appsv1 "k8s.io/api/apps/v1"
 	"strings"
 
 	apinetworkingv1alpha3 "istio.io/api/networking/v1alpha3"
@@ -83,11 +84,7 @@ func IstioComponentHasResourcesSetToCpuAndMemory(ctx context.Context, component,
 		return err
 	}
 
-	operator, err := getIstioOperatorFromCluster(k8sClient)
-	if err != nil {
-		return err
-	}
-	resources, err := getResourcesForComponent(operator, component, resourceType)
+	resources, err := getResourcesForComponent(k8sClient, component, resourceType)
 	if err != nil {
 		return err
 	}
@@ -125,32 +122,40 @@ type ResourceStruct struct {
 	Memory string
 }
 
-func getResourcesForComponent(operator *istioOperator.IstioOperator, component, resourceType string) (*ResourceStruct, error) {
+func getResourcesForComponent(k8sClient client.Client, component, resourceType string) (*ResourceStruct, error) {
 	res := ResourceStruct{}
 
 	switch component {
 	case "proxy_init":
 		fallthrough
 	case "proxy":
-		jsonResources, err := json.Marshal(operator.Spec.Values.Fields["global"].GetStructValue().Fields[component].GetStructValue().
-			Fields["resources"].GetStructValue().Fields[resourceType].GetStructValue())
-
-		if err != nil {
-			return nil, err
-		}
-		err = json.Unmarshal(jsonResources, &res)
-		if err != nil {
-			return nil, err
-		}
-		return &res, nil
+		//		jsonResources, err := json.Marshal(operator.Spec.Values.Fields["global"].GetStructValue().Fields[component].GetStructValue().
+		//			Fields["resources"].GetStructValue().Fields[resourceType].GetStructValue())
+		//
+		//		if err != nil {
+		//			return nil, err
+		//		}
+		//		err = json.Unmarshal(jsonResources, &res)
+		//		if err != nil {
+		//			return nil, err
+		//		}
+		//		return &res, nil
+		return nil, errors.New("Proxy resources are not implemented")
 	case "ingress-gateway":
+		var igDeployment appsv1.Deployment
+		err := k8sClient.Get(context.Background(), types.NamespacedName{Name: "istio-ingressgateway", Namespace: defaultIopNamespace}, &igDeployment)
+		if err != nil {
+			return nil, err
+		}
+
 		if resourceType == "limits" {
-			err := mapstructure.Decode(operator.Spec.Components.IngressGateways[0].K8S.Resources.Limits, &res)
+
+			err := mapstructure.Decode(igDeployment.Spec.Template.Spec.Containers[0].Resources.Limits, &res)
 			if err != nil {
 				return nil, err
 			}
 		} else {
-			err := mapstructure.Decode(operator.Spec.Components.IngressGateways[0].K8S.Resources.Requests, &res)
+			err := mapstructure.Decode(igDeployment.Spec.Template.Spec.Containers[0].Resources.Requests, &res)
 			if err != nil {
 				return nil, err
 			}
@@ -158,30 +163,38 @@ func getResourcesForComponent(operator *istioOperator.IstioOperator, component, 
 
 		return &res, nil
 	case "egress-gateway":
-		if resourceType == "limits" {
-			err := mapstructure.Decode(operator.Spec.Components.EgressGateways[0].K8S.Resources.Limits, &res)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			err := mapstructure.Decode(operator.Spec.Components.EgressGateways[0].K8S.Resources.Requests, &res)
-			if err != nil {
-				return nil, err
-			}
-		}
-		return &res, nil
+		//		if resourceType == "limits" {
+		//			err := mapstructure.Decode(operator.Spec.Components.EgressGateways[0].K8S.Resources.Limits, &res)
+		//			if err != nil {
+		//				return nil, err
+		//			}
+		//		} else {
+		//			err := mapstructure.Decode(operator.Spec.Components.EgressGateways[0].K8S.Resources.Requests, &res)
+		//			if err != nil {
+		//				return nil, err
+		//			}
+		//		}
+		return nil, errors.New("Egress gateway resources are not implemented")
 	case "pilot":
+		var idDeployment appsv1.Deployment
+		err := k8sClient.Get(context.Background(), types.NamespacedName{Name: "istiod", Namespace: defaultIopNamespace}, &idDeployment)
+		if err != nil {
+			return nil, err
+		}
+
 		if resourceType == "limits" {
-			err := mapstructure.Decode(operator.Spec.Components.Pilot.K8S.Resources.Limits, &res)
+
+			err := mapstructure.Decode(idDeployment.Spec.Template.Spec.Containers[0].Resources.Limits, &res)
 			if err != nil {
 				return nil, err
 			}
 		} else {
-			err := mapstructure.Decode(operator.Spec.Components.Pilot.K8S.Resources.Requests, &res)
+			err := mapstructure.Decode(idDeployment.Spec.Template.Spec.Containers[0].Resources.Requests, &res)
 			if err != nil {
 				return nil, err
 			}
 		}
+
 		return &res, nil
 	default:
 		return nil, godog.ErrPending

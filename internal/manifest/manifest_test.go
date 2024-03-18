@@ -44,7 +44,7 @@ var _ = Describe("Manifest merge", func() {
 
 	It("should return error when provided invalid cluster size", func() {
 		// given
-		sut := IstioMerger{workingDir}
+		sut := NewDefaultIstioMerger()
 
 		// when
 		mergedIstioOperatorPath, err := sut.Merge(9, istioCR, clusterconfig.ClusterConfiguration{})
@@ -68,11 +68,10 @@ var _ = Describe("Manifest merge", func() {
 
 	It("should return error when provided misconfigured default Istio Operator", func() {
 		// given
-		sut := IstioMerger{workingDir}
 		wrongOperator, err := os.ReadFile("test/wrong-operator.yaml")
-		productionOperator = wrongOperator
 		Expect(err).Should(Not(HaveOccurred()))
-		Expect(productionOperator).To(Not(BeEmpty()))
+
+		sut := IstioMerger{workingDir, ManifestGetterMock{wrongOperator}}
 
 		// when
 		mergedIstioOperatorPath, err := sut.Merge(clusterconfig.Production, istioCR, clusterconfig.ClusterConfiguration{})
@@ -84,11 +83,10 @@ var _ = Describe("Manifest merge", func() {
 
 	It("should return merged configuration, when there is a Istio CR with valid configuration and a correct Istio Operator manifest", func() {
 		// given
-		sut := IstioMerger{workingDir}
 		goodOperator, err := os.ReadFile("test/test-operator.yaml")
-		productionOperator = goodOperator
 		Expect(err).Should(Not(HaveOccurred()))
-		Expect(productionOperator).To(Not(BeEmpty()))
+
+		sut := IstioMerger{workingDir, ManifestGetterMock{goodOperator}}
 
 		// when
 		mergedIstioOperatorPath, err := sut.Merge(clusterconfig.Production, istioCR, clusterconfig.ClusterConfiguration{})
@@ -126,10 +124,10 @@ var _ = Describe("Manifest merge", func() {
 			},
 		}
 
-		sut := IstioMerger{workingDir}
-		ProductionOperator, err := os.ReadFile("test/test-operator.yaml")
+		goodOperator, err := os.ReadFile("test/test-operator.yaml")
 		Expect(err).Should(Not(HaveOccurred()))
-		Expect(ProductionOperator).To(Not(BeEmpty()))
+
+		sut := IstioMerger{workingDir, ManifestGetterMock{goodOperator}}
 
 		// when
 		mergedIstioOperatorPath, err := sut.Merge(clusterconfig.Production, istioCR, clusterConfig)
@@ -168,4 +166,12 @@ func readIOP(iopv1alpha1FilePath string) iopv1alpha1.IstioOperator {
 	Expect(err).ShouldNot(HaveOccurred())
 
 	return iop
+}
+
+type ManifestGetterMock struct {
+	manifest []byte
+}
+
+func (m ManifestGetterMock) GetBytes(_ clusterconfig.ClusterSize) ([]byte, error) {
+	return m.manifest, nil
 }

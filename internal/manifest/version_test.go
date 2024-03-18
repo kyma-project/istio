@@ -2,14 +2,9 @@ package manifest
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/coreos/go-semver/semver"
-	"google.golang.org/protobuf/types/known/structpb"
-	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
-	"sigs.k8s.io/yaml"
 
-	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -64,21 +59,3 @@ var _ = Describe("GetIstioVersion", func() {
 		Expect(prodVersion.Equal(*evalVersion)).To(BeTrue())
 	})
 })
-
-type MergerMock struct {
-	tag string
-}
-
-func (m MergerMock) Merge(_ clusterconfig.ClusterSize, _ *operatorv1alpha2.Istio, _ clusterconfig.ClusterConfiguration) (string, error) {
-	return "mocked istio operator merge result", nil
-}
-
-func (m MergerMock) GetIstioOperator(_ clusterconfig.ClusterSize) (iopv1alpha1.IstioOperator, error) {
-	iop := iopv1alpha1.IstioOperator{}
-	manifest, err := os.ReadFile("istio-operator.yaml")
-	if err == nil {
-		err = yaml.Unmarshal(manifest, &iop)
-	}
-	iop.Spec.Tag = structpb.NewStringValue(m.tag)
-	return iop, err
-}

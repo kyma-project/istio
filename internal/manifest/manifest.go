@@ -29,13 +29,33 @@ type Merger interface {
 	GetIstioOperator(clusterSize clusterconfig.ClusterSize) (iopv1alpha1.IstioOperator, error)
 }
 
+type ManifestGetter interface {
+	GetBytes(clusterSize clusterconfig.ClusterSize) ([]byte, error)
+}
+
+type ManifestGetterImpl struct {
+}
+
+func (m *ManifestGetterImpl) GetBytes(clusterSize clusterconfig.ClusterSize) ([]byte, error) {
+	switch clusterSize {
+	case clusterconfig.Production:
+		return productionOperator, nil
+	case clusterconfig.Evaluation:
+		return evaluationOperator, nil
+	default:
+		return nil, errors.New("unsupported cluster size")
+	}
+}
+
 type IstioMerger struct {
-	workingDir string
+	workingDir     string
+	manifestGetter ManifestGetter
 }
 
 func NewDefaultIstioMerger() IstioMerger {
 	return IstioMerger{
-		workingDir: workingDir,
+		workingDir:     workingDir,
+		manifestGetter: &ManifestGetterImpl{},
 	}
 }
 
@@ -61,17 +81,12 @@ func (m *IstioMerger) Merge(clusterSize clusterconfig.ClusterSize, istioCR *oper
 }
 
 func (m *IstioMerger) GetIstioOperator(clusterSize clusterconfig.ClusterSize) (iopv1alpha1.IstioOperator, error) {
-	var manifest []byte
-	switch clusterSize {
-	case clusterconfig.Production:
-		manifest = productionOperator
-	case clusterconfig.Evaluation:
-		manifest = evaluationOperator
-	default:
-		return iopv1alpha1.IstioOperator{}, errors.New("unsupported cluster size;")
+	manifest, err := m.manifestGetter.GetBytes(clusterSize)
+	if err != nil {
+		return iopv1alpha1.IstioOperator{}, err
 	}
 	toBeInstalledIop := iopv1alpha1.IstioOperator{}
-	err := yaml.Unmarshal(manifest, &toBeInstalledIop)
+	err = yaml.Unmarshal(manifest, &toBeInstalledIop)
 	if err != nil {
 		return iopv1alpha1.IstioOperator{}, err
 	}

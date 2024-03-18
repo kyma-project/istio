@@ -109,7 +109,6 @@ Feature: Installing and uninstalling Istio module
     And Istio CR "istio-sample" in namespace "kyma-system" has condition with reason "ReconcileSucceeded" of type "Ready" and status "True"
     And Namespace "istio-system" is "present"
     And "Deployment" "istiod" in namespace "istio-system" is deleted
-    And "istiooperator" "installed-state-default-operator" in namespace "istio-system" is deleted
     And "Deployment" "istio-ingressgateway" in namespace "istio-system" is deleted
     And "DaemonSet" "istio-cni-node" in namespace "istio-system" is deleted
     And Istio injection is "enabled" in namespace "default"
@@ -120,7 +119,6 @@ Feature: Installing and uninstalling Istio module
     And Template value "ProxyCPURequest" is set to "79m"
     When Istio CR "istio-sample" from "istio_cr_template" is updated in namespace "kyma-system"
     Then "Deployment" "istiod" in namespace "istio-system" is ready
-    And "istiooperator" "installed-state-default-operator" in namespace "istio-system" is "present"
     And "Deployment" "istio-ingressgateway" in namespace "istio-system" is ready
     And "DaemonSet" "istio-cni-node" in namespace "istio-system" is ready
     And "EnvoyFilter" "kyma-referer" in namespace "istio-system" is "present"

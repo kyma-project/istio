@@ -135,11 +135,11 @@ func getResourcesForComponent(k8sClient client.Client, component, resourceType s
 		}
 
 		if resourceType == "limits" {
-			res.Memory = fmt.Sprintf("%dm", igDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Memory().MilliValue())
-			res.Cpu = fmt.Sprintf("%dm", igDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu().MilliValue())
+			res.Memory = igDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Memory().String()
+			res.Cpu = igDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu().String()
 		} else {
-			res.Memory = fmt.Sprintf("%dm", igDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().MilliValue())
-			res.Cpu = fmt.Sprintf("%dm", igDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu().MilliValue())
+			res.Memory = igDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String()
+			res.Cpu = igDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu().String()
 		}
 
 		return &res, nil
@@ -164,11 +164,11 @@ func getResourcesForComponent(k8sClient client.Client, component, resourceType s
 		}
 
 		if resourceType == "limits" {
-			res.Memory = fmt.Sprintf("%dm", idDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Memory().MilliValue())
-			res.Cpu = fmt.Sprintf("%dm", idDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu().MilliValue())
+			res.Memory = idDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Memory().String()
+			res.Cpu = idDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu().String()
 		} else {
-			res.Memory = fmt.Sprintf("%dm", idDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().MilliValue())
-			res.Cpu = fmt.Sprintf("%dm", idDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu().MilliValue())
+			res.Memory = idDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String()
+			res.Cpu = idDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu().String()
 		}
 
 		return &res, nil

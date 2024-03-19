@@ -19,7 +19,7 @@ Feature: Installing and uninstalling Istio module
     #And "proxy_init" has "requests" set to cpu - "10m" and memory - "10Mi"
     #And "proxy_init" has "limits" set to cpu - "100m" and memory - "50Mi"
     And "pilot" has "requests" set to cpu - "100m" and memory - "512Mi"
-    And "pilot" has "limits" set to cpu - "4000m" and memory - "2Gi"
+    And "pilot" has "limits" set to cpu - "4000m" and memory - "2048Mi"
     #And "egress-gateway" has "requests" set to cpu - "10m" and memory - "120Mi"
     #And "egress-gateway" has "limits" set to cpu - "2000m" and memory - "1024Mi"
 

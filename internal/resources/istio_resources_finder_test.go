@@ -107,10 +107,9 @@ var _ = Describe("Resources", func() {
 var _ = Describe("NewIstioResourcesFinder", func() {
 	It("should read configuration from yaml", func() {
 		goodResourceList, err := os.ReadFile("test_files/test_resources_list.yaml")
-		controlledResourcesList = goodResourceList
 		Expect(err).ToNot(HaveOccurred())
-		Expect(controlledResourcesList).ToNot(BeEmpty())
-		config, err := NewIstioResourcesFinder(context.TODO(), nil, logr.Logger{})
+
+		config, err := NewIstioResourcesFinder(context.TODO(), nil, logr.Logger{}, ControlledListGetterMock{goodResourceList})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(config).To(BeEquivalentTo(&IstioResourcesFinder{
 			ctx:    context.TODO(),
@@ -139,10 +138,10 @@ var _ = Describe("NewIstioResourcesFinder", func() {
 
 	It("should fail if the configuration contains invalid regex", func() {
 		wrongResourceList, err := os.ReadFile("test_files/test_wrong_resources_list.yaml")
-		controlledResourcesList = wrongResourceList
 		Expect(err).ToNot(HaveOccurred())
+
 		Expect(controlledResourcesList).ToNot(BeEmpty())
-		_, err = NewIstioResourcesFinder(context.TODO(), nil, logr.Logger{})
+		_, err = NewIstioResourcesFinder(context.TODO(), nil, logr.Logger{}, ControlledListGetterMock{wrongResourceList})
 		Expect(err).To(HaveOccurred())
 	})
 })
@@ -198,4 +197,12 @@ func Test_contains(t *testing.T) {
 			}
 		})
 	}
+}
+
+type ControlledListGetterMock struct {
+	controlledList []byte
+}
+
+func (m ControlledListGetterMock) GetBytes() ([]byte, error) {
+	return m.controlledList, nil
 }

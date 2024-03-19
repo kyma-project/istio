@@ -124,7 +124,7 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha2.
 	} else if shouldDelete(istioCR) && hasInstallationFinalizer(istioCR) {
 		ctrl.Log.Info("Starting Istio uninstall")
 
-		istioResourceFinder, err := resources.NewIstioResourcesFinder(ctx, i.Client, ctrl.Log)
+		istioResourceFinder, err := resources.NewIstioResourcesFinder(ctx, i.Client, ctrl.Log, resources.NewDefaultControlledListGetter())
 		if err != nil {
 			return described_errors.NewDescribedError(err, "Could not read customer resources finder configuration")
 		}

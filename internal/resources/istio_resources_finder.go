@@ -20,6 +20,21 @@ import (
 //go:embed controlled_resources_list.yaml
 var controlledResourcesList []byte
 
+type ControlledListGetter interface {
+	GetBytes() ([]byte, error)
+}
+
+type ControlledListGetterImpl struct {
+}
+
+func NewDefaultControlledListGetter() ControlledListGetter {
+	return &ControlledListGetterImpl{}
+}
+
+func (m *ControlledListGetterImpl) GetBytes() ([]byte, error) {
+	return controlledResourcesList, nil
+}
+
 type ResourceMeta struct {
 	Name      string
 	Namespace string
@@ -49,9 +64,15 @@ type IstioResourcesFinder struct {
 var noMatchesForKind = regexp.MustCompile("no matches for kind")
 var couldNotFindReqResource = regexp.MustCompile("could not find the requested resource")
 
-func NewIstioResourcesFinder(ctx context.Context, client client.Client, logger logr.Logger) (*IstioResourcesFinder, error) {
+func NewIstioResourcesFinder(ctx context.Context, client client.Client, logger logr.Logger, getter ControlledListGetter) (*IstioResourcesFinder, error) {
 	var finderConfiguration resourceFinderConfiguration
-	err := yaml.Unmarshal(controlledResourcesList, &finderConfiguration)
+
+	controlledList, err := getter.GetBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	err = yaml.Unmarshal(controlledList, &finderConfiguration)
 	if err != nil {
 		return nil, err
 	}

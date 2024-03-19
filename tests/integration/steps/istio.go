@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+	"strconv"
 	"strings"
 
 	apinetworkingv1alpha3 "istio.io/api/networking/v1alpha3"
@@ -87,12 +89,22 @@ func IstioComponentHasResourcesSetToCpuAndMemory(ctx context.Context, component,
 		return err
 	}
 
-	if resources.Cpu != cpu {
-		return fmt.Errorf("cpu %s for component %s wasn't expected; expected=%s got=%s", resourceType, component, cpu, resources.Cpu)
+	cpuMilli, err := strconv.Atoi(strings.TrimSuffix(cpu, "m"))
+	if err != nil {
+		return err
 	}
 
-	if resources.Memory != memory {
-		return fmt.Errorf("memory %s for component %s wasn't expected; expected=%s got=%s", resourceType, component, memory, resources.Memory)
+	memMilli, err := strconv.Atoi(strings.TrimSuffix(memory, "m"))
+	if err != nil {
+		return err
+	}
+
+	if resource.NewScaledQuantity(int64(cpuMilli), resource.Milli).Equal(resources.Cpu) {
+		return fmt.Errorf("cpu %s for component %s wasn't expected; expected=%s got=%v", resourceType, component, cpu, resources.Cpu)
+	}
+
+	if resource.NewScaledQuantity(int64(memMilli), resource.Milli).Equal(resources.Memory) {
+		return fmt.Errorf("memory %s for component %s wasn't expected; expected=%s got=%v", resourceType, component, memory, resources.Memory)
 	}
 
 	return nil
@@ -104,8 +116,8 @@ func UninstallIstio(ctx context.Context) error {
 }
 
 type ResourceStruct struct {
-	Cpu    string
-	Memory string
+	Cpu    resource.Quantity
+	Memory resource.Quantity
 }
 
 func getResourcesForComponent(k8sClient client.Client, component, resourceType string) (*ResourceStruct, error) {
@@ -135,11 +147,11 @@ func getResourcesForComponent(k8sClient client.Client, component, resourceType s
 		}
 
 		if resourceType == "limits" {
-			res.Memory = igDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Memory().String()
-			res.Cpu = igDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu().String()
+			res.Memory = *igDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Memory()
+			res.Cpu = *igDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu()
 		} else {
-			res.Memory = igDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String()
-			res.Cpu = igDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu().String()
+			res.Memory = *igDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory()
+			res.Cpu = *igDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu()
 		}
 
 		return &res, nil
@@ -164,11 +176,11 @@ func getResourcesForComponent(k8sClient client.Client, component, resourceType s
 		}
 
 		if resourceType == "limits" {
-			res.Memory = idDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Memory().String()
-			res.Cpu = idDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu().String()
+			res.Memory = *idDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Memory()
+			res.Cpu = *idDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu()
 		} else {
-			res.Memory = idDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String()
-			res.Cpu = idDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu().String()
+			res.Memory = *idDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory()
+			res.Cpu = *idDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu()
 		}
 
 		return &res, nil

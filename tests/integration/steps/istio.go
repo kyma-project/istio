@@ -94,7 +94,7 @@ func IstioComponentHasResourcesSetToCpuAndMemory(ctx context.Context, component,
 		return err
 	}
 
-	memMilli, err := strconv.Atoi(strings.TrimSuffix(memory, "m"))
+	memMilli, err := strconv.Atoi(strings.TrimSuffix(memory, "Mi"))
 	if err != nil {
 		return err
 	}

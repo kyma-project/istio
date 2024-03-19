@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/coreos/go-semver/semver"
-
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/pkg/errors"
@@ -62,13 +60,11 @@ func (s *SidecarsRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio
 		return described_errors.NewDescribedError(err, errorDescription)
 	}
 
-	v, err := semver.NewVersion(iop.Spec.Tag.GetStringValue())
+	istioVersion, _, err := manifest.GetIstioVersion(s.Merger)
 	if err != nil {
-		ctrl.Log.Error(err, "Error occurred during parsing Istio semver version")
-		return described_errors.NewDescribedError(err, "Could not parse Istio semver version")
+		ctrl.Log.Error(err, "Error getting Istio version from manifest")
+		return described_errors.NewDescribedError(err, "Could not get Istio version from manifest")
 	}
-
-	istioVersion := fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Patch)
 
 	expectedImage := pods.NewSidecarImage(iop.Spec.Hub, iop.Spec.Tag.GetStringValue())
 	s.Log.Info("Running proxy sidecar reset", "expected image", expectedImage)

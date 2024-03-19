@@ -27,11 +27,11 @@ require (
 	istio.io/api v1.20.3-0.20240116015448-5563f7225778
 	istio.io/client-go v1.20.3-0.20240116015948-bc198a253520
 	istio.io/istio v0.0.0-20240125032203-d9910718b0ea
-	k8s.io/api v0.28.7
-	k8s.io/apiextensions-apiserver v0.28.7
-	k8s.io/apimachinery v0.28.7
-	k8s.io/client-go v0.28.7
-	k8s.io/kubectl v0.28.7
+	k8s.io/api v0.28.8
+	k8s.io/apiextensions-apiserver v0.28.8
+	k8s.io/apimachinery v0.28.8
+	k8s.io/client-go v0.28.8
+	k8s.io/kubectl v0.28.8
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b
 	sigs.k8s.io/controller-runtime v0.16.3 // Since we are using the Istio library directly, we should also use the controller-runtime version that is used by Istio.
 	sigs.k8s.io/yaml v1.4.0
@@ -88,7 +88,7 @@ require (
 	github.com/gofrs/uuid v4.3.1+incompatible // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/cel-go v0.16.1 // indirect
 	github.com/google/gnostic-models v0.6.8 // indirect
@@ -202,9 +202,9 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	helm.sh/helm/v3 v3.12.3 // indirect
-	k8s.io/apiserver v0.28.7 // indirect
-	k8s.io/cli-runtime v0.28.7 // indirect
-	k8s.io/component-base v0.28.7 // indirect
+	k8s.io/apiserver v0.28.8 // indirect
+	k8s.io/cli-runtime v0.28.8 // indirect
+	k8s.io/component-base v0.28.8 // indirect
 	k8s.io/klog/v2 v2.100.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20231010175941-2dd684a91f00 // indirect
 	sigs.k8s.io/gateway-api v1.0.1-0.20231102234152-004e14bfe016 // indirect

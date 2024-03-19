@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/pkg/errors"
+	"gopkg.in/inf.v0"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"strconv"
@@ -99,12 +100,12 @@ func IstioComponentHasResourcesSetToCpuAndMemory(ctx context.Context, component,
 		return err
 	}
 
-	if resource.NewScaledQuantity(int64(cpuMilli), resource.Milli).Equal(resources.Cpu) {
-		return fmt.Errorf("cpu %s for component %s wasn't expected; expected=%s got=%v", resourceType, component, cpu, resources.Cpu)
+	if resource.NewDecimalQuantity(*inf.NewDec(int64(cpuMilli), inf.Scale(resource.Milli)), resource.DecimalSI).Equal(resources.Cpu) {
+		return fmt.Errorf("cpu %s for component %s wasn't expected; expected=%v got=%v", resourceType, component, resource.NewScaledQuantity(int64(cpuMilli), resource.Milli), resources.Cpu)
 	}
 
-	if resource.NewScaledQuantity(int64(memMilli), resource.Milli).Equal(resources.Memory) {
-		return fmt.Errorf("memory %s for component %s wasn't expected; expected=%s got=%v", resourceType, component, memory, resources.Memory)
+	if resource.NewDecimalQuantity(*inf.NewDec(int64(memMilli), inf.Scale(resource.Milli)), resource.DecimalSI).Equal(resources.Memory) {
+		return fmt.Errorf("memory %s for component %s wasn't expected; expected=%v got=%v", resourceType, component, resource.NewScaledQuantity(int64(memMilli), resource.Milli), resources.Memory)
 	}
 
 	return nil

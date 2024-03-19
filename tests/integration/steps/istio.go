@@ -135,11 +135,11 @@ func getResourcesForComponent(k8sClient client.Client, component, resourceType s
 		}
 
 		if resourceType == "limits" {
-			res.Memory = igDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Memory().String()
-			res.Cpu = igDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu().String()
+			res.Memory = fmt.Sprintf("%dm", igDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Memory().MilliValue())
+			res.Cpu = fmt.Sprintf("%dm", igDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu().MilliValue())
 		} else {
-			res.Memory = igDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String()
-			res.Cpu = igDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu().String()
+			res.Memory = fmt.Sprintf("%dm", igDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().MilliValue())
+			res.Cpu = fmt.Sprintf("%dm", igDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu().MilliValue())
 		}
 
 		return &res, nil
@@ -164,11 +164,11 @@ func getResourcesForComponent(k8sClient client.Client, component, resourceType s
 		}
 
 		if resourceType == "limits" {
-			res.Memory = idDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Memory().String()
-			res.Cpu = idDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu().String()
+			res.Memory = fmt.Sprintf("%dm", idDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Memory().MilliValue())
+			res.Cpu = fmt.Sprintf("%dm", idDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu().MilliValue())
 		} else {
-			res.Memory = idDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().String()
-			res.Cpu = idDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu().String()
+			res.Memory = fmt.Sprintf("%dm", idDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory().MilliValue())
+			res.Cpu = fmt.Sprintf("%dm", idDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu().MilliValue())
 		}
 
 		return &res, nil

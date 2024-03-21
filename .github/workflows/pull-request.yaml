@@ -28,7 +28,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version-file: "go.mod"
           cache: false # We need to disable caching here, since this is handled by the golangci-lint action
       - name: golangci-lint
         uses: golangci/golangci-lint-action@3cfe3a4abbb849e10058ce4af15d205b6da42804 #v4.0.0
@@ -44,7 +44,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version-file: "go.mod"
       - name: Run tests
         run: |
           PULL_PULL_SHA=${{ github.event.pull_request.head.sha}} \

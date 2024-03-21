@@ -7,7 +7,7 @@ If you are experiencing issues with the cluster, you can follow the steps below 
 1. Check if Istio CR is in Warning state, if yes check for the warning message and conditions. It might be helpful at the beginning of the investigation.
 2. Check [NetworkPolicies](https://kubernetes.io/docs/concepts/services-networking/network-policies/) first. Try to find custom configuration which may affect the connectivity.
 3. Check for the following custom resources applied on the cluster. Misconfigured might interrupt the cluster's traffic:
-    - [`DestinationRule`](https://istio.io/latest/docs/reference/config/networking/destination-rule/) - misconfigured might interrupt ability to access the workloads.
+    - [`DestinationRule`](https://istio.io/latest/docs/reference/config/networking/destination-rule/) - misconfigured might interrupt the ability to access workloads.
     - [`PeerAuthentication`](https://istio.io/latest/docs/reference/config/security/peer_authentication/) - misconfigured might cause issues in the traffic between workloads.
     - [`Gateway`](https://istio.io/latest/docs/reference/config/networking/gateway/) - misconfigured might cause issues with access to the cluster's workloads from the outside.
     - [`AuthorizationPolicy`](https://istio.io/latest/docs/reference/config/security/authorization-policy/) - misconfigured might cause access control issues.

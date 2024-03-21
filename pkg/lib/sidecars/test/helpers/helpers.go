@@ -37,6 +37,7 @@ var DefaultSidecarResources = v1.ResourceRequirements{
 }
 
 func NewSidecarPodBuilder() *SidecarPodFixtureBuilder {
+	resources := DefaultSidecarResources.DeepCopy()
 	return &SidecarPodFixtureBuilder{
 		name:                   "app",
 		namespace:              "custom",
@@ -50,7 +51,7 @@ func NewSidecarPodBuilder() *SidecarPodFixtureBuilder {
 		conditionStatus:        "True",
 		hostNetwork:            false,
 		ownerReference:         metav1.OwnerReference{Kind: "ReplicaSet"},
-		resources:              DefaultSidecarResources,
+		resources:              *resources,
 	}
 }
 

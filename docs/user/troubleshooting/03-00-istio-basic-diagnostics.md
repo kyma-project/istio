@@ -18,9 +18,8 @@ If you are experiencing issues with the cluster, you can follow the steps below 
 ## Sidecar injection
 
 1. Inspect if Istio CR is in Warning state, if yes check for the warning message. It might be helpful at the beginning of the investigation.
-2. Check if the label `istio-injection=enabled` is present on the namespace where the application is deployed. 
-3. Sidecar injection behavior set on namespace can be overwritten by the `sidecar.istio.io/inject` label on the pod. Make sure that this label is not set to `false` there.
-4. Make sure the pod does not have `hostNetwork: true` in the spec. If it does, the sidecar will not be injected.
+2. Check if you correctly enabled sidecar injection. You can check our [sidecar enablement guide](https://kyma-project.io/#/istio/user/operation-guides/02-10-check-if-sidecar-injection-is-enabled?id=check-if-you-have-istio-sidecar-proxy-injection-enabled) for more information.
+3. Make sure the pod does not have `hostNetwork: true` in the spec. If it does, the sidecar will not be injected.
 
 ## Still something does not work?
 1. Check the [Official Istio Troubleshooting Guide](https://github.com/istio/istio/wiki/Troubleshooting-Istio).

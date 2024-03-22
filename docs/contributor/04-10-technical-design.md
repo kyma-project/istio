@@ -78,7 +78,7 @@ Whenever the component detects a change in the `numTrustedProxies` configuration
 ### Istio ResourcesReconciliation
 
 Istio ResourcesReconciliation is responsible for applying resources dependent on Istio, such as VirtualService or EnvoyFilter, and ensuring that the state of the Istio service mesh is configured correctly based on these resources.
-To maintain the correct state, the component provides [Restart Predicates](#restart-predicates) on a per-resource basis, which the [IngressGatewayReconciler](#ingressgatewayreconciler) and [ProxySidecarReconciliation](#proxysidecarreconciliation) components consume.
+To maintain the correct state, the component provides [Restart Predicates](#restart-predicates) on a per-resource basis, which the [SidecarRestarter](#sidecarsrestarter) and [IngressGatewayRestarter](#ingressgatewayrestarter) components consume.
 
 When the Istio InstallationReconciliation component reconciles resources that are not Istio resources, it sets their OwnerReference to the Istio CR.
 As a result, if you remove the Istio CR, any associated resources that would normally remain in the cluster are also deleted.
@@ -101,7 +101,7 @@ Additionally, clear status reporting and the ability to provide detailed informa
 
 ### Restart Predicates
 
-The [IngressGatewayReconciler](#ingressgatewayreconciler) and [ProxySidecarReconciliation](#proxysidecarreconciliation) components use Restart Predicates.
+The [SidecarRestarter](#sidecarsrestarter) and [IngressGatewayRestarter](#ingressgatewayrestarter)  components use Restart Predicates.
 Depending on the implemented interfaces, a predicate can trigger a restart of Ingress Gateways, Proxy Sidecars, or both Ingress Gateways and Proxy Sidecars.
 
 For cases where it isn't trivial to check whether the configuration has been applied to the cluster state, Restart Predicates use a timestamp-based approach. For example, the `envoy_filter_allow_partial_referer` resource has the `istios.operator.kyma-project.io/updatedAt` annotation, which includes the timestamp of its last update.

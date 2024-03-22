@@ -112,7 +112,6 @@ Feature: Installing and uninstalling Istio module
     And "Deployment" "istio-ingressgateway" in namespace "istio-system" is deleted
     And "DaemonSet" "istio-cni-node" in namespace "istio-system" is deleted
     And Istio injection is "enabled" in namespace "default"
-    And "EnvoyFilter" "kyma-referer" in namespace "istio-system" is deleted
     And "PeerAuthentication" "default" in namespace "istio-system" is deleted
     And Httpbin application "test-app" deployment is created in namespace "default"
     # We need to update the Istio CR to trigger a reconciliation
@@ -121,6 +120,5 @@ Feature: Installing and uninstalling Istio module
     Then "Deployment" "istiod" in namespace "istio-system" is ready
     And "Deployment" "istio-ingressgateway" in namespace "istio-system" is ready
     And "DaemonSet" "istio-cni-node" in namespace "istio-system" is ready
-    And "EnvoyFilter" "kyma-referer" in namespace "istio-system" is "present"
     And "PeerAuthentication" "default" in namespace "istio-system" is "present"
     And Application pod "test-app" in namespace "default" has Istio proxy "present"

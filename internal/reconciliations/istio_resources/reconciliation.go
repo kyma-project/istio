@@ -69,8 +69,7 @@ func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha2.Is
 
 // getResources returns all Istio resources required for the reconciliation specific for the given hyperscaler.
 func getResources(k8sClient client.Client, hsClient clusterconfig.Hyperscaler) ([]Resource, error) {
-	istioResources := []Resource{NewEnvoyFilterAllowPartialReferer(k8sClient)}
-	istioResources = append(istioResources, NewPeerAuthenticationMtls(k8sClient))
+	istioResources := []Resource{NewPeerAuthenticationMtls(k8sClient)}
 
 	isAws := hsClient.IsAws()
 	if isAws {

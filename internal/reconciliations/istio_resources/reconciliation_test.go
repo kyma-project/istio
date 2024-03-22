@@ -42,24 +42,6 @@ var _ = Describe("Reconciliation", func() {
 		},
 	}
 
-	It("should succeed creating envoy filter referer", func() {
-		//given
-		client := createFakeClient()
-		hc := &hyperscalerClientMock{isAws: false}
-		reconciler := NewReconciler(client, hc)
-
-		//when
-		err := reconciler.Reconcile(context.Background(), istioCR)
-
-		//then
-		Expect(err).To(Not(HaveOccurred()))
-
-		var s networkingv1alpha3.EnvoyFilterList
-		listErr := client.List(context.Background(), &s)
-		Expect(listErr).To(Not(HaveOccurred()))
-		Expect(s.Items).To(HaveLen(1))
-	})
-
 	It("should succeed creating peer authentication mtls", func() {
 		//given
 		client := createFakeClient()

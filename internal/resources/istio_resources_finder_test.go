@@ -33,7 +33,7 @@ var _ = Describe("Resources", func() {
 		Expect(err != nil).To(Equal(wantErr))
 		Expect(got).To(BeEquivalentTo(want))
 	},
-		Entry("Should get nothing if there are only default istio resources present", context.TODO(),
+		Entry("should get nothing if there are only default istio resources present", context.TODO(),
 			logr.Discard(),
 			fake.NewClientBuilder().WithScheme(sc).WithObjects(&networkingv1alpha3.EnvoyFilter{
 				ObjectMeta: metav1.ObjectMeta{
@@ -59,7 +59,7 @@ var _ = Describe("Resources", func() {
 			},
 			nil,
 			false,
-		), Entry("Should get resource if there is a customer resource present", context.TODO(),
+		), Entry("should get resource if there is a customer resource present", context.TODO(),
 			logr.Discard(),
 			fake.NewClientBuilder().WithScheme(sc).WithObjects(&networkingv1alpha3.EnvoyFilter{
 				ObjectMeta: metav1.ObjectMeta{
@@ -149,12 +149,12 @@ var _ = Describe("NewIstioResourcesFinder", func() {
 var _ = DescribeTable("contains", func(a []ResourceMeta, b Resource, should bool) {
 	Expect(contains(a, b.ResourceMeta)).To(Equal(should))
 },
-	Entry("Should return true if the array contains the resource", []ResourceMeta{{Name: "test", Namespace: "test-ns"}},
+	Entry("should return true if the array contains the resource", []ResourceMeta{{Name: "test", Namespace: "test-ns"}},
 		Resource{ResourceMeta: ResourceMeta{
 			Name:      "test",
 			Namespace: "test-ns",
 		}}, true),
-	Entry("Should return false if the array doesn't contain the resource", []ResourceMeta{{Name: "test", Namespace: "test-ns"}},
+	Entry("should return false if the array doesn't contain the resource", []ResourceMeta{{Name: "test", Namespace: "test-ns"}},
 		Resource{ResourceMeta: ResourceMeta{
 			Name:      "test",
 			Namespace: "test",

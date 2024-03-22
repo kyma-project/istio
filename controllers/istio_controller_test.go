@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/kyma-project/istio/operator/internal/manifest"
 	"github.com/kyma-project/istio/operator/internal/restarter"
 
 	"k8s.io/utils/ptr"
@@ -1006,12 +1007,8 @@ type istioInstallationReconciliationMock struct {
 	err described_errors.DescribedError
 }
 
-func (i *istioInstallationReconciliationMock) Reconcile(_ context.Context, _ *operatorv1alpha2.Istio, _ status.Status) described_errors.DescribedError {
-	return i.err
-}
-
-func (i *istioInstallationReconciliationMock) GetIstioTag() string {
-	return "1.0.0-distroless"
+func (i *istioInstallationReconciliationMock) Reconcile(_ context.Context, _ *operatorv1alpha2.Istio, _ status.Status) (manifest.IstioImageVersion, described_errors.DescribedError) {
+	return manifest.IstioImageVersion{Version: "1.0.0", Flavor: "distroless"}, i.err
 }
 
 type StatusMock struct {

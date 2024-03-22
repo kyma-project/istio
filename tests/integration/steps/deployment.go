@@ -191,12 +191,10 @@ func ApplicationPodShouldHaveIstioProxy(ctx context.Context, appName, namespace,
 
 func ApplicationPodShouldHaveIstioProxyInRequiredVersion(ctx context.Context, appName, namespace string) error {
 	merger := manifest.NewDefaultIstioMerger()
-	version, prerelease, err := manifest.GetIstioVersion(&merger)
+	istioImageVersion, err := merger.GetIstioImageVersion()
 	if err != nil {
 		return err
 	}
-
-	requiredProxyVersion := fmt.Sprintf("%s-%s", version, prerelease)
 
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
@@ -232,7 +230,7 @@ func ApplicationPodShouldHaveIstioProxyInRequiredVersion(ctx context.Context, ap
 					return err
 				}
 
-				if deployedVersion == requiredProxyVersion {
+				if deployedVersion == istioImageVersion.Tag() {
 					hasProxyInVersion = true
 				}
 			}

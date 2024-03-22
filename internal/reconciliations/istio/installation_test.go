@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/kyma-project/istio/operator/internal/described_errors"
+	"github.com/kyma-project/istio/operator/internal/manifest"
 	"github.com/kyma-project/istio/operator/internal/resources"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -71,7 +72,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -116,7 +117,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -158,7 +159,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -205,7 +206,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -245,7 +246,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -287,7 +288,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -335,7 +336,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -390,7 +391,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -443,7 +444,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -481,7 +482,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -520,7 +521,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -559,7 +560,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -598,7 +599,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -637,7 +638,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -679,7 +680,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -726,7 +727,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -769,7 +770,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -813,7 +814,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -859,7 +860,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -899,7 +900,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -938,7 +939,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -988,7 +989,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -1037,7 +1038,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -1083,7 +1084,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
@@ -1206,6 +1207,10 @@ func (m MergerMock) GetIstioOperator(_ clusterconfig.ClusterSize) (iopv1alpha1.I
 		},
 	}
 	return iop, m.getIstioOperatorError
+}
+
+func (m MergerMock) GetIstioImageVersion() (manifest.IstioImageVersion, error) {
+	return manifest.NewIstioImageVersionFromTag("1.16.1-distroless")
 }
 
 func (m MergerMock) SetIstioInstallFlavor(_ clusterconfig.ClusterSize) {}

@@ -9,6 +9,7 @@ import (
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/kyma-project/istio/operator/internal/filter"
+	"github.com/kyma-project/istio/operator/internal/manifest"
 	"github.com/kyma-project/istio/operator/internal/restarter"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
@@ -233,12 +234,16 @@ func (m MergerMock) Merge(_ clusterconfig.ClusterSize, _ *operatorv1alpha2.Istio
 
 func (m MergerMock) GetIstioOperator(_ clusterconfig.ClusterSize) (iopv1alpha1.IstioOperator, error) {
 	iop := iopv1alpha1.IstioOperator{}
-	manifest, err := os.ReadFile("../../internal/manifest/istio-operator.yaml")
+	manifest, err := os.ReadFile("../../internal/istiooperator/istio-operator.yaml")
 	if err == nil {
 		err = yaml.Unmarshal(manifest, &iop)
 	}
 	iop.Spec.Tag = structpb.NewStringValue(m.tag)
 	return iop, err
+}
+
+func (m MergerMock) GetIstioImageVersion() (manifest.IstioImageVersion, error) {
+	return manifest.NewIstioImageVersionFromTag("1.16.1-distroless")
 }
 
 func (m MergerMock) SetIstioInstallFlavor(_ clusterconfig.ClusterSize) {}

@@ -77,7 +77,7 @@ var _ = Describe("GetProxyResources", func() {
 
 	It("should be able to get resources from real istio operator template when IstioCR has no overrides", func() {
 		//given
-		manifest, err := os.ReadFile("../../internal/manifest/istio-operator.yaml")
+		manifest, err := os.ReadFile("../../internal/istiooperator/istio-operator.yaml")
 		Expect(err).ShouldNot(HaveOccurred())
 
 		iop := iopv1alpha1.IstioOperator{}

@@ -60,7 +60,7 @@ func (s *SidecarsRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio
 		return described_errors.NewDescribedError(err, errorDescription)
 	}
 
-	istioVersion, _, err := manifest.GetIstioVersion(s.Merger)
+	istioImageVersion, err := s.Merger.GetIstioImageVersion()
 	if err != nil {
 		ctrl.Log.Error(err, "Error getting Istio version from manifest")
 		return described_errors.NewDescribedError(err, "Could not get Istio version from manifest")
@@ -76,8 +76,8 @@ func (s *SidecarsRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio
 		return described_errors.NewDescribedError(err, errorDescription)
 	}
 
-	if istioVersion != version {
-		err := fmt.Errorf("istio-system pods version: %s do not match target version: %s", version, istioVersion)
+	if version != istioImageVersion.Version {
+		err := fmt.Errorf("istio-system pods version: %s do not match target version: %s", version, istioImageVersion.Version)
 		s.Log.Error(err, err.Error())
 		s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarRestartFailed))
 		return described_errors.NewDescribedError(err, errorDescription)

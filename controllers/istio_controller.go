@@ -132,7 +132,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		}
 	}
 
-	installationErr := r.istioInstallation.Reconcile(ctx, &istioCR, r.statusHandler)
+	istioImageVersion, installationErr := r.istioInstallation.Reconcile(ctx, &istioCR, r.statusHandler)
 	if installationErr != nil {
 		return r.requeueReconciliation(ctx, &istioCR, installationErr, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIstioInstallUninstallFailed))
 	}
@@ -159,7 +159,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, err
 	}
 
-	return r.finishReconcile(ctx, &istioCR, r.istioInstallation.GetIstioTag())
+	return r.finishReconcile(ctx, &istioCR, istioImageVersion.Tag())
 }
 
 // requeueReconciliation cancels the reconciliation and requeues the request.

@@ -390,12 +390,10 @@ func ResourceNotPresent(ctx context.Context, kind string) error {
 
 func IstioResourceContainerHasRequiredVersion(ctx context.Context, containerName, kind, resourceName, namespace string) error {
 	merger := manifest.NewDefaultIstioMerger()
-	version, prerelease, err := manifest.GetIstioVersion(&merger)
+	istioImageVersion, err := merger.GetIstioImageVersion()
 	if err != nil {
 		return err
 	}
-
-	requiredVersion := fmt.Sprintf("%s-%s", version, prerelease)
 
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
@@ -428,8 +426,8 @@ func IstioResourceContainerHasRequiredVersion(ctx context.Context, containerName
 				if err != nil {
 					return err
 				}
-				if deployedVersion != requiredVersion {
-					return fmt.Errorf("container: %s kind: %s name: %s in namespace %s has version %s when required %s", containerName, kind, resourceName, namespace, deployedVersion, requiredVersion)
+				if deployedVersion != istioImageVersion.Tag() {
+					return fmt.Errorf("container: %s kind: %s name: %s in namespace %s has version %s when required %s", containerName, kind, resourceName, namespace, deployedVersion, istioImageVersion.Tag())
 				}
 				hasExpectedVersion = true
 			}
@@ -446,8 +444,8 @@ func IstioResourceContainerHasRequiredVersion(ctx context.Context, containerName
 				if err != nil {
 					return err
 				}
-				if deployedVersion != requiredVersion {
-					return fmt.Errorf("container: %s kind: %s name: %s in namespace %s has version %s when required %s", containerName, kind, resourceName, namespace, deployedVersion, requiredVersion)
+				if deployedVersion != istioImageVersion.Tag() {
+					return fmt.Errorf("container: %s kind: %s name: %s in namespace %s has version %s when required %s", containerName, kind, resourceName, namespace, deployedVersion, istioImageVersion.Tag())
 				}
 				hasExpectedVersion = true
 			}

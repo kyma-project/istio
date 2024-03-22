@@ -3,13 +3,15 @@ package resources
 import (
 	"context"
 
-	"github.com/kyma-project/istio/operator/internal/manifest"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/yaml"
 )
+
+// variable is set to the correct version by the Dockerfile during build time.
+var version = "dev"
 
 // Apply creates or updates a resource in the given manifest in the cluster. The resource is annotated with a disclaimer.
 // If the owner is provided, an OwnerReference is added to the resource. The function returns the operation result depending on the action taken.
@@ -42,7 +44,7 @@ func ApplyVersionedLabels(resource *unstructured.Unstructured) {
 	if versionedLabels == nil {
 		versionedLabels = make(map[string]string)
 	}
-	versionedLabels["app.kubernetes.io/version"] = manifest.GetModuleVersion()
+	versionedLabels["app.kubernetes.io/version"] = version
 	resource.SetLabels(versionedLabels)
 }
 

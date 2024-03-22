@@ -26,9 +26,8 @@ dependencies:
   - name: influxdb
     version: "4.10.2"
     repository: https://helm.influxdata.com
-  - name: grafana
-    version: "6.57.2"
-    repository: https://grafana.github.io/helm-charts  
   - name: prometheus
     version: "19.7.2"
     repository: https://prometheus-community.github.io/helm-charts
+  - name: plutono
+    version: 0.1.0

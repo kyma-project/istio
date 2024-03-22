@@ -53,7 +53,7 @@ spec:
     spec:
       serviceAccountName: {{ .Release.Name }}
       containers:
-      - image: docker.io/kong/httpbin
+      - image: werd/gofihttpbin:main
         imagePullPolicy: IfNotPresent
         name: httpbin
         ports:

@@ -13,7 +13,7 @@ If you are experiencing issues with the cluster, you can follow the steps below 
     - [`AuthorizationPolicy`](https://istio.io/latest/docs/reference/config/security/authorization-policy/)
     - [`RequestAuthentication`](https://istio.io/latest/docs/reference/config/security/request_authentication/)
 4. Use `istioctl analyze -A` to check for potential issues in the Istio configuration. This command checks for potential issues in the Istio configuration and provides suggestions on how to fix them.
-5. Check response flags: DC (Downstream client terminated connection), UC (Upstream terminated connection) are out of scope for Istio team, since it relates to client(DC) or workload application(UC) behavior. You can find them in the Envoy sidecar's access logs.
+5. Enable the access logs of the Envoy Proxy by following this [guide](https://istio.io/latest/docs/tasks/observability/logs/access-log/). In the access log you can find the field `response_flags`. The response flags DC (Downstream client terminated connection) and UC (Upstream terminated connection) are out of scope for Istio team, since it relates to client(DC) or workload application(UC) behaviour.
 
 ## Sidecar injection
 

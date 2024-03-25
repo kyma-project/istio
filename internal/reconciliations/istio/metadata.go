@@ -58,7 +58,8 @@ func updateResourcesMetadataForSelector(ctx context.Context, c client.Client) er
 		var obj client.Object
 		for _, r := range list.Items {
 			u := r.DeepCopy()
-			patch := client.StrategicMergeFrom(u)
+			u.SetGroupVersionKind(gvk)
+			var patch client.Patch
 			// Ressetkk: if the list grows, we'll have to think about some other solution
 			// those resources contain templates for pods they manage.
 			// Some of the istio pods (e.g. CNI) does not set operator.istio.io/component in a template,
@@ -69,6 +70,7 @@ func updateResourcesMetadataForSelector(ctx context.Context, c client.Client) er
 				if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &d); err != nil {
 					return err
 				}
+				patch = client.StrategicMergeFrom(d.DeepCopy())
 				updateObjectLabels(&d.ObjectMeta)
 				updateObjectLabels(&d.Spec.Template.ObjectMeta)
 				obj = &d
@@ -77,11 +79,13 @@ func updateResourcesMetadataForSelector(ctx context.Context, c client.Client) er
 				if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &ds); err != nil {
 					return err
 				}
+				patch = client.StrategicMergeFrom(ds.DeepCopy())
 				updateObjectLabels(&ds.ObjectMeta)
 				updateObjectLabels(&ds.Spec.Template.ObjectMeta)
 				obj = &ds
-			// handle without conversion
+			// handle without a conversion
 			default:
+				patch = client.MergeFrom(u.DeepCopy())
 				l := labels.SetModuleLabels(u.GetLabels())
 				u.SetLabels(l)
 				obj = u

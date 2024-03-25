@@ -85,6 +85,8 @@ func updateResourcesMetadataForSelector(ctx context.Context, c client.Client) er
 				obj = &ds
 			// handle without a conversion
 			default:
+				// MergeFrom is used instead of StrategicMergeFrom, since Strategic cannot handle unstructured objects reliably
+				// This is acceptable, as the applied labels are applied as an overlay on top of existing ones.
 				patch = client.MergeFrom(u.DeepCopy())
 				l := labels.SetModuleLabels(u.GetLabels())
 				u.SetLabels(l)

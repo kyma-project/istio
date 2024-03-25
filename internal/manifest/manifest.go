@@ -84,6 +84,8 @@ func (m *IstioMerger) Merge(clusterSize clusterconfig.ClusterSize, istioCR *oper
 }
 
 func (m *IstioMerger) GetIstioImageVersion() (IstioImageVersion, error) {
+        // We can always use the Production cluster size here, because we have tests verifying that Production 
+        // and Evaluation have the same version.
 	iop, err := m.GetIstioOperator(clusterconfig.Production)
 	if err != nil {
 		return IstioImageVersion{}, err

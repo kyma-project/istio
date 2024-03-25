@@ -123,7 +123,7 @@ var _ = Describe("Merge", func() {
 	})
 })
 
-var _ = Describe("IstioImageVersion", func() {
+var _ = Describe("NewIstioImageVersionFromTag", func() {
 	It("should return IstioImageVersion for a correct semantic version", func() {
 		// when
 		version, err := manifest.NewIstioImageVersionFromTag("1.12.3-blah")

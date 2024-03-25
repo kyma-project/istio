@@ -19,8 +19,7 @@ const (
 )
 
 type IstioImageVersion struct {
-	Version string
-	Flavor  string
+	semanticVersion *semver.Version
 }
 
 func NewIstioImageVersionFromTag(tag string) (IstioImageVersion, error) {
@@ -28,14 +27,23 @@ func NewIstioImageVersionFromTag(tag string) (IstioImageVersion, error) {
 	if err != nil {
 		return IstioImageVersion{}, err
 	}
-	return IstioImageVersion{
-		Version: fmt.Sprintf("%d.%d.%d", semVersion.Major, semVersion.Minor, semVersion.Patch),
-		Flavor:  string(semVersion.PreRelease),
-	}, nil
+	return IstioImageVersion{semanticVersion: semVersion}, nil
+}
+
+func (i *IstioImageVersion) Version() string {
+	return fmt.Sprintf("%d.%d.%d", i.semanticVersion.Major, i.semanticVersion.Minor, i.semanticVersion.Patch)
+}
+
+func (i *IstioImageVersion) Flavor() string {
+	return string(i.semanticVersion.PreRelease)
 }
 
 func (i *IstioImageVersion) Tag() string {
-	return fmt.Sprintf("%s-%s", i.Version, i.Flavor)
+	return i.semanticVersion.String()
+}
+
+func (i *IstioImageVersion) Empty() bool {
+	return i.semanticVersion == nil
 }
 
 type Merger interface {

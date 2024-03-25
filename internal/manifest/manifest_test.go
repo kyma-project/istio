@@ -123,7 +123,30 @@ var _ = Describe("Merge", func() {
 	})
 })
 
-var _ = Describe("GetIstioVersion", func() {
+var _ = Describe("IstioImageVersion", func() {
+	It("should return IstioImageVersion for a correct semantic version", func() {
+		// when
+		version, err := manifest.NewIstioImageVersionFromTag("1.12.3-blah")
+
+		// then
+		Expect(err).Should(Not(HaveOccurred()))
+		Expect(version.Version()).Should(Equal("1.12.3"))
+		Expect(version.Flavor()).Should(Equal("blah"))
+		Expect(version.Tag()).Should(Equal("1.12.3-blah"))
+	})
+
+	It("should return error for an incorrect semantic version", func() {
+		// when
+		version, err := manifest.NewIstioImageVersionFromTag("1.2.99.3")
+
+		// then
+		Expect(err).Should(HaveOccurred())
+		Expect(err.Error()).Should(ContainSubstring("invalid syntax"))
+		Expect(version.Empty()).Should(BeTrue())
+	})
+})
+
+var _ = Describe("GetIstioImageVersion", func() {
 	It("should return Istio version and verify production and evaluation manifests have same hub and tag", func() {
 		// given
 		merger := manifest.NewDefaultIstioMerger()

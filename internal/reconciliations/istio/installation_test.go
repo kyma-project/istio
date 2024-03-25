@@ -1210,7 +1210,7 @@ func (m MergerMock) GetIstioOperator(_ clusterconfig.ClusterSize) (iopv1alpha1.I
 }
 
 func (m MergerMock) GetIstioImageVersion() (manifest.IstioImageVersion, error) {
-	return manifest.NewIstioImageVersionFromTag("1.16.1-distroless")
+	return manifest.NewIstioImageVersionFromTag(m.tag)
 }
 
 func (m MergerMock) SetIstioInstallFlavor(_ clusterconfig.ClusterSize) {}

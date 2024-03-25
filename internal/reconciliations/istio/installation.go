@@ -102,8 +102,8 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha2.
 			return istioImageVersion, described_errors.NewDescribedError(err, "Could not get Istio sidecar version on cluster")
 		}
 
-		if installedVersion != istioImageVersion.Version {
-			return istioImageVersion, described_errors.NewDescribedError(fmt.Errorf("istio-system pods version: %s do not match target version: %s", installedVersion, istioImageVersion.Version), "Istio installation failed")
+		if installedVersion != istioImageVersion.Version() {
+			return istioImageVersion, described_errors.NewDescribedError(fmt.Errorf("istio-system pods version: %s do not match target version: %s", installedVersion, istioImageVersion.Version()), "Istio installation failed")
 		}
 
 		ctrl.Log.Info("Istio installation succeeded")

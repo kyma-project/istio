@@ -162,11 +162,3 @@ func Test_contains(t *testing.T) {
 		})
 	}
 }
-
-type ControlledListGetterMock struct {
-	controlledList []byte
-}
-
-func (m ControlledListGetterMock) GetBytes() ([]byte, error) {
-	return m.controlledList, nil
-}

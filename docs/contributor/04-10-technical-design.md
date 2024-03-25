@@ -22,6 +22,8 @@ As a consequence, only the oldest Istio CR in the `kyma-system` namespace is rec
 The version of Istio is coupled to the version of Kyma Istio Operator. This means that each particular version of Kyma Istio Operator is released to support only a specific version of Istio.
 If you upgrade Kyma Istio Operator to a new version, it automatically updates Istio as well, provided that a more recent Istio version is part of the Kyma Istio Operator's release.
 
+We support two installation profiles for Istio and version for both is specified in [Evaluation](https://github.com/kyma-project/istio/blob/main/internal/istiooperator/istio-operator-light.yaml) and [Production](https://github.com/kyma-project/istio/blob/main/internal/istiooperator/istio-operator.yaml) operator files respectively.
+
 ## Version Upgrade
 
 You can upgrade Istio only by one minor version (for example, 1.2.3 -> 1.3.0). This requirement is also relevant when upgrading Kyma Istio Operator.
@@ -62,7 +64,7 @@ To create the IstioOperator CR, it merges Istio CR with IstioOperator, which con
 #### Istio Installation
 
 Istio InstallationReconciliation performs the Istio installation, upgrade, and uninstallation using the [Istio Go module](https://github.com/istio/istio).
-It executes the installation of Istio as a synchronous and blocking call that checks the proper status of the installation. The reconciliation loop is blocked until Istio is installed. 
+It executes the installation of Istio as a synchronous and blocking call that checks the proper status of the installation. The reconciliation loop is blocked until Istio is installed.
 During each reconciliation, the component checks the installation of Istio. If Istio is not installed, it triggers the execution of the installation process.
 As part of the installation, this component adds the finalizer `istios.operator.kyma-project.io/istio-installation` to Istio CR. This finalizer is only removed after Istio is successfully uninstalled.
 

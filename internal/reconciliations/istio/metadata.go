@@ -58,6 +58,7 @@ func updateResourcesMetadataForSelector(ctx context.Context, c client.Client) er
 		var obj client.Object
 		for _, r := range list.Items {
 			u := r.DeepCopy()
+			patch := client.StrategicMergeFrom(u)
 			// Ressetkk: if the list grows, we'll have to think about some other solution
 			// those resources contain templates for pods they manage.
 			// Some of the istio pods (e.g. CNI) does not set operator.istio.io/component in a template,
@@ -87,7 +88,7 @@ func updateResourcesMetadataForSelector(ctx context.Context, c client.Client) er
 			}
 
 			if err := retry.RetryOnError(retry.DefaultRetry, func() error {
-				return c.Update(ctx, obj)
+				return c.Patch(ctx, obj, patch)
 			}); err != nil {
 				return err
 			}

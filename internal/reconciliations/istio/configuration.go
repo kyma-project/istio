@@ -7,7 +7,7 @@ import (
 
 	"github.com/coreos/go-semver/semver"
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/internal/manifest"
+	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/kyma-project/istio/operator/internal/restarter"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -23,7 +23,7 @@ func shouldDelete(istio *operatorv1alpha2.Istio) bool {
 }
 
 // shouldInstall returns true when Istio should be installed
-func shouldInstall(istio *operatorv1alpha2.Istio, istioImageVersion manifest.IstioImageVersion) (shouldInstall bool, err error) {
+func shouldInstall(istio *operatorv1alpha2.Istio, istioImageVersion istiooperator.IstioImageVersion) (shouldInstall bool, err error) {
 	if shouldDelete(istio) {
 		return false, nil
 	}

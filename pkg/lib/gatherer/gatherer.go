@@ -142,13 +142,13 @@ func GetIstioPodsVersion(ctx context.Context, kubeClient client.Client) (string,
 	return currentVersion.String(), nil
 }
 
-func VerifyIstioPodsVersion(ctx context.Context, kubeClient client.Client, manifestVersion string) error {
+func VerifyIstioPodsVersion(ctx context.Context, kubeClient client.Client, istioOperatorVersion string) error {
 	podsVersion, err := GetIstioPodsVersion(ctx, kubeClient)
 	if err != nil {
 		return err
 	}
-	if podsVersion != manifestVersion {
-		return fmt.Errorf("istio-system Pods version %s do not match manifest version %s", podsVersion, manifestVersion)
+	if podsVersion != istioOperatorVersion {
+		return fmt.Errorf("istio-system Pods version %s do not match istio operator version %s", podsVersion, istioOperatorVersion)
 	}
 	return nil
 }

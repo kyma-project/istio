@@ -1,11 +1,11 @@
-package manifest_test
+package istiooperator_test
 
 import (
 	"os"
 	"path"
 	"testing"
 
-	"github.com/kyma-project/istio/operator/internal/manifest"
+	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/kyma-project/istio/operator/internal/tests"
 	"github.com/onsi/ginkgo/v2/types"
 
@@ -26,7 +26,7 @@ func TestManifest(t *testing.T) {
 }
 
 var _ = ReportAfterSuite("custom reporter", func(report types.Report) {
-	tests.GenerateGinkgoJunitReport("manifest-suite", report)
+	tests.GenerateGinkgoJunitReport("istiooperator-suite", report)
 })
 
 var _ = Describe("Merge", func() {
@@ -44,7 +44,7 @@ var _ = Describe("Merge", func() {
 
 	DescribeTable("Merge for differnt cluster sizes", func(clusterSize clusterconfig.ClusterSize, shouldError bool, igwMinReplicas int) {
 		// given
-		sut := manifest.NewDefaultIstioMerger()
+		sut := istiooperator.NewDefaultIstioMerger()
 
 		// when
 		mergedIstioOperatorPath, err := sut.Merge(clusterSize, istioCR, clusterconfig.ClusterConfiguration{})
@@ -56,7 +56,7 @@ var _ = Describe("Merge", func() {
 			Expect(mergedIstioOperatorPath).To(BeEmpty())
 		} else {
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(mergedIstioOperatorPath).To(Equal(path.Join("/tmp", manifest.MergedIstioOperatorFile)))
+			Expect(mergedIstioOperatorPath).To(Equal(path.Join("/tmp", istiooperator.MergedIstioOperatorFile)))
 
 			iop := readIOP(mergedIstioOperatorPath)
 
@@ -94,14 +94,14 @@ var _ = Describe("Merge", func() {
 			},
 		}
 
-		sut := manifest.NewDefaultIstioMerger()
+		sut := istiooperator.NewDefaultIstioMerger()
 
 		// when
 		mergedIstioOperatorPath, err := sut.Merge(clusterconfig.Production, istioCR, clusterConfig)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
-		Expect(mergedIstioOperatorPath).To(Equal(path.Join("/tmp", manifest.MergedIstioOperatorFile)))
+		Expect(mergedIstioOperatorPath).To(Equal(path.Join("/tmp", istiooperator.MergedIstioOperatorFile)))
 
 		iop := readIOP(mergedIstioOperatorPath)
 
@@ -126,7 +126,7 @@ var _ = Describe("Merge", func() {
 var _ = Describe("NewIstioImageVersionFromTag", func() {
 	It("should return IstioImageVersion for a correct semantic version", func() {
 		// when
-		version, err := manifest.NewIstioImageVersionFromTag("1.12.3-blah")
+		version, err := istiooperator.NewIstioImageVersionFromTag("1.12.3-blah")
 
 		// then
 		Expect(err).Should(Not(HaveOccurred()))
@@ -137,7 +137,7 @@ var _ = Describe("NewIstioImageVersionFromTag", func() {
 
 	It("should return error for an incorrect semantic version", func() {
 		// when
-		version, err := manifest.NewIstioImageVersionFromTag("1.2.99.3")
+		version, err := istiooperator.NewIstioImageVersionFromTag("1.2.99.3")
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -147,9 +147,9 @@ var _ = Describe("NewIstioImageVersionFromTag", func() {
 })
 
 var _ = Describe("GetIstioImageVersion", func() {
-	It("should return Istio version and verify production and evaluation manifests have same hub and tag", func() {
+	It("should return Istio version and verify production and evaluation istio operator files have same hub and tag", func() {
 		// given
-		merger := manifest.NewDefaultIstioMerger()
+		merger := istiooperator.NewDefaultIstioMerger()
 
 		// when
 		imageVersion, err := merger.GetIstioImageVersion()
@@ -171,10 +171,10 @@ var _ = Describe("GetIstioImageVersion", func() {
 func readIOP(iopv1alpha1FilePath string) iopv1alpha1.IstioOperator {
 	iop := iopv1alpha1.IstioOperator{}
 
-	manifest, err := os.ReadFile(iopv1alpha1FilePath)
+	istioOpertor, err := os.ReadFile(iopv1alpha1FilePath)
 	Expect(err).ShouldNot(HaveOccurred())
 
-	err = yaml.Unmarshal(manifest, &iop)
+	err = yaml.Unmarshal(istioOpertor, &iop)
 	Expect(err).ShouldNot(HaveOccurred())
 
 	return iop

@@ -9,7 +9,7 @@ import (
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/kyma-project/istio/operator/internal/filter"
-	"github.com/kyma-project/istio/operator/internal/manifest"
+	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/kyma-project/istio/operator/internal/restarter"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
@@ -56,7 +56,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		// then
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Level()).To(Equal(described_errors.Error))
-		Expect(err.Error()).To(ContainSubstring("istio-system Pods version 1.16.0 do not match manifest version 1.16.1"))
+		Expect(err.Error()).To(ContainSubstring("istio-system Pods version 1.16.0 do not match istio operator version 1.16.1"))
 		Expect((*istioCr.Status.Conditions)[0].Message).To(Equal("Proxy sidecar restart failed"))
 	})
 
@@ -234,16 +234,16 @@ func (m MergerMock) Merge(_ clusterconfig.ClusterSize, _ *operatorv1alpha2.Istio
 
 func (m MergerMock) GetIstioOperator(_ clusterconfig.ClusterSize) (iopv1alpha1.IstioOperator, error) {
 	iop := iopv1alpha1.IstioOperator{}
-	manifest, err := os.ReadFile("../../internal/istiooperator/istio-operator.yaml")
+	istioOperator, err := os.ReadFile("../../internal/istiooperator/istio-operator.yaml")
 	if err == nil {
-		err = yaml.Unmarshal(manifest, &iop)
+		err = yaml.Unmarshal(istioOperator, &iop)
 	}
 	iop.Spec.Tag = structpb.NewStringValue(m.tag)
 	return iop, err
 }
 
-func (m MergerMock) GetIstioImageVersion() (manifest.IstioImageVersion, error) {
-	return manifest.NewIstioImageVersionFromTag("1.16.1-distroless")
+func (m MergerMock) GetIstioImageVersion() (istiooperator.IstioImageVersion, error) {
+	return istiooperator.NewIstioImageVersionFromTag("1.16.1-distroless")
 }
 
 func (m MergerMock) SetIstioInstallFlavor(_ clusterconfig.ClusterSize) {}

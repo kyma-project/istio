@@ -6,7 +6,7 @@ import (
 
 	"github.com/avast/retry-go"
 	"github.com/distribution/reference"
-	"github.com/kyma-project/istio/operator/internal/manifest"
+	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	"github.com/masterminds/semver"
 	v1 "k8s.io/api/apps/v1"
@@ -190,7 +190,7 @@ func ApplicationPodShouldHaveIstioProxy(ctx context.Context, appName, namespace,
 }
 
 func ApplicationPodShouldHaveIstioProxyInRequiredVersion(ctx context.Context, appName, namespace string) error {
-	merger := manifest.NewDefaultIstioMerger()
+	merger := istiooperator.NewDefaultIstioMerger()
 	istioImageVersion, err := merger.GetIstioImageVersion()
 	if err != nil {
 		return err

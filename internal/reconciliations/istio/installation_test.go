@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/kyma-project/istio/operator/internal/described_errors"
-	"github.com/kyma-project/istio/operator/internal/manifest"
+	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/kyma-project/istio/operator/internal/resources"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -210,7 +210,7 @@ var _ = Describe("Installation reconciliation", func() {
 
 		// then
 		Expect(err).Should(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("istio-system Pods version 1.16.0 do not match manifest version 1.16.1"))
+		Expect(err.Error()).To(ContainSubstring("istio-system Pods version 1.16.0 do not match istio operator version 1.16.1"))
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 		Expect(istioCR.Status.State).To(Equal(operatorv1alpha2.Processing))
@@ -604,7 +604,7 @@ var _ = Describe("Installation reconciliation", func() {
 		// then
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Error()).To(Equal("fake is not in dotted-tri format"))
-		Expect(err.Description()).To(Equal("Could not get Istio version from manifest: fake is not in dotted-tri format"))
+		Expect(err.Description()).To(Equal("Could not get Istio version from istio operator file: fake is not in dotted-tri format"))
 		Expect(mockClient.installCalled).To(BeFalse())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 		Expect(istioCR.Status.Conditions).To(BeNil())
@@ -1170,8 +1170,8 @@ func (m MergerMock) GetIstioOperator(_ clusterconfig.ClusterSize) (iopv1alpha1.I
 	return iop, m.getIstioOperatorError
 }
 
-func (m MergerMock) GetIstioImageVersion() (manifest.IstioImageVersion, error) {
-	return manifest.NewIstioImageVersionFromTag(m.tag)
+func (m MergerMock) GetIstioImageVersion() (istiooperator.IstioImageVersion, error) {
+	return istiooperator.NewIstioImageVersionFromTag(m.tag)
 }
 
 func (m MergerMock) SetIstioInstallFlavor(_ clusterconfig.ClusterSize) {}

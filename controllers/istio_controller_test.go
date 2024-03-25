@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/kyma-project/istio/operator/internal/manifest"
+	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/kyma-project/istio/operator/internal/restarter"
 	"k8s.io/utils/ptr"
 
@@ -1006,8 +1006,8 @@ type istioInstallationReconciliationMock struct {
 	err described_errors.DescribedError
 }
 
-func (i *istioInstallationReconciliationMock) Reconcile(_ context.Context, _ *operatorv1alpha2.Istio, _ status.Status) (manifest.IstioImageVersion, described_errors.DescribedError) {
-	version, err := manifest.NewIstioImageVersionFromTag("1.16.0-distroless")
+func (i *istioInstallationReconciliationMock) Reconcile(_ context.Context, _ *operatorv1alpha2.Istio, _ status.Status) (istiooperator.IstioImageVersion, described_errors.DescribedError) {
+	version, err := istiooperator.NewIstioImageVersionFromTag("1.16.0-distroless")
 	if err != nil {
 		i.err = described_errors.NewDescribedError(err, "error creating IstioImageVersion")
 	}

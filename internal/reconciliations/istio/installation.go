@@ -12,7 +12,7 @@ import (
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
-	"github.com/kyma-project/istio/operator/internal/manifest"
+	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/kyma-project/istio/operator/internal/resources"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 	sidecarRemover "github.com/kyma-project/istio/operator/pkg/lib/sidecars/remove"
@@ -23,13 +23,13 @@ import (
 )
 
 type InstallationReconciliation interface {
-	Reconcile(ctx context.Context, istioCR *operatorv1alpha2.Istio, statusHandler status.Status) (manifest.IstioImageVersion, described_errors.DescribedError)
+	Reconcile(ctx context.Context, istioCR *operatorv1alpha2.Istio, statusHandler status.Status) (istiooperator.IstioImageVersion, described_errors.DescribedError)
 }
 
 type Installation struct {
 	IstioClient LibraryClient
 	Client      client.Client
-	Merger      manifest.Merger
+	Merger      istiooperator.Merger
 }
 
 const (
@@ -38,11 +38,11 @@ const (
 )
 
 // Reconcile runs Istio reconciliation to install, upgrade or uninstall Istio and returns the updated Istio CR.
-func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha2.Istio, statusHandler status.Status) (manifest.IstioImageVersion, described_errors.DescribedError) {
+func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha2.Istio, statusHandler status.Status) (istiooperator.IstioImageVersion, described_errors.DescribedError) {
 	istioImageVersion, err := i.Merger.GetIstioImageVersion()
 	if err != nil {
-		ctrl.Log.Error(err, "Error getting Istio version from manifest")
-		return istioImageVersion, described_errors.NewDescribedError(err, "Could not get Istio version from manifest")
+		ctrl.Log.Error(err, "Error getting Istio version from istio operator file")
+		return istioImageVersion, described_errors.NewDescribedError(err, "Could not get Istio version from istio operator file")
 	}
 
 	shouldInstallIstio, err := shouldInstall(istioCR, istioImageVersion)

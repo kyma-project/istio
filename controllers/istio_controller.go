@@ -34,7 +34,7 @@ import (
 	"github.com/kyma-project/istio/operator/internal/status"
 	"k8s.io/client-go/util/retry"
 
-	"github.com/kyma-project/istio/operator/internal/manifest"
+	"github.com/kyma-project/istio/operator/internal/istiooperator"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
@@ -56,7 +56,7 @@ const (
 )
 
 func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *IstioReconciler {
-	merger := manifest.NewDefaultIstioMerger()
+	merger := istiooperator.NewDefaultIstioMerger()
 
 	efReferer := istio_resources.NewEnvoyFilterAllowPartialReferer(mgr.GetClient())
 	statusHandler := status.NewStatusHandler(mgr.GetClient())

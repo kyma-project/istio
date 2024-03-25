@@ -10,7 +10,7 @@ import (
 	"github.com/cucumber/godog"
 	istioCR "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
-	"github.com/kyma-project/istio/operator/internal/manifest"
+	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	networkingv1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
@@ -389,7 +389,7 @@ func ResourceNotPresent(ctx context.Context, kind string) error {
 }
 
 func IstioResourceContainerHasRequiredVersion(ctx context.Context, containerName, kind, resourceName, namespace string) error {
-	merger := manifest.NewDefaultIstioMerger()
+	merger := istiooperator.NewDefaultIstioMerger()
 	istioImageVersion, err := merger.GetIstioImageVersion()
 	if err != nil {
 		return err

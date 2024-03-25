@@ -12,7 +12,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/filter"
-	"github.com/kyma-project/istio/operator/internal/manifest"
+	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars"
@@ -26,13 +26,13 @@ const errorDescription = "Error occurred during reconciliation of Istio Sidecars
 type SidecarsRestarter struct {
 	Log           logr.Logger
 	Client        client.Client
-	Merger        manifest.Merger
+	Merger        istiooperator.Merger
 	ProxyResetter sidecars.ProxyResetter
 	Predicates    []filter.SidecarProxyPredicate
 	StatusHandler status.Status
 }
 
-func NewSidecarsRestarter(logger logr.Logger, client client.Client, merger manifest.Merger, resetter sidecars.ProxyResetter, predicates []filter.SidecarProxyPredicate, statusHandler status.Status) *SidecarsRestarter {
+func NewSidecarsRestarter(logger logr.Logger, client client.Client, merger istiooperator.Merger, resetter sidecars.ProxyResetter, predicates []filter.SidecarProxyPredicate, statusHandler status.Status) *SidecarsRestarter {
 	return &SidecarsRestarter{
 		Log:           logger,
 		Client:        client,
@@ -62,9 +62,9 @@ func (s *SidecarsRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio
 
 	istioImageVersion, err := s.Merger.GetIstioImageVersion()
 	if err != nil {
-		ctrl.Log.Error(err, "Error getting Istio version from manifest")
+		ctrl.Log.Error(err, "Error getting Istio version from istio operator file")
 		s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarRestartFailed))
-		return described_errors.NewDescribedError(err, "Could not get Istio version from manifest")
+		return described_errors.NewDescribedError(err, "Could not get Istio version from istio operator file")
 	}
 
 	expectedImage := pods.NewSidecarImage(iop.Spec.Hub, iop.Spec.Tag.GetStringValue())

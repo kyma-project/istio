@@ -210,7 +210,7 @@ var _ = Describe("Installation reconciliation", func() {
 
 		// then
 		Expect(err).Should(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("istio-system pods version: 1.16.0 do not match target version: 1.16.1"))
+		Expect(err.Error()).To(ContainSubstring("istio-system Pods version 1.16.0 do not match manifest version 1.16.1"))
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 		Expect(istioCR.Status.State).To(Equal(operatorv1alpha2.Processing))
@@ -606,45 +606,6 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(err.Error()).To(Equal("fake is not in dotted-tri format"))
 		Expect(err.Description()).To(Equal("Could not get Istio version from manifest: fake is not in dotted-tri format"))
 		Expect(mockClient.installCalled).To(BeFalse())
-		Expect(mockClient.uninstallCalled).To(BeFalse())
-		Expect(istioCR.Status.Conditions).To(BeNil())
-	})
-
-	It("should fail when istio sidecar version on cluster is invalid", func() {
-		// given
-		numTrustedProxies := 1
-		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
-			Name:            "default",
-			ResourceVersion: "1",
-			Annotations: map[string]string{
-				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
-			},
-		},
-			Spec: operatorv1alpha2.IstioSpec{
-				Config: operatorv1alpha2.Config{
-					NumTrustedProxies: &numTrustedProxies,
-				},
-			},
-		}
-		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "fake")
-		istioNamespace := createNamespace("istio-system")
-		c := createFakeClient(&istioCR, istiod, istioNamespace)
-		mockClient := mockLibraryClient{}
-		installation := istio.Installation{
-			Client:      c,
-			IstioClient: &mockClient,
-			Merger:      MergerMock{tag: "1.17.0-distroless"},
-		}
-		statusHandler := status.NewStatusHandler(c)
-
-		// when
-		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
-
-		// then
-		Expect(err).Should(HaveOccurred())
-		Expect(err.Error()).To(Equal("Invalid Semantic Version"))
-		Expect(err.Description()).To(Equal("Could not get Istio sidecar version on cluster: Invalid Semantic Version"))
-		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 		Expect(istioCR.Status.Conditions).To(BeNil())
 	})

@@ -56,7 +56,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		// then
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Level()).To(Equal(described_errors.Error))
-		Expect(err.Error()).To(ContainSubstring("istio-system pods version: 1.16.0 do not match target version: 1.16.1"))
+		Expect(err.Error()).To(ContainSubstring("istio-system Pods version 1.16.0 do not match manifest version 1.16.1"))
 		Expect((*istioCr.Status.Conditions)[0].Message).To(Equal("Proxy sidecar restart failed"))
 	})
 

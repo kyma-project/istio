@@ -97,13 +97,9 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha2.
 			return istioImageVersion, described_errors.NewDescribedError(err, "Could not add warden validation label")
 		}
 
-		installedVersion, err := gatherer.GetIstioPodsVersion(ctx, i.Client)
+		err = gatherer.VerifyIstioPodsVersion(ctx, i.Client, istioImageVersion.Version())
 		if err != nil {
-			return istioImageVersion, described_errors.NewDescribedError(err, "Could not get Istio sidecar version on cluster")
-		}
-
-		if installedVersion != istioImageVersion.Version() {
-			return istioImageVersion, described_errors.NewDescribedError(fmt.Errorf("istio-system pods version: %s do not match target version: %s", installedVersion, istioImageVersion.Version()), "Istio installation failed")
+			return istioImageVersion, described_errors.NewDescribedError(err, "Verifying Pod versions in istio-system namespace failed")
 		}
 
 		ctrl.Log.Info("Istio installation succeeded")
@@ -121,7 +117,7 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha2.
 	} else if shouldDelete(istioCR) && hasInstallationFinalizer(istioCR) {
 		ctrl.Log.Info("Starting Istio uninstall")
 
-		istioResourceFinder, err := resources.NewIstioResourcesFinder(ctx, i.Client, ctrl.Log, resources.NewDefaultControlledListGetter())
+		istioResourceFinder, err := resources.NewIstioResourcesFinder(ctx, i.Client, ctrl.Log)
 		if err != nil {
 			return istioImageVersion, described_errors.NewDescribedError(err, "Could not read customer resources finder configuration")
 		}

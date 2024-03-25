@@ -63,25 +63,17 @@ func (s *SidecarsRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio
 	istioImageVersion, err := s.Merger.GetIstioImageVersion()
 	if err != nil {
 		ctrl.Log.Error(err, "Error getting Istio version from manifest")
+		s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarRestartFailed))
 		return described_errors.NewDescribedError(err, "Could not get Istio version from manifest")
 	}
 
 	expectedImage := pods.NewSidecarImage(iop.Spec.Hub, iop.Spec.Tag.GetStringValue())
 	s.Log.Info("Running proxy sidecar reset", "expected image", expectedImage)
 
-	version, err := gatherer.GetIstioPodsVersion(ctx, s.Client)
+	err = gatherer.VerifyIstioPodsVersion(ctx, s.Client, istioImageVersion.Version())
 	if err != nil {
-		s.Log.Error(err, "Failed to get istio pod version")
 		s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarRestartFailed))
-		return described_errors.NewDescribedError(err, errorDescription)
-	}
-
-	istioVersion := istioImageVersion.Version()
-	if version != istioVersion {
-		err := fmt.Errorf("istio-system pods version: %s do not match target version: %s", version, istioImageVersion.Version())
-		s.Log.Error(err, err.Error())
-		s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarRestartFailed))
-		return described_errors.NewDescribedError(err, errorDescription)
+		return described_errors.NewDescribedError(err, "Verifying Pod versions in istio-system namespace failed")
 	}
 
 	expectedResources, err := istioCR.GetProxyResources(iop)
@@ -97,6 +89,7 @@ func (s *SidecarsRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio
 		s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarRestartFailed))
 		return described_errors.NewDescribedError(err, errorDescription)
 	}
+
 	warningsCount := len(warnings)
 	if warningsCount > 0 {
 		podsLimit := 5

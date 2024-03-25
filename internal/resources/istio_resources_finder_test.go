@@ -2,7 +2,6 @@ package resources
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	"github.com/go-logr/logr"
@@ -104,45 +103,10 @@ var _ = Describe("Resources", func() {
 		))
 })
 
-var _ = Describe("NewIstioResourcesFinder", func() {
-	It("should read configuration from yaml", func() {
-		goodResourceList, err := os.ReadFile("test_files/test_resources_list.yaml")
+var _ = Describe("IstioResourcesFinder", func() {
+	It("should succeed when reading controlled resources list configuration", func() {
+		_, err := NewIstioResourcesFinder(context.TODO(), nil, logr.Logger{})
 		Expect(err).ToNot(HaveOccurred())
-
-		config, err := NewIstioResourcesFinder(context.TODO(), nil, logr.Logger{}, ControlledListGetterMock{goodResourceList})
-		Expect(err).ToNot(HaveOccurred())
-		Expect(config).To(BeEquivalentTo(&IstioResourcesFinder{
-			ctx:    context.TODO(),
-			logger: logr.Logger{},
-			client: nil,
-			configuration: resourceFinderConfiguration{
-				Resources: []ResourceConfiguration{
-					{
-						GroupVersionKind: schema.GroupVersionKind{
-							Group:   "networking.istio.io",
-							Version: "v1alpha3",
-							Kind:    "EnvoyFilter",
-						},
-						ControlledList: []ResourceMeta{
-							{
-								Name:      "stats-filter-\\d\\.\\d\\d",
-								Namespace: "istio-system",
-							},
-						},
-					},
-				},
-			},
-		},
-		))
-	})
-
-	It("should fail if the configuration contains invalid regex", func() {
-		wrongResourceList, err := os.ReadFile("test_files/test_wrong_resources_list.yaml")
-		Expect(err).ToNot(HaveOccurred())
-
-		Expect(controlledResourcesList).ToNot(BeEmpty())
-		_, err = NewIstioResourcesFinder(context.TODO(), nil, logr.Logger{}, ControlledListGetterMock{wrongResourceList})
-		Expect(err).To(HaveOccurred())
 	})
 })
 

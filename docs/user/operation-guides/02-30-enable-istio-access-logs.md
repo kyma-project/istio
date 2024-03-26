@@ -6,15 +6,15 @@ You can enable [Istio access logs](https://istio.io/latest/docs/tasks/observabil
 The Istio setup shipped with the Istio module provides a pre-configured [extension provider](https://istio.io/latest/docs/tasks/observability/telemetry) for access logs, which will configure the Istio proxies to print access logs to stdout using the JSON format. It uses a configuration similar to the following one:
 
 ```yaml
-  extensionProviders:
-    - name: stdout-json
-      envoyFileAccessLog:
-        path: "/dev/stdout"
-        logFormat:
-          labels:
-            ...
-            traceparent: "%REQ(TRACEPARENT)%"
-            tracestate: "%REQ(TRACESTATE)%"
+extensionProviders:
+  - name: stdout-json
+    envoyFileAccessLog:
+      path: "/dev/stdout"
+      logFormat:
+        labels:
+          ...
+          traceparent: "%REQ(TRACEPARENT)%"
+          tracestate: "%REQ(TRACESTATE)%"
 ```
 
 The [log format](https://github.com/kyma-project/istio/blob/main/manifests/istio-operator-template.yaml#L160) is based on the Istio default format enhanced with the attributes relevant for identifying the related trace context conform to the [w3c-tracecontext](https://www.w3.org/TR/trace-context/) protocol. See [Kyma tracing](https://kyma-project.io/#/telemetry-manager/user/03-traces) for more details on tracing. See [Istio tracing](https://kyma-project.io/#/telemetry-manager/user/03-traces?id=istio) on how to enable trace context propagation with Istio.

@@ -26,13 +26,6 @@ resources:
       version: v1alpha3
       kind: Gateway
   - GroupVersionKind:
-      group: install.istio.io
-      version: v1alpha1
-      kind: IstioOperator
-    ControlledList:
-      - name: "installed-state-default-operator"
-        namespace: "istio-system"
-  - GroupVersionKind:
       group: security.istio.io
       version: v1beta1
       kind: PeerAuthentication

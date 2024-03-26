@@ -9,7 +9,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
-	networkingv1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
 	securityv1beta1 "istio.io/client-go/pkg/apis/security/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/scheme"
@@ -42,24 +41,6 @@ var _ = Describe("Reconciliation", func() {
 			},
 		},
 	}
-
-	It("should succeed creating envoy filter referer", func() {
-		//given
-		client := createFakeClient()
-		hc := &hyperscalerClientMock{isAws: false}
-		reconciler := NewReconciler(client, hc)
-
-		//when
-		err := reconciler.Reconcile(context.Background(), istioCR)
-
-		//then
-		Expect(err).To(Not(HaveOccurred()))
-
-		var s networkingv1alpha3.EnvoyFilterList
-		listErr := client.List(context.Background(), &s)
-		Expect(listErr).To(Not(HaveOccurred()))
-		Expect(s.Items).To(HaveLen(1))
-	})
 
 	It("should succeed creating peer authentication mtls", func() {
 		//given
@@ -160,8 +141,6 @@ func createFakeClient(objects ...ctrlclient.Object) ctrlclient.Client {
 	err = networkingv1alpha3.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
 	err = securityv1beta1.AddToScheme(scheme.Scheme)
-	Expect(err).ShouldNot(HaveOccurred())
-	err = networkingv1beta1.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
 
 	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build()

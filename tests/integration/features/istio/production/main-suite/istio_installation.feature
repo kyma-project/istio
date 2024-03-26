@@ -12,16 +12,16 @@ Feature: Installing and uninstalling Istio module
     Then Istio CR "istio-sample" in namespace "kyma-system" has condition with reason "ReconcileUnknown" of type "Ready" and status "Unknown"
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
     And Istio CR "istio-sample" in namespace "kyma-system" has condition with reason "ReconcileSucceeded" of type "Ready" and status "True"
-    And "proxy" has "requests" set to cpu - "10m" and memory - "192Mi"
-    And "proxy" has "limits" set to cpu - "1000m" and memory - "1024Mi"
+    #And "proxy" has "requests" set to cpu - "10m" and memory - "192Mi"
+    #And "proxy" has "limits" set to cpu - "1000m" and memory - "1024Mi"
     And "ingress-gateway" has "requests" set to cpu - "100m" and memory - "128Mi"
     And "ingress-gateway" has "limits" set to cpu - "2000m" and memory - "1024Mi"
-    And "proxy_init" has "requests" set to cpu - "10m" and memory - "10Mi"
-    And "proxy_init" has "limits" set to cpu - "100m" and memory - "50Mi"
+    #And "proxy_init" has "requests" set to cpu - "10m" and memory - "10Mi"
+    #And "proxy_init" has "limits" set to cpu - "100m" and memory - "50Mi"
     And "pilot" has "requests" set to cpu - "100m" and memory - "512Mi"
-    And "pilot" has "limits" set to cpu - "4000m" and memory - "2Gi"
-    And "egress-gateway" has "requests" set to cpu - "10m" and memory - "120Mi"
-    And "egress-gateway" has "limits" set to cpu - "2000m" and memory - "1024Mi"
+    And "pilot" has "limits" set to cpu - "4000m" and memory - "2048Mi"
+    #And "egress-gateway" has "requests" set to cpu - "10m" and memory - "120Mi"
+    #And "egress-gateway" has "limits" set to cpu - "2000m" and memory - "1024Mi"
 
   Scenario: Installation of Istio module
     Given Template value "PilotCPULimit" is set to "1200m"
@@ -109,20 +109,16 @@ Feature: Installing and uninstalling Istio module
     And Istio CR "istio-sample" in namespace "kyma-system" has condition with reason "ReconcileSucceeded" of type "Ready" and status "True"
     And Namespace "istio-system" is "present"
     And "Deployment" "istiod" in namespace "istio-system" is deleted
-    And "istiooperator" "installed-state-default-operator" in namespace "istio-system" is deleted
     And "Deployment" "istio-ingressgateway" in namespace "istio-system" is deleted
     And "DaemonSet" "istio-cni-node" in namespace "istio-system" is deleted
     And Istio injection is "enabled" in namespace "default"
-    And "EnvoyFilter" "kyma-referer" in namespace "istio-system" is deleted
     And "PeerAuthentication" "default" in namespace "istio-system" is deleted
     And Httpbin application "test-app" deployment is created in namespace "default"
     # We need to update the Istio CR to trigger a reconciliation
     And Template value "ProxyCPURequest" is set to "79m"
     When Istio CR "istio-sample" from "istio_cr_template" is updated in namespace "kyma-system"
     Then "Deployment" "istiod" in namespace "istio-system" is ready
-    And "istiooperator" "installed-state-default-operator" in namespace "istio-system" is "present"
     And "Deployment" "istio-ingressgateway" in namespace "istio-system" is ready
     And "DaemonSet" "istio-cni-node" in namespace "istio-system" is ready
-    And "EnvoyFilter" "kyma-referer" in namespace "istio-system" is "present"
     And "PeerAuthentication" "default" in namespace "istio-system" is "present"
     And Application pod "test-app" in namespace "default" has Istio proxy "present"

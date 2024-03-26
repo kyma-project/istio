@@ -52,7 +52,7 @@ import (
 
 const (
 	namespace                    = "kyma-system"
-	IstioVersion                 = "1.20.3"
+	IstioVersion                 = "1.21.0"
 	IstioImageBase               = "distroless"
 	IstioResourceListDefaultPath = "manifests/controlled_resources_list.yaml"
 )
@@ -62,11 +62,10 @@ var IstioTag = fmt.Sprintf("%s-%s", IstioVersion, IstioImageBase)
 func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *IstioReconciler {
 	merger := manifest.NewDefaultIstioMerger()
 
-	efReferer := istio_resources.NewEnvoyFilterAllowPartialReferer(mgr.GetClient())
 	statusHandler := status.NewStatusHandler(mgr.GetClient())
 	restarters := []restarter.Restarter{
-		restarter.NewIngressGatewayRestarter(mgr.GetClient(), []filter.IngressGatewayPredicate{efReferer}, statusHandler),
-		restarter.NewSidecarsRestarter(IstioVersion, IstioImageBase, mgr.GetLogger(), mgr.GetClient(), &merger, sidecars.NewProxyResetter(), []filter.SidecarProxyPredicate{efReferer}, statusHandler),
+		restarter.NewIngressGatewayRestarter(mgr.GetClient(), []filter.IngressGatewayPredicate{}, statusHandler),
+		restarter.NewSidecarsRestarter(IstioVersion, IstioImageBase, mgr.GetLogger(), mgr.GetClient(), &merger, sidecars.NewProxyResetter(), []filter.SidecarProxyPredicate{}, statusHandler),
 	}
 
 	return &IstioReconciler{

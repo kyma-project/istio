@@ -5,15 +5,12 @@ import (
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/kyma-project/istio/operator/internal/filter"
-	"github.com/kyma-project/istio/operator/internal/reconciliations/istio_resources"
 	"github.com/kyma-project/istio/operator/internal/restarter"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/pkg/lib/annotations"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	apinetworkingv1alpha3 "istio.io/api/networking/v1alpha3"
-	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,33 +30,13 @@ var _ = Describe("Istio Ingress Gateway restart", func() {
 				Config: operatorv1alpha2.Config{},
 			},
 		}
-		kymaReferer := &v1alpha3.EnvoyFilter{
-			TypeMeta: metav1.TypeMeta{
-				Kind:       "EnvoyFilter",
-				APIVersion: "networking.istio.io/v1alpha3",
-			},
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "kyma-referer",
-				Namespace: gatherer.IstioNamespace,
-				//has to be newer than istio-ingressgateway
-				CreationTimestamp: metav1.Unix(time.Now().Add(time.Hour).Unix(), 0),
-				Annotations: map[string]string{
-					istio_resources.EnvoyFilterAnnotation: metav1.Unix(time.Now().Add(time.Hour).Unix(), 0).Format(time.RFC3339),
-				},
-			},
-			Spec: apinetworkingv1alpha3.EnvoyFilter{
-				ConfigPatches: []*apinetworkingv1alpha3.EnvoyFilter_EnvoyConfigObjectPatch{
-					{},
-				},
-			},
-		}
+
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.1")
 		igDep := createIngressGatewayDep(time.Now().Add(-time.Hour))
 		igPod := createIgPodWithCreationTimestamp("istio-ingressgateway", gatherer.IstioNamespace, "discovery", "1.16.1", time.Now().Add(-time.Hour))
-		fakeClient := createFakeClient(istioCR, istiod, igPod, igDep, kymaReferer)
+		fakeClient := createFakeClient(istioCR, istiod, igPod, igDep)
 		statusHandler := status.NewStatusHandler(fakeClient)
-		efReferer := istio_resources.NewEnvoyFilterAllowPartialReferer(fakeClient)
-		igRestarter := restarter.NewIngressGatewayRestarter(fakeClient, []filter.IngressGatewayPredicate{efReferer}, statusHandler)
+		igRestarter := restarter.NewIngressGatewayRestarter(fakeClient, []filter.IngressGatewayPredicate{mockIgPredicate{shouldRestart: true}}, statusHandler)
 
 		//when
 		err := igRestarter.Restart(context.Background(), istioCR)
@@ -85,33 +62,13 @@ var _ = Describe("Istio Ingress Gateway restart", func() {
 				Config: operatorv1alpha2.Config{},
 			},
 		}
-		kymaReferer := &v1alpha3.EnvoyFilter{
-			TypeMeta: metav1.TypeMeta{
-				Kind:       "EnvoyFilter",
-				APIVersion: "networking.istio.io/v1alpha3",
-			},
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "kyma-referer",
-				Namespace: gatherer.IstioNamespace,
-				//has to be older than istio-ingressgateway
-				CreationTimestamp: metav1.Unix(time.Now().Add(time.Hour).Unix(), 0),
-				Annotations: map[string]string{
-					istio_resources.EnvoyFilterAnnotation: metav1.Unix(time.Now().Add(-time.Hour).Unix(), 0).Format(time.RFC3339),
-				},
-			},
-			Spec: apinetworkingv1alpha3.EnvoyFilter{
-				ConfigPatches: []*apinetworkingv1alpha3.EnvoyFilter_EnvoyConfigObjectPatch{
-					{},
-				},
-			},
-		}
+
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.1")
 		igDep := createIngressGatewayDep(time.Now())
 		igPod := createIgPodWithCreationTimestamp("istio-ingressgateway", gatherer.IstioNamespace, "discovery", "1.16.1", time.Now())
-		fakeClient := createFakeClient(istioCR, istiod, igDep, igPod, kymaReferer)
+		fakeClient := createFakeClient(istioCR, istiod, igDep, igPod)
 		statusHandler := status.NewStatusHandler(fakeClient)
-		efReferer := istio_resources.NewEnvoyFilterAllowPartialReferer(fakeClient)
-		igRestarter := restarter.NewIngressGatewayRestarter(fakeClient, []filter.IngressGatewayPredicate{efReferer}, statusHandler)
+		igRestarter := restarter.NewIngressGatewayRestarter(fakeClient, []filter.IngressGatewayPredicate{mockIgPredicate{shouldRestart: false}}, statusHandler)
 
 		//when
 		err := igRestarter.Restart(context.Background(), istioCR)
@@ -137,26 +94,11 @@ var _ = Describe("Istio Ingress Gateway restart", func() {
 				Config: operatorv1alpha2.Config{},
 			},
 		}
-		kymaReferer := &v1alpha3.EnvoyFilter{
-			TypeMeta: metav1.TypeMeta{
-				Kind:       "EnvoyFilter",
-				APIVersion: "networking.istio.io/v1alpha3",
-			},
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "kyma-referer",
-				Namespace: gatherer.IstioNamespace,
-			},
-			Spec: apinetworkingv1alpha3.EnvoyFilter{
-				ConfigPatches: []*apinetworkingv1alpha3.EnvoyFilter_EnvoyConfigObjectPatch{
-					{},
-				},
-			},
-		}
+
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.1")
-		fakeClient := createFakeClient(istioCR, istiod, kymaReferer)
+		fakeClient := createFakeClient(istioCR, istiod)
 		statusHandler := status.NewStatusHandler(fakeClient)
-		efReferer := istio_resources.NewEnvoyFilterAllowPartialReferer(fakeClient)
-		igRestarter := restarter.NewIngressGatewayRestarter(fakeClient, []filter.IngressGatewayPredicate{efReferer}, statusHandler)
+		igRestarter := restarter.NewIngressGatewayRestarter(fakeClient, []filter.IngressGatewayPredicate{mockIgPredicate{shouldRestart: true}}, statusHandler)
 
 		//when
 		err := igRestarter.Restart(context.Background(), istioCR)
@@ -184,8 +126,7 @@ var _ = Describe("Istio Ingress Gateway restart", func() {
 		ingressGateway := createIgPodWithCreationTimestamp("istio-ingressgateway", gatherer.IstioNamespace, "discovery", "1.16.1", time.Now())
 		fakeClient := createFakeClient(istioCR, istiod, ingressGateway)
 		statusHandler := status.NewStatusHandler(fakeClient)
-		efReferer := istio_resources.NewEnvoyFilterAllowPartialReferer(fakeClient)
-		igRestarter := restarter.NewIngressGatewayRestarter(fakeClient, []filter.IngressGatewayPredicate{efReferer}, statusHandler)
+		igRestarter := restarter.NewIngressGatewayRestarter(fakeClient, []filter.IngressGatewayPredicate{mockIgPredicate{shouldRestart: true}}, statusHandler)
 
 		//when
 		err := igRestarter.Restart(context.Background(), istioCR)
@@ -224,6 +165,18 @@ func createIngressGatewayDep(creationTimestamp time.Time) *appsv1.Deployment {
 			},
 		},
 	}
+}
+
+type mockIgPredicate struct {
+	shouldRestart bool
+}
+
+func (m mockIgPredicate) RequiresIngressGatewayRestart(_ v1.Pod) bool {
+	return m.shouldRestart
+}
+
+func (m mockIgPredicate) NewIngressGatewayEvaluator(_ context.Context) (filter.IngressGatewayRestartEvaluator, error) {
+	return m, nil
 }
 
 func createIgPodWithCreationTimestamp(name, namespace, containerName, imageVersion string, t time.Time) *v1.Pod {

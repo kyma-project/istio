@@ -4,7 +4,6 @@ import (
 	"context"
 	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/resources"
-	networkingv1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -71,7 +70,7 @@ func createFakeClient(objects ...ctrlClient.Object) ctrlClient.Client {
 	Expect(err).ShouldNot(HaveOccurred())
 	err = securityv1beta1.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
-	err = networkingv1beta1.AddToScheme(scheme.Scheme)
+	err = networkingv1alpha3.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
 
 	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build()

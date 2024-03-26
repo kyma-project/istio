@@ -33,41 +33,15 @@ Use the Telemetry API to selectively enable Istio access logs. See:
 ### Configure Istio Access Logs for the Entire Namespace
 
 <!-- tabs:start -->
-#### **kubectl**
-1. Export the name of the namespace you want to use:
-    
-    ```yaml
-    export NAMESPACE={NAMESPACE_NAME}
-    ```
-
-2. To apply the configuration, run:
-
-    ```yaml
-    cat <<EOF | kubectl apply -f -
-    apiVersion: telemetry.istio.io/v1alpha1
-    kind: Telemetry
-    metadata:
-      name: access-config
-      namespace: $NAMESPACE
-    spec:
-      accessLogging:
-        - providers:
-          - name: stdout-json
-    EOF
-    ```
-3. To verify that the resource is applied, run:
-    ```yaml
-    kubectl -n $NAMESPACE get telemetries.telemetry.istio.io
-    ```
 
 #### **Kyma Dashboard**
 
-1. Navigate to the namespace you want to use.
+1. Select the namespace for which you want to configure Istio Access Logs.
 2. Go to **Configuration > Custom Resources**.
 3. Scroll down to find the section `telemetry.istio.io` and select **Telemetries**.
 4. Select **Create Telemetry** and paste the following configuration in the editor:
 
-  ```yaml
+  ```bash
   apiVersion: telemetry.istio.io/v1alpha1
   kind: Telemetry
   metadata:
@@ -79,6 +53,32 @@ Use the Telemetry API to selectively enable Istio access logs. See:
   ```
 6. Select **Create**.
 
+#### **kubectl**
+1. Export the name of the namespace you want to use:
+    
+    ```bash
+    export YOUR_NAMESPACE={NAMESPACE_NAME}
+    ```
+
+2. To apply the configuration, run:
+
+    ```bash
+    cat <<EOF | kubectl apply -f -
+    apiVersion: telemetry.istio.io/v1alpha1
+    kind: Telemetry
+    metadata:
+      name: access-config
+      namespace: $YOUR_NAMESPACE
+    spec:
+      accessLogging:
+        - providers:
+          - name: stdout-json
+    EOF
+    ```
+3. To verify that the resource is applied, run:
+    ```bash
+    kubectl -n $YOUR_NAMESPACE get telemetries.telemetry.istio.io
+    ```
 <!-- tabs:end -->
 
 
@@ -88,16 +88,15 @@ To configure label-based selection of workloads, use a [selector](https://istio.
 
 <!-- tabs:start -->
 #### **Kyma Dashboard**
-1. Select the namespace you want to use.
+1. Select the namespace of the workload for which you want to configure Istio Access Logs.
 2. Go to **Configuration > Custom Resources**.
 3. Scroll down to find the section `telemetry.istio.io` and select **Telemetries > Create Telemetry**.
 4. Select **Create Telemetry** and paste the following sample configuration in the editor:
-    ```yaml
+    ```bash
     apiVersion: telemetry.istio.io/v1alpha1
     kind: Telemetry
     metadata:
       name: access-config
-      namespace: {YOUR_NAMESPACE}
     spec:
       selector:
         matchLabels:
@@ -106,19 +105,19 @@ To configure label-based selection of workloads, use a [selector](https://istio.
         - providers:
           - name: stdout-json
     ```
-6. Replace `{YOUR_NAMESPACE}` and `{YOUR_LABEL}` with your namespace and the label of the workload, respectively.
+6. Replace `{YOUR_LABEL}` with the workload's label.
 7. Select **Create**.
 
 #### **kubectl**
 1. Export the name of the namespace and the label of the workload:
     
-    ```yaml
+    ```bash
     export YOUR_NAMESPACE={NAMESPACE_NAME}
     export YOUR_LABEL={LABEL}
     ```
 
 2. To apply the configuration, run:
-    ```yaml
+    ```bash
     cat <<EOF | kubectl apply -f -
     apiVersion: telemetry.istio.io/v1alpha1
     kind: Telemetry
@@ -135,8 +134,8 @@ To configure label-based selection of workloads, use a [selector](https://istio.
     EOF
     ```
 3. To verify that the resource is applied, run:
-    ```yaml
-    kubectl -n {YOUR_NAMESPACE} get telemetries.telemetry.istio.io
+    ```bash
+    kubectl -n $YOUR_NAMESPACE get telemetries.telemetry.istio.io
     ```
 <!-- tabs:end -->
 
@@ -150,7 +149,7 @@ Instead of enabling the access logs for all the individual proxies of the worklo
 2. Go to **Configuration > Custom Resources**.
 3. Scroll down to find the section `telemetry.istio.io` and select **Telemetries**.
 4. Select **Create Telemetry** and paste the following configuration in the editor:
-    ```yaml
+    ```bash
     apiVersion: telemetry.istio.io/v1alpha1
     kind: Telemetry
     metadata:
@@ -169,7 +168,7 @@ Instead of enabling the access logs for all the individual proxies of the worklo
 #### **kubectl**
 
 1. To apply the configuration, run:
-    ```yaml
+    ```bash
     cat <<EOF | kubectl apply -f -
     apiVersion: telemetry.istio.io/v1alpha1
     kind: Telemetry
@@ -186,7 +185,7 @@ Instead of enabling the access logs for all the individual proxies of the worklo
     EOF
     ```
 2. To verify that the resource is applied, run:
-    ```yaml
+    ```bash
     kubectl -n istio-system get telemetries.telemetry.istio.io
     ```
 <!-- tabs:end -->
@@ -201,7 +200,7 @@ Enable access logs for all individual proxies of the workloads and Istio Ingress
 2. Go to **Configuration > Custom Resources**.
 3. Scroll down to find the section `telemetry.istio.io` and select **Telemetries**.
 4. Select **Create Telemetry** and paste the following configuration in the editor:
-    ```yaml
+    ```bash
     apiVersion: telemetry.istio.io/v1alpha1
     kind: Telemetry
     metadata:
@@ -219,7 +218,7 @@ Enable access logs for all individual proxies of the workloads and Istio Ingress
 
 #### **kubectl**
 1. To apply the configuration, run:
-    ```yaml
+    ```bash
     cat <<EOF | kubectl apply -f -
     apiVersion: telemetry.istio.io/v1alpha1
     kind: Telemetry
@@ -235,7 +234,7 @@ Enable access logs for all individual proxies of the workloads and Istio Ingress
           - name: stdout-json
     ```
 2. To verify that the resource is applied, run:
-    ```yaml
+    ```bash
     kubectl -n istio-system get telemetries.telemetry.istio.io
     ```
 <!-- tabs:end -->

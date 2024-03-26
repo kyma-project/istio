@@ -36,7 +36,7 @@ Use the Telemetry API to selectively enable Istio access logs. See:
 
 #### **Kyma Dashboard**
 
-1. Go to the namespace for which you want to configure Istio Access Logs.
+1. Go to the namespace for which you want to configure Istio access logs.
 2. Go to **Configuration > Custom Resources**.
 3. Scroll down to find the section `telemetry.istio.io` and select **Telemetries**.
 4. Select **Create Telemetry** and paste the following sample configuration into the editor:

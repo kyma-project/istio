@@ -56,7 +56,7 @@ Use the Telemetry API to selectively enable Istio access logs. See:
 7. Select **Create**.
 
 #### **kubectl**
-1. Export the name of the namespace for which you want to configure Istio Access Logs.
+1. Export the name of the namespace for which you want to configure Istio access logs.
     
     ```bash
     export YOUR_NAMESPACE={NAMESPACE_NAME}
@@ -90,7 +90,7 @@ To configure label-based selection of workloads, use a [selector](https://istio.
 
 <!-- tabs:start -->
 #### **Kyma Dashboard**
-1. Go to the namespace of the workloads for which you want to enable Istio access logs.
+1. Go to the namespace of the workloads for which you want to configure Istio access logs.
 2. Go to **Configuration > Custom Resources**.
 3. Scroll down to find the section `telemetry.istio.io` and select **Telemetries > Create Telemetry**.
 4. Select **Create Telemetry** and paste the following sample configuration into the editor:

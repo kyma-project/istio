@@ -38,7 +38,7 @@ func shouldInstall(istio *operatorv1alpha2.Istio, istioImageVersion istiooperato
 		return false, err
 	}
 
-	if err := CheckIstioVersion(lastAppliedConfig.IstioTag, istioImageVersion.Tag()); err != nil {
+	if err := checkIstioVersion(lastAppliedConfig.IstioTag, istioImageVersion.Tag()); err != nil {
 		return false, err
 	}
 
@@ -82,7 +82,7 @@ func getLastAppliedConfiguration(istioCR *operatorv1alpha2.Istio) (appliedConfig
 	return lastAppliedConfig, nil
 }
 
-func CheckIstioVersion(currentIstioVersionString, targetIstioVersionString string) error {
+func checkIstioVersion(currentIstioVersionString, targetIstioVersionString string) error {
 	currentIstioVersion, err := semver.NewVersion(currentIstioVersionString)
 	if err != nil {
 		return err
@@ -90,6 +90,12 @@ func CheckIstioVersion(currentIstioVersionString, targetIstioVersionString strin
 	targetIstioVersion, err := semver.NewVersion(targetIstioVersionString)
 	if err != nil {
 		return err
+	}
+
+	// We need to compare this separately, because semver library does not support comparing versions by ignoring pre-release versions. But only a changed image type must not be considered
+	// as a change of the Istio version.
+	if currentIstioVersion.Major == targetIstioVersion.Major && currentIstioVersion.Minor == targetIstioVersion.Minor && currentIstioVersion.Patch == targetIstioVersion.Patch {
+		return nil
 	}
 
 	if targetIstioVersion.LessThan(*currentIstioVersion) {

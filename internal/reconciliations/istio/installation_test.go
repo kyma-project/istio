@@ -37,7 +37,7 @@ import (
 
 const (
 	istioVersion string = "1.16.1"
-	istioTag     string = "1.16.1-distroless"
+	istioTag            = istioVersion + "-distroless"
 	testKey      string = "key"
 	testValue    string = "value"
 )
@@ -452,6 +452,47 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 		Expect(istioCR.Status.State).To(Equal(operatorv1alpha2.Processing))
 		Expect(istioCR.Status.Conditions).ToNot(BeNil())
+	})
+
+	It("should execute install when only Istio image type has changed to debug", func() {
+		// given
+		numTrustedProxies := 1
+		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
+			Name:            "default",
+			ResourceVersion: "1",
+			Annotations: map[string]string{
+				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
+			},
+		},
+			Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
+					NumTrustedProxies: &numTrustedProxies,
+				},
+			},
+			Status: operatorv1alpha2.IstioStatus{
+				State: operatorv1alpha2.Processing,
+			},
+		}
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion+"-debug")
+		istioNamespace := createNamespace("istio-system")
+		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway"}}
+		c := createFakeClient(&istioCR, istiod, istioNamespace, igwDeployment)
+		mockClient := mockLibraryClient{}
+		installation := istio.Installation{
+			Client:      c,
+			IstioClient: &mockClient,
+			Merger:      MergerMock{tag: istioVersion + "-debug"},
+		}
+		statusHandler := status.NewStatusHandler(c)
+
+		// when
+		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+
+		// then
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(mockClient.installCalled).To(BeTrue())
+		Expect(mockClient.uninstallCalled).To(BeFalse())
+		Expect(istioCR.Status.State).To(Equal(operatorv1alpha2.Processing))
 	})
 
 	It("should not execute install to downgrade istio", func() {

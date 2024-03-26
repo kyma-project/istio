@@ -148,7 +148,7 @@ Instead of enabling the access logs for all the individual proxies of the worklo
 
 <!-- tabs:start -->
 #### **Kyma Dashboard**
-1. Select the `istio-system` namespace.
+1. Go to the `istio-system` namespace.
 2. Go to **Configuration > Custom Resources**.
 3. Scroll down to find the section `telemetry.istio.io` and select **Telemetries**.
 4. Select **Create Telemetry** and paste the following sample configuration into the editor:
@@ -199,7 +199,7 @@ Enable access logs for all individual proxies of the workloads and Istio Ingress
 
 <!-- tabs:start -->
 #### **Kyma Dashboard**
-1. Select the `istio-system` namespace.
+1. Go to the `istio-system` namespace.
 2. Go to **Configuration > Custom Resources**.
 3. Scroll down to find the section `telemetry.istio.io` and select **Telemetries**.
 4. Select **Create Telemetry** and paste the following sample configuration into the editor:

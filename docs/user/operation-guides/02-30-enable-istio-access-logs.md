@@ -112,7 +112,7 @@ To configure label-based selection of workloads, use a [selector](https://istio.
 7. Select **Create**.
 
 #### **kubectl**
-1. Export the name of the workloads' namespace and its label as environment variables:
+1. Export the name of the workloads' namespace and their label as environment variables:
     
     ```bash
     export YOUR_NAMESPACE={NAMESPACE_NAME}

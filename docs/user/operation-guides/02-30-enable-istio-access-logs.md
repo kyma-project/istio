@@ -3,7 +3,7 @@ title: Enable Istio Access Logs
 ---
 
 You can enable [Istio access logs](https://istio.io/latest/docs/tasks/observability/logs/access-log/) to provide fine-grained details about the access to workloads that are part of the Istio service mesh. This can help indicate the four “golden signals” of monitoring (latency, traffic, errors, and saturation) and troubleshooting anomalies.
-The Istio setup shipped with Kyma provides a pre-configured [extension provider](https://istio.io/latest/docs/tasks/observability/telemetry) for access logs, which will configure the istio-proxies to print access logs to stdout using JSON format. It uses a configuration similar to the following one:
+The Istio setup shipped with the Istio module provides a pre-configured [extension provider](https://istio.io/latest/docs/tasks/observability/telemetry) for access logs, which will configure the Istio proxies to print access logs to stdout using the JSON format. It uses a configuration similar to the following one:
 
 ```yaml
   extensionProviders:
@@ -24,34 +24,74 @@ The [log format](https://github.com/kyma-project/istio/blob/main/manifests/istio
 
 ## Configuration
 
-Use the Telemetry API to selectively enable Istio access logs. You can enable access logs for an entire namespace, for a selective workload, or on the Istio Gateway scope.
+Use the Telemetry API to selectively enable Istio access logs. See:
+- [Configure Istio Access Logs for the Entire Namespace](#configure-istio-access-logs-for-the-entire-namespace)
+- [Configure Istio Access Logs for a Selective Workload](#configure-istio-access-logs-for-a-selective-workload)
+- [Configure Istio Access Logs for a Specific Gateway](#configure-istio-access-logs-for-a-specific-gateway)
+- [Configure Istio Access Logs for the Entire Mesh](#configure-istio-access-logs-for-the-entire-mesh)
 
 ### Configure Istio Access Logs for the Entire Namespace
 
-1. In the following sample configuration, replace `{YOUR_NAMESPACE}` with your namespace.
-1. To apply the configuration, run `kubectl apply`.
+<!-- tabs:start -->
+#### **kubectl**
+1. Export the name of the namespace you want to use:
+    
+    ```yaml
+    export NAMESPACE={NAMESPACE_NAME}
+    ```
+
+2. To apply the configuration, run:
 
     ```yaml
+    cat <<EOF | kubectl apply -f -
     apiVersion: telemetry.istio.io/v1alpha1
     kind: Telemetry
     metadata:
       name: access-config
-      namespace: {YOUR_NAMESPACE}
+      namespace: $NAMESPACE
     spec:
       accessLogging:
         - providers:
           - name: stdout-json
+    EOF
     ```
-1. To verify that the resource is applied, run:
+3. To verify that the resource is applied, run:
     ```yaml
-    kubectl -n {YOUR_NAMESPACE} get telemetries.telemetry.istio.io
+    kubectl -n $NAMESPACE get telemetries.telemetry.istio.io
     ```
+
+#### **Kyma Dashboard**
+
+1. Navigate to the namespace you want to use.
+2. Go to **Configuration > Custom Resources**.
+3. Scroll down to find the section `telemetry.istio.io` and select **Telemetries**.
+4. Select **Create Telemetry** and paste the following configuration in the editor:
+
+  ```yaml
+  apiVersion: telemetry.istio.io/v1alpha1
+  kind: Telemetry
+  metadata:
+    name: access-config
+  spec:
+    accessLogging:
+      - providers:
+        - name: stdout-json
+  ```
+6. Select **Create**.
+
+<!-- tabs:end -->
+
 
 ### Configure Istio Access Logs for a Selective Workload
 
 To configure label-based selection of workloads, use a [selector](https://istio.io/latest/docs/reference/config/type/workload-selector/#WorkloadSelector).
-1. In the following sample configuration, replace `{YOUR_NAMESPACE}` and `{YOUR_LABEL}` with your namespace and the label of the workload, respectively.
-1. To apply the configuration, run `kubectl apply`.
+
+<!-- tabs:start -->
+#### **Kyma Dashboard**
+1. Select the namespace you want to use.
+2. Go to **Configuration > Custom Resources**.
+3. Scroll down to find the section `telemetry.istio.io` and select **Telemetries > Create Telemetry**.
+4. Select **Create Telemetry** and paste the following sample configuration in the editor:
     ```yaml
     apiVersion: telemetry.istio.io/v1alpha1
     kind: Telemetry
@@ -66,16 +106,50 @@ To configure label-based selection of workloads, use a [selector](https://istio.
         - providers:
           - name: stdout-json
     ```
-1. To verify that the resource is applied, run:
+6. Replace `{YOUR_NAMESPACE}` and `{YOUR_LABEL}` with your namespace and the label of the workload, respectively.
+7. Select **Create**.
+
+#### **kubectl**
+1. Export the name of the namespace and the label of the workload:
+    
+    ```yaml
+    export YOUR_NAMESPACE={NAMESPACE_NAME}
+    export YOUR_LABEL={LABEL}
+    ```
+
+2. To apply the configuration, run:
+    ```yaml
+    cat <<EOF | kubectl apply -f -
+    apiVersion: telemetry.istio.io/v1alpha1
+    kind: Telemetry
+    metadata:
+      name: access-config
+      namespace: {YOUR_NAMESPACE}
+    spec:
+      selector:
+        matchLabels:
+          service.istio.io/canonical-name: {YOUR_LABEL}
+      accessLogging:
+        - providers:
+          - name: stdout-json
+    EOF
+    ```
+3. To verify that the resource is applied, run:
     ```yaml
     kubectl -n {YOUR_NAMESPACE} get telemetries.telemetry.istio.io
     ```
+<!-- tabs:end -->
 
 ### Configure Istio Access Logs for a Specific Gateway
 
 Instead of enabling the access logs for all the individual proxies of the workloads you have, you can enable the logs for the proxy used by the related Istio Ingress Gateway.
 
-1. To apply the configuration, run `kubectl apply`.
+<!-- tabs:start -->
+#### **Kyma Dashboard**
+1. Select the `istio-system` namespace.
+2. Go to **Configuration > Custom Resources**.
+3. Scroll down to find the section `telemetry.istio.io` and select **Telemetries**.
+4. Select **Create Telemetry** and paste the following configuration in the editor:
     ```yaml
     apiVersion: telemetry.istio.io/v1alpha1
     kind: Telemetry
@@ -90,15 +164,43 @@ Instead of enabling the access logs for all the individual proxies of the worklo
         - providers:
           - name: stdout-json
     ```
-1. To verify that the resource is applied, run:
+5. Select **Create**.
+
+#### **kubectl**
+
+1. To apply the configuration, run:
+    ```yaml
+    cat <<EOF | kubectl apply -f -
+    apiVersion: telemetry.istio.io/v1alpha1
+    kind: Telemetry
+    metadata:
+      name: access-config
+      namespace: istio-system
+    spec:
+      selector:
+        matchLabels:
+          istio: ingressgateway
+      accessLogging:
+        - providers:
+          - name: stdout-json
+    EOF
+    ```
+2. To verify that the resource is applied, run:
     ```yaml
     kubectl -n istio-system get telemetries.telemetry.istio.io
     ```
+<!-- tabs:end -->
 
 ### Configure Istio Access Logs for the Entire Mesh
 
 Enable access logs for all individual proxies of the workloads and Istio Ingress Gateways.
-1. To apply the configuration, run `kubectl apply`.
+
+<!-- tabs:start -->
+#### **Kyma Dashboard**
+1. Select the `istio-system` namespace.
+2. Go to **Configuration > Custom Resources**.
+3. Scroll down to find the section `telemetry.istio.io` and select **Telemetries**.
+4. Select **Create Telemetry** and paste the following configuration in the editor:
     ```yaml
     apiVersion: telemetry.istio.io/v1alpha1
     kind: Telemetry
@@ -113,7 +215,27 @@ Enable access logs for all individual proxies of the workloads and Istio Ingress
         - providers:
           - name: stdout-json
     ```
-1. To verify that the resource is applied, run:
+5. Select **Create**.
+
+#### **kubectl**
+1. To apply the configuration, run:
+    ```yaml
+    cat <<EOF | kubectl apply -f -
+    apiVersion: telemetry.istio.io/v1alpha1
+    kind: Telemetry
+    metadata:
+      name: access-config
+      namespace: istio-system
+    spec:
+      selector:
+        matchLabels:
+          istio: ingressgateway
+      accessLogging:
+        - providers:
+          - name: stdout-json
+    ```
+2. To verify that the resource is applied, run:
     ```yaml
     kubectl -n istio-system get telemetries.telemetry.istio.io
     ```
+<!-- tabs:end -->

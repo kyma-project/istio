@@ -36,25 +36,27 @@ Use the Telemetry API to selectively enable Istio access logs. See:
 
 #### **Kyma Dashboard**
 
-1. Select the namespace for which you want to configure Istio Access Logs.
+1. Go to the namespace for which you want to configure Istio Access Logs.
 2. Go to **Configuration > Custom Resources**.
 3. Scroll down to find the section `telemetry.istio.io` and select **Telemetries**.
 4. Select **Create Telemetry** and paste the following sample configuration into the editor:
 
-  ```bash
-  apiVersion: telemetry.istio.io/v1alpha1
-  kind: Telemetry
-  metadata:
-    name: access-config
-  spec:
-    accessLogging:
-      - providers:
-        - name: stdout-json
-  ```
-6. Select **Create**.
+    ```bash
+    apiVersion: telemetry.istio.io/v1alpha1
+    kind: Telemetry
+    metadata:
+      name: access-config
+      namespace: {YOUR_NAMESPACE}
+    spec:
+      accessLogging:
+        - providers:
+          - name: stdout-json
+    ```
+6. Replace `{YOUR_NAMESPACE}` with the name of the namespace.
+7. Select **Create**.
 
 #### **kubectl**
-1. Export the name of the namespace you want to use:
+1. Export the name of the namespace for which you want to configure Istio Access Logs.
     
     ```bash
     export YOUR_NAMESPACE={NAMESPACE_NAME}
@@ -88,7 +90,7 @@ To configure label-based selection of workloads, use a [selector](https://istio.
 
 <!-- tabs:start -->
 #### **Kyma Dashboard**
-1. Select the namespace of the workload for which you want to configure Istio Access Logs.
+1. Go to the namespace of the workloads for which you want to enable Istio access logs.
 2. Go to **Configuration > Custom Resources**.
 3. Scroll down to find the section `telemetry.istio.io` and select **Telemetries > Create Telemetry**.
 4. Select **Create Telemetry** and paste the following sample configuration into the editor:
@@ -97,6 +99,7 @@ To configure label-based selection of workloads, use a [selector](https://istio.
     kind: Telemetry
     metadata:
       name: access-config
+      namespace: {YOUR_NAMESPACE}
     spec:
       selector:
         matchLabels:
@@ -105,11 +108,11 @@ To configure label-based selection of workloads, use a [selector](https://istio.
         - providers:
           - name: stdout-json
     ```
-6. Replace `{YOUR_LABEL}` with the workload's label.
+6. Replace `{YOUR_LABEL}` with the workloads' label and `{YOUR_NAMESPACE}` with the name of the workloads' namespace.
 7. Select **Create**.
 
 #### **kubectl**
-1. Export the name of the workload's namespace and its label as environment variables:
+1. Export the name of the workloads' namespace and its label as environment variables:
     
     ```bash
     export YOUR_NAMESPACE={NAMESPACE_NAME}

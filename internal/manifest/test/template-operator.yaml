@@ -1,9 +1,0 @@
-apiVersion: install.istio.io/v1alpha1
-kind: IstioOperator
-metadata:
-  name: test-operator
-  namespace: istio-system
-  labels:
-    app.kubernetes.io/version: "{{ .ModuleVersion }}"
-spec:
-  tag: "{{ .IstioVersion }}-{{ .IstioImageBase }}"

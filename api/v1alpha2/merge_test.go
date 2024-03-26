@@ -5,7 +5,7 @@ import (
 	"github.com/kyma-project/istio/operator/internal/tests"
 	"github.com/onsi/ginkgo/v2/types"
 	operatorv1alpha1 "istio.io/api/operator/v1alpha1"
-	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
+	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	"istio.io/istio/pkg/config/mesh"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -53,12 +53,12 @@ func jsonTagsToSnakeCase(camelCaseMarshaledJson []byte) string {
 
 var _ = Describe("Merge", func() {
 	Context("Authorizations", func() {
-		It("Should set authorizer with no headers setup", func() {
+		It("should set authorizer with no headers setup", func() {
 			// given
 			m := mesh.DefaultMeshConfig()
 			meshConfig := convert(m)
 
-			iop := istioOperator.IstioOperator{
+			iop := iopv1alpha1.IstioOperator{
 				Spec: &operatorv1alpha1.IstioOperatorSpec{
 					MeshConfig: meshConfig,
 				},
@@ -104,12 +104,12 @@ var _ = Describe("Merge", func() {
 			Expect(foundAuthorizer).To(BeTrue(), "Could not find the authorizer by the name")
 		})
 
-		It("Should set headers for authorizer", func() {
+		It("should set headers for authorizer", func() {
 			// given
 			m := mesh.DefaultMeshConfig()
 			meshConfig := convert(m)
 
-			iop := istioOperator.IstioOperator{
+			iop := iopv1alpha1.IstioOperator{
 				Spec: &operatorv1alpha1.IstioOperatorSpec{
 					MeshConfig: meshConfig,
 				},
@@ -203,13 +203,13 @@ var _ = Describe("Merge", func() {
 		})
 	})
 
-	It("Should update numTrustedProxies on IstioOperator from 1 to 5", func() {
+	It("should update numTrustedProxies on IstioOperator from 1 to 5", func() {
 		// given
 		m := mesh.DefaultMeshConfig()
 		m.DefaultConfig.GatewayTopology = &v1alpha1.Topology{NumTrustedProxies: 1}
 		meshConfig := convert(m)
 
-		iop := istioOperator.IstioOperator{
+		iop := iopv1alpha1.IstioOperator{
 			Spec: &operatorv1alpha1.IstioOperatorSpec{
 				MeshConfig: meshConfig,
 			},
@@ -229,12 +229,12 @@ var _ = Describe("Merge", func() {
 		Expect(numTrustedProxies).To(Equal(float64(5)))
 	})
 
-	It("Should set numTrustedProxies on IstioOperator to 5 when no GatewayTopology is configured", func() {
+	It("should set numTrustedProxies on IstioOperator to 5 when no GatewayTopology is configured", func() {
 		// given
 		m := mesh.DefaultMeshConfig()
 		meshConfig := convert(m)
 
-		iop := istioOperator.IstioOperator{
+		iop := iopv1alpha1.IstioOperator{
 			Spec: &operatorv1alpha1.IstioOperatorSpec{
 				MeshConfig: meshConfig,
 			},
@@ -255,9 +255,9 @@ var _ = Describe("Merge", func() {
 		Expect(numTrustedProxies).To(Equal(float64(numProxies)))
 	})
 
-	It("Should set numTrustedProxies on IstioOperator to 5 when IstioOperator has nil spec", func() {
+	It("should set numTrustedProxies on IstioOperator to 5 when IstioOperator has nil spec", func() {
 		// given
-		iop := istioOperator.IstioOperator{
+		iop := iopv1alpha1.IstioOperator{
 			Spec: nil,
 		}
 
@@ -276,9 +276,9 @@ var _ = Describe("Merge", func() {
 		Expect(numTrustedProxies).To(Equal(float64(numProxies)))
 	})
 
-	It("Should set numTrustedProxies on IstioOperator to 5 when IstioOperator has nil mesh config", func() {
+	It("should set numTrustedProxies on IstioOperator to 5 when IstioOperator has nil mesh config", func() {
 		// given
-		iop := istioOperator.IstioOperator{
+		iop := iopv1alpha1.IstioOperator{
 			Spec: &operatorv1alpha1.IstioOperatorSpec{
 				MeshConfig: nil,
 			},
@@ -299,13 +299,13 @@ var _ = Describe("Merge", func() {
 		Expect(numTrustedProxies).To(Equal(float64(numProxies)))
 	})
 
-	It("Should change nothing if config is empty", func() {
+	It("should change nothing if config is empty", func() {
 		// given
 		m := mesh.DefaultMeshConfig()
 		m.DefaultConfig.GatewayTopology = &v1alpha1.Topology{NumTrustedProxies: 1}
 		meshConfig := convert(m)
 
-		iop := istioOperator.IstioOperator{
+		iop := iopv1alpha1.IstioOperator{
 			Spec: &operatorv1alpha1.IstioOperatorSpec{
 				MeshConfig: meshConfig,
 			},
@@ -323,14 +323,14 @@ var _ = Describe("Merge", func() {
 			GetStructValue().Fields["gatewayTopology"].GetStructValue().Fields["numTrustedProxies"].GetNumberValue()
 		Expect(numTrustedProxies).To(Equal(float64(1)))
 	})
-	It("Should set numTrustedProxies on IstioOperator to 5 when there is no defaultConfig in meshConfig", func() {
+	It("should set numTrustedProxies on IstioOperator to 5 when there is no defaultConfig in meshConfig", func() {
 		// given
 		m := &v1alpha1.MeshConfig{
 			EnableTracing: true,
 		}
 		meshConfig := convert(m)
 
-		iop := istioOperator.IstioOperator{
+		iop := iopv1alpha1.IstioOperator{
 			Spec: &operatorv1alpha1.IstioOperatorSpec{
 				MeshConfig: meshConfig,
 			},
@@ -352,9 +352,9 @@ var _ = Describe("Merge", func() {
 
 	Context("Pilot", func() {
 		Context("When Istio CR has 500m configured for CPU limits", func() {
-			It("Should set CPU limits to 500m in IOP", func() {
+			It("should set CPU limits to 500m in IOP", func() {
 				//given
-				iop := istioOperator.IstioOperator{
+				iop := iopv1alpha1.IstioOperator{
 					Spec: &operatorv1alpha1.IstioOperatorSpec{},
 				}
 				cpuLimit := "500m"
@@ -381,9 +381,9 @@ var _ = Describe("Merge", func() {
 		})
 
 		Context("When Istio CR has 500m configured for CPU requests", func() {
-			It("Should set CPU requests to 500m in IOP", func() {
+			It("should set CPU requests to 500m in IOP", func() {
 				//given
-				iop := istioOperator.IstioOperator{
+				iop := iopv1alpha1.IstioOperator{
 					Spec: &operatorv1alpha1.IstioOperatorSpec{},
 				}
 				cpuLimit := "500m"
@@ -411,9 +411,9 @@ var _ = Describe("Merge", func() {
 	})
 	Context("IngressGateway", func() {
 		Context("When Istio CR has 500m configured for CPU and 500Mi for memory limits", func() {
-			It("Should set CPU limits to 500m and 500Mi for memory in IOP", func() {
+			It("should set CPU limits to 500m and 500Mi for memory in IOP", func() {
 				//given
-				iop := istioOperator.IstioOperator{
+				iop := iopv1alpha1.IstioOperator{
 					Spec: &operatorv1alpha1.IstioOperatorSpec{},
 				}
 				cpuLimit := "500m"
@@ -446,9 +446,9 @@ var _ = Describe("Merge", func() {
 		})
 
 		Context("When Istio CR has 500m configured for CPU and 500Mi for memory requests", func() {
-			It("Should set CPU requests to 500m and 500Mi for memory in IOP", func() {
+			It("should set CPU requests to 500m and 500Mi for memory in IOP", func() {
 				//given
-				iop := istioOperator.IstioOperator{
+				iop := iopv1alpha1.IstioOperator{
 					Spec: &operatorv1alpha1.IstioOperatorSpec{},
 				}
 				cpuRequests := "500m"
@@ -481,9 +481,9 @@ var _ = Describe("Merge", func() {
 	})
 
 	Context("Strategy", func() {
-		It("Should update RollingUpdate when it is present in Istio CR", func() {
+		It("should update RollingUpdate when it is present in Istio CR", func() {
 			//given
-			iop := istioOperator.IstioOperator{
+			iop := iopv1alpha1.IstioOperator{
 				Spec: &operatorv1alpha1.IstioOperatorSpec{},
 			}
 
@@ -523,9 +523,9 @@ var _ = Describe("Merge", func() {
 	})
 
 	Context("HPASpec", func() {
-		It("Should update HPASpec when it is present in Istio CR", func() {
+		It("should update HPASpec when it is present in Istio CR", func() {
 			//given
-			iop := istioOperator.IstioOperator{
+			iop := iopv1alpha1.IstioOperator{
 				Spec: &operatorv1alpha1.IstioOperatorSpec{},
 			}
 			maxReplicas := int32(5)
@@ -557,9 +557,9 @@ var _ = Describe("Merge", func() {
 	Context("CNI", func() {
 		Context("Affinity", func() {
 			Context("PodAffinity", func() {
-				It("Should update CNI affinity when it is present in Istio CR", func() {
+				It("should update CNI affinity when it is present in Istio CR", func() {
 					//given
-					iop := istioOperator.IstioOperator{
+					iop := iopv1alpha1.IstioOperator{
 						Spec: &operatorv1alpha1.IstioOperatorSpec{},
 					}
 
@@ -601,9 +601,9 @@ var _ = Describe("Merge", func() {
 			})
 
 			Context("PodAntiAffinity", func() {
-				It("Should update CNI PodAntiAffinity when it is present in Istio CR", func() {
+				It("should update CNI PodAntiAffinity when it is present in Istio CR", func() {
 					//given
-					iop := istioOperator.IstioOperator{
+					iop := iopv1alpha1.IstioOperator{
 						Spec: &operatorv1alpha1.IstioOperatorSpec{},
 					}
 
@@ -645,9 +645,9 @@ var _ = Describe("Merge", func() {
 			})
 
 			Context("NodeAffinity", func() {
-				It("Should update CNI NodeAffinity when it is present in Istio CR", func() {
+				It("should update CNI NodeAffinity when it is present in Istio CR", func() {
 					//given
-					iop := istioOperator.IstioOperator{
+					iop := iopv1alpha1.IstioOperator{
 						Spec: &operatorv1alpha1.IstioOperatorSpec{},
 					}
 
@@ -690,9 +690,9 @@ var _ = Describe("Merge", func() {
 		})
 
 		Context("Resources", func() {
-			It("Should update CNI resources when those are present in Istio CR", func() {
+			It("should update CNI resources when those are present in Istio CR", func() {
 				//given
-				iop := istioOperator.IstioOperator{
+				iop := iopv1alpha1.IstioOperator{
 					Spec: &operatorv1alpha1.IstioOperatorSpec{},
 				}
 				cpuRequests := "500m"
@@ -725,9 +725,9 @@ var _ = Describe("Merge", func() {
 	})
 
 	Context("Proxy", func() {
-		It("Should update Proxy resources configuration if they are present in Istio CR", func() {
+		It("should update Proxy resources configuration if they are present in Istio CR", func() {
 			//given
-			iop := istioOperator.IstioOperator{
+			iop := iopv1alpha1.IstioOperator{
 				Spec: &operatorv1alpha1.IstioOperatorSpec{},
 			}
 

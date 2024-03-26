@@ -1,21 +1,21 @@
 package v1alpha2_test
 
 import (
+	"os"
+
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	operatorv1alpha1 "istio.io/api/operator/v1alpha1"
-	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
+	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	"k8s.io/utils/ptr"
-	"os"
 	"sigs.k8s.io/yaml"
 )
 
 var _ = Describe("GetProxyResources", func() {
-
 	It("should get resources from merged Istio CR and istio operator", func() {
 		//given
-		iop := istioOperator.IstioOperator{
+		iop := iopv1alpha1.IstioOperator{
 			Spec: &operatorv1alpha1.IstioOperatorSpec{},
 		}
 
@@ -52,7 +52,7 @@ var _ = Describe("GetProxyResources", func() {
 
 	It("should validate that resources can be returned", func() {
 		//given
-		iop := istioOperator.IstioOperator{
+		iop := iopv1alpha1.IstioOperator{
 			Spec: &operatorv1alpha1.IstioOperatorSpec{},
 		}
 
@@ -77,11 +77,11 @@ var _ = Describe("GetProxyResources", func() {
 
 	It("should be able to get resources from real istio operator template when IstioCR has no overrides", func() {
 		//given
-		manifest, err := os.ReadFile("../../manifests/istio-operator-template.yaml")
+		istioOperator, err := os.ReadFile("../../internal/istiooperator/istio-operator.yaml")
 		Expect(err).ShouldNot(HaveOccurred())
 
-		iop := istioOperator.IstioOperator{}
-		err = yaml.Unmarshal(manifest, &iop)
+		iop := iopv1alpha1.IstioOperator{}
+		err = yaml.Unmarshal(istioOperator, &iop)
 		Expect(err).ShouldNot(HaveOccurred())
 
 		istioCR := v1alpha2.Istio{}

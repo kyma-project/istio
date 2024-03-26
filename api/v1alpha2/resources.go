@@ -3,13 +3,13 @@ package v1alpha2
 import (
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/types/known/structpb"
-	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
+	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 // GetProxyResources returns the proxy resources by merging the given IstioOperator with the configuration in Istio CR.
-func (i *Istio) GetProxyResources(op istioOperator.IstioOperator) (v1.ResourceRequirements, error) {
+func (i *Istio) GetProxyResources(op iopv1alpha1.IstioOperator) (v1.ResourceRequirements, error) {
 	mergedOp, err := i.MergeInto(op)
 	if err != nil {
 		return v1.ResourceRequirements{}, err
@@ -41,7 +41,7 @@ func (i *Istio) GetProxyResources(op istioOperator.IstioOperator) (v1.ResourceRe
 	}, nil
 }
 
-func hasResources(op istioOperator.IstioOperator) bool {
+func hasResources(op iopv1alpha1.IstioOperator) bool {
 	if op.Spec.Values.Fields[globalField] == nil {
 		return false
 	}

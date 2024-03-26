@@ -3,6 +3,7 @@ package pods
 import (
 	"context"
 	"fmt"
+
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/istio/operator/internal/filter"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
@@ -18,6 +19,13 @@ const (
 type SidecarImage struct {
 	Repository string
 	Tag        string
+}
+
+func NewSidecarImage(hub, tag string) SidecarImage {
+	return SidecarImage{
+		Repository: fmt.Sprintf("%s/proxyv2", hub),
+		Tag:        tag,
+	}
 }
 
 func (r SidecarImage) String() string {

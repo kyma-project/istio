@@ -8,6 +8,7 @@ Feature: Observability
     And "Deployment" "istio-controller-manager" in namespace "kyma-system" is ready
     And Istio CR "istio-sample" from "istio_cr_template" is applied in namespace "kyma-system"
     And Istio injection is "enabled" in namespace "default"
+    And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
 
   Scenario: Logs from stdout-json envoyFileAccessLog provider are in correct format
     Given Access logging is enabled for the mesh using "stdout-json" provider

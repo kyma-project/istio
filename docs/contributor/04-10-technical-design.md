@@ -22,7 +22,7 @@ As a consequence, only the oldest Istio CR in the `kyma-system` namespace is rec
 The version of Istio is coupled to the version of Kyma Istio Operator. This means that each particular version of Kyma Istio Operator is released to support only a specific version of Istio.
 If you upgrade Kyma Istio Operator to a new version, it automatically updates Istio as well, provided that a more recent Istio version is part of the Kyma Istio Operator's release.
 
-We support two installation profiles for Istio and version for both is specified in [Evaluation](https://github.com/kyma-project/istio/blob/main/internal/istiooperator/istio-operator-light.yaml) and [Production](https://github.com/kyma-project/istio/blob/main/internal/istiooperator/istio-operator.yaml) operator files respectively.
+There are two installation profiles for Istio and its version: evaluation and production. They are specified in the [`istio-operator-light`](https://github.com/kyma-project/istio/blob/main/internal/istiooperator/istio-operator-light.yaml) and [`istio-operator`](https://github.com/kyma-project/istio/blob/main/internal/istiooperator/istio-operator.yaml) files, respectively.
 
 ## Version Upgrade
 

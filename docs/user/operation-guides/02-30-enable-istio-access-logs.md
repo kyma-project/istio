@@ -124,11 +124,11 @@ To configure label-based selection of workloads, use a [selector](https://istio.
     kind: Telemetry
     metadata:
       name: access-config
-      namespace: {YOUR_NAMESPACE}
+      namespace: $YOUR_NAMESPACE
     spec:
       selector:
         matchLabels:
-          service.istio.io/canonical-name: {YOUR_LABEL}
+          service.istio.io/canonical-name: $YOUR_LABEL
       accessLogging:
         - providers:
           - name: stdout-json

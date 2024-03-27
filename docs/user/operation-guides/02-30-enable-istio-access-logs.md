@@ -38,7 +38,7 @@ Use the Telemetry API to selectively enable Istio access logs. See:
 
 1. Go to the namespace for which you want to configure Istio access logs.
 2. Go to **Configuration > Custom Resources**.
-3. Scroll down to find the section `telemetry.istio.io` and select **Telemetries**.
+3. In the section `telemetry.istio.io`, select **Telemetries**.
 4. Select **Create Telemetry** and paste the following sample configuration into the editor:
 
     ```yaml
@@ -92,7 +92,7 @@ To configure label-based selection of workloads, use a [selector](https://istio.
 #### **Kyma Dashboard**
 1. Go to the namespace of the workloads for which you want to configure Istio access logs.
 2. Go to **Configuration > Custom Resources**.
-3. Scroll down to find the section `telemetry.istio.io` and select **Telemetries > Create Telemetry**.
+3. In the section `telemetry.istio.io`, select **Telemetries**.
 4. Select **Create Telemetry** and paste the following sample configuration into the editor:
     ```yaml
     apiVersion: telemetry.istio.io/v1alpha1
@@ -150,7 +150,7 @@ Instead of enabling the access logs for all the individual proxies of the worklo
 #### **Kyma Dashboard**
 1. Go to the `istio-system` namespace.
 2. Go to **Configuration > Custom Resources**.
-3. Scroll down to find the section `telemetry.istio.io` and select **Telemetries**.
+3. In the section `telemetry.istio.io`, select **Telemetries**.
 4. Select **Create Telemetry** and paste the following sample configuration into the editor:
     ```yaml
     apiVersion: telemetry.istio.io/v1alpha1
@@ -201,7 +201,7 @@ Enable access logs for all individual proxies of the workloads and Istio Ingress
 #### **Kyma Dashboard**
 1. Go to the `istio-system` namespace.
 2. Go to **Configuration > Custom Resources**.
-3. Scroll down to find the section `telemetry.istio.io` and select **Telemetries**.
+3. In the section `telemetry.istio.io`, select **Telemetries**.
 4. Select **Create Telemetry** and paste the following sample configuration into the editor:
     ```yaml
     apiVersion: telemetry.istio.io/v1alpha1

@@ -5,7 +5,7 @@ title: Enable Istio Access Logs
 You can enable [Istio access logs](https://istio.io/latest/docs/tasks/observability/logs/access-log/) to provide fine-grained details about the access to workloads that are part of the Istio service mesh. This can help indicate the four “golden signals” of monitoring (latency, traffic, errors, and saturation) and troubleshooting anomalies.
 The Istio setup shipped with the Istio module provides a pre-configured [extension provider](https://istio.io/latest/docs/tasks/observability/telemetry) for access logs, which configures the Istio proxies to print access logs to stdout using the JSON format. It uses a configuration similar to the following one:
 
-```bash
+```yaml
 extensionProviders:
   - name: stdout-json
     envoyFileAccessLog:
@@ -41,7 +41,7 @@ Use the Telemetry API to selectively enable Istio access logs. See:
 3. Scroll down to find the section `telemetry.istio.io` and select **Telemetries**.
 4. Select **Create Telemetry** and paste the following sample configuration into the editor:
 
-    ```bash
+    ```yaml
     apiVersion: telemetry.istio.io/v1alpha1
     kind: Telemetry
     metadata:
@@ -94,7 +94,7 @@ To configure label-based selection of workloads, use a [selector](https://istio.
 2. Go to **Configuration > Custom Resources**.
 3. Scroll down to find the section `telemetry.istio.io` and select **Telemetries > Create Telemetry**.
 4. Select **Create Telemetry** and paste the following sample configuration into the editor:
-    ```bash
+    ```yaml
     apiVersion: telemetry.istio.io/v1alpha1
     kind: Telemetry
     metadata:
@@ -152,7 +152,7 @@ Instead of enabling the access logs for all the individual proxies of the worklo
 2. Go to **Configuration > Custom Resources**.
 3. Scroll down to find the section `telemetry.istio.io` and select **Telemetries**.
 4. Select **Create Telemetry** and paste the following sample configuration into the editor:
-    ```bash
+    ```yaml
     apiVersion: telemetry.istio.io/v1alpha1
     kind: Telemetry
     metadata:
@@ -203,7 +203,7 @@ Enable access logs for all individual proxies of the workloads and Istio Ingress
 2. Go to **Configuration > Custom Resources**.
 3. Scroll down to find the section `telemetry.istio.io` and select **Telemetries**.
 4. Select **Create Telemetry** and paste the following sample configuration into the editor:
-    ```bash
+    ```yaml
     apiVersion: telemetry.istio.io/v1alpha1
     kind: Telemetry
     metadata:

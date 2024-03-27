@@ -1,7 +1,11 @@
 OS_ARCH ?= $(shell uname | awk '{print tolower($0)}')
 KYMA_DOMAIN ?= $(shell kubectl config view -o json | jq '.clusters[0].cluster.server' | sed -e "s/https:\/\/api.//" -e 's/"//g')
 
-deploy-helm:
+load-testing/charts/plutono:
+	curl -sL https://github.com/credativ/helmcharts/releases/download/plutono-0.1.0/plutono-0.1.0.tgz > plutono.tgz
+	tar -xf plutono.tgz -C load-testing/charts
+
+deploy-helm: load-testing/charts/plutono
 	helm dependency update load-testing
 	helm upgrade --install load-testing load-testing --set Domain=${KYMA_DOMAIN} --create-namespace --wait
 
@@ -23,5 +27,7 @@ test-performance: deploy-helm test-deploy
 	kubectl exec -q $(shell kubectl get pods --selector=app=k6 -o jsonpath='{.items[0].metadata.name}') -- k6 run run.js -d 1m --vus 500 --out influxdb=http://load-testing-influxdb:8086/k6 --log-output none --system-tags=method,name,status,tag -e DOMAIN=${KYMA_DOMAIN}
 	sleep 2
 	kubectl cp $(shell kubectl get pods --selector=app=k6 -o jsonpath='{.items[0].metadata.name}'):summary.html summary-sidecar.html
+
+	./hack/dashboard_snapshot.sh
 
 .PHONY: test-performance

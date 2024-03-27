@@ -9,7 +9,7 @@ require (
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/coreos/go-semver v0.3.1
 	github.com/cucumber/godog v0.14.0
-	github.com/distribution/reference v0.5.0
+	github.com/distribution/reference v0.6.0
 	github.com/go-logr/logr v1.4.1
 	github.com/imdario/mergo v1.0.0
 	github.com/masterminds/semver v1.5.0

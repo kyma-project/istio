@@ -11,7 +11,7 @@ import (
 )
 
 //go:embed peer_authentication_mtls.yaml
-var manifest_pa_mtls []byte
+var paMtls []byte
 
 type PeerAuthenticationMtls struct {
 	k8sClient client.Client
@@ -22,7 +22,7 @@ func NewPeerAuthenticationMtls(k8sClient client.Client) PeerAuthenticationMtls {
 }
 
 func (PeerAuthenticationMtls) reconcile(ctx context.Context, k8sClient client.Client, _ metav1.OwnerReference, _ map[string]string) (controllerutil.OperationResult, error) {
-	return resources.Apply(ctx, k8sClient, manifest_pa_mtls, nil)
+	return resources.Apply(ctx, k8sClient, paMtls, nil)
 }
 
 func (PeerAuthenticationMtls) Name() string {

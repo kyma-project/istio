@@ -19,7 +19,7 @@ import (
 )
 
 //go:embed envoy_filter_allow_partial_referer.yaml
-var manifest_ef_allow_partial_referer []byte
+var efAllowPartialReferer []byte
 
 const EnvoyFilterAnnotation = "istios.operator.kyma-project.io/updatedAt"
 
@@ -53,7 +53,7 @@ func newEnvoyFilterEvaluator(ctx context.Context, k8sClient client.Client) (Envo
 
 func (e EnvoyFilterAllowPartialReferer) reconcile(ctx context.Context, k8sClient client.Client, _ metav1.OwnerReference, _ map[string]string) (controllerutil.OperationResult, error) {
 	var envoyFilter unstructured.Unstructured
-	err := yaml.Unmarshal(manifest_ef_allow_partial_referer, &envoyFilter)
+	err := yaml.Unmarshal(efAllowPartialReferer, &envoyFilter)
 	if err != nil {
 		return controllerutil.OperationResultNone, err
 	}
@@ -114,7 +114,7 @@ func podIsOlder(pod v1.Pod, envoyTime time.Time) bool {
 
 func getUpdateTime(ctx context.Context, k8sClient client.Client) (time.Time, error) {
 	var object unstructured.Unstructured
-	err := yaml.Unmarshal(manifest_ef_allow_partial_referer, &object)
+	err := yaml.Unmarshal(efAllowPartialReferer, &object)
 	if err != nil {
 		return time.Time{}, err
 	}

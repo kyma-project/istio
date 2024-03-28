@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/distribution/reference"
 
 	"github.com/masterminds/semver"
@@ -131,7 +132,7 @@ func GetIstioPodsVersion(ctx context.Context, kubeClient client.Client) (string,
 				currentVersion = version
 				continue
 			} else if currentVersion.Compare(version) != 0 {
-				return "", fmt.Errorf("Image version of pod %s: %s do not match version: %s", pod.Name, version.String(), currentVersion.String())
+				return "", fmt.Errorf("Image version of Pod %s %s do not match other Pods version %s", pod.Name, version.String(), currentVersion.String())
 			}
 		}
 	}
@@ -139,6 +140,17 @@ func GetIstioPodsVersion(ctx context.Context, kubeClient client.Client) (string,
 		return "", errors.New("Unable to obtain installed Istio image version")
 	}
 	return currentVersion.String(), nil
+}
+
+func VerifyIstioPodsVersion(ctx context.Context, kubeClient client.Client, istioOperatorVersion string) error {
+	podsVersion, err := GetIstioPodsVersion(ctx, kubeClient)
+	if err != nil {
+		return err
+	}
+	if podsVersion != istioOperatorVersion {
+		return fmt.Errorf("istio-system Pods version %s do not match istio operator version %s", podsVersion, istioOperatorVersion)
+	}
+	return nil
 }
 
 func getImageVersion(image string) (*semver.Version, error) {

@@ -2,13 +2,14 @@ package v1alpha2
 
 import (
 	"encoding/json"
+
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"istio.io/api/operator/v1alpha1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"google.golang.org/protobuf/types/known/structpb"
 	meshv1alpha1 "istio.io/api/mesh/v1alpha1"
-	istioOperator "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
+	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	"istio.io/istio/pkg/util/protomarshal"
 )
 
@@ -22,7 +23,7 @@ const (
 	requestsField         = "requests"
 )
 
-func (i *Istio) MergeInto(op istioOperator.IstioOperator) (istioOperator.IstioOperator, error) {
+func (i *Istio) MergeInto(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {
 	if op.Spec == nil {
 		op.Spec = &v1alpha1.IstioOperatorSpec{}
 	}
@@ -44,7 +45,7 @@ type meshConfigBuilder struct {
 	c *meshv1alpha1.MeshConfig
 }
 
-func newMeshConfigBuilder(op istioOperator.IstioOperator) (*meshConfigBuilder, error) {
+func newMeshConfigBuilder(op iopv1alpha1.IstioOperator) (*meshConfigBuilder, error) {
 	if op.Spec.MeshConfig == nil {
 		op.Spec.MeshConfig = &structpb.Struct{}
 	}
@@ -139,7 +140,7 @@ func (m *meshConfigBuilder) BuildExternalAuthorizerConfiguration(authorizers []*
 	return m
 }
 
-func (i *Istio) mergeConfig(op istioOperator.IstioOperator) (istioOperator.IstioOperator, error) {
+func (i *Istio) mergeConfig(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {
 
 	mcb, err := newMeshConfigBuilder(op)
 	if err != nil {
@@ -160,7 +161,7 @@ func (i *Istio) mergeConfig(op istioOperator.IstioOperator) (istioOperator.Istio
 	return op, nil
 }
 
-func (i *Istio) mergeResources(op istioOperator.IstioOperator) (istioOperator.IstioOperator, error) {
+func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {
 	if i.Spec.Components == nil {
 		return op, nil
 	}

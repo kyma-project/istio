@@ -3,9 +3,11 @@ package resources
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/istio/operator/pkg/labels"
-	"os"
 	"regexp"
+
+	_ "embed"
+
+	"github.com/kyma-project/istio/operator/pkg/labels"
 
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -14,6 +16,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 )
+
+//go:embed controlled_resources_list.yaml
+var controlledResourcesList []byte
 
 type ResourceMeta struct {
 	Name      string
@@ -44,13 +49,9 @@ type IstioResourcesFinder struct {
 var noMatchesForKind = regexp.MustCompile("no matches for kind")
 var couldNotFindReqResource = regexp.MustCompile("could not find the requested resource")
 
-func NewIstioResourcesFinderFromConfigYaml(ctx context.Context, client client.Client, logger logr.Logger, path string) (*IstioResourcesFinder, error) {
-	configYaml, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
+func NewIstioResourcesFinder(ctx context.Context, client client.Client, logger logr.Logger) (*IstioResourcesFinder, error) {
 	var finderConfiguration resourceFinderConfiguration
-	err = yaml.Unmarshal(configYaml, &finderConfiguration)
+	err := yaml.Unmarshal(controlledResourcesList, &finderConfiguration)
 	if err != nil {
 		return nil, err
 	}

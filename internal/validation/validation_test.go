@@ -23,7 +23,7 @@ var _ = ReportAfterSuite("custom reporter", func(report types.Report) {
 })
 
 var _ = Describe("Validation", func() {
-	It("Should successfully validate authorizers if no issue is present", func() {
+	It("should successfully validate authorizers if no issue is present", func() {
 		//given
 		istioCr := istioCR.Istio{
 			ObjectMeta: metav1.ObjectMeta{
@@ -53,7 +53,7 @@ var _ = Describe("Validation", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
-	It("Should fail to validate if some authorizers have the same name", func() {
+	It("should fail to validate if some authorizers have the same name", func() {
 		//given
 		istioCr := istioCR.Istio{
 			ObjectMeta: metav1.ObjectMeta{

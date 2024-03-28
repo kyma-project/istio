@@ -20,7 +20,7 @@ jobs:
           GARDENER_TOKEN: ${{ secrets.GARDENER_TOKEN }}
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.21"
+          go-version-file: "go.mod"
       - run: make IMG="europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{github.sha}}" gardener-perf-test
         shell: bash
         env:
@@ -31,6 +31,7 @@ jobs:
           GARDENER_REGION: "europe-west3"
           GARDENER_ZONES: "europe-west3-c,europe-west3-b,europe-west3-a"
           GARDENER_CLUSTER_VERSION: "1.27"
+          GARDENER_GARDENLINUX_VERSION: "1312.3.0"
           MACHINE_TYPE: "n2-standard-4"
           DISK_SIZE: 50
           DISK_TYPE: "pd-standard"

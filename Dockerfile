@@ -16,7 +16,6 @@ COPY main.go main.go
 COPY api/ api/
 COPY controllers/ controllers/
 COPY internal/ internal/
-COPY manifests/ manifests/
 COPY pkg/ pkg/
 
 # Build
@@ -25,14 +24,13 @@ COPY pkg/ pkg/
 # the docker BUILDPLATFORM arg will be linux/arm64 when for Apple x86 it will be linux/amd64. Therefore,
 # by leaving it empty we can ensure that the container and binary shipped on it will have the same platform.
 ARG VERSION=dev
-RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH:-amd64} go build -a -ldflags="-X github.com/kyma-project/istio/operator/pkg/version.version=${VERSION}" -o manager main.go
+RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH:-amd64} go build -a -ldflags="-X github.com/kyma-project/istio/operator/internal/resources.version=${VERSION}" -o manager main.go
 
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
 FROM gcr.io/distroless/static:nonroot
 WORKDIR /
 COPY --from=builder /workspace/manager .
-COPY --from=builder /workspace/manifests/ manifests
 
 USER 65532:65532
 

@@ -13,7 +13,7 @@ import puppeteer from 'puppeteer';
     await page.goto('https://grafana.bc-perf.goatz.shoot.canary.k8s-hana.ondemand.com/d/XwO4kRSnz/istio-performance?orgId=1');
 
     // Set screen size
-    await page.setViewport({width: 1080, height: 1024});
+    await page.setViewport({width: 1080, height: 10000});
 
     // Type into the search box
     const buttonSelector = 'button[class="css-orvko6"]';

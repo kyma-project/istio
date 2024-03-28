@@ -12,6 +12,7 @@ Update the Kyma Istio module to use new Istio version. Update Istio version and 
 
 ACs:
 - [ ] Review Istio RNs.
+- [ ] Verify that the new Istio version doesn't introduce features that transition to a new [phase](https://istio.io/latest/docs/releases/feature-stages/) in Istio, potentially affecting Kyma's Istio behavior. If such changes are identified, discuss them with the team to determine the best course of action.
 - [ ] Istio bumped on the `main` and latest release branch.
 - [ ] Prepare Kyma runtime Istio RNs based on open-source Istio RNs.
 - [ ] Istio installs and upgrades to new version.

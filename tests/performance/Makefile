@@ -2,6 +2,7 @@ OS_ARCH ?= $(shell uname | awk '{print tolower($0)}')
 KYMA_DOMAIN ?= $(shell kubectl config view -o json | jq '.clusters[0].cluster.server' | sed -e "s/https:\/\/api.//" -e 's/"//g')
 
 load-testing/charts/plutono:
+	mkdir load-testing/charts
 	curl -sL https://github.com/credativ/helmcharts/releases/download/plutono-0.1.0/plutono-0.1.0.tgz > plutono.tgz
 	tar -xf plutono.tgz -C load-testing/charts
 
@@ -33,6 +34,6 @@ test-performance: deploy-helm test-deploy
 	sleep 5
 	kubectl cp $(shell kubectl get pods --selector=app=k6 -o jsonpath='{.items[0].metadata.name}'):summary.html summary-sidecar.html
 
-	cd hack/puppeteer && ./export.sh
+	cd hack/puppeteer && KYMA_DOMAIN=${KYMA_DOMAIN} ./export.sh
 
 .PHONY: test-performance

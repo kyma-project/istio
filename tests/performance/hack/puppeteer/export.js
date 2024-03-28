@@ -10,7 +10,7 @@ import puppeteer from 'puppeteer';
 
 
     // Navigate the page to a URL
-    await page.goto('https://grafana.bc-perf.goatz.shoot.canary.k8s-hana.ondemand.com/d/XwO4kRSnz/istio-performance?orgId=1');
+    await page.goto(`https://grafana.${process.env.KYMA_DOMAIN}/d/XwO4kRSnz/istio-performance?orgId=1`);
 
     // Set screen size
     await page.setViewport({width: 1080, height: 10000});

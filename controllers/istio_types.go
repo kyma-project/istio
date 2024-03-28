@@ -2,13 +2,13 @@ package controllers
 
 import (
 	"context"
+	"github.com/kyma-project/istio/operator/internal/restarter"
 	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio_resources"
-	"github.com/kyma-project/istio/operator/internal/reconciliations/proxy"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
@@ -25,9 +25,8 @@ type IstioReconciler struct {
 	client.Client
 	Scheme                 *runtime.Scheme
 	istioInstallation      istio.InstallationReconciliation
-	proxySidecars          proxy.SidecarsReconciliation
 	istioResources         istio_resources.ResourcesReconciliation
-	ingressGateway         Reconciliation
+	restarters             []restarter.Restarter
 	log                    logr.Logger
 	statusHandler          status.Status
 	reconciliationInterval time.Duration

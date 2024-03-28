@@ -24,10 +24,10 @@ version: 0.1.0
 appVersion: "1.16.0"
 dependencies:
   - name: influxdb
-    version: "4.10.2"
+    version: "4.12.5"
     repository: https://helm.influxdata.com
   - name: prometheus
-    version: "19.7.2"
+    version: "25.18.0"
     repository: https://prometheus-community.github.io/helm-charts
   - name: plutono
     version: 0.1.0

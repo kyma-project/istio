@@ -8,6 +8,11 @@ influxdb:
       init.iql: |+
         CREATE DATABASE "k6"
 
+prometheus:
+  kube-state-metrics:
+    customLabels:
+      sidecar.istio.io/inject: "false"
+
 plutono:
   volumes:
     - name: dashboards

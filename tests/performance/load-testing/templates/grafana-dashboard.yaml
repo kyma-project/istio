@@ -11,7 +11,7 @@ data:
         "list": [
           {
             "builtIn": 1,
-            "datasource": "-- Grafana --",
+            "datasource": "-- Plutono --",
             "enable": true,
             "hide": true,
             "iconColor": "rgba(0, 211, 255, 1)",
@@ -27,11 +27,9 @@ data:
         ]
       },
       "editable": true,
-      "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "iteration": 1640190496077,
+      "iteration": 1711624365901,
       "links": [],
-      "liveNow": false,
       "panels": [
         {
           "fieldConfig": {
@@ -47,6 +45,7 @@ data:
                 "fillOpacity": 10,
                 "gradientMode": "none",
                 "hideFrom": {
+                  "graph": false,
                   "legend": false,
                   "tooltip": false,
                   "viz": false
@@ -58,14 +57,7 @@ data:
                   "type": "linear"
                 },
                 "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
+                "spanNulls": false
               },
               "mappings": [],
               "thresholds": {
@@ -127,6 +119,9 @@ data:
             },
             "tooltip": {
               "mode": "single"
+            },
+            "tooltipOptions": {
+              "mode": "single"
             }
           },
           "pluginVersion": "8.0.5",
@@ -179,203 +174,7 @@ data:
           "type": "timeseries"
         },
         {
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "yellow",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 3,
-            "w": 9,
-            "x": 7,
-            "y": 0
-          },
-          "id": 23763572004,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "center",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "text": {},
-            "textMode": "auto"
-          },
-          "pluginVersion": "8.3.3",
-          "targets": [
-            {
-              "alias": "",
-              "datasource": {
-                "type": "influxdb",
-                "uid": "PF3A0F3054C0DA367"
-              },
-              "groupBy": [
-                {
-                  "params": [
-                    "$__interval"
-                  ],
-                  "type": "time"
-                },
-                {
-                  "params": [
-                    "null"
-                  ],
-                  "type": "fill"
-                }
-              ],
-              "hide": false,
-              "measurement": "http_req_sending",
-              "orderByTime": "ASC",
-              "policy": "default",
-              "query": "SELECT count(value)  - 1 from \"http_req_sending\"  where $timeFilter ",
-              "rawQuery": false,
-              "refId": "B",
-              "resultFormat": "time_series",
-              "select": [
-                [
-                  {
-                    "params": [
-                      "value"
-                    ],
-                    "type": "field"
-                  },
-                  {
-                    "params": [],
-                    "type": "mean"
-                  }
-                ]
-              ],
-              "tags": []
-            }
-          ],
-          "title": "Total Events ",
-          "type": "stat"
-        },
-        {
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "light-purple",
-                    "value": null
-                  }
-                ]
-              },
-              "unit": "none"
-            },
-            "overrides": [
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "errors.count"
-                },
-                "properties": [
-                  {
-                    "id": "color",
-                    "value": {
-                      "fixedColor": "dark-red",
-                      "mode": "fixed"
-                    }
-                  }
-                ]
-              }
-            ]
-          },
-          "gridPos": {
-            "h": 3,
-            "w": 8,
-            "x": 16,
-            "y": 0
-          },
-          "id": 23763571997,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "text": {},
-            "textMode": "auto"
-          },
-          "pluginVersion": "8.3.3",
-          "targets": [
-            {
-              "datasource": {
-                "type": "influxdb",
-                "uid": "PF3A0F3054C0DA367"
-              },
-              "groupBy": [
-                {
-                  "params": [
-                    "$__interval"
-                  ],
-                  "type": "time"
-                },
-                {
-                  "params": [
-                    "null"
-                  ],
-                  "type": "fill"
-                }
-              ],
-              "measurement": "http_req_failed",
-              "orderByTime": "ASC",
-              "policy": "default",
-              "query": "SELECT count(\"value\") FROM \"errors\" WHERE $timeFilter",
-              "rawQuery": false,
-              "refId": "A",
-              "resultFormat": "time_series",
-              "select": [
-                [
-                  {
-                    "params": [
-                      "value"
-                    ],
-                    "type": "field"
-                  },
-                  {
-                    "params": [],
-                    "type": "sum"
-                  }
-                ]
-              ],
-              "tags": []
-            }
-          ],
-          "title": "Errors From K6",
-          "type": "stat"
-        },
-        {
+          "datasource": null,
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -416,10 +215,10 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 4,
+            "h": 7,
             "w": 4,
             "x": 7,
-            "y": 3
+            "y": 0
           },
           "id": 23763571996,
           "options": {
@@ -437,7 +236,7 @@ data:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.3.3",
+          "pluginVersion": "7.5.29",
           "targets": [
             {
               "alias": "",
@@ -488,6 +287,7 @@ data:
           "type": "stat"
         },
         {
+          "datasource": null,
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -528,10 +328,10 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 4,
+            "h": 7,
             "w": 5,
             "x": 11,
-            "y": 3
+            "y": 0
           },
           "id": 23763572018,
           "options": {
@@ -549,7 +349,7 @@ data:
             "text": {},
             "textMode": "auto"
           },
-          "pluginVersion": "8.3.3",
+          "pluginVersion": "7.5.29",
           "targets": [
             {
               "alias": "P95",
@@ -602,42 +402,11 @@ data:
           "type": "stat"
         },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
+          "datasource": null,
           "fieldConfig": {
             "defaults": {
               "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 1,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
+                "mode": "thresholds"
               },
               "mappings": [],
               "thresholds": {
@@ -649,19 +418,19 @@ data:
                   }
                 ]
               },
-              "unit": "s"
+              "unit": "none"
             },
             "overrides": [
               {
                 "matcher": {
                   "id": "byName",
-                  "options": "P99"
+                  "options": "errors.count"
                 },
                 "properties": [
                   {
                     "id": "color",
                     "value": {
-                      "fixedColor": "light-purple",
+                      "fixedColor": "dark-red",
                       "mode": "fixed"
                     }
                   }
@@ -673,51 +442,181 @@ data:
             "h": 4,
             "w": 8,
             "x": 16,
-            "y": 3
+            "y": 0
           },
-          "id": 23763572021,
+          "id": 23763571997,
           "options": {
-            "legend": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
               "calcs": [
-                "mean"
+                "lastNotNull"
               ],
-              "displayMode": "table",
-              "placement": "right"
+              "fields": "",
+              "values": false
             },
-            "tooltip": {
-              "mode": "single"
-            }
+            "text": {},
+            "textMode": "auto"
           },
-          "pluginVersion": "8.0.5",
+          "pluginVersion": "7.5.29",
           "targets": [
             {
-              "exemplar": true,
-              "expr": "(histogram_quantile(0.50, sum(irate(istio_request_duration_milliseconds_bucket{reporter=\"destination\",destination_service=~\"$dsrv\"}[5m])) by (le)) / 1000) ",
-              "interval": "",
-              "legendFormat": "P50",
-              "refId": "A"
-            },
-            {
-              "exemplar": true,
-              "expr": "(histogram_quantile(0.90, sum(irate(istio_request_duration_milliseconds_bucket{reporter=\"destination\",destination_service=~\"$dsrv\"}[5m])) by (le)) / 1000) ",
-              "hide": false,
-              "interval": "",
-              "legendFormat": "P90",
-              "refId": "B"
-            },
-            {
-              "exemplar": true,
-              "expr": "(histogram_quantile(0.95, sum(irate(istio_request_duration_milliseconds_bucket{reporter=\"destination\",destination_service=~\"$dsrv\"}[5m])) by (le)) / 1000) ",
-              "hide": false,
-              "interval": "",
-              "legendFormat": "P95",
-              "refId": "C"
+              "datasource": {
+                "type": "influxdb",
+                "uid": "PF3A0F3054C0DA367"
+              },
+              "groupBy": [
+                {
+                  "params": [
+                    "$__interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "http_req_failed",
+              "orderByTime": "ASC",
+              "policy": "default",
+              "query": "SELECT count(\"value\") FROM \"errors\" WHERE $timeFilter",
+              "rawQuery": false,
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "sum"
+                  }
+                ]
+              ],
+              "tags": []
             }
           ],
-          "title": "Avg Istio Time",
-          "type": "timeseries"
+          "title": "Errors From K6",
+          "type": "stat"
         },
         {
+          "datasource": null,
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "yellow",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "none"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "errors.count"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "dark-red",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 3,
+            "w": 8,
+            "x": 16,
+            "y": 4
+          },
+          "id": 23763572030,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "text": {},
+            "textMode": "auto"
+          },
+          "pluginVersion": "7.5.29",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "PF3A0F3054C0DA367"
+              },
+              "groupBy": [
+                {
+                  "params": [
+                    "$__interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "http_req_failed",
+              "orderByTime": "ASC",
+              "policy": "default",
+              "query": "SELECT mean(\"value\") FROM \"http_req_sending\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "sum"
+                  }
+                ]
+              ],
+              "tags": []
+            }
+          ],
+          "title": "Errors From K6",
+          "type": "stat"
+        },
+        {
+          "datasource": null,
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -731,6 +630,7 @@ data:
                 "fillOpacity": 10,
                 "gradientMode": "none",
                 "hideFrom": {
+                  "graph": false,
                   "legend": false,
                   "tooltip": false,
                   "viz": false
@@ -745,14 +645,7 @@ data:
                   "type": "linear"
                 },
                 "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
+                "spanNulls": false
               },
               "mappings": [],
               "thresholds": {
@@ -802,6 +695,9 @@ data:
               "placement": "bottom"
             },
             "tooltip": {
+              "mode": "single"
+            },
+            "tooltipOptions": {
               "mode": "single"
             }
           },
@@ -857,6 +753,7 @@ data:
           "type": "timeseries"
         },
         {
+          "datasource": null,
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -870,6 +767,7 @@ data:
                 "fillOpacity": 10,
                 "gradientMode": "none",
                 "hideFrom": {
+                  "graph": false,
                   "legend": false,
                   "tooltip": false,
                   "viz": false
@@ -884,14 +782,7 @@ data:
                   "type": "linear"
                 },
                 "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
+                "spanNulls": false
               },
               "mappings": [],
               "thresholds": {
@@ -941,6 +832,9 @@ data:
               "placement": "bottom"
             },
             "tooltip": {
+              "mode": "single"
+            },
+            "tooltipOptions": {
               "mode": "single"
             }
           },
@@ -996,6 +890,7 @@ data:
           "type": "timeseries"
         },
         {
+          "datasource": null,
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1009,6 +904,7 @@ data:
                 "fillOpacity": 0,
                 "gradientMode": "none",
                 "hideFrom": {
+                  "graph": false,
                   "legend": false,
                   "tooltip": false,
                   "viz": false
@@ -1020,14 +916,7 @@ data:
                   "type": "linear"
                 },
                 "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
+                "spanNulls": false
               },
               "mappings": [],
               "thresholds": {
@@ -1073,6 +962,9 @@ data:
               "placement": "bottom"
             },
             "tooltip": {
+              "mode": "single"
+            },
+            "tooltipOptions": {
               "mode": "single"
             }
           },
@@ -1125,6 +1017,7 @@ data:
           "type": "timeseries"
         },
         {
+          "datasource": null,
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1138,6 +1031,7 @@ data:
                 "fillOpacity": 10,
                 "gradientMode": "none",
                 "hideFrom": {
+                  "graph": false,
                   "legend": false,
                   "tooltip": false,
                   "viz": false
@@ -1152,14 +1046,7 @@ data:
                   "type": "linear"
                 },
                 "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
+                "spanNulls": false
               },
               "mappings": [],
               "thresholds": {
@@ -1209,6 +1096,9 @@ data:
               "placement": "bottom"
             },
             "tooltip": {
+              "mode": "single"
+            },
+            "tooltipOptions": {
               "mode": "single"
             }
           },
@@ -1264,105 +1154,7 @@ data:
           "type": "timeseries"
         },
         {
-          "id": 23763572028,
-          "gridPos": {
-            "x": 0,
-            "y": 32,
-            "h": 7,
-            "w": 24
-          },
-          "type": "timeseries",
-          "title": "Istio pod number",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "PBFA97CFB590B2093"
-              },
-              "refId": "A",
-              "editorMode": "code",
-              "expr": "kube_deployment_status_replicas{deployment=~\"istio-ingressgateway|istiod\",namespace=\"istio-system\"}",
-              "legendFormat": "{{printf "{{deployment}}" }}",
-              "range": true
-            }
-          ],
-          "options": {
-            "tooltip": {
-              "mode": "single",
-              "sort": "none"
-            },
-            "legend": {
-              "showLegend": true,
-              "displayMode": "table",
-              "placement": "right",
-              "calcs": [
-                "last",
-                "min",
-                "max"
-              ]
-            }
-          },
-          "fieldConfig": {
-            "defaults": {
-              "custom": {
-                "drawStyle": "line",
-                "lineInterpolation": "stepBefore",
-                "barAlignment": 0,
-                "lineWidth": 1,
-                "fillOpacity": 25,
-                "gradientMode": "none",
-                "spanNulls": false,
-                "showPoints": "never",
-                "pointSize": 5,
-                "stacking": {
-                  "mode": "none",
-                  "group": "A"
-                },
-                "axisPlacement": "auto",
-                "axisLabel": "",
-                "axisColorMode": "text",
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "axisCenteredZero": false,
-                "hideFrom": {
-                  "tooltip": false,
-                  "viz": false,
-                  "legend": false
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                },
-                "lineStyle": {
-                  "fill": "solid"
-                }
-              },
-              "color": {
-                "mode": "palette-classic"
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "value": null,
-                    "color": "green"
-                  },
-                  {
-                    "value": 80,
-                    "color": "red"
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "datasource": {
-            "uid": "PBFA97CFB590B2093",
-            "type": "prometheus"
-          }
-        },
-        {
+          "datasource": null,
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1376,6 +1168,7 @@ data:
                 "fillOpacity": 10,
                 "gradientMode": "none",
                 "hideFrom": {
+                  "graph": false,
                   "legend": false,
                   "tooltip": false,
                   "viz": false
@@ -1390,14 +1183,7 @@ data:
                   "type": "linear"
                 },
                 "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
+                "spanNulls": false
               },
               "mappings": [],
               "thresholds": {
@@ -1452,6 +1238,9 @@ data:
             },
             "tooltip": {
               "mode": "single"
+            },
+            "tooltipOptions": {
+              "mode": "single"
             }
           },
           "targets": [
@@ -1504,10 +1293,7 @@ data:
           "type": "timeseries"
         },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
+          "datasource": "Prometheus",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1518,28 +1304,25 @@ data:
                 "axisPlacement": "auto",
                 "barAlignment": 0,
                 "drawStyle": "line",
-                "fillOpacity": 10,
+                "fillOpacity": 25,
                 "gradientMode": "none",
                 "hideFrom": {
+                  "graph": false,
                   "legend": false,
                   "tooltip": false,
                   "viz": false
                 },
-                "lineInterpolation": "linear",
+                "lineInterpolation": "stepBefore",
+                "lineStyle": {
+                  "fill": "solid"
+                },
                 "lineWidth": 1,
                 "pointSize": 5,
                 "scaleDistribution": {
                   "type": "linear"
                 },
                 "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
+                "spanNulls": false
               },
               "mappings": [],
               "thresholds": {
@@ -1564,6 +1347,178 @@ data:
             "x": 0,
             "y": 32
           },
+          "id": 23763572028,
+          "options": {
+            "legend": {
+              "calcs": [
+                "last",
+                "min",
+                "max"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            },
+            "tooltipOptions": {
+              "mode": "single"
+            }
+          },
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "kube_deployment_status_replicas{deployment=~\"istio-ingressgateway\"}",
+              "interval": "",
+              "legendFormat": "{{printf "{{deployment}}" }}",
+              "refId": "A"
+            }
+          ],
+          "title": "Istio ingress gateway pod number",
+          "type": "timeseries"
+        },
+        {
+          "datasource": "Prometheus",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 25,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "graph": false,
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "stepBefore",
+                "lineStyle": {
+                  "fill": "solid"
+                },
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 24,
+            "x": 0,
+            "y": 39
+          },
+          "id": 23763572029,
+          "options": {
+            "legend": {
+              "calcs": [
+                "last",
+                "min",
+                "max"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            },
+            "tooltipOptions": {
+              "mode": "single"
+            }
+          },
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "kube_deployment_status_replicas{deployment=~\"istiod\"}",
+              "interval": "",
+              "legendFormat": "{{printf "{{deployment}}" }}",
+              "refId": "A"
+            }
+          ],
+          "title": "Istiod pod number",
+          "type": "timeseries"
+        },
+        {
+          "datasource": "Prometheus",
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "graph": false,
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 24,
+            "x": 0,
+            "y": 46
+          },
           "id": 23763572024,
           "options": {
             "legend": {
@@ -1576,6 +1531,9 @@ data:
             },
             "tooltip": {
               "mode": "single"
+            },
+            "tooltipOptions": {
+              "mode": "single"
             }
           },
           "targets": [
@@ -1587,7 +1545,7 @@ data:
               "refId": "A"
             }
           ],
-          "title": "Control Plane Container CPU",
+          "title": "Control plane container CPU",
           "transformations": [
             {
               "id": "filterFieldsByName",
@@ -1606,103 +1564,78 @@ data:
           "type": "timeseries"
         },
         {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "Prometheus",
+          "description": "",
           "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              },
-              "unit": "decbytes"
-            },
+            "defaults": {},
             "overrides": []
           },
+          "fill": 1,
+          "fillGradient": 0,
           "gridPos": {
             "h": 7,
             "w": 24,
             "x": 0,
-            "y": 39
+            "y": 53
           },
-          "id": 23763572025,
+          "hiddenSeries": false,
+          "id": 23763572031,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
           "options": {
-            "legend": {
-              "calcs": [
-                "max",
-                "mean"
-              ],
-              "displayMode": "table",
-              "placement": "right"
-            },
-            "tooltip": {
-              "mode": "single"
-            }
+            "alertThreshold": true
           },
+          "percentage": false,
+          "pluginVersion": "7.5.29",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
           "targets": [
             {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "PBFA97CFB590B2093"
-              },
               "exemplar": true,
-              "expr": "sum(container_memory_usage_bytes{namespace=\"istio-system\",pod !=\"\"}) by (container)",
+              "expr": "sum(container_memory_working_set_bytes{namespace=\"istio-system\", container!=\"POD\", container!=\"\", image!=\"\"}) by (container)",
+              "hide": false,
               "interval": "",
-              "legendFormat": "{{printf "{{container}}" }}",
+              "legendFormat": "",
               "refId": "A"
             }
           ],
-          "title": "Control Plane Container Memory",
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Control plane memory usage",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
           "transformations": [
             {
               "id": "filterFieldsByName",
               "options": {
                 "include": {
                   "names": [
-                    "istio-proxy",
                     "discovery",
+                    "istio-proxy",
                     "install-cni",
                     "Time"
                   ]
@@ -1710,16 +1643,46 @@ data:
               }
             }
           ],
-          "type": "timeseries"
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
         }
       ],
       "refresh": false,
-      "schemaVersion": 34,
+      "schemaVersion": 27,
       "style": "dark",
       "tags": [],
       "templating": {
         "list": [
           {
+            "allValue": null,
             "current": {
               "selected": false,
               "text": "hello.default.svc.cluster.local",
@@ -1730,8 +1693,11 @@ data:
               "uid": "PBFA97CFB590B2093"
             },
             "definition": "label_values(destination_service)",
+            "description": null,
+            "error": {},
             "hide": 0,
             "includeAll": false,
+            "label": null,
             "multi": false,
             "name": "dsrv",
             "options": [],
@@ -1743,7 +1709,11 @@ data:
             "regex": "",
             "skipUrlSync": false,
             "sort": 0,
-            "type": "query"
+            "tagValuesQuery": "",
+            "tags": [],
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
           }
         ]
       },
@@ -1755,6 +1725,5 @@ data:
       "timezone": "",
       "title": "Istio-performance",
       "uid": "XwO4kRSnz",
-      "version": 1,
-      "weekStart": ""
+      "version": 1
     }

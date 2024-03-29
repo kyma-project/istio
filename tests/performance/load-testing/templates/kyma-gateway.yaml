@@ -14,7 +14,7 @@ spec:
         protocol: HTTPS
       tls:
         mode: SIMPLE
-        credentialName: kyma-gateway-cert
+        credentialName: kyma-gateway-certs
       hosts:
         - "*.{{ .Values.Domain }}"
     - port:

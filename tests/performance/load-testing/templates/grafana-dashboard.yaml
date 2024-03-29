@@ -1645,7 +1645,7 @@ data:
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"istio-system\",pod !=\"\",container!=\"\"}[5m])) by (container)",
+              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"istio-system\",pod !=\"\",container!=\"\"}[5m])) by (container)*1000",
               "interval": "",
               "legendFormat": "{{printf "{{container}}" }}",
               "refId": "A"
@@ -1953,7 +1953,7 @@ data:
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"default\",pod !=\"\",container=\"httpbin\"}[5m])) by (container)",
+              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"default\",pod !=\"\",container=\"httpbin\"}[5m])) by (container)*1000",
               "interval": "",
               "legendFormat": "{{printf "{{container}}" }}",
               "refId": "A"
@@ -1963,7 +1963,7 @@ data:
           "timeFrom": null,
           "timeRegions": [],
           "timeShift": null,
-          "title": "Control plane container CPU",
+          "title": "Target application CPU usage",
           "tooltip": {
             "shared": true,
             "sort": 0,

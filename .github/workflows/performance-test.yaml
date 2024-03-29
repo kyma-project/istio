@@ -52,11 +52,11 @@ jobs:
       - name: Check threshold breaches on test without sidecar
         if: always()
         shell: bash
-        run: if [[ $(cat summary-no-sidecar.html | grep "<h4>Breached Thresholds</h4>" -A1 | grep -oe ">\d<" | sed 's/[<>]//g') != '0' ]]; then exit 1; fi
+        run: if [[ $(cat tests/performance/summary-no-sidecar.html | grep "<h4>Breached Thresholds</h4>" -A1 | grep -oe ">\d<" | sed 's/[<>]//g') != '0' ]]; then exit 1; fi
       - name: Check threshold breaches on test with sidecar
         if: always()
         shell: bash
-        run: if [[ $(cat summary-sidecar.html | grep "<h4>Breached Thresholds</h4>" -A1 | grep -oe ">\d<" | sed 's/[<>]//g') != '0' ]]; then exit 1; fi
+        run: if [[ $(cat tests/performance/summary-sidecar.html | grep "<h4>Breached Thresholds</h4>" -A1 | grep -oe ">\d<" | sed 's/[<>]//g') != '0' ]]; then exit 1; fi
 
   slack_failed_notification:
     name: Slack Notification

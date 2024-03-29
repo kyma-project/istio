@@ -27,12 +27,19 @@ kubectl apply -f config/samples/operator_v1alpha2_istio.yaml
 
 number=1
 	while [[ $number -le 100 ]] ; do
-		echo ">--> checking kyma status #$number"
+		echo ">--> checking Istio status #$number"
 		STATUS=$(kubectl get -n kyma-system istio default -o jsonpath='{.status.state}')
 		echo "kyma status: ${STATUS:='UNKNOWN'}"
 		[[ "$STATUS" == "Ready" ]] && break
 		sleep 5
         	((number = number + 1))
+	done
+number=1
+	while [[ $number -le 100 ]] ; do
+	    ip=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+	    [[ "$ip" != "" ]] && break
+      sleep 5
+             ((number = number + 1))
 	done
 
 domain=$(kubectl config view -o json | jq '.clusters[0].cluster.server' | sed -e "s/https:\/\/api.//" -e 's/"//g')

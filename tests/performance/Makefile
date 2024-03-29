@@ -8,7 +8,7 @@ load-testing/charts/plutono:
 
 deploy-helm: load-testing/charts/plutono
 	helm dependency update load-testing
-	helm upgrade --install load-testing load-testing --set Domain=${KYMA_DOMAIN} --create-namespace --wait
+	helm upgrade --install load-testing load-testing --set IngressGatewayIP=$(shell kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}') --set Domain=${KYMA_DOMAIN} --create-namespace --wait
 
 test-deploy:
 	kubectl rollout status deployment/load-testing

@@ -128,17 +128,6 @@ func getResourcesForComponent(k8sClient client.Client, component, resourceType s
 	case "proxy_init":
 		fallthrough
 	case "proxy":
-		//		jsonResources, err := json.Marshal(operator.Spec.Values.Fields["global"].GetStructValue().Fields[component].GetStructValue().
-		//			Fields["resources"].GetStructValue().Fields[resourceType].GetStructValue())
-		//
-		//		if err != nil {
-		//			return nil, err
-		//		}
-		//		err = json.Unmarshal(jsonResources, &res)
-		//		if err != nil {
-		//			return nil, err
-		//		}
-		//		return &res, nil
 		return nil, errors.New("Proxy resources are not implemented")
 	case "ingress-gateway":
 		var igDeployment appsv1.Deployment
@@ -157,17 +146,6 @@ func getResourcesForComponent(k8sClient client.Client, component, resourceType s
 
 		return &res, nil
 	case "egress-gateway":
-		//		if resourceType == "limits" {
-		//			err := mapstructure.Decode(operator.Spec.Components.EgressGateways[0].K8S.Resources.Limits, &res)
-		//			if err != nil {
-		//				return nil, err
-		//			}
-		//		} else {
-		//			err := mapstructure.Decode(operator.Spec.Components.EgressGateways[0].K8S.Resources.Requests, &res)
-		//			if err != nil {
-		//				return nil, err
-		//			}
-		//		}
 		return nil, errors.New("Egress gateway resources are not implemented")
 	case "pilot":
 		var idDeployment appsv1.Deployment

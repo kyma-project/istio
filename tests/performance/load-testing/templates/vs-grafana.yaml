@@ -32,7 +32,7 @@ spec:
         regex: /.*
     route:
     - destination:
-        host: {{ .Release.Name }}-grafana.{{ .Release.Namespace }}.svc.cluster.local
+        host: {{ .Release.Name }}-plutono.{{ .Release.Namespace }}.svc.cluster.local
         port:
-          number: 80
+          number: 3000
       weight: 100

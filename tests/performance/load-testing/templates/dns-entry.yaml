@@ -1,0 +1,12 @@
+apiVersion: dns.gardener.cloud/v1alpha1
+kind: DNSEntry
+metadata:
+  name: kyma-dns-entry
+  namespace: kyma-system
+  annotations:
+    dns.gardener.cloud/class: garden
+spec:
+  dnsName: "*.{{ .Values.Domain }}"
+  ttl: 600
+  targets:
+    - {{.Values.IngressGatewayIP}}

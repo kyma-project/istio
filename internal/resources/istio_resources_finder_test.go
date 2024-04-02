@@ -32,7 +32,7 @@ var _ = Describe("Resources", func() {
 		Expect(err != nil).To(Equal(wantErr))
 		Expect(got).To(BeEquivalentTo(want))
 	},
-		Entry("Should get nothing if there are only default istio resources present", context.TODO(),
+		Entry("should get nothing if there are only default istio resources present", context.TODO(),
 			logr.Discard(),
 			fake.NewClientBuilder().WithScheme(sc).WithObjects(&networkingv1alpha3.EnvoyFilter{
 				ObjectMeta: metav1.ObjectMeta{
@@ -58,7 +58,7 @@ var _ = Describe("Resources", func() {
 			},
 			nil,
 			false,
-		), Entry("Should get resource if there is a customer resource present", context.TODO(),
+		), Entry("should get resource if there is a customer resource present", context.TODO(),
 			logr.Discard(),
 			fake.NewClientBuilder().WithScheme(sc).WithObjects(&networkingv1alpha3.EnvoyFilter{
 				ObjectMeta: metav1.ObjectMeta{
@@ -103,50 +103,22 @@ var _ = Describe("Resources", func() {
 		))
 })
 
-var _ = Describe("NewIstioResourcesFinderFromConfigYaml", func() {
-	It("Should read configuration from yaml", func() {
-		config, err := NewIstioResourcesFinderFromConfigYaml(context.TODO(), nil, logr.Logger{}, "test_files/test_resources_list.yaml")
+var _ = Describe("IstioResourcesFinder", func() {
+	It("should succeed when reading controlled resources list configuration", func() {
+		_, err := NewIstioResourcesFinder(context.TODO(), nil, logr.Logger{})
 		Expect(err).ToNot(HaveOccurred())
-		Expect(config).To(BeEquivalentTo(&IstioResourcesFinder{
-			ctx:    context.TODO(),
-			logger: logr.Logger{},
-			client: nil,
-			configuration: resourceFinderConfiguration{
-				Resources: []ResourceConfiguration{
-					{
-						GroupVersionKind: schema.GroupVersionKind{
-							Group:   "networking.istio.io",
-							Version: "v1alpha3",
-							Kind:    "EnvoyFilter",
-						},
-						ControlledList: []ResourceMeta{
-							{
-								Name:      "stats-filter-\\d\\.\\d\\d",
-								Namespace: "istio-system",
-							},
-						},
-					},
-				},
-			},
-		},
-		))
-	})
-
-	It("Should fail if the configuration contains invalid regex", func() {
-		_, err := NewIstioResourcesFinderFromConfigYaml(context.TODO(), nil, logr.Logger{}, "test_files/test_wrong_resources_list.yaml")
-		Expect(err).To(HaveOccurred())
 	})
 })
 
 var _ = DescribeTable("contains", func(a []ResourceMeta, b Resource, should bool) {
 	Expect(contains(a, b.ResourceMeta)).To(Equal(should))
 },
-	Entry("Should return true if the array contains the resource", []ResourceMeta{{Name: "test", Namespace: "test-ns"}},
+	Entry("should return true if the array contains the resource", []ResourceMeta{{Name: "test", Namespace: "test-ns"}},
 		Resource{ResourceMeta: ResourceMeta{
 			Name:      "test",
 			Namespace: "test-ns",
 		}}, true),
-	Entry("Should return false if the array doesn't contain the resource", []ResourceMeta{{Name: "test", Namespace: "test-ns"}},
+	Entry("should return false if the array doesn't contain the resource", []ResourceMeta{{Name: "test", Namespace: "test-ns"}},
 		Resource{ResourceMeta: ResourceMeta{
 			Name:      "test",
 			Namespace: "test",

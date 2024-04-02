@@ -20,9 +20,10 @@ To learn if any Pods or workloads require a manual restart, follow these steps:
 
 1. Check the installed Istio version. From the `istiod` deployment in a running cluster, run:
 
-      ```bash
-      export PILOT_ISTIO_VERSION=$(kubectl get deployment istiod -n istio-system -o json | jq '.spec.template.spec.containers | .[].image' | sed 's/[^:"]*[:]//' | sed 's/["]//g')
-      ```
+```bash
+export PILOT_ISTIO_VERSION=$(kubectl get deployment istiod -n istio-system -o json | jq '.spec.template.spec.containers | .[].image' | sed 's/[^:"]*[:]//' | sed 's/["]//g')
+```
+
 2. Get the list of objects which require rollout. Find all Pods with outdated sidecars. The returned list follows the `name/namespace` format. The empty output means that there is no Pod that requires migration. To find all outdated Pods, run:
 
    ```bash

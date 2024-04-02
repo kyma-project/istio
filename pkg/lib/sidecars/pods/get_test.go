@@ -2,9 +2,10 @@ package pods_test
 
 import (
 	"context"
-	"github.com/kyma-project/istio/operator/internal/filter"
 	"testing"
 	"time"
+
+	"github.com/kyma-project/istio/operator/internal/filter"
 
 	"github.com/kyma-project/istio/operator/internal/tests"
 	. "github.com/onsi/ginkgo/v2"
@@ -52,11 +53,7 @@ var _ = Describe("Get Pods", func() {
 	logger := logr.Discard()
 
 	When("Istio image changed", func() {
-
-		expectedImage := pods.SidecarImage{
-			Repository: "istio/proxyv2",
-			Tag:        "1.10.0",
-		}
+		expectedImage := pods.NewSidecarImage("istio", "1.10.0")
 
 		tests := []struct {
 			name       string
@@ -231,10 +228,7 @@ var _ = Describe("Get Pods", func() {
 
 		for _, tt := range tests {
 			It(tt.name, func() {
-				expectedImage := pods.SidecarImage{
-					Repository: "istio/proxyv2",
-					Tag:        "1.10.0",
-				}
+				expectedImage := pods.NewSidecarImage("istio", "1.10.0")
 
 				podList, err := pods.GetPodsToRestart(ctx, tt.c, expectedImage, helpers.DefaultSidecarResources, []filter.SidecarProxyPredicate{}, &logger)
 

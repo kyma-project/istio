@@ -99,7 +99,7 @@ To learn more about oauth2-proxy, [see the documentation](https://github.com/oau
       set-xauthrequest: true
       whitelist-domain: "*.$DOMAIN_TO_EXPOSE_WORKLOADS:*"
       reverse-proxy: true
-      pass-access-token: true 
+      pass-access-token: true
       set-authorization-header: true
       pass-authorization-header: true
       scope: "openid email"

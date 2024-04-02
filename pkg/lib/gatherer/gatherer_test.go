@@ -284,7 +284,7 @@ var _ = Describe("Gatherer", func() {
 			version, err := gatherer.GetIstioPodsVersion(context.TODO(), client)
 
 			Expect(err).Should(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("Image version of pod istio-ingressgateway: 1.10.0 do not match version: 1.0.0"))
+			Expect(err.Error()).To(ContainSubstring("Image version of Pod istio-ingressgateway 1.10.0 do not match other Pods version 1.0.0"))
 			Expect(version).To(Equal(""))
 		})
 

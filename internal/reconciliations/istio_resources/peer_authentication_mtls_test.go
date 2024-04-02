@@ -2,6 +2,7 @@ package istio_resources
 
 import (
 	"context"
+
 	"github.com/kyma-project/istio/operator/internal/resources"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -53,7 +54,7 @@ var _ = Describe("Apply", func() {
 	It("should return not changed if no change was applied", func() {
 		//given
 		var p securityv1beta1.PeerAuthentication
-		err := yaml.Unmarshal(manifest_pa_mtls, &p)
+		err := yaml.Unmarshal(paMtls, &p)
 		Expect(err).To(Not(HaveOccurred()))
 
 		client := createFakeClient(&p)
@@ -79,7 +80,7 @@ var _ = Describe("Apply", func() {
 	It("should return updated if change was applied", func() {
 		//given
 		var p securityv1beta1.PeerAuthentication
-		err := yaml.Unmarshal(manifest_pa_mtls, &p)
+		err := yaml.Unmarshal(paMtls, &p)
 		Expect(err).To(Not(HaveOccurred()))
 
 		p.Spec.Mtls.Mode = 0

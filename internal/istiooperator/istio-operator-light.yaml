@@ -5,12 +5,9 @@ metadata:
   namespace: istio-system
   labels:
     kyma-project.io/module: istio
-    app.kubernetes.io/component: operator
-    app.kubernetes.io/part-of: istio
-    app.kubernetes.io/version: "{{ .ModuleVersion }}"
-    app.kubernetes.io/name: istio-operator
-    app.kubernetes.io/instance: istio-operator-default
 spec:
+  hub: europe-docker.pkg.dev/kyma-project/prod/external/istio
+  tag: "1.20.3-distroless"
   components:
     base:
       enabled: true
@@ -21,22 +18,22 @@ spec:
         affinity:
           podAntiAffinity:
             preferredDuringSchedulingIgnoredDuringExecution:
-            - podAffinityTerm:
-                labelSelector:
-                  matchExpressions:
-                  - key: app
-                    operator: In
-                    values:
-                    - istio-cni-node
-                topologyKey: kubernetes.io/hostname
-              weight: 100
+              - podAffinityTerm:
+                  labelSelector:
+                    matchExpressions:
+                      - key: app
+                        operator: In
+                        values:
+                          - istio-cni-node
+                  topologyKey: kubernetes.io/hostname
+                weight: 100
         resources:
           limits:
-            cpu: 500m
-            memory: 1024Mi
+            cpu: 250m
+            memory: 384Mi
           requests:
-            cpu: 100m
-            memory: 512Mi
+            cpu: 10m
+            memory: 128Mi
     egressGateways:
     - enabled: false
       k8s:
@@ -54,38 +51,25 @@ spec:
         affinity:
           podAntiAffinity:
             preferredDuringSchedulingIgnoredDuringExecution:
-            - podAffinityTerm:
-                labelSelector:
-                  matchExpressions:
-                  - key: app
-                    operator: In
-                    values:
-                    - istio-ingressgateway
-                topologyKey: kubernetes.io/hostname
-              weight: 100
+              - podAffinityTerm:
+                  labelSelector:
+                    matchExpressions:
+                      - key: app
+                        operator: In
+                        values:
+                          - istio-ingressgateway
+                  topologyKey: kubernetes.io/hostname
+                weight: 100
         hpaSpec:
-          maxReplicas: 10
-          metrics:
-          - resource:
-              name: cpu
-              target:
-                type: Utilization
-                averageUtilization: 80
-            type: Resource
-          - resource:
-              name: memory
-              target:
-                type: Utilization
-                averageUtilization: 80
-            type: Resource
-          minReplicas: 3
+          maxReplicas: 5
+          minReplicas: 1
         resources:
           limits:
-            cpu: 2000m
+            cpu: 1000m
             memory: 1024Mi
           requests:
-            cpu: 100m
-            memory: 128Mi
+            cpu: 10m
+            memory: 32Mi
         securityContext:
           runAsGroup: "65534"
           runAsNonRoot: true
@@ -118,19 +102,19 @@ spec:
         - name: PILOT_HTTP10
           value: "1"
         hpaSpec:
-          maxReplicas: 5
-          minReplicas: 2
+          maxReplicas: 1
+          minReplicas: 1
         podAnnotations:
           istios.operator.kyma-project.io/managed-by-disclaimer: |
             DO NOT EDIT - This resource is managed by Kyma.
             Any modifications are discarded and the resource is reverted to the original state.
         resources:
           limits:
-            cpu: 4000m
-            memory: 2Gi
+            cpu: 1000m
+            memory: 1024Mi
           requests:
-            cpu: 100m
-            memory: 512Mi
+            cpu: 50m
+            memory: 128Mi
         securityContext:
           runAsGroup: "65534"
           runAsNonRoot: true
@@ -143,7 +127,6 @@ spec:
           istios.operator.kyma-project.io/managed-by-disclaimer: |
             DO NOT EDIT - This resource is managed by Kyma.
             Any modifications are discarded and the resource is reverted to the original state.
-  hub: europe-docker.pkg.dev/kyma-project/prod/external/istio
   meshConfig:
     defaultConfig:
       holdApplicationUntilProxyStarts: true
@@ -197,7 +180,6 @@ spec:
       name: stdout-json
     trustDomain: cluster.local
   profile: default
-  tag: "{{ .IstioVersion }}-{{ .IstioImageBase }}"
   values:
     base:
       enableCRDTemplates: false
@@ -245,7 +227,7 @@ spec:
       configValidation: true
       defaultNodeSelector: {}
       defaultPodDisruptionBudget:
-        enabled: true
+        enabled: false
       defaultResources:
         requests:
           cpu: 10m
@@ -289,11 +271,11 @@ spec:
           failureThreshold: 600
         resources:
           limits:
-            cpu: 1000m
-            memory: 1024Mi
+            cpu: 250m
+            memory: 254Mi
           requests:
             cpu: 10m
-            memory: 192Mi
+            memory: 32Mi
         statusPort: 15020
         tracer: none
       proxy_init:

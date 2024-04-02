@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/coreos/go-semver/semver"
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/kyma-project/istio/operator/internal/restarter"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -21,7 +23,7 @@ func shouldDelete(istio *operatorv1alpha2.Istio) bool {
 }
 
 // shouldInstall returns true when Istio should be installed
-func shouldInstall(istio *operatorv1alpha2.Istio, istioTag string) (shouldInstall bool, err error) {
+func shouldInstall(istio *operatorv1alpha2.Istio, istioImageVersion istiooperator.IstioImageVersion) (shouldInstall bool, err error) {
 	if shouldDelete(istio) {
 		return false, nil
 	}
@@ -36,7 +38,7 @@ func shouldInstall(istio *operatorv1alpha2.Istio, istioTag string) (shouldInstal
 		return false, err
 	}
 
-	if err := CheckIstioVersion(lastAppliedConfig.IstioTag, istioTag); err != nil {
+	if err := checkIstioVersion(lastAppliedConfig.IstioTag, istioImageVersion.Tag()); err != nil {
 		return false, err
 	}
 
@@ -80,7 +82,7 @@ func getLastAppliedConfiguration(istioCR *operatorv1alpha2.Istio) (appliedConfig
 	return lastAppliedConfig, nil
 }
 
-func CheckIstioVersion(currentIstioVersionString, targetIstioVersionString string) error {
+func checkIstioVersion(currentIstioVersionString, targetIstioVersionString string) error {
 	currentIstioVersion, err := semver.NewVersion(currentIstioVersionString)
 	if err != nil {
 		return err
@@ -88,6 +90,12 @@ func CheckIstioVersion(currentIstioVersionString, targetIstioVersionString strin
 	targetIstioVersion, err := semver.NewVersion(targetIstioVersionString)
 	if err != nil {
 		return err
+	}
+
+	// We need to compare this separately, because semver library does not support comparing versions by ignoring pre-release versions. But only a changed image type must not be considered
+	// as a change of the Istio version.
+	if currentIstioVersion.Major == targetIstioVersion.Major && currentIstioVersion.Minor == targetIstioVersion.Minor && currentIstioVersion.Patch == targetIstioVersion.Patch {
+		return nil
 	}
 
 	if targetIstioVersion.LessThan(*currentIstioVersion) {

@@ -18,14 +18,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
-type hyperscalerClientMock struct {
-	isAws bool
-}
-
-func (hc *hyperscalerClientMock) IsAws() bool {
-	return hc.isAws
-}
-
 var _ = Describe("Reconciliation", func() {
 	numTrustedProxies := 1
 	istioCR := operatorv1alpha2.Istio{
@@ -45,8 +37,7 @@ var _ = Describe("Reconciliation", func() {
 	It("should succeed creating peer authentication mtls", func() {
 		//given
 		client := createFakeClient()
-		hc := &hyperscalerClientMock{isAws: false}
-		reconciler := NewReconciler(client, hc)
+		reconciler := NewReconciler(client)
 
 		//when
 		err := reconciler.Reconcile(context.Background(), istioCR)
@@ -63,8 +54,7 @@ var _ = Describe("Reconciliation", func() {
 	It("should succeed creating config maps for dashboards", func() {
 		//given
 		client := createFakeClient()
-		hc := &hyperscalerClientMock{isAws: false}
-		reconciler := NewReconciler(client, hc)
+		reconciler := NewReconciler(client)
 
 		//when
 		err := reconciler.Reconcile(context.Background(), istioCR)
@@ -98,9 +88,9 @@ var _ = Describe("Reconciliation", func() {
 
 		It("should be created when hyperscaler is AWS", func() {
 			//given
-			client := createFakeClient()
-			hc := &hyperscalerClientMock{isAws: true}
-			reconciler := NewReconciler(client, hc)
+			n := corev1.Node{Spec: corev1.NodeSpec{ProviderID: "aws://asdasdads"}}
+			client := createFakeClient(&n)
+			reconciler := NewReconciler(client)
 
 			//when
 			err := reconciler.Reconcile(context.Background(), istioCR)
@@ -115,8 +105,7 @@ var _ = Describe("Reconciliation", func() {
 		It("should not be created when hyperscaler is not AWS", func() {
 			//given
 			client := createFakeClient()
-			hc := &hyperscalerClientMock{isAws: false}
-			reconciler := NewReconciler(client, hc)
+			reconciler := NewReconciler(client)
 
 			//when
 			err := reconciler.Reconcile(context.Background(), istioCR)

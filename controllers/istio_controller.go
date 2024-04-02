@@ -52,10 +52,7 @@ import (
 )
 
 const (
-	namespace                    = "kyma-system"
-	IstioVersion                 = "1.21.0"
-	IstioImageBase               = "distroless"
-	IstioResourceListDefaultPath = "manifests/controlled_resources_list.yaml"
+	namespace = "kyma-system"
 )
 
 func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *IstioReconciler {

@@ -185,6 +185,8 @@ spec:
       enableCRDTemplates: false
       validationURL: ""
     cni:
+      repair:
+        deletePods: true
       cniBinDir: /opt/cni/bin
       cniConfDir: /etc/cni/net.d
     defaultRevision: ""

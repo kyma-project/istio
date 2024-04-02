@@ -22,6 +22,47 @@ const (
 	gardenerMockOSImage     string = "Garden Linux 934.8"
 )
 
+var _ = Describe("GetClusterProvider", func() {
+	It("Should return other when cluster provider is unknown", func() {
+		//given
+		node := corev1.Node{
+			ObjectMeta: v1.ObjectMeta{
+				Name: "node-1",
+			},
+			Spec: corev1.NodeSpec{ProviderID: "kubernetes://asdadsads"},
+			Status: corev1.NodeStatus{
+				NodeInfo: corev1.NodeSystemInfo{
+					KubeProxyVersion: k3sMockKubeProxyVersion,
+				},
+			},
+		}
+		client := createFakeClient(&node)
+		p, err := clusterconfig.GetClusterProvider(context.TODO(), client)
+		Expect(err).To(BeNil())
+		Expect(p).To(Equal("other"))
+	})
+	It("Should return 'aws' for clusters provisioned on AWS nodes", func() {
+		//given
+		node := corev1.Node{
+			ObjectMeta: v1.ObjectMeta{
+				Name: "node-1",
+			},
+			Spec: corev1.NodeSpec{ProviderID: "aws://asdadsads"},
+		}
+		client := createFakeClient(&node)
+		p, err := clusterconfig.GetClusterProvider(context.TODO(), client)
+		Expect(err).To(BeNil())
+		Expect(p).To(Equal("aws"))
+	})
+	It("Should return 'other' for clusters without nodes", func() {
+		//given
+		client := createFakeClient()
+		p, err := clusterconfig.GetClusterProvider(context.TODO(), client)
+		Expect(err).To(BeNil())
+		Expect(p).To(Equal("other"))
+	})
+})
+
 var _ = Describe("EvaluateClusterConfiguration", func() {
 	Context("k3d", func() {
 		It("should set cni values and serviceAnnotations to k3d configuration", func() {

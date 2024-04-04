@@ -4,8 +4,8 @@ import (
 	"context"
 	"github.com/avast/retry-go"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
-	networkingv1beta1 "istio.io/api/networking/v1beta1"
-	"istio.io/client-go/pkg/apis/networking/v1beta1"
+	networkingv1alpha3 "istio.io/api/networking/v1alpha3"
+	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -15,7 +15,7 @@ func CreateDestinationRule(ctx context.Context, name, namespace, host string) (c
 		return ctx, err
 	}
 
-	d := v1beta1.DestinationRule{
+	d := v1alpha3.DestinationRule{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "networking.istio.io/v1beta1",
 			Kind:       "DestinationRule",
@@ -24,7 +24,7 @@ func CreateDestinationRule(ctx context.Context, name, namespace, host string) (c
 			Name:      name,
 			Namespace: namespace,
 		},
-		Spec: networkingv1beta1.DestinationRule{
+		Spec: networkingv1alpha3.DestinationRule{
 			Host: host,
 		},
 	}

@@ -2,8 +2,12 @@ package steps
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"github.com/pkg/errors"
+	"gopkg.in/inf.v0"
+	appsv1 "k8s.io/api/apps/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+	"strconv"
 	"strings"
 
 	apinetworkingv1alpha3 "istio.io/api/networking/v1alpha3"
@@ -18,8 +22,6 @@ import (
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	crds "github.com/kyma-project/istio/operator/tests/integration/pkg/crds"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
-	"github.com/mitchellh/mapstructure"
-	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -83,21 +85,27 @@ func IstioComponentHasResourcesSetToCpuAndMemory(ctx context.Context, component,
 		return err
 	}
 
-	operator, err := getIstioOperatorFromCluster(k8sClient)
-	if err != nil {
-		return err
-	}
-	resources, err := getResourcesForComponent(operator, component, resourceType)
+	resources, err := getResourcesForComponent(k8sClient, component, resourceType)
 	if err != nil {
 		return err
 	}
 
-	if resources.Cpu != cpu {
-		return fmt.Errorf("cpu %s for component %s wasn't expected; expected=%s got=%s", resourceType, component, cpu, resources.Cpu)
+	cpuMilli, err := strconv.Atoi(strings.TrimSuffix(cpu, "m"))
+	if err != nil {
+		return err
 	}
 
-	if resources.Memory != memory {
-		return fmt.Errorf("memory %s for component %s wasn't expected; expected=%s got=%s", resourceType, component, memory, resources.Memory)
+	memMilli, err := strconv.Atoi(strings.TrimSuffix(memory, "Mi"))
+	if err != nil {
+		return err
+	}
+
+	if resource.NewDecimalQuantity(*inf.NewDec(int64(cpuMilli), inf.Scale(resource.Milli)), resource.DecimalSI).Equal(resources.Cpu) {
+		return fmt.Errorf("cpu %s for component %s wasn't expected; expected=%v got=%v", resourceType, component, resource.NewScaledQuantity(int64(cpuMilli), resource.Milli), resources.Cpu)
+	}
+
+	if resource.NewDecimalQuantity(*inf.NewDec(int64(memMilli), inf.Scale(resource.Milli)), resource.DecimalSI).Equal(resources.Memory) {
+		return fmt.Errorf("memory %s for component %s wasn't expected; expected=%v got=%v", resourceType, component, resource.NewScaledQuantity(int64(memMilli), resource.Milli), resources.Memory)
 	}
 
 	return nil
@@ -108,80 +116,52 @@ func UninstallIstio(ctx context.Context) error {
 	return istioClient.Uninstall(ctx)
 }
 
-func getIstioOperatorFromCluster(k8sClient client.Client) (*iopv1alpha1.IstioOperator, error) {
-
-	iop := iopv1alpha1.IstioOperator{}
-
-	err := k8sClient.Get(context.TODO(), types.NamespacedName{Name: defaultIopName, Namespace: defaultIopNamespace}, &iop)
-	if err != nil {
-		return nil, fmt.Errorf("default Kyma IstioOperator CR wasn't found err=%s", err)
-	}
-
-	return &iop, nil
-}
-
 type ResourceStruct struct {
-	Cpu    string
-	Memory string
+	Cpu    resource.Quantity
+	Memory resource.Quantity
 }
 
-func getResourcesForComponent(operator *iopv1alpha1.IstioOperator, component, resourceType string) (*ResourceStruct, error) {
+func getResourcesForComponent(k8sClient client.Client, component, resourceType string) (*ResourceStruct, error) {
 	res := ResourceStruct{}
 
 	switch component {
 	case "proxy_init":
 		fallthrough
 	case "proxy":
-		jsonResources, err := json.Marshal(operator.Spec.Values.Fields["global"].GetStructValue().Fields[component].GetStructValue().
-			Fields["resources"].GetStructValue().Fields[resourceType].GetStructValue())
-
-		if err != nil {
-			return nil, err
-		}
-		err = json.Unmarshal(jsonResources, &res)
-		if err != nil {
-			return nil, err
-		}
-		return &res, nil
+		return nil, errors.New("Proxy resources are not implemented")
 	case "ingress-gateway":
+		var igDeployment appsv1.Deployment
+		err := k8sClient.Get(context.Background(), types.NamespacedName{Name: "istio-ingressgateway", Namespace: defaultIopNamespace}, &igDeployment)
+		if err != nil {
+			return nil, err
+		}
+
 		if resourceType == "limits" {
-			err := mapstructure.Decode(operator.Spec.Components.IngressGateways[0].K8S.Resources.Limits, &res)
-			if err != nil {
-				return nil, err
-			}
+			res.Memory = *igDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Memory()
+			res.Cpu = *igDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu()
 		} else {
-			err := mapstructure.Decode(operator.Spec.Components.IngressGateways[0].K8S.Resources.Requests, &res)
-			if err != nil {
-				return nil, err
-			}
+			res.Memory = *igDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory()
+			res.Cpu = *igDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu()
 		}
 
 		return &res, nil
 	case "egress-gateway":
-		if resourceType == "limits" {
-			err := mapstructure.Decode(operator.Spec.Components.EgressGateways[0].K8S.Resources.Limits, &res)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			err := mapstructure.Decode(operator.Spec.Components.EgressGateways[0].K8S.Resources.Requests, &res)
-			if err != nil {
-				return nil, err
-			}
-		}
-		return &res, nil
+		return nil, errors.New("Egress gateway resources are not implemented")
 	case "pilot":
-		if resourceType == "limits" {
-			err := mapstructure.Decode(operator.Spec.Components.Pilot.K8S.Resources.Limits, &res)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			err := mapstructure.Decode(operator.Spec.Components.Pilot.K8S.Resources.Requests, &res)
-			if err != nil {
-				return nil, err
-			}
+		var idDeployment appsv1.Deployment
+		err := k8sClient.Get(context.Background(), types.NamespacedName{Name: "istiod", Namespace: defaultIopNamespace}, &idDeployment)
+		if err != nil {
+			return nil, err
 		}
+
+		if resourceType == "limits" {
+			res.Memory = *idDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Memory()
+			res.Cpu = *idDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu()
+		} else {
+			res.Memory = *idDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory()
+			res.Cpu = *idDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu()
+		}
+
 		return &res, nil
 	default:
 		return nil, godog.ErrPending

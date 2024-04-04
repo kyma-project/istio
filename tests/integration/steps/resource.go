@@ -13,7 +13,6 @@ import (
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
-	networkingv1beta1 "istio.io/client-go/pkg/apis/networking/v1beta1"
 	securityv1beta1 "istio.io/client-go/pkg/apis/security/v1beta1"
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	v1 "k8s.io/api/apps/v1"
@@ -126,7 +125,7 @@ func ResourceIsPresent(ctx context.Context, kind, name, namespace, present strin
 		case PeerAuthentication.String():
 			object = &securityv1beta1.PeerAuthentication{}
 		case VirtualService.String():
-			object = &networkingv1beta1.VirtualService{}
+			object = &networkingv1alpha3.VirtualService{}
 		case ConfigMap.String():
 			object = &corev1.ConfigMap{}
 		case IstioOperator.String():
@@ -261,7 +260,7 @@ func ResourceInNamespaceIsDeleted(ctx context.Context, kind, name, namespace str
 		})
 	case DestinationRule.String():
 		return retry.Do(func() error {
-			var dr networkingv1beta1.DestinationRule
+			var dr networkingv1alpha3.DestinationRule
 			err := k8sClient.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, &dr)
 			if err != nil {
 				return err
@@ -291,7 +290,7 @@ func ResourceInNamespaceIsDeleted(ctx context.Context, kind, name, namespace str
 		})
 	case Gateway.String():
 		return retry.Do(func() error {
-			var r networkingv1beta1.Gateway
+			var r networkingv1alpha3.Gateway
 			err := k8sClient.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, &r)
 			if err != nil {
 				return err
@@ -321,7 +320,7 @@ func ResourceInNamespaceIsDeleted(ctx context.Context, kind, name, namespace str
 		})
 	case VirtualService.String():
 		return retry.Do(func() error {
-			var r networkingv1beta1.VirtualService
+			var r networkingv1alpha3.VirtualService
 			err := k8sClient.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, &r)
 			if err != nil {
 				return err
@@ -373,7 +372,7 @@ func ResourceNotPresent(ctx context.Context, kind string) error {
 			}
 
 		case DestinationRule.String():
-			var drList networkingv1beta1.DestinationRuleList
+			var drList networkingv1alpha3.DestinationRuleList
 			err := k8sClient.List(context.TODO(), &drList)
 			if err != nil {
 				return err

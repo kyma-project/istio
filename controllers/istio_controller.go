@@ -19,18 +19,15 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/istio/operator/internal/restarter"
-	"github.com/kyma-project/istio/operator/internal/validation"
-	"net/http"
 	"time"
 
-	"github.com/kyma-project/istio/operator/internal/clusterconfig"
-	"github.com/kyma-project/istio/operator/internal/filter"
-	"github.com/kyma-project/istio/operator/pkg/lib/sidecars"
-
 	"github.com/kyma-project/istio/operator/internal/described_errors"
+	"github.com/kyma-project/istio/operator/internal/filter"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio_resources"
+	"github.com/kyma-project/istio/operator/internal/restarter"
 	"github.com/kyma-project/istio/operator/internal/status"
+	"github.com/kyma-project/istio/operator/internal/validation"
+	"github.com/kyma-project/istio/operator/pkg/lib/sidecars"
 	"k8s.io/client-go/util/retry"
 
 	"github.com/kyma-project/istio/operator/internal/manifest"
@@ -73,7 +70,7 @@ func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *I
 		Client:                 mgr.GetClient(),
 		Scheme:                 mgr.GetScheme(),
 		istioInstallation:      &istio.Installation{Client: mgr.GetClient(), IstioClient: istio.NewIstioClient(), IstioVersion: IstioVersion, IstioImageBase: IstioImageBase, Merger: &merger},
-		istioResources:         istio_resources.NewReconciler(mgr.GetClient(), clusterconfig.NewHyperscalerClient(&http.Client{Timeout: 1 * time.Second})),
+		istioResources:         istio_resources.NewReconciler(mgr.GetClient()),
 		restarters:             restarters,
 		log:                    mgr.GetLogger(),
 		statusHandler:          statusHandler,

@@ -3,6 +3,8 @@ package clusterconfig
 import (
 	"context"
 	"regexp"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"strings"
 
 	"github.com/imdario/mergo"
 	corev1 "k8s.io/api/core/v1"
@@ -106,6 +108,36 @@ func EvaluateClusterConfiguration(ctx context.Context, k8sClient client.Client) 
 		return ClusterConfiguration{}, err
 	}
 	return flavour.clusterConfiguration()
+}
+
+// GetClusterProvider is a small hack that tries to determine the
+// hyperscaler based on the first provider node.
+func GetClusterProvider(ctx context.Context, k8sclient client.Client) (string, error) {
+	nodes := corev1.NodeList{}
+	err := k8sclient.List(ctx, &nodes)
+	if err != nil {
+		return "", err
+	}
+	// if we got OK response and node list is empty, we can't guess cloud provider
+	// treat as "other" provider
+	// in standard execution this should never be reached because if cluster
+	// doesn't have any nodes, nothing can be run on it
+	// this catches rare case where cluster doesn't have any nodes, but
+	// client-go also doesn't return any error
+	if len(nodes.Items) == 0 {
+		ctrl.Log.Info("unable to determine cloud provider due to empty node list, using 'other' as provider")
+		return "other", nil
+	}
+
+	// get 1st node since all nodes usually are backed by the same provider
+	n := nodes.Items[0]
+	provider := n.Spec.ProviderID
+	switch {
+	case strings.HasPrefix(provider, "aws://"):
+		return "aws", nil
+	default:
+		return "other", nil
+	}
 }
 
 func DiscoverClusterFlavour(ctx context.Context, k8sClient client.Client) (ClusterFlavour, error) {

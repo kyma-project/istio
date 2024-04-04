@@ -20,14 +20,12 @@ type ResourcesReconciliation interface {
 
 type ResourcesReconciler struct {
 	client         client.Client
-	hsClient       clusterconfig.Hyperscaler
 	templateValues map[string]string
 }
 
-func NewReconciler(client client.Client, hsClient clusterconfig.Hyperscaler) *ResourcesReconciler {
+func NewReconciler(client client.Client) *ResourcesReconciler {
 	return &ResourcesReconciler{
-		client:   client,
-		hsClient: hsClient,
+		client: client,
 	}
 }
 
@@ -39,7 +37,12 @@ type Resource interface {
 func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha2.Istio) described_errors.DescribedError {
 	ctrl.Log.Info("Reconciling Istio resources")
 
-	resources, err := getResources(r.client, r.hsClient)
+	provider, err := clusterconfig.GetClusterProvider(ctx, r.client)
+	if err != nil {
+		return described_errors.NewDescribedError(err, "could not determine cluster provider")
+	}
+
+	resources, err := getResources(r.client, provider)
 	if err != nil {
 		ctrl.Log.Error(err, "Failed to initialise Istio resources")
 		return described_errors.NewDescribedError(err, "Istio controller failed to initialise Istio resources")
@@ -68,12 +71,11 @@ func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha2.Is
 }
 
 // getResources returns all Istio resources required for the reconciliation specific for the given hyperscaler.
-func getResources(k8sClient client.Client, hsClient clusterconfig.Hyperscaler) ([]Resource, error) {
+func getResources(k8sClient client.Client, provider string) ([]Resource, error) {
 	istioResources := []Resource{NewEnvoyFilterAllowPartialReferer(k8sClient)}
 	istioResources = append(istioResources, NewPeerAuthenticationMtls(k8sClient))
 
-	isAws := hsClient.IsAws()
-	if isAws {
+	if provider == "aws" {
 		istioResources = append(istioResources, NewProxyProtocolEnvoyFilter(k8sClient))
 	}
 

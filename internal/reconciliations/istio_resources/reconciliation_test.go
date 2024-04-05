@@ -38,8 +38,7 @@ var _ = Describe("Reconciliation", func() {
 	It("should succeed creating envoy filter referer", func() {
 		//given
 		client := createFakeClient()
-		hc := &hyperscalerClientMock{isAws: false}
-		reconciler := NewReconciler(client, hc)
+		reconciler := NewReconciler(client)
 
 		//when
 		err := reconciler.Reconcile(context.Background(), istioCR)

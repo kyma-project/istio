@@ -137,6 +137,7 @@ func main() {
 
 func defineFlagVar() *FlagVar {
 	flagVar := new(FlagVar)
+
 	flag.StringVar(&flagVar.metricsAddr, "metrics-bind-address", ":8090", "The address the metric endpoint binds to.")
 	flag.StringVar(&flagVar.probeAddr, "health-probe-bind-address", ":8091", "The address the probe endpoint binds to.")
 	flag.BoolVar(&flagVar.enableLeaderElection, "leader-elect", false,

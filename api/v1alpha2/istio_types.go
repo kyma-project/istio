@@ -87,12 +87,14 @@ type ReasonWithMessage struct {
 	Message string
 }
 
-// Defines the desired specification for installing or updating Istio.
+// IstioSpec describes the desired specification for installing or updating Istio.
 type IstioSpec struct {
 	// +kubebuilder:validation:Optional
 	Config Config `json:"config,omitempty"`
 	// +kubebuilder:validation:Optional
 	Components *Components `json:"components,omitempty"`
+	// +kubebuilder:validation:Optional
+	Experimental *Experimental `json:"experimental,omitempty"`
 }
 
 //+kubebuilder:object:root=true

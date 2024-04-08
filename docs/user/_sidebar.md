@@ -17,6 +17,7 @@
   * [Istio Controller Parameters](/istio/user/technical-reference/05-00-istio-controller-parameters.md)
   * [Istio Controller RBAC Configuration](/istio/user/technical-reference/05-10-istio-controller-rbac.md)
 * [Troubleshooting](/istio/user/troubleshooting/README.md)
+  * [Basic Diagnostics](/istio/user/03-00-istio-basic-diagnostics.md)
   * [No Access](/istio/user/troubleshooting/03-10-503-no-access.md)
   * [Connection Refused](/istio/user/troubleshooting/03-20-connection-refused.md)
   * [No Istio Sidecar](/istio/user/troubleshooting/03-30-istio-no-sidecar.md)

@@ -15,7 +15,7 @@ labels:
     includeTemplates: true
     pairs:
       kyma-project.io/module: istio
-      app.kubernetes.io/version: dev
+      app.kubernetes.io/version: VERSION
       app.kubernetes.io/part-of: istio
       app.kubernetes.io/name: istio-operator
       app.kubernetes.io/instance: istio-operator-default

@@ -196,11 +196,14 @@ func (r *IstioReconciler) finishReconcile(ctx context.Context, istioCR *operator
 	}
 
 	r.statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileSucceeded))
+	if err := r.validate(istioCR); err != nil {
+		return ctrl.Result{}, r.statusHandler.UpdateToError(ctx, istioCR, err)
+	}
+
 	if err := r.statusHandler.UpdateToReady(ctx, istioCR); err != nil {
 		r.log.Error(err, "Error during updating status to ready")
 		return ctrl.Result{}, err
 	}
-
 	r.log.Info("Reconcile finished")
 	return ctrl.Result{RequeueAfter: r.reconciliationInterval}, nil
 }

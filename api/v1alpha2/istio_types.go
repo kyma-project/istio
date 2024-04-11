@@ -118,6 +118,11 @@ type IstioList struct {
 	Items           []Istio `json:"items"`
 }
 
+const (
+	ExternalPolicyCluster = "Cluster"
+	ExternalPolicyLocal   = "Local"
+)
+
 // IstioStatus defines the observed state of IstioCR.
 type IstioStatus struct {
 	// State signifies the current state of CustomObject. Value

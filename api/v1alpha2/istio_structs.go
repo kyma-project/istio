@@ -15,6 +15,10 @@ type Config struct {
 
 	// Defines a list of external authorization providers.
 	Authorizers []*Authorizer `json:"authorizers,omitempty"`
+
+	// Defines configuration for Istio Ingress Gateway external traffic policy.
+	// +kube:validation:Enum=ExternalPolicyLocal;ExternalPolicyCluster
+	ExternalTrafficPolicy *string `json:"externalTrafficPolicy,omitempty"`
 }
 
 type Components struct {

@@ -1237,6 +1237,13 @@ spec:
                     description: IngressGateway defines component configurations for
                       Istio Ingress Gateway
                     properties:
+                      externalTrafficPolicy:
+                        description: ExternalTrafficPolicy defines configuration for
+                          Istio Ingress Gateway external traffic policy.
+                        enum:
+                        - Local
+                        - Cluster
+                        type: string
                       k8s:
                         description: KubernetesResourcesConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec
                         properties:
@@ -1311,12 +1318,17 @@ spec:
                             - rollingUpdate
                             type: object
                         type: object
-                    required:
-                    - k8s
                     type: object
                   pilot:
                     description: Pilot defines component configuration for Istiod
                     properties:
+                      externalTrafficPolicy:
+                        description: ExternalTrafficPolicy defines configuration for
+                          Istio Ingress Gateway external traffic policy.
+                        enum:
+                        - Local
+                        - Cluster
+                        type: string
                       k8s:
                         description: KubernetesResourcesConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec
                         properties:
@@ -1391,8 +1403,6 @@ spec:
                             - rollingUpdate
                             type: object
                         type: object
-                    required:
-                    - k8s
                     type: object
                   proxy:
                     description: Proxy defines component configuration for Istio proxy
@@ -1546,10 +1556,6 @@ spec:
                       - service
                       type: object
                     type: array
-                  externalTrafficPolicy:
-                    description: Defines configuration for Istio Ingress Gateway external
-                      traffic policy.
-                    type: string
                   numTrustedProxies:
                     description: Defines the number of trusted proxies deployed in
                       front of the Istio gateway proxy.
@@ -1673,8 +1679,8 @@ spec:
           metadata:
             type: object
           spec:
-            description: Defines the desired specification for installing or updating
-              Istio.
+            description: IstioSpec describes the desired specification for installing
+              or updating Istio.
             properties:
               components:
                 properties:
@@ -2873,6 +2879,13 @@ spec:
                     description: IngressGateway defines component configurations for
                       Istio Ingress Gateway
                     properties:
+                      externalTrafficPolicy:
+                        description: ExternalTrafficPolicy defines configuration for
+                          Istio Ingress Gateway external traffic policy.
+                        enum:
+                        - Local
+                        - Cluster
+                        type: string
                       k8s:
                         description: KubernetesResourcesConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec
                         properties:
@@ -2947,12 +2960,17 @@ spec:
                             - rollingUpdate
                             type: object
                         type: object
-                    required:
-                    - k8s
                     type: object
                   pilot:
                     description: Pilot defines component configuration for Istiod
                     properties:
+                      externalTrafficPolicy:
+                        description: ExternalTrafficPolicy defines configuration for
+                          Istio Ingress Gateway external traffic policy.
+                        enum:
+                        - Local
+                        - Cluster
+                        type: string
                       k8s:
                         description: KubernetesResourcesConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec
                         properties:
@@ -3027,8 +3045,6 @@ spec:
                             - rollingUpdate
                             type: object
                         type: object
-                    required:
-                    - k8s
                     type: object
                   proxy:
                     description: Proxy defines component configuration for Istio proxy
@@ -3182,16 +3198,22 @@ spec:
                       - service
                       type: object
                     type: array
-                  externalTrafficPolicy:
-                    description: Defines configuration for Istio Ingress Gateway external
-                      traffic policy.
-                    type: string
                   numTrustedProxies:
                     description: Defines the number of trusted proxies deployed in
                       front of the Istio gateway proxy.
                     maximum: 4294967295
                     minimum: 0
                     type: integer
+                type: object
+              experimental:
+                properties:
+                  pilot:
+                    properties:
+                      enableAlphaGatewayAPI:
+                        type: boolean
+                      enableMultiNetworkDiscoverGatewayAPI:
+                        type: boolean
+                    type: object
                 type: object
             type: object
           status:

@@ -2,7 +2,6 @@ package v1alpha2
 
 import (
 	"encoding/json"
-
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"istio.io/api/operator/v1alpha1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -176,9 +175,25 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 			op.Spec.Components.IngressGateways[0].K8S = &v1alpha1.KubernetesResourcesSpec{}
 		}
 
-		err := mergeK8sConfig(op.Spec.Components.IngressGateways[0].K8S, *i.Spec.Components.IngressGateway.K8s)
-		if err != nil {
-			return op, err
+		if i.Spec.Components.IngressGateway.K8s != nil {
+			err := mergeK8sConfig(op.Spec.Components.IngressGateways[0].K8S, *i.Spec.Components.IngressGateway.K8s)
+			if err != nil {
+				return op, err
+			}
+		}
+
+		if i.Spec.Components.IngressGateway.ExternalTrafficPolicy != nil {
+			op.Spec.Components.IngressGateways[0].K8S.Overlays = append(op.Spec.Components.IngressGateways[0].K8S.Overlays, &v1alpha1.K8SObjectOverlay{
+				ApiVersion: "v1",
+				Kind:       "Service",
+				Name:       "istio-ingressgateway",
+				Patches: []*v1alpha1.K8SObjectOverlay_PathValue{
+					{
+						Path:  "spec.externalTrafficPolicy",
+						Value: structpb.NewStringValue(*i.Spec.Components.IngressGateway.ExternalTrafficPolicy),
+					},
+				},
+			})
 		}
 	}
 	if i.Spec.Components.Pilot != nil {
@@ -191,13 +206,15 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 		if op.Spec.Components.Pilot.K8S == nil {
 			op.Spec.Components.Pilot.K8S = &v1alpha1.KubernetesResourcesSpec{}
 		}
-		err := mergeK8sConfig(op.Spec.Components.Pilot.K8S, *i.Spec.Components.Pilot.K8s)
-		if err != nil {
-			return op, err
+		if i.Spec.Components.Pilot.K8s != nil {
+			err := mergeK8sConfig(op.Spec.Components.Pilot.K8S, *i.Spec.Components.Pilot.K8s)
+			if err != nil {
+				return op, err
+			}
 		}
 	}
 
-	if i.Spec.Components.Proxy != nil && i.Spec.Components.Proxy.K8S.Resources != nil {
+	if i.Spec.Components.Proxy != nil && i.Spec.Components.Proxy.K8S != nil && i.Spec.Components.Proxy.K8S.Resources != nil {
 		if op.Spec.Values == nil {
 			op.Spec.Values = &structpb.Struct{}
 			op.Spec.Values.Fields = make(map[string]*structpb.Value)
@@ -298,7 +315,7 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 			op.Spec.Components.Cni.K8S.Affinity = &v1alpha1.Affinity{}
 		}
 
-		if i.Spec.Components.Cni.K8S.Affinity != nil {
+		if i.Spec.Components.Cni.K8S != nil && i.Spec.Components.Cni.K8S.Affinity != nil {
 			if op.Spec.Components.Cni.K8S.Affinity == nil {
 				op.Spec.Components.Cni.K8S.Affinity = &v1alpha1.Affinity{}
 			}

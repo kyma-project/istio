@@ -10,6 +10,9 @@ Cypress.Commands.add('createNamespace', (name: string) => {
         // We have to use cy.wrap, since the post command uses a cy.fixture internally
         cy.wrap(postApi('v1/namespaces', ns)).should("be.true");
     })
+    // Added wait to reduce possible flakiness, since Busola would not be able to recover if you navigate to
+    // a namespace that is not yet created.
+    cy.wait(1000);
 })
 
 Cypress.Commands.add('deleteNamespace', (name: string) => {

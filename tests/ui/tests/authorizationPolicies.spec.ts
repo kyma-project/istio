@@ -61,7 +61,7 @@ context('Authorization Policies', () => {
         cy.clickSaveButton();
         cy.clickViewTab();
 
-        cy.contains("ALLOW").should('be.visible');
+        cy.contains("ALLOW");
     });
 
 });

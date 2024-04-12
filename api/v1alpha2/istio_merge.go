@@ -209,10 +209,11 @@ func applyGatewayExternalTrafficPolicy(op iopv1alpha1.IstioOperator, i *Istio) i
 			},
 		}
 	} else {
-		if len(op.Spec.Components.IngressGateways) == 0 {
-			op.Spec.Components.IngressGateways = append(op.Spec.Components.IngressGateways, &v1alpha1.GatewaySpec{})
+		if op.Spec.Components != nil && len(op.Spec.Components.IngressGateways) != 0 {
+			if op.Spec.Components.IngressGateways[0].K8S.Affinity.PodAntiAffinity != nil {
+				op.Spec.Components.IngressGateways[0].K8S.Affinity.PodAntiAffinity = nil
+			}
 		}
-		op.Spec.Components.IngressGateways[0].K8S = &v1alpha1.KubernetesResourcesSpec{}
 	}
 	return op
 }

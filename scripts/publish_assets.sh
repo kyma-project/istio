@@ -26,7 +26,7 @@ curl -f -L \
   --data-binary @"istio-manager.yaml" \
   ${GITHUB_URL}/releases/${RELEASE_ID}/assets?name=istio-manager.yaml
 
-IMG="europe-docker.pkg.dev/kyma-project/prod/istio-manager:${RELEASE_TAG}-experimental"  make generate-manifests
+IMG="${IMG}-experimental"  make generate-manifests
 curl -f -L \
   -X POST \
   -H "Accept: application/vnd.github+json" \

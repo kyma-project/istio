@@ -34,7 +34,7 @@ metadata:
   name: default
 spec:
   config:
-    gatewayexternalTrafficPolicy: Local
+    gatewayExternalTrafficPolicy: Local
 ```
 This will set the value of `externalTrafficPolicy` to `Local`.
 
@@ -46,7 +46,7 @@ metadata:
   name: default
 spec:
   config:
-    gatewayexternalTrafficPolicy: Cluster
+    gatewayExternalTrafficPolicy: Cluster
 ```
 This will set the value of `externalTrafficPolicy` to `Cluster`.
 

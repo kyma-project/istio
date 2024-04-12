@@ -15,6 +15,11 @@ type Config struct {
 
 	// Defines a list of external authorization providers.
 	Authorizers []*Authorizer `json:"authorizers,omitempty"`
+
+	// ExternalTrafficPolicy defines configuration for Istio Ingress Gateway external traffic policy.
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Enum=Local;Cluster
+	GatewayExternalTrafficPolicy *string `json:"gatewayExternalTrafficPolicy,omitempty"`
 }
 
 type Components struct {
@@ -71,13 +76,8 @@ type HPASpec struct {
 
 // IstioComponent defines configuration for generic Istio component (ingress gateway, istiod)
 type IstioComponent struct {
-	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Required
 	K8s *KubernetesResourcesConfig `json:"k8s"`
-
-	// ExternalTrafficPolicy defines configuration for Istio Ingress Gateway external traffic policy.
-	// +kubebuilder:validation:Optional
-	// +kubebuilder:validation:Enum=Local;Cluster
-	ExternalTrafficPolicy *string `json:"externalTrafficPolicy,omitempty"`
 }
 
 // Strategy defines rolling update strategy

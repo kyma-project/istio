@@ -4,6 +4,15 @@
   widget: FormGroup
   defaultExpanded: true
   children:
+  - path: gatewayExternalTrafficPolicy
+    name: config.gatewayExternalTrafficPolicy
+    simple: true
+    enum:
+    - Local
+    - Cluster
+    description: description.externalTrafficPolicy
+    value:
+      type: string
   - path: numTrustedProxies
     simple: true
     name: config.numTrustedProxies

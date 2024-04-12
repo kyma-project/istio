@@ -1237,13 +1237,6 @@ spec:
                     description: IngressGateway defines component configurations for
                       Istio Ingress Gateway
                     properties:
-                      externalTrafficPolicy:
-                        description: ExternalTrafficPolicy defines configuration for
-                          Istio Ingress Gateway external traffic policy.
-                        enum:
-                        - Local
-                        - Cluster
-                        type: string
                       k8s:
                         description: KubernetesResourcesConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec
                         properties:
@@ -1318,17 +1311,12 @@ spec:
                             - rollingUpdate
                             type: object
                         type: object
+                    required:
+                    - k8s
                     type: object
                   pilot:
                     description: Pilot defines component configuration for Istiod
                     properties:
-                      externalTrafficPolicy:
-                        description: ExternalTrafficPolicy defines configuration for
-                          Istio Ingress Gateway external traffic policy.
-                        enum:
-                        - Local
-                        - Cluster
-                        type: string
                       k8s:
                         description: KubernetesResourcesConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec
                         properties:
@@ -1403,6 +1391,8 @@ spec:
                             - rollingUpdate
                             type: object
                         type: object
+                    required:
+                    - k8s
                     type: object
                   proxy:
                     description: Proxy defines component configuration for Istio proxy
@@ -1556,6 +1546,13 @@ spec:
                       - service
                       type: object
                     type: array
+                  gatewayExternalTrafficPolicy:
+                    description: ExternalTrafficPolicy defines configuration for Istio
+                      Ingress Gateway external traffic policy.
+                    enum:
+                    - Local
+                    - Cluster
+                    type: string
                   numTrustedProxies:
                     description: Defines the number of trusted proxies deployed in
                       front of the Istio gateway proxy.
@@ -2879,13 +2876,6 @@ spec:
                     description: IngressGateway defines component configurations for
                       Istio Ingress Gateway
                     properties:
-                      externalTrafficPolicy:
-                        description: ExternalTrafficPolicy defines configuration for
-                          Istio Ingress Gateway external traffic policy.
-                        enum:
-                        - Local
-                        - Cluster
-                        type: string
                       k8s:
                         description: KubernetesResourcesConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec
                         properties:
@@ -2960,17 +2950,12 @@ spec:
                             - rollingUpdate
                             type: object
                         type: object
+                    required:
+                    - k8s
                     type: object
                   pilot:
                     description: Pilot defines component configuration for Istiod
                     properties:
-                      externalTrafficPolicy:
-                        description: ExternalTrafficPolicy defines configuration for
-                          Istio Ingress Gateway external traffic policy.
-                        enum:
-                        - Local
-                        - Cluster
-                        type: string
                       k8s:
                         description: KubernetesResourcesConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec
                         properties:
@@ -3045,6 +3030,8 @@ spec:
                             - rollingUpdate
                             type: object
                         type: object
+                    required:
+                    - k8s
                     type: object
                   proxy:
                     description: Proxy defines component configuration for Istio proxy
@@ -3198,6 +3185,13 @@ spec:
                       - service
                       type: object
                     type: array
+                  gatewayExternalTrafficPolicy:
+                    description: ExternalTrafficPolicy defines configuration for Istio
+                      Ingress Gateway external traffic policy.
+                    enum:
+                    - Local
+                    - Cluster
+                    type: string
                   numTrustedProxies:
                     description: Defines the number of trusted proxies deployed in
                       front of the Istio gateway proxy.

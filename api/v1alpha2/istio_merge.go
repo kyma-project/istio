@@ -2,8 +2,10 @@ package v1alpha2
 
 import (
 	"encoding/json"
+	"github.com/kyma-project/istio/operator/pkg/labels"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"istio.io/api/operator/v1alpha1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"google.golang.org/protobuf/types/known/structpb"
@@ -157,7 +159,62 @@ func (i *Istio) mergeConfig(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOper
 		op.Spec.MeshConfig = updatedConfig
 	}
 
+	op = applyGatewayExternalTrafficPolicy(op, i)
+
 	return op, nil
+}
+
+func applyGatewayExternalTrafficPolicy(op iopv1alpha1.IstioOperator, i *Istio) iopv1alpha1.IstioOperator {
+	if i.Spec.Config.GatewayExternalTrafficPolicy != nil && *i.Spec.Config.GatewayExternalTrafficPolicy == "Local" {
+		if len(op.Spec.Components.IngressGateways) == 0 {
+			op.Spec.Components.IngressGateways = append(op.Spec.Components.IngressGateways, &v1alpha1.GatewaySpec{})
+		}
+		if op.Spec.Components.IngressGateways[0].K8S == nil {
+			op.Spec.Components.IngressGateways[0].K8S = &v1alpha1.KubernetesResourcesSpec{}
+		}
+
+		const kind = "Service"
+		const version = "v1"
+		const istioIngressGateway = "istio-ingressgateway"
+		const path = "spec.externalTrafficPolicy"
+
+		op.Spec.Components.IngressGateways[0].K8S.Overlays = append(op.Spec.Components.IngressGateways[0].K8S.Overlays, &v1alpha1.K8SObjectOverlay{
+			ApiVersion: version,
+			Kind:       kind,
+			Name:       istioIngressGateway,
+			Patches: []*v1alpha1.K8SObjectOverlay_PathValue{
+				{
+					Path:  path,
+					Value: structpb.NewStringValue(*i.Spec.Config.GatewayExternalTrafficPolicy),
+				},
+			},
+		})
+
+		op.Spec.Components.IngressGateways[0].K8S.Affinity = &v1alpha1.Affinity{
+			PodAntiAffinity: &v1alpha1.PodAntiAffinity{
+				PreferredDuringSchedulingIgnoredDuringExecution: []*v1alpha1.WeightedPodAffinityTerm{
+					{
+						Weight: 100,
+						PodAffinityTerm: &v1alpha1.PodAffinityTerm{
+							TopologyKey: "kubernetes.io/hostname",
+							LabelSelector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{
+									"app":                 istioIngressGateway,
+									labels.ModuleLabelKey: labels.ModuleLabelValue,
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+	} else {
+		if len(op.Spec.Components.IngressGateways) == 0 {
+			op.Spec.Components.IngressGateways = append(op.Spec.Components.IngressGateways, &v1alpha1.GatewaySpec{})
+		}
+		op.Spec.Components.IngressGateways[0].K8S = &v1alpha1.KubernetesResourcesSpec{}
+	}
+	return op
 }
 
 func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {
@@ -182,19 +239,6 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 			}
 		}
 
-		if i.Spec.Components.IngressGateway.ExternalTrafficPolicy != nil {
-			op.Spec.Components.IngressGateways[0].K8S.Overlays = append(op.Spec.Components.IngressGateways[0].K8S.Overlays, &v1alpha1.K8SObjectOverlay{
-				ApiVersion: "v1",
-				Kind:       "Service",
-				Name:       "istio-ingressgateway",
-				Patches: []*v1alpha1.K8SObjectOverlay_PathValue{
-					{
-						Path:  "spec.externalTrafficPolicy",
-						Value: structpb.NewStringValue(*i.Spec.Components.IngressGateway.ExternalTrafficPolicy),
-					},
-				},
-			})
-		}
 	}
 	if i.Spec.Components.Pilot != nil {
 		if op.Spec.Components == nil {

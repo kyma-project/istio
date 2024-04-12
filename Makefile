@@ -103,6 +103,10 @@ run: manifests install create-kyma-system-ns build ## Run a controller from your
 docker-build: ## Build docker image with the manager.
 	IMG=$(IMG) docker build -t ${IMG} --build-arg TARGETOS=${TARGETOS} --build-arg TARGETARCH=${TARGETARCH} .
 
+.PHONY: docker-build-experimental
+docker-build: ## Build docker image with the experimental manager
+	IMG=$(IMG) docker build -t ${IMG} --build-arg GO_BUILD_TAGS=experimental --build-arg TARGETOS=${TARGETOS} --build-arg TARGETARCH=${TARGETARCH} .
+
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
 	docker push ${IMG}

@@ -33,9 +33,8 @@ kind: Istio
 metadata:
   name: default
 spec:
-  components:
-    ingressGateway:
-      externalTrafficPolicy: Local
+  config:
+    gatewayexternalTrafficPolicy: Local
 ```
 This will set the value of `externalTrafficPolicy` to `Local`.
 
@@ -46,9 +45,8 @@ kind: Istio
 metadata:
   name: default
 spec:
-  components:
-    ingressGateway:
-      externalTrafficPolicy: Cluster
+  config:
+    gatewayexternalTrafficPolicy: Cluster
 ```
 This will set the value of `externalTrafficPolicy` to `Cluster`.
 

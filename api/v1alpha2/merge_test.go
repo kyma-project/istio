@@ -398,6 +398,33 @@ var _ = Describe("Merge", func() {
 
 	})
 
+	It("Should clear Affinity when there is no configuration in Istio CR", func() {
+		// given
+
+		iop := iopv1alpha1.IstioOperator{
+			Spec: &operatorv1alpha1.IstioOperatorSpec{},
+		}
+		istioCR := Istio{Spec: IstioSpec{
+			Config: Config{
+				GatewayExternalTrafficPolicy: ptr.To("Cluster"),
+			},
+		}}
+
+		_, err := istioCR.MergeInto(iop)
+
+		iop = iopv1alpha1.IstioOperator{
+			Spec: &operatorv1alpha1.IstioOperatorSpec{},
+		}
+		istioCR = Istio{Spec: IstioSpec{}}
+
+		out, err := istioCR.MergeInto(iop)
+		// then
+		Expect(err).ShouldNot(HaveOccurred())
+
+		Expect(out.Spec.Components).To(BeNil())
+
+	})
+
 	Context("Pilot", func() {
 		Context("When Istio CR has 500m configured for CPU limits", func() {
 			It("should set CPU limits to 500m in IOP", func() {

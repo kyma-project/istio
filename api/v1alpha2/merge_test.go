@@ -392,7 +392,10 @@ var _ = Describe("Merge", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 
 		externalTrafficPolicy := out.Spec.Components.IngressGateways[0].K8S.Overlays[0].Patches[0].Value.GetStringValue()
-		Expect(externalTrafficPolicy).To(Equal("Local"))
+		Expect(externalTrafficPolicy).To(Equal("Cluster"))
+		podAntiAffinity := out.Spec.Components.IngressGateways[0].K8S.Affinity.PodAntiAffinity
+		Expect(podAntiAffinity).To(BeNil())
+
 	})
 
 	Context("Pilot", func() {

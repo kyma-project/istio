@@ -165,7 +165,7 @@ func (i *Istio) mergeConfig(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOper
 }
 
 func applyGatewayExternalTrafficPolicy(op iopv1alpha1.IstioOperator, i *Istio) iopv1alpha1.IstioOperator {
-	if i.Spec.Config.GatewayExternalTrafficPolicy != nil && *i.Spec.Config.GatewayExternalTrafficPolicy == "Local" {
+	if i.Spec.Config.GatewayExternalTrafficPolicy != nil {
 		if op.Spec.Components == nil {
 			op.Spec.Components = &v1alpha1.IstioComponentSetSpec{}
 		}
@@ -193,28 +193,32 @@ func applyGatewayExternalTrafficPolicy(op iopv1alpha1.IstioOperator, i *Istio) i
 			},
 		})
 
-		op.Spec.Components.IngressGateways[0].K8S.Affinity = &v1alpha1.Affinity{
-			PodAntiAffinity: &v1alpha1.PodAntiAffinity{
-				PreferredDuringSchedulingIgnoredDuringExecution: []*v1alpha1.WeightedPodAffinityTerm{
-					{
-						Weight: 100,
-						PodAffinityTerm: &v1alpha1.PodAffinityTerm{
-							TopologyKey: "kubernetes.io/hostname",
-							LabelSelector: &metav1.LabelSelector{
-								MatchLabels: map[string]string{
-									"app":                 istioIngressGateway,
-									labels.ModuleLabelKey: labels.ModuleLabelValue,
+		if *i.Spec.Config.GatewayExternalTrafficPolicy == "Local" {
+			op.Spec.Components.IngressGateways[0].K8S.Affinity = &v1alpha1.Affinity{
+				PodAntiAffinity: &v1alpha1.PodAntiAffinity{
+					PreferredDuringSchedulingIgnoredDuringExecution: []*v1alpha1.WeightedPodAffinityTerm{
+						{
+							Weight: 100,
+							PodAffinityTerm: &v1alpha1.PodAffinityTerm{
+								TopologyKey: "kubernetes.io/hostname",
+								LabelSelector: &metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"app":                 istioIngressGateway,
+										labels.ModuleLabelKey: labels.ModuleLabelValue,
+									},
 								},
 							},
 						},
 					},
 				},
-			},
+			}
+		} else {
+			op.Spec.Components.IngressGateways[0].K8S.Affinity = &v1alpha1.Affinity{}
 		}
 	} else {
 		if op.Spec.Components != nil && len(op.Spec.Components.IngressGateways) != 0 {
 			if op.Spec.Components.IngressGateways[0].K8S.Affinity.PodAntiAffinity != nil {
-				op.Spec.Components.IngressGateways[0].K8S.Affinity.PodAntiAffinity = nil
+				op.Spec.Components.IngressGateways[0].K8S.Affinity = &v1alpha1.Affinity{}
 			}
 		}
 	}

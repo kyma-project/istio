@@ -1,0 +1,18 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: placeholderName
+  namespace: placeholderNamespace
+spec:
+  action: AUDIT
+  rules:
+    - to:
+        - operation:
+            methods:
+              - GET
+            paths:
+              - /user/profile/*
+      when:
+        - key: request.auth.claims[iss]
+          values:
+            - https://test-value.com

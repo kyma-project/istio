@@ -15,6 +15,7 @@ on:
       - "CODEOWNERS"
       - "sec-scanners-config.yaml"
       - ".github/**" #Ignoring since the build job isn't triggered on the workflow directory changes
+      - ".**"
     branches:
       - 'release-**'
       - 'main'

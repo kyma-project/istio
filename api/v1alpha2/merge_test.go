@@ -411,6 +411,7 @@ var _ = Describe("Merge", func() {
 		}}
 
 		_, err := istioCR.MergeInto(iop)
+		Expect(err).ShouldNot(HaveOccurred())
 
 		iop = iopv1alpha1.IstioOperator{
 			Spec: &operatorv1alpha1.IstioOperatorSpec{},

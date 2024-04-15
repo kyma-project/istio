@@ -89,9 +89,22 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           statusName: "rel-istio-build"
+          intervalSeconds: "30"
           timeoutSeconds: "1800"
       - name: Check that module build status is success
         if: steps.wait-for-build.outputs.state != 'success'
+        run: exit 1
+
+      - uses: autotelic/action-wait-for-status-check@6556cf50c8fb6608412945382eae73581f56cbb4
+        name: Verify build of experimental image
+        id: wait-for-experimental-build
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          statusName: "rel-istio-experimental-build"
+          intervalSeconds: "30"
+          timeoutSeconds: "300"
+      - name: Check that experimental module build status is success
+        if: steps.wait-for-experimental-build.outputs.state != 'success'
         run: exit 1
 
       - name: Publish release assets

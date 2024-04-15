@@ -10,12 +10,13 @@ set -x
 RELEASE_TAG=$1
 RELEASE_ID=$2
 
-IMG="europe-docker.pkg.dev/kyma-project/prod/istio-manager:${RELEASE_TAG}" VERSION="${RELEASE_TAG}" make generate-manifests
-
 REPOSITORY=${REPOSITORY:-kyma-project/istio}
 GITHUB_URL=https://uploads.github.com/repos/${REPOSITORY}
 GITHUB_AUTH_HEADER="Authorization: Bearer ${GITHUB_TOKEN}"
+IMG="europe-docker.pkg.dev/kyma-project/prod/istio-manager:${RELEASE_TAG}"
+VERSION="${RELEASE_TAG}"
 
+make generate-manifests
 curl -f -L \
   -X POST \
   -H "Accept: application/vnd.github+json" \
@@ -24,6 +25,16 @@ curl -f -L \
   -H "Content-Type: application/octet-stream" \
   --data-binary @"istio-manager.yaml" \
   ${GITHUB_URL}/releases/${RELEASE_ID}/assets?name=istio-manager.yaml
+
+IMG="${IMG}-experimental"  make generate-manifests
+curl -f -L \
+  -X POST \
+  -H "Accept: application/vnd.github+json" \
+  -H "${GITHUB_AUTH_HEADER}" \
+  -H "X-GitHub-Api-Version: 2022-11-28" \
+  -H "Content-Type: application/octet-stream" \
+  --data-binary @"istio-manager.yaml" \
+  ${GITHUB_URL}/releases/${RELEASE_ID}/assets?name=istio-manager-experimental.yaml
 
 curl -f -L \
   -X POST \

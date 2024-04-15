@@ -27,12 +27,17 @@ Kyma Istio Operator is a component of the Kyma runtime that handles the manageme
    kubectl label namespace kyma-system istio-injection=enabled --overwrite
    ```
 
-2. To install Istio, you must install the latest version of Kyma Istio Operator and Istio CRD first. Run:
-
+2. To install Istio, you must install the latest version of Kyma Istio Operator and Istio CRD first.
+   In order to install the standard version, run :
    ```bash
    kubectl apply -f https://github.com/kyma-project/istio/releases/latest/download/istio-manager.yaml
    ```
 
+   In order to install the experimental version, run :
+   ```bash
+   kubectl apply -f https://github.com/kyma-project/istio/releases/latest/download/istio-manager-experimental.yaml
+   ```
+   
 3. To get Istio installed, apply the default Istio CR:
 
    ```bash

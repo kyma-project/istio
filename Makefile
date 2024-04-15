@@ -85,6 +85,10 @@ vet: ## Run go vet against code.
 test: manifests generate fmt vet envtest ## Run tests.
 	KUBEBUILDER_CONTROLPLANE_START_TIMEOUT=2m KUBEBUILDER_CONTROLPLANE_STOP_TIMEOUT=2m KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test $(shell go list ./... | grep -v /tests/integration) -coverprofile cover.out
 
+.PHONY: test-experimental-tag
+test-experimental-tag: manifests generate fmt vet envtest ## Run tests.
+	KUBEBUILDER_CONTROLPLANE_START_TIMEOUT=2m KUBEBUILDER_CONTROLPLANE_STOP_TIMEOUT=2m KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test -tags experimental $(shell go list ./... | grep -v /tests/integration) -coverprofile cover.out
+
 ##@ Build
 
 .PHONY: build
@@ -98,6 +102,10 @@ run: manifests install create-kyma-system-ns build ## Run a controller from your
 .PHONY: docker-build
 docker-build: ## Build docker image with the manager.
 	IMG=$(IMG) docker build -t ${IMG} --build-arg TARGETOS=${TARGETOS} --build-arg TARGETARCH=${TARGETARCH} .
+
+.PHONY: docker-build-experimental
+docker-build-experimental: ## Build docker image with the experimental manager
+	IMG=$(IMG) docker build -t ${IMG} --build-arg GO_BUILD_TAGS=experimental --build-arg TARGETOS=${TARGETOS} --build-arg TARGETARCH=${TARGETARCH} .
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.

@@ -12,7 +12,7 @@ Cypress.Commands.add('createNamespace', (name: string) => {
     })
     // Added wait to reduce possible flakiness, since Busola would not be able to recover if you navigate to
     // a namespace that is not yet created.
-    cy.wait(1000);
+    cy.wait(4000);
 })
 
 Cypress.Commands.add('deleteNamespace', (name: string) => {

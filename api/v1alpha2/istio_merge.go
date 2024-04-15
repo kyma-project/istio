@@ -166,6 +166,9 @@ func (i *Istio) mergeConfig(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOper
 
 func applyGatewayExternalTrafficPolicy(op iopv1alpha1.IstioOperator, i *Istio) iopv1alpha1.IstioOperator {
 	if i.Spec.Config.GatewayExternalTrafficPolicy != nil && *i.Spec.Config.GatewayExternalTrafficPolicy == "Local" {
+		if op.Spec.Components == nil {
+			op.Spec.Components = &v1alpha1.IstioComponentSetSpec{}
+		}
 		if len(op.Spec.Components.IngressGateways) == 0 {
 			op.Spec.Components.IngressGateways = append(op.Spec.Components.IngressGateways, &v1alpha1.GatewaySpec{})
 		}

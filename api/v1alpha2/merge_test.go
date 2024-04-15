@@ -10,6 +10,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/ptr"
 	"regexp"
 	"strings"
 	"testing"
@@ -348,6 +349,50 @@ var _ = Describe("Merge", func() {
 		numTrustedProxies := out.Spec.MeshConfig.Fields["defaultConfig"].
 			GetStructValue().Fields["gatewayTopology"].GetStructValue().Fields["numTrustedProxies"].GetNumberValue()
 		Expect(numTrustedProxies).To(Equal(float64(5)))
+	})
+
+	It("should create IngressGateway overlay with externalTrafficPolicy set to Local", func() {
+		// given
+
+		iop := iopv1alpha1.IstioOperator{
+			Spec: &operatorv1alpha1.IstioOperatorSpec{},
+		}
+		istioCR := Istio{Spec: IstioSpec{
+			Config: Config{
+				GatewayExternalTrafficPolicy: ptr.To("Local"),
+			},
+		}}
+
+		// when
+		out, err := istioCR.MergeInto(iop)
+
+		// then
+		Expect(err).ShouldNot(HaveOccurred())
+
+		externalTrafficPolicy := out.Spec.Components.IngressGateways[0].K8S.Overlays[0].Patches[0].Value.GetStringValue()
+		Expect(externalTrafficPolicy).To(Equal("Local"))
+	})
+
+	It("should create IngressGateway overlay with externalTrafficPolicy set to Cluster", func() {
+		// given
+
+		iop := iopv1alpha1.IstioOperator{
+			Spec: &operatorv1alpha1.IstioOperatorSpec{},
+		}
+		istioCR := Istio{Spec: IstioSpec{
+			Config: Config{
+				GatewayExternalTrafficPolicy: ptr.To("Cluster"),
+			},
+		}}
+
+		// when
+		out, err := istioCR.MergeInto(iop)
+
+		// then
+		Expect(err).ShouldNot(HaveOccurred())
+
+		externalTrafficPolicy := out.Spec.Components.IngressGateways[0].K8S.Overlays[0].Patches[0].Value.GetStringValue()
+		Expect(externalTrafficPolicy).To(Equal("Local"))
 	})
 
 	Context("Pilot", func() {

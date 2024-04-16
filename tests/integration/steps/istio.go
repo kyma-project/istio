@@ -71,7 +71,7 @@ func SetIstioInjection(ctx context.Context, enabled, namespace string) error {
 	}, testcontext.GetRetryOpts()...)
 }
 
-func IstioComponentHasResourcesSetToCpuAndMemory(ctx context.Context, component, resourceType, cpu, memory string) error {
+func IstioComponentHasResourcesSetToCpuAndMemory(ctx context.Context, component, resourceType, cpu, memory string) (context.Context, error) {
 	switch component {
 	case "ingress-gateway":
 		return DeploymentHasPodWithContainerResourcesSetToCpuAndMemory(ctx, "istio-ingressgateway", defaultIstioNamespace, "istio-proxy", resourceType, cpu, memory)
@@ -79,7 +79,7 @@ func IstioComponentHasResourcesSetToCpuAndMemory(ctx context.Context, component,
 		return DeploymentHasPodWithContainerResourcesSetToCpuAndMemory(ctx, "istiod", defaultIstioNamespace, "discovery", resourceType, cpu, memory)
 	}
 
-	return fmt.Errorf("resources for component %s are not implemented", component)
+	return ctx, fmt.Errorf("resources for component %s are not implemented", component)
 }
 
 func UninstallIstio(ctx context.Context) error {

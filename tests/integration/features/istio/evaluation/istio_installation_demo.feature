@@ -12,8 +12,8 @@ Feature: Installing Istio module with evaluation profile
     And Istio injection is "enabled" in namespace "default"
     And Httpbin application "httpbin" deployment is created in namespace "default"
     When "Deployment" "httpbin" in namespace "default" is ready
-    Then Pod of Deployment "httpbin" in namespace "default" has container "istio-proxy" with resource "requests" set to cpu - "10m" and memory - "32Mi"
-    And Pod of Deployment "httpbin" in namespace "default" has container "istio-proxy" with resource "limits" set to cpu - "250m" and memory - "254Mi"
+    Then Pod of deployment "httpbin" in namespace "default" has container "istio-proxy" with resource "requests" set to cpu - "10m" and memory - "32Mi"
+    And Pod of deployment "httpbin" in namespace "default" has container "istio-proxy" with resource "limits" set to cpu - "250m" and memory - "254Mi"
     And "ingress-gateway" has "requests" set to cpu - "10m" and memory - "32Mi"
     And "ingress-gateway" has "limits" set to cpu - "1000m" and memory - "1024Mi"
     And "pilot" has "requests" set to cpu - "50m" and memory - "128Mi"

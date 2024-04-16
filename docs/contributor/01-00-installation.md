@@ -16,7 +16,7 @@
 git clone https://github.com/kyma-project/istio.git && cd istio
 ```
 
-1. Set the Istio Operator image name.
+2. Set the Istio Operator image name.
 
 ```bash
 export IMG=istio-operator:0.0.1
@@ -32,8 +32,14 @@ kyma provision k3d
 
 4. Build the image.
 
+Run:
 ```bash
 make docker-build
+```
+
+To build the experimental image, run:
+```bash
+make docker-build-experimental
 ```
 
 5. Push the image to the registry.

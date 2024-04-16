@@ -51,3 +51,15 @@ jobs:
           PULL_BASE_SHA=${{ github.event.pull_request.base.sha}} \
           PULL_NUMBER=${{ github.event.number }} \
           ./tests/integration/scripts/code-coverage-guard.sh
+
+  run-unit-tests-experimental:
+    name: Run unit tests with experimental build tag
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+      - name: Run tests
+        run: make test-experimental-tag

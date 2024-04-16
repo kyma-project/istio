@@ -25,6 +25,7 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^Namespace "([^"]*)" has "([^"]*)" label and "([^"]*)" annotation`, steps.NamespaceHasLabelAndAnnotation)
 	ctx.Step(`^Istio CRDs "([^"]*)" be present on cluster$`, steps.IstioCRDsBePresentOnCluster)
 	ctx.Step(`^"([^"]*)" has "([^"]*)" set to cpu - "([^"]*)" and memory - "([^"]*)"$`, steps.IstioComponentHasResourcesSetToCpuAndMemory)
+	ctx.Step(`^Pod of deployment "([^"]*)" in namespace "([^"]*)" has container "([^"]*)" with resource "([^"]*)" set to cpu - "([^"]*)" and memory - "([^"]*)"$`, steps.DeploymentHasPodWithContainerResourcesSetToCpuAndMemory)
 	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" is deleted$`, steps.ResourceInNamespaceIsDeleted)
 	ctx.Step(`^"([^"]*)" "([^"]*)" is deleted$`, steps.ClusterResourceIsDeleted)
 	ctx.Step(`^"([^"]*)" is not present on cluster$`, steps.ResourceNotPresent)

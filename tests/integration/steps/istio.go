@@ -3,11 +3,6 @@ package steps
 import (
 	"context"
 	"fmt"
-	"github.com/pkg/errors"
-	"gopkg.in/inf.v0"
-	appsv1 "k8s.io/api/apps/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
-	"strconv"
 	"strings"
 
 	apinetworkingv1alpha3 "istio.io/api/networking/v1alpha3"
@@ -18,18 +13,15 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/avast/retry-go"
-	"github.com/cucumber/godog"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	crds "github.com/kyma-project/istio/operator/tests/integration/pkg/crds"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
-	defaultIopName      string = "installed-state-default-operator"
-	defaultIopNamespace string = "istio-system"
+	defaultIstioNamespace string = "istio-system"
 )
 
 func IstioCRDsBePresentOnCluster(ctx context.Context, should string) error {
@@ -80,35 +72,14 @@ func SetIstioInjection(ctx context.Context, enabled, namespace string) error {
 }
 
 func IstioComponentHasResourcesSetToCpuAndMemory(ctx context.Context, component, resourceType, cpu, memory string) error {
-	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
-	if err != nil {
-		return err
+	switch component {
+	case "ingress-gateway":
+		return DeploymentHasPodWithContainerResourcesSetToCpuAndMemory(ctx, "istio-ingressgateway", defaultIstioNamespace, "istio-proxy", resourceType, cpu, memory)
+	case "pilot":
+		return DeploymentHasPodWithContainerResourcesSetToCpuAndMemory(ctx, "istiod", defaultIstioNamespace, "discovery", resourceType, cpu, memory)
 	}
 
-	resources, err := getResourcesForComponent(k8sClient, component, resourceType)
-	if err != nil {
-		return err
-	}
-
-	cpuMilli, err := strconv.Atoi(strings.TrimSuffix(cpu, "m"))
-	if err != nil {
-		return err
-	}
-
-	memMilli, err := strconv.Atoi(strings.TrimSuffix(memory, "Mi"))
-	if err != nil {
-		return err
-	}
-
-	if resource.NewDecimalQuantity(*inf.NewDec(int64(cpuMilli), inf.Scale(resource.Milli)), resource.DecimalSI).Equal(resources.Cpu) {
-		return fmt.Errorf("cpu %s for component %s wasn't expected; expected=%v got=%v", resourceType, component, resource.NewScaledQuantity(int64(cpuMilli), resource.Milli), resources.Cpu)
-	}
-
-	if resource.NewDecimalQuantity(*inf.NewDec(int64(memMilli), inf.Scale(resource.Milli)), resource.DecimalSI).Equal(resources.Memory) {
-		return fmt.Errorf("memory %s for component %s wasn't expected; expected=%v got=%v", resourceType, component, resource.NewScaledQuantity(int64(memMilli), resource.Milli), resources.Memory)
-	}
-
-	return nil
+	return fmt.Errorf("resources for component %s are not implemented", component)
 }
 
 func UninstallIstio(ctx context.Context) error {
@@ -116,65 +87,9 @@ func UninstallIstio(ctx context.Context) error {
 	return istioClient.Uninstall(ctx)
 }
 
-type ResourceStruct struct {
-	Cpu    resource.Quantity
-	Memory resource.Quantity
-}
-
-func getResourcesForComponent(k8sClient client.Client, component, resourceType string) (*ResourceStruct, error) {
-	res := ResourceStruct{}
-
-	switch component {
-	case "proxy_init":
-		fallthrough
-	case "proxy":
-		return nil, errors.New("Proxy resources are not implemented")
-	case "ingress-gateway":
-		var igDeployment appsv1.Deployment
-		err := k8sClient.Get(context.Background(), types.NamespacedName{Name: "istio-ingressgateway", Namespace: defaultIopNamespace}, &igDeployment)
-		if err != nil {
-			return nil, err
-		}
-
-		if resourceType == "limits" {
-			res.Memory = *igDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Memory()
-			res.Cpu = *igDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu()
-		} else {
-			res.Memory = *igDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory()
-			res.Cpu = *igDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu()
-		}
-
-		return &res, nil
-	case "egress-gateway":
-		return nil, errors.New("Egress gateway resources are not implemented")
-	case "pilot":
-		var idDeployment appsv1.Deployment
-		err := k8sClient.Get(context.Background(), types.NamespacedName{Name: "istiod", Namespace: defaultIopNamespace}, &idDeployment)
-		if err != nil {
-			return nil, err
-		}
-
-		if resourceType == "limits" {
-			res.Memory = *idDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Memory()
-			res.Cpu = *idDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu()
-		} else {
-			res.Memory = *idDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory()
-			res.Cpu = *idDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu()
-		}
-
-		return &res, nil
-	default:
-		return nil, godog.ErrPending
-	}
-}
-
 // CreateIstioGateway creates an Istio Gateway with http port 80 configured and any host
 func CreateIstioGateway(ctx context.Context, name, namespace string) (context.Context, error) {
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
-	if err != nil {
-		return ctx, err
-	}
-
 	if err != nil {
 		return ctx, err
 	}

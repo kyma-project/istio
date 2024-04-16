@@ -7,9 +7,6 @@
   - path: gatewayExternalTrafficPolicy
     name: config.gatewayExternalTrafficPolicy
     simple: true
-    enum:
-    - Local
-    - Cluster
     description: description.externalTrafficPolicy
     value:
       type: string

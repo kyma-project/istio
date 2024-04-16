@@ -180,6 +180,8 @@ func applyGatewayExternalTrafficPolicy(op iopv1alpha1.IstioOperator, i *Istio) i
 		const version = "v1"
 		const istioIngressGateway = "istio-ingressgateway"
 		const path = "spec.externalTrafficPolicy"
+		const topologyKey = "kubernetes.io/hostname"
+		const app = "app"
 
 		op.Spec.Components.IngressGateways[0].K8S.Overlays = append(op.Spec.Components.IngressGateways[0].K8S.Overlays, &v1alpha1.K8SObjectOverlay{
 			ApiVersion: version,
@@ -200,10 +202,10 @@ func applyGatewayExternalTrafficPolicy(op iopv1alpha1.IstioOperator, i *Istio) i
 						{
 							Weight: 100,
 							PodAffinityTerm: &v1alpha1.PodAffinityTerm{
-								TopologyKey: "kubernetes.io/hostname",
+								TopologyKey: topologyKey,
 								LabelSelector: &metav1.LabelSelector{
 									MatchLabels: map[string]string{
-										"app":                 istioIngressGateway,
+										app:                   istioIngressGateway,
 										labels.ModuleLabelKey: labels.ModuleLabelValue,
 									},
 								},

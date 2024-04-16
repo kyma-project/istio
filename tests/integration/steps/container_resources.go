@@ -43,7 +43,7 @@ func DeploymentHasPodWithContainerResourcesSetToCpuAndMemory(ctx context.Context
 		}
 
 		if err := assertResources(resources, cpu, memory); err != nil {
-			return errors.Wrap(err, fmt.Sprintf("assert %s resources of container %s in pod %s/%s", resourceType, pod.Namespace, pod.Name))
+			return errors.Wrap(err, fmt.Sprintf("assert %s resources of container %s in pod %s/%s", resourceType, container, pod.Namespace, pod.Name))
 		}
 
 		return nil

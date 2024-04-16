@@ -3,6 +3,9 @@ package steps
 import (
 	"context"
 	"fmt"
+	"github.com/pkg/errors"
+	appsv1 "k8s.io/api/apps/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
 
 	apinetworkingv1alpha3 "istio.io/api/networking/v1alpha3"
@@ -72,19 +75,66 @@ func SetIstioInjection(ctx context.Context, enabled, namespace string) error {
 }
 
 func IstioComponentHasResourcesSetToCpuAndMemory(ctx context.Context, component, resourceType, cpu, memory string) (context.Context, error) {
-	switch component {
-	case "ingress-gateway":
-		return DeploymentHasPodWithContainerResourcesSetToCpuAndMemory(ctx, "istio-ingressgateway", defaultIstioNamespace, "istio-proxy", resourceType, cpu, memory)
-	case "pilot":
-		return DeploymentHasPodWithContainerResourcesSetToCpuAndMemory(ctx, "istiod", defaultIstioNamespace, "discovery", resourceType, cpu, memory)
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return ctx, err
 	}
 
-	return ctx, fmt.Errorf("resources for component %s are not implemented", component)
+	resources, err := getResourcesForIstioComponent(k8sClient, component, resourceType)
+	if err != nil {
+		return ctx, err
+	}
+
+	if err := assertResources(*resources, cpu, memory); err != nil {
+		return ctx, errors.Wrap(err, fmt.Sprintf("assert %s resources of Istio component %s ", resourceType, component))
+	}
+	return ctx, nil
 }
 
 func UninstallIstio(ctx context.Context) error {
 	istioClient := istio.NewIstioClient()
 	return istioClient.Uninstall(ctx)
+}
+
+func getResourcesForIstioComponent(k8sClient client.Client, component, resourceType string) (*resourceStruct, error) {
+	res := resourceStruct{}
+
+	switch component {
+	case "ingress-gateway":
+		var igDeployment appsv1.Deployment
+		err := k8sClient.Get(context.Background(), types.NamespacedName{Name: "istio-ingressgateway", Namespace: defaultIstioNamespace}, &igDeployment)
+		if err != nil {
+			return nil, err
+		}
+
+		if resourceType == "limits" {
+			res.Memory = *igDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Memory()
+			res.Cpu = *igDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu()
+		} else {
+			res.Memory = *igDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory()
+			res.Cpu = *igDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu()
+		}
+
+		return &res, nil
+	case "pilot":
+		var idDeployment appsv1.Deployment
+		err := k8sClient.Get(context.Background(), types.NamespacedName{Name: "istiod", Namespace: defaultIstioNamespace}, &idDeployment)
+		if err != nil {
+			return nil, err
+		}
+
+		if resourceType == "limits" {
+			res.Memory = *idDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Memory()
+			res.Cpu = *idDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu()
+		} else {
+			res.Memory = *idDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory()
+			res.Cpu = *idDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu()
+		}
+
+		return &res, nil
+	default:
+		return nil, fmt.Errorf("resources for component %s are not implemented", component)
+	}
 }
 
 // CreateIstioGateway creates an Istio Gateway with http port 80 configured and any host

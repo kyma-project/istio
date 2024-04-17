@@ -17,7 +17,7 @@ Feature: X-Forwarded-For header
     Then Request sent to exposed httpbin, "should" contain public client IP in "X-Forwarded-For" header
 
   Scenario: X-Forward-For header contains public client IP when externalTrafficPolicy is set to Local
-    Given Istio CR "istio-sample" from "istio-cr-external-traffic-policy" is applied in namespace "kyma-system" with "externalTrafficPolicy" set to "Local"
+    Given Istio CR "istio-sample" is applied in namespace "kyma-system" with externalTrafficPolicy set to "Local"
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
     And Istio injection is "enabled" in namespace "default"
     And Httpbin application "httpbin" deployment is created in namespace "default"
@@ -27,7 +27,7 @@ Feature: X-Forwarded-For header
     Then Request sent to exposed httpbin, "should" contain public client IP in "X-Forwarded-For" header
 
   Scenario: X-Forward-For header contains public client IP when externalTrafficPolicy is set to Cluster
-    Given Istio CR "istio-sample" from "istio-cr-external-traffic-policy" is applied in namespace "kyma-system" with "externalTrafficPolicy" set to "Cluster"
+    Given Istio CR "istio-sample" is applied in namespace "kyma-system" with externalTrafficPolicy set to "Local"
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
     And Istio injection is "enabled" in namespace "default"
     And Httpbin application "httpbin" deployment is created in namespace "default"

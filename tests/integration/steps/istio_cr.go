@@ -158,6 +158,29 @@ func (t *TemplatedIstioCr) IstioCRIsUpdatedInNamespace(ctx context.Context, name
 	}, testcontext.GetRetryOpts()...)
 }
 
+func CreateIstioWithExternalTrafficPolicy(ctx context.Context, name, namespace, value string) (context.Context, error) {
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return ctx, err
+	}
+
+	istio, err := createIstioCRFromTemplate(name, "istio-cr-external-traffic-policy", namespace, map[string]string{"GatewayExternalTrafficPolicy": value})
+	if err != nil {
+		return ctx, err
+	}
+
+	err = retry.Do(func() error {
+		err := k8sClient.Create(context.Background(), &istio)
+		if err != nil {
+			return err
+		}
+		ctx = testcontext.AddIstioCRIntoContext(ctx, &istio)
+		return nil
+	}, testcontext.GetRetryOpts()...)
+
+	return ctx, err
+}
+
 func createIstioCRFromTemplate(name string, templateFN string, namespace string, templateValues map[string]string) (istioCR.Istio, error) {
 	istioCRYaml, err := os.ReadFile(path.Join("steps", fmt.Sprintf("%s.yaml", templateFN)))
 	if err != nil {

@@ -218,6 +218,11 @@ aws-integration-test: install deploy
 	# Increased TEST_REQUEST_TIMEOUT to 600s to avoid timeouts on Gardener clusters
 	cd tests/integration && TEST_REQUEST_TIMEOUT=600s && EXPORT_RESULT=true go test -v -timeout 35m -run TestAws
 
+.PHONY: gcp-integration-test
+gcp-integration-test: install deploy
+	# Increased TEST_REQUEST_TIMEOUT to 600s to avoid timeouts on Gardener clusters
+	cd tests/integration && TEST_REQUEST_TIMEOUT=600s && EXPORT_RESULT=true go test -v -timeout 35m -run TestGcp
+
 .PHONY: deploy-latest-release
 deploy-latest-release: create-kyma-system-ns
 	cd tests/integration && ./scripts/deploy-latest-release-to-cluster.sh $(TARGET_BRANCH)
@@ -241,6 +246,10 @@ gardener-perf-test:
 .PHONY: gardener-aws-integration-test
 gardener-aws-integration-test:
 	./hack/ci/gardener-integration-aws-specific.sh
+
+.PHONY: gardener-gcp-integration-test
+gardener-gcp-integration-test:
+	./hack/ci/gardener-integration-gcp-specific.sh
 
 .PHONY: module-version
 module-version:

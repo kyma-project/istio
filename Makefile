@@ -65,7 +65,7 @@ manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and Cust
 	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
 .PHONY: generate-integration-test-manifest
-generate-integration-test-manifest: manifests kustomize
+generate-integration-test-manifest: manifests kustomize module-version
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default -o tests/integration/steps/operator_generated_manifest.yaml
 
@@ -244,8 +244,4 @@ gardener-aws-integration-test:
 
 .PHONY: module-version
 module-version:
-ifeq ($(OS_TYPE), Darwin)
-	sed -i'.bak' -e 's/VERSION/$(VERSION)/g' config/default/kustomization.yaml
-else
-	sed -i 's/VERSION/$(VERSION)/g' config/default/kustomization.yaml
-endif
+	sed 's/VERSION/$(VERSION)/g' config/default/kustomization.template.yaml > config/default/kustomization.yaml

@@ -16,7 +16,7 @@ GITHUB_AUTH_HEADER="Authorization: Bearer ${GITHUB_TOKEN}"
 IMG="europe-docker.pkg.dev/kyma-project/prod/istio-manager:${RELEASE_TAG}"
 VERSION="${RELEASE_TAG}"
 
-IMG="${IMG}" make generate-manifests
+IMG="${IMG}" VERSION="${VERSION}" make generate-manifests
 curl -f -L \
   -X POST \
   -H "Accept: application/vnd.github+json" \
@@ -26,7 +26,7 @@ curl -f -L \
   --data-binary @"istio-manager.yaml" \
   ${GITHUB_URL}/releases/${RELEASE_ID}/assets?name=istio-manager.yaml
 
-IMG="${IMG}-experimental" make generate-manifests
+IMG="${IMG}-experimental" VERSION="${VERSION}-experimental" make generate-manifests
 curl -f -L \
   -X POST \
   -H "Accept: application/vnd.github+json" \

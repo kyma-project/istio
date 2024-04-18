@@ -1547,8 +1547,11 @@ spec:
                       type: object
                     type: array
                   gatewayExternalTrafficPolicy:
-                    description: ExternalTrafficPolicy defines configuration for Istio
-                      Ingress Gateway external traffic policy.
+                    description: GatewayExternalTrafficPolicy defines the external
+                      traffic policy for Istio Ingress Gateway Service. Valid configurations
+                      are "Local" or "Cluster". An external traffic policy set to
+                      "Local  preserves the client IP in the request, but also introduces
+                      the risk of unbalanced traffic distribution.
                     enum:
                     - Local
                     - Cluster
@@ -3186,8 +3189,11 @@ spec:
                       type: object
                     type: array
                   gatewayExternalTrafficPolicy:
-                    description: ExternalTrafficPolicy defines configuration for Istio
-                      Ingress Gateway external traffic policy.
+                    description: GatewayExternalTrafficPolicy defines the external
+                      traffic policy for Istio Ingress Gateway Service. Valid configurations
+                      are "Local" or "Cluster". An external traffic policy set to
+                      "Local  preserves the client IP in the request, but also introduces
+                      the risk of unbalanced traffic distribution.
                     enum:
                     - Local
                     - Cluster

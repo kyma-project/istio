@@ -2,10 +2,8 @@ package v1alpha2
 
 import (
 	"encoding/json"
-	"github.com/kyma-project/istio/operator/pkg/labels"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"istio.io/api/operator/v1alpha1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"google.golang.org/protobuf/types/known/structpb"
@@ -180,8 +178,6 @@ func applyGatewayExternalTrafficPolicy(op iopv1alpha1.IstioOperator, i *Istio) i
 		const version = "v1"
 		const istioIngressGateway = "istio-ingressgateway"
 		const path = "spec.externalTrafficPolicy"
-		const topologyKey = "kubernetes.io/hostname"
-		const app = "app"
 
 		op.Spec.Components.IngressGateways[0].K8S.Overlays = append(op.Spec.Components.IngressGateways[0].K8S.Overlays, &v1alpha1.K8SObjectOverlay{
 			ApiVersion: version,
@@ -194,35 +190,6 @@ func applyGatewayExternalTrafficPolicy(op iopv1alpha1.IstioOperator, i *Istio) i
 				},
 			},
 		})
-
-		if *i.Spec.Config.GatewayExternalTrafficPolicy == "Local" {
-			op.Spec.Components.IngressGateways[0].K8S.Affinity = &v1alpha1.Affinity{
-				PodAntiAffinity: &v1alpha1.PodAntiAffinity{
-					PreferredDuringSchedulingIgnoredDuringExecution: []*v1alpha1.WeightedPodAffinityTerm{
-						{
-							Weight: 100,
-							PodAffinityTerm: &v1alpha1.PodAffinityTerm{
-								TopologyKey: topologyKey,
-								LabelSelector: &metav1.LabelSelector{
-									MatchLabels: map[string]string{
-										app:                   istioIngressGateway,
-										labels.ModuleLabelKey: labels.ModuleLabelValue,
-									},
-								},
-							},
-						},
-					},
-				},
-			}
-		} else {
-			op.Spec.Components.IngressGateways[0].K8S.Affinity = &v1alpha1.Affinity{}
-		}
-	} else {
-		if op.Spec.Components != nil && len(op.Spec.Components.IngressGateways) != 0 {
-			if op.Spec.Components.IngressGateways[0].K8S.Affinity.PodAntiAffinity != nil {
-				op.Spec.Components.IngressGateways[0].K8S.Affinity = &v1alpha1.Affinity{}
-			}
-		}
 	}
 	return op
 }

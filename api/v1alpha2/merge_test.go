@@ -393,36 +393,6 @@ var _ = Describe("Merge", func() {
 
 		externalTrafficPolicy := out.Spec.Components.IngressGateways[0].K8S.Overlays[0].Patches[0].Value.GetStringValue()
 		Expect(externalTrafficPolicy).To(Equal("Cluster"))
-		podAntiAffinity := out.Spec.Components.IngressGateways[0].K8S.Affinity.PodAntiAffinity
-		Expect(podAntiAffinity).To(BeNil())
-
-	})
-
-	It("Should clear Affinity when there is no configuration in Istio CR", func() {
-		// given
-
-		iop := iopv1alpha1.IstioOperator{
-			Spec: &operatorv1alpha1.IstioOperatorSpec{},
-		}
-		istioCR := Istio{Spec: IstioSpec{
-			Config: Config{
-				GatewayExternalTrafficPolicy: ptr.To("Cluster"),
-			},
-		}}
-
-		_, err := istioCR.MergeInto(iop)
-		Expect(err).ShouldNot(HaveOccurred())
-
-		iop = iopv1alpha1.IstioOperator{
-			Spec: &operatorv1alpha1.IstioOperatorSpec{},
-		}
-		istioCR = Istio{Spec: IstioSpec{}}
-
-		out, err := istioCR.MergeInto(iop)
-		// then
-		Expect(err).ShouldNot(HaveOccurred())
-
-		Expect(out.Spec.Components).To(BeNil())
 
 	})
 

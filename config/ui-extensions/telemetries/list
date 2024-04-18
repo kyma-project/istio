@@ -1,0 +1,10 @@
+- source: spec.accessLogging.match.mode
+  name: Access logging match mode
+  widget: Labels
+- source: spec.accessLogging.filter.expression
+  name: Access logging filter expression
+  widget: Labels
+- source: spec.tracing.providers
+  name: Tracing providers
+  widget: JoinedArray
+

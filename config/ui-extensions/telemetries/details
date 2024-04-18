@@ -1,0 +1,44 @@
+body:  
+  - name: Configuration
+    widget: Panel
+    source: spec
+    children:
+      - name: AccessLogging
+        source: accessLogging
+        widget: Table
+        visibility: $exists($value)
+        collapsible:
+          - name: Filter
+            source: filter
+            widget: Panel
+            visibility: $exists($value)
+            children:
+              - name: Expression
+                source: expression
+                widget: Labels
+          - name: Match
+            source: match
+            widget: Panel
+            visibility: $exists($value)
+            children:
+              - name: Mode
+                source: mode
+                widget: Labels
+      - name: Tracing
+        source: tracing
+        widget: Table
+        visibility: $exists($value)
+        collapsible:
+          - name: RandomSamplingPercentage
+            source: randomSamplingPercentage
+            widget: Text
+            visibility: $exists($value)
+          - name: Providers
+            source: providers
+            widget: Panel
+            visibility: $exists($value)
+            children:
+              - source: name
+                widget: Text
+                name: Name
+ 

@@ -244,8 +244,4 @@ gardener-aws-integration-test:
 
 .PHONY: module-version
 module-version:
-ifeq ($(OS_TYPE), Darwin)
-	sed -i'.bak' -e 's/VERSION/$(VERSION)/g' config/default/kustomization.yaml
-else
-	sed -i 's/VERSION/$(VERSION)/g' config/default/kustomization.yaml
-endif
+	sed 's/VERSION/$(VERSION)/g' config/default/kustomization.template.yaml > config/default/kustomization.yaml

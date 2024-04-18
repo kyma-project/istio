@@ -12,16 +12,7 @@ import (
 )
 
 // ValidatePublicClientIpInHeader validates that the header expectedHeaderName contains the public client IP.
-func ValidatePublicClientIpInHeader(ctx context.Context, shouldContain, expectedHeaderName string) (context.Context, error) {
-	var should bool
-	if shouldContain == "should" {
-		should = true
-	} else if shouldContain == "should not" {
-		should = false
-	} else {
-		return ctx, fmt.Errorf("invalid value %s for shouldContain", shouldContain)
-	}
-
+func ValidatePublicClientIpInHeader(ctx context.Context, expectedHeaderName string) (context.Context, error) {
 	return ctx, retry.Do(func() error {
 		clientIp, err := ip.FetchPublic()
 		if err != nil {
@@ -47,17 +38,19 @@ func ValidatePublicClientIpInHeader(ctx context.Context, shouldContain, expected
 		if err != nil {
 			return err
 		}
-		r.Body.Close()
+		defer func() {
+			err := r.Body.Close()
+			if err != nil {
+				log.Printf("Failed to close response body: %s", err)
+			}
+		}()
 
 		hv := fmt.Sprintf("%v", resp["headers"].(map[string]interface{})[expectedHeaderName])
-		if should && hv == clientIp {
-			return nil
+	
+		if hv != clientIp {
+			return fmt.Errorf("expected header %s to contain %s, but got %s", expectedHeaderName, clientIp, hv)
 		}
 
-		if !should && hv != clientIp {
-			return nil
-		}
-
-		return fmt.Errorf("expected header %s to contain %s, but got %s", expectedHeaderName, clientIp, hv)
+		return nil
 	}, testcontext.GetRetryOpts()...)
 }

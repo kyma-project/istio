@@ -3,9 +3,6 @@
 Many applications need to know the client IP address of an originating request to behave properly. Usual use cases include workloads that require the client IP address to restrict their access. The ability to provide client attributes to services has long been a staple of reverse proxies, which use the X-Forwarded-For (XFF) header to forward client attributes to destination workloads. For more information on XFF, see 
 the [IETF’s RFC documentation](https://datatracker.ietf.org/doc/html/rfc7239) and [Envoy documentation](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_conn_man/headers#x-forwarded-for).
 
-> [!NOTE]
->  The X-Forwarded-For header is only supported on AWS clusters.
-
 ## Prerequisites
 
 * An AWS cluster

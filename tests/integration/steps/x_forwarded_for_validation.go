@@ -2,55 +2,35 @@ package steps
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"github.com/avast/retry-go"
 	"github.com/kyma-project/istio/operator/tests/integration/pkg/ip"
-	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
+	"github.com/kyma-project/istio/operator/tests/integration/testsupport"
 	"log"
-	"net/http"
 )
 
 // ValidatePublicClientIpInHeader validates that the header expectedHeaderName contains the public client IP.
 func ValidatePublicClientIpInHeader(ctx context.Context, expectedHeaderName string) (context.Context, error) {
-	return ctx, retry.Do(func() error {
-		clientIp, err := ip.FetchPublic()
-		if err != nil {
-			return err
-		}
 
-		log.Printf("Public IP address of the caller: %s\n", clientIp)
+	clientIp, err := ip.FetchPublic()
+	if err != nil {
+		return ctx, err
+	}
 
-		ingressAddress, err := fetchIstioIngressGatewayAddress(ctx)
-		if err != nil {
-			return err
-		}
+	log.Printf("Public IP address of the caller: %s\n", clientIp)
 
-		url := fmt.Sprintf("http://%s/get?show_env=true", ingressAddress)
+	ingressAddress, err := fetchIstioIngressGatewayAddress(ctx)
+	if err != nil {
+		return ctx, err
+	}
 
-		r, err := http.Get(url)
-		if err != nil {
-			return err
-		}
+	c := testsupport.NewHttpClientWithRetry()
+	url := fmt.Sprintf("http://%s/get?show_env=true", ingressAddress)
 
-		var resp map[string]interface{}
-		err = json.NewDecoder(r.Body).Decode(&resp)
-		if err != nil {
-			return err
-		}
-		defer func() {
-			err := r.Body.Close()
-			if err != nil {
-				log.Printf("Failed to close response body: %s", err)
-			}
-		}()
+	asserter := testsupport.BodyContainsAsserter{
+		Expected: []string{
+			fmt.Sprintf(`"%s": "%s"`, expectedHeaderName, clientIp),
+		},
+	}
 
-		hv := fmt.Sprintf("%v", resp["headers"].(map[string]interface{})[expectedHeaderName])
-	
-		if hv != clientIp {
-			return fmt.Errorf("expected header %s to contain %s, but got %s", expectedHeaderName, clientIp, hv)
-		}
-
-		return nil
-	}, testcontext.GetRetryOpts()...)
+	return ctx, c.Get(url, asserter)
 }

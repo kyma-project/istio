@@ -31,13 +31,39 @@ Run the following command:
   ```
 
 #### **Kyma Dashboard**
-1. Navigate to `Cluster Details`.
-2. Open the Istio module's configuration.
-3. Click **Edit**.
-4. Add the number of trusted proxies and click **Update**.
-   ![Add the numTrustedProxies](./assets/01-00-num-trusted-proxies-ui.svg)
+1. Navigate to Cluster Details and select Modify Modules.
+2. Choose the Istio module and select Edit.
+3. In the General section, add the number of trusted proxies.
+4. Select Save.
 <!-- tabs:end -->
 
+### Configure the externalTrafficPolicy in the Istio Custom Resource
+
+***GCP and Azure***
+
+GCP and Azure require to set gatewayExternalTrafficPolicy to `Local`
+
+Add **gatewayExternalTrafficPolicy** to the Istio custom resource:
+
+<!-- tabs:start -->
+#### **kubectl**
+Run the following command:
+
+  ```bash
+  kubectl patch istios/default -n kyma-system --type merge -p '{"spec":{"config":{"gatewayExternalTrafficPolicy": "Local"}}}'
+  ```
+
+#### **Kyma Dashboard**
+1. Navigate to Cluster Details and select Modify Modules.
+2. Choose the Istio module and select Edit.
+3. In the General section, select `Local` in gatewayExternalTrafficPolicy field.
+4. Select Save.
+<!-- tabs:end -->
+
+***AWS***
+
+On AWS we automatically apply EF ProxyProtocol, which makes the XFF header being set to the client's IP address.
+Although you can set the externalTrafficPolicy to `Local` on AWS, it will not affect the XFF header behavior.
 
 ### Create a Workload for Verification
 

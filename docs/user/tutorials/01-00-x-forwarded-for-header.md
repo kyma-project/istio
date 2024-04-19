@@ -37,11 +37,9 @@ Run the following command:
 4. Select Save.
 <!-- tabs:end -->
 
-### Configure the externalTrafficPolicy in the Istio Custom Resource
+### Configure the externalTrafficPolicy in the Istio Custom Resource (GCP and Azure only)
 
-***GCP and Azure***
-
-GCP and Azure require to set gatewayExternalTrafficPolicy to `Local`
+To make XFF header contain client's IP on GCP and Azure, it's required to set gatewayExternalTrafficPolicy to `Local`
 
 Add **gatewayExternalTrafficPolicy** to the Istio custom resource:
 
@@ -59,11 +57,6 @@ Run the following command:
 3. In the General section, select `Local` in gatewayExternalTrafficPolicy field.
 4. Select Save.
 <!-- tabs:end -->
-
-***AWS***
-
-On AWS we automatically apply EF ProxyProtocol, which makes the XFF header being set to the client's IP address.
-Although you can set the externalTrafficPolicy to `Local` on AWS, it will not affect the XFF header behavior.
 
 ### Create a Workload for Verification
 

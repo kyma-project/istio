@@ -1,9 +1,7 @@
 # Support for Experimental Configuration Parameters in Istio Custom Resource
 
 ## Status
-|Status      | Date             |
-|----------|-------------|
-|Accepted | 04.04.2024 |
+Accepted
 
 ## Context
 To support features that are not yet production ready, or might not get promoted to a GA feature, we need to introduce a mechanism that would allow users to use these features and provide feedback.

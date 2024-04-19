@@ -7,7 +7,7 @@ Accepted
 We need to support configuration for resources that depend on Istio CRDs, which have been already installed on the cluster. To address this, we create an `IstioResourcesReconciliation` component that will ensure that the state of these resources is up-to-date.
 
 ## Decision
-Create the `IstioResourcesReconciliation` component. The component will define the resources (in the form of YAML documents) and provide predicates on a per-resource basis. These predicated will trigger a restart of the Istio Ingress gateway or/and a restart of the Istio proxy.
+Create the `IstioResourcesReconciliation` component. The component will define the resources (in the form of `YAML` documents) and provide predicates on a per-resource basis. These predicated will trigger a restart of the Istio Ingress gateway or/and a restart of the Istio proxy.
 
 ## Consequences
 The possibility of creating resources that require the presence of CRDs installed by Istio install becomes available in Istio Controller.

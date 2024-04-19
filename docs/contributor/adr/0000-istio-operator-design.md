@@ -1,7 +1,5 @@
 # Istio Operator Design
 
-Date: 2022-12-14
-
 ## Status
 
 Accepted

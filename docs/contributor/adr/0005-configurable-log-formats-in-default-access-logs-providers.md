@@ -31,7 +31,7 @@ This ADR proposes making the access logging a configurable feature, which can su
 
 Extended the Istio CR that contains the **accessLog** field.
 
-#### Using *merge* strategy
+#### Using the `merge` Strategy
 ```yaml
 apiVersion: operator.kyma-project.io/v1alpha2
 kind: Istio
@@ -50,7 +50,7 @@ The access logs then contain list of default values with merged custom `tenant` 
 {"tenant": "tenant-xxx", [default values]}
 ```
 
-#### Using *replace* strategy
+#### Using the `replace` Strategy
 
 ```yaml
 apiVersion: operator.kyma-project.io/v1alpha2

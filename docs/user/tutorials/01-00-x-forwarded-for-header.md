@@ -38,7 +38,7 @@ Run the following command:
 
 To make XFF header contain client's IP on GCP and Azure, it's required to set gatewayExternalTrafficPolicy to `Local`
 
-Hint: While using GCP or Azure you can find your load balancer's IP address in the ingress-gateway service's status.loadBalancer.ingress field.
+Hint: While using GCP or Azure you can find your load balancer's IP address in the ingress-gateway Service's status.loadBalancer.ingress field.
 
 Add **gatewayExternalTrafficPolicy** to the Istio custom resource:
 

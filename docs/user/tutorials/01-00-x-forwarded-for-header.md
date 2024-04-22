@@ -33,7 +33,7 @@ Run the following command:
 4. Select **Save**.
 <!-- tabs:end -->
 
-### Configure the externalTrafficPolicy in the Istio Custom Resource (GCP and Azure only)
+### Configure Gateway External Traffic Policy in the Istio Custom Resource (GCP and Azure only)
 
 If you are using a GCP or Azure cluster, you must also set the **gatewayExternalTrafficPolicy** to `Local` in order to include the client's IP address in the XFF header. Skip this step if you're using a different cloud service provider.
 

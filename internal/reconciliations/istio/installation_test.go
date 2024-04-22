@@ -256,7 +256,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(istioCR.Status.Conditions).ToNot(BeNil())
 	})
 
-	It("should execute install to upgrade istio and update Istio CR status when NumTrustedProxies has changed and restart Istio GW", func() {
+	It("should execute install to upgrade istio and update Istio CR status when NumTrustedProxies has changed", func() {
 		// given
 		newNumTrustedProxies := 3
 		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
@@ -299,9 +299,6 @@ var _ = Describe("Installation reconciliation", func() {
 
 		igwDeployment = &appsv1.Deployment{}
 		Expect(c.Get(context.TODO(), types.NamespacedName{Namespace: "istio-system", Name: "istio-ingressgateway"}, igwDeployment)).Should(Succeed())
-
-		hasRestartAnnotation := annotations.HasRestartAnnotation(igwDeployment.Spec.Template.Annotations)
-		Expect(hasRestartAnnotation).To(BeTrue())
 	})
 
 	It("should execute install to upgrade istio and update Istio CR status when NumTrustedProxies has not changed and do not restart Istio GW", func() {

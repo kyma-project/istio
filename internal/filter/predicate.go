@@ -18,5 +18,5 @@ type ProxyRestartEvaluator interface {
 }
 
 type IngressGatewayRestartEvaluator interface {
-	RequiresIngressGatewayRestart(v1.Pod) bool
+	RequiresIngressGatewayRestart() bool
 }

@@ -122,9 +122,10 @@ var _ = Describe("Istio Ingress Gateway restart", func() {
 			},
 		}
 
+		igDep := createIngressGatewayDep(time.Now())
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.1")
 		ingressGateway := createIgPodWithCreationTimestamp("istio-ingressgateway", gatherer.IstioNamespace, "discovery", "1.16.1", time.Now())
-		fakeClient := createFakeClient(istioCR, istiod, ingressGateway)
+		fakeClient := createFakeClient(istioCR, istiod, ingressGateway, igDep)
 		statusHandler := status.NewStatusHandler(fakeClient)
 		igRestarter := restarter.NewIngressGatewayRestarter(fakeClient, []filter.IngressGatewayPredicate{mockIgPredicate{shouldRestart: true}}, statusHandler)
 
@@ -171,7 +172,7 @@ type mockIgPredicate struct {
 	shouldRestart bool
 }
 
-func (m mockIgPredicate) RequiresIngressGatewayRestart(_ v1.Pod) bool {
+func (m mockIgPredicate) RequiresIngressGatewayRestart() bool {
 	return m.shouldRestart
 }
 

@@ -1,15 +1,12 @@
 package istio
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 
 	"github.com/coreos/go-semver/semver"
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
-	"github.com/kyma-project/istio/operator/internal/restarter"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type appliedConfig struct {
@@ -109,31 +106,6 @@ func checkIstioVersion(currentIstioVersionString, targetIstioVersionString strin
 		return fmt.Errorf("target Istio version (%s) is higher than current Istio version (%s) - the difference between versions exceed one minor version", targetIstioVersion.String(), currentIstioVersion.String())
 	}
 
-	return nil
-}
-
-func restartIngressGatewayIfNeeded(ctx context.Context, k8sClient client.Client, istioCR *operatorv1alpha2.Istio) error {
-	mustRestart := false
-
-	lastAppliedConfig, err := getLastAppliedConfiguration(istioCR)
-	if err != nil {
-		return err
-	}
-
-	isNewNotNil := (istioCR.Spec.Config.NumTrustedProxies != nil)
-	isOldNotNil := (lastAppliedConfig.IstioSpec.Config.NumTrustedProxies != nil)
-	if isNewNotNil && isOldNotNil && *istioCR.Spec.Config.NumTrustedProxies != *lastAppliedConfig.IstioSpec.Config.NumTrustedProxies {
-		mustRestart = true
-	} else if isNewNotNil != isOldNotNil {
-		mustRestart = true
-	}
-
-	if mustRestart {
-		err := restarter.RestartIngressGateway(ctx, k8sClient)
-		if err != nil {
-			return err
-		}
-	}
 	return nil
 }
 

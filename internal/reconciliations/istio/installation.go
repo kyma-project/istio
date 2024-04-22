@@ -105,11 +105,6 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha2.
 		ctrl.Log.Info("Istio installation succeeded")
 		statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIstioInstallSucceeded))
 
-		err = restartIngressGatewayIfNeeded(ctx, i.Client, istioCR)
-		if err != nil {
-			return istioImageVersion, described_errors.NewDescribedError(err, "Could not restart Istio Ingress GW deployment")
-		}
-
 		if err := updateResourcesMetadataForSelector(ctx, i.Client); err != nil {
 			return istioImageVersion, described_errors.NewDescribedError(err, "could not update managed metadata")
 		}

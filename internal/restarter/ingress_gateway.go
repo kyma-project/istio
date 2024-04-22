@@ -67,6 +67,8 @@ func RestartIngressGateway(ctx context.Context, k8sClient client.Client) error {
 	deployment := appsv1.Deployment{}
 	err := k8sClient.Get(ctx, types.NamespacedName{Namespace: namespace, Name: deploymentName}, &deployment)
 	if err != nil {
+		// If ingress gateway deployment is missing, we should not fail, as it may have not yet been created
+		// In that case, the following creation will do the same thing as we would require from the restart
 		if k8sErrors.IsNotFound(err) {
 			return nil
 		}

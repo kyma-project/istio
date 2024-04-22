@@ -3,7 +3,6 @@ package restarter_test
 import (
 	"context"
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/kyma-project/istio/operator/internal/filter"
 	"github.com/kyma-project/istio/operator/internal/restarter"
 	"github.com/kyma-project/istio/operator/internal/status"
@@ -110,34 +109,6 @@ var _ = Describe("Istio Ingress Gateway restart", func() {
 
 	})
 
-	It("should fail restart of istio ingress-gateway when there is no Envoy Filter kyma-referer", func() {
-		// given
-		istioCR := &operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
-			Name:            "default",
-			ResourceVersion: "1",
-			Annotations:     map[string]string{},
-		},
-			Spec: operatorv1alpha2.IstioSpec{
-				Config: operatorv1alpha2.Config{},
-			},
-		}
-
-		igDep := createIngressGatewayDep(time.Now())
-		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.1")
-		ingressGateway := createIgPodWithCreationTimestamp("istio-ingressgateway", gatherer.IstioNamespace, "discovery", "1.16.1", time.Now())
-		fakeClient := createFakeClient(istioCR, istiod, ingressGateway, igDep)
-		statusHandler := status.NewStatusHandler(fakeClient)
-		igRestarter := restarter.NewIngressGatewayRestarter(fakeClient, []filter.IngressGatewayPredicate{mockIgPredicate{shouldRestart: true}}, statusHandler)
-
-		//when
-		err := igRestarter.Restart(context.Background(), istioCR)
-
-		//then
-		Expect(err).Should(HaveOccurred())
-		Expect(err.Level()).To(Equal(described_errors.Error))
-		Expect((*istioCR.Status.Conditions)[0].Reason).Should(Equal(string(operatorv1alpha2.ConditionReasonIngressGatewayRestartFailed)))
-		Expect((*istioCR.Status.Conditions)[0].Message).Should(Equal(operatorv1alpha2.ConditionReasonIngressGatewayRestartFailedMessage))
-	})
 })
 
 func createIngressGatewayDep(creationTimestamp time.Time) *appsv1.Deployment {

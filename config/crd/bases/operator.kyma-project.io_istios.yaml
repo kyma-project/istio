@@ -1273,11 +1273,11 @@ spec:
                       type: object
                     type: array
                   gatewayExternalTrafficPolicy:
-                    description: Defines the external
-                      traffic policy for the Istio Ingress Gateway Service. Valid configurations
-                      are "Local" or "Cluster". The external traffic policy set to
-                      "Local" preserves the client IP in the request but also introduces
-                      the risk of unbalanced traffic distribution.
+                    description: Defines the external traffic policy for the Istio
+                      Ingress Gateway Service. Valid configurations are "Local" or
+                      "Cluster". The external traffic policy set to "Local" preserves
+                      the client IP in the request, but also introduces the risk of
+                      unbalanced traffic distribution.
                     enum:
                     - Local
                     - Cluster
@@ -2644,11 +2644,11 @@ spec:
                       type: object
                     type: array
                   gatewayExternalTrafficPolicy:
-                    description: Defines the external
-                      traffic policy for the Istio Ingress Gateway Service. Valid configurations
-                      are "Local" or "Cluster". The external traffic policy set to
-                      "Local" preserves the client IP in the request but also introduces
-                      the risk of unbalanced traffic distribution.
+                    description: Defines the external traffic policy for the Istio
+                      Ingress Gateway Service. Valid configurations are "Local" or
+                      "Cluster". The external traffic policy set to "Local" preserves
+                      the client IP in the request, but also introduces the risk of
+                      unbalanced traffic distribution.
                     enum:
                     - Local
                     - Cluster

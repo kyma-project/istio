@@ -57,7 +57,7 @@ Run the following command:
 #### **Kyma Dashboard**
 1. Navigate to **Cluster Details** and select **Modify Modules**.
 2. Choose the Istio module and select **Edit**.
-3. In the General section, select `Local` in gatewayExternalTrafficPolicy field.
+3. In the `General` section, set the Gateway external traffic policy to `Local`.
 4. Select **Save**.
 <!-- tabs:end -->
 

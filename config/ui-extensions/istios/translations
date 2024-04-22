@@ -34,4 +34,4 @@ en:
   description.limits.memory: Total memory limits of all Pods that are in a non-terminal state must not exceed this value
   description.requests.cpu: Total CPU requests of all Pods that are in a non-terminal state must not exceed this value
   description.requests.memory: Total memory requests of all Pods that are in a non-terminal state must not exceed this value
-  description.externalTrafficPolicy: Specifies externalTrafficPolicy of Istio Ingress Gateway Service
+  description.externalTrafficPolicy: Specifies externalTrafficPolicy for the Istio Ingress Gateway Service

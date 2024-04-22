@@ -5,7 +5,6 @@ the [IETF’s RFC documentation](https://datatracker.ietf.org/doc/html/rfc7239) 
 
 ## Prerequisites
 
-* An AWS cluster
 * The Istio module enabled or [Kyma Istio Operator](../../../README.md#install-kyma-istio-operator-and-istio-from-the-latest-release) installed
 * [Istio Gateway](https://kyma-project.io/#/api-gateway/user/tutorials/01-20-set-up-tls-gateway) set up
 
@@ -36,7 +35,7 @@ Run the following command:
 
 ### Configure the externalTrafficPolicy in the Istio Custom Resource (GCP and Azure only)
 
-To make XFF header contain client's IP on GCP and Azure, it's required to set gatewayExternalTrafficPolicy to `Local`
+If you are using a GCP or Azure cluster, you must also set the **gatewayExternalTrafficPolicy** to `Local` in order to include the client's IP address in the XFF header. Skip this step if you're using a different cloud service provider.
 
 > [!TIP]
 > While using GCP or Azure, you can find your load balancer's IP address in the field **status.loadBalancer.ingress** of the `ingress-gateway` Service.

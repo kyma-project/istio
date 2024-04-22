@@ -4,7 +4,6 @@ configMapGenerator:
   files:
   - general
   - form
-  # - list
   - details
   options:
     disableNameSuffixHash: true

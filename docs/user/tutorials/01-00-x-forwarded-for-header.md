@@ -28,17 +28,18 @@ Run the following command:
   ```
 
 #### **Kyma Dashboard**
-1. Navigate to Cluster Details and select Modify Modules.
-2. Choose the Istio module and select Edit.
-3. In the General section, add the number of trusted proxies.
-4. Select Save.
+1. Navigate to **Cluster Details** and select **Modify Modules**.
+2. Choose the Istio module and select **Edit**.
+3. In the `General` section, add the number of trusted proxies.
+4. Select **Save**.
 <!-- tabs:end -->
 
 ### Configure the externalTrafficPolicy in the Istio Custom Resource (GCP and Azure only)
 
 To make XFF header contain client's IP on GCP and Azure, it's required to set gatewayExternalTrafficPolicy to `Local`
 
-Hint: While using GCP or Azure you can find your load balancer's IP address in the ingress-gateway Service's status.loadBalancer.ingress field.
+> [!TIP]
+> While using GCP or Azure, you can find your load balancer's IP address in the field **status.loadBalancer.ingress** of the `ingress-gateway` Service.
 
 Add **gatewayExternalTrafficPolicy** to the Istio custom resource:
 
@@ -51,10 +52,10 @@ Run the following command:
   ```
 
 #### **Kyma Dashboard**
-1. Navigate to Cluster Details and select Modify Modules.
-2. Choose the Istio module and select Edit.
+1. Navigate to **Cluster Details** and select **Modify Modules**.
+2. Choose the Istio module and select **Edit**.
 3. In the General section, select `Local` in gatewayExternalTrafficPolicy field.
-4. Select Save.
+4. Select **Save**.
 <!-- tabs:end -->
 
 ### Create a Workload for Verification

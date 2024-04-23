@@ -68,6 +68,8 @@ jobs:
         run: |
           git tag ${{ github.event.inputs.name }}
           git push origin ${{ github.event.inputs.name }}
+          git tag ${{ github.event.inputs.name }}-experimental
+          git push origin ${{ github.event.inputs.name }}-experimental
 
     outputs:
       release_id: ${{ steps.create-draft.outputs.release_id }}

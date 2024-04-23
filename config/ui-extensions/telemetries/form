@@ -1,0 +1,32 @@
+- path: spec.accessLogging
+  widget: GenericList
+  simple: true
+  name: Access logging configuration
+  children:
+    - path: '[]'
+      children:
+        - path: match.mode
+          simple: true
+          name: Access logging match mode
+        - path: filter.expression
+          simple: true
+          name: Access logging filter expression
+- path: spec.tracing
+  simple: true
+  widget: GenericList
+  name: Tracing configuration
+  children:
+  - path: '[]'
+    children:
+    - path: providers
+      simple: true
+      widget: GenericList
+      children:
+      - path: '[]'
+        children:
+        - path: name
+          simple: true
+          name: Tracing provider name
+    - path: randomSamplingPercentage
+      type: number
+      name: Tracing random sampling percentage

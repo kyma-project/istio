@@ -6,6 +6,7 @@ resources:
 - serviceentries
 - authorizationpolicies
 - sidecars
+- telemetries
 
 labels:
   - includeSelectors: true

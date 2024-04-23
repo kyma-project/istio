@@ -4,5 +4,6 @@ import './gateway';
 import './virtualService';
 import './serviceEntry';
 import './sidecar';
+import './telemetries';
 
-export {Commands as ResourceCommands} from "./commands";
+export { Commands as ResourceCommands } from "./commands";

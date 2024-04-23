@@ -1075,27 +1075,6 @@ func createFakeClient(objects ...client.Object) client.Client {
 	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).WithStatusSubresource(objects...).Build()
 }
 
-type shouldFailFakeClientOnAnnotation struct {
-	client.Client
-	failAnnotation string
-}
-
-func (p *shouldFailFakeClientOnAnnotation) Update(ctx context.Context, obj client.Object, _ ...client.UpdateOption) error {
-	_, found := obj.GetAnnotations()[p.failAnnotation]
-	if found {
-		return fmt.Errorf("intentionally failing client update call on annotation: %s", p.failAnnotation)
-	}
-	return p.Client.Update(ctx, obj)
-}
-
-func (p *shouldFailFakeClientOnAnnotation) Patch(ctx context.Context, obj client.Object, patch client.Patch, _ ...client.PatchOption) error {
-	_, found := obj.GetAnnotations()[p.failAnnotation]
-	if found {
-		return fmt.Errorf("intentionally failing client update call on annotation: %s", p.failAnnotation)
-	}
-	return p.Client.Patch(ctx, obj, patch)
-}
-
 func createPod(name, namespace, containerName, imageVersion string) *corev1.Pod {
 	return &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{

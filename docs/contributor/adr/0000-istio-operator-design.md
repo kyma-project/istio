@@ -7,7 +7,7 @@ Accepted
 ## Context
 
 Since we will be implementing a new Kyma Istio operator to support the new modularised architecture of Kyma, we need to create design documentation to have a better idea of how to implement this new operator.
-The technical design is part of the operator documentation and can be found [here](https://github.com/kyma-project/istio/blob/main/docs/technical-design.md).
+The technical design is part of the operator documentation and can be found [here](../04-10-technical-design.md).
 The functionalities that need to be supported by the new controller can be found in the issue [Technical Design for the Kyma Istio Component](https://github.com/kyma-project/istio/issues/32).
 
 ## Decision

@@ -55,9 +55,6 @@ Run the following command:
   kubectl patch istios/default -n kyma-system --type merge -p '{"spec":{"config":{"gatewayExternalTrafficPolicy": "Local"}}}'
   ```
 
-> [!WARNING]
-> For production deployments it is strongly recommended to deploy an ingress gateway pod to multiple nodes if you enable externalTrafficPolicy: Local. Otherwise, this creates a situation where only nodes with an active ingress gateway pod will be able to accept and distribute incoming NLB traffic to the rest of the cluster, creating potential ingress traffic bottlenecks and reduced internal load balancing capability, or even complete loss of ingress traffic to the cluster if the subset of nodes with ingress gateway pods go down. See Source IP for Services with Type=NodePort for more information. See reference Istio documentation: https://istio.io/latest/docs/tasks/security/authorization/authz-ingress/#network
-> Default Kyma Istio installation profile configures PodAntiAffinity to ensure that IngressGateway pods are evenly spread against all Nodes. This guarantees that if your IngressGateway autoscaling configuration `minReplicas` is at least equal to the number of Nodes, the above requirement will be satisfied. You can configure autoscaling options in Istio Custom Resource using `spec.config.components.ingressGateway.k8s.hpaSpec.minReplicas`.
 
 #### **Kyma Dashboard**
 1. Navigate to **Cluster Details** and select **Modify Modules**.

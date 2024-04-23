@@ -38,10 +38,12 @@ Run the following command:
 If you are using a GCP or Azure cluster, you must also set the **gatewayExternalTrafficPolicy** to `Local` in order to include the client's IP address in the XFF header. Skip this step if you're using a different cloud service provider.
 
 For production Deployments, it is strongly recommended to deploy an Ingress Gateway Pod to multiple nodes if you enable `externalTrafficPolicy: Local`. Otherwise, this creates a situation where only nodes with an active Ingress Gateway Pod are able to accept and distribute incoming NLB traffic to the rest of the cluster, creating potential ingress traffic bottlenecks and reduced internal load balancing capability, or even complete loss of ingress traffic incoming to the cluster if the subset of nodes with Ingress Gateway Pods goes down. See the source IP for Services with `Type=NodePort` for more information. For reference, see Istio [Network Load Balancer](https://istio.io/latest/docs/tasks/security/authorization/authz-ingress/#network) documentation.
+
 Default Kyma Istio installation profile configures **PodAntiAffinity** to ensure that Ingress Gateway Pods are evenly spread across all Nodes. This guarantees that the above requirement is satisfied if your IngressGateway autoscaling configuration **minReplicas** is at least equal to the number of Nodes. You can configure autoscaling options in the Istio custom resource using **spec.config.components.ingressGateway.k8s.hpaSpec.minReplicas**.
 
 > [!WARNING]
 > Deploy an Ingress Gateway Pod to multiple nodes if you enable `externalTrafficPolicy: Local` in production Deployments.
+
 > [!TIP]
 > While using GCP or Azure, you can find your load balancer's IP address in the field **status.loadBalancer.ingress** of the `ingress-gateway` Service.
 

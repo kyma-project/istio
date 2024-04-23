@@ -15,6 +15,11 @@ type Config struct {
 
 	// Defines a list of external authorization providers.
 	Authorizers []*Authorizer `json:"authorizers,omitempty"`
+
+	// Defines the external traffic policy for the Istio Ingress Gateway Service. Valid configurations are "Local" or "Cluster". The external traffic policy set to "Local" preserves the client IP in the request, but also introduces the risk of unbalanced traffic distribution.
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Enum=Local;Cluster
+	GatewayExternalTrafficPolicy *string `json:"gatewayExternalTrafficPolicy,omitempty"`
 }
 
 type Components struct {

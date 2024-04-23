@@ -4,9 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	v1 "k8s.io/api/core/v1"
-
 	"github.com/kyma-project/istio/operator/internal/filter"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 )
 
 type IngressGatewayRestartPredicate struct {
@@ -28,7 +27,7 @@ func getLastAppliedConfiguration(istioCR *operatorv1alpha2.Istio) (appliedConfig
 		return lastAppliedConfig, nil
 	}
 
-	if lastAppliedAnnotation, found := istioCR.Annotations[v1.LastAppliedConfigAnnotation]; found {
+	if lastAppliedAnnotation, found := istioCR.Annotations[istio.LastAppliedConfiguration]; found {
 		err := json.Unmarshal([]byte(lastAppliedAnnotation), &lastAppliedConfig)
 		if err != nil {
 			return lastAppliedConfig, err
@@ -45,20 +44,20 @@ func (i IngressGatewayRestartPredicate) NewIngressGatewayEvaluator(ctx context.C
 	}
 
 	return IngressGatewayRestartEvaluator{
-		newNumTrustedProxies: i.istioCR.Spec.Config.NumTrustedProxies,
-		oldNumTrustedProxies: lastAppliedConfig.IstioSpec.Config.NumTrustedProxies,
+		NewNumTrustedProxies: i.istioCR.Spec.Config.NumTrustedProxies,
+		OldNumTrustedProxies: lastAppliedConfig.IstioSpec.Config.NumTrustedProxies,
 	}, nil
 }
 
 type IngressGatewayRestartEvaluator struct {
-	newNumTrustedProxies *int
-	oldNumTrustedProxies *int
+	NewNumTrustedProxies *int
+	OldNumTrustedProxies *int
 }
 
 func (i IngressGatewayRestartEvaluator) RequiresIngressGatewayRestart() bool {
-	isNewNotNil := i.newNumTrustedProxies != nil
-	isOldNotNil := i.oldNumTrustedProxies != nil
-	if isNewNotNil && isOldNotNil && *i.newNumTrustedProxies != *i.oldNumTrustedProxies {
+	isNewNotNil := i.NewNumTrustedProxies != nil
+	isOldNotNil := i.OldNumTrustedProxies != nil
+	if isNewNotNil && isOldNotNil && *i.NewNumTrustedProxies != *i.OldNumTrustedProxies {
 		return true
 	} else if isNewNotNil != isOldNotNil {
 		return true

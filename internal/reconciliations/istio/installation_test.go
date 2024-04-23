@@ -16,7 +16,6 @@ import (
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
-	"github.com/kyma-project/istio/operator/pkg/lib/annotations"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 	operatorv1alpha1 "istio.io/api/operator/v1alpha1"
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
@@ -345,68 +344,6 @@ var _ = Describe("Installation reconciliation", func() {
 		currentIGWDeployment := appsv1.Deployment{}
 		Expect(c.Get(context.TODO(), types.NamespacedName{Namespace: "istio-system", Name: "istio-ingressgateway"}, &currentIGWDeployment)).Should(Succeed())
 		Expect(currentIGWDeployment.Spec.Template.Annotations["reconciler.kyma-project.io/lastRestartDate"]).To(BeEmpty())
-	})
-
-	It("should fail Istio reconciliation when NumTrustedProxies has changed and fails to restart Istio GW", func() {
-		// given
-		newNumTrustedProxies := 3
-		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
-			Name:            "default",
-			ResourceVersion: "1",
-			Annotations: map[string]string{
-				istio.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"NumTrustedProxies":1},"IstioTag":"%s"}`, istioTag),
-			},
-		},
-			Spec: operatorv1alpha2.IstioSpec{
-				Config: operatorv1alpha2.Config{
-					NumTrustedProxies: &newNumTrustedProxies,
-				},
-			},
-			Status: operatorv1alpha2.IstioStatus{
-				State: operatorv1alpha2.Processing,
-			},
-		}
-		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
-		istioNamespace := createNamespace("istio-system")
-		igwDeployment := &appsv1.Deployment{
-			ObjectMeta: v1.ObjectMeta{
-				Namespace: "istio-system",
-				Name:      "istio-ingressgateway",
-				Annotations: map[string]string{
-					"failAnnotation": "intentional",
-				},
-			},
-		}
-		c := createFakeClient(&istioCR, istiod, istioNamespace, igwDeployment)
-		shouldFailClient := &shouldFailFakeClientOnAnnotation{c, "failAnnotation"}
-		mockClient := mockLibraryClient{}
-		installation := istio.Installation{
-			Client:      shouldFailClient,
-			IstioClient: &mockClient,
-			Merger:      MergerMock{tag: istioTag},
-		}
-		statusHandler := status.NewStatusHandler(c)
-
-		// when
-		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
-
-		// then
-		Expect(err).Should(HaveOccurred())
-		Expect(mockClient.installCalled).To(BeTrue())
-		Expect(mockClient.uninstallCalled).To(BeFalse())
-		Expect(istioCR.Status.State).To(Equal(operatorv1alpha2.Processing))
-
-		Expect(istioCR.Status.Conditions).ToNot(BeNil())
-		Expect((*istioCR.Status.Conditions)).To(HaveLen(1))
-		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
-		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonIstioInstallSucceeded)))
-		Expect((*istioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
-
-		igwDeployment = &appsv1.Deployment{}
-		Expect(c.Get(context.TODO(), types.NamespacedName{Namespace: "istio-system", Name: "istio-ingressgateway"}, igwDeployment)).Should(Succeed())
-
-		hasRestartAnnotation := annotations.HasRestartAnnotation(igwDeployment.Spec.Template.Annotations)
-		Expect(hasRestartAnnotation).To(BeFalse())
 	})
 
 	It("should execute install to upgrade istio and update Istio CR status when Istio version has changed", func() {

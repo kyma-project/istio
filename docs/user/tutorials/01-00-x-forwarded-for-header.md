@@ -43,7 +43,7 @@ Default Kyma Istio installation profile configures **PodAntiAffinity** to ensure
 
 > [!WARNING]
 > Deploy an Ingress Gateway Pod to multiple nodes if you enable `externalTrafficPolicy: Local` in production Deployments.
-> Switching externalTrafficPolicy may result in temporal increase in requests delay. Please make sure that this is acceptable.
+> Switching `externalTrafficPolicy` may result in a temporal increase in request delay. Make sure that this is acceptable.
 
 > [!TIP]
 > While using GCP or Azure, you can find your load balancer's IP address in the field **status.loadBalancer.ingress** of the `ingress-gateway` Service.

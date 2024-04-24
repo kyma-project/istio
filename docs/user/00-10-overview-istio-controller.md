@@ -52,9 +52,6 @@ Conditions:
 
 ## X-Forwarded-For HTTP Header
 
-> [!NOTE]
-> The **X-Forwarded-For** (XFF) header is only supported on AWS clusters.
-
 The XFF header conveys the client IP address and the chain of intermediary proxies that the request traversed to reach the Istio service mesh.
 The header might not include all IP addresses if an intermediary proxy does not support modifying the header.
 Due to [technical limitations of AWS Classic ELBs](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-proxy-protocol.html#proxy-protocol), when using an IPv4 connection, the header does not include the public IP of the load balancer in front of Istio Ingress Gateway.

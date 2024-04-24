@@ -24,7 +24,7 @@ Cypress.Commands.add('gatewayAddServer', (server: GatewayServer): void => {
     cy.get('[aria-label^="Gateway name"]:visible')
         .find('input')
         .eq(1)
-        .type(server.name, {force: true});
+        .type(server.name, { force: true });
 
     cy.get('[aria-label="expand Hosts"]:visible').click();
     cy.inputClearAndType('[data-testid="spec.servers.0.hosts.0"]', server.host);

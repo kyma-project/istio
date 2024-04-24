@@ -3,12 +3,8 @@
 Many applications need to know the client IP address of an originating request to behave properly. Usual use cases include workloads that require the client IP address to restrict their access. The ability to provide client attributes to services has long been a staple of reverse proxies, which use the X-Forwarded-For (XFF) header to forward client attributes to destination workloads. For more information on XFF, see 
 the [IETF’s RFC documentation](https://datatracker.ietf.org/doc/html/rfc7239) and [Envoy documentation](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_conn_man/headers#x-forwarded-for).
 
-> [!NOTE]
->  The X-Forwarded-For header is only supported on AWS clusters.
-
 ## Prerequisites
 
-* An AWS cluster
 * The Istio module enabled or [Kyma Istio Operator](../../../README.md#install-kyma-istio-operator-and-istio-from-the-latest-release) installed
 * [Istio Gateway](https://kyma-project.io/#/api-gateway/user/tutorials/01-20-set-up-tls-gateway) set up
 
@@ -31,13 +27,44 @@ Run the following command:
   ```
 
 #### **Kyma Dashboard**
-1. Navigate to `Cluster Details`.
-2. Open the Istio module's configuration.
-3. Click **Edit**.
-4. Add the number of trusted proxies and click **Update**.
-   ![Add the numTrustedProxies](./assets/01-00-num-trusted-proxies-ui.svg)
+1. Navigate to **Cluster Details** and select **Modify Modules**.
+2. Choose the Istio module and select **Edit**.
+3. In the `General` section, add the number of trusted proxies.
+4. Select **Save**.
 <!-- tabs:end -->
 
+### Configure Gateway External Traffic Policy in the Istio Custom Resource (GCP and Azure only)
+
+If you are using a GCP or Azure cluster, you must also set the **gatewayExternalTrafficPolicy** to `Local` in order to include the client's IP address in the XFF header. Skip this step if you're using a different cloud service provider.
+
+For production Deployments, it is strongly recommended to deploy an Ingress Gateway Pod to multiple nodes if you enable `externalTrafficPolicy: Local`. Otherwise, this creates a situation where only nodes with an active Ingress Gateway Pod are able to accept and distribute incoming NLB traffic to the rest of the cluster, creating potential ingress traffic bottlenecks and reduced internal load balancing capability, or even complete loss of ingress traffic incoming to the cluster if the subset of nodes with Ingress Gateway Pods goes down. See the source IP for Services with `Type=NodePort` for more information. For reference, see Istio [Network Load Balancer](https://istio.io/latest/docs/tasks/security/authorization/authz-ingress/#network) documentation.
+
+Default Kyma Istio installation profile configures **PodAntiAffinity** to ensure that Ingress Gateway Pods are evenly spread across all Nodes. This guarantees that the above requirement is satisfied if your IngressGateway autoscaling configuration **minReplicas** is at least equal to the number of Nodes. You can configure autoscaling options in the Istio custom resource using **spec.config.components.ingressGateway.k8s.hpaSpec.minReplicas**.
+
+> [!WARNING]
+> Deploy an Ingress Gateway Pod to multiple nodes if you enable `externalTrafficPolicy: Local` in production Deployments.
+> Switching `externalTrafficPolicy` may result in a temporal increase in request delay. Make sure that this is acceptable.
+
+> [!TIP]
+> While using GCP or Azure, you can find your load balancer's IP address in the field **status.loadBalancer.ingress** of the `ingress-gateway` Service.
+
+Add **gatewayExternalTrafficPolicy** to the Istio custom resource:
+
+<!-- tabs:start -->
+#### **kubectl**
+Run the following command:
+
+  ```bash
+  kubectl patch istios/default -n kyma-system --type merge -p '{"spec":{"config":{"gatewayExternalTrafficPolicy": "Local"}}}'
+  ```
+
+
+#### **Kyma Dashboard**
+1. Navigate to **Cluster Details** and select **Modify Modules**.
+2. Choose the Istio module and select **Edit**.
+3. In the `General` section, set the Gateway external traffic policy to `Local`.
+4. Select **Save**.
+<!-- tabs:end -->
 
 ### Create a Workload for Verification
 

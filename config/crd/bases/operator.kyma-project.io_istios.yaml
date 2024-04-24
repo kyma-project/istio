@@ -1272,6 +1272,14 @@ spec:
                       - service
                       type: object
                     type: array
+                  gatewayExternalTrafficPolicy:
+                    description: |-
+                      Defines the external traffic policy for the Istio Ingress Gateway Service. Valid configurations are "Local" or "Cluster". The external traffic policy set to "Local" preserves the client IP in the request, but also introduces the risk of unbalanced traffic distribution.
+                      WARNING: Switching `externalTrafficPolicy` may result in a temporal increase in request delay. Make sure that this is acceptable.
+                    enum:
+                    - Local
+                    - Cluster
+                    type: string
                   numTrustedProxies:
                     description: Defines the number of trusted proxies deployed in
                       front of the Istio gateway proxy.
@@ -2633,6 +2641,14 @@ spec:
                       - service
                       type: object
                     type: array
+                  gatewayExternalTrafficPolicy:
+                    description: |-
+                      Defines the external traffic policy for the Istio Ingress Gateway Service. Valid configurations are "Local" or "Cluster". The external traffic policy set to "Local" preserves the client IP in the request, but also introduces the risk of unbalanced traffic distribution.
+                      WARNING: Switching `externalTrafficPolicy` may result in a temporal increase in request delay. Make sure that this is acceptable.
+                    enum:
+                    - Local
+                    - Cluster
+                    type: string
                   numTrustedProxies:
                     description: Defines the number of trusted proxies deployed in
                       front of the Istio gateway proxy.

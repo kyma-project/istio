@@ -114,6 +114,10 @@ spec:
         env:
         - name: PILOT_HTTP10
           value: "1"
+        - name: METRIC_ROTATION_INTERVAL
+          value: "5m0s"
+        - name: METRIC_GRACEFUL_DELETION_INTERVAL
+          value: "5m0s"
         hpaSpec:
           maxReplicas: 5
           minReplicas: 2
@@ -148,6 +152,8 @@ spec:
       tracingServiceName: CANONICAL_NAME_ONLY
     defaultProviders:
       tracing: []
+      metrics:
+      - prometheus
     enablePrometheusMerge: false
     enableTracing: false
     extensionProviders:

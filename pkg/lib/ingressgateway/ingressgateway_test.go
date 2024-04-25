@@ -7,7 +7,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	ingressgateway "github.com/kyma-project/istio/operator/pkg/lib/ingress_gateway"
+	"github.com/kyma-project/istio/operator/pkg/lib/ingressgateway"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/utils/ptr"

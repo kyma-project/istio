@@ -8,7 +8,7 @@ import (
 	"github.com/kyma-project/istio/operator/internal/filter"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/pkg/lib/annotations"
-	ingressgateway "github.com/kyma-project/istio/operator/pkg/lib/ingress_gateway"
+	"github.com/kyma-project/istio/operator/pkg/lib/ingressgateway"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/types"

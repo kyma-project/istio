@@ -4,8 +4,8 @@ import "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 const (
 	LastAppliedConfiguration string = "operator.kyma-project.io/lastAppliedConfiguration"
-	ModuleLabelKey                  = "kyma-project.io/module"
-	ModuleLabelValue                = "istio"
+	ModuleLabelKey           string = "kyma-project.io/module"
+	ModuleLabelValue         string = "istio"
 )
 
 func SetModuleLabels(labels map[string]string) map[string]string {

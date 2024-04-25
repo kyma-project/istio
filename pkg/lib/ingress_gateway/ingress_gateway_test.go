@@ -15,7 +15,7 @@ import (
 
 var _ = Describe("Ingress Gateway Restarter", func() {
 	Context("RequiresIngressGatewayRestart", func() {
-		It("Should evaluate to true if new is nil and old is nil", func() {
+		It("Should evaluate to true if new is nil and old is not nil", func() {
 			evaluator := ingressgateway.NumTrustedProxiesRestartEvaluator{
 				NewNumTrustedProxies: nil,
 				OldNumTrustedProxies: new(int),

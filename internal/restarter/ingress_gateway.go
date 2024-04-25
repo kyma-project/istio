@@ -40,7 +40,7 @@ func NewIngressGatewayRestarter(client client.Client, predicates []filter.Ingres
 func (r *IngressGatewayRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio) described_errors.DescribedError {
 	ctrl.Log.Info("Restarting Istio Ingress Gateway")
 
-	r.predicates = append(r.predicates, ingressgateway.NewIngressGatewayRestartPredicate(istioCR))
+	r.predicates = append(r.predicates, ingressgateway.NewRestartPredicate(istioCR))
 	for _, predicate := range r.predicates {
 		evaluator, err := predicate.NewIngressGatewayEvaluator(ctx)
 		if err != nil {
@@ -48,7 +48,7 @@ func (r *IngressGatewayRestarter) Restart(ctx context.Context, istioCR *v1alpha2
 		}
 
 		if evaluator.RequiresIngressGatewayRestart() {
-			err = RestartIngressGateway(ctx, r.client)
+			err = restartIngressGateway(ctx, r.client)
 			if err != nil {
 				r.statusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonIngressGatewayRestartFailed))
 				return described_errors.NewDescribedError(err, "Failed to restart Ingress Gateway")
@@ -61,7 +61,7 @@ func (r *IngressGatewayRestarter) Restart(ctx context.Context, istioCR *v1alpha2
 	return nil
 }
 
-func RestartIngressGateway(ctx context.Context, k8sClient client.Client) error {
+func restartIngressGateway(ctx context.Context, k8sClient client.Client) error {
 	ctrl.Log.Info("Restarting istio-ingressgateway")
 
 	deployment := appsv1.Deployment{}

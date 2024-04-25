@@ -3,6 +3,7 @@ package istio
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/kyma-project/istio/operator/pkg/labels"
 
 	"github.com/coreos/go-semver/semver"
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
@@ -25,7 +26,7 @@ func shouldInstall(istio *operatorv1alpha2.Istio, istioImageVersion istiooperato
 		return false, nil
 	}
 
-	lastAppliedConfigAnnotation, ok := istio.Annotations[LastAppliedConfiguration]
+	lastAppliedConfigAnnotation, ok := istio.Annotations[labels.LastAppliedConfiguration]
 	if !ok {
 		return true, nil
 	}
@@ -59,7 +60,7 @@ func UpdateLastAppliedConfiguration(istioCR *operatorv1alpha2.Istio, istioTag st
 		return err
 	}
 
-	istioCR.Annotations[LastAppliedConfiguration] = string(config)
+	istioCR.Annotations[labels.LastAppliedConfiguration] = string(config)
 	return nil
 }
 
@@ -69,7 +70,7 @@ func getLastAppliedConfiguration(istioCR *operatorv1alpha2.Istio) (appliedConfig
 		return lastAppliedConfig, nil
 	}
 
-	if lastAppliedAnnotation, found := istioCR.Annotations[LastAppliedConfiguration]; found {
+	if lastAppliedAnnotation, found := istioCR.Annotations[labels.LastAppliedConfiguration]; found {
 		err := json.Unmarshal([]byte(lastAppliedAnnotation), &lastAppliedConfig)
 		if err != nil {
 			return lastAppliedConfig, err

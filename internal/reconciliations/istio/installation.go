@@ -33,8 +33,7 @@ type Installation struct {
 }
 
 const (
-	LastAppliedConfiguration string = "operator.kyma-project.io/lastAppliedConfiguration"
-	installationFinalizer    string = "istios.operator.kyma-project.io/istio-installation"
+	installationFinalizer string = "istios.operator.kyma-project.io/istio-installation"
 )
 
 // Reconcile runs Istio reconciliation to install, upgrade or uninstall Istio and returns the updated Istio CR.

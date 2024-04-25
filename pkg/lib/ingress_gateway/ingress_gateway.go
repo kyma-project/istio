@@ -37,7 +37,7 @@ func getLastAppliedConfiguration(istioCR *operatorv1alpha2.Istio) (appliedConfig
 	return lastAppliedConfig, nil
 }
 
-func (i IngressGatewayRestartPredicate) NewIngressGatewayEvaluator(ctx context.Context) (filter.IngressGatewayRestartEvaluator, error) {
+func (i IngressGatewayRestartPredicate) NewIngressGatewayEvaluator(_ context.Context) (filter.IngressGatewayRestartEvaluator, error) {
 	lastAppliedConfig, err := getLastAppliedConfiguration(i.istioCR)
 	if err != nil {
 		return nil, err

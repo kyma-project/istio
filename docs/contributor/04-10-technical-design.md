@@ -124,5 +124,5 @@ This component covers the following restart triggers:
 
 ### IngressGatewayRestarter
 
-IngressGateway Restarter is responsible for restarting Istio Ingress Gateway. The component consumes a list of [Restart Predicates](#restart-predicates) that determine when the restart should occur. Restarter triggers the restart in case that `numTrustedProxies` configuration changed.
+IngressGateway Restarter is responsible for restarting Istio Ingress Gateway. The component consumes a list of [Restart Predicates](#restart-predicates) that determine when the restart should occur. Restarter triggers the restart if there's a change in the `numTrustedProxies` configuration.
 

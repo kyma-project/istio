@@ -2,18 +2,20 @@ package restarter
 
 import (
 	"context"
+
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/kyma-project/istio/operator/internal/filter"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/pkg/lib/annotations"
+	"github.com/kyma-project/istio/operator/pkg/lib/ingressgateway"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 const (
@@ -37,36 +39,20 @@ func NewIngressGatewayRestarter(client client.Client, predicates []filter.Ingres
 
 func (r *IngressGatewayRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio) described_errors.DescribedError {
 	ctrl.Log.Info("Restarting Istio Ingress Gateway")
-	podList, err := getIngressGatewayPods(ctx, r.client)
-	if err != nil {
-		r.statusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonIngressGatewayRestartFailed))
-		return described_errors.NewDescribedError(err, "Failed to get ingress gateway pods")
-	}
 
-	mustRestart := false
-
+	r.predicates = append(r.predicates, ingressgateway.NewRestartPredicate(istioCR))
 	for _, predicate := range r.predicates {
 		evaluator, err := predicate.NewIngressGatewayEvaluator(ctx)
 		if err != nil {
-			r.statusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonIngressGatewayRestartFailed))
-			return described_errors.NewDescribedError(err, "Cannot create evaluator")
+			return described_errors.NewDescribedError(err, "Could not create Ingress Gateway restart evaluator")
 		}
-		for _, pod := range podList.Items {
-			if evaluator.RequiresIngressGatewayRestart(pod) {
-				mustRestart = true
-				break
+
+		if evaluator.RequiresIngressGatewayRestart() {
+			err = restartIngressGateway(ctx, r.client)
+			if err != nil {
+				r.statusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonIngressGatewayRestartFailed))
+				return described_errors.NewDescribedError(err, "Failed to restart Ingress Gateway")
 			}
-		}
-
-		if mustRestart {
-			break
-		}
-	}
-
-	if mustRestart {
-		if err := RestartIngressGateway(ctx, r.client); err != nil {
-			r.statusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonIngressGatewayRestartFailed))
-			return described_errors.NewDescribedError(err, "Failed to restart ingress gateway")
 		}
 	}
 
@@ -75,28 +61,17 @@ func (r *IngressGatewayRestarter) Restart(ctx context.Context, istioCR *v1alpha2
 	return nil
 }
 
-func getIngressGatewayPods(ctx context.Context, k8sClient client.Client) (*v1.PodList, error) {
-
-	ls := labels.SelectorFromSet(map[string]string{
-		"app": "istio-ingressgateway",
-	})
-
-	list := v1.PodList{}
-	err := k8sClient.List(ctx, &list, &client.ListOptions{Namespace: namespace, LabelSelector: ls})
-	if err != nil {
-		return nil, err
-	}
-
-	return &list, err
-
-}
-
-func RestartIngressGateway(ctx context.Context, k8sClient client.Client) error {
+func restartIngressGateway(ctx context.Context, k8sClient client.Client) error {
 	ctrl.Log.Info("Restarting istio-ingressgateway")
 
 	deployment := appsv1.Deployment{}
 	err := k8sClient.Get(ctx, types.NamespacedName{Namespace: namespace, Name: deploymentName}, &deployment)
 	if err != nil {
+		// If ingress gateway deployment is missing, we should not fail, as it may have not yet been created
+		// In that case, the upcoming creation of the deployment will do the same thing as we would require from the restart
+		if k8sErrors.IsNotFound(err) {
+			return nil
+		}
 		return err
 	}
 

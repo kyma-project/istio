@@ -120,8 +120,9 @@ This component covers the following restart triggers:
 - Restart Pods with proxy sidecar when CNI config changes.
 - Restart Pods with proxy sidecar after an Istio version update.
 - Restart Pods with proxy sidecar when proxy resources change.
-- Restart Pods if they match [Restart Predicates](#restart-predicates) that the [Istio ResourcesReconciliation component](#istio-resourcesreconciliation) specifies (for example, being up-to-date with EnvoyFilter).
+- Restart Pods if they match [Restart Predicates](#restart-predicates) that the [Istio ResourcesReconciliation component](#istio-resourcesreconciliation) specifies (for example, being up to date with proxy image version).
 
 ### IngressGatewayRestarter
 
-IngressGateway Restarter is responsible for restarting Istio Ingress Gateway. The component consumes a list of [Restart Predicates](#restart-predicates) that determine when the restart should occur.
+IngressGateway Restarter is responsible for restarting Istio Ingress Gateway. The component consumes a list of [Restart Predicates](#restart-predicates) that determine when the restart should occur. Restarter triggers the restart if there's a change in the `numTrustedProxies` configuration.
+

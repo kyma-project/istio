@@ -33,8 +33,7 @@ type Installation struct {
 }
 
 const (
-	LastAppliedConfiguration string = "operator.kyma-project.io/lastAppliedConfiguration"
-	installationFinalizer    string = "istios.operator.kyma-project.io/istio-installation"
+	installationFinalizer string = "istios.operator.kyma-project.io/istio-installation"
 )
 
 // Reconcile runs Istio reconciliation to install, upgrade or uninstall Istio and returns the updated Istio CR.
@@ -104,11 +103,6 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha2.
 
 		ctrl.Log.Info("Istio installation succeeded")
 		statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIstioInstallSucceeded))
-
-		err = restartIngressGatewayIfNeeded(ctx, i.Client, istioCR)
-		if err != nil {
-			return istioImageVersion, described_errors.NewDescribedError(err, "Could not restart Istio Ingress GW deployment")
-		}
 
 		if err := updateResourcesMetadataForSelector(ctx, i.Client); err != nil {
 			return istioImageVersion, described_errors.NewDescribedError(err, "could not update managed metadata")

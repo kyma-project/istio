@@ -148,7 +148,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 	if err := restarter.Restart(ctx, &istioCR, r.restarters); err != nil {
 		// We don't want to use the requeueReconciliation function here, since there is condition handling in this function, and we
-		// need to clean this up, before we can use it here as  conditions are already handled in the restarters.
+		// need to clean this up, before we can use it here as conditions are already handled in the restarters.
 		statusUpdateErr := r.statusHandler.UpdateToError(ctx, &istioCR, err)
 		if statusUpdateErr != nil {
 			r.log.Error(statusUpdateErr, "Error during updating status to error")

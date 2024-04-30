@@ -37,23 +37,9 @@ Use the Telemetry API to selectively enable Istio access logs. See:
 #### **Kyma Dashboard**
 
 1. Go to the namespace for which you want to configure Istio access logs.
-2. Go to **Configuration > Custom Resources**.
-3. In the section `telemetry.istio.io`, select **Telemetries**.
-4. Select **Create Telemetry** and paste the following sample configuration into the editor:
-
-    ```yaml
-    apiVersion: telemetry.istio.io/v1alpha1
-    kind: Telemetry
-    metadata:
-      name: access-config
-      namespace: {YOUR_NAMESPACE}
-    spec:
-      accessLogging:
-        - providers:
-          - name: stdout-json
-    ```
-6. Replace `{YOUR_NAMESPACE}` with the name of the namespace.
-7. Select **Create**.
+2. Go to **Istio > Telemetries** and select **Create**.
+3. Provide the name, for example, `access-config`.
+4. Select **Create**.
 
 #### **kubectl**
 1. Export the name of the namespace for which you want to configure Istio access logs.
@@ -91,9 +77,8 @@ To configure label-based selection of workloads, use a [selector](https://istio.
 <!-- tabs:start -->
 #### **Kyma Dashboard**
 1. Go to the namespace of the workloads for which you want to configure Istio access logs.
-2. Go to **Configuration > Custom Resources**.
-3. In the section `telemetry.istio.io`, select **Telemetries**.
-4. Select **Create Telemetry** and paste the following sample configuration into the editor:
+2. Go to **Istio > Telemetries** and select **Create**.
+3. Switch to the `YAML` section and paste the following sample configuration into the editor:
     ```yaml
     apiVersion: telemetry.istio.io/v1alpha1
     kind: Telemetry
@@ -108,8 +93,8 @@ To configure label-based selection of workloads, use a [selector](https://istio.
         - providers:
           - name: stdout-json
     ```
-6. Replace `{YOUR_LABEL}` with the workloads' label and `{YOUR_NAMESPACE}` with the name of the workloads' namespace.
-7. Select **Create**.
+4. Replace `{YOUR_LABEL}` with the workloads' label and `{YOUR_NAMESPACE}` with the name of the workloads' namespace.
+5. Select **Create**.
 
 #### **kubectl**
 1. Export the name of the workloads' namespace and their label as environment variables:
@@ -149,9 +134,8 @@ Instead of enabling the access logs for all the individual proxies of the worklo
 <!-- tabs:start -->
 #### **Kyma Dashboard**
 1. Go to the `istio-system` namespace.
-2. Go to **Configuration > Custom Resources**.
-3. In the section `telemetry.istio.io`, select **Telemetries**.
-4. Select **Create Telemetry** and paste the following sample configuration into the editor:
+2. Go to **Istio > Telemetries** and select **Create**.
+3. Switch to the `YAML` section and paste the following sample configuration into the editor:
     ```yaml
     apiVersion: telemetry.istio.io/v1alpha1
     kind: Telemetry
@@ -166,7 +150,7 @@ Instead of enabling the access logs for all the individual proxies of the worklo
         - providers:
           - name: stdout-json
     ```
-5. Select **Create**.
+4. Select **Create**.
 
 #### **kubectl**
 
@@ -200,9 +184,8 @@ Enable access logs for all individual proxies of the workloads and Istio Ingress
 <!-- tabs:start -->
 #### **Kyma Dashboard**
 1. Go to the `istio-system` namespace.
-2. Go to **Configuration > Custom Resources**.
-3. In the section `telemetry.istio.io`, select **Telemetries**.
-4. Select **Create Telemetry** and paste the following sample configuration into the editor:
+2. Go to **Istio > Telemetries** and select **Create**.
+3. Switch to the `YAML` section and paste the following sample configuration into the editor:
     ```yaml
     apiVersion: telemetry.istio.io/v1alpha1
     kind: Telemetry
@@ -217,7 +200,7 @@ Enable access logs for all individual proxies of the workloads and Istio Ingress
         - providers:
           - name: stdout-json
     ```
-5. Select **Create**.
+4. Select **Create**.
 
 #### **kubectl**
 1. To apply the configuration, run:

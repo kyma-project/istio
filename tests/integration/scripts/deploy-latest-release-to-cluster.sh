@@ -11,6 +11,7 @@ TARGET_BRANCH="$1"
 TAG=$(git describe --tags --abbrev=0)
 if [ "${TAG%.*}" == "${TARGET_BRANCH#release\-}" ]
 then
+  TAG="${TAG%-experimental}"
   echo "Installing Istio ${TAG}"
   RELEASE_MANIFEST_URL="https://github.com/kyma-project/istio/releases/download/${TAG}/istio-manager.yaml"
   curl -L "$RELEASE_MANIFEST_URL" | kubectl apply -f -

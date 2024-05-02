@@ -76,3 +76,11 @@ This table lists all the possible parameters of the given resource together with
 | **conditions.&#x200b;reason**             | string     | Defines the reason for the condition status change.                                                                      |
 | **conditions.&#x200b;status** (required)  | string     | Represents the status of the condition. The value is either `True`, `False`, or `Unknown`.                               |
 | **conditions.&#x200b;type**               | string     | Provides a short description of the condition.                                                                           |
+
+### Annotations
+
+If you want to configure the `ENABLE_EXTERNAL_NAME_ALIAS` Istio pilot environment variable to retain behaviour for EXTERNAL_NAME that was present [prior to Istio 1.21](https://istio.io/latest/news/releases/1.21.x/announcing-1.21/upgrade-notes/#externalname-support-changes), add the following annotation to the Istio CR:
+
+```yaml
+istio-operator.kyma-project.io/disable-external-name-alias: "true"
+```

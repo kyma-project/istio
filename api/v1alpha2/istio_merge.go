@@ -49,6 +49,19 @@ type meshConfigBuilder struct {
 }
 
 func manageExternalNameAlias(i *Istio, op iopv1alpha1.IstioOperator) iopv1alpha1.IstioOperator {
+	if op.Spec == nil {
+		op.Spec = &v1alpha1.IstioOperatorSpec{}
+	}
+	if op.Spec.Components == nil {
+		op.Spec.Components = &v1alpha1.IstioComponentSetSpec{}
+	}
+	if op.Spec.Components.Pilot == nil {
+		op.Spec.Components.Pilot = &v1alpha1.ComponentSpec{}
+	}
+	if op.Spec.Components.Pilot.K8S == nil {
+		op.Spec.Components.Pilot.K8S = &v1alpha1.KubernetesResourcesSpec{}
+	}
+
 	shouldDisable := annotations.ShouldDisableExternalNameAlias(i.Annotations)
 	found := false
 	for _, v := range op.Spec.Components.Pilot.K8S.Env {

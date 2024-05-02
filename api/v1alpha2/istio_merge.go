@@ -3,6 +3,7 @@ package v1alpha2
 import (
 	"encoding/json"
 
+	"github.com/kyma-project/istio/operator/pkg/lib/annotations"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"istio.io/api/operator/v1alpha1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -38,11 +39,45 @@ func (i *Istio) MergeInto(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperat
 		return op, err
 	}
 
-	return mergedResourcesOp, nil
+	externalNameAliasAnnotationFixOp := manageExternalNameAlias(i, mergedResourcesOp)
+
+	return externalNameAliasAnnotationFixOp, nil
 }
 
 type meshConfigBuilder struct {
 	c *meshv1alpha1.MeshConfig
+}
+
+func manageExternalNameAlias(i *Istio, op iopv1alpha1.IstioOperator) iopv1alpha1.IstioOperator {
+	shouldDisable := annotations.ShouldDisableExternalNameAlias(i.Annotations)
+	found := false
+	for _, v := range op.Spec.Components.Pilot.K8S.Env {
+		if v.Name == "ENABLE_EXTERNAL_NAME_ALIAS" {
+			if shouldDisable {
+				v.Value = "false"
+			} else {
+				v.Value = "true"
+			}
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		if shouldDisable {
+			op.Spec.Components.Pilot.K8S.Env = append(op.Spec.Components.Pilot.K8S.Env, &v1alpha1.EnvVar{
+				Name:  "ENABLE_EXTERNAL_NAME_ALIAS",
+				Value: "false",
+			})
+		} else {
+			op.Spec.Components.Pilot.K8S.Env = append(op.Spec.Components.Pilot.K8S.Env, &v1alpha1.EnvVar{
+				Name:  "ENABLE_EXTERNAL_NAME_ALIAS",
+				Value: "true",
+			})
+		}
+	}
+
+	return op
 }
 
 func newMeshConfigBuilder(op iopv1alpha1.IstioOperator) (*meshConfigBuilder, error) {

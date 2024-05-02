@@ -99,6 +99,8 @@ spec:
                 topologyKey: kubernetes.io/hostname
               weight: 100
         env:
+        - name: ENABLE_EXTERNAL_NAME_ALIAS
+          value: "false"
         - name: PILOT_HTTP10
           value: "1"
         hpaSpec:

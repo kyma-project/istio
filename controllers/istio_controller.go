@@ -225,7 +225,7 @@ func (r *IstioReconciler) SetupWithManager(mgr ctrl.Manager, rateLimiter RateLim
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&operatorv1alpha2.Istio{}).
-		WithEventFilter(predicate.GenerationChangedPredicate{}).
+		WithEventFilter(predicate.Or(predicate.GenerationChangedPredicate{}, predicate.AnnotationChangedPredicate{})).
 		WithOptions(controller.Options{
 			RateLimiter: TemplateRateLimiter(
 				rateLimiter.BaseDelay,

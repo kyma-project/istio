@@ -408,6 +408,90 @@ var _ = Describe("Merge", func() {
 				Expect(iopCpuLimit).To(Equal(cpuLimit))
 			})
 		})
+		Context("Istio CR annotation to disable external name alias feature", func() {
+			It("should set env variable to true when there was no annotation", func() {
+				//given
+				iop := iopv1alpha1.IstioOperator{
+					Spec: &operatorv1alpha1.IstioOperatorSpec{},
+				}
+				istioCR := Istio{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{},
+					},
+					Spec: IstioSpec{},
+				}
+
+				// when
+				out, err := istioCR.MergeInto(iop)
+
+				var env *operatorv1alpha1.EnvVar
+				//then
+				Expect(err).ShouldNot(HaveOccurred())
+				for _, v := range out.Spec.Components.Pilot.K8S.Env {
+					if v.Name == "ENABLE_EXTERNAL_NAME_ALIAS" {
+						env = v
+					}
+				}
+				Expect(env).ToNot(BeNil())
+				Expect(env.Value).To(Equal("true"))
+			})
+			It("should set env variable to true when the annotation value is false", func() {
+				//given
+				iop := iopv1alpha1.IstioOperator{
+					Spec: &operatorv1alpha1.IstioOperatorSpec{},
+				}
+				istioCR := Istio{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{
+							"istio-operator.kyma-project.io/disable-external-name-alias": "false",
+						},
+					},
+					Spec: IstioSpec{},
+				}
+
+				// when
+				out, err := istioCR.MergeInto(iop)
+
+				//then
+				Expect(err).ShouldNot(HaveOccurred())
+				var env *operatorv1alpha1.EnvVar
+				for _, v := range out.Spec.Components.Pilot.K8S.Env {
+					if v.Name == "ENABLE_EXTERNAL_NAME_ALIAS" {
+						env = v
+					}
+				}
+				Expect(env).ToNot(BeNil())
+				Expect(env.Value).To(Equal("true"))
+			})
+			It("should set env variable to false when the annotation value is true", func() {
+				//given
+				iop := iopv1alpha1.IstioOperator{
+					Spec: &operatorv1alpha1.IstioOperatorSpec{},
+				}
+				istioCR := Istio{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{
+							"istio-operator.kyma-project.io/disable-external-name-alias": "true",
+						},
+					},
+					Spec: IstioSpec{},
+				}
+
+				// when
+				out, err := istioCR.MergeInto(iop)
+
+				var env *operatorv1alpha1.EnvVar
+				//then
+				Expect(err).ShouldNot(HaveOccurred())
+				for _, v := range out.Spec.Components.Pilot.K8S.Env {
+					if v.Name == "ENABLE_EXTERNAL_NAME_ALIAS" {
+						env = v
+					}
+				}
+				Expect(env).ToNot(BeNil())
+				Expect(env.Value).To(Equal("false"))
+			})
+		})
 	})
 	Context("IngressGateway", func() {
 		Context("When Istio CR has 500m configured for CPU and 500Mi for memory limits", func() {

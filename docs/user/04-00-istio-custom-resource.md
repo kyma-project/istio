@@ -85,3 +85,4 @@ To retain the behavior of `EXTERNAL_NAME` that was present in versions of Istio 
 ```yaml
 istio-operator.kyma-project.io/disable-external-name-alias: "true"
 ```
+For more information, see [ExternalName support changes](https://istio.io/latest/news/releases/1.21.x/announcing-1.21/upgrade-notes/#externalname-support-changes).

@@ -1,6 +1,6 @@
 module-name: istio
 protecode:
-  - europe-docker.pkg.dev/kyma-project/prod/istio-manager:v20240426-1fb939e9
+  - europe-docker.pkg.dev/kyma-project/prod/istio-manager:v20240503-83b9b82c
   - europe-docker.pkg.dev/kyma-project/prod/external/istio/install-cni:1.21.1-distroless
   - europe-docker.pkg.dev/kyma-project/prod/external/istio/proxyv2:1.21.1-distroless
   - europe-docker.pkg.dev/kyma-project/prod/external/istio/pilot:1.21.1-distroless

@@ -26,7 +26,8 @@ export K3D_CLUSTER_NAME=kyma
 3. Provision the k3d cluster.
 
 ```bash
-kyma provision k3d
+k3d cluster create
+kubectl create ns kyma-system
 ```
 >**TIP:** To verify the correctness of the project, build it using the `make build` command.
 

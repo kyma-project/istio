@@ -1,0 +1,81 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: httpbin-local-ratelimit
+  namespace: default
+spec:
+  workloadSelector:
+    labels:
+      app: httpbin
+  configPatches:
+    - applyTo: HTTP_FILTER
+      match:
+        context: SIDECAR_INBOUND
+        listener:
+          filterChain:
+            filter:
+              name: "envoy.filters.network.http_connection_manager"
+      patch:
+        # This will add a globally disabled rate limiter. That is required to have a filter for a specific route.
+        operation: INSERT_BEFORE
+        value:
+          name: envoy.filters.http.local_ratelimit
+          typed_config:
+            "@type": type.googleapis.com/udpa.type.v1.TypedStruct
+            type_url: type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+            value:
+              stat_prefix: http_local_rate_limiter
+    - applyTo: HTTP_ROUTE
+      match:
+        context: SIDECAR_INBOUND
+        routeConfiguration:
+          vhost:
+            name: ""
+            route:
+              action: ANY
+      patch:
+        operation: MERGE
+        value:
+          route:
+            rate_limits:
+              - actions:
+                  - request_headers:
+                      header_name: "x-api-usage"
+                      descriptor_key: "API_USAGE"
+          typed_per_filter_config:
+            envoy.filters.http.local_ratelimit:
+              "@type": type.googleapis.com/udpa.type.v1.TypedStruct
+              type_url: type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+              value:
+                stat_prefix: api_usage_local_rate_limiter
+                enable_x_ratelimit_headers: DRAFT_VERSION_03
+                descriptors:
+                  - entries:
+                      - key: API_USAGE
+                        value: BASIC
+                    token_bucket:
+                      max_tokens: 2
+                      tokens_per_fill: 2
+                      fill_interval: 20s
+                  - entries:
+                      - key: API_USAGE
+                        value: PRO
+                    token_bucket:
+                      max_tokens: 100
+                      tokens_per_fill: 50
+                      fill_interval: 20s
+                filter_enabled:
+                  runtime_key: local_rate_limit_enabled
+                  default_value:
+                    numerator: 100
+                    denominator: HUNDRED
+                filter_enforced:
+                  runtime_key: local_rate_limit_enforced
+                  default_value:
+                    numerator: 100
+                    denominator: HUNDRED
+                # The token bucket must be set for the per route configuration otherwise the config will be rejected. 
+                token_bucket:
+                  max_tokens: 1000
+                  tokens_per_fill: 1000
+                  fill_interval: 1s

@@ -1,0 +1,81 @@
+# Rate Limit Service Config
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ratelimit-config
+  namespace: ratelimit
+data:
+  config.yaml: |
+    domain: ratelimit
+    descriptors:
+      - key: CLIENT_CERT
+        rate_limit:
+          unit: minute
+          requests_per_unit: 5
+---
+# EnvoyFilter with Rate Limit Actions
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: rate-limit-actions-sidecar
+  namespace: default
+spec:
+  workloadSelector:
+    labels:
+      app: httpbin
+  configPatches:
+    - applyTo: VIRTUAL_HOST
+      match:
+        context: SIDECAR_INBOUND
+        routeConfiguration:
+          vhost:
+            name: ""
+            route:
+              action: ANY
+      patch:
+        operation: MERGE
+        value:
+          rate_limits:
+            - actions:
+                - request_headers:
+                    header_name: "X-Forwarded-Client-Cert"
+                    descriptor_key: "CLIENT_CERT"
+---
+# EnvoyFilter Enabling Rate Limit Service
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: global-ratelimit-service
+  namespace: default
+spec:
+  workloadSelector:
+    labels:
+      app: httpbin
+  configPatches:
+    - applyTo: HTTP_FILTER
+      match:
+        context: SIDECAR_INBOUND
+        listener:
+          filterChain:
+            filter:
+              name: "envoy.filters.network.http_connection_manager"
+              subFilter:
+                name: "envoy.filters.http.router"
+      patch:
+        operation: INSERT_BEFORE
+        value:
+          name: envoy.filters.http.ratelimit
+          typed_config:
+            "@type": type.googleapis.com/envoy.extensions.filters.http.ratelimit.v3.RateLimit
+            stat_prefix: global_rate_limiter
+            enable_x_ratelimit_headers: DRAFT_VERSION_03
+            # domain can be anything! Match it to the ratelimter service config
+            domain: ratelimit
+            failure_mode_deny: true
+            timeout: 10s
+            rate_limit_service:
+              grpc_service:
+                envoy_grpc:
+                  cluster_name: outbound|8081||ratelimit.ratelimit.svc.cluster.local
+                  authority: ratelimit.ratelimit.svc.cluster.local
+              transport_api_version: V3

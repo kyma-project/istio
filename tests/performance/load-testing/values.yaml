@@ -1,6 +1,13 @@
 istioJWT:
   enabled: true
 
+ratelimit:
+  local:
+    service: false
+    gateway: false
+  global:
+    service: false
+    gateway: false
 influxdb:
   initScripts:
     enabled: true

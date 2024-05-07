@@ -167,6 +167,7 @@ curl -i -H "X-Forwarded-For:175.1.23.5" -X GET "http://httpbin.local.kyma.dev/ge
 ```
 
 ### Scenario 4: Rate limiting by client cert
+There is no out of the box [Envoy RateLimit Action](https://www.envoyproxy.io/docs/envoy/latest/api-v3/config/route/v3/route_components.proto#config-route-v3-ratelimit-action) that supports the `X-Forwarded-Client-Cert` header. In this example the `request_headers` is used to extract the value from `X-Forwarded-Client-Cert` header.
 
 - Apply configuration
 ```bash
@@ -176,11 +177,9 @@ kubectl apply -f ./global/scenario-4-limit-by-client-cert.yaml
 ```bash
 kubectl delete pod -n ratelimit -l app=ratelimit
 ```
-
-- Test rate limiting
+- Test rate limiting by using `X-Forwarded-Client-Cert` added by Ingress Gateway. Since rate limiting is applied on sidecar
 ```bash
 curl -i -X GET "http://httpbin.local.kyma.dev/get"
-curl --cert client.crt --key client.key --cacert cacert.crt -X GET http://httpbin.local.kyma.dev/get
 ```
 
 ### Scenario 5: Rate limiting by multiple criteria: Rate Limit on header value and IP or existence of different header

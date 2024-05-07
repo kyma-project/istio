@@ -123,8 +123,17 @@ curl -ik -X GET "http://httpbin.local.kyma.dev/get"
 ```
 
 #### Scenario 4: Rate limiting by client cert
-There is no out of the box [Envoy RateLimit Action](https://www.envoyproxy.io/docs/envoy/latest/api-v3/config/route/v3/route_components.proto#config-route-v3-ratelimit-action) that supports the `X-Forwarded-Client-Cert` header. A workaround could be to use a `request_headers` like in Scenario 1 and match for the value or a `header_match` Action like in Scenario 2 and check if a matching header value.
-But this workaround would probably not cover the normal use case of rate limiting by client cert.
+There is no out of the box [Envoy RateLimit Action](https://www.envoyproxy.io/docs/envoy/latest/api-v3/config/route/v3/route_components.proto#config-route-v3-ratelimit-action) that supports the `X-Forwarded-Client-Cert` header. In this example the `request_headers` is used to extract the value from `X-Forwarded-Client-Cert` header.
+If we want to match the client cert only partial the `header_value_match` RateLimitAction can be used.
+
+- Update `CLIENT_CERT` descriptor to match one of the `X-Forwarded-Client-Cert` values added by ingressgateway and apply the configuration:
+```bash
+kubectl apply -f ./local/scenario-4-limit-by-static-client-cert.yaml
+```
+- Test rate limiting by using `X-Forwarded-Client-Cert` added by Ingress Gateway. Since rate limiting is applied on sidecar
+```bash
+curl -i -X GET "http://httpbin.local.kyma.dev/get"
+```
 
 #### Scenario 5: Rate limiting by multiple criteria: custom header existence and IP
 - Configure `spec.config.gatewayExternalTrafficPolicy: Local` in Istio CR to preserve the client IP

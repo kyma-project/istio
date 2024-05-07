@@ -8,7 +8,7 @@ data:
   config.yaml: |
     domain: ratelimit
     descriptors:
-      - key: USER_ID
+      - key: CLIENT_CERT
         rate_limit:
           unit: minute
           requests_per_unit: 5
@@ -38,10 +38,10 @@ spec:
           rate_limits:
             - actions:
                 - request_headers:
-                    header_name: "x-user-id"
-                    descriptor_key: "USER_ID"
+                    header_name: "X-Forwarded-Client-Cert"
+                    descriptor_key: "CLIENT_CERT"
 ---
-# EnvoyFilter Enabling Rate Limit Service for httpbin Sidecar
+# EnvoyFilter Enabling Rate Limit Service
 apiVersion: networking.istio.io/v1alpha3
 kind: EnvoyFilter
 metadata:

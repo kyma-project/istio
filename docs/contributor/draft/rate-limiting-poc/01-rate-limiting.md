@@ -51,8 +51,6 @@ In Envoy the rate limit filters are applied before RBAC filters. That means if a
 
 **Local:** A local rate limit is very useful when proxy instances can be horizontally scaled out based on the client load. In this scenario, since each proxy instance get its own rate limit quota, the traffic that the fleet of envoy proxies can handle increase when more proxy instances are spun up.
 
-TLDR comparsion:
-
 |                                                  | Global                                                                                                  | Local                                                                                                                                                             |
 |--------------------------------------------------|---------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Use Cases                                        | Consistent enforcement, quotas, centralized control                                                     | Resilience, Burst handling                                                                                                                                        |

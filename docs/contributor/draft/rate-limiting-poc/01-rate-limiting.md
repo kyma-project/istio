@@ -5,6 +5,19 @@ in the service sidecars.
 For some scenarios, it might be more efficient to do rate limiting before the traffic reaches the cluster/service mesh. This can be done by using rate limiting capabilities by services offered
 by cloud providers like GCP Cloud Armor, AWS WAF, Azure Front Door, etc.
 
+## When should a global or local rate limit be used?
+**Global:** If you want to enforce a global access control policy to a particular resource, then global rate limiting should be used. A typical scenario is to set how often a user can access an API according to the user’s service level agreement.
+
+**Local:** A local rate limit is very useful when proxy instances can be horizontally scaled out based on the client load. In this scenario, since each proxy instance get its own rate limit quota, the traffic that the fleet of envoy proxies can handle increase when more proxy instances are spun up.
+
+|                                                 | Global                                                                                                  | Local                                                                                                                                                             |
+|-------------------------------------------------|---------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Use Cases                                       | Consistent enforcement, quotas, centralized control                                                     | Resilience, Burst handling                                                                                                                                        |
+| Rate Limiting Descriptors                       | Supports Dynamic descriptors, e.g. for header values or Client IPs                                      | Supports only static descriptors                                                                                                                                  |
+| Implementation                                  | Centralized Rate Limit Service                                                                          | Each Envoy instance acts independently                                                                                                                            |
+| Communication                                   | gRPC communication with Rate limit service adds latency                                                 | No communication                                                                                                                                                  |
+| Default rate limiting when no descriptor matches | More complicated, since you need to define a default descriptor, e.g. Client IP, to apply rate limiting | Every rate limiting configuration needs a default token. This can also be a drawback, e.g. if this default is well configured the service would restrict traffic. |
+
 ## Common rate limit use cases
 
 - Rate limit for a client
@@ -46,17 +59,42 @@ More information can be found in the [Global Rate Limit Filter](https://www.envo
 ## Is there anything to consider when using rate limiting in combination with External Authorizer/Authorization Policies?
 In Envoy the rate limit filters are applied before RBAC filters. That means if a rate limiting is happened, the request is not forwarded to the RBAC filters and therefore external authorizer services should not be called.
 
-## When should a global or local rate limit be used?
-**Global:** If you want to enforce a global access control policy to a particular resource, then global rate limiting should be used. A typical scenario is to set how often a user can access an API according to the user’s service level agreement.
+## Namespace of EnvoyFilter
+Depending on if the rate limiting is applied to the ingress gateway or to the service sidecars, the EnvoyFilter should be applied to the respective namespace.
+For the service sidecars the EnvoyFilter must be applied to the namespace of the service. For the ingress gateway the EnvoyFilter must be applied to `istio-system`.
 
-**Local:** A local rate limit is very useful when proxy instances can be horizontally scaled out based on the client load. In this scenario, since each proxy instance get its own rate limit quota, the traffic that the fleet of envoy proxies can handle increase when more proxy instances are spun up.
+## Performance Testing
+Executed on Gardener GCP cluster with 3 nodes of n2-standard-4.
+For global rate limiting Envoy's reference Rate Limitings Service with a replica count of 3 was used. It's not clear if this is supported by the rate limiting service and if the rate limiting data in Redis is updated correctly, 
+but since we have the rate limiting configured in a way that it should never occur, it should not be a problem.
+ 
+From the performance tests, it can be seen that the rate limiting has a significant impact on the request duration. 
+While local rate limiting is performing better than global rate limiting, it's still a significant impact on the request duration.
+It's interesting that the worst performance is when global rate limiting is applied to the service sidecar. The reason for this might be, that we only have one httpbin instance as load testing service and therefore only one Envoy proxy that
+is invoking the rate limiting service. This might be a bottleneck in this scenario.
 
-|                                                  | Global                                                                                                  | Local                                                                                                                                                             |
-|--------------------------------------------------|---------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Use Cases                                        | Consistent enforcement, quotas, centralized control                                                     | Resilience, Burst handling                                                                                                                                        |
-| Rate Limiting Descriptors                        | Supports Dynamic descriptors, e.g. for header values or Client IPs                                      | Supports only static descriptors                                                                                                                                  |
-| Implementation                                   | Centralized Rate Limit Service                                                                          | Each Envoy instance acts independently                                                                                                                            |
-| Communication                                    | gRPC communication with Rate limit service adds latency                                                 | No communication                                                                                                                                                  |
-| Default rate limiting when no descriptor matches | More complicated, since you need to define a default descriptor, e.g. Client IP, to apply rate limiting | Every rate limiting configuration needs a default token. This can also be a drawback, e.g. if this default is well configured the service would restrict traffic. |
-
+- No rate limiting
+  - [Grafana](https://snapshots.raintank.io/dashboard/snapshot/WqB8kbgM2OylHOFD9xYty6Vodb6hwopJ?orgId=0)
+  - [K6 no sidecar summary](./perf_tests/no-rate-limit/summary-no-sidecar.html)
+  - [K6 sidecar summary](./perf_tests/no-rate-limit/summary-sidecar.html)
+- Local rate limiting on service sidecar
+  - [Grafana](https://snapshots.raintank.io/dashboard/snapshot/w2sc5TZWym9OaKBQml991CCTZx2T7cJa?orgId=0)
+  - [K6 no sidecar summary](perf_tests/local/rate-limit-on-sidecar/summary-no-sidecar.html)
+  - [K6 sidecar summary](perf_tests/local/rate-limit-on-sidecar/summary-sidecar.html)
+- Local rate limiting on Ingress Gateway
+  - [Grafana](https://snapshots.raintank.io/dashboard/snapshot/CL82OVZPfCFMgCuAvJ5hL8dR4o9xeRFo?orgId=0)
+  - [K6 no sidecar summary](perf_tests/local/rate-limit-on-gateway/summary-no-sidecar.html)
+  - [K6 sidecar summary](perf_tests/local/rate-limit-on-gateway/summary-sidecar.html)
+- Global rate limiting on service sidecar
+  - [Grafana](https://snapshots.raintank.io/dashboard/snapshot/q66lxmc9JGvbgoGHOaIzkIdNMAsf7vpP?orgId=0)
+  - [K6 no sidecar summary](perf_tests/global/rate-limit-on-sidecar/summary-no-sidecar.html)
+  - [K6 sidecar summary](perf_tests/global/rate-limit-on-sidecar/summary-sidecar.html)
+- Global rate limiting on Ingress Gateway
+  - [Grafana](https://snapshots.raintank.io/dashboard/snapshot/9P53uTH2Ss1yCdtAgtxcPUCXgsf8ADjC?orgId=0)
+  - [K6 no sidecar summary](perf_tests/global/rate-limit-on-gateway/summary-no-sidecar.html)
+  - [K6 sidecar summary](perf_tests/global/rate-limit-on-gateway/summary-sidecar.html)
+- Global rate limiting on Ingress Gateway and local rate limiting on sidecar
+  - [Grafana](https://snapshots.raintank.io/dashboard/snapshot/vT3OCvUwzvdKu0iEE3rLEHOWrtaqQiv9?orgId=0)
+  - [K6 no sidecar summary](perf_tests/global-local/summary-no-sidecar.html)
+  - [K6 sidecar summary](perf_tests/global-local/summary-sidecar.html)
 

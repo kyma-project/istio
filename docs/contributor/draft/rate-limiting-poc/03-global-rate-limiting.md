@@ -61,6 +61,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: ratelimit-config
+  namespace: ratelimit
 data:
   config.yaml: |
     domain: ratelimit

@@ -1,0 +1,584 @@
+{{- if .Values.ratelimit.local.service -}}
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: httpbin-local-ratelimit
+  namespace: default
+spec:
+  workloadSelector:
+    labels:
+      app: load-testing
+  configPatches:
+    - applyTo: HTTP_FILTER
+      match:
+        context: SIDECAR_INBOUND
+        listener:
+          filterChain:
+            filter:
+              name: "envoy.filters.network.http_connection_manager"
+      patch:
+        # This will add a globally disabled rate limiter. That is required to have a filter for a specific route.
+        operation: INSERT_BEFORE
+        value:
+          name: envoy.filters.http.local_ratelimit
+          typed_config:
+            "@type": type.googleapis.com/udpa.type.v1.TypedStruct
+            type_url: type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+            value:
+              stat_prefix: http_local_rate_limiter
+    - applyTo: HTTP_ROUTE
+      match:
+        context: SIDECAR_INBOUND
+        routeConfiguration:
+          vhost:
+            name: ""
+            route:
+              action: ANY
+      patch:
+        operation: MERGE
+        value:
+          route:
+            rate_limits:
+              - actions:
+                  - request_headers:
+                      header_name: "x-api-usage"
+                      descriptor_key: "API_USAGE"
+          typed_per_filter_config:
+            envoy.filters.http.local_ratelimit:
+              "@type": type.googleapis.com/udpa.type.v1.TypedStruct
+              type_url: type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+              value:
+                stat_prefix: api_usage_local_rate_limiter
+                enable_x_ratelimit_headers: DRAFT_VERSION_03
+                descriptors:
+                  - entries:
+                      - key: API_USAGE
+                        value: BASIC
+                    token_bucket:
+                      max_tokens: 2
+                      tokens_per_fill: 2
+                      fill_interval: 20s
+                  - entries:
+                      - key: API_USAGE
+                        value: PRO
+                    token_bucket:
+                      max_tokens: 10000
+                      tokens_per_fill: 10000
+                      fill_interval: 1s
+                filter_enabled:
+                  runtime_key: local_rate_limit_enabled
+                  default_value:
+                    numerator: 100
+                    denominator: HUNDRED
+                filter_enforced:
+                  runtime_key: local_rate_limit_enforced
+                  default_value:
+                    numerator: 100
+                    denominator: HUNDRED
+                # The token bucket must be set for the per route configuration otherwise the config will be rejected.
+                token_bucket:
+                  max_tokens: 100000
+                  tokens_per_fill: 100000
+                  fill_interval: 1s
+---
+{{- end }}
+{{- if .Values.ratelimit.local.gateway -}}
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: httpbin-local-ratelimit
+  namespace: istio-system
+spec:
+  workloadSelector:
+    labels:
+      istio: ingressgateway
+  configPatches:
+    - applyTo: HTTP_FILTER
+      match:
+        context: GATEWAY
+        listener:
+          filterChain:
+            filter:
+              name: "envoy.filters.network.http_connection_manager"
+      patch:
+        # This will add a globally disabled rate limiter. That is required to have a filter for a specific route.
+        operation: INSERT_BEFORE
+        value:
+          name: envoy.filters.http.local_ratelimit
+          typed_config:
+            "@type": type.googleapis.com/udpa.type.v1.TypedStruct
+            type_url: type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+            value:
+              stat_prefix: http_local_rate_limiter
+    - applyTo: HTTP_ROUTE
+      match:
+        context: GATEWAY
+        routeConfiguration:
+          vhost:
+            name: ""
+            route:
+              action: ANY
+      patch:
+        operation: MERGE
+        value:
+          route:
+            rate_limits:
+              - actions:
+                  - request_headers:
+                      header_name: "x-api-usage"
+                      descriptor_key: "API_USAGE"
+          typed_per_filter_config:
+            envoy.filters.http.local_ratelimit:
+              "@type": type.googleapis.com/udpa.type.v1.TypedStruct
+              type_url: type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+              value:
+                stat_prefix: api_usage_local_rate_limiter
+                enable_x_ratelimit_headers: DRAFT_VERSION_03
+                descriptors:
+                  - entries:
+                      - key: API_USAGE
+                        value: BASIC
+                    token_bucket:
+                      max_tokens: 2
+                      tokens_per_fill: 2
+                      fill_interval: 20s
+                  - entries:
+                      - key: API_USAGE
+                        value: PRO
+                    token_bucket:
+                      max_tokens: 10000
+                      tokens_per_fill: 10000
+                      fill_interval: 1s
+                filter_enabled:
+                  runtime_key: local_rate_limit_enabled
+                  default_value:
+                    numerator: 100
+                    denominator: HUNDRED
+                filter_enforced:
+                  runtime_key: local_rate_limit_enforced
+                  default_value:
+                    numerator: 100
+                    denominator: HUNDRED
+                # The token bucket must be set for the per route configuration otherwise the config will be rejected.
+                token_bucket:
+                  max_tokens: 100000
+                  tokens_per_fill: 100000
+                  fill_interval: 1s
+---
+{{- end }}
+{{- if .Values.ratelimit.global.service -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ratelimit-config
+  namespace: default
+data:
+  config.yaml: |
+    domain: ratelimit
+    descriptors:
+      - key: API_USAGE
+        value: BASIC
+        rate_limit:
+          unit: minute
+          requests_per_unit: 5
+      - key: API_USAGE
+        value: PRO
+        rate_limit:
+          unit: second
+          requests_per_unit: 10000
+      - key: API_USAGE
+        rate_limit:
+          unit: minute
+          requests_per_unit: 1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: default
+  labels:
+    app: redis
+spec:
+  ports:
+    - name: redis
+      port: 6379
+  selector:
+    app: redis
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - image: redis:alpine
+          imagePullPolicy: Always
+          name: redis
+          ports:
+            - name: redis
+              containerPort: 6379
+      restartPolicy: Always
+      serviceAccountName: ""
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ratelimit
+  namespace: default
+  labels:
+    app: ratelimit
+spec:
+  ports:
+    - name: http-port
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+    - name: grpc-port
+      port: 8081
+      targetPort: 8081
+      protocol: TCP
+    - name: http-debug
+      port: 6070
+      targetPort: 6070
+      protocol: TCP
+  selector:
+    app: ratelimit
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ratelimit
+  namespace: default
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ratelimit
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: ratelimit
+    spec:
+      containers:
+        - image: envoyproxy/ratelimit:9d8d70a8 # 2022/08/16
+          imagePullPolicy: Always
+          name: ratelimit
+          command: ["/bin/ratelimit"]
+          env:
+            - name: LOG_LEVEL
+              value: debug
+            - name: REDIS_SOCKET_TYPE
+              value: tcp
+            - name: REDIS_URL
+              value: redis:6379
+            - name: USE_STATSD
+              value: "false"
+            - name: RUNTIME_ROOT
+              value: /data
+            - name: RUNTIME_SUBDIRECTORY
+              value: ratelimit
+            - name: RUNTIME_WATCH_ROOT
+              value: "false"
+            - name: RUNTIME_IGNOREDOTFILES
+              value: "true"
+            - name: HOST
+              value: "::"
+            - name: GRPC_HOST
+              value: "::"
+          ports:
+            - containerPort: 8080
+            - containerPort: 8081
+            - containerPort: 6070
+          volumeMounts:
+            - name: config-volume
+              mountPath: /data/ratelimit/config
+      volumes:
+        - name: config-volume
+          configMap:
+            name: ratelimit-config
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: rate-limit-actions
+  namespace: default
+spec:
+  workloadSelector:
+    labels:
+      app: load-testing
+  configPatches:
+    - applyTo: VIRTUAL_HOST
+      match:
+        context: SIDECAR_INBOUND
+        routeConfiguration:
+          vhost:
+            name: ""
+            route:
+              action: ANY
+      patch:
+        operation: MERGE
+        value:
+          rate_limits:
+            - actions:
+                - request_headers:
+                    header_name: "x-api-usage"
+                    descriptor_key: "API_USAGE"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: global-ratelimit-service
+  namespace: default
+spec:
+  workloadSelector:
+    labels:
+      app: load-testing
+  configPatches:
+    - applyTo: HTTP_FILTER
+      match:
+        context: SIDECAR_INBOUND
+        listener:
+          filterChain:
+            filter:
+              name: "envoy.filters.network.http_connection_manager"
+              subFilter:
+                name: "envoy.filters.http.router"
+      patch:
+        operation: INSERT_BEFORE
+        value:
+          name: envoy.filters.http.ratelimit
+          typed_config:
+            "@type": type.googleapis.com/envoy.extensions.filters.http.ratelimit.v3.RateLimit
+            stat_prefix: global_rate_limiter
+            enable_x_ratelimit_headers: DRAFT_VERSION_03
+            # domain can be anything! Match it to the ratelimter service config
+            domain: ratelimit
+            failure_mode_deny: true
+            timeout: 10s
+            rate_limit_service:
+              grpc_service:
+                envoy_grpc:
+                  cluster_name: outbound|8081||ratelimit.default.svc.cluster.local
+                  authority: ratelimit.default.svc.cluster.local
+              transport_api_version: V3
+{{- end }}
+{{- if .Values.ratelimit.global.gateway -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ratelimit-config
+  namespace: default
+data:
+  config.yaml: |
+    domain: ratelimit
+    descriptors:
+      - key: API_USAGE
+        value: BASIC
+        rate_limit:
+          unit: minute
+          requests_per_unit: 5
+      - key: API_USAGE
+        value: PRO
+        rate_limit:
+          unit: second
+          requests_per_unit: 10000
+      - key: API_USAGE
+        rate_limit:
+          unit: minute
+          requests_per_unit: 1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: default
+  labels:
+    app: redis
+spec:
+  ports:
+    - name: redis
+      port: 6379
+  selector:
+    app: redis
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - image: redis:alpine
+          imagePullPolicy: Always
+          name: redis
+          ports:
+            - name: redis
+              containerPort: 6379
+      restartPolicy: Always
+      serviceAccountName: ""
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ratelimit
+  namespace: default
+  labels:
+    app: ratelimit
+spec:
+  ports:
+    - name: http-port
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+    - name: grpc-port
+      port: 8081
+      targetPort: 8081
+      protocol: TCP
+    - name: http-debug
+      port: 6070
+      targetPort: 6070
+      protocol: TCP
+  selector:
+    app: ratelimit
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ratelimit
+  namespace: default
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ratelimit
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: ratelimit
+    spec:
+      containers:
+        - image: envoyproxy/ratelimit:9d8d70a8 # 2022/08/16
+          imagePullPolicy: Always
+          name: ratelimit
+          command: ["/bin/ratelimit"]
+          env:
+            - name: LOG_LEVEL
+              value: debug
+            - name: REDIS_SOCKET_TYPE
+              value: tcp
+            - name: REDIS_URL
+              value: redis:6379
+            - name: USE_STATSD
+              value: "false"
+            - name: RUNTIME_ROOT
+              value: /data
+            - name: RUNTIME_SUBDIRECTORY
+              value: ratelimit
+            - name: RUNTIME_WATCH_ROOT
+              value: "false"
+            - name: RUNTIME_IGNOREDOTFILES
+              value: "true"
+            - name: HOST
+              value: "::"
+            - name: GRPC_HOST
+              value: "::"
+          ports:
+            - containerPort: 8080
+            - containerPort: 8081
+            - containerPort: 6070
+          volumeMounts:
+            - name: config-volume
+              mountPath: /data/ratelimit/config
+      volumes:
+        - name: config-volume
+          configMap:
+            name: ratelimit-config
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: rate-limit-actions
+  namespace: istio-system
+spec:
+  workloadSelector:
+    labels:
+      istio: ingressgateway
+  configPatches:
+    - applyTo: VIRTUAL_HOST
+      match:
+        context: GATEWAY
+        routeConfiguration:
+          vhost:
+            name: ""
+            route:
+              action: ANY
+      patch:
+        operation: MERGE
+        value:
+          rate_limits:
+            - actions:
+                - request_headers:
+                    header_name: "x-api-usage"
+                    descriptor_key: "API_USAGE"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: global-ratelimit-service
+  namespace: istio-system
+spec:
+  workloadSelector:
+    labels:
+      istio: ingressgateway
+  configPatches:
+    - applyTo: HTTP_FILTER
+      match:
+        context: GATEWAY
+        listener:
+          filterChain:
+            filter:
+              name: "envoy.filters.network.http_connection_manager"
+              subFilter:
+                name: "envoy.filters.http.router"
+      patch:
+        operation: INSERT_BEFORE
+        value:
+          name: envoy.filters.http.ratelimit
+          typed_config:
+            "@type": type.googleapis.com/envoy.extensions.filters.http.ratelimit.v3.RateLimit
+            stat_prefix: global_rate_limiter
+            enable_x_ratelimit_headers: DRAFT_VERSION_03
+            # domain can be anything! Match it to the ratelimter service config
+            domain: ratelimit
+            failure_mode_deny: true
+            timeout: 10s
+            rate_limit_service:
+              grpc_service:
+                envoy_grpc:
+                  cluster_name: outbound|8081||ratelimit.default.svc.cluster.local
+                  authority: ratelimit.default.svc.cluster.local
+              transport_api_version: V3
+{{- end }}

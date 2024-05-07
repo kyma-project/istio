@@ -36,19 +36,27 @@ let postRequestTrend = new Trend('post_request_duration', true);
 let DOMAIN = __ENV.DOMAIN
 
 export default function run() {
+    const params = {
+        headers: {
+            "x-api-usage":"PRO",
+        }
+    };
+
     if (__ENV.REQUEST_TYPE === "get") {
         group('get-request', function () {
-            get();
+            get(params);
         })
     } else {
         group('post-request', function () {
-            post();
+            post(params);
         })
     }
 }
 
-export function get() {
-    let resp = http.get(`https://hello.${DOMAIN}/headers`);
+export function get(params) {
+
+
+    let resp = http.get(`https://hello.${DOMAIN}/headers`, params);
     getRequestTrend.add(resp.timings.duration);
     if (!check(resp, {
         'is status 200': (r) => r.status === 200,
@@ -58,12 +66,12 @@ export function get() {
     }
 }
 
-export function post() {
+export function post(params) {
     const payload = JSON.stringify({
         'x': 'y'
     });
 
-    let resp = http.post(`https://hello.${DOMAIN}/post`, payload);
+    let resp = http.post(`https://hello.${DOMAIN}/post`, payload, params);
     postRequestTrend.add(resp.timings.duration);
     if (!check(resp, {
         'is status 200': (r) => r.status === 200,

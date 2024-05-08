@@ -1,0 +1,4 @@
+en:
+  spec.jwtRules: JWT Rules
+  spec.jwtRules.jwksUri: JWKS URI
+  spec.jwtRules.jwks: JWKS

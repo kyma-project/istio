@@ -3,9 +3,11 @@
 set -ex
 
 echo "Provisioning k3d cluster"
-kyma provision k3d
+k3d cluster create kyma --port 80:80@loadbalancer --port 443:443@loadbalancer --k3s-arg "--disable=traefik@server:0"  
 
 export KUBECONFIG=$(k3d kubeconfig merge kyma)
+
+kubectl create ns kyma-system
 
 echo "Apply istio"
 make create-kyma-system-ns

@@ -210,7 +210,7 @@ POST_IMAGE_VERSION=v$(shell date '+%Y%m%d')-$(shell printf %.8s ${PULL_BASE_SHA}
 
 .PHONY: istio-integration-test
 istio-integration-test: install deploy
-	# Increased TEST_REQUEST_TIMEOUT to 300s to avoid timeouts on newly created k3s clusters on Prow
+	# Increased TEST_REQUEST_TIMEOUT to 300s to avoid timeouts on newly created k3s clusters
 	cd tests/integration && TEST_REQUEST_TIMEOUT=300s && EXPORT_RESULT=true go test -v -timeout 35m -run TestIstioMain
 
 .PHONY: aws-integration-test
@@ -230,7 +230,7 @@ deploy-latest-release: create-kyma-system-ns
 # Latest release deployed on cluster is a prerequisite, it is handled by deploy-latest-release target
 .PHONY: istio-upgrade-integration-test
 istio-upgrade-integration-test: deploy-latest-release generate-integration-test-manifest
-	# Increased TEST_REQUEST_TIMEOUT to 300s to avoid timeouts on newly created k3s clusters on Prow
+	# Increased TEST_REQUEST_TIMEOUT to 300s to avoid timeouts on newly created k3s clusters
 	cd tests/integration &&  TEST_REQUEST_TIMEOUT=300s && EXPORT_RESULT=true go test -v -timeout 10m -run TestIstioUpgrade
 
 ########## Gardener specific ###########

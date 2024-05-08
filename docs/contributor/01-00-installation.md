@@ -27,7 +27,7 @@ export K3D_CLUSTER_NAME=kyma
 
 ```bash
 k3d registry create kyma-registry --port 5001
-k3d cluster create kyma --kubeconfig-switch-context -p 80:80@loadbalancer -p 443:443@loadbalancer --registry-use kyma-registry
+k3d cluster create kyma --kubeconfig-switch-context -p 80:80@loadbalancer -p 443:443@loadbalancer  --k3s-arg "--disable=traefik@server:0" --registry-use kyma-registry
 kubectl create ns kyma-system
 ```
 >**TIP:** To verify the correctness of the project, build it using the `make build` command.

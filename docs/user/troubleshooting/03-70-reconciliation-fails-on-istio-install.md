@@ -3,12 +3,12 @@
 ## Symptoms
 
 - The Istio Ingress Gateway Deployment, Istiod Deployment, or istio-cni-node DaemonSets are not getting up
-- Something new is stuck in the pod, and does not get up
-- Istio Module Operator return error on Istio Install phase
+- A non-default container is present in any of the above, and cannot start
+- Istio Custom Resource is in Error state
 
 ## Causes
 
-- The Istio Ingress Gateway Deployment, Istiod Deployment, or istio-cni-node DaemonSets pods template is modified, the new container is injected. The new container cannot get up in the pod for some reason, so the pod does not have status Running, and the install phase of the reconciliation fails.
+- The Istio Ingress Gateway Deployment, Istiod Deployment, or istio-cni-node DaemonSets might have a container injected by an outside component, for example with a mutating webhook. If the new container cannot start for any reason, the pod will not get to a Running state, failing Istio module reconciliation.
 
 ## Remedy
 

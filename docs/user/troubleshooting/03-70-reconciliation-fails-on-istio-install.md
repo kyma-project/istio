@@ -15,6 +15,5 @@
 1. Check if a given resource's pod template is modified with additional container
 2. Check if the new injected container is not getting up in the pod
 3. Remove new additional injected container from the pod template in the given resource
-4. Now new pods should work as expected.
-5. Istio reconciliation loop should now pass the Installation step
+4. If error persists, check if there might be a mutating webhook in the cluster that is modifying Istio resources
 

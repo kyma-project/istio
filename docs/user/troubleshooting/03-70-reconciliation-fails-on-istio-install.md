@@ -13,7 +13,7 @@
 ## Remedy
 
 1. Check if a given resource's Pod template has been modified to include an additional container.
-2. Check if the new injected container is not getting up in the pod
+2. Check if the newly injected container fails to start.
 3. If the container is unable to start, remove it from the Pod template of the given resource.
 4. If the error persists, check if there is a mutating webhook in the cluster that is modifying Istio resources.
 

@@ -14,6 +14,12 @@
 
 1. Check if a given resource's Pod template has been modified to include an additional container.
 2. Check if the newly injected container fails to start.
-3. If the container is unable to start, remove it from the Pod template of the given resource.
-4. If the error persists, check if there is a mutating webhook in the cluster that is modifying Istio resources.
 
+> [!TIP]
+> To retrieve information for the above steps, you can use command `kubectl describe <resource> -n istio-system -o yaml`
+
+3. If the container is unable to start, remove it from the Pod template of the given resource.
+
+   `kubectl edit <resource> -n istio-system`
+
+4. If the error persists, check if there is a mutating webhook in the cluster that is modifying Istio resources.

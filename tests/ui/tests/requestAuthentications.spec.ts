@@ -17,7 +17,7 @@ context('RequestAuthentications', () => {
         cy.deleteNamespace(namespaceName);
     });
 
-    it('should create new with two JWT Rules', () => {
+    it('should create new with two JWT Rules and no selector', () => {
         cy.navigateToRequestAuthentications(namespaceName);
         cy.clickCreateButton();
 
@@ -64,9 +64,11 @@ context('RequestAuthentications', () => {
 
         assertJwtRule(jwtRule);
         assertJwtRule(jwtRule2);
+
+        cy.contains("Matches all Pods in the Namespace")
     });
 
-    it('should render pod for matchSelector in details', () => {
+    it('should render pod for selector in details', () => {
 
         const podName = generateRandomName("reqauth-pod")
         cy.createHttpbinSleepPod(podName, namespaceName);

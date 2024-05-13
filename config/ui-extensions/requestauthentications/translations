@@ -9,3 +9,5 @@ en:
   spec.jwtRules.fromHeaders: From Headers
   spec.jwtRules.fromHeaders.name: Name
   spec.jwtRules.fromHeaders.prefix: Prefix
+  spec.selector.matchLabels: Selector
+  selector.matchesAllPods: Matches all Pods in the Namespace

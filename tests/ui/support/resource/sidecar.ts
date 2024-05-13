@@ -18,8 +18,8 @@ Cypress.Commands.add('sidecarAddIngress', (ingress: SidecarIngress): void => {
     cy.addFormGroupItem('[aria-label="expand Ingress"]:visible');
     cy.get('[aria-label="expand Port"]:visible').click();
 
-    cy.inputClearAndType('[placeholder="Enter the port number"]', ingress.port.toString());
+    cy.inputClearAndType('[data-testid="spec.ingress.0.port.number"]', ingress.port.toString());
     cy.chooseComboboxOption('[data-testid="spec.ingress.0.port.protocol"]', ingress.protocol);
     cy.inputClearAndType('[aria-label="Sidecar name"]', ingress.name, true);
-    cy.inputClearAndType('[placeholder="For example, 127.0.0.1:PORT"]', ingress.defaultEndpoint);
+    cy.inputClearAndType('[data-testid="spec.ingress.0.defaultEndpoint"]', ingress.defaultEndpoint);
 });

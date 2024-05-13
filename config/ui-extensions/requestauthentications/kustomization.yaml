@@ -3,6 +3,8 @@ configMapGenerator:
   namespace: kyma-system
   files:
   - general
+  - dataSources
+  - details
   - form
   - translations
   options:

@@ -1,0 +1,51 @@
+body:
+  - source: spec.jwtRules
+    name: spec.jwtRules
+    showHeader: false
+    widget: Table
+    collapsibleTitle: '"Issuer " & $item.issuer'
+    collapsible:
+      - source: issuer
+        name: spec.jwtRules.issuer
+        widget: Text
+      - source: jwksUri
+        name: spec.jwtRules.jwksUri
+        widget: Text
+      - source: audiences
+        name: spec.jwtRules.audiences
+        widget: JoinedArray
+      - source: fromParams
+        name: spec.jwtRules.fromParams
+        widget: JoinedArray
+      - source: fromCookies
+        name: spec.jwtRules.fromCookies
+        widget: JoinedArray
+      - source: fromHeaders
+        name: spec.jwtRules.fromHeaders
+        widget: Table
+        showHeader: false
+        collapsibleTitle: '"Header " & $item.name'
+        collapsible:
+          - source: name
+            name: spec.jwtRules.fromHeaders.name
+            widget: Text
+          - source: prefix
+            name: spec.jwtRules.fromHeaders.prefix
+            widget: Text
+  - widget: Panel
+    name: spec.selector.matchLabels
+    disablePadding: true
+    children:
+      - source: $podSelector()
+        widget: ResourceList
+        disableCreate: true
+        visibility: $exists($root.spec.selector.matchLabels) and $boolean($root.spec.selector.matchLabels)
+      - source: spec.selector
+        widget: Panel
+        name: selector.matchesAllPods
+        visibility: $not($exists($value)) or $not($boolean($value))
+    header:
+      - source: spec.selector.matchLabels
+        widget: Labels
+        name: spec.selector.matchLabels
+        visibility: $exists($value) and $boolean($value)

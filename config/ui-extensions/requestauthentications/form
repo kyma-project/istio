@@ -9,9 +9,15 @@
     - path: '[].issuer'
     - path: '[].jwksUri'
       name: spec.jwtRules.jwksUri
-    - path: '[].jwks'
-      name: spec.jwtRules.jwks
     - path: '[].audiences'
+      widget: SimpleList
+      children:
+          - path: '[]'
+    - path: '[].fromParams'
+      widget: SimpleList
+      children:
+          - path: '[]'
+    - path: '[].fromCookies'
       widget: SimpleList
       children:
           - path: '[]'
@@ -21,11 +27,3 @@
       children:
         - path: '[].name'
         - path: '[].prefix'
-    - path: '[].fromParams'
-      widget: SimpleList
-      children:
-          - path: '[]'
-    - path: '[].fromCookies'
-      widget: SimpleList
-      children:
-          - path: '[]'

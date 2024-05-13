@@ -65,6 +65,22 @@ context('RequestAuthenticationss', () => {
         assertJwtRule(jwtRule);
         assertJwtRule(jwtRule2);
     });
+
+    it('should render pod for matchSelector in details', () => {
+
+        const podName = generateRandomName("reqauth-pod")
+        cy.createHttpbinSleepPod(podName, namespaceName);
+        cy.navigateToRequestAuthentications(namespaceName);
+        cy.clickCreateButton();
+
+        cy.requestAuthenticationTypeName(reqAuthName);
+        cy.requestAuthenticationAddMatchLabel({key: "app", value: podName});
+        cy.clickCreateButton();
+
+        // Verify the details
+        cy.contains(`${podName}`).should('be.visible');
+        cy.contains(`app=${podName}`).should('be.visible');
+    });
 })
 
 function assertJwtRule(rule: JwtRule) {

@@ -2,6 +2,7 @@ export interface RequestAuthenticationCommands {
     requestAuthenticationTypeName(name: string): void
     requestAuthenticationAddJwtRule(rule: JwtRule, numberOfJwtRule?: number): void
     requestAuthenticationAddJwtRules(rules: JwtRule[]): void
+    requestAuthenticationAddMatchLabel(label: Label): void
 }
 
 export type JwtRule = {
@@ -18,8 +19,23 @@ export type FromHeaders = {
     prefix: string;
 }
 
+export type Label = {
+    key: string;
+    value: string;
+}
+
 Cypress.Commands.add('requestAuthenticationTypeName', (name: string): void => {
     cy.inputClearAndType('ui5-input[aria-label="RequestAuthentication name"]', name);
+});
+Cypress.Commands.add('requestAuthenticationAddMatchLabel', (label: Label): void => {
+    cy.inputClearAndType('ui5-input[placeholder="Enter key"]:visible', label.key);
+    cy.get('ui5-input[placeholder="Enter value"]:visible')
+        .eq(0)
+        .scrollIntoView()
+        .find('input:visible')
+        .click()
+        .clear({force: true})
+        .type(label.value, {force: true});
 });
 
 Cypress.Commands.add('requestAuthenticationAddJwtRules', (rules: JwtRule[]): void => {

@@ -8,7 +8,7 @@
 
 ## Cause
 
-- The Istio Ingress Gateway Deployment, Istiod Deployment, or istio-cni-node DaemonSets might have a container injected by an outside component, for example with a mutating webhook. If the new container cannot start for any reason, the pod will not get to a Running state, failing Istio module reconciliation.
+- If an external component, like a mutating webhook, adds a container to the Istio Ingress Gateway Deployment, Istiod Deployment, or Istio CNI DaemonSets, and that new container fails to start for any reason, the Pod is unable to reach the `Running` state. As a result, the Istio module reconciliation fails.
 
 ## Remedy
 

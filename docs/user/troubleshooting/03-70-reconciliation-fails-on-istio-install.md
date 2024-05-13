@@ -16,10 +16,10 @@
 2. Check if the newly injected container fails to start.
 
 > [!TIP]
-> To retrieve information for the above steps, you can use command `kubectl describe <resource> -n istio-system -o yaml`
+> To retrieve information for the above steps, you can use the command `kubectl describe {RESOURCE_NAME} -n istio-system -o yaml`.
 
 3. If the container is unable to start, remove it from the Pod template of the given resource.
 
-   `kubectl edit <resource> -n istio-system`
+   `kubectl edit {RESOURCE_NAME} -n istio-system`
 
 4. If the error persists, check if there is a mutating webhook in the cluster that is modifying Istio resources.

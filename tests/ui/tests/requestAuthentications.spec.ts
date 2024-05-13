@@ -1,7 +1,7 @@
 import {generateNamespaceName, generateRandomName} from "../support";
 import {JwtRule} from "../support/resource/requestAuthentication";
 
-context('RequestAuthenticationss', () => {
+context('RequestAuthentications', () => {
 
     let namespaceName: string;
     let reqAuthName: string;

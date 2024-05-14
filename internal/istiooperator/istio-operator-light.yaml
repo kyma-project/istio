@@ -61,7 +61,7 @@ spec:
                   topologyKey: kubernetes.io/hostname
                 weight: 100
         hpaSpec:
-          maxReplicas: 5
+          maxReplicas: 1
           minReplicas: 1
         resources:
           limits:
@@ -308,7 +308,7 @@ spec:
       injectionURL: ""
     pilot:
       autoscaleEnabled: true
-      autoscaleMax: 5
+      autoscaleMax: 1
       autoscaleMin: 1
       configMap: true
       cpu:

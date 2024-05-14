@@ -44,7 +44,7 @@ Istio Controller installs Istio with a configuration that depends in the cluster
 | Component       | Min replicas | Max replicas |
 |-----------------|--------------|--------------|
 | Pilot           | 1            | 1            |
-| Ingress Gateway | 1            | 3            |
+| Ingress Gateway | 1            | 1            |
 
 ### CNI Autoscaling
 

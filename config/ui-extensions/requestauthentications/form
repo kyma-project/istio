@@ -1,0 +1,29 @@
+- path: spec.selector.matchLabels
+  widget: KeyValuePair
+  defaultExpanded: true
+- path: spec.jwtRules
+  name: spec.jwtRules
+  widget: GenericList
+  simple: true
+  children:
+    - path: '[].issuer'
+    - path: '[].jwksUri'
+      name: spec.jwtRules.jwksUri
+    - path: '[].audiences'
+      widget: SimpleList
+      children:
+          - path: '[]'
+    - path: '[].fromParams'
+      widget: SimpleList
+      children:
+          - path: '[]'
+    - path: '[].fromCookies'
+      widget: SimpleList
+      children:
+          - path: '[]'
+    - path: '[].fromHeaders'
+      simple: true
+      widget: GenericList
+      children:
+        - path: '[].name'
+        - path: '[].prefix'

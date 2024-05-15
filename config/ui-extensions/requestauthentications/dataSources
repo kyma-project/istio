@@ -1,0 +1,5 @@
+podSelector:
+  resource:
+    kind: Pod
+    version: v1
+  filter: $matchByLabelSelector($item, $root.spec.selector.matchLabels)

@@ -1,0 +1,13 @@
+en:
+  spec.jwtRules: JWT Rules
+  spec.jwtRules.issuer: Issuer
+  spec.jwtRules.jwksUri: JWKS URI
+  spec.jwtRules.jwks: JWKS
+  spec.jwtRules.audiences: Audiences
+  spec.jwtRules.fromParams: From Params
+  spec.jwtRules.fromCookies: From Cookies
+  spec.jwtRules.fromHeaders: From Headers
+  spec.jwtRules.fromHeaders.name: Name
+  spec.jwtRules.fromHeaders.prefix: Prefix
+  spec.selector.matchLabels: Selector
+  selector.matchesAllPods: Matches all Pods in the Namespace

@@ -5,5 +5,6 @@ import './virtualService';
 import './serviceEntry';
 import './sidecar';
 import './telemetries';
+import './requestAuthentication';
 
 export { Commands as ResourceCommands } from "./commands";

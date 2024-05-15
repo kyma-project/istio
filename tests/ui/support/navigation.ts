@@ -7,6 +7,8 @@ export interface NavigationCommands {
     navigateToAuthorizationPolicies(namespace: string): void
     navigateToTelemetries(namespace: string): void
     navigateToTelemetry(name: string, namespace: string): void
+    navigateToRequestAuthentications(namespace: string): void
+    navigateToRequestAuthentication(name: string, namespace: string): void
     navigateToDestinationRule(name: string, namespace: string): void
     navigateToDestinationRules(namespace: string): void
     navigateToGateway(name: string, namespace: string): void
@@ -113,6 +115,20 @@ Cypress.Commands.add('navigateToSidecar', (namespace: string, name: string): voi
 Cypress.Commands.add('navigateToSidecars', (namespace: string): void => {
     cy.wrap(getK8sCurrentContext()).then((context) => {
         cy.visit(`${config.clusterAddress}/cluster/${context}/namespaces/${namespace}/sidecars`)
+        cy.wait(2000);
+    });
+});
+
+Cypress.Commands.add('navigateToRequestAuthentication', (namespace: string, name: string): void => {
+    cy.wrap(getK8sCurrentContext()).then((context) => {
+        cy.visit(`${config.clusterAddress}/cluster/${context}/namespaces/${namespace}/requestauthentications/${name}`)
+        cy.wait(2000);
+    });
+});
+
+Cypress.Commands.add('navigateToRequestAuthentications', (namespace: string): void => {
+    cy.wrap(getK8sCurrentContext()).then((context) => {
+        cy.visit(`${config.clusterAddress}/cluster/${context}/namespaces/${namespace}/requestauthentications`)
         cy.wait(2000);
     });
 });

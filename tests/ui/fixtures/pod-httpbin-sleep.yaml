@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: placeholderName
+  namespace: placeholderNamespace
+  labels:
+    app: placeholderName
+spec:
+  containers:
+    - name: test-container
+      image: eu.gcr.io/kyma-project/external/kennethreitz/httpbin
+      command: ["/bin/sh", "-c"]
+      args:
+        - while true; do sleep 1; done;

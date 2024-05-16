@@ -27,6 +27,6 @@ Cypress.Commands.add('serviceEntrySelectLocation', (value: string): void => {
 
 Cypress.Commands.add('serviceEntryTypeAddress', (value: string): void => {
     cy.get('[aria-label="expand Addresses"]:visible').click();
-    cy.inputClearAndType('[placeholder="For example, 127.0.0.1"]:visible', value);
+    cy.inputClearAndType('[data-testid="spec.addresses.0"]', value);
 });
 

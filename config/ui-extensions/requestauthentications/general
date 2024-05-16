@@ -1,0 +1,12 @@
+resource:
+  kind: RequestAuthentication
+  group: security.istio.io
+  version: v1beta1
+urlPath: requestauthentications
+category: Istio
+name: Request Authentications
+scope: namespace
+description: >-
+  {{[Istio Request Authentication](https://istio.io/latest/docs/reference/config/security/request_authentication)}}
+  defines what request authentication methods are supported by a workload.
+

@@ -29,7 +29,6 @@ jobs:
           GARDENER_PROVIDER_SECRET_NAME: "goat"
           GARDENER_PROVIDER: "gcp"
           GARDENER_REGION: "europe-west3"
-          GARDENER_ZONES: "europe-west3-c,europe-west3-b,europe-west3-a"
           GARDENER_CLUSTER_VERSION: "1.27"
           GARDENER_GARDENLINUX_VERSION: "1312.3.0"
           MACHINE_TYPE: "n2-standard-4"

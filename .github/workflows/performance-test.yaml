@@ -30,7 +30,6 @@ jobs:
           GARDENER_PROVIDER: "gcp"
           GARDENER_REGION: "europe-west3"
           GARDENER_CLUSTER_VERSION: "1.27"
-          GARDENER_GARDENLINUX_VERSION: "1312.3.0"
           MACHINE_TYPE: "n2-standard-4"
           DISK_SIZE: 50
           DISK_TYPE: "pd-standard"

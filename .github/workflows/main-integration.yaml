@@ -81,7 +81,6 @@ jobs:
           GARDENER_PROVIDER: "gcp"
           GARDENER_REGION: "europe-west3"
           GARDENER_CLUSTER_VERSION: "1.28"
-          GARDENER_GARDENLINUX_VERSION: "1312.3.0"
           MACHINE_TYPE: "n2-standard-4"
           DISK_SIZE: 50
           DISK_TYPE: "pd-standard"
@@ -112,7 +111,6 @@ jobs:
           GARDENER_PROVIDER: "aws"
           GARDENER_CLUSTER_VERSION: "1.28"
           GARDENER_REGION: "eu-west-1"
-          GARDENER_GARDENLINUX_VERSION: "1312.3.0"
           MACHINE_TYPE: "m5.xlarge"
           DISK_SIZE: 50
           DISK_TYPE: "gp2"
@@ -143,7 +141,6 @@ jobs:
           GARDENER_PROVIDER: "gcp"
           GARDENER_REGION: "europe-west3"
           GARDENER_CLUSTER_VERSION: "1.28"
-          GARDENER_GARDENLINUX_VERSION: "1312.3.0"
           MACHINE_TYPE: "n2-standard-4"
           DISK_SIZE: 50
           DISK_TYPE: "pd-standard"
@@ -174,7 +171,6 @@ jobs:
           GARDENER_PROVIDER: "aws"
           GARDENER_CLUSTER_VERSION: "1.28"
           GARDENER_REGION: "eu-west-1"
-          GARDENER_GARDENLINUX_VERSION: "1312.3.0"
           MACHINE_TYPE: "m5.xlarge"
           DISK_SIZE: 50
           DISK_TYPE: "gp2"

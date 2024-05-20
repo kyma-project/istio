@@ -37,14 +37,14 @@ Cypress.Commands.add('navigateToAuthorizationPolicies', (namespace: string): voi
 
 Cypress.Commands.add('navigateToTelemetries', (namespace: string): void => {
     cy.wrap(getK8sCurrentContext()).then((context) => {
-        cy.visit(`${config.clusterAddress}/cluster/${context}/namespaces/${namespace}/telemetries`)
+        cy.visit(`${config.clusterAddress}/cluster/${context}/namespaces/${namespace}/istio-telemetries`)
         cy.wait(2000);
     });
 });
 
 Cypress.Commands.add('navigateToTelemetry', (namespace: string, name: string): void => {
     cy.wrap(getK8sCurrentContext()).then((context) => {
-        cy.visit(`${config.clusterAddress}/cluster/${context}/namespaces/${namespace}/telemetries/${name}`)
+        cy.visit(`${config.clusterAddress}/cluster/${context}/namespaces/${namespace}/istio-telemetries/${name}`)
         cy.wait(2000);
     });
 });

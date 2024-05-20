@@ -11,5 +11,5 @@ features:
     disableCreate: true
     disableDelete: true
 description: >-
-  {{[Istio CR](https://github.com/kyma-project/istio/blob/main/config/samples/operator_v1alpha2_istio.yaml)}}
-  describes the Istio module
+  {{[Istio custom resource ](https://kyma-project.io/#/istio/user/04-00-istio-custom-resource)}}
+  configures the Istio module.

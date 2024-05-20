@@ -27,11 +27,11 @@ require (
 	istio.io/api v1.21.2
 	istio.io/client-go v1.21.2
 	istio.io/istio v0.0.0-20240418224740-ed90e14d3473
-	k8s.io/api v0.29.4
-	k8s.io/apiextensions-apiserver v0.29.4
-	k8s.io/apimachinery v0.29.4
-	k8s.io/client-go v0.29.4
-	k8s.io/kubectl v0.29.4
+	k8s.io/api v0.29.5
+	k8s.io/apiextensions-apiserver v0.29.5
+	k8s.io/apimachinery v0.29.5
+	k8s.io/client-go v0.29.5
+	k8s.io/kubectl v0.29.5
 	k8s.io/utils v0.0.0-20240102154912-e7106e64919e
 	sigs.k8s.io/controller-runtime v0.16.3 // Since we are using the Istio library directly, we should also use the controller-runtime version that is used by Istio.
 	sigs.k8s.io/yaml v1.4.0
@@ -196,9 +196,9 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	helm.sh/helm/v3 v3.14.2 // indirect
-	k8s.io/apiserver v0.29.4 // indirect
-	k8s.io/cli-runtime v0.29.4 // indirect
-	k8s.io/component-base v0.29.4 // indirect
+	k8s.io/apiserver v0.29.5 // indirect
+	k8s.io/cli-runtime v0.29.5 // indirect
+	k8s.io/component-base v0.29.5 // indirect
 	k8s.io/klog/v2 v2.120.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20240105020646-a37d4de58910 // indirect
 	sigs.k8s.io/gateway-api v1.0.1-0.20240112015229-444631bfe06f // indirect

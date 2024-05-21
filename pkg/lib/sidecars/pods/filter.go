@@ -7,7 +7,8 @@ import (
 )
 
 const (
-	istioSidecarName = "istio-proxy"
+	istioSidecarName                         = "istio-proxy"
+	istioSidecarCustomImageAnnotation string = "sidecar.istio.io/proxyImage"
 )
 
 type RestartProxyPredicate struct {
@@ -38,6 +39,7 @@ func (r RestartProxyPredicate) NewProxyRestartEvaluator(_ context.Context) (filt
 func needsRestart(pod v1.Pod, expectedImage SidecarImage, expectedResources v1.ResourceRequirements) bool {
 	return HasIstioSidecarStatusAnnotation(pod) &&
 		IsPodReady(pod) &&
+		!hasCustomImageAnnotation(pod) &&
 		(hasSidecarContainerWithWithDifferentImage(pod, expectedImage) || hasDifferentSidecarResources(pod, expectedResources))
 }
 
@@ -62,6 +64,11 @@ func hasTrueStatusConditions(pod v1.Pod) bool {
 
 func isPodRunning(pod v1.Pod) bool {
 	return pod.Status.Phase == v1.PodRunning
+}
+
+func hasCustomImageAnnotation(pod v1.Pod) bool {
+	_, found := pod.Annotations[istioSidecarCustomImageAnnotation]
+	return found
 }
 
 func hasSidecarContainerWithWithDifferentImage(pod v1.Pod, expectedImage SidecarImage) bool {

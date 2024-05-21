@@ -37,6 +37,6 @@ Application resiliency is an important topic within traffic management. Traditio
 [Check if you have automatic Istio sidecar proxy injection enabled](./operation-guides/02-10-check-if-sidecar-injection-is-enabled.md) and learn how to [enable automatic Istio sidecar proxy injection](./operation-guides/02-20-enable-sidecar-injection.md).
 Follow the troubleshooting guides if you experience [issues with Istio sidecar injection](./troubleshooting/03-30-istio-no-sidecar.md) or have [incompatible Istio sidecar version after Kyma Istio Operator's upgrade](./troubleshooting/03-40-incompatible-istio-sidecar-version.md).
 
-## Custom image for Istio sidecar
+## Custom Image for Istio Sidecar
 
-If custom image is set for proxy sidecar [docs](https://istio.io/latest/docs/reference/config/annotations/#SidecarProxyImage), the proxy using custom image will not be restarted by Istio Operator.
+Istio Operator does not restart an Istio sidecar proxy, if it has a custom image set. See [Resource Annotations](https://istio.io/latest/docs/reference/config/annotations/#SidecarProxyImage).

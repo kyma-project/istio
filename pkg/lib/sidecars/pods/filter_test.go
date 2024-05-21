@@ -11,7 +11,7 @@ import (
 
 var _ = Describe("Evaluate restart", func() {
 	It("should should return false when pod has custom image annotation", func() {
-		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", map[string]string{"sidecar.istio.io/proxyImage": "istio/proxyv2:1.22.0"})
+		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", map[string]string{"sidecar.istio.io/proxyImage": "istio/proxyv2:1.21.0"})
 
 		predicate := pods.NewRestartProxyPredicate(pods.NewSidecarImage("istio", "1.22.0"), v1.ResourceRequirements{})
 		evaluator, err := predicate.NewProxyRestartEvaluator(context.Background())

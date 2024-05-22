@@ -9,6 +9,7 @@ Istio Controller is part of Kyma Istio Operator. Its role is to manage the insta
 ## Istio Version
 
 The version of Istio is dependent on the version of Istio Controller that you use. This means that if a new version of Istio Controller introduces a new version of Istio, deploying the controller will automatically trigger an upgrade of Istio.
+However, it is only allowed to skip a version of Istio Controller if the difference between the minor version of Istio it contains and the minor version of Istio you're using is not greater than one (for example, 1.2.3 -> 1.3.0). Upgrading the major version (for example, 1.2.3 -> 2.0.0) is not supported as well as any downgrade.
 
 ## Istio Custom Resource
 

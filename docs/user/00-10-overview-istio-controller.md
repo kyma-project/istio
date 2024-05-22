@@ -12,7 +12,7 @@ The version of Istio is dependent on the version of Istio Controller that you us
 
 ## Upgrades and Downgrades
 
-It is only allowed to skip a version of Kyma Istio Operator if the difference between the minor version of Istio it contains and the minor version of Istio you're using is not greater than one.
+It is only allowed to skip a version of Kyma Istio Operator if the difference between the minor version of Istio it contains and the minor version of Istio you're using is not greater than one (for example, 1.2.3 -> 1.3.0).
 If the difference is greater than one minor version (for example, 1.2.3 -> 1.4.0), the reconciliation fails.
 The same happens if you try to update the major version (1.2.3 -> 2.0.0) or downgrade the version. Such scenarios are not supported.
 

@@ -10,6 +10,12 @@ Istio Controller is part of Kyma Istio Operator. Its role is to manage the insta
 
 The version of Istio is dependent on the version of Istio Controller that you use. This means that if a new version of Istio Controller introduces a new version of Istio, deploying the controller will automatically trigger an upgrade of Istio.
 
+## Upgrades and Downgrades
+
+You can only skip a version of Kyma Istio Operator if the difference between the minor version of Istio it contains and the minor version of Istio you're using is not greater than one (for example, 1.2.3 -> 1.3.0).
+If the difference is greater than one minor version (for example, 1.2.3 -> 1.4.0), the reconciliation fails.
+The same happens if you try to update the major version (for example, 1.2.3 -> 2.0.0) or downgrade the version. Such scenarios are not supported.
+
 ## Istio Custom Resource
 
 The `istios.operator.kyma-project.io` CustomResourceDefinition (CRD) describes the Istio CR that is used to manage the Istio installation. To learn more, read the [Istio CR documentation](04-00-istio-custom-resource.md).

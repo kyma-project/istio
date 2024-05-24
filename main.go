@@ -46,7 +46,7 @@ import (
 const (
 	rateLimiterBurstDefault       = 200
 	rateLimiterFrequencyDefault   = 30
-	failureBaseDelayDefault       = 1 * time.Second
+	failureBaseDelayDefault       = 2 * time.Second
 	failureMaxDelayDefault        = 1000 * time.Second
 	reconciliationIntervalDefault = 10 * time.Hour
 )

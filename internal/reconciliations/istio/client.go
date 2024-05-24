@@ -3,12 +3,7 @@ package istio
 import (
 	"context"
 	"fmt"
-	"os"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
-	"sync"
-	"time"
-
+	"github.com/pkg/errors"
 	"istio.io/api/operator/v1alpha1"
 	"istio.io/istio/istioctl/pkg/install/k8sversion"
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
@@ -22,7 +17,13 @@ import (
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
+	"os"
+	"os/exec"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
+	"sync"
+	"time"
 
 	istio "istio.io/istio/operator/cmd/mesh"
 	"istio.io/istio/operator/pkg/util/clog"
@@ -49,31 +50,33 @@ func NewIstioClient() *IstioClient {
 	return &IstioClient{istioLogOptions: istioLogOptions, consoleLogger: consoleLogger, printer: printer}
 }
 
+func installIstioInExternalProcess(mergedIstioOperatorPath string) error {
+	istioInstallPath, ok := os.LookupEnv("ISTIO_INSTALL_BIN_PATH")
+	if !ok {
+		istioInstallPath = "./istio_install"
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*6)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, istioInstallPath, mergedIstioOperatorPath)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+
+	if err != nil {
+		// We should not return the error of the external process, because it is always "exit status 1" and we do
+		// not want to show such an error in the resource status
+		return errors.New("Istio installation resulted in an error")
+	}
+
+	return nil
+}
+
 func (c *IstioClient) Install(mergedIstioOperatorPath string) error {
+	err := installIstioInExternalProcess(mergedIstioOperatorPath)
 
-	rc, err := kube.DefaultRestConfig("", "", func(config *rest.Config) {
-		config.QPS = 50
-		config.Burst = 100
-	})
 	if err != nil {
-		return err
-	}
-
-	cliClient, err := kube.NewCLIClient(kube.NewClientConfigForRestConfig(rc), "")
-	if err != nil {
-		return err
-	}
-
-	if err := k8sversion.IsK8VersionSupported(cliClient, c.consoleLogger); err != nil {
-		return err
-	}
-
-	iopFileNames := make([]string, 0, 1)
-	iopFileNames = append(iopFileNames, mergedIstioOperatorPath)
-	// We don't want to verify after installation, because it is unreliable
-	installArgs := &istio.InstallArgs{ReadinessTimeout: 150 * time.Second, SkipConfirmation: true, Verify: false, InFilenames: iopFileNames}
-
-	if err := istio.Install(cliClient, &istio.RootArgs{}, installArgs, c.istioLogOptions, os.Stdout, c.consoleLogger, c.printer); err != nil {
 		return err
 	}
 

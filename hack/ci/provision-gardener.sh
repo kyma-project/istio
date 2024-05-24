@@ -43,6 +43,8 @@ echo "$shoot_template" | kubectl --kubeconfig "${GARDENER_KUBECONFIG}" apply -f 
 echo "waiting fo cluster to be ready..."
 kubectl wait  --kubeconfig "${GARDENER_KUBECONFIG}" --for=condition=EveryNodeReady shoot/${CLUSTER_NAME} --timeout=17m
 
+sleep 120
+
 # create kubeconfig request, that creates a kubeconfig which is valid for one day
 kubectl create  --kubeconfig "${GARDENER_KUBECONFIG}" \
     -f <(printf '{"spec":{"expirationSeconds":86400}}') \

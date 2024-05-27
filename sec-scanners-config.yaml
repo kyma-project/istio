@@ -11,3 +11,4 @@ whitesource:
     - "**/tests/**"
     - "**/test/**"
     - "**/*_test.go"
+

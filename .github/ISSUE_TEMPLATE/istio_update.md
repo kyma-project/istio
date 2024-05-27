@@ -19,6 +19,7 @@ ACs:
 - [ ] Istio module upgrades with zero downtime - https://github.com/kyma-project/istio/issues/429
 - [ ] Tests and documentation updated if needed.
 - [ ] Verify that sidecars are in sync with Control Plane.
+- [ ] Istio and Envoy Version updated in the `README.md`. The scripts `scripts/get_module_istio_version.sh` and `scripts/get_module_envoy_version.sh` can be used to extract the versions.
 
 **DoD:**
 - [ ] Provide documentation.

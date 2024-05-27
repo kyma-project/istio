@@ -15,5 +15,6 @@ ISTIO_TAG=$1
 
 # The command will have a return in the following format: /usr/local/bin/envoy  version: bcf6c19288e9d4a133f815657c951539018bc9bb/1.29.4-dev/Clean/RELEASE/BoringSSL
 # We need to sanitize the version by removing newlines
-docker run --rm --entrypoint "/usr/local/bin/envoy" europe-docker.pkg.dev/kyma-project/prod/external/istio/proxyv2:${ISTIO_TAG}-distroless --version | awk '{print $3}' | awk -F'/' '{print $2}' | tr -d '\n'
+# To avoid confusion we also remove the -dev suffix
+docker run --rm --entrypoint "/usr/local/bin/envoy" europe-docker.pkg.dev/kyma-project/prod/external/istio/proxyv2:${ISTIO_TAG}-distroless --version | awk '{print $3}' | awk -F'/' '{print $2}' | tr -d '\n' | sed 's/-dev//'
 

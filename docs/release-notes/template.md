@@ -10,3 +10,7 @@
 ## Fixed Bugs
 
 - Some bug fix
+
+## Versions
+- Istio version: {ISTIO_VERSION_PLACEHOLDER}  
+- Envoy version: {ENVOY_VERSION_PLACEHOLDER}

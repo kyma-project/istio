@@ -20,7 +20,12 @@ GITHUB_URL=https://api.github.com/repos/${REPOSITORY}
 GITHUB_AUTH_HEADER="Authorization: Bearer ${GITHUB_TOKEN}"
 CHANGELOG_FILE=$(cat CHANGELOG.md)
 RELEASE_NOTES_FILE=$(cat "docs/release-notes/${RELEASE_TAG}.md")
-BODY="${RELEASE_NOTES_FILE}
+
+ISTIO_VERSION=$("scripts/get_module_istio_version.sh")
+ENVOY_VERSION=$("scripts/get_module_envoy_version.sh" $ISTIO_VERSION)
+RELEASE_NOTES_WITH_VERSIONS=$(echo $RELEASE_NOTES_FILE | sed "s/{ISTIO_VERSION_PLACEHOLDER}/$ISTIO_VERSION/g" | sed "s/{ENVOY_VERSION_PLACEHOLDER}/$ENVOY_VERSION/g")
+
+BODY="${RELEASE_NOTES_WITH_VERSIONS}
 
 ${CHANGELOG_FILE}"
 

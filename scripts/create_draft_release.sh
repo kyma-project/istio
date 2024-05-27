@@ -23,9 +23,12 @@ RELEASE_NOTES_FILE=$(cat "docs/release-notes/${RELEASE_TAG}.md")
 
 ISTIO_VERSION=$("scripts/get_module_istio_version.sh")
 ENVOY_VERSION=$("scripts/get_module_envoy_version.sh" $ISTIO_VERSION)
-RELEASE_NOTES_WITH_VERSIONS=$(echo $RELEASE_NOTES_FILE | sed "s/{ISTIO_VERSION_PLACEHOLDER}/$ISTIO_VERSION/g" | sed "s/{ENVOY_VERSION_PLACEHOLDER}/$ENVOY_VERSION/g")
 
-BODY="${RELEASE_NOTES_WITH_VERSIONS}
+BODY="${RELEASE_NOTES_FILE}
+
+## Versions
+- Istio: ${ISTIO_VERSION}
+- Envoy: ${ENVOY_VERSION}
 
 ${CHANGELOG_FILE}"
 

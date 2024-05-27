@@ -129,13 +129,13 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			return ctrl.Result{}, err
 		}
 	}
-  beforeNum := runtime.NumGoroutine()
+	beforeNum := runtime.NumGoroutine()
 	istioImageVersion, installationErr := r.istioInstallation.Reconcile(ctx, &istioCR, r.statusHandler)
 	if installationErr != nil {
 		return r.requeueReconciliation(ctx, &istioCR, installationErr, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIstioInstallUninstallFailed))
 	}
-  println(" = = = = = = = = =GO ROUTINES BEFORE ISTIO INSTALL= === = = = = = == ", beforeNum)
-  println(" === = = == = = =GO ROUTINES AFTER ISTIO INSTALL == ++ == = = = = = =", runtime.NumGoroutine())
+	println(" = = = = = = = = =GO ROUTINES BEFORE ISTIO INSTALL= === = = = = = == ", beforeNum)
+	println(" === = = == = = =GO ROUTINES AFTER ISTIO INSTALL == ++ == = = = = = =", runtime.NumGoroutine())
 
 	// If there are no finalizers left, we must assume that the resource is deleted and therefore must stop the reconciliation
 	// to prevent accidental read or write to the resource.

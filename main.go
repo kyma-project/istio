@@ -46,7 +46,7 @@ import (
 const (
 	rateLimiterBurstDefault       = 200
 	rateLimiterFrequencyDefault   = 30
-	failureBaseDelayDefault       = 2 * time.Second
+	failureBaseDelayDefault       = 1 * time.Second
 	failureMaxDelayDefault        = 1000 * time.Second
 	reconciliationIntervalDefault = 10 * time.Hour
 )
@@ -98,6 +98,7 @@ func main() {
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
+	oo := 20 * time.Second
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme: scheme,
 		Metrics: metricsserver.Options{
@@ -107,6 +108,7 @@ func main() {
 		HealthProbeBindAddress: flagVar.probeAddr,
 		LeaderElection:         flagVar.enableLeaderElection,
 		LeaderElectionID:       "76223278.kyma-project.io",
+		RenewDeadline:          &oo,
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")

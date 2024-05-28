@@ -23,6 +23,11 @@ const (
 	requestsField         = "requests"
 )
 
+// compatibility environment variables of Istio
+// they are supposed to be feature flags, to keep the compatibility with previous Istio versions in case of breaking changes
+// should be updated with every Istio bump according to the release notes
+// requires update of integration tests
+// current env comes from: Istio 1.21
 var compatibilityEnvs = map[string]string{
 	"ENABLE_EXTERNAL_NAME_ALIAS": "false",
 	"VERIFY_CERT_AT_CLIENT":      "false",

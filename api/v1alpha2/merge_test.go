@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/kyma-project/istio/operator/internal/tests"
 	"github.com/onsi/ginkgo/v2/types"
+	meshv1alpha1 "istio.io/api/mesh/v1alpha1"
 	operatorv1alpha1 "istio.io/api/operator/v1alpha1"
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	"istio.io/istio/pkg/config/mesh"
@@ -17,7 +18,6 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	meshv1alpha1 "istio.io/api/mesh/v1alpha1"
 
 	"google.golang.org/protobuf/types/known/structpb"
 	"istio.io/api/mesh/v1alpha1"
@@ -548,11 +548,11 @@ var _ = Describe("Merge", func() {
 			}
 			istioCR := Istio{
 				ObjectMeta: metav1.ObjectMeta{
-					Annotations: map[string]string{
-						"istio-operator.kyma-project.io/disable-external-name-alias": "true",
-					},
+					Annotations: map[string]string{},
 				},
-				Spec: IstioSpec{},
+				Spec: IstioSpec{
+					CompatibilityMode: true,
+				},
 			}
 
 			// when
@@ -561,10 +561,46 @@ var _ = Describe("Merge", func() {
 			//then
 			Expect(err).ShouldNot(HaveOccurred())
 
-			for _, v := range out.Spec.Components.Pilot.K8S.Env {
-				if _, ok := compatibilityEnvs[v.Name]; ok {
-					Expect(v.Value).To(Equal(compatibilityEnvs[v.Name]))
-				}
+			existingEnvs := map[string]string{}
+			for _, v := range out.Spec.Components.Pilot.K8S.GetEnv() {
+				existingEnvs[v.Name] = v.Value
+			}
+
+			for k, v := range compatibilityEnvs {
+				Expect(existingEnvs[k]).To(Equal(v))
+			}
+
+		})
+
+		It("should set compatibility variables on Istio Pilot when compatibility mode is on despite disable external name aliast annotation set to false", func() {
+			//given
+			iop := iopv1alpha1.IstioOperator{
+				Spec: &operatorv1alpha1.IstioOperatorSpec{},
+			}
+			istioCR := Istio{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						"istio-operator.kyma-project.io/disable-external-name-alias": "false",
+					},
+				},
+				Spec: IstioSpec{
+					CompatibilityMode: true,
+				},
+			}
+
+			// when
+			out, err := istioCR.MergeInto(iop)
+
+			//then
+			Expect(err).ShouldNot(HaveOccurred())
+
+			existingEnvs := map[string]string{}
+			for _, v := range out.Spec.Components.Pilot.K8S.GetEnv() {
+				existingEnvs[v.Name] = v.Value
+			}
+
+			for k, v := range compatibilityEnvs {
+				Expect(existingEnvs[k]).To(Equal(v))
 			}
 		})
 
@@ -575,11 +611,11 @@ var _ = Describe("Merge", func() {
 			}
 			istioCR := Istio{
 				ObjectMeta: metav1.ObjectMeta{
-					Annotations: map[string]string{
-						"istio-operator.kyma-project.io/disable-external-name-alias": "true",
-					},
+					Annotations: map[string]string{},
 				},
-				Spec: IstioSpec{},
+				Spec: IstioSpec{
+					CompatibilityMode: false,
+				},
 			}
 
 			// when
@@ -588,11 +624,14 @@ var _ = Describe("Merge", func() {
 			//then
 			Expect(err).ShouldNot(HaveOccurred())
 
-			for _, v := range out.Spec.Components.Pilot.K8S.Env {
-				if _, ok := compatibilityEnvs[v.Name]; ok {
-					Expect(v.Value).To(Equal(compatibilityEnvs[v.Name]))
+			vc := 0
+			for _, value := range out.Spec.Components.Pilot.K8S.GetEnv() {
+				if v, ok := compatibilityEnvs[value.Name]; ok && value.Value == v {
+					vc++
 				}
 			}
+
+			Expect(vc).To(Equal(0))
 		})
 	})
 

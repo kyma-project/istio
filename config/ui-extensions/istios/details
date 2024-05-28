@@ -20,6 +20,9 @@ body:
     - source: spec.config.numTrustedProxies
       name: config.numTrustedProxies
       placeholder: '1'
+    - source: spec.compatibilityMode
+      name: numTrustedProxies
+      placeholder: 'false'
 
     - name: config.authorizers
       widget: Table

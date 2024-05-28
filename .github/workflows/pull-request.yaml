@@ -26,6 +26,8 @@ jobs:
             owner_files:
               - 'OWNERS'
               - 'CODEOWNERS'
+            hidden_files:
+              - '.**'
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
       - uses: ./.github/actions/wait-for-job-succeed-or-fail

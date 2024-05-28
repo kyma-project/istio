@@ -35,6 +35,7 @@ jobs:
     needs: [check-wait-for-image-build]
     if: ${{ needs.check-wait-for-image-build.outputs.check== 'true' }}
     steps:
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/wait-for-job-succeed-or-fail
         with:
           job-name: 'pull-istio-operator-build'

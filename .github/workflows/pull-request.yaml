@@ -41,22 +41,15 @@ jobs:
       - uses: tj-actions/changed-files@90a06d6ba9543371ab4df8eeca0be07ca6054959
         id: changed-files
         with:
-          files_ignore_yaml: |
-            docs:
-              - docs/**
-              - '**/*.md'
-            performance_tests:
-              - tests/performance/**
-            owner_files:
-              - OWNERS
-              - CODEOWNERS
-            sec_scanners:
-              - sec-scanners-config.yaml
-            dependabot:
-              - ./github/dependabot.yml
-            hidden_files:
-              - '\.github/**'
-              - '\.reuse/**'
+          files_ignore: |
+            docs/**
+            **/*.md
+            tests/performance/**
+            OWNERS
+            CODEOWNERS
+            sec-scanners-config.yaml
+            .github/**
+            .reuse/**
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
   dispatch-unit-test:
@@ -75,22 +68,16 @@ jobs:
       - uses: tj-actions/changed-files@90a06d6ba9543371ab4df8eeca0be07ca6054959
         id: changed-files
         with:
-          files_ignore_yaml: |
-            docs:
-              - docs/**
-              - '**/*.md'
-            performance_tests:
-              - tests/performance/**
-            owner_files:
-              - OWNERS
-              - CODEOWNERS
-            sec_scanners:
-              - sec-scanners-config.yaml
-            github:
-              - .github/** #Ignoring since build job isn't triggered on the workflow directory changes
-            hidden_files:
-              - '\.github/**'
-              - '\.reuse/**'
+          files_ignore: |
+            docs/**
+            **/*.md
+            tests/performance/**
+            OWNERS
+            CODEOWNERS
+            sec-scanners-config.yaml
+            .github/**
+            .github/**
+            .reuse/**
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
   dispatch-integration:
@@ -109,14 +96,11 @@ jobs:
       - uses: tj-actions/changed-files@90a06d6ba9543371ab4df8eeca0be07ca6054959
         id: changed-files
         with:
-          files_yaml: |
-            ui-extensions:
-              - config/ui-extensions/**
-            crd:
-              - config/crd/**
-            ui-tests:
-              - tests/ui/**
-              - .github/workflows/ui-tests.yaml
+          files: |
+            config/ui-extensions/**
+            config/crd/**
+            tests/ui/**
+            .github/workflows/ui-tests.yaml
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
   dispatch-ui:

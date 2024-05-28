@@ -339,7 +339,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(istioCR.Status.State).To(Equal(operatorv1alpha2.Processing))
 	})
 
-	It("should not execute install to downgrade istio and return warning", func() {
+	It("should return warning and not execute install when new Istio version is lower", func() {
 		// given
 		numTrustedProxies := 1
 		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
@@ -379,7 +379,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(istioCR.Status.Conditions).To(BeNil())
 	})
 
-	It("should not execute install to upgrade istio from 1.16.1 to 1.18.0 and return warning", func() {
+	It("should return warning and not execute install when new Istio version is more than one minor version higher", func() {
 		// given
 		numTrustedProxies := 1
 		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
@@ -419,7 +419,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(istioCR.Status.Conditions).To(BeNil())
 	})
 
-	It("should not execute install to upgrade istio from 1.16.1 to 2.0.0 and return warning", func() {
+	It("should return warning and not execute install when new Istio version has a higher major version", func() {
 		// given
 		numTrustedProxies := 1
 		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{

@@ -14,11 +14,6 @@ type appliedConfig struct {
 	IstioTag string
 }
 
-// shouldDelete returns true when Istio should be deleted
-func shouldDelete(istio *operatorv1alpha2.Istio) bool {
-	return !istio.DeletionTimestamp.IsZero()
-}
-
 // isIstioInstalled returns true when Istio CR has LastAppliedConfiguration annotation
 func isIstioInstalled(istio *operatorv1alpha2.Istio) bool {
 	_, ok := istio.Annotations[labels.LastAppliedConfiguration]

@@ -539,6 +539,63 @@ var _ = Describe("Merge", func() {
 			})
 		})
 	})
+
+	Context("Compatibility Mode", func() {
+		It("should set compatibility variables on Istio Pilot when compatibility mode is on", func() {
+			//given
+			iop := iopv1alpha1.IstioOperator{
+				Spec: &operatorv1alpha1.IstioOperatorSpec{},
+			}
+			istioCR := Istio{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						"istio-operator.kyma-project.io/disable-external-name-alias": "true",
+					},
+				},
+				Spec: IstioSpec{},
+			}
+
+			// when
+			out, err := istioCR.MergeInto(iop)
+
+			//then
+			Expect(err).ShouldNot(HaveOccurred())
+
+			for _, v := range out.Spec.Components.Pilot.K8S.Env {
+				if _, ok := compatibilityEnvs[v.Name]; ok {
+					Expect(v.Value).To(Equal(compatibilityEnvs[v.Name]))
+				}
+			}
+		})
+
+		It("should not set compatibility variables on Istio Pilot when compatibility mode is off", func() {
+			//given
+			iop := iopv1alpha1.IstioOperator{
+				Spec: &operatorv1alpha1.IstioOperatorSpec{},
+			}
+			istioCR := Istio{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						"istio-operator.kyma-project.io/disable-external-name-alias": "true",
+					},
+				},
+				Spec: IstioSpec{},
+			}
+
+			// when
+			out, err := istioCR.MergeInto(iop)
+
+			//then
+			Expect(err).ShouldNot(HaveOccurred())
+
+			for _, v := range out.Spec.Components.Pilot.K8S.Env {
+				if _, ok := compatibilityEnvs[v.Name]; ok {
+					Expect(v.Value).To(Equal(compatibilityEnvs[v.Name]))
+				}
+			}
+		})
+	})
+
 	Context("IngressGateway", func() {
 		Context("When Istio CR has 500m configured for CPU and 500Mi for memory limits", func() {
 			It("should set CPU limits to 500m and 500Mi for memory in IOP", func() {

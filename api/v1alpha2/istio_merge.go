@@ -23,6 +23,12 @@ const (
 	requestsField         = "requests"
 )
 
+var compatibilityEnvs = map[string]string{
+	"ENABLE_EXTERNAL_NAME_ALIAS": "false",
+	"VERIFY_CERT_AT_CLIENT":      "false",
+	"ENABLE_AUTO_SNI":            "false",
+}
+
 func (i *Istio) MergeInto(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {
 	if op.Spec == nil {
 		op.Spec = &v1alpha1.IstioOperatorSpec{}
@@ -40,11 +46,40 @@ func (i *Istio) MergeInto(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperat
 
 	externalNameAliasAnnotationFixOp := manageExternalNameAlias(i, mergedResourcesOp)
 
+	if i.Spec.CompatibilityMode {
+		compatibleIop := setCompatibilityEnvs(i, externalNameAliasAnnotationFixOp)
+		return compatibleIop, nil
+	}
+
 	return externalNameAliasAnnotationFixOp, nil
 }
 
 type meshConfigBuilder struct {
 	c *meshv1alpha1.MeshConfig
+}
+
+func setCompatibilityEnvs(_ *Istio, op iopv1alpha1.IstioOperator) iopv1alpha1.IstioOperator {
+	if op.Spec == nil {
+		op.Spec = &v1alpha1.IstioOperatorSpec{}
+	}
+	if op.Spec.Components == nil {
+		op.Spec.Components = &v1alpha1.IstioComponentSetSpec{}
+	}
+	if op.Spec.Components.Pilot == nil {
+		op.Spec.Components.Pilot = &v1alpha1.ComponentSpec{}
+	}
+	if op.Spec.Components.Pilot.K8S == nil {
+		op.Spec.Components.Pilot.K8S = &v1alpha1.KubernetesResourcesSpec{}
+	}
+
+	for k, v := range compatibilityEnvs {
+		op.Spec.Components.Pilot.K8S.Env = append(op.Spec.Components.Pilot.K8S.Env, &v1alpha1.EnvVar{
+			Name:  k,
+			Value: v,
+		})
+	}
+
+	return op
 }
 
 func manageExternalNameAlias(i *Istio, op iopv1alpha1.IstioOperator) iopv1alpha1.IstioOperator {

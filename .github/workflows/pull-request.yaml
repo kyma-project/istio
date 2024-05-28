@@ -26,6 +26,8 @@ jobs:
             owner_files:
               - 'OWNERS'
               - 'CODEOWNERS'
+      - name: List all changed files
+        run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
       - uses: ./.github/actions/wait-for-job-succeed-or-fail
         if: ${{ steps.changed-files.outputs.any_modified }}
         with:

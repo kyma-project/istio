@@ -15,20 +15,15 @@ jobs:
       - uses: tj-actions/changed-files@90a06d6ba9543371ab4df8eeca0be07ca6054959
         id: changed-files
         with:
-          files_ignore_yaml: |
-            docs:
-              - docs/**
-              - '**/*.md'
-            yaml:
-              - '**/*.yaml'
-            performance_tests:
-              - tests/performance/**
-            owner_files:
-              - OWNERS
-              - CODEOWNERS
-            hidden_files:
-              - '\.github/**'
-              - '\.reuse/**'
+          files_ignore: |
+             docs/**
+             **/*.md
+             **/*.yaml
+             tests/performance/**
+             OWNERS
+             CODEOWNERS
+             .github/**
+             .reuse/**
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
       - uses: ./.github/actions/wait-for-job-succeed-or-fail

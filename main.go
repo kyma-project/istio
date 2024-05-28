@@ -153,4 +153,5 @@ func defineFlagVar() *FlagVar {
 	flag.DurationVar(&flagVar.reconciliationInterval, "reconciliation-interval", reconciliationIntervalDefault,
 		"Indicates the time based reconciliation interval.")
 	return flagVar
+
 }

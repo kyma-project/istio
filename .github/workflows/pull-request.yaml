@@ -82,7 +82,6 @@ jobs:
             CODEOWNERS
             sec-scanners-config.yaml
             .github/**
-            .github/**
             .reuse/**
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}'

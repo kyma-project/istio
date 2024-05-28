@@ -47,7 +47,7 @@ jobs:
     name: Run UI tests
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
-    needs: [wait-for-image-build,filter-changes]
+    needs: [wait-for-image-build]
     steps:
       - uses: actions/checkout@v4
         with:

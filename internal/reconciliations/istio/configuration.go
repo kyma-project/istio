@@ -7,7 +7,6 @@ import (
 
 	"github.com/coreos/go-semver/semver"
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/internal/istiooperator"
 )
 
 type appliedConfig struct {
@@ -20,27 +19,10 @@ func shouldDelete(istio *operatorv1alpha2.Istio) bool {
 	return !istio.DeletionTimestamp.IsZero()
 }
 
-// shouldInstall returns true when Istio should be installed
-func shouldInstall(istio *operatorv1alpha2.Istio, istioImageVersion istiooperator.IstioImageVersion) (shouldInstall bool, err error) {
-	if shouldDelete(istio) {
-		return false, nil
-	}
-
-	lastAppliedConfigAnnotation, ok := istio.Annotations[labels.LastAppliedConfiguration]
-	if !ok {
-		return true, nil
-	}
-
-	var lastAppliedConfig appliedConfig
-	if err := json.Unmarshal([]byte(lastAppliedConfigAnnotation), &lastAppliedConfig); err != nil {
-		return false, err
-	}
-
-	if err := checkIstioVersion(lastAppliedConfig.IstioTag, istioImageVersion.Tag()); err != nil {
-		return false, err
-	}
-
-	return true, nil
+// isIstioInstalled returns true when Istio CR has LastAppliedConfiguration annotation
+func isIstioInstalled(istio *operatorv1alpha2.Istio) bool {
+	_, ok := istio.Annotations[labels.LastAppliedConfiguration]
+	return ok
 }
 
 // UpdateLastAppliedConfiguration annotates the passed CR with LastAppliedConfiguration, which holds information about last applied
@@ -80,7 +62,7 @@ func getLastAppliedConfiguration(istioCR *operatorv1alpha2.Istio) (appliedConfig
 	return lastAppliedConfig, nil
 }
 
-func checkIstioVersion(currentIstioVersionString, targetIstioVersionString string) error {
+func checkIstioVersionUpdate(currentIstioVersionString, targetIstioVersionString string) error {
 	currentIstioVersion, err := semver.NewVersion(currentIstioVersionString)
 	if err != nil {
 		return err

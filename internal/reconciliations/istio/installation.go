@@ -44,15 +44,20 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha2.
 		return istioImageVersion, described_errors.NewDescribedError(err, "Could not get Istio version from istio operator file")
 	}
 
-	shouldInstallIstio, err := shouldInstall(istioCR, istioImageVersion)
-
-	if err != nil {
-		ctrl.Log.Error(err, "Error evaluating Istio CR changes")
-		return istioImageVersion, described_errors.NewDescribedError(err, "Istio install check failed")
-	}
-
-	if shouldInstallIstio {
+	if !shouldDelete(istioCR) {
 		ctrl.Log.Info("Starting Istio install", "istio version", istioImageVersion.Version)
+
+		if isIstioInstalled(istioCR) {
+			lastAppliedConfig, err := getLastAppliedConfiguration(istioCR)
+			if err != nil {
+				ctrl.Log.Error(err, "Error evaluating Istio CR changes")
+				return istioImageVersion, described_errors.NewDescribedError(err, "Istio install check failed")
+			}
+
+			if err := checkIstioVersionUpdate(lastAppliedConfig.IstioTag, istioImageVersion.Tag()); err != nil {
+				return istioImageVersion, described_errors.NewDescribedError(err, "Istio version update is not allowed").SetWarning()
+			}
+		}
 
 		if !hasInstallationFinalizer(istioCR) {
 			if err = addInstallationFinalizer(ctx, i.Client, istioCR); err != nil {

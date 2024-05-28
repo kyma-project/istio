@@ -339,7 +339,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(istioCR.Status.State).To(Equal(operatorv1alpha2.Processing))
 	})
 
-	It("should not execute install to downgrade istio", func() {
+	It("should not execute install to downgrade istio and return warning", func() {
 		// given
 		numTrustedProxies := 1
 		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
@@ -372,13 +372,14 @@ var _ = Describe("Installation reconciliation", func() {
 		// then
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Error()).To(Equal("target Istio version (1.16.0-distroless) is lower than current version (1.16.1-distroless) - downgrade not supported"))
-		Expect(err.Description()).To(Equal("Istio install check failed: target Istio version (1.16.0-distroless) is lower than current version (1.16.1-distroless) - downgrade not supported"))
+		Expect(err.Description()).To(Equal("Istio version update is not allowed: target Istio version (1.16.0-distroless) is lower than current version (1.16.1-distroless) - downgrade not supported"))
+		Expect(err.Level()).To(Equal(described_errors.Warning))
 		Expect(mockClient.installCalled).To(BeFalse())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 		Expect(istioCR.Status.Conditions).To(BeNil())
 	})
 
-	It("should not execute install to upgrade istio from 1.16.1 to 1.18.0", func() {
+	It("should not execute install to upgrade istio from 1.16.1 to 1.18.0 and return warning", func() {
 		// given
 		numTrustedProxies := 1
 		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
@@ -411,13 +412,14 @@ var _ = Describe("Installation reconciliation", func() {
 		// then
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Error()).To(Equal("target Istio version (1.18.0-distroless) is higher than current Istio version (1.16.1-distroless) - the difference between versions exceed one minor version"))
-		Expect(err.Description()).To(Equal("Istio install check failed: target Istio version (1.18.0-distroless) is higher than current Istio version (1.16.1-distroless) - the difference between versions exceed one minor version"))
+		Expect(err.Description()).To(Equal("Istio version update is not allowed: target Istio version (1.18.0-distroless) is higher than current Istio version (1.16.1-distroless) - the difference between versions exceed one minor version"))
+		Expect(err.Level()).To(Equal(described_errors.Warning))
 		Expect(mockClient.installCalled).To(BeFalse())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 		Expect(istioCR.Status.Conditions).To(BeNil())
 	})
 
-	It("should not execute install to upgrade istio from 1.16.1 to 2.0.0", func() {
+	It("should not execute install to upgrade istio from 1.16.1 to 2.0.0 and return warning", func() {
 		// given
 		numTrustedProxies := 1
 		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
@@ -450,7 +452,8 @@ var _ = Describe("Installation reconciliation", func() {
 		// then
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Error()).To(Equal("target Istio version (2.0.0-distroless) is different than current Istio version (1.16.1-distroless) - major version upgrade is not supported"))
-		Expect(err.Description()).To(Equal("Istio install check failed: target Istio version (2.0.0-distroless) is different than current Istio version (1.16.1-distroless) - major version upgrade is not supported"))
+		Expect(err.Description()).To(Equal("Istio version update is not allowed: target Istio version (2.0.0-distroless) is different than current Istio version (1.16.1-distroless) - major version upgrade is not supported"))
+		Expect(err.Level()).To(Equal(described_errors.Warning))
 		Expect(mockClient.installCalled).To(BeFalse())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 		Expect(istioCR.Status.Conditions).To(BeNil())
@@ -595,7 +598,8 @@ var _ = Describe("Installation reconciliation", func() {
 				labels.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":1},"IstioTag":"%s"}`, istioTag),
 			},
 			DeletionTimestamp: &now,
-			Finalizers:        []string{"istios.operator.kyma-project.io/test-mock"},
+			// We need to add a dummy finalizer to be able to set the deletion timestamp.
+			Finalizers: []string{"istios.operator.kyma-project.io/test-mock"},
 		},
 			Spec: operatorv1alpha2.IstioSpec{
 				Config: operatorv1alpha2.Config{

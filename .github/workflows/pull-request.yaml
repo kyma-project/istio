@@ -18,9 +18,9 @@ jobs:
           files_ignore_yaml: |
             docs:
               - docs/**
-              - **.md
+              - '**.md'
             yaml:
-              - **yaml
+              - '**.yaml'
             performance_tests:
               - tests/performance/**
             owner_files:

@@ -6,6 +6,32 @@ on:
       - main
       - 'release-**'
 jobs:
+  wait-for-image-build:
+    name: Wait for image build
+    runs-on: ubuntu-latest
+    if: ${{ github.event.pull_request.draft == false }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: tj-actions/changed-files@90a06d6ba9543371ab4df8eeca0be07ca6054959
+        id: changed-files
+        with:
+          files_ignore_yaml: |
+            docs:
+              - 'docs/**'
+              - '**.md'
+            yaml:
+              - '**yaml'
+            performance_tests:
+              - 'tests/performance/**'
+            owner_files:
+              - 'OWNERS'
+              - 'CODEOWNERS'
+      - uses: ./.github/actions/wait-for-job-succeed-or-fail
+        if: ${{ steps.changed-files.outputs.any_modified }}
+        with:
+          job-name: 'pull-istio-operator-build'
+          github-auth-token: ${{ secrets.GITHUB_TOKEN }}
+
   check-unit-test:
     name: Check whether unit test & lint should run based on the changed files
     if: github.event.pull_request.draft == false
@@ -67,7 +93,7 @@ jobs:
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
   dispatch-integration:
     name: Dispatch integration tests
-    needs: [check-integration]
+    needs: [check-integration,wait-for-image-build]
     uses: ./.github/workflows/pull-integration.yaml
     if: ${{ needs.check-integration.outputs.any_modified }}
     secrets: inherit
@@ -93,7 +119,7 @@ jobs:
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
   dispatch-ui:
     name: Dispatch UI tests
-    needs: [check-ui]
+    needs: [check-ui,wait-for-image-build]
     uses: ./.github/workflows/ui-tests.yaml
     if: ${{ needs.check-ui.outputs.any_modified }}
     secrets: inherit

@@ -1,20 +1,14 @@
-# Jobs defined in this file are responsible for things that do not require container image
-# but still relevant to the codebase such as unit tests, linting etc
-
-name: Pull Request
-
+name: Pull Request pipeline
 on:
   pull_request:
     types: [ synchronize, opened, reopened, ready_for_review ]
     branches:
       - main
       - 'release-**'
-permissions:
-  contents: read
-
 jobs:
-  filter-changes:
-    name: List relevant VCS changes
+  check-unit-test:
+    name: Check whether unit test & lint should run based on the changed files
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -38,49 +32,68 @@ jobs:
               - ".**"
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    needs: [filter-changes]
-    if: ${{ github.event.pull_request.draft == false && needs.changed-files.outputs.any_modified }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: "go.mod"
-          cache: false # We need to disable caching here, since this is handled by the golangci-lint action
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@3cfe3a4abbb849e10058ce4af15d205b6da42804 #v4.0.0
-        with:
-          version: 'latest'
-          args: --timeout=10m --verbose
+  dispatch-unit-test:
+    name: Dispatch unit test
+    needs: [check-unit-test]
+    uses: ./.github/workflows/pull-unit-lint.yaml
+    if: ${{ needs.check-unit-test.outputs.any_modified }}
+    secrets: inherit
 
-  run-unit-tests:
-    name: Run unit tests
-    needs: [filter-changes]
+  check-integration:
+    name: Check whether integration tests should run based on the changed files
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
-    if: ${{ github.event.pull_request.draft == false && needs.changed-files.outputs.any_modified }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: tj-actions/changed-files@90a06d6ba9543371ab4df8eeca0be07ca6054959
+        id: changed-files
         with:
-          go-version-file: "go.mod"
-      - name: Run tests
-        run: |
-          PULL_PULL_SHA=${{ github.event.pull_request.head.sha}} \
-          PULL_BASE_SHA=${{ github.event.pull_request.base.sha}} \
-          PULL_NUMBER=${{ github.event.number }} \
-          ./tests/integration/scripts/code-coverage-guard.sh
+          files_ignore_yaml: |
+            docs:
+              - 'docs/**'
+              - '**/*.md'
+            performance_tests:
+              - 'tests/performance/**'
+            owner_files:
+              - 'OWNERS'
+              - 'CODEOWNERS'
+            sec_scanners:
+              - 'sec-scanners-config.yaml'
+            github:
+              - '.github/**' #Ignoring since build job isn't triggered on the workflow directory changes
+            hidden_files:
+              - '.**'
+      - name: List all changed files
+        run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
+  dispatch-integration:
+    name: Dispatch integration tests
+    needs: [check-integration]
+    uses: ./.github/workflows/pull-integration.yaml
+    if: ${{ needs.check-integration.outputs.any_modified }}
+    secrets: inherit
 
-  run-unit-tests-experimental:
-    name: Run unit tests with experimental build tag
-    needs: [filter-changes]
+  check-ui:
+    name: Check whether UI tests should run based on the changed files
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
-    if: ${{ github.event.pull_request.draft == false && needs.changed-files.outputs.any_modified }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: tj-actions/changed-files@90a06d6ba9543371ab4df8eeca0be07ca6054959
+        id: changed-files
         with:
-          go-version-file: "go.mod"
-      - name: Run tests
-        run: make test-experimental-tag
+          files_yaml: |
+            ui-extensions:
+              - 'config/ui-extensions/**'
+            crd:
+              - 'config/crd/**'
+            ui-tests:
+              - 'tests/ui/**'
+              - '.github/workflows/ui-tests.yaml'
+      - name: List all changed files
+        run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
+  dispatch-ui:
+    name: Dispatch UI tests
+    needs: [check-ui]
+    uses: ./.github/workflows/ui-tests.yaml
+    if: ${{ needs.check-ui.outputs.any_modified }}
+    secrets: inherit

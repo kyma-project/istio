@@ -48,7 +48,7 @@ jobs:
           files_ignore_yaml: |
             docs:
               - docs/**
-              - **/*.md
+              - '**/*.md'
             performance_tests:
               - tests/performance/**
             owner_files:
@@ -81,7 +81,7 @@ jobs:
           files_ignore_yaml: |
             docs:
               - docs/**
-              - **/*.md
+              - '**/*.md'
             performance_tests:
               - tests/performance/**
             owner_files:

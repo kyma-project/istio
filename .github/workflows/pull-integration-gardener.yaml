@@ -14,6 +14,7 @@ on:
 
 jobs:
   filter-changes:
+    name: List relevant VCS changes
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

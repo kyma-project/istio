@@ -8,7 +8,7 @@ on:
 jobs:
   check-wait-for-image-build:
     outputs:
-      check: ${{ changed-files.outputs.any_modified }}
+      check: ${{ steps.changed-files.outputs.any_modified }}
     name: Check whether to wait for image build
     runs-on: ubuntu-latest
     if: ${{ github.event.pull_request.draft == false }}
@@ -42,7 +42,7 @@ jobs:
 
   check-unit-test:
     outputs:
-      check: ${{ changed-files.outputs.any_modified }}
+      check: ${{ steps.changed-files.outputs.any_modified }}
     name: Check whether unit test & lint should run based on the changed files
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
@@ -71,7 +71,7 @@ jobs:
 
   check-integration:
     outputs:
-      check: ${{ changed-files.outputs.any_modified }}
+      check: ${{ steps.changed-files.outputs.any_modified }}
     name: Check whether integration tests should run based on the changed files
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
@@ -100,7 +100,7 @@ jobs:
 
   check-ui:
     outputs:
-      check: ${{ changed-files.outputs.any_modified }}
+      check: ${{ steps.changed-files.outputs.any_modified }}
     name: Check whether UI tests should run based on the changed files
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest

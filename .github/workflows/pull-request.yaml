@@ -17,17 +17,17 @@ jobs:
         with:
           files_ignore_yaml: |
             docs:
-              - 'docs/**'
-              - '**.md'
+              - docs/**
+              - **.md
             yaml:
-              - '**yaml'
+              - **yaml
             performance_tests:
-              - 'tests/performance/**'
+              - tests/performance/**
             owner_files:
-              - 'OWNERS'
-              - 'CODEOWNERS'
+              - OWNERS
+              - CODEOWNERS
             hidden_files:
-              - '.**'
+              - .**
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
       - uses: ./.github/actions/wait-for-job-succeed-or-fail
@@ -47,19 +47,19 @@ jobs:
         with:
           files_ignore_yaml: |
             docs:
-              - 'docs/**'
-              - '**/*.md'
+              - docs/**
+              - **/*.md
             performance_tests:
-              - 'tests/performance/**'
+              - tests/performance/**
             owner_files:
-              - 'OWNERS'
-              - 'CODEOWNERS'
+              - OWNERS
+              - CODEOWNERS
             sec_scanners:
-              - 'sec-scanners-config.yaml'
+              - sec-scanners-config.yaml
             dependabot:
-              - './github/dependabot.yml'
+              - ./github/dependabot.yml
             hidden_files:
-              - ".**"
+              - .**
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
   dispatch-unit-test:
@@ -80,19 +80,19 @@ jobs:
         with:
           files_ignore_yaml: |
             docs:
-              - 'docs/**'
-              - '**/*.md'
+              - docs/**
+              - **/*.md
             performance_tests:
-              - 'tests/performance/**'
+              - tests/performance/**
             owner_files:
-              - 'OWNERS'
-              - 'CODEOWNERS'
+              - OWNERS
+              - CODEOWNERS
             sec_scanners:
-              - 'sec-scanners-config.yaml'
+              - sec-scanners-config.yaml
             github:
-              - '.github/**' #Ignoring since build job isn't triggered on the workflow directory changes
+              - .github/** #Ignoring since build job isn't triggered on the workflow directory changes
             hidden_files:
-              - '.**'
+              - .**
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
   dispatch-integration:
@@ -113,12 +113,12 @@ jobs:
         with:
           files_yaml: |
             ui-extensions:
-              - 'config/ui-extensions/**'
+              - config/ui-extensions/**
             crd:
-              - 'config/crd/**'
+              - config/crd/**
             ui-tests:
-              - 'tests/ui/**'
-              - '.github/workflows/ui-tests.yaml'
+              - tests/ui/**
+              - .github/workflows/ui-tests.yaml
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
   dispatch-ui:

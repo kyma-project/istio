@@ -27,8 +27,8 @@ jobs:
               - OWNERS
               - CODEOWNERS
             hidden_files:
-              - '.github/**'
-              - '.reuse/**'
+              - '\.github/**'
+              - '\.reuse/**'
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
       - uses: ./.github/actions/wait-for-job-succeed-or-fail
@@ -60,8 +60,8 @@ jobs:
             dependabot:
               - ./github/dependabot.yml
             hidden_files:
-              - '.github/**'
-              - '.reuse/**'
+              - '\.github/**'
+              - '\.reuse/**'
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
   dispatch-unit-test:
@@ -94,8 +94,8 @@ jobs:
             github:
               - .github/** #Ignoring since build job isn't triggered on the workflow directory changes
             hidden_files:
-              - '.github/**'
-              - '.reuse/**'
+              - '\.github/**'
+              - '\.reuse/**'
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
   dispatch-integration:

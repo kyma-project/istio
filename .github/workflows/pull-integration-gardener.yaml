@@ -55,7 +55,7 @@ jobs:
     name: Istio integration test GCP
     runs-on: ubuntu-latest
     if: ${{ github.event.pull_request.draft == false && needs.changed-files.outputs.any_modified }}
-    needs: [wait-for-image-build]
+    needs: [wait-for-image-build,filter-changes]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -87,7 +87,7 @@ jobs:
     name: Istio integration test AWS specific
     runs-on: ubuntu-latest
     if: ${{ github.event.pull_request.draft == false && needs.changed-files.outputs.any_modified }}
-    needs: [wait-for-image-build]
+    needs: [wait-for-image-build,filter-changes]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -119,7 +119,7 @@ jobs:
     name: Istio integration test GCP specific
     runs-on: ubuntu-latest
     if: ${{ github.event.pull_request.draft == false && needs.changed-files.outputs.any_modified }}
-    needs: [wait-for-image-build]
+    needs: [wait-for-image-build,filter-changes]
     steps:
       - uses: actions/checkout@v4
         with:

@@ -52,7 +52,7 @@ jobs:
     name: Kubernetes version compatibility test
     runs-on: ubuntu-latest
     if: ${{ github.event.pull_request.draft == false && needs.changed-files.outputs.any_modified }}
-    needs: [wait-for-image-build]
+    needs: [wait-for-image-build,filter-changes]
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/k8s-compatibility-test
@@ -63,7 +63,7 @@ jobs:
     name: Istio upgrade integration test
     runs-on: ubuntu-latest
     if: ${{ github.event.pull_request.draft == false && needs.changed-files.outputs.any_modified }}
-    needs: [wait-for-image-build]
+    needs: [wait-for-image-build,filter-changes]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -77,7 +77,7 @@ jobs:
     name: Istio integration test
     runs-on: ubuntu-latest
     if: ${{ github.event.pull_request.draft == false && needs.changed-files.outputs.any_modified }}
-    needs: [wait-for-image-build]
+    needs: [wait-for-image-build,filter-changes]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -93,7 +93,7 @@ jobs:
     name: Istio integration test evaluation
     runs-on: ubuntu-latest
     if: ${{ github.event.pull_request.draft == false && needs.changed-files.outputs.any_modified }}
-    needs: [wait-for-image-build]
+    needs: [wait-for-image-build,filter-changes]
     steps:
       - uses: actions/checkout@v4
         with:

@@ -11,10 +11,24 @@ permissions:
   contents: read
 
 jobs:
+  filter-changes:
+    name: List relevant VCS changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: tj-actions/changed-files@90a06d6ba9543371ab4df8eeca0be07ca6054959
+        id: changed-files
+        with:
+          files_yaml: |
+            workflows:
+              - ".github/workflows/**"
+      - name: List all changed files
+        run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
   verify-actions:
     name: Ensure SHA pinned actions
+    needs: [filter-changes]
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
+    if: ${{ github.event.pull_request.draft == false && needs.changed-files.outputs.any_modified }}
     steps:
       - uses: actions/checkout@v4
       - uses: zgosalvez/github-actions-ensure-sha-pinned-actions@b1b635d24259e8a047a6ce7d6501ea432aa7a830 # 3.0.2

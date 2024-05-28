@@ -26,8 +26,9 @@ jobs:
             owner_files:
               - OWNERS
               - CODEOWNERS
-            hidden_files:
-              - \.**
+            github_and_reuse:
+              - .github/**
+              - .reuse/**
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
       - uses: ./.github/actions/wait-for-job-succeed-or-fail
@@ -58,8 +59,9 @@ jobs:
               - sec-scanners-config.yaml
             dependabot:
               - ./github/dependabot.yml
-            hidden_files:
-              - \.**
+            github_and_reuse:
+              - .github/**
+              - .reuse/**
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
   dispatch-unit-test:
@@ -91,8 +93,9 @@ jobs:
               - sec-scanners-config.yaml
             github:
               - .github/** #Ignoring since build job isn't triggered on the workflow directory changes
-            hidden_files:
-              - \.**
+            github_and_reuse:
+              - .github/**
+              - .reuse/**
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
   dispatch-integration:

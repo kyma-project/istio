@@ -6,15 +6,6 @@ name: Pull Request
 on:
   pull_request:
     types: [ synchronize, opened, reopened, ready_for_review ]
-    paths-ignore:
-      - 'docs/**'
-      - '**/*.md'
-      - 'tests/performance/**'
-      - 'OWNERS'
-      - 'CODEOWNERS'
-      - 'sec-scanners-config.yaml'
-      - './github/dependabot.yml'
-      - ".**"
     branches:
       - main
       - 'release-**'
@@ -22,9 +13,35 @@ permissions:
   contents: read
 
 jobs:
-  lint:
+  filter-changes:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: tj-actions/changed-files@90a06d6ba9543371ab4df8eeca0be07ca6054959
+        id: changed-files
+        with:
+          files_ignore_yaml: |
+            docs:
+              - 'docs/**'
+              - '**/*.md'
+            performance_tests:
+              - 'tests/performance/**'
+            owner_files:
+              - 'OWNERS'
+              - 'CODEOWNERS'
+            sec_scanners:
+              - 'sec-scanners-config.yaml'
+            dependabot:
+              - './github/dependabot.yml'
+            hidden_files:
+              - ".**"
+      - name: List all changed files
+        run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    needs: [filter-changes]
+    if: ${{ github.event.pull_request.draft == false && needs.changed-files.outputs.any_modified }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -39,8 +56,9 @@ jobs:
 
   run-unit-tests:
     name: Run unit tests
+    needs: [filter-changes]
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
+    if: ${{ github.event.pull_request.draft == false && needs.changed-files.outputs.any_modified }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -55,8 +73,9 @@ jobs:
 
   run-unit-tests-experimental:
     name: Run unit tests with experimental build tag
+    needs: [filter-changes]
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
+    if: ${{ github.event.pull_request.draft == false && needs.changed-files.outputs.any_modified }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5

@@ -8,24 +8,39 @@ on:
   # It allows the workflow to get the repository secrets
   pull_request_target:
     types: [ synchronize, opened, reopened, ready_for_review ]
-    paths-ignore:
-      - "docs/**"
-      - "**/*.md"
-      - "OWNERS"
-      - "CODEOWNERS"
-      - "sec-scanners-config.yaml"
-      - ".github/**" #Ignoring since the build job isn't triggered on the workflow directory changes
-      - ".**"
     branches:
       - 'release-**'
       - 'main'
 
 jobs:
+  filter-changes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: tj-actions/changed-files@90a06d6ba9543371ab4df8eeca0be07ca6054959
+        id: changed-files
+        with:
+          files_ignore_yaml: |
+            docs:
+              - 'docs/**'
+              - '**/*.md'
+            owner_files:
+              - 'OWNERS'
+              - 'CODEOWNERS'
+            sec_scanners:
+              - 'sec-scanners-config.yaml'
+            github:
+              - '.github/**' #Ignoring since build job isn't triggered on the workflow directory changes
+            hidden_files:
+              - '.**'
+      - name: List all changed files
+        run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
   wait-for-image-build:
     name: Wait for image build
+    needs: [filter-changes]
     environment: ${{ github.event.pull_request.author_association != 'COLLABORATOR' && github.event.pull_request.author_association != 'OWNER' && 'restricted' || 'internal' }}
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
+    if: ${{ github.event.pull_request.draft == false && needs.changed-files.outputs.any_modified }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -38,7 +53,7 @@ jobs:
   istio-integration-gcp:
     name: Istio integration test GCP
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
+    if: ${{ github.event.pull_request.draft == false && needs.changed-files.outputs.any_modified }}
     needs: [wait-for-image-build]
     steps:
       - uses: actions/checkout@v4
@@ -70,7 +85,7 @@ jobs:
   istio-integration-aws-specific:
     name: Istio integration test AWS specific
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
+    if: ${{ github.event.pull_request.draft == false && needs.changed-files.outputs.any_modified }}
     needs: [wait-for-image-build]
     steps:
       - uses: actions/checkout@v4
@@ -102,7 +117,7 @@ jobs:
   istio-integration-gcp-specific:
     name: Istio integration test GCP specific
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
+    if: ${{ github.event.pull_request.draft == false && needs.changed-files.outputs.any_modified }}
     needs: [wait-for-image-build]
     steps:
       - uses: actions/checkout@v4

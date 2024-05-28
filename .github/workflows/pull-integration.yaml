@@ -6,24 +6,40 @@ name: Pull Request integration tests
 on:
   pull_request:
     types: [synchronize, opened, reopened, ready_for_review]
-    paths-ignore:
-      - "docs/**"
-      - "**/*.md"
-      - "tests/performance/**"
-      - "OWNERS"
-      - "CODEOWNERS"
-      - "sec-scanners-config.yaml"
-      - ".github/**" #Ignoring since build job isn't triggered on the workflow directory changes
-      - ".**"
     branches:
       - main
       - 'release-**'
 
 jobs:
+  filter-changes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: tj-actions/changed-files@90a06d6ba9543371ab4df8eeca0be07ca6054959
+        id: changed-files
+        with:
+          files_ignore_yaml: |
+            docs:
+              - 'docs/**'
+              - '**/*.md'
+            performance_tests:
+              - 'tests/performance/**'
+            owner_files:
+              - 'OWNERS'
+              - 'CODEOWNERS'
+            sec_scanners:
+              - 'sec-scanners-config.yaml'
+            github:
+              - '.github/**' #Ignoring since build job isn't triggered on the workflow directory changes
+            hidden_files:
+              - '.**'
+      - name: List all changed files
+        run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
   wait-for-image-build:
     name: Wait for image build
+    needs: [filter-changes]
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
+    if: ${{ github.event.pull_request.draft == false && needs.changed-files.outputs.any_modified }}
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/wait-for-job-succeed-or-fail
@@ -34,7 +50,7 @@ jobs:
   k8s-compatibility-test:
     name: Kubernetes version compatibility test
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
+    if: ${{ github.event.pull_request.draft == false && needs.changed-files.outputs.any_modified }}
     needs: [wait-for-image-build]
     steps:
       - uses: actions/checkout@v4
@@ -45,7 +61,7 @@ jobs:
   istio-upgrade-integration-test:
     name: Istio upgrade integration test
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
+    if: ${{ github.event.pull_request.draft == false && needs.changed-files.outputs.any_modified }}
     needs: [wait-for-image-build]
     steps:
       - uses: actions/checkout@v4
@@ -59,7 +75,7 @@ jobs:
   istio-integration-test:
     name: Istio integration test
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
+    if: ${{ github.event.pull_request.draft == false && needs.changed-files.outputs.any_modified }}
     needs: [wait-for-image-build]
     steps:
       - uses: actions/checkout@v4
@@ -75,7 +91,7 @@ jobs:
   istio-integration-test-evaluation:
     name: Istio integration test evaluation
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
+    if: ${{ github.event.pull_request.draft == false && needs.changed-files.outputs.any_modified }}
     needs: [wait-for-image-build]
     steps:
       - uses: actions/checkout@v4

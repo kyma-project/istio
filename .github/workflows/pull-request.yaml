@@ -31,7 +31,7 @@ jobs:
     name: Wait for image build
     runs-on: ubuntu-latest
     needs: [check-wait-for-image-build]
-    if: ${{ needs.check-wait-for-image-build.outputs.any_modified }}
+    if: ${{ needs.check-wait-for-image-build.outputs.any_modified == 'true' }}
     steps:
       - uses: ./.github/actions/wait-for-job-succeed-or-fail
         with:
@@ -62,7 +62,7 @@ jobs:
     name: Dispatch unit test
     needs: [check-unit-test]
     uses: ./.github/workflows/pull-unit-lint.yaml
-    if: ${{ needs.check-unit-test.outputs.any_modified }}
+    if: ${{ needs.check-unit-test.outputs.any_modified == 'true' }}
     secrets: inherit
 
   check-integration:
@@ -89,7 +89,7 @@ jobs:
     name: Dispatch integration tests
     needs: [check-integration,wait-for-image-build]
     uses: ./.github/workflows/pull-integration.yaml
-    if: ${{ needs.check-integration.outputs.any_modified }}
+    if: ${{ needs.check-integration.outputs.any_modified == 'true' }}
     secrets: inherit
 
   check-ui:
@@ -112,5 +112,5 @@ jobs:
     name: Dispatch UI tests
     needs: [check-ui,wait-for-image-build]
     uses: ./.github/workflows/ui-tests.yaml
-    if: ${{ needs.check-ui.outputs.any_modified }}
+    if: ${{ needs.check-ui.outputs.any_modified == 'true' }}
     secrets: inherit

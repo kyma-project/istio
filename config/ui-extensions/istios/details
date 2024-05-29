@@ -21,7 +21,7 @@ body:
       name: config.numTrustedProxies
       placeholder: '1'
     - source: spec.compatibilityMode
-      name: numTrustedProxies
+      name: compatibilityMode
       placeholder: 'false'
 
     - name: config.authorizers

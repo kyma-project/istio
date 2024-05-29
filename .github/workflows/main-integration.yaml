@@ -34,7 +34,7 @@ jobs:
   wait-for-image-build:
     name: Wait for image build
     needs: [filter-changes]
-    if: ${{ github.event.pull_request.draft == false && needs.changed-files.outputs.check == 'true' }}
+    if: ${{ github.event.pull_request.draft == false && needs.filter-changes.outputs.check == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

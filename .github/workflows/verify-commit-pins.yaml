@@ -27,7 +27,7 @@ jobs:
     name: Ensure SHA pinned actions
     needs: [filter-changes]
     runs-on: ubuntu-latest
-    if: ${{ github.event.pull_request.draft == false && needs.changed-files.outputs.check == 'true' }}
+    if: ${{ github.event.pull_request.draft == false && needs.filter-changes.outputs.check == 'true' }}
     steps:
       - uses: actions/checkout@v4
       - uses: zgosalvez/github-actions-ensure-sha-pinned-actions@b1b635d24259e8a047a6ce7d6501ea432aa7a830 # 3.0.2

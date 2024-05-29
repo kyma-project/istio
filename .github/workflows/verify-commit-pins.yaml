@@ -1,28 +1,9 @@
 name: Workflow validation
 
 on:
-  pull_request:
-    types: [ synchronize, opened, reopened, ready_for_review ]
-    branches:
-      - main
-permissions:
-  contents: read
+  workflow_call:
 
 jobs:
-  filter-changes:
-    outputs:
-      check: ${{ steps.changed-files.outputs.any_modified }}
-    name: List relevant VCS changes
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: tj-actions/changed-files@90a06d6ba9543371ab4df8eeca0be07ca6054959
-        id: changed-files
-        with:
-          files: |
-            .github/workflows/**
-      - name: List all changed files
-        run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
   verify-actions:
     name: Ensure SHA pinned actions
     needs: [filter-changes]

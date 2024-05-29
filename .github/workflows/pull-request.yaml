@@ -123,3 +123,24 @@ jobs:
     uses: ./.github/workflows/ui-tests.yaml
     if: ${{ needs.check-ui.outputs.check == 'true' }}
     secrets: inherit
+
+  check-verify-pins:
+    outputs:
+      check: ${{ steps.changed-files.outputs.any_modified }}
+    name: Check whether to run verify-commit-pins
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: tj-actions/changed-files@90a06d6ba9543371ab4df8eeca0be07ca6054959
+        id: changed-files
+        with:
+          files: |
+            .github/workflows/**
+      - name: List all changed files
+        run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
+  dispatch-verify-pins:
+    name: Dispatch verify-commit-pins
+    needs: [check-verify-pins]
+    uses: ./.github/workflows/verify-commit-pins.yaml
+    if: ${{ needs.check-verify-pins.outputs.check == 'true' }}
+    secrets: inherit

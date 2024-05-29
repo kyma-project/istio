@@ -57,7 +57,7 @@ jobs:
         shell: bash
         env:
           GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"
-          GARDENER_PROJECT_NAME: "goatz"
+          GARDENER_PROJECT_NAME: "goats"
           GARDENER_PROVIDER_SECRET_NAME: "goat"
           GARDENER_PROVIDER: "gcp"
           GARDENER_REGION: "europe-west3"
@@ -91,7 +91,7 @@ jobs:
         shell: bash
         env:
           GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"
-          GARDENER_PROJECT_NAME: "goatz"
+          GARDENER_PROJECT_NAME: "goats"
           GARDENER_PROVIDER_SECRET_NAME: "aws-gardener-access"
           GARDENER_PROVIDER: "aws"
           GARDENER_CLUSTER_VERSION: "1.28"
@@ -125,7 +125,7 @@ jobs:
         shell: bash
         env:
           GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"
-          GARDENER_PROJECT_NAME: "goatz"
+          GARDENER_PROJECT_NAME: "goats"
           GARDENER_PROVIDER_SECRET_NAME: "goat"
           GARDENER_PROVIDER: "gcp"
           GARDENER_REGION: "europe-west3"

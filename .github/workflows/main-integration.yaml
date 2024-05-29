@@ -5,15 +5,6 @@ name: main integration tests
 
 on:
   push:
-    paths-ignore:
-      - "docs/**"
-      - "**/*.md"
-      - "tests/performance/**"
-      - "OWNERS"
-      - "CODEOWNERS"
-      - "sec-scanners-config.yaml"
-      - ".github/**" #Ignoring since the build job isn't triggered on the workflow directory changes
-      - ".**"
     branches:
       - main
       - 'release-**'
@@ -27,21 +18,15 @@ jobs:
       - uses: tj-actions/changed-files@90a06d6ba9543371ab4df8eeca0be07ca6054959
         id: changed-files
         with:
-          files_ignore_yaml: |
-            docs:
-              - "docs/**"
-              - "**/*.md"
-            performance_tests:
-              - "tests/performance/**"
-            owner_files:
-              - "OWNERS"
-              - "CODEOWNERS"
-            sec_scanners:
-              - "sec-scanners-config.yaml"
-            github:
-              - ".github/**" #Ignoring since the build job isn't triggered on the workflow directory changes
-            hidden_files:
-              - ".**"
+          files_ignore: |
+            docs/**
+            **/*.md
+            tests/performance/**
+            OWNERS
+            CODEOWNERS
+            sec-scanners-config.yaml
+            .github/**
+            .**
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
   wait-for-image-build:

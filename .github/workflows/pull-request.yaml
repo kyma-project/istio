@@ -27,7 +27,7 @@ jobs:
              .github/**
              .reuse/**
       - name: List all changed files
-        run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
+        run: echo '${{ steps.changed-files.outputs.all_changed_files }}' >> $GITHUB_STEP_SUMMARY
 
   wait-for-image-build:
     name: Wait for image build
@@ -62,7 +62,7 @@ jobs:
             .github/**
             .reuse/**
       - name: List all changed files
-        run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
+        run: echo '${{ steps.changed-files.outputs.all_changed_files }}' >> $GITHUB_STEP_SUMMARY
   dispatch-unit-test:
     name: Dispatch unit test
     needs: [check-unit-test]
@@ -91,7 +91,7 @@ jobs:
             .github/**
             .reuse/**
       - name: List all changed files
-        run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
+        run: echo '${{ steps.changed-files.outputs.all_changed_files }}' >> $GITHUB_STEP_SUMMARY
   dispatch-integration:
     name: Dispatch integration tests
     needs: [check-integration,wait-for-image-build]
@@ -116,7 +116,7 @@ jobs:
             tests/ui/**
             .github/workflows/ui-tests.yaml
       - name: List all changed files
-        run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
+        run: echo '${{ steps.changed-files.outputs.all_changed_files }}' >> $GITHUB_STEP_SUMMARY
   dispatch-ui:
     name: Dispatch UI tests
     needs: [check-ui,wait-for-image-build]
@@ -137,7 +137,7 @@ jobs:
           files: |
             .github/workflows/**
       - name: List all changed files
-        run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
+        run: echo '${{ steps.changed-files.outputs.all_changed_files }}' >> $GITHUB_STEP_SUMMARY
   dispatch-verify-pins:
     name: Dispatch verify-commit-pins
     needs: [check-verify-pins]

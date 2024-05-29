@@ -11,6 +11,8 @@ on:
 
 jobs:
   filter-changes:
+    outputs:
+      check: ${{ steps.changed-files.outputs.any_modified }}
     name: List relevant VCS changes
     runs-on: ubuntu-latest
     steps:
@@ -32,7 +34,7 @@ jobs:
   wait-for-image-build:
     name: Wait for image build
     needs: [filter-changes]
-    if: ${{ github.event.pull_request.draft == false && needs.changed-files.outputs.any_modified }}
+    if: ${{ github.event.pull_request.draft == false && needs.changed-files.outputs.check == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

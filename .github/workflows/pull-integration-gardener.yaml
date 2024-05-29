@@ -38,7 +38,7 @@ jobs:
     needs: [filter-changes]
     environment: ${{ github.event.pull_request.author_association != 'COLLABORATOR' && github.event.pull_request.author_association != 'OWNER' && 'restricted' || 'internal' }}
     runs-on: ubuntu-latest
-    if: ${{ github.event.pull_request.draft == false && needs.changed-files.outputs.check == 'true' }}
+    if: ${{ github.event.pull_request.draft == false && needs.filter-changes.outputs.check == 'true' }}
     steps:
       - uses: actions/checkout@v4
         with:

@@ -19,6 +19,7 @@ ACs:
 - [ ] Istio module upgrades with zero downtime - https://github.com/kyma-project/istio/issues/429
 - [ ] Tests and documentation updated if needed.
 - [ ] Verify that sidecars are in sync with Control Plane.
+- [ ] Check compatibility variables for the new version, and update them if neccessary.
 
 **DoD:**
 - [ ] Provide documentation.

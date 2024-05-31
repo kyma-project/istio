@@ -181,7 +181,7 @@ jobs:
     name: Slack Notification
     runs-on: ubuntu-latest
     if: ${{ failure() }}
-    needs: [istio-upgrade-integration-test, istio-integration-test,  istio-integration-gcp, istio-integration-aws, istio-integration-aws-specific]
+    needs: [istio-upgrade-integration-test, istio-integration-test,  istio-integration-gcp, istio-integration-aws, istio-integration-aws-specific, istio-integration-gcp-specific]
     steps:
       - uses: actions/checkout@v4
       - name: Notify

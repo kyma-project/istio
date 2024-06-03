@@ -111,6 +111,9 @@ func main() {
 		LeaderElectionID:       "76223278.kyma-project.io",
 		Client: client.Options{
 			Cache: &client.CacheOptions{
+				// The cache is disabled for these objects to avoid huge memory usage.
+				// Having the cache enabled had previously caused memory usage
+				//to have a significant peak when sidecar restart was triggered.
 				DisableFor: []client.Object{
 					&v1.DaemonSet{},
 					&v1.Deployment{},

@@ -97,6 +97,7 @@ func containsSidecar(pod v1.Pod) bool {
 func GetAllInjectedPods(ctx context.Context, k8sclient client.Client) (outputPodList *v1.PodList, err error) {
 	podList := &v1.PodList{}
 	outputPodList = &v1.PodList{}
+	outputPodList.Items = make([]v1.Pod, len(podList.Items))
 
 	err = retry.RetryOnError(retry.DefaultRetry, func() error {
 		return k8sclient.List(ctx, podList, &client.ListOptions{})

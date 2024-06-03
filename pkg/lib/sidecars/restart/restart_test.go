@@ -46,7 +46,7 @@ var _ = Describe("Restart Pods", func() {
 		}
 
 		// when
-		warnings, err := restart.Restart(ctx, c, podList, &logger)
+		warnings, err := restart.Restart(ctx, c, &podList, &logger)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -67,7 +67,7 @@ var _ = Describe("Restart Pods", func() {
 		}
 
 		// when
-		warnings, err := restart.Restart(ctx, c, podList, &logger)
+		warnings, err := restart.Restart(ctx, c, &podList, &logger)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -88,7 +88,7 @@ var _ = Describe("Restart Pods", func() {
 		}
 
 		// when
-		warnings, err := restart.Restart(ctx, c, podList, &logger)
+		warnings, err := restart.Restart(ctx, c, &podList, &logger)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -109,7 +109,7 @@ var _ = Describe("Restart Pods", func() {
 		}
 
 		// when
-		warnings, err := restart.Restart(ctx, c, podList, &logger)
+		warnings, err := restart.Restart(ctx, c, &podList, &logger)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -134,7 +134,7 @@ var _ = Describe("Restart Pods", func() {
 		}
 
 		// when
-		warnings, err := restart.Restart(ctx, c, podList, &logger)
+		warnings, err := restart.Restart(ctx, c, &podList, &logger)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -158,7 +158,7 @@ var _ = Describe("Restart Pods", func() {
 		}
 
 		// when
-		warnings, err := restart.Restart(ctx, c, podList, &logger)
+		warnings, err := restart.Restart(ctx, c, &podList, &logger)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -181,7 +181,7 @@ var _ = Describe("Restart Pods", func() {
 		}
 
 		// when
-		warnings, err := restart.Restart(ctx, c, podList, &logger)
+		warnings, err := restart.Restart(ctx, c, &podList, &logger)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -204,7 +204,7 @@ var _ = Describe("Restart Pods", func() {
 		}
 
 		// when
-		warnings, err := restart.Restart(ctx, c, podList, &logger)
+		warnings, err := restart.Restart(ctx, c, &podList, &logger)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -230,7 +230,7 @@ var _ = Describe("Restart Pods", func() {
 		}
 
 		// when
-		warnings, err := restart.Restart(ctx, c, podList, &logger)
+		warnings, err := restart.Restart(ctx, c, &podList, &logger)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -256,7 +256,7 @@ var _ = Describe("Restart Pods", func() {
 		c := fakeClient(&pod)
 
 		// when
-		warnings, err := restart.Restart(ctx, c, podList, &logger)
+		warnings, err := restart.Restart(ctx, c, &podList, &logger)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -291,7 +291,7 @@ var _ = Describe("Restart Pods", func() {
 		}})
 
 		// when
-		warnings, err := restart.Restart(ctx, c, podList, &logger)
+		warnings, err := restart.Restart(ctx, c, &podList, &logger)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -316,7 +316,7 @@ var _ = Describe("Restart Pods", func() {
 		}
 
 		// when
-		warnings, err := restart.Restart(ctx, c, podList, &logger)
+		warnings, err := restart.Restart(ctx, c, &podList, &logger)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -351,7 +351,7 @@ var _ = Describe("Restart Pods", func() {
 		}})
 
 		// when
-		warnings, err := restart.Restart(ctx, c, podList, &logger)
+		warnings, err := restart.Restart(ctx, c, &podList, &logger)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())

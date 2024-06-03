@@ -80,7 +80,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 
 		Expect(istioCR.Status.Conditions).ToNot(BeNil())
-		Expect((*istioCR.Status.Conditions)).To(HaveLen(1))
+		Expect(*istioCR.Status.Conditions).To(HaveLen(1))
 		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
 		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonIstioInstallSucceeded)))
 		Expect((*istioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
@@ -339,125 +339,57 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(istioCR.Status.State).To(Equal(operatorv1alpha2.Processing))
 	})
 
-	It("should return warning and not execute install when new Istio version is lower", func() {
-		// given
-		numTrustedProxies := 1
-		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
-			Name:            "default",
-			ResourceVersion: "1",
-			Annotations: map[string]string{
-				labels.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
-			},
-		},
-			Spec: operatorv1alpha2.IstioSpec{
-				Config: operatorv1alpha2.Config{
-					NumTrustedProxies: &numTrustedProxies,
+	DescribeTable("updating Istio version",
+		func(mergerIstioVersionTag string, expectedErrorMessage string) {
+			// given
+			numTrustedProxies := 1
+			istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
+				Name:            "default",
+				ResourceVersion: "1",
+				Annotations: map[string]string{
+					labels.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
 				},
 			},
-		}
-
-		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
-		mockClient := mockLibraryClient{}
-		c := createFakeClient(&istioCR, istiod)
-		installation := istio.Installation{
-			Client:      c,
-			IstioClient: &mockClient,
-			Merger:      MergerMock{tag: "1.16.0-distroless"},
-		}
-		statusHandler := status.NewStatusHandler(c)
-
-		// when
-		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
-
-		// then
-		Expect(err).Should(HaveOccurred())
-		Expect(err.Error()).To(Equal("target Istio version (1.16.0-distroless) is lower than current version (1.16.1-distroless) - downgrade not supported"))
-		Expect(err.Description()).To(Equal("Istio version update is not allowed: target Istio version (1.16.0-distroless) is lower than current version (1.16.1-distroless) - downgrade not supported"))
-		Expect(err.Level()).To(Equal(described_errors.Warning))
-		Expect(mockClient.installCalled).To(BeFalse())
-		Expect(mockClient.uninstallCalled).To(BeFalse())
-		Expect(istioCR.Status.Conditions).To(BeNil())
-	})
-
-	It("should return warning and not execute install when new Istio version is more than one minor version higher", func() {
-		// given
-		numTrustedProxies := 1
-		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
-			Name:            "default",
-			ResourceVersion: "1",
-			Annotations: map[string]string{
-				labels.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
-			},
-		},
-			Spec: operatorv1alpha2.IstioSpec{
-				Config: operatorv1alpha2.Config{
-					NumTrustedProxies: &numTrustedProxies,
+				Spec: operatorv1alpha2.IstioSpec{
+					Config: operatorv1alpha2.Config{
+						NumTrustedProxies: &numTrustedProxies,
+					},
 				},
-			},
-		}
+			}
 
-		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
-		mockClient := mockLibraryClient{}
-		c := createFakeClient(&istioCR, istiod)
-		installation := istio.Installation{
-			Client:      c,
-			IstioClient: &mockClient,
-			Merger:      MergerMock{tag: "1.18.0-distroless"},
-		}
-		statusHandler := status.NewStatusHandler(c)
+			istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
+			mockClient := mockLibraryClient{}
+			c := createFakeClient(&istioCR, istiod)
+			installation := istio.Installation{
+				Client:      c,
+				IstioClient: &mockClient,
+				Merger:      MergerMock{tag: mergerIstioVersionTag},
+			}
+			statusHandler := status.NewStatusHandler(c)
 
-		// when
-		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+			// when
+			_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
 
-		// then
-		Expect(err).Should(HaveOccurred())
-		Expect(err.Error()).To(Equal("target Istio version (1.18.0-distroless) is higher than current Istio version (1.16.1-distroless) - the difference between versions exceed one minor version"))
-		Expect(err.Description()).To(Equal("Istio version update is not allowed: target Istio version (1.18.0-distroless) is higher than current Istio version (1.16.1-distroless) - the difference between versions exceed one minor version"))
-		Expect(err.Level()).To(Equal(described_errors.Warning))
-		Expect(mockClient.installCalled).To(BeFalse())
-		Expect(mockClient.uninstallCalled).To(BeFalse())
-		Expect(istioCR.Status.Conditions).To(BeNil())
-	})
+			// then
+			Expect(err).Should(HaveOccurred())
+			Expect(err.Error()).To(Equal(expectedErrorMessage))
+			Expect(err.Description()).To(ContainSubstring("Istio version update is not allowed"))
+			Expect(err.Description()).To(ContainSubstring(expectedErrorMessage))
+			Expect(err.ShouldSetCondition()).To(BeFalse())
+			Expect(err.Level()).To(Equal(described_errors.Warning))
+			Expect(mockClient.installCalled).To(BeFalse())
+			Expect(mockClient.uninstallCalled).To(BeFalse())
 
-	It("should return warning and not execute install when new Istio version has a higher major version", func() {
-		// given
-		numTrustedProxies := 1
-		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
-			Name:            "default",
-			ResourceVersion: "1",
-			Annotations: map[string]string{
-				labels.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
-			},
+			Expect(istioCR.Status.Conditions).ToNot(BeNil())
+			Expect(*istioCR.Status.Conditions).To(HaveLen(1))
+			Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
+			Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonIstioVersionUpdateNotAllowed)))
+			Expect((*istioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 		},
-			Spec: operatorv1alpha2.IstioSpec{
-				Config: operatorv1alpha2.Config{
-					NumTrustedProxies: &numTrustedProxies,
-				},
-			},
-		}
-
-		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
-		mockClient := mockLibraryClient{}
-		c := createFakeClient(&istioCR, istiod)
-		installation := istio.Installation{
-			Client:      c,
-			IstioClient: &mockClient,
-			Merger:      MergerMock{tag: "2.0.0-distroless"},
-		}
-		statusHandler := status.NewStatusHandler(c)
-
-		// when
-		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
-
-		// then
-		Expect(err).Should(HaveOccurred())
-		Expect(err.Error()).To(Equal("target Istio version (2.0.0-distroless) is different than current Istio version (1.16.1-distroless) - major version upgrade is not supported"))
-		Expect(err.Description()).To(Equal("Istio version update is not allowed: target Istio version (2.0.0-distroless) is different than current Istio version (1.16.1-distroless) - major version upgrade is not supported"))
-		Expect(err.Level()).To(Equal(described_errors.Warning))
-		Expect(mockClient.installCalled).To(BeFalse())
-		Expect(mockClient.uninstallCalled).To(BeFalse())
-		Expect(istioCR.Status.Conditions).To(BeNil())
-	})
+		Entry("should return warning and not execute install when new Istio version is lower", "1.16.0-distroless", "target Istio version (1.16.0-distroless) is lower than current version (1.16.1-distroless) - downgrade not supported"),
+		Entry("should return warning and not execute install when new Istio version is more than one minor version higher", "1.18.0-distroless", "target Istio version (1.18.0-distroless) is higher than current Istio version (1.16.1-distroless) - the difference between versions exceed one minor version"),
+		Entry("should return warning and not execute install when new Istio version has a higher major version", "2.0.0-distroless", "target Istio version (2.0.0-distroless) is different than current Istio version (1.16.1-distroless) - major version upgrade is not supported"),
+	)
 
 	It("should fail when istio version is invalid", func() {
 		// given
@@ -540,7 +472,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 
 		Expect(istioCR.Status.Conditions).ToNot(BeNil())
-		Expect((*istioCR.Status.Conditions)).To(HaveLen(1))
+		Expect(*istioCR.Status.Conditions).To(HaveLen(1))
 		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
 		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonCustomResourceMisconfigured)))
 		Expect((*istioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
@@ -627,7 +559,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(mockClient.installCalled).To(BeFalse())
 
 		Expect(istioCR.Status.Conditions).ToNot(BeNil())
-		Expect((*istioCR.Status.Conditions)).To(HaveLen(1))
+		Expect(*istioCR.Status.Conditions).To(HaveLen(1))
 		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
 		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonIstioInstallNotNeeded)))
 		Expect((*istioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
@@ -672,7 +604,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(mockClient.uninstallCalled).To(BeTrue())
 
 		Expect(istioCR.Status.Conditions).ToNot(BeNil())
-		Expect((*istioCR.Status.Conditions)).To(HaveLen(1))
+		Expect(*istioCR.Status.Conditions).To(HaveLen(1))
 		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
 		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonIstioUninstallSucceeded)))
 		Expect((*istioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
@@ -797,7 +729,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 
 		Expect(istioCR.Status.Conditions).ToNot(BeNil())
-		Expect((*istioCR.Status.Conditions)).To(HaveLen(1))
+		Expect(*istioCR.Status.Conditions).To(HaveLen(1))
 		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
 		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonIstioInstallNotNeeded)))
 		Expect((*istioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
@@ -847,7 +779,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(mockClient.uninstallCalled).To(BeTrue())
 
 		Expect(istioCR.Status.Conditions).ToNot(BeNil())
-		Expect((*istioCR.Status.Conditions)).To(HaveLen(1))
+		Expect(*istioCR.Status.Conditions).To(HaveLen(1))
 		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
 		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonIstioUninstallSucceeded)))
 		Expect((*istioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))

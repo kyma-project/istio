@@ -41,7 +41,9 @@ func installIstio(ctx context.Context, args installArgs) (istiooperator.IstioIma
 		}
 
 		if err := checkIstioVersionUpdate(lastAppliedConfig.IstioTag, istioImageVersion.Tag()); err != nil {
-			return istioImageVersion, described_errors.NewDescribedError(err, "Istio version update is not allowed").SetWarning()
+			statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIstioVersionUpdateNotAllowed))
+			// We are already updating the condition, that's why we need to avoid another condition update by applying SetCondition(false)
+			return istioImageVersion, described_errors.NewDescribedError(err, "Istio version update is not allowed").SetWarning().SetCondition(false)
 		}
 	}
 

@@ -14,7 +14,8 @@ The version of Istio is dependent on the version of Istio Controller that you us
 
 You can only skip a version of Kyma Istio Operator if the difference between the minor version of Istio it contains and the minor version of Istio you're using is not greater than one (for example, 1.2.3 -> 1.3.0).
 If the difference is greater than one minor version (for example, 1.2.3 -> 1.4.0), the reconciliation fails.
-The same happens if you try to update the major version (for example, 1.2.3 -> 2.0.0) or downgrade the version. Such scenarios are not supported.
+The same happens if you try to update the major version (for example, 1.2.3 -> 2.0.0) or downgrade the version. 
+Such scenarios are not supported and will result in Istio CR in Warning state with the `Ready` condition being `false` with the reason `IstioVersionUpdateNotAllowed`.
 
 ## Istio Custom Resource
 
@@ -38,24 +39,25 @@ Istio Operator does not restart an Istio sidecar proxy, if it has a custom image
 
 Conditions:
 
-| CR state   | Type                         | Status | Reason                            | Message                                                                                  |
-|------------|------------------------------|--------|-----------------------------------|------------------------------------------------------------------------------------------|
-| Ready      | Ready                        | True   | ReconcileSucceeded                | Reconciliation succeeded                                                                 |
-| Error      | Ready                        | False  | ReconcileFailed                   | Reconciliation failed                                                                    |
-| Warning    | Ready                        | False  | OlderCRExists                     | This Istio custom resource is not the oldest one and does not represent the module state |
-| Processing | Ready                        | False  | IstioInstallNotNeeded             | Istio installation is not needed                                                         |
-| Processing | Ready                        | False  | IstioInstallSucceeded             | Istio installation succeeded                                                             |
-| Processing | Ready                        | False  | IstioUninstallSucceeded           | Istio uninstallation succeded                                                            |
-| Error      | Ready                        | False  | IstioInstallUninstallFailed       | Istio install or uninstall failed                                                        |
-| Error      | Ready                        | False  | IstioCustomResourceMisconfigured  | Istio custom resource has invalid configuration                                          |
-| Warning    | Ready                        | False  | IstioCustomResourcesDangling      | Istio deletion blocked because of existing Istio custom resources                        |
-| Processing | Ready                        | False  | CustomResourcesReconcileSucceeded | Custom resources reconciliation succeeded                                                |
-| Error      | Ready                        | False  | CustomResourcesReconcileFailed    | Custom resources reconciliation failed                                                   |
-| Processing | ProxySidecarRestartSucceeded | True   | ProxySidecarRestartSucceeded      | Proxy sidecar restart succeeded                                                          |
-| Error      | ProxySidecarRestartSucceeded | False  | ProxySidecarRestartFailed         | Proxy sidecar restart failed                                                             |
-| Warning    | ProxySidecarRestartSucceeded | False  | ProxySidecarManualRestartRequired | Proxy sidecar manual restart is required for some workloads                              |
-| Processing | Ready                        | False  | IngressGatewayReconcileSucceeded  | Istio Ingress Gateway reconciliation succeeded                                           |
-| Error      | Ready                        | False  | IngressGatewayReconcileFailed     | Istio Ingress Gateway reconciliation failed                                              |
+| CR state   | Type                         | Status | Reason                             | Message                                                                                  |
+|------------|------------------------------|--------|------------------------------------|------------------------------------------------------------------------------------------|
+| Ready      | Ready                        | True   | ReconcileSucceeded                 | Reconciliation succeeded                                                                 |
+| Error      | Ready                        | False  | ReconcileFailed                    | Reconciliation failed                                                                    |
+| Warning    | Ready                        | False  | OlderCRExists                      | This Istio custom resource is not the oldest one and does not represent the module state |
+| Processing | Ready                        | False  | IstioInstallNotNeeded              | Istio installation is not needed                                                         |
+| Processing | Ready                        | False  | IstioInstallSucceeded              | Istio installation succeeded                                                             |
+| Processing | Ready                        | False  | IstioUninstallSucceeded            | Istio uninstallation succeded                                                            |
+| Error      | Ready                        | False  | IstioInstallUninstallFailed        | Istio install or uninstall failed                                                        |
+| Error      | Ready                        | False  | IstioCustomResourceMisconfigured   | Istio custom resource has invalid configuration                                          |
+| Warning    | Ready                        | False  | IstioCustomResourcesDangling       | Istio deletion blocked because of existing Istio custom resources                        |
+| Processing | Ready                        | False  | CustomResourcesReconcileSucceeded  | Custom resources reconciliation succeeded                                                |
+| Error      | Ready                        | False  | CustomResourcesReconcileFailed     | Custom resources reconciliation failed                                                   |
+| Processing | ProxySidecarRestartSucceeded | True   | ProxySidecarRestartSucceeded       | Proxy sidecar restart succeeded                                                          |
+| Error      | ProxySidecarRestartSucceeded | False  | ProxySidecarRestartFailed          | Proxy sidecar restart failed                                                             |
+| Warning    | ProxySidecarRestartSucceeded | False  | ProxySidecarManualRestartRequired  | Proxy sidecar manual restart is required for some workloads                              |
+| Processing | Ready                        | False  | IngressGatewayReconcileSucceeded   | Istio Ingress Gateway reconciliation succeeded                                           |
+| Error      | Ready                        | False  | IngressGatewayReconcileFailed      | Istio Ingress Gateway reconciliation failed                                              |
+| Warning    | Ready                        | False  | IstioVersionUpdateNotAllowed       | Update to the new Istio version is not allowed                                           |
 
 ## X-Forwarded-For HTTP Header
 

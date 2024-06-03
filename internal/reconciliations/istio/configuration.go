@@ -14,12 +14,6 @@ type appliedConfig struct {
 	IstioTag string
 }
 
-// isIstioInstalled returns true when Istio CR has LastAppliedConfiguration annotation
-func isIstioInstalled(istio *operatorv1alpha2.Istio) bool {
-	_, ok := istio.Annotations[labels.LastAppliedConfiguration]
-	return ok
-}
-
 // UpdateLastAppliedConfiguration annotates the passed CR with LastAppliedConfiguration, which holds information about last applied
 // IstioCR spec and IstioTag (IstioVersion-IstioImageBase)
 func UpdateLastAppliedConfiguration(istioCR *operatorv1alpha2.Istio, istioTag string) error {

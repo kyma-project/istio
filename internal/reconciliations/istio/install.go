@@ -8,6 +8,7 @@ import (
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/internal/webhooks"
+	"github.com/kyma-project/istio/operator/pkg/labels"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -33,7 +34,7 @@ func installIstio(ctx context.Context, args installArgs) (istiooperator.IstioIma
 
 	ctrl.Log.Info("Starting Istio install", "istio version", istioImageVersion.Version)
 
-	if isIstioInstalled(istioCR) {
+	if _, ok := istioCR.Annotations[labels.LastAppliedConfiguration]; ok {
 		lastAppliedConfig, err := getLastAppliedConfiguration(istioCR)
 		if err != nil {
 			ctrl.Log.Error(err, "Error evaluating Istio CR changes")

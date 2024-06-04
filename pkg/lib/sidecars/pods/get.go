@@ -51,14 +51,11 @@ func getAllRunningPods(ctx context.Context, c client.Client) (*v1.PodList, error
 	return podList, nil
 }
 
-func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage SidecarImage, expectedResources v1.ResourceRequirements, predicates []filter.SidecarProxyPredicate, logger *logr.Logger) (outputPodsList v1.PodList, err error) {
+func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage SidecarImage, expectedResources v1.ResourceRequirements, predicates []filter.SidecarProxyPredicate, logger *logr.Logger) (outputPodsList *v1.PodList, err error) {
 	podList, err := getAllRunningPods(ctx, c)
 	if err != nil {
-		return outputPodsList, err
+		return nil, err
 	}
-
-	podList.DeepCopyInto(&outputPodsList)
-	outputPodsList.Items = []v1.Pod{}
 
 	//Add predicate for image version and resources configuration
 	predicates = append(predicates, NewRestartProxyPredicate(expectedImage, expectedResources))
@@ -66,17 +63,20 @@ func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage Sideca
 	for _, predicate := range predicates {
 		evaluator, err := predicate.NewProxyRestartEvaluator(ctx)
 		if err != nil {
-			return v1.PodList{}, err
+			return &v1.PodList{}, err
 		}
 
+		outputPodsList = &v1.PodList{}
 		for _, pod := range podList.Items {
 			if evaluator.RequiresProxyRestart(pod) {
-				outputPodsList.Items = append(outputPodsList.Items, *pod.DeepCopy())
+				outputPodsList.Items = append(outputPodsList.Items, pod)
 			}
 		}
 	}
 
-	logger.Info("Pods to restart", "number of pods", len(outputPodsList.Items))
+	if outputPodsList != nil {
+		logger.Info("Pods to restart", "number of pods", len(outputPodsList.Items))
+	}
 	return outputPodsList, nil
 }
 
@@ -97,6 +97,7 @@ func containsSidecar(pod v1.Pod) bool {
 func GetAllInjectedPods(ctx context.Context, k8sclient client.Client) (outputPodList *v1.PodList, err error) {
 	podList := &v1.PodList{}
 	outputPodList = &v1.PodList{}
+	outputPodList.Items = make([]v1.Pod, len(podList.Items))
 
 	err = retry.RetryOnError(retry.DefaultRetry, func() error {
 		return k8sclient.List(ctx, podList, &client.ListOptions{})

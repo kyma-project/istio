@@ -4,7 +4,10 @@
 package main
 
 import (
+	"errors"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"istio.io/istio/istioctl/pkg/install/k8sversion"
@@ -32,11 +35,26 @@ func initializeLog() *istiolog.Options {
 
 func main() {
 	iopFileNames := []string{os.Args[1]}
+	istioVersion := os.Args[2] // semver string
+  compatibilityMode := os.Args[3] // true or false string
+  var setOptions []string
 
 	istioLogOptions := initializeLog()
 	registeredScope := istiolog.RegisterScope("installation", "installation")
 	consoleLogger := clog.NewConsoleLogger(os.Stdout, os.Stderr, registeredScope)
 	printer := istio.NewPrinterForWriter(os.Stdout)
+
+  var err error
+
+  if  compatibilityMode != "" && compatibilityMode == "true" {
+    setOptions, err = buildCompatibilityOption(setOptions, istioVersion)
+    if err != nil {
+      println("ACHTUNG ERROR WHILE BUILDING COMPAtiBILITY OPTION")
+      consoleLogger.LogAndError(err)
+      os.Exit(1)
+    }
+  }
+
 
 	rc, err := kube.DefaultRestConfig("", "", func(config *rest.Config) {
 		config.QPS = 50
@@ -59,10 +77,35 @@ func main() {
 	}
 
 	// We don't want to verify after installation, because it is unreliable
-	installArgs := &istio.InstallArgs{ReadinessTimeout: 150 * time.Second, SkipConfirmation: true, Verify: false, InFilenames: iopFileNames}
+  installArgs := &istio.InstallArgs{ReadinessTimeout: 150 * time.Second, SkipConfirmation: true, Verify: false, InFilenames: iopFileNames, Set: setOptions}
 
 	if err := istio.Install(cliClient, &istio.RootArgs{}, installArgs, istioLogOptions, os.Stdout, consoleLogger, printer); err != nil {
 		consoleLogger.LogAndError("Istio install error: ", err)
 		os.Exit(1)
 	}
+}
+
+func buildCompatibilityOption(setOpts []string, istioVersion string) ([]string, error) {
+    const compatibilityFlag = "compatibilityVersion="
+    println("DOING GREAT TRYING TO APPLY COMPATIBILITY BROTHER")
+    sp := strings.Split(istioVersion, ".")
+    if len(sp) != 3 {
+      return nil, errors.New("expected Istio version in semver X.Y.Z")
+    }
+
+    tmp, err := strconv.Atoi(sp[1])
+    if err != nil {
+      println("ACHTUNG ERRROR ", err.Error())
+      return nil, err
+    }
+
+    // we want to support compatibility with one minor back
+    compatibilityMajor := sp[0]
+    compatibilityMinor := strconv.Itoa(tmp - 1)
+    semVerSep := "."
+    compatibilityOption := compatibilityFlag + compatibilityMajor + semVerSep + compatibilityMinor
+    println("DEBUG BROTHER ", compatibilityOption, "=======")
+    setOpts = append(setOpts, compatibilityOption)
+
+    return setOpts, nil
 }

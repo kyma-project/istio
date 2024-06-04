@@ -23,15 +23,11 @@ const (
 	requestsField         = "requests"
 )
 
-// compatibility environment variables of Istio
-// they are supposed to be feature flags, to keep the compatibility with previous Istio versions in case of breaking changes
+// the following map contains Istio compatibility environment variables, that are not included in the compatibilityVersion of istioctl install
 // should be updated with every Istio bump according to the release notes
-// requires update of integration tests
 // current env comes from: Istio 1.21
 var compatibilityEnvs = map[string]string{
 	"ENABLE_EXTERNAL_NAME_ALIAS": "false",
-	"VERIFY_CERT_AT_CLIENT":      "false",
-	"ENABLE_AUTO_SNI":            "false",
 }
 
 func (i *Istio) MergeInto(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {
@@ -52,7 +48,7 @@ func (i *Istio) MergeInto(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperat
 	externalNameAliasAnnotationFixOp := manageExternalNameAlias(i, mergedResourcesOp)
 
 	if i.Spec.CompatibilityMode {
-		compatibleIop := setCompatibilityEnvs(i, externalNameAliasAnnotationFixOp)
+		compatibleIop := setCompatibilityEnvs(externalNameAliasAnnotationFixOp)
 		return compatibleIop, nil
 	}
 
@@ -63,7 +59,7 @@ type meshConfigBuilder struct {
 	c *meshv1alpha1.MeshConfig
 }
 
-func setCompatibilityEnvs(_ *Istio, op iopv1alpha1.IstioOperator) iopv1alpha1.IstioOperator {
+func setCompatibilityEnvs(op iopv1alpha1.IstioOperator) iopv1alpha1.IstioOperator {
 	if op.Spec == nil {
 		op.Spec = &v1alpha1.IstioOperatorSpec{}
 	}

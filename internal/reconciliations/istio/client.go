@@ -3,6 +3,13 @@ package istio
 import (
 	"context"
 	"fmt"
+	"os"
+	"os/exec"
+	"strconv"
+	"sync"
+	"time"
+
+	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/pkg/errors"
 	"istio.io/api/operator/v1alpha1"
 	"istio.io/istio/istioctl/pkg/install/k8sversion"
@@ -17,13 +24,9 @@ import (
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
-	"os"
-	"os/exec"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
-	"sync"
-	"time"
 
 	istio "istio.io/istio/operator/cmd/mesh"
 	"istio.io/istio/operator/pkg/util/clog"
@@ -31,7 +34,7 @@ import (
 )
 
 type LibraryClient interface {
-	Install(mergedIstioOperatorPath string) error
+	Install(mergedIstioOperatorPath string, istioVersion istiooperator.IstioImageVersion, compatibilityMode bool) error
 	Uninstall(ctx context.Context) error
 }
 
@@ -50,7 +53,7 @@ func NewIstioClient() *IstioClient {
 	return &IstioClient{istioLogOptions: istioLogOptions, consoleLogger: consoleLogger, printer: printer}
 }
 
-func installIstioInExternalProcess(mergedIstioOperatorPath string) error {
+func installIstioInExternalProcess(mergedIstioOperatorPath, istioVersion string, compatibilityMode bool) error {
 	istioInstallPath, ok := os.LookupEnv("ISTIO_INSTALL_BIN_PATH")
 	if !ok {
 		istioInstallPath = "./istio_install"
@@ -59,7 +62,7 @@ func installIstioInExternalProcess(mergedIstioOperatorPath string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*6)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, istioInstallPath, mergedIstioOperatorPath)
+	cmd := exec.CommandContext(ctx, istioInstallPath, mergedIstioOperatorPath, istioVersion, strconv.FormatBool(compatibilityMode))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
@@ -73,8 +76,8 @@ func installIstioInExternalProcess(mergedIstioOperatorPath string) error {
 	return nil
 }
 
-func (c *IstioClient) Install(mergedIstioOperatorPath string) error {
-	err := installIstioInExternalProcess(mergedIstioOperatorPath)
+func (c *IstioClient) Install(mergedIstioOperatorPath string, istioVersion istiooperator.IstioImageVersion, compatibilityMode bool) error {
+	err := installIstioInExternalProcess(mergedIstioOperatorPath, istioVersion.Version(), compatibilityMode)
 
 	if err != nil {
 		return err

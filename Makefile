@@ -95,12 +95,12 @@ test-experimental-tag: manifests generate fmt vet envtest ## Run tests.
 ##@ Build
 
 .PHONY: build
-build: generate fmt vet ## Build manager binary.
+build: generate ## Build manager binary.
 	go build -o bin/manager main.go
 	go build -o $(ISTIO_INSTALL_BIN_PATH) cmd/istio-install/main.go
 
 .PHONY: run
-run: manifests install create-kyma-system-ns ## Run a controller from your host.
+run: manifests install build create-kyma-system-ns ## Run a controller from your host.
 	ISTIO_INSTALL_BIN_PATH=$(ISTIO_INSTALL_BIN_PATH) go run ./main.go
 
 .PHONY: docker-build

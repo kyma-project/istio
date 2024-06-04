@@ -7,7 +7,6 @@ on:
       - '.github/workflows/**'
     branches:
       - main
-
 permissions:
   contents: read
 

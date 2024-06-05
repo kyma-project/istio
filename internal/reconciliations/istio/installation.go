@@ -80,7 +80,6 @@ func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha2.
 			return istioImageVersion, described_errors.NewDescribedError(err, "Could not merge Istio operator configuration").SetCondition(false)
 		}
 
-    println("CALLLLLING INSTALL AAAA ", istioCR.Spec.CompatibilityMode)
 		err = i.IstioClient.Install(mergedIstioOperatorPath, istioImageVersion, istioCR.Spec.CompatibilityMode)
 		if err != nil {
 			// In case of an error during the Istio installation, the old mutatingwebhook won't be deactivated, which will block later reconciliations

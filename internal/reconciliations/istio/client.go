@@ -4,13 +4,10 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
-	"strconv"
 	"sync"
-	"time"
 
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
-	"github.com/pkg/errors"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/external_installation"
 	"istio.io/api/operator/v1alpha1"
 	"istio.io/istio/istioctl/pkg/install/k8sversion"
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
@@ -53,32 +50,13 @@ func NewIstioClient() *IstioClient {
 	return &IstioClient{istioLogOptions: istioLogOptions, consoleLogger: consoleLogger, printer: printer}
 }
 
-func installIstioInExternalProcess(mergedIstioOperatorPath, istioVersion string, compatibilityMode bool) error {
-	istioInstallPath, ok := os.LookupEnv("ISTIO_INSTALL_BIN_PATH")
-	if !ok {
-		istioInstallPath = "./istio_install"
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*6)
-	defer cancel()
-
-	cmd := exec.CommandContext(ctx, istioInstallPath, mergedIstioOperatorPath, istioVersion, strconv.FormatBool(compatibilityMode))
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-
-	if err != nil {
-		// We should not return the error of the external process, because it is always "exit status 1" and we do
-		// not want to show such an error in the resource status
-		return errors.New("Istio installation resulted in an error")
-	}
-
-	return nil
-}
-
 func (c *IstioClient) Install(mergedIstioOperatorPath string, istioVersion istiooperator.IstioImageVersion, compatibilityMode bool) error {
-	err := installIstioInExternalProcess(mergedIstioOperatorPath, istioVersion.Version(), compatibilityMode)
+	ei, err := external_installation.NewExternalInstaller(mergedIstioOperatorPath, istioVersion.Version(), compatibilityMode)
+	if err != nil {
+		return err
+	}
 
+	err = ei.Install()
 	if err != nil {
 		return err
 	}

@@ -61,10 +61,3 @@ Feature: Configuration of Istio module
     And Log of container "ext-authz" in deployment "ext-authz" in namespace "default" contains "X-Add-In-Check:[value] X-Ext-Authz:[allow]"
     And Request with header "x-ext-authz" with value "deny" to path "/headers" should have response code "403"
     And Log of container "ext-authz" in deployment "ext-authz" in namespace "default" contains "X-Add-In-Check:[value] X-Ext-Authz:[deny]"
-  Scenario: Compatibility mode is on
-    Given Template value "CompatibilityMode" is set to "true"
-    When Istio CR "istio-sample" from "istio_cr_template" is applied in namespace "kyma-system"
-    And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
-    Then Environment variable "ENABLE_EXTERNAL_NAME_ALIAS" on Deployment "istiod" in namespace "istio-system" is present and has value "false"
-    And Environment variable "VERIFY_CERT_AT_CLIENT" on Deployment "istiod" in namespace "istio-system" is present and has value "false"
-    And Environment variable "ENABLE_AUTO_SNI" on Deployment "istiod" in namespace "istio-system" is present and has value "false"

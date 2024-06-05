@@ -93,3 +93,7 @@ Run this command to get all resources created by the Istio module:
 ```bash
 kubectl get all|<resources-kind> -A -l kyma-project.io/module=istio
 ```
+
+## Compatibility Mode
+
+You can set Istio Module to work in the compatibility mode by setting IstioCR's `spec.compatibilityMode` field. It leverages underlying Istio compatibilityVersion feature, and in addition applies all the environment variables that are not contained in the compatibilityVersion of Istio, but mentioned in the release notes. It let's users to keep possibility to mitigate breaking changes during the Istio bump. Istio Module supports compatibilityVersion one minor back to the current Istio version (eg. Istio module with Istio 1.21.0 applies compatibilityVersion to 1.20). See [Istio Documentation on compatibilityVersion](https://istio.io/latest/docs/setup/additional-setup/compatibility-versions/).

@@ -10,7 +10,7 @@ Feature: Compatibility Mode
   Scenario: Compatibility mode is set on
     Given Istio CR "istio-sample" from "istio_cr_template" is applied in namespace "kyma-system"
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
-    # ENABLE_EXTERNAL_NAME_ALIAS is set to true by the custom annotation handler, because of that we need to verify if it's not overwritten
+    # ENABLE_EXTERNAL_NAME_ALIAS is set to true by the custom annotation handler if the compatibility mode is off, so we check default setup here
     Then Environment variable "ENABLE_EXTERNAL_NAME_ALIAS" on Deployment "istiod" in namespace "istio-system" is present and has value "true"
     And Environment variable "VERIFY_CERTIFICATE_AT_CLIENT" on Deployment "istiod" in namespace "istio-system" is not present
     And Environment variable "ENABLE_AUTO_SNI" on Deployment "istiod" in namespace "istio-system" is not present

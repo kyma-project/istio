@@ -1,4 +1,4 @@
-package external_installation
+package istio
 
 import (
 	"context"

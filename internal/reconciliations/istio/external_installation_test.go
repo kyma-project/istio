@@ -1,17 +1,10 @@
-package external_installation_test
+package istio_test
 
 import (
-	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/external_installation"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"testing"
 )
-
-func TestManifest(t *testing.T) {
-	RegisterFailHandler(Fail)
-
-	RunSpecs(t, "Test External Installer")
-}
 
 var _ = Describe("External Install Client", func() {
 	Context("Create external install client", func() {
@@ -19,7 +12,7 @@ var _ = Describe("External Install Client", func() {
 			iopPath := "/some/path"
 			compatibilityMode := true
 			istioVersion := "1.21.2"
-			ei, err := external_installation.NewExternalInstaller(iopPath, istioVersion, compatibilityMode)
+			ei, err := istio.NewExternalInstaller(iopPath, istioVersion, compatibilityMode)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(ei.Args[1]).To(Equal(iopPath))
 		})
@@ -28,7 +21,7 @@ var _ = Describe("External Install Client", func() {
 			iopPath := "/some/path"
 			compatibilityMode := true
 			istioVersion := "1.21.2"
-			ei, err := external_installation.NewExternalInstaller(iopPath, istioVersion, compatibilityMode)
+			ei, err := istio.NewExternalInstaller(iopPath, istioVersion, compatibilityMode)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(ei.Args[2]).To(Equal("compatibilityVersion=1.20"))
 		})
@@ -37,7 +30,7 @@ var _ = Describe("External Install Client", func() {
 			iopPath := "/some/path"
 			compatibilityMode := false
 			istioVersion := "1.21.2"
-			ei, err := external_installation.NewExternalInstaller(iopPath, istioVersion, compatibilityMode)
+			ei, err := istio.NewExternalInstaller(iopPath, istioVersion, compatibilityMode)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(ei.Args[2]).To(Equal(""))
 		})
@@ -46,9 +39,9 @@ var _ = Describe("External Install Client", func() {
 			iopPath := "/some/path"
 			compatibilityMode := true
 			istioVersion := "1.21"
-			_, err := external_installation.NewExternalInstaller(iopPath, istioVersion, compatibilityMode)
+			_, err := istio.NewExternalInstaller(iopPath, istioVersion, compatibilityMode)
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(Equal(external_installation.ErrCannotParseSemver.Error()))
+			Expect(err.Error()).To(Equal(istio.ErrCannotParseSemver.Error()))
 		})
 	})
 })

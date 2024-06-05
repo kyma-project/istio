@@ -7,7 +7,6 @@ import (
 	"sync"
 
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
-	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/external_installation"
 	"istio.io/api/operator/v1alpha1"
 	"istio.io/istio/istioctl/pkg/install/k8sversion"
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
@@ -51,7 +50,7 @@ func NewIstioClient() *IstioClient {
 }
 
 func (c *IstioClient) Install(mergedIstioOperatorPath string, istioVersion istiooperator.IstioImageVersion, compatibilityMode bool) error {
-	ei, err := external_installation.NewExternalInstaller(mergedIstioOperatorPath, istioVersion.Version(), compatibilityMode)
+	ei, err := NewExternalInstaller(mergedIstioOperatorPath, istioVersion.Version(), compatibilityMode)
 	if err != nil {
 		return err
 	}

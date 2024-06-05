@@ -50,7 +50,7 @@ func NewIstioClient() *IstioClient {
 }
 
 func (c *IstioClient) Install(mergedIstioOperatorPath string, istioVersion istiooperator.IstioImageVersion, compatibilityMode bool) error {
-	ei, err := NewExternalInstaller(mergedIstioOperatorPath, istioVersion.Version(), compatibilityMode)
+	ei, err := newExternalInstaller(mergedIstioOperatorPath, istioVersion.Version(), compatibilityMode)
 	if err != nil {
 		return err
 	}

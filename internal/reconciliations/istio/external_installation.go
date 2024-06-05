@@ -11,14 +11,14 @@ import (
 	"time"
 )
 
-var ErrCannotParseSemver = errors.New("cannot parse semver, invalid format")
+var errCannotParseSemver = errors.New("cannot parse semver, invalid format")
 
-type ExternalInstall struct {
+type externalInstaller struct {
 	cancel context.CancelFunc
 	*exec.Cmd
 }
 
-func NewExternalInstaller(iopPath, istioVersion string, compatibilityMode bool) (*ExternalInstall, error) {
+func newExternalInstaller(iopPath, istioVersion string, compatibilityMode bool) (*externalInstaller, error) {
 	var compatibilityParam string
 	var err error
 	istioInstallPath, ok := os.LookupEnv("ISTIO_INSTALL_BIN_PATH")
@@ -35,13 +35,13 @@ func NewExternalInstaller(iopPath, istioVersion string, compatibilityMode bool) 
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*6)
 
-	return &ExternalInstall{
+	return &externalInstaller{
 		cancel,
 		exec.CommandContext(ctx, istioInstallPath, iopPath, compatibilityParam),
 	}, nil
 }
 
-func (ei *ExternalInstall) Install() error {
+func (ei *externalInstaller) Install() error {
 	ei.Stdout = os.Stdout
 	ei.Stderr = os.Stderr
 	defer ei.cancel()
@@ -58,11 +58,11 @@ func (ei *ExternalInstall) Install() error {
 func buildCompatibilityParam(istioVersion string) (string, error) {
 	sp := strings.Split(istioVersion, ".")
 	if len(sp) < 3 {
-		return "", ErrCannotParseSemver
+		return "", errCannotParseSemver
 	}
 
 	majorVersion := sp[0]
-	minorVersion, err := stepBackOneMinorVersion(sp[1])
+	minorVersion, err := decreaseOneMinorVersion(sp[1])
 	if err != nil {
 		return "", err
 	}
@@ -71,7 +71,7 @@ func buildCompatibilityParam(istioVersion string) (string, error) {
 	return compatibilityParam, nil
 }
 
-func stepBackOneMinorVersion(minor string) (string, error) {
+func decreaseOneMinorVersion(minor string) (string, error) {
 	tmp, err := strconv.Atoi(minor)
 	if err != nil {
 		return "", err

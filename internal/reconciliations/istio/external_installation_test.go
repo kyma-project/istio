@@ -1,7 +1,6 @@
-package istio_test
+package istio
 
 import (
-	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -12,7 +11,7 @@ var _ = Describe("External Install Client", func() {
 			iopPath := "/some/path"
 			compatibilityMode := true
 			istioVersion := "1.21.2"
-			ei, err := istio.NewExternalInstaller(iopPath, istioVersion, compatibilityMode)
+			ei, err := newExternalInstaller(iopPath, istioVersion, compatibilityMode)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(ei.Args[1]).To(Equal(iopPath))
 		})
@@ -21,7 +20,7 @@ var _ = Describe("External Install Client", func() {
 			iopPath := "/some/path"
 			compatibilityMode := true
 			istioVersion := "1.21.2"
-			ei, err := istio.NewExternalInstaller(iopPath, istioVersion, compatibilityMode)
+			ei, err := newExternalInstaller(iopPath, istioVersion, compatibilityMode)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(ei.Args[2]).To(Equal("compatibilityVersion=1.20"))
 		})
@@ -30,7 +29,7 @@ var _ = Describe("External Install Client", func() {
 			iopPath := "/some/path"
 			compatibilityMode := false
 			istioVersion := "1.21.2"
-			ei, err := istio.NewExternalInstaller(iopPath, istioVersion, compatibilityMode)
+			ei, err := newExternalInstaller(iopPath, istioVersion, compatibilityMode)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(ei.Args[2]).To(Equal(""))
 		})
@@ -39,9 +38,9 @@ var _ = Describe("External Install Client", func() {
 			iopPath := "/some/path"
 			compatibilityMode := true
 			istioVersion := "1.21"
-			_, err := istio.NewExternalInstaller(iopPath, istioVersion, compatibilityMode)
+			_, err := newExternalInstaller(iopPath, istioVersion, compatibilityMode)
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(Equal(istio.ErrCannotParseSemver.Error()))
+			Expect(err.Error()).To(Equal(errCannotParseSemver.Error()))
 		})
 	})
 })

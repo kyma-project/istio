@@ -354,6 +354,31 @@ func VerifyEnvVariableOnDeployment(ctx context.Context, envVarName, deploymentNa
 	}, testcontext.GetRetryOpts()...)
 }
 
+func VerifyLackEnvVariableOnDeployment(ctx context.Context, envVarName, deploymentName, namespace string) error {
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	return retry.Do(func() error {
+		var dep v1.Deployment
+		err = k8sClient.Get(ctx, types.NamespacedName{Namespace: namespace, Name: deploymentName}, &dep)
+		if err != nil {
+			return err
+		}
+
+		for _, c := range dep.Spec.Template.Spec.Containers {
+			for _, e := range c.Env {
+				if e.Name == envVarName {
+					return fmt.Errorf("environment variable %s should not be present on the deployment %s in namespace %s", envVarName, deploymentName, namespace)
+				}
+			}
+		}
+
+    return nil
+	}, testcontext.GetRetryOpts()...)
+}
+
 func getPodList(ctx context.Context, k8sClient client.Client, podList *corev1.PodList, opts *client.ListOptions) error {
 	err := k8sClient.List(ctx, podList, opts)
 	if err != nil {

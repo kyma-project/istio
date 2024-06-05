@@ -26,7 +26,7 @@ const (
 // the following map contains Istio compatibility environment variables, that are not included in the compatibilityVersion of istioctl install
 // should be updated with every Istio bump according to the release notes
 // current env comes from: Istio 1.21
-var compatibilityEnvs = map[string]string{
+var pilotCompatibilityEnvVars = map[string]string{
 	"ENABLE_EXTERNAL_NAME_ALIAS": "false",
 }
 
@@ -73,7 +73,7 @@ func setCompatibilityEnvs(op iopv1alpha1.IstioOperator) iopv1alpha1.IstioOperato
 		op.Spec.Components.Pilot.K8S = &v1alpha1.KubernetesResourcesSpec{}
 	}
 
-	for k, v := range compatibilityEnvs {
+	for k, v := range pilotCompatibilityEnvVars {
 		op.Spec.Components.Pilot.K8S.Env = append(op.Spec.Components.Pilot.K8S.Env, &v1alpha1.EnvVar{
 			Name:  k,
 			Value: v,

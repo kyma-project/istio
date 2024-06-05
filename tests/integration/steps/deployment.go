@@ -354,7 +354,7 @@ func VerifyEnvVariableOnDeployment(ctx context.Context, envVarName, deploymentNa
 	}, testcontext.GetRetryOpts()...)
 }
 
-func VerifyLackEnvVariableOnDeployment(ctx context.Context, envVarName, deploymentName, namespace string) error {
+func VerifyEnvVariableIsNotOnDeployment(ctx context.Context, envVarName, deploymentName, namespace string) error {
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
@@ -375,7 +375,7 @@ func VerifyLackEnvVariableOnDeployment(ctx context.Context, envVarName, deployme
 			}
 		}
 
-    return nil
+		return nil
 	}, testcontext.GetRetryOpts()...)
 }
 

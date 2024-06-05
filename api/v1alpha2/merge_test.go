@@ -565,7 +565,7 @@ var _ = Describe("Merge", func() {
 				existingEnvs[v.Name] = v.Value
 			}
 
-			for k, v := range compatibilityEnvs {
+			for k, v := range pilotCompatibilityEnvVars {
 				Expect(existingEnvs[k]).To(Equal(v))
 			}
 
@@ -598,7 +598,7 @@ var _ = Describe("Merge", func() {
 				existingEnvs[v.Name] = v.Value
 			}
 
-			for k, v := range compatibilityEnvs {
+			for k, v := range pilotCompatibilityEnvVars {
 				Expect(existingEnvs[k]).To(Equal(v))
 			}
 		})
@@ -623,14 +623,14 @@ var _ = Describe("Merge", func() {
 			//then
 			Expect(err).ShouldNot(HaveOccurred())
 
-			vc := 0
+			variableCounter := 0
 			for _, value := range out.Spec.Components.Pilot.K8S.GetEnv() {
-				if v, ok := compatibilityEnvs[value.Name]; ok && value.Value == v {
-					vc++
+				if v, ok := pilotCompatibilityEnvVars[value.Name]; ok && value.Value == v {
+					variableCounter++
 				}
 			}
 
-			Expect(vc).To(Equal(0))
+			Expect(variableCounter).To(Equal(0))
 		})
 	})
 

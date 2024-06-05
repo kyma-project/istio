@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+var ErrCannotParseSemver = errors.New("cannot parse semver, invalid format")
+
 type ExternalInstall struct {
 	cancel context.CancelFunc
 	*exec.Cmd
@@ -54,23 +56,27 @@ func (ei *ExternalInstall) Install() error {
 }
 
 func buildCompatibilityParam(istioVersion string) (string, error) {
-	flag := "compatibilityVersion="
-	semVerSep := "."
 	sp := strings.Split(istioVersion, ".")
 	if len(sp) < 3 {
-		return "", fmt.Errorf("expected semver Istio version in format X.Y.Z, but got %s", istioVersion)
+		return "", ErrCannotParseSemver
 	}
 
-	major := sp[0]
-
-	tmp, err := strconv.Atoi(sp[1])
+	majorVersion := sp[0]
+	minorVersion, err := stepBackOneMinorVersion(sp[1])
 	if err != nil {
 		return "", err
 	}
 
-	minor := strconv.Itoa(tmp - 1)
-
-	compatibilityParam := flag + major + semVerSep + minor
-
+	compatibilityParam := fmt.Sprintf("compatibilityVersion=%s.%s", majorVersion, minorVersion)
 	return compatibilityParam, nil
+}
+
+func stepBackOneMinorVersion(minor string) (string, error) {
+	tmp, err := strconv.Atoi(minor)
+	if err != nil {
+		return "", err
+	}
+
+	minorBackOne := strconv.Itoa(tmp - 1)
+	return minorBackOne, nil
 }

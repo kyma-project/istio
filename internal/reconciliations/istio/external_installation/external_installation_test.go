@@ -48,6 +48,7 @@ var _ = Describe("External Install Client", func() {
 			istioVersion := "1.21"
 			_, err := external_installation.NewExternalInstaller(iopPath, istioVersion, compatibilityMode)
 			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(Equal(external_installation.ErrCannotParseSemver.Error()))
 		})
 	})
 })

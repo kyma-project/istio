@@ -54,7 +54,7 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^Ext-authz application "([^"]*)" deployment is created in namespace "([^"]*)"$`, steps.CreateExtAuthzApplication)
 	ctx.Step(`^Authorization policy "([^"]*)" in namespace "([^"]*)" with app selector "([^"]*)" is using extension provider "([^"]*)" for operation "([^"]*)"$`, steps.CreateAuthorizationPolicyExtAuthz)
 	ctx.Step(`Environment variable "([^"]*)" on Deployment "([^"]*)" in namespace "([^"]*)" is present and has value "([^"]*)`, steps.VerifyEnvVariableOnDeployment)
-	ctx.Step(`Environment variable "([^"]*)" on Deployment "([^"]*)" in namespace "([^"]*)" is not present`, steps.VerifyLackEnvVariableOnDeployment)
+	ctx.Step(`Environment variable "([^"]*)" on Deployment "([^"]*)" in namespace "([^"]*)" is not present`, steps.VerifyEnvVariableIsNotOnDeployment)
 }
 
 func upgradeInitScenario(ctx *godog.ScenarioContext) {

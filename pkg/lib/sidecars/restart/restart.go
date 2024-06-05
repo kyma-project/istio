@@ -26,7 +26,7 @@ func newRestartWarning(o actionObject, message string) RestartWarning {
 	}
 }
 
-func Restart(ctx context.Context, c client.Client, podList v1.PodList, logger *logr.Logger) ([]RestartWarning, error) {
+func Restart(ctx context.Context, c client.Client, podList *v1.PodList, logger *logr.Logger) ([]RestartWarning, error) {
 	warnings := make([]RestartWarning, 0)
 	processedActionObjects := make(map[string]bool)
 

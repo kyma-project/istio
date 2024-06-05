@@ -18,7 +18,9 @@ package main
 
 import (
 	"flag"
+	v1 "k8s.io/api/apps/v1"
 	"os"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"time"
 
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
@@ -107,6 +109,19 @@ func main() {
 		HealthProbeBindAddress: flagVar.probeAddr,
 		LeaderElection:         flagVar.enableLeaderElection,
 		LeaderElectionID:       "76223278.kyma-project.io",
+		Client: client.Options{
+			Cache: &client.CacheOptions{
+				// The cache is disabled for these objects to avoid huge memory usage.
+				// Having the cache enabled had previously caused memory usage
+				//to have a significant peak when sidecar restart was triggered.
+				DisableFor: []client.Object{
+					&v1.DaemonSet{},
+					&v1.Deployment{},
+					&v1.StatefulSet{},
+					&v1.ReplicaSet{},
+				},
+			},
+		},
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")

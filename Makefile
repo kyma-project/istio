@@ -95,7 +95,7 @@ test-experimental-tag: manifests generate fmt vet envtest ## Run tests.
 ##@ Build
 
 .PHONY: build
-build: generate ## Build manager binary.
+build: generate fmt vet ## Build manager binary.
 	go build -o bin/manager main.go
 	go build -o $(ISTIO_INSTALL_BIN_PATH) cmd/istio-install/main.go
 

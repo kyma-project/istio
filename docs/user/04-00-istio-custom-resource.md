@@ -84,7 +84,7 @@ This table lists all the possible parameters of the given resource together with
 To retain the behavior of `EXTERNAL_NAME` that was present in versions of Istio prior to 1.21, you can configure the `ENABLE_EXTERNAL_NAME_ALIAS` environment variable in the Istio pilot. To do this, add the following annotation to the Istio CR:
 
 !> [!WARNING]
-> Annotation does not have effect when compatibility mode is on. The `ENABLE_EXTERNAL_NAME_ALIAS` environment variable in this mode is set to false.
+> The annotation does not have an effect when compatibility mode is on. The **ENABLE_EXTERNAL_NAME_ALIAS** environment variable in this mode is set to `false`.
 
 ```yaml
 istio-operator.kyma-project.io/disable-external-name-alias: "true"

@@ -28,6 +28,14 @@ env:
 on:
   workflow_dispatch:
     inputs:
+      label:
+        description: "Label"
+        required: true
+        default: "patch"
+        options:
+          - patch
+          - minor
+          - major
       releaseTag:
         description: "Release Tag"
         required: true
@@ -161,3 +169,15 @@ jobs:
               exit 0
           fi
           gh pr create -B main -H ${{ vars.GIT_USER_NAME }}:${BRANCH_NAME} -R https://github.tools.sap/kyma/module-manifests/ --title "Promote Istio ${TAG} to ${CHANNEL} channel" --fill --body "${ISTIO_RELEASES_URL}/${TAG}"
+      - name: Label the PR with patch/minor label
+        working-directory: module-manifests
+        shell: bash
+        env:
+          CHANNEL: ${{ inputs.channel }}
+          MODULE_MANIFESTS_REPO_URL: "https://${{ vars.GH_TOOLS_HOST }}/kyma/${{ vars.MODULE_MANIFESTS_REPO_NAME }}"
+          LABEl: ${{ inputs.label }}
+        run: |
+          prs=$(gh pr list -R "${MODULE_MANIFESTS_REPO_URL}" -A ${{ vars.GIT_USER_NAME }} --state open --json headRefName | jq -r '.[] | .headRefName')
+          if  echo $prs | tr " " '\n' | grep -F -q -x ${BRANCH_NAME}; then
+              gh pr edit -R "${MODULE_MANIFESTS_REPO_URL}" -A ${{ vars.GIT_USER_NAME }} --json ${BRANCH_NAME} --add-label "${LABEL}"
+          fi

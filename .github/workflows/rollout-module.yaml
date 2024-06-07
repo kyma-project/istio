@@ -122,30 +122,22 @@ jobs:
         run: |
           echo "Creating module configuration file:"
           if "${CHANNEL}" == "experimental"; then
-            cat <<EOF | tee module-config.yaml
-            name: ${FULL_MODULE_NAME}
-            channel: ${CHANNEL}
-            version: ${TAG}-experimental
-            manifest: ${MANIFEST_FILENAME}
-            defaultCR: ${DEFAULT_CR_FILENAME}
-            annotations:
-              "operator.kyma-project.io/doc-url": "${DOC_URL}"
-            moduleRepo: https://github.com/kyma-project/istio.git
-            moduleSecurityScanConfig: true
-            EOF
+            MODULE_VERSION="${TAG}-experimental"
           else
-            cat <<EOF | tee module-config.yaml
-            name: ${FULL_MODULE_NAME}
-            channel: ${CHANNEL}
-            version: ${TAG}
-            manifest: ${MANIFEST_FILENAME}
-            defaultCR: ${DEFAULT_CR_FILENAME}
-            annotations:
-              "operator.kyma-project.io/doc-url": "${DOC_URL}"
-            moduleRepo: https://github.com/kyma-project/istio.git
-            moduleSecurityScanConfig: true
-            EOF
+            MODULE_VERSION="${TAG}"
           fi
+          
+          cat <<EOF | tee module-config.yaml
+          name: ${FULL_MODULE_NAME}
+          channel: ${CHANNEL}
+          version: ${MODULE_VERSION}
+          manifest: ${MANIFEST_FILENAME}
+          defaultCR: ${DEFAULT_CR_FILENAME}
+          annotations:
+            "operator.kyma-project.io/doc-url": "${DOC_URL}"
+          moduleRepo: https://github.com/kyma-project/istio.git
+          moduleSecurityScanConfig: true
+          EOF
       - name: Commit and push changes
         shell: bash
         working-directory: module-manifests

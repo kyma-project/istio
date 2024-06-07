@@ -23,16 +23,6 @@ const (
 	requestsField         = "requests"
 )
 
-// the following map contains Istio compatibility environment variables, that are not included in the compatibilityVersion of istioctl install
-// should be updated with every Istio bump according to the release notes
-// current env comes from: Istio 1.21
-var pilotCompatibilityEnvVars = map[string]string{
-	"ENABLE_EXTERNAL_NAME_ALIAS":                                       "false",
-	"PERSIST_OLDEST_FIRST_HEURISTIC_FOR_VIRTUAL_SERVICE_HOST_MATCHING": "true",
-	"VERIFY_CERTIFICATE_AT_CLIENT":                                     "false",
-	"ENABLE_AUTO_SNI":                                                  "false",
-}
-
 func (i *Istio) MergeInto(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {
 	if op.Spec == nil {
 		op.Spec = &v1alpha1.IstioOperatorSpec{}
@@ -60,30 +50,6 @@ func (i *Istio) MergeInto(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperat
 
 type meshConfigBuilder struct {
 	c *meshv1alpha1.MeshConfig
-}
-
-func setCompatibilityEnvs(op iopv1alpha1.IstioOperator) iopv1alpha1.IstioOperator {
-	if op.Spec == nil {
-		op.Spec = &v1alpha1.IstioOperatorSpec{}
-	}
-	if op.Spec.Components == nil {
-		op.Spec.Components = &v1alpha1.IstioComponentSetSpec{}
-	}
-	if op.Spec.Components.Pilot == nil {
-		op.Spec.Components.Pilot = &v1alpha1.ComponentSpec{}
-	}
-	if op.Spec.Components.Pilot.K8S == nil {
-		op.Spec.Components.Pilot.K8S = &v1alpha1.KubernetesResourcesSpec{}
-	}
-
-	for k, v := range pilotCompatibilityEnvVars {
-		op.Spec.Components.Pilot.K8S.Env = append(op.Spec.Components.Pilot.K8S.Env, &v1alpha1.EnvVar{
-			Name:  k,
-			Value: v,
-		})
-	}
-
-	return op
 }
 
 func manageExternalNameAlias(i *Istio, op iopv1alpha1.IstioOperator) iopv1alpha1.IstioOperator {

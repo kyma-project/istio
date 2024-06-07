@@ -29,7 +29,7 @@ on:
   workflow_dispatch:
     inputs:
       label:
-        description: "Label"
+        description: "Pull Request label"
         required: true
         default: "patch"
         options:
@@ -169,7 +169,4 @@ jobs:
           MODULE_MANIFESTS_REPO_URL: "https://${{ vars.GH_TOOLS_HOST }}/kyma/${{ vars.MODULE_MANIFESTS_REPO_NAME }}"
           LABEl: ${{ inputs.label }}
         run: |
-          prs=$(gh pr list -R "${MODULE_MANIFESTS_REPO_URL}" -A ${{ vars.GIT_USER_NAME }} --state open --json headRefName | jq -r '.[] | .headRefName')
-          if  echo $prs | tr " " '\n' | grep -F -q -x ${BRANCH_NAME}; then
-              gh pr edit -R "${MODULE_MANIFESTS_REPO_URL}" -A ${{ vars.GIT_USER_NAME }} --json ${BRANCH_NAME} --add-label "${LABEL}"
-          fi
+          gh pr edit ${{ vars.GIT_USER_NAME }}:${BRANCH_NAME} -R "${MODULE_MANIFESTS_REPO_URL}" --add-label "${LABEL}"

@@ -32,13 +32,6 @@ func initializeLog() *istiolog.Options {
 
 func main() {
 	iopFileNames := []string{os.Args[1]}
-	compatibilityFlag := os.Args[2]
-
-	var setOptions []string
-
-	if compatibilityFlag != "" {
-		setOptions = append(setOptions, compatibilityFlag)
-	}
 
 	istioLogOptions := initializeLog()
 	registeredScope := istiolog.RegisterScope("installation", "installation")
@@ -66,7 +59,7 @@ func main() {
 	}
 
 	// We don't want to verify after installation, because it is unreliable
-	installArgs := &istio.InstallArgs{ReadinessTimeout: 150 * time.Second, SkipConfirmation: true, Verify: false, InFilenames: iopFileNames, Set: setOptions}
+	installArgs := &istio.InstallArgs{ReadinessTimeout: 150 * time.Second, SkipConfirmation: true, Verify: false, InFilenames: iopFileNames}
 
 	if err := istio.Install(cliClient, &istio.RootArgs{}, installArgs, istioLogOptions, os.Stdout, consoleLogger, printer); err != nil {
 		consoleLogger.LogAndError("Istio install error: ", err)

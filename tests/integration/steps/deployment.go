@@ -13,7 +13,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -328,55 +327,6 @@ func CreateServiceWithPort(ctx context.Context, appName, namespace string, port,
 	}, testcontext.GetRetryOpts()...)
 
 	return ctx, err
-}
-
-func VerifyEnvVariableOnDeployment(ctx context.Context, envVarName, deploymentName, namespace, envVarVal string) error {
-	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
-	if err != nil {
-		return err
-	}
-
-	return retry.Do(func() error {
-		var dep v1.Deployment
-		err = k8sClient.Get(ctx, types.NamespacedName{Namespace: namespace, Name: deploymentName}, &dep)
-		if err != nil {
-			return err
-		}
-
-		for _, c := range dep.Spec.Template.Spec.Containers {
-			for _, e := range c.Env {
-				if e.Name == envVarName && e.Value == envVarVal {
-					return nil
-				}
-			}
-		}
-		return fmt.Errorf("expected env variable %s on Deployment %s with value %s", envVarName, deploymentName, envVarVal)
-	}, testcontext.GetRetryOpts()...)
-}
-
-func VerifyEnvVariableIsNotOnDeployment(ctx context.Context, envVarName, deploymentName, namespace string) error {
-	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
-	if err != nil {
-		return err
-	}
-
-	return retry.Do(func() error {
-		var dep v1.Deployment
-		err = k8sClient.Get(ctx, types.NamespacedName{Namespace: namespace, Name: deploymentName}, &dep)
-		if err != nil {
-			return err
-		}
-
-		for _, c := range dep.Spec.Template.Spec.Containers {
-			for _, e := range c.Env {
-				if e.Name == envVarName {
-					return fmt.Errorf("environment variable %s should not be present on the deployment %s in namespace %s", envVarName, deploymentName, namespace)
-				}
-			}
-		}
-
-		return nil
-	}, testcontext.GetRetryOpts()...)
 }
 
 func getPodList(ctx context.Context, k8sClient client.Client, podList *corev1.PodList, opts *client.ListOptions) error {

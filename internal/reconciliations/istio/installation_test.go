@@ -962,7 +962,7 @@ type mockLibraryClient struct {
 	uninstallError error
 }
 
-func (c *mockLibraryClient) Install(_ string, _ istiooperator.IstioImageVersion, _ bool) error {
+func (c *mockLibraryClient) Install(_ string) error {
 	c.installCalled = true
 	return c.installError
 }

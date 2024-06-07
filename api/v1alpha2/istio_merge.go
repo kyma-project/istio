@@ -27,7 +27,10 @@ const (
 // should be updated with every Istio bump according to the release notes
 // current env comes from: Istio 1.21
 var pilotCompatibilityEnvVars = map[string]string{
-	"ENABLE_EXTERNAL_NAME_ALIAS": "false",
+	"ENABLE_EXTERNAL_NAME_ALIAS":                                       "false",
+	"PERSIST_OLDEST_FIRST_HEURISTIC_FOR_VIRTUAL_SERVICE_HOST_MATCHING": "true",
+	"VERIFY_CERTIFICATE_AT_CLIENT":                                     "false",
+	"ENABLE_AUTO_SNI":                                                  "false",
 }
 
 func (i *Istio) MergeInto(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {

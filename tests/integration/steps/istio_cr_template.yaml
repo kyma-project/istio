@@ -50,4 +50,3 @@ spec:
   config:
     numTrustedProxies: {{.NumTrustedProxies}}
     gatewayExternalTrafficPolicy: {{ .GatewayExternalTrafficPolicy }}
-  compatibilityMode: {{ .CompatibilityMode }}

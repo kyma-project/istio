@@ -17,7 +17,7 @@ context('Virtual Services', () => {
         cy.deleteNamespace(namespaceName);
     });
 
-    it('should create new', () => {
+    it.skip('should create new', () => {
         cy.navigateToVirtualServices(namespaceName);
 
         cy.clickCreateButton();

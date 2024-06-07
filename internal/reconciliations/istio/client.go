@@ -3,10 +3,7 @@ package istio
 import (
 	"context"
 	"fmt"
-	"os"
-	"sync"
-
-	"github.com/kyma-project/istio/operator/internal/istiooperator"
+	"github.com/pkg/errors"
 	"istio.io/api/operator/v1alpha1"
 	"istio.io/istio/istioctl/pkg/install/k8sversion"
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
@@ -20,9 +17,13 @@ import (
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
+	"os"
+	"os/exec"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
+	"sync"
+	"time"
 
 	istio "istio.io/istio/operator/cmd/mesh"
 	"istio.io/istio/operator/pkg/util/clog"
@@ -30,7 +31,7 @@ import (
 )
 
 type LibraryClient interface {
-	Install(mergedIstioOperatorPath string, istioVersion istiooperator.IstioImageVersion, compatibilityMode bool) error
+	Install(mergedIstioOperatorPath string) error
 	Uninstall(ctx context.Context) error
 }
 
@@ -49,13 +50,32 @@ func NewIstioClient() *IstioClient {
 	return &IstioClient{istioLogOptions: istioLogOptions, consoleLogger: consoleLogger, printer: printer}
 }
 
-func (c *IstioClient) Install(mergedIstioOperatorPath string, istioVersion istiooperator.IstioImageVersion, compatibilityMode bool) error {
-	ei, err := newExternalInstaller(mergedIstioOperatorPath, istioVersion.Version(), compatibilityMode)
-	if err != nil {
-		return err
+func installIstioInExternalProcess(mergedIstioOperatorPath string) error {
+	istioInstallPath, ok := os.LookupEnv("ISTIO_INSTALL_BIN_PATH")
+	if !ok {
+		istioInstallPath = "./istio_install"
 	}
 
-	err = ei.Install()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*6)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, istioInstallPath, mergedIstioOperatorPath)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+
+	if err != nil {
+		// We should not return the error of the external process, because it is always "exit status 1" and we do
+		// not want to show such an error in the resource status
+		return errors.New("Istio installation resulted in an error")
+	}
+
+	return nil
+}
+
+func (c *IstioClient) Install(mergedIstioOperatorPath string) error {
+	err := installIstioInExternalProcess(mergedIstioOperatorPath)
+
 	if err != nil {
 		return err
 	}

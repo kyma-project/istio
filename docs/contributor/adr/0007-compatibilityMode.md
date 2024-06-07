@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted by the Istio module team
+Accepted
 
 ## Context
 

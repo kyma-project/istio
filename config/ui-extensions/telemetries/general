@@ -2,7 +2,7 @@ resource:
   kind: Telemetry
   group: telemetry.istio.io
   version: v1alpha1
-urlPath: telemetries
+urlPath: istiotelemetries
 category: Istio
 name: Telemetries
 scope: namespace

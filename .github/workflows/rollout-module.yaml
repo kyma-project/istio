@@ -1,7 +1,6 @@
 
 name: Rollout to channel via module-manifests
 #  Workflow requires the following variables to be defined
-#     DOC_URL - location of istio documentation
 #     GIT_USER_NAME - user creating head branch and PR
 #     GIT_USER_EMAIL - this user email
 #     GH_TOOLS_HOST - tools host
@@ -15,6 +14,7 @@ env:
 
   ISTIO_API_URL: "https://api.github.com/repos/kyma-project/istio"
   ISTIO_RELEASES_URL: "https://github.com/kyma-project/istio/releases"
+  DOC_URL: "https://kyma-project.io/#/istio/user/README"
 
   # File names
   DEFAULT_CR_FILENAME: istio-default-cr.yaml
@@ -48,7 +48,6 @@ jobs:
       - name: Validate required environment variables
         shell: bash
         run: |
-          [ -z "${{ vars.DOC_URL }}" ] && echo "DOC_URL is required" && exit 1 
           [ -z "${{ vars.GIT_USER_EMAIL }}" ] && echo "GIT_USER_EMAIL is required" && exit 1 
           [ -z "${{ vars.GIT_USER_NAME }}" ] && echo "GIT_USER_NAME is required" && exit 1 
           [ -z "${{ vars.GH_TOOLS_HOST }}" ] && echo "GH_TOOLS_HOST is required" && exit 1 
@@ -74,9 +73,11 @@ jobs:
               exit 1  
           fi
       - name: Set branch name
+        shell: bash
         run: echo "BRANCH_NAME=istio-${TAG}-${{ inputs.channel }}" >> $GITHUB_ENV
 
       - name: Setup git and clone repo
+        shell: bash
         run: |
           git config --global user.email ${{ vars.GIT_USER_EMAIL }}
           git config --global user.name ${{ vars.GIT_USER_NAME }}
@@ -86,6 +87,7 @@ jobs:
 
       - name: Sync Repo and create branch
         working-directory: module-manifests
+        shell: bash
         run: |
           git remote add upstream ${MODULE_MANIFESTS_WITH_USER}
           git fetch upstream
@@ -94,6 +96,7 @@ jobs:
           mkdir -p modules/istio/${{ inputs.channel }}
       - name: Download artifacts
         working-directory: module-manifests/modules/istio/${{ inputs.channel }}
+        shell: bash
         env:
           CHANNEL: ${{ inputs.channel }}
         run: |
@@ -107,20 +110,36 @@ jobs:
         env:
           CHANNEL: ${{ inputs.channel }}
         working-directory: module-manifests/modules/istio/${{ inputs.channel }}
+        shell: bash
         run: |
           echo "Creating module configuration file:"
-          cat <<EOF | tee module-config.yaml
-          name: ${FULL_MODULE_NAME}
-          channel: ${CHANNEL}
-          version: ${TAG}
-          manifest: ${MANIFEST_FILENAME}
-          defaultCR: ${DEFAULT_CR_FILENAME}
-          annotations:
-            "operator.kyma-project.io/doc-url": "${{ vars.DOC_URL }}"
-          moduleRepo: https://github.com/kyma-project/istio.git
-          moduleSecurityScanConfig: true
-          EOF
+          if "${CHANNEL}" == "experimental"; then
+            cat <<EOF | tee module-config.yaml
+            name: ${FULL_MODULE_NAME}
+            channel: ${CHANNEL}
+            version: ${TAG}-experimental
+            manifest: ${MANIFEST_FILENAME}
+            defaultCR: ${DEFAULT_CR_FILENAME}
+            annotations:
+              "operator.kyma-project.io/doc-url": "${DOC_URL}"
+            moduleRepo: https://github.com/kyma-project/istio.git
+            moduleSecurityScanConfig: true
+            EOF
+          else
+            cat <<EOF | tee module-config.yaml
+            name: ${FULL_MODULE_NAME}
+            channel: ${CHANNEL}
+            version: ${TAG}
+            manifest: ${MANIFEST_FILENAME}
+            defaultCR: ${DEFAULT_CR_FILENAME}
+            annotations:
+              "operator.kyma-project.io/doc-url": "${DOC_URL}"
+            moduleRepo: https://github.com/kyma-project/istio.git
+            moduleSecurityScanConfig: true
+            EOF
+          fi
       - name: Commit and push changes
+        shell: bash
         working-directory: module-manifests
         env:
           FORK_ORIGIN: "https://${{ vars.GIT_USER_NAME }}:${{ secrets.BOT_TOKEN_GITHUB_TOOLS }}@${{ vars.GH_TOOLS_HOST }}/${{ vars.GIT_USER_NAME }}/${{ vars.MODULE_MANIFESTS_REPO_NAME }}.git"

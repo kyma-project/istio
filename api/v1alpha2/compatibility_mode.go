@@ -15,7 +15,12 @@ var pilotCompatibilityEnvVars = map[string]string{
 	"ENABLE_AUTO_SNI":                                                  "false",
 }
 
-func setCompatibilityEnvs(op iopv1alpha1.IstioOperator) iopv1alpha1.IstioOperator {
+func setCompatibilityMode(op iopv1alpha1.IstioOperator) iopv1alpha1.IstioOperator {
+	pilotIop := setCompatibilityPilot(op)
+	return pilotIop
+}
+
+func setCompatibilityPilot(op iopv1alpha1.IstioOperator) iopv1alpha1.IstioOperator {
 	if op.Spec == nil {
 		op.Spec = &v1alpha1.IstioOperatorSpec{}
 	}

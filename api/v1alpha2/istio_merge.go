@@ -41,7 +41,7 @@ func (i *Istio) MergeInto(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperat
 	externalNameAliasAnnotationFixOp := manageExternalNameAlias(i, mergedResourcesOp)
 
 	if i.Spec.CompatibilityMode {
-		compatibleIop := setCompatibilityEnvs(externalNameAliasAnnotationFixOp)
+		compatibleIop := setCompatibilityMode(externalNameAliasAnnotationFixOp)
 		return compatibleIop, nil
 	}
 

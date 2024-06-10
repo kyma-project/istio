@@ -8,8 +8,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var _ = Describe("Merge", func() {
-	Context("Compatibility Mode", func() {
+var _ = Describe("Compatibility Mode", func() {
+	Context("Istio Pilot", func() {
 		It("should set compatibility variables on Istio Pilot when compatibility mode is on", func() {
 			//given
 			iop := iopv1alpha1.IstioOperator{
@@ -103,7 +103,7 @@ var _ = Describe("Merge", func() {
 			Expect(variableCounter).To(Equal(0))
 		})
 
-		It("should not set compatibility variables on Istio Pilot when compatibility mode is skipped on the IstioCR", func() {
+		It("should not set compatibility variables on Istio Pilot when compatibility mode is is not configured in IstioCR", func() {
 			//given
 			iop := iopv1alpha1.IstioOperator{
 				Spec: &operatorv1alpha1.IstioOperatorSpec{},

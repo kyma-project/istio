@@ -20,8 +20,7 @@ ACs:
 - [ ] Tests and documentation updated if needed.
 - [ ] Verify that sidecars are in sync with Control Plane.
 - [ ] Istio and Envoy Version updated in the [`README.md`](https://github.com/kyma-project/istio) and [`/docs/user/README.md`](https://github.com/kyma-project/istio) files. You can use the scripts `scripts/get_module_istio_version.sh` and `scripts/get_module_envoy_version.sh` to extract the versions.
-- [ ] Check **compatibilityVersion** of the previous minor version . You can find it in the [`helm-profiles`](https://github.com/istio/istio/tree/master/manifests/helm-profiles) directory. Evaluate content, and adjust compatibility mode implementation in `api/v1alpha2/comaptibility_mode.go` .
-- [ ] Check compatibility variables not covered by **compatibilityVersion** for the new version in the Istio release notes. Update them if necessary.
+- [ ] Check **compatibilityVersion** of the previous minor version. You can find it in the [`helm-profiles`](https://github.com/istio/istio/tree/master/manifests/helm-profiles) directory. Evaluate content, and adjust compatibility mode implementation in `api/v1alpha2/comaptibility_mode.go`. Check in the release notes for any compatibility flags, that might be not covered by the compatibilityVersion. Update `docs/user/04-00-istio-custom-resource.md` with any updates to the content of the compatibility mode.
 
 **DoD:**
 - [ ] Provide documentation.

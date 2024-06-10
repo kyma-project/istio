@@ -72,7 +72,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -117,7 +117,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -159,7 +159,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -167,7 +167,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 
 		ns := corev1.Namespace{}
-		_ = c.Get(context.TODO(), types.NamespacedName{Name: "istio-system"}, &ns)
+		_ = c.Get(context.Background(), types.NamespacedName{Name: "istio-system"}, &ns)
 		Expect(ns.Labels).To(HaveKeyWithValue(testKey, testValue))
 		Expect(ns.Annotations).To(HaveKeyWithValue(testKey, testValue))
 		Expect(ns.Labels).To(HaveKeyWithValue("namespaces.warden.kyma-project.io/validate", "enabled"))
@@ -206,7 +206,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -246,7 +246,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -288,7 +288,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -330,7 +330,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -368,7 +368,7 @@ var _ = Describe("Installation reconciliation", func() {
 			statusHandler := status.NewStatusHandler(c)
 
 			// when
-			_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+			_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
 
 			// then
 			Expect(err).Should(HaveOccurred())
@@ -419,7 +419,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -461,7 +461,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -508,7 +508,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -552,7 +552,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -596,7 +596,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -642,7 +642,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -682,7 +682,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -721,7 +721,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -771,7 +771,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -820,7 +820,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -866,24 +866,24 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.TODO(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
 
 		cm := corev1.ConfigMap{}
-		cerr := c.Get(context.TODO(), types.NamespacedName{Namespace: "istio-system", Name: "istio"}, &cm)
+		cerr := c.Get(context.Background(), types.NamespacedName{Namespace: "istio-system", Name: "istio"}, &cm)
 		Expect(cerr).ToNot(HaveOccurred())
 		Expect(cm.Labels).To(HaveKeyWithValue("kyma-project.io/module", "istio"))
 
 		d := appsv1.Deployment{}
-		cerr = c.Get(context.TODO(), types.NamespacedName{Namespace: "istio-system", Name: "istio-ingressgateway"}, &d)
+		cerr = c.Get(context.Background(), types.NamespacedName{Namespace: "istio-system", Name: "istio-ingressgateway"}, &d)
 		Expect(cerr).ToNot(HaveOccurred())
 		Expect(d.Labels).To(HaveKeyWithValue("kyma-project.io/module", "istio"))
 		Expect(d.Spec.Template.Labels).To(HaveKeyWithValue("kyma-project.io/module", "istio"))
 
 		ds := appsv1.DaemonSet{}
-		cerr = c.Get(context.TODO(), types.NamespacedName{Namespace: "istio-system", Name: "istio-cni-node"}, &ds)
+		cerr = c.Get(context.Background(), types.NamespacedName{Namespace: "istio-system", Name: "istio-cni-node"}, &ds)
 		Expect(cerr).ToNot(HaveOccurred())
 		Expect(ds.Labels).To(HaveKeyWithValue("kyma-project.io/module", "istio"))
 		Expect(ds.Spec.Template.Labels).To(HaveKeyWithValue("kyma-project.io/module", "istio"))

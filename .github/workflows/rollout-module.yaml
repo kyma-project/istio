@@ -167,6 +167,6 @@ jobs:
         env:
           CHANNEL: ${{ inputs.channel }}
           MODULE_MANIFESTS_REPO_URL: "https://${{ vars.GH_TOOLS_HOST }}/kyma/${{ vars.MODULE_MANIFESTS_REPO_NAME }}"
-          LABEl: ${{ inputs.label }}
+          LABEL: ${{ inputs.label }}
         run: |
           gh pr edit ${{ vars.GIT_USER_NAME }}:${BRANCH_NAME} -R "${MODULE_MANIFESTS_REPO_URL}" --add-label "${LABEL}"

@@ -15,7 +15,7 @@ The version of Istio is dependent on the version of Istio Controller that you us
 You can only skip a version of Kyma Istio Operator if the difference between the minor version of Istio it contains and the minor version of Istio you're using is not greater than one (for example, 1.2.3 -> 1.3.0).
 If the difference is greater than one minor version (for example, 1.2.3 -> 1.4.0), the reconciliation fails.
 The same happens if you try to update the major version (for example, 1.2.3 -> 2.0.0) or downgrade the version. 
-Such scenarios are not supported and will result in Istio CR in Warning state with the `Ready` condition being `false` with the reason `IstioVersionUpdateNotAllowed`.
+Such scenarios are not supported and cause the Istio CR to be in the `Warning` state with the `Ready` condition set to `false` and the reason being `IstioVersionUpdateNotAllowed`.
 
 ## Istio Custom Resource
 

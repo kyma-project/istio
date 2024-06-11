@@ -6,8 +6,7 @@ import (
 )
 
 func initScenario(ctx *godog.ScenarioContext) {
-	// The hook verifyIfControllerHasBeenRestarted caused flakiness in the tests. To unblock PRs during the investigation, it was disabled.
-	//ctx.After(verifyIfControllerHasBeenRestarted)
+	ctx.After(verifyIfControllerHasBeenRestarted)
 	ctx.After(testObjectsTearDown)
 	ctx.After(istioCrTearDown)
 
@@ -57,8 +56,7 @@ func initScenario(ctx *godog.ScenarioContext) {
 }
 
 func upgradeInitScenario(ctx *godog.ScenarioContext) {
-	// The hook verifyIfControllerHasBeenRestarted caused flakiness in the tests. To unblock PRs during the investigation, it was disabled.
-	//ctx.After(verifyIfControllerHasBeenRestarted)
+	ctx.After(verifyIfControllerHasBeenRestarted)
 	ctx.After(testObjectsTearDown)
 	ctx.After(istioCrTearDown)
 

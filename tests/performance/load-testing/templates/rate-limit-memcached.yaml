@@ -194,39 +194,39 @@ data:
 apiVersion: v1
 kind: Service
 metadata:
-  name: redis
-  namespace: default
+  name: memcached
+  namespace: test
   labels:
-    app: redis
+    app: memcached
 spec:
   ports:
-    - name: redis
-      port: 6379
+    - name: memcached
+      port: 11211
   selector:
-    app: redis
+    app: memcached
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: redis
-  namespace: default
+  name: memcached
+  namespace: test
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: redis
+      app: memcached
   template:
     metadata:
       labels:
-        app: redis
+        app: memcached
     spec:
       containers:
-        - image: redis:alpine
+        - image: memcached:alpine
           imagePullPolicy: Always
-          name: redis
+          name: memcached
           ports:
-            - name: redis
-              containerPort: 6379
+            - name: memcached
+              containerPort: 11211
       restartPolicy: Always
       serviceAccountName: ""
 ---
@@ -279,10 +279,10 @@ spec:
           env:
             - name: LOG_LEVEL
               value: debug
-            - name: REDIS_SOCKET_TYPE
-              value: tcp
-            - name: REDIS_URL
-              value: redis:6379
+            - name: MEMCACHE_HOST_PORT
+              value: memcached:11211
+            - name: BACKEND_TYPE
+              value: memcache
             - name: USE_STATSD
               value: "false"
             - name: RUNTIME_ROOT

@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted by the Istio module team
+Accepted
 
 ## Context
 There is a need to support the configuration of **externalTrafficPolicy** as the default value of `Cluster` does not allow for forwarding the correct value of **X-Forwarded-For** headers. This is a common requirement for applications that need to know the original client IP address.

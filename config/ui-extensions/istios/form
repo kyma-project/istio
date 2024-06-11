@@ -1,20 +1,25 @@
-- path: spec.config
+- path: spec
   simple: true
   name: General
   widget: FormGroup
   defaultExpanded: true
   children:
-  - path: gatewayExternalTrafficPolicy
+  - path: config.gatewayExternalTrafficPolicy
     name: config.gatewayExternalTrafficPolicy
     simple: true
     description: description.externalTrafficPolicy
     value:
       type: string
-  - path: numTrustedProxies
+  - path: config.numTrustedProxies
     simple: true
     name: config.numTrustedProxies
     value:
       type: number
+  - path: compatibilityMode
+    simple: true
+    name: compatibilityMode
+    value:
+      type: bool
 - path: spec.config.authorizers
   name: config.authorizers
   widget: GenericList

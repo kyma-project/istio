@@ -18,6 +18,7 @@ This table lists all the possible parameters of the given resource together with
 
 | Parameter                                                   | Type           | Description                                                                                                                                                                                                                                                                                                                                 |
 |-------------------------------------------------------------|----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **compatibilityMode**                                       | bool           | Enables compatibility mode in Istio. When enabled, applies `ENABLE_EXTERNAL_NAME_ALIAS=false`, `PERSIST_OLDEST_FIRST_HEURISTIC_FOR_VIRTUAL_SERVICE_HOST_MATCHING=true`, `VERIFY_CERTIFICATE_AT_CLIENT=false`, `ENABLE_AUTO_SNI=false` environment variables to Istiod.                                                                                                                                                                                                                                     |
 | **components.cni**                                          | object         | Defines component configuration for Istio CNI DaemonSet.                                                                                                                                                                                                                                                                                    |
 | **components.cni.k8s.affinity**                             | object         | Affinity is a group of affinity scheduling rules. To learn more, read about affininty in the [Istio documentation](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#Affinity).                                                                                                                                        |
 | **components.cni.k8s.resources**                            | object         | Defines [Kubernetes resources requests and limits configuration](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/). For more information, read about Resources in the [Istio documentation](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#Resources ).                               |
@@ -81,6 +82,9 @@ This table lists all the possible parameters of the given resource together with
 ### Annotations
 
 To retain the behavior of `EXTERNAL_NAME` that was present in versions of Istio prior to 1.21, you can configure the `ENABLE_EXTERNAL_NAME_ALIAS` environment variable in the Istio pilot. To do this, add the following annotation to the Istio CR:
+
+!> [!WARNING]
+> The annotation does not have an effect when compatibility mode is on. The **ENABLE_EXTERNAL_NAME_ALIAS** environment variable in this mode is set to `false`.
 
 ```yaml
 istio-operator.kyma-project.io/disable-external-name-alias: "true"

@@ -15,6 +15,14 @@ The latest release includes the following versions of Istio and Envoy:
 **Istio version:** 1.21.3
 **Envoy version:** 1.29.5
 
+Istio Pilot Environment variables applied with `spec.compatibilityMode: true` on IstioCR:
+
+NAME                  |           VALUE
+ ---------- | ---------------
+PERSIST_OLDEST_FIRST_HEURISTIC_FOR_VIRTUAL_SERVICE_HOST_MATCHING | true
+VERIFY_CERTIFICATE_AT_CLIENT | false
+ENABLE_AUTO_SNI | false
+
 ## Install Kyma Istio Operator and Istio from the latest release
 
 ### Prerequisites

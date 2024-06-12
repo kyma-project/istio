@@ -1,6 +1,7 @@
 module github.com/kyma-project/istio/operator
 
 go 1.22
+toolchain go1.22.3
 
 // Client-go does not handle different versions of mergo due to some breaking changes - use the matching version
 replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.5
@@ -27,11 +28,11 @@ require (
 	istio.io/api v1.21.3-0.20240422111456-ce2c1feea604
 	istio.io/client-go v1.21.3-0.20240422111956-6caf45ef5297
 	istio.io/istio v0.0.0-20240601203759-7f26a100ece0
-	k8s.io/api v0.29.3
-	k8s.io/apiextensions-apiserver v0.29.3
-	k8s.io/apimachinery v0.29.3
-	k8s.io/client-go v0.29.3
-	k8s.io/kubectl v0.29.3
+	k8s.io/api v0.30.1
+	k8s.io/apiextensions-apiserver v0.30.1
+	k8s.io/apimachinery v0.30.1
+	k8s.io/client-go v0.30.1
+	k8s.io/kubectl v0.30.1
 	k8s.io/utils v0.0.0-20240102154912-e7106e64919e
 	sigs.k8s.io/controller-runtime v0.16.3 // Since we are using the Istio library directly, we should also use the controller-runtime version that is used by Istio.
 	sigs.k8s.io/yaml v1.4.0
@@ -73,7 +74,7 @@ require (
 	github.com/go-errors/errors v1.5.1 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/go-logr/zapr v1.2.4 // indirect
+	github.com/go-logr/zapr v1.3.0 // indirect
 	github.com/go-openapi/jsonpointer v0.20.2 // indirect
 	github.com/go-openapi/jsonreference v0.20.4 // indirect
 	github.com/go-openapi/swag v0.22.7 // indirect
@@ -85,7 +86,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
-	github.com/google/cel-go v0.17.7 // indirect
+	github.com/google/cel-go v0.17.8 // indirect
 	github.com/google/gnostic-models v0.6.8 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
@@ -175,7 +176,6 @@ require (
 	go.opentelemetry.io/proto/otlp v1.0.0 // indirect
 	go.starlark.net v0.0.0-20231121155337-90ade8b19d09 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
-	go.uber.org/goleak v1.3.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
 	golang.org/x/crypto v0.23.0 // indirect
@@ -196,11 +196,11 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	helm.sh/helm/v3 v3.14.2 // indirect
-	k8s.io/apiserver v0.29.3 // indirect
-	k8s.io/cli-runtime v0.29.3 // indirect
-	k8s.io/component-base v0.29.3 // indirect
-	k8s.io/klog/v2 v2.120.0 // indirect
-	k8s.io/kube-openapi v0.0.0-20240105020646-a37d4de58910 // indirect
+	k8s.io/apiserver v0.30.1 // indirect
+	k8s.io/cli-runtime v0.30.1 // indirect
+	k8s.io/component-base v0.30.1 // indirect
+	k8s.io/klog/v2 v2.120.1 // indirect
+	k8s.io/kube-openapi v0.0.0-20240228011516-70dd3763d340 // indirect
 	sigs.k8s.io/gateway-api v1.0.1-0.20240112015229-444631bfe06f // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/kustomize/api v0.13.5-0.20230601165947-6ce0bf390ce3 // indirect

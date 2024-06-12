@@ -16,10 +16,7 @@ updates:
       - dependency-name: "istio.io/client-go"
       - dependency-name: "istio.io/api"
       - dependency-name: "istio.io/istio"
-    groups:
-      k8s-dependencies:
-        patterns:
-          - "k8s.io/*"
+      - dependency-name: "k8s.io/*"
   - package-ecosystem: "docker"
     directory: "/"
     labels:
@@ -49,10 +46,7 @@ updates:
       - dependency-name: "istio.io/client-go"
       - dependency-name: "istio.io/api"
       - dependency-name: "istio.io/istio"
-    groups:
-      k8s-dependencies:
-        patterns:
-          - "k8s.io/*"
+      - dependency-name: "k8s.io/*"
   - package-ecosystem: "docker"
     target-branch: "release-1.6"
     directory: "/"

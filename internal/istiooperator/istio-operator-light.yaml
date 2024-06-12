@@ -7,7 +7,7 @@ metadata:
     kyma-project.io/module: istio
 spec:
   hub: europe-docker.pkg.dev/kyma-project/prod/external/istio
-  tag: "1.21.2-distroless"
+  tag: "1.21.3-distroless"
   components:
     base:
       enabled: true

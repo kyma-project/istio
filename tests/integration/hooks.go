@@ -67,34 +67,6 @@ var istioCrTearDown = func(ctx context.Context, sc *godog.Scenario, _ error) (co
 	return ctx, nil
 }
 
-var verifyIfControllerHasBeenRestarted = func(ctx context.Context, sc *godog.Scenario, _ error) (context.Context, error) {
-	// The hook verifyIfControllerHasBeenRestarted caused flakiness in the tests. To unblock PRs during the investigation, it was disabled.
-	//c, err := testcontext.GetK8sClientFromContext(ctx)
-	//if err != nil {
-	//	return ctx, err
-	//}
-	//
-	//podList := &corev1.PodList{}
-	//err = c.List(ctx, podList, client.MatchingLabels{"app.kubernetes.io/component": "istio-operator.kyma-project.io"})
-	//if err != nil {
-	//	return ctx, err
-	//}
-	//if len(podList.Items) < 1 {
-	//	return ctx, errors.New("Controller not found")
-	//}
-	//
-	//for _, cpod := range podList.Items {
-	//	if len(cpod.Status.ContainerStatuses) > 0 {
-	//		if rc := cpod.Status.ContainerStatuses[0].RestartCount; rc > 0 {
-	//			errMsg := fmt.Sprintf("Controller has been restarted %d times", rc)
-	//			return ctx, errors.New(errMsg)
-	//		}
-	//	}
-	//}
-
-	return ctx, nil
-}
-
 func forceIstioCrRemoval(ctx context.Context, istio *v1alpha2.Istio) error {
 	c, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {

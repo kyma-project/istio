@@ -10,7 +10,7 @@ Kyma Istio Operator is an essential part of the Istio module that handles the ma
 
 The latest release includes the following versions of Istio and Envoy:  
 **Istio version:** 1.21.3
-**Envoy version:** 1.29.4
+**Envoy version:** 1.29.5
 
 ## Useful Links
 

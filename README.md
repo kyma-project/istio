@@ -13,7 +13,7 @@ Kyma Istio Operator is a component of the Kyma runtime that handles the manageme
 
 The latest release includes the following versions of Istio and Envoy:
 **Istio version:** 1.21.3
-**Envoy version:** 1.29.4
+**Envoy version:** 1.29.5
 
 ## Install Kyma Istio Operator and Istio from the latest release
 

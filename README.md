@@ -16,6 +16,7 @@ The latest release includes the following versions of Istio and Envoy:
 **Envoy version:** 1.29.5
 
 If you want to enable compatibility with the previous minor version of Istio, see [Compatibility Mode](https://kyma-project.io/#/istio/user/00-10-overview-istio-controller?id=compatibility-mode).
+
 ## Install Kyma Istio Operator and Istio from the latest release
 
 ### Prerequisites

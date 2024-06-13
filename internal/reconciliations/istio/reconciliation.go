@@ -15,7 +15,7 @@ type InstallationReconciliation interface {
 }
 
 type Installation struct {
-	IstioClient LibraryClient
+	IstioClient libraryClient
 	Client      client.Client
 	Merger      istiooperator.Merger
 }

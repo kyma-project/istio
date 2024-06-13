@@ -4,6 +4,7 @@
 package main
 
 import (
+	istioclient "github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	"os"
 	"time"
 
@@ -15,25 +16,9 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-func initializeLog() *istiolog.Options {
-	logoptions := istiolog.DefaultOptions()
-	logoptions.SetOutputLevel("validation", istiolog.ErrorLevel)
-	logoptions.SetOutputLevel("processing", istiolog.ErrorLevel)
-	logoptions.SetOutputLevel("analysis", istiolog.WarnLevel)
-	logoptions.SetOutputLevel("installation", istiolog.WarnLevel)
-	logoptions.SetOutputLevel("translator", istiolog.WarnLevel)
-	logoptions.SetOutputLevel("adsc", istiolog.WarnLevel)
-	logoptions.SetOutputLevel("default", istiolog.WarnLevel)
-	logoptions.SetOutputLevel("klog", istiolog.WarnLevel)
-	logoptions.SetOutputLevel("kube", istiolog.ErrorLevel)
-
-	return logoptions
-}
-
 func main() {
 	iopFileNames := []string{os.Args[1]}
 
-	istioLogOptions := initializeLog()
 	registeredScope := istiolog.RegisterScope("installation", "installation")
 	consoleLogger := clog.NewConsoleLogger(os.Stdout, os.Stderr, registeredScope)
 	printer := istio.NewPrinterForWriter(os.Stdout)
@@ -47,7 +32,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	cliClient, err := kube.NewCLIClient(kube.NewClientConfigForRestConfig(rc), "")
+	cliClient, err := kube.NewCLIClient(kube.NewClientConfigForRestConfig(rc))
 	if err != nil {
 		consoleLogger.LogAndError("Failed to create Istio CLI client: ", err)
 		os.Exit(1)
@@ -58,10 +43,15 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err := istioclient.ConfigureIstioLog(); err != nil {
+		consoleLogger.LogAndError("Failed to configure Istio log: ", err)
+		os.Exit(1)
+	}
+
 	// We don't want to verify after installation, because it is unreliable
 	installArgs := &istio.InstallArgs{ReadinessTimeout: 150 * time.Second, SkipConfirmation: true, Verify: false, InFilenames: iopFileNames}
 
-	if err := istio.Install(cliClient, &istio.RootArgs{}, installArgs, istioLogOptions, os.Stdout, consoleLogger, printer); err != nil {
+	if err := istio.Install(cliClient, &istio.RootArgs{}, installArgs, os.Stdout, consoleLogger, printer); err != nil {
 		consoleLogger.LogAndError("Istio install error: ", err)
 		os.Exit(1)
 	}

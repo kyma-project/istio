@@ -21,6 +21,7 @@ import (
 	v1 "k8s.io/api/apps/v1"
 	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"time"
 
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
@@ -94,13 +95,48 @@ func main() {
 		FailureMaxDelay: flagVar.failureMaxDelay,
 	}
 
+	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+
+	mgr, err := createManager(flagVar)
+	if err != nil {
+		setupLog.Error(err, "Unable to create manager")
+		os.Exit(1)
+	}
+
+	reconciler, err := controllers.NewController(mgr, flagVar.reconciliationInterval)
+	if err != nil {
+		setupLog.Error(err, "Unable to create controller")
+		os.Exit(1)
+	}
+
+	if err = reconciler.SetupWithManager(mgr, rateLimiter); err != nil {
+		setupLog.Error(err, "Unable to setup controller", "controller", "Istio")
+		os.Exit(1)
+	}
+	//+kubebuilder:scaffold:builder
+
+	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
+		setupLog.Error(err, "Unable to set up health check")
+		os.Exit(1)
+	}
+	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
+		setupLog.Error(err, "Unable to set up ready check")
+		os.Exit(1)
+	}
+
+	setupLog.Info("starting manager")
+	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
+		setupLog.Error(err, "Problem running manager")
+		os.Exit(1)
+	}
+}
+
+func createManager(flagVar *FlagVar) (manager.Manager, error) {
 	webhookServer := webhook.NewServer(webhook.Options{
 		Port: 9443,
 	})
 
-	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
-
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+	return ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme: scheme,
 		Metrics: metricsserver.Options{
 			BindAddress: flagVar.metricsAddr,
@@ -123,31 +159,6 @@ func main() {
 			},
 		},
 	})
-	if err != nil {
-		setupLog.Error(err, "unable to start manager")
-		os.Exit(1)
-	}
-
-	if err = controllers.NewReconciler(mgr, flagVar.reconciliationInterval).SetupWithManager(mgr, rateLimiter); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Istio")
-		os.Exit(1)
-	}
-	//+kubebuilder:scaffold:builder
-
-	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
-		setupLog.Error(err, "unable to set up health check")
-		os.Exit(1)
-	}
-	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
-		setupLog.Error(err, "unable to set up ready check")
-		os.Exit(1)
-	}
-
-	setupLog.Info("starting manager")
-	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
-		setupLog.Error(err, "problem running manager")
-		os.Exit(1)
-	}
 }
 
 func defineFlagVar() *FlagVar {

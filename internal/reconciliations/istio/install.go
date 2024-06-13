@@ -20,7 +20,7 @@ type installArgs struct {
 	statusHandler       status.Status
 	istioOperatorMerger istiooperator.Merger
 	istioImageVersion   istiooperator.IstioImageVersion
-	istioClient         LibraryClient
+	istioClient         libraryClient
 }
 
 func installIstio(ctx context.Context, args installArgs) (istiooperator.IstioImageVersion, described_errors.DescribedError) {

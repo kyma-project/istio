@@ -1,4 +1,4 @@
-# Configuring envoy rate limiting with memcached
+# Configure Envoy Rate Limiting with Memcached
 
 1. Apply the following resources:
 
@@ -146,7 +146,7 @@ data:
 EOF
 ```
 
-3. Apply envoy filters pointing to above ratelimit service:
+3. Apply EnvoyFilter resources pointing to the above `ratelimit` service:
 
 ```
 kubectl apply -f - <<EOF

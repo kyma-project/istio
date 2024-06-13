@@ -103,7 +103,7 @@ To enable compatibility mode in the Istio module, you can set the **spec.compati
 
 The following Istio Pilot environment variables are applied when you set `spec.compatibilityMode: true` in Istio CR:
 
-NAME                                                                 |           VALUE
+Name                                                                 |           Value
  ----------                                                          | ---------------
 **PERSIST_OLDEST_FIRST_HEURISTIC_FOR_VIRTUAL_SERVICE_HOST_MATCHING** | `true`
 **VERIFY_CERTIFICATE_AT_CLIENT**                                     | `false`

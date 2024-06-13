@@ -10,9 +10,11 @@ Kyma Istio Operator is an essential part of the Istio module that handles the ma
 
 The latest release includes the following versions of Istio and Envoy:  
 **Istio version:** 1.21.3
+
 **Envoy version:** 1.29.5
 
-If you want to enable compatibility with the previous minor version of Istio, see [Compatibility Mode](https://kyma-project.io/#/istio/user/00-10-overview-istio-controller?id=compatibility-mode).
+> [!NOTE]
+> If you want to enable compatibility with the previous minor version of Istio, see [Compatibility Mode](https://kyma-project.io/#/istio/user/00-10-overview-istio-controller?id=compatibility-mode).
 
 ## Useful Links
 

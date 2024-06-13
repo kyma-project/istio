@@ -40,17 +40,18 @@ type IstioClient struct {
 	printer       istio.Printer
 }
 
-func NewIstioClient() (*IstioClient, error) {
-	err := ConfigureIstioLog()
-	if err != nil {
-		return nil, err
-	}
+const logScope = "istio-library"
 
-	registeredScope := istiolog.RegisterScope("installation", "installation")
-	consoleLogger := clog.NewConsoleLogger(os.Stdout, os.Stderr, registeredScope)
+func CreateIstioLibraryLogger() *clog.ConsoleLogger {
+	registeredScope := istiolog.RegisterScope(logScope, logScope)
+	return clog.NewConsoleLogger(os.Stdout, os.Stderr, registeredScope)
+}
+
+func NewIstioClient() *IstioClient {
+	consoleLogger := CreateIstioLibraryLogger()
 	printer := istio.NewPrinterForWriter(os.Stdout)
 
-	return &IstioClient{consoleLogger: consoleLogger, printer: printer}, nil
+	return &IstioClient{consoleLogger: consoleLogger, printer: printer}
 }
 
 func installIstioInExternalProcess(mergedIstioOperatorPath string) error {
@@ -157,9 +158,12 @@ func (c *IstioClient) Uninstall(ctx context.Context) error {
 	return nil
 }
 
-func ConfigureIstioLog() error {
+func ConfigureIstioLogScopes() error {
 	o := istiolog.DefaultOptions()
-	o.SetDefaultOutputLevel("all", istiolog.WarnLevel)
+	o.SetDefaultOutputLevel(logScope, istiolog.WarnLevel)
+	o.SetDefaultOutputLevel("analysis", istiolog.WarnLevel)
+	o.SetDefaultOutputLevel("translator", istiolog.WarnLevel)
+	o.SetDefaultOutputLevel("adsc", istiolog.WarnLevel)
 	// These scopes are too noisy even at warning level
 	o.SetDefaultOutputLevel("validation", istiolog.ErrorLevel)
 	o.SetDefaultOutputLevel("processing", istiolog.ErrorLevel)

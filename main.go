@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	v1 "k8s.io/api/apps/v1"
 	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -97,20 +98,21 @@ func main() {
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
+	// We configure the Istio logging here to make it visible that global log config is updated instead of hiding it in the scope of istio package.
+	err := istio.ConfigureIstioLogScopes()
+	if err != nil {
+		setupLog.Error(err, "Unable to configure Istio log scopes")
+		os.Exit(1)
+	}
+
 	mgr, err := createManager(flagVar)
 	if err != nil {
 		setupLog.Error(err, "Unable to create manager")
 		os.Exit(1)
 	}
 
-	reconciler, err := controllers.NewController(mgr, flagVar.reconciliationInterval)
-	if err != nil {
-		setupLog.Error(err, "Unable to create controller")
-		os.Exit(1)
-	}
-
-	if err = reconciler.SetupWithManager(mgr, rateLimiter); err != nil {
-		setupLog.Error(err, "Unable to setup controller", "controller", "Istio")
+	if err = controllers.NewController(mgr, flagVar.reconciliationInterval).SetupWithManager(mgr, rateLimiter); err != nil {
+		setupLog.Error(err, "Unable to create controller", "controller", "Istio")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder

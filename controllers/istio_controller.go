@@ -53,7 +53,7 @@ const (
 	namespace = "kyma-system"
 )
 
-func NewController(mgr manager.Manager, reconciliationInterval time.Duration) (*IstioReconciler, error) {
+func NewController(mgr manager.Manager, reconciliationInterval time.Duration) *IstioReconciler {
 	merger := istiooperator.NewDefaultIstioMerger()
 
 	statusHandler := status.NewStatusHandler(mgr.GetClient())
@@ -62,21 +62,16 @@ func NewController(mgr manager.Manager, reconciliationInterval time.Duration) (*
 		restarter.NewSidecarsRestarter(mgr.GetLogger(), mgr.GetClient(), &merger, sidecars.NewProxyResetter(), []filter.SidecarProxyPredicate{}, statusHandler),
 	}
 
-	istioClient, err := istio.NewIstioClient()
-	if err != nil {
-		return nil, err
-	}
-
 	return &IstioReconciler{
 		Client:                 mgr.GetClient(),
 		Scheme:                 mgr.GetScheme(),
-		istioInstallation:      &istio.Installation{Client: mgr.GetClient(), IstioClient: istioClient, Merger: &merger},
+		istioInstallation:      &istio.Installation{Client: mgr.GetClient(), IstioClient: istio.NewIstioClient(), Merger: &merger},
 		istioResources:         istio_resources.NewReconciler(mgr.GetClient()),
 		restarters:             restarters,
 		log:                    mgr.GetLogger(),
 		statusHandler:          statusHandler,
 		reconciliationInterval: reconciliationInterval,
-	}, nil
+	}
 }
 
 func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {

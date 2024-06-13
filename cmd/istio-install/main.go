@@ -10,17 +10,14 @@ import (
 
 	"istio.io/istio/istioctl/pkg/install/k8sversion"
 	istio "istio.io/istio/operator/cmd/mesh"
-	"istio.io/istio/operator/pkg/util/clog"
 	"istio.io/istio/pkg/kube"
-	istiolog "istio.io/istio/pkg/log"
 	"k8s.io/client-go/rest"
 )
 
 func main() {
 	iopFileNames := []string{os.Args[1]}
 
-	registeredScope := istiolog.RegisterScope("installation", "installation")
-	consoleLogger := clog.NewConsoleLogger(os.Stdout, os.Stderr, registeredScope)
+	consoleLogger := istioclient.CreateIstioLibraryLogger()
 	printer := istio.NewPrinterForWriter(os.Stdout)
 
 	rc, err := kube.DefaultRestConfig("", "", func(config *rest.Config) {
@@ -43,7 +40,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := istioclient.ConfigureIstioLog(); err != nil {
+	if err := istioclient.ConfigureIstioLogScopes(); err != nil {
 		consoleLogger.LogAndError("Failed to configure Istio log: ", err)
 		os.Exit(1)
 	}

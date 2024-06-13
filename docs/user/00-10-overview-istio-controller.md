@@ -100,5 +100,14 @@ kubectl get all|<resources-kind> -A -l kyma-project.io/module=istio
 
 To enable compatibility mode in the Istio module, you can set the **spec.compatibilityMode** field in the Istio CR. This allows you to mitigate breaking changes when a new release introduces an Istio upgrade. The Istio module applies an opinionated subset of Istio compatibilityVersion, and supports compatibility with the previous minor version of Istio. For example, the Istio module with Istio 1.21.0 applies a compatibility version of Istio 1.20. For more information, see [Compatibility Versions](https://istio.io/latest/docs/setup/additional-setup/compatibility-versions/).
 
+
+The following Istio Pilot environment variables are applied when you set `spec.compatibilityMode: true` in Istio CR:
+
+Name                                                                 |           Value
+ ----------                                                          | ---------------
+**PERSIST_OLDEST_FIRST_HEURISTIC_FOR_VIRTUAL_SERVICE_HOST_MATCHING** | `true`
+**VERIFY_CERTIFICATE_AT_CLIENT**                                     | `false`
+**ENABLE_AUTO_SNI**                                                  | `false`
+
 > [!WARNING]
 > You can use the compatibility mode to retain the behavior of the current Istio version when a new version of the Istio module with a higher version of Istio is released. Then, the compatibility will be first set to a minor version lower than the one you are currently using. If this lower version’s behavior is not compatible with your current mesh setup, some configurations may be broken until the new release of the Istio module is rolled out. 

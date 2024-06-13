@@ -218,3 +218,52 @@ spec:
               transport_api_version: V3
 EOF
 ```
+
+# Test scenarios for memcached rate limiting
+
+### Scenario 1: Rate limiting by header values
+
+#### Config for rate limiting on dynamic header values
+Rate limit requests based on the value of a header where each header value will have its own rate limit budget.
+
+- Apply configuration
+```bash
+kubectl apply -f ./global/scenario-1-limit-by-dynamic-header-values.yaml
+```
+- Restart rate limit service to apply the new config
+```bash
+kubectl delete pod -n ratelimit -l app=ratelimit
+```
+- Test rate limiting, each user-id has its own request limit
+```bash
+curl -i -H "x-user-id:1" -X GET "http://httpbin.ps-rate.goatz.shoot.canary.k8s-hana.ondemand.com/get"
+curl -i -H "x-user-id:2" -X GET "http://httpbin.ps-rate.goatz.shoot.canary.k8s-hana.ondemand.com/get"
+curl -i -H "x-user-id:3" -X GET "http://httpbin.ps-rate.goatz.shoot.canary.k8s-hana.ondemand.com/get"
+curl -i -H "x-user-id:50e29ebe23f0716b5bfbe42ac9c4c8e75f46899c79e31a76fc11fe62e1e6f3a4770272a6d1119f8526ee668ddb1c28b70e9542f638c8251bc7802fdd205b7614356940285ec6da05af3e1eda659c72cb4df3367a7a261c850fee2e85176c39161ac86c93109c1fc8648c524cb8af745f7dfcbff448b2e49721195b6262a4326450e29ebe23f0716b5bfbe42ac9c4c8e75f46899c79e31a76fc11fe62e1e6f3a4770272a6d1119f8526ee668ddb1c28b70e9542f638c8251bc7802fdd205b7614356940285ec6da05af3e1eda659c72cb4df3367a7a261c850fee2e85176c39161ac86c93109c1fc8648c524cb8af745f7dfcbff448b2e49721195b6262a43264" -X GET "http://httpbin.ps-rate.goatz.shoot.canary.k8s-hana.ondemand.com/get"
+```
+
+Getting error with the long one:
+```
+time="2024-06-13T12:57:20Z" level=error msg="Error multi-getting memcache keys ([ratelimitratelimit_USER_ID_50e29ebe23f0716b5bfbe42ac9c4c8e75f46899c79e31a76fc11fe62e1e6f3a4770272a6d1119f8526ee668ddb1c28b70e9542f638c8251bc7802fdd205b7614356940285ec6da05af3e1eda659c72cb4df3367a7a261c850fee2e85176c39161ac86c93109c1fc8648c524cb8af745f7dfcbff448b2e49721195b6262a4326450e29ebe23f0716b5bfbe42ac9c4c8e75f46899c79e31a76fc11fe62e1e6f3a4770272a6d1119f8526ee668ddb1c28b70e9542f638c8251bc7802fdd205b7614356940285ec6da05af3e1eda659c72cb4df3367a7a261c850fee2e85176c39161ac86c93109c1fc8648c524cb8af745f7dfcbff448b2e49721195b6262a43264_1718283420]): malformed: key is too long or contains invalid characters"
+```
+
+### Scenario 4: Rate limiting by client cert
+There is no out of the box [Envoy RateLimit Action](https://www.envoyproxy.io/docs/envoy/latest/api-v3/config/route/v3/route_components.proto#config-route-v3-ratelimit-action) that supports the `X-Forwarded-Client-Cert` header. In this example the `request_headers` is used to extract the value from `X-Forwarded-Client-Cert` header.
+
+- Apply configuration
+```bash
+kubectl apply -f ./global/scenario-4-limit-by-client-cert.yaml
+```
+- Restart rate limit service to apply the new config
+```bash
+kubectl delete pod -n ratelimit -l app=ratelimit
+```
+- Test rate limiting by using `X-Forwarded-Client-Cert` added by Ingress Gateway. Since rate limiting is applied on sidecar
+```bash
+curl -i -X GET "http://httpbin.ps-rate.goatz.shoot.canary.k8s-hana.ondemand.com/get"
+```
+
+Client cert is not working due to too long key value:
+```
+time="2024-06-13T13:05:28Z" level=error msg="Error multi-getting memcache keys ([ratelimitratelimit_CLIENT_CERT_By=spiffe://cluster.local/ns/default/sa/httpbin;Hash=8e5bed411f57a6f82015aea05234c6b8bba2ce8efb73b2cc0965ab9660213d98;Subject=\"\";URI=spiffe://cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account_1718283900]): malformed: key is too long or contains invalid characters"
+```

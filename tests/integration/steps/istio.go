@@ -92,12 +92,8 @@ func IstioComponentHasResourcesSetToCpuAndMemory(ctx context.Context, component,
 }
 
 func UninstallIstio(ctx context.Context) error {
-	c, err := istio.NewIstioClient()
-	if err != nil {
-		return err
-	}
-
-	return c.Uninstall(ctx)
+	istioClient := istio.NewIstioClient()
+	return istioClient.Uninstall(ctx)
 }
 
 func getResourcesForIstioComponent(k8sClient client.Client, component, resourceType string) (*resourceStruct, error) {

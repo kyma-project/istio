@@ -18,6 +18,12 @@ func main() {
 	iopFileNames := []string{os.Args[1]}
 
 	consoleLogger := istioclient.CreateIstioLibraryLogger()
+
+	if err := istioclient.ConfigureIstioLogScopes(); err != nil {
+		consoleLogger.LogAndError("Failed to configure Istio log: ", err)
+		os.Exit(1)
+	}
+
 	printer := istio.NewPrinterForWriter(os.Stdout)
 
 	rc, err := kube.DefaultRestConfig("", "", func(config *rest.Config) {
@@ -37,11 +43,6 @@ func main() {
 
 	if err := k8sversion.IsK8VersionSupported(cliClient, consoleLogger); err != nil {
 		consoleLogger.LogAndError("Check failed for minimum supported Kubernetes version: ", err)
-		os.Exit(1)
-	}
-
-	if err := istioclient.ConfigureIstioLogScopes(); err != nil {
-		consoleLogger.LogAndError("Failed to configure Istio log: ", err)
 		os.Exit(1)
 	}
 

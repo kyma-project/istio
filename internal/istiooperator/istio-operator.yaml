@@ -260,7 +260,6 @@ spec:
         enabled: false
       network: ""
       omitSidecarInjectorConfigMap: false
-      oneNamespace: false
       operatorManageWebhooks: false
       pilotCertProvider: istiod
       priorityClassName: istio-kyma-priority

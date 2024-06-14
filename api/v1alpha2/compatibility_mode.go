@@ -5,18 +5,14 @@ import (
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 )
 
-// the following map contains Istio compatibility environment variables, that are not included in the compatibilityVersion of istioctl install
-// should be updated with every Istio bump according to the release notes
-// current env comes from: Istio 1.21, compatibilityVersion 1.20
 var pilotCompatibilityEnvVars = map[string]string{
-	"PERSIST_OLDEST_FIRST_HEURISTIC_FOR_VIRTUAL_SERVICE_HOST_MATCHING": "true",
-	"VERIFY_CERTIFICATE_AT_CLIENT":                                     "false",
-	"ENABLE_AUTO_SNI":                                                  "false",
+	"ENABLE_ENHANCED_RESOURCE_SCOPING":   "false",
+	"ENABLE_RESOLUTION_NONE_TARGET_PORT": "false",
 }
 
-func setCompatibilityMode(op iopv1alpha1.IstioOperator) iopv1alpha1.IstioOperator {
+func setCompatibilityMode(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {
 	pilotIop := setCompatibilityPilot(op)
-	return pilotIop
+	return setCompatibilityProxyMetadata(pilotIop)
 }
 
 func setCompatibilityPilot(op iopv1alpha1.IstioOperator) iopv1alpha1.IstioOperator {
@@ -41,4 +37,33 @@ func setCompatibilityPilot(op iopv1alpha1.IstioOperator) iopv1alpha1.IstioOperat
 	}
 
 	return op
+}
+
+var proxyMetaDataCompativility = map[string]string{
+	"ISTIO_DELTA_XDS": "false",
+}
+
+func setCompatibilityProxyMetadata(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {
+	if op.Spec == nil {
+		op.Spec = &v1alpha1.IstioOperatorSpec{}
+	}
+
+	mcb, err := newMeshConfigBuilder(op)
+	if err != nil {
+		return op, err
+	}
+
+	for k, v := range proxyMetaDataCompativility {
+		mcb.AddProxyMetadata(k, v)
+	}
+	newMeshConfig := mcb.Build()
+
+	updatedConfig, err := marshalMeshConfig(newMeshConfig)
+	if err != nil {
+		return op, err
+	}
+
+	op.Spec.MeshConfig = updatedConfig
+
+	return op, nil
 }

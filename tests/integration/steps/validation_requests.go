@@ -3,10 +3,10 @@ package steps
 import (
 	"context"
 	"fmt"
+	testcontext2 "github.com/kyma-project/istio/operator/tests/testcontext"
 
 	"github.com/avast/retry-go"
 	"github.com/kyma-project/istio/operator/tests/integration/pkg/ip"
-	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	"github.com/kyma-project/istio/operator/tests/integration/testsupport"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -92,7 +92,7 @@ func ValidateResponseCodeForRequestWithHeader(ctx context.Context, givenHeaderNa
 
 func fetchIstioIngressGatewayAddress(ctx context.Context) (string, error) {
 
-	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -142,7 +142,7 @@ func fetchIstioIngressGatewayAddress(ctx context.Context) (string, error) {
 		}
 
 		return nil
-	}, testcontext.GetRetryOpts()...)
+	}, testcontext2.GetRetryOpts()...)
 
 	if err != nil {
 		return "", err

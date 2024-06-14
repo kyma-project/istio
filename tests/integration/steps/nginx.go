@@ -5,7 +5,7 @@ import (
 	"context"
 	_ "embed"
 	"github.com/avast/retry-go"
-	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
+	testcontext2 "github.com/kyma-project/istio/operator/tests/testcontext"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -64,7 +64,7 @@ func createService(ctx context.Context, appName string, namespace string) (conte
 		},
 	}
 
-	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return ctx, err
 	}
@@ -74,14 +74,14 @@ func createService(ctx context.Context, appName string, namespace string) (conte
 		if err != nil {
 			return err
 		}
-		ctx = testcontext.AddCreatedTestObjectInContext(ctx, &svc)
+		ctx = testcontext2.AddCreatedTestObjectInContext(ctx, &svc)
 		return nil
-	}, testcontext.GetRetryOpts()...)
+	}, testcontext2.GetRetryOpts()...)
 	return ctx, err
 }
 
 func createDeployment(ctx context.Context, name, namespace, configMapName string) (context.Context, error) {
-	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return ctx, err
 	}
@@ -140,9 +140,9 @@ func createDeployment(ctx context.Context, name, namespace, configMapName string
 		if err != nil {
 			return err
 		}
-		ctx = testcontext.AddCreatedTestObjectInContext(ctx, &dep)
+		ctx = testcontext2.AddCreatedTestObjectInContext(ctx, &dep)
 		return nil
-	}, testcontext.GetRetryOpts()...)
+	}, testcontext2.GetRetryOpts()...)
 
 	return ctx, err
 }
@@ -156,7 +156,7 @@ func createConfigurationCm(ctx context.Context, name string, namespace, forwardT
 	if err != nil {
 		return ctx, err
 	}
-	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return ctx, err
 	}
@@ -166,9 +166,9 @@ func createConfigurationCm(ctx context.Context, name string, namespace, forwardT
 		if err != nil {
 			return err
 		}
-		ctx = testcontext.AddCreatedTestObjectInContext(ctx, &cm)
+		ctx = testcontext2.AddCreatedTestObjectInContext(ctx, &cm)
 		return nil
-	}, testcontext.GetRetryOpts()...)
+	}, testcontext2.GetRetryOpts()...)
 
 	return ctx, err
 }

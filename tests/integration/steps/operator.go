@@ -3,10 +3,10 @@ package steps
 import (
 	"context"
 	"fmt"
+	testcontext2 "github.com/kyma-project/istio/operator/tests/testcontext"
 
 	"github.com/avast/retry-go"
 	"github.com/kyma-project/istio/operator/tests/integration/pkg/manifestprocessor"
-	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	v1 "k8s.io/api/apps/v1"
 	v1c "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -30,7 +30,7 @@ func DeployIstioOperator(ctx context.Context, manifestType, should string) error
 		expectSuccess = true
 	}
 
-	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -98,5 +98,5 @@ func DeployIstioOperator(ctx context.Context, manifestType, should string) error
 			}
 		}
 		return nil
-	}, testcontext.GetRetryOpts()...)
+	}, testcontext2.GetRetryOpts()...)
 }

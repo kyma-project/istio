@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: Job
+spec:
+  template:
+    spec:
+      containers:
+      - name: loadtest
+        image: "europe-central2-docker.pkg.dev/sap-se-cx-kyma-goat/networking-dev-tools/grpc-loadtest:latest"
+        command:
+        - /manager
+        - --service={{ or .Service "HelloService.SayHello" }}
+        - --address={{ or .Address "grpcbin:50051" }}
+        - --requests={{ or .Requests 1000 }}
+        - --rps={{ or .RPS 0 }}
+        - --concurrency={{ or .Concurrency 1 }}
+        - --duration={{ or .Duration 0 }}
+      restartPolicy: Never
+  backoffLimit: 4
+

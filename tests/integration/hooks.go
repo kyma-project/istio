@@ -3,11 +3,11 @@ package integration
 import (
 	"context"
 	"fmt"
+	testcontext2 "github.com/kyma-project/istio/operator/tests/testcontext"
 
 	"github.com/avast/retry-go"
 	"github.com/cucumber/godog"
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	"github.com/pkg/errors"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -15,10 +15,10 @@ import (
 )
 
 var testObjectsTearDown = func(ctx context.Context, sc *godog.Scenario, _ error) (context.Context, error) {
-	if objects, ok := testcontext.GetCreatedTestObjectsFromContext(ctx); ok {
+	if objects, ok := testcontext2.GetCreatedTestObjectsFromContext(ctx); ok {
 		for _, o := range objects {
 
-			t, err := testcontext.GetTestingFromContext(ctx)
+			t, err := testcontext2.GetTestingFromContext(ctx)
 			if err != nil {
 				return ctx, err
 			}
@@ -26,7 +26,7 @@ var testObjectsTearDown = func(ctx context.Context, sc *godog.Scenario, _ error)
 
 			err = retry.Do(func() error {
 				return removeObjectFromCluster(ctx, o)
-			}, testcontext.GetRetryOpts()...)
+			}, testcontext2.GetRetryOpts()...)
 
 			if err != nil {
 				t.Logf("Failed to delete %s", o.GetName())
@@ -41,12 +41,12 @@ var testObjectsTearDown = func(ctx context.Context, sc *godog.Scenario, _ error)
 
 var istioCrTearDown = func(ctx context.Context, sc *godog.Scenario, _ error) (context.Context, error) {
 
-	t, err := testcontext.GetTestingFromContext(ctx)
+	t, err := testcontext2.GetTestingFromContext(ctx)
 	if err != nil {
 		return ctx, err
 	}
 
-	if istios, ok := testcontext.GetIstioCRsFromContext(ctx); ok {
+	if istios, ok := testcontext2.GetIstioCRsFromContext(ctx); ok {
 		// We can ignore a failed removal of the Istio CR, because we need to run force remove in any case to make sure no resource is left before the next scenario
 		for _, istio := range istios {
 			_ = retry.Do(func() error {
@@ -57,7 +57,7 @@ var istioCrTearDown = func(ctx context.Context, sc *godog.Scenario, _ error) (co
 				}
 				t.Logf("Deleted Istio CR %s", istio.GetName())
 				return nil
-			}, testcontext.GetRetryOpts()...)
+			}, testcontext2.GetRetryOpts()...)
 			err := forceIstioCrRemoval(ctx, istio)
 			if err != nil {
 				return ctx, err
@@ -68,12 +68,12 @@ var istioCrTearDown = func(ctx context.Context, sc *godog.Scenario, _ error) (co
 }
 
 func forceIstioCrRemoval(ctx context.Context, istio *v1alpha2.Istio) error {
-	c, err := testcontext.GetK8sClientFromContext(ctx)
+	c, err := testcontext2.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
 	}
 
-	t, err := testcontext.GetTestingFromContext(ctx)
+	t, err := testcontext2.GetTestingFromContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -101,11 +101,11 @@ func forceIstioCrRemoval(ctx context.Context, istio *v1alpha2.Istio) error {
 		}
 
 		return errors.New(fmt.Sprintf("istio CR in status %s found (%s), skipping force removal", istio.Status.State, istio.Status.Description))
-	}, testcontext.GetRetryOpts()...)
+	}, testcontext2.GetRetryOpts()...)
 }
 
 func removeObjectFromCluster(ctx context.Context, object client.Object) error {
-	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
 	}

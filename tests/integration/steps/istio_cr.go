@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	testcontext2 "github.com/kyma-project/istio/operator/tests/testcontext"
 	"github.com/pkg/errors"
 	"os"
 	"path"
@@ -14,7 +15,6 @@ import (
 
 	"github.com/avast/retry-go"
 	istioCR "github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
@@ -22,7 +22,7 @@ import (
 )
 
 func IstioCRDIsInstalled(ctx context.Context) error {
-	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -37,11 +37,11 @@ func IstioCRDIsInstalled(ctx context.Context) error {
 	crd.SetGroupVersionKind(crdGVK)
 	return retry.Do(func() error {
 		return k8sClient.Get(context.TODO(), types.NamespacedName{Name: "istios.operator.kyma-project.io"}, &crd)
-	}, testcontext.GetRetryOpts()...)
+	}, testcontext2.GetRetryOpts()...)
 }
 
 func IstioCRInNamespaceHasStatus(ctx context.Context, name, namespace, status string) error {
-	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -56,11 +56,11 @@ func IstioCRInNamespaceHasStatus(ctx context.Context, name, namespace, status st
 			return fmt.Errorf("status %s of Istio CR is not equal to %s\n Description: %s", cr.Status.State, status, cr.Status.Description)
 		}
 		return nil
-	}, testcontext.GetRetryOpts()...)
+	}, testcontext2.GetRetryOpts()...)
 }
 
 func IstioCRInNamespaceHasStatusCondition(ctx context.Context, name, namespace, reason, conditionType, status string) error {
-	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -80,11 +80,11 @@ func IstioCRInNamespaceHasStatusCondition(ctx context.Context, name, namespace, 
 			}
 		}
 		return fmt.Errorf("status condition reason %s of type %s and status %s not found", reason, conditionType, status)
-	}, testcontext.GetRetryOpts()...)
+	}, testcontext2.GetRetryOpts()...)
 }
 
 func IstioCRInNamespaceHasDescription(ctx context.Context, name, namespace, desc string) error {
-	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -99,7 +99,7 @@ func IstioCRInNamespaceHasDescription(ctx context.Context, name, namespace, desc
 			return fmt.Errorf("description %s of Istio CR is not equal to %s", cr.Status.Description, desc)
 		}
 		return nil
-	}, testcontext.GetRetryOpts()...)
+	}, testcontext2.GetRetryOpts()...)
 }
 
 type TemplatedIstioCr struct {
@@ -114,7 +114,7 @@ func (t *TemplatedIstioCr) SetTemplateValue(name, value string) {
 }
 
 func (t *TemplatedIstioCr) IstioCRIsAppliedInNamespace(ctx context.Context, name, templateFN, namespace string) (context.Context, error) {
-	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return ctx, err
 	}
@@ -129,15 +129,15 @@ func (t *TemplatedIstioCr) IstioCRIsAppliedInNamespace(ctx context.Context, name
 		if err != nil {
 			return err
 		}
-		ctx = testcontext.AddIstioCRIntoContext(ctx, &istio)
+		ctx = testcontext2.AddIstioCRIntoContext(ctx, &istio)
 		return nil
-	}, testcontext.GetRetryOpts()...)
+	}, testcontext2.GetRetryOpts()...)
 
 	return ctx, err
 }
 
 func (t *TemplatedIstioCr) IstioCRIsUpdatedInNamespace(ctx context.Context, name, templateFN, namespace string) error {
-	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -155,7 +155,7 @@ func (t *TemplatedIstioCr) IstioCRIsUpdatedInNamespace(ctx context.Context, name
 		istio.Spec.DeepCopyInto(&existingIstio.Spec)
 
 		return k8sClient.Update(context.TODO(), &existingIstio)
-	}, testcontext.GetRetryOpts()...)
+	}, testcontext2.GetRetryOpts()...)
 }
 
 func createIstioCRFromTemplate(name string, templateFN string, namespace string, templateValues map[string]string) (istioCR.Istio, error) {
@@ -187,7 +187,7 @@ func createIstioCRFromTemplate(name string, templateFN string, namespace string,
 }
 
 func IstioCrStatusUpdateHappened(ctx context.Context, name, namespace string) error {
-	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -216,5 +216,5 @@ func IstioCrStatusUpdateHappened(ctx context.Context, name, namespace string) er
 		}
 
 		return fmt.Errorf("no server-side update occurred for the CR '%s' within the last 20 seconds", name)
-	}, testcontext.GetRetryOpts()...)
+	}, testcontext2.GetRetryOpts()...)
 }

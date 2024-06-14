@@ -130,13 +130,14 @@ jobs:
           cat <<EOF | tee module-config.yaml
           name: ${FULL_MODULE_NAME}
           channel: ${CHANNEL}
-          version: ${MODULE_VERSION}
+          version: "${MODULE_VERSION}"
           manifest: ${MANIFEST_FILENAME}
           defaultCR: ${DEFAULT_CR_FILENAME}
+          labels:
+            "operator.kyma-project.io/managed-by": "lifecycle-manager"
           annotations:
             "operator.kyma-project.io/doc-url": "${DOC_URL}"
           moduleRepo: https://github.com/kyma-project/istio.git
-          moduleSecurityScanConfig: true
           EOF
       - name: Commit and push changes
         shell: bash

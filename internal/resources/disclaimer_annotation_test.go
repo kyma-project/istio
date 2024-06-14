@@ -9,8 +9,8 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
-	securityv1beta1 "istio.io/client-go/pkg/apis/security/v1beta1"
+	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1"
+	securityv1 "istio.io/client-go/pkg/apis/security/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	ctrlClient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -68,7 +68,7 @@ func createFakeClient(objects ...ctrlClient.Object) ctrlClient.Client {
 	Expect(err).ShouldNot(HaveOccurred())
 	err = networkingv1alpha3.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
-	err = securityv1beta1.AddToScheme(scheme.Scheme)
+	err = securityv1.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
 	err = networkingv1alpha3.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())

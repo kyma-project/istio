@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	gingkoTypes "github.com/onsi/ginkgo/v2/types"
 	. "github.com/onsi/gomega"
-	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
+	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
 	"istio.io/istio/istioctl/pkg/tag"
 	v1 "k8s.io/api/admissionregistration/v1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -54,7 +54,7 @@ func createFakeClient(objects ...client.Object) client.Client {
 	Expect(err).NotTo(HaveOccurred())
 	err = appsv1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
-	err = networkingv1alpha3.AddToScheme(scheme.Scheme)
+	err = networkingv1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build()

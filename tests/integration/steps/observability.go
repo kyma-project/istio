@@ -6,8 +6,8 @@ import (
 
 	"github.com/avast/retry-go"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
-	"istio.io/api/telemetry/v1alpha1"
-	v1alpha12 "istio.io/client-go/pkg/apis/telemetry/v1alpha1"
+	apitelemetryv1 "istio.io/api/telemetry/v1"
+	telemetryv1 "istio.io/client-go/pkg/apis/telemetry/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -19,15 +19,15 @@ func EnableAccessLogging(ctx context.Context, provider string) (context.Context,
 		return ctx, err
 	}
 	err = retry.Do(func() error {
-		tm := &v1alpha12.Telemetry{
+		tm := &telemetryv1.Telemetry{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "access-logs",
 				Namespace: "istio-system",
 			},
-			Spec: v1alpha1.Telemetry{
-				AccessLogging: []*v1alpha1.AccessLogging{
+			Spec: apitelemetryv1.Telemetry{
+				AccessLogging: []*apitelemetryv1.AccessLogging{
 					{
-						Providers: []*v1alpha1.ProviderRef{
+						Providers: []*apitelemetryv1.ProviderRef{
 							{Name: provider},
 						},
 					},
@@ -51,15 +51,15 @@ func EnableTracing(ctx context.Context, tracingProvider string) (context.Context
 		return ctx, err
 	}
 	err = retry.Do(func() error {
-		tm := &v1alpha12.Telemetry{
+		tm := &telemetryv1.Telemetry{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "enable-tracing",
 				Namespace: "istio-system",
 			},
-			Spec: v1alpha1.Telemetry{
-				Tracing: []*v1alpha1.Tracing{
+			Spec: apitelemetryv1.Telemetry{
+				Tracing: []*apitelemetryv1.Tracing{
 					{
-						Providers: []*v1alpha1.ProviderRef{
+						Providers: []*apitelemetryv1.ProviderRef{
 							{Name: tracingProvider},
 						},
 					},

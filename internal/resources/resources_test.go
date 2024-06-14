@@ -7,8 +7,8 @@ import (
 	"github.com/kyma-project/istio/operator/internal/resources"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	v1beta12 "istio.io/api/security/v1beta1"
-	"istio.io/client-go/pkg/apis/security/v1beta1"
+	apisecurityv1 "istio.io/api/security/v1"
+	securityclientv1 "istio.io/client-go/pkg/apis/security/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -36,7 +36,7 @@ var _ = Describe("Apply", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(res).To(Equal(controllerutil.OperationResultCreated))
 
-		var pa v1beta1.PeerAuthentication
+		var pa securityclientv1.PeerAuthentication
 		Expect(yaml.Unmarshal(resourceWithSpec, &pa)).Should(Succeed())
 		Expect(k8sClient.Get(context.Background(), ctrlClient.ObjectKeyFromObject(&pa), &pa)).Should(Succeed())
 		um, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&pa)
@@ -57,7 +57,7 @@ var _ = Describe("Apply", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(res).To(Equal(controllerutil.OperationResultCreated))
 
-		var pa v1beta1.PeerAuthentication
+		var pa securityclientv1.PeerAuthentication
 		Expect(yaml.Unmarshal(resourceWithSpec, &pa)).Should(Succeed())
 		Expect(k8sClient.Get(context.Background(), ctrlClient.ObjectKeyFromObject(&pa), &pa)).Should(Succeed())
 		um, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&pa)
@@ -71,11 +71,11 @@ var _ = Describe("Apply", func() {
 
 	It("should update resource with spec and add disclaimer", func() {
 		// given
-		var pa v1beta1.PeerAuthentication
+		var pa securityclientv1.PeerAuthentication
 		Expect(yaml.Unmarshal(resourceWithSpec, &pa)).Should(Succeed())
 		k8sClient := createFakeClient(&pa)
 
-		pa.Spec.Mtls.Mode = v1beta12.PeerAuthentication_MutualTLS_PERMISSIVE
+		pa.Spec.Mtls.Mode = apisecurityv1.PeerAuthentication_MutualTLS_PERMISSIVE
 		var resourceWithUpdatedSpec []byte
 		resourceWithUpdatedSpec, err := yaml.Marshal(&pa)
 		Expect(err).ShouldNot(HaveOccurred())
@@ -88,7 +88,7 @@ var _ = Describe("Apply", func() {
 		Expect(res).To(Equal(controllerutil.OperationResultUpdated))
 
 		Expect(k8sClient.Get(context.Background(), ctrlClient.ObjectKeyFromObject(&pa), &pa)).Should(Succeed())
-		Expect(pa.Spec.Mtls.Mode).To(Equal(v1beta12.PeerAuthentication_MutualTLS_PERMISSIVE))
+		Expect(pa.Spec.Mtls.Mode).To(Equal(apisecurityv1.PeerAuthentication_MutualTLS_PERMISSIVE))
 		um, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&pa)
 		unstr := unstructured.Unstructured{Object: um}
 		Expect(err).ToNot(HaveOccurred())
@@ -129,7 +129,7 @@ var _ = Describe("Apply", func() {
 		// given
 		k8sClient := createFakeClient()
 		ownerReference := metav1.OwnerReference{
-			APIVersion: "security.istio.io/v1beta1",
+			APIVersion: "security.istio.io/v1",
 			Kind:       "PeerAuthentication",
 			Name:       "owner-name",
 			UID:        "owner-uid",
@@ -141,7 +141,7 @@ var _ = Describe("Apply", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(res).To(Equal(controllerutil.OperationResultCreated))
 
-		var pa v1beta1.PeerAuthentication
+		var pa securityclientv1.PeerAuthentication
 		Expect(yaml.Unmarshal(resourceWithSpec, &pa)).Should(Succeed())
 		Expect(k8sClient.Get(context.Background(), ctrlClient.ObjectKeyFromObject(&pa), &pa)).Should(Succeed())
 		Expect(pa.OwnerReferences).To(ContainElement(ownerReference))

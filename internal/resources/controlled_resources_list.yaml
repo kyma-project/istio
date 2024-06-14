@@ -2,11 +2,11 @@
 resources:
   - GroupVersionKind:
       group: security.istio.io
-      version: v1beta1
+      version: v1
       kind: AuthorizationPolicy
   - GroupVersionKind:
       group: networking.istio.io
-      version: v1alpha3
+      version: v1
       kind: DestinationRule
   - GroupVersionKind:
       group: networking.istio.io
@@ -23,11 +23,11 @@ resources:
         namespace: "istio-system"
   - GroupVersionKind:
       group: networking.istio.io
-      version: v1alpha3
+      version: v1
       kind: Gateway
   - GroupVersionKind:
       group: security.istio.io
-      version: v1beta1
+      version: v1
       kind: PeerAuthentication
     ControlledList:
       - name: "default"
@@ -38,19 +38,19 @@ resources:
       kind: ProxyConfig
   - GroupVersionKind:
       group: security.istio.io
-      version: v1beta1
+      version: v1
       kind: RequestAuthentication
   - GroupVersionKind:
       group: networking.istio.io
-      version: v1alpha3
+      version: v1
       kind: ServiceEntry
   - GroupVersionKind:
       group: networking.istio.io
-      version: v1alpha3
+      version: v1
       kind: Sidecar
   - GroupVersionKind:
       group: telemetry.istio.io
-      version: v1alpha1
+      version: v1
       kind: Telemetry
   - GroupVersionKind:
       group: networking.istio.io
@@ -61,7 +61,7 @@ resources:
         namespace: "istio-system"
   - GroupVersionKind:
       group: networking.istio.io
-      version: v1beta1
+      version: v1
       kind: VirtualService
     ControlledList:
       - name: "istio-healthz"
@@ -72,9 +72,9 @@ resources:
       kind: WasmPlugin
   - GroupVersionKind:
       group: networking.istio.io
-      version: v1alpha3
+      version: v1
       kind: WorkloadEntry
   - GroupVersionKind:
       group: networking.istio.io
-      version: v1alpha3
+      version: v1
       kind: WorkloadGroup

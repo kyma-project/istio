@@ -17,7 +17,7 @@ func CreateDestinationRule(ctx context.Context, name, namespace, host string) (c
 
 	d := v1alpha3.DestinationRule{
 		TypeMeta: metav1.TypeMeta{
-			APIVersion: "networking.istio.io/v1beta1",
+			APIVersion: "networking.istio.io/v1",
 			Kind:       "DestinationRule",
 		},
 		ObjectMeta: metav1.ObjectMeta{

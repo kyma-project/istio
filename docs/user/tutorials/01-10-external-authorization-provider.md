@@ -173,7 +173,7 @@ To learn more about oauth2-proxy, [see the documentation](https://github.com/oau
 3. Create a DestinationRule with a traffic policy for the external authorization provider:
     ```
     cat <<EOF | kubectl apply -f -
-    apiVersion: networking.istio.io/v1beta1
+    apiVersion: networking.istio.io/v1
     kind: DestinationRule
     metadata:
       name: external-authz-https

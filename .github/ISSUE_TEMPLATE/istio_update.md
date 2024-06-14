@@ -10,7 +10,7 @@ assignees: ''
 
 Update the Kyma Istio module to use a new Istio version.
 Update the Istio version and dependencies, adjust tests and documentation if needed.
-The upgrade needs to have zero downtime for production ready settings.
+The upgrade needs to have zero downtime for production-ready settings.
 
 ACs:
 - [ ] Review Istio RNs.

@@ -19,6 +19,7 @@ package main
 import (
 	"flag"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
+	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	v1 "k8s.io/api/apps/v1"
 	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -74,6 +75,7 @@ type FlagVar struct {
 func init() { //nolint:gochecknoinits
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
+	utilruntime.Must(networkingv1alpha3.AddToScheme(scheme))
 	utilruntime.Must(networkingv1.AddToScheme(scheme))
 	utilruntime.Must(componentv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(operatorv1alpha2.AddToScheme(scheme))

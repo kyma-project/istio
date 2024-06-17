@@ -12,7 +12,8 @@ import (
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
-	networkingv1 "istio.io/client-go/pkg/apis/networking/v1alpha3"
+	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
+	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	securityv1 "istio.io/client-go/pkg/apis/security/v1"
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	v1 "k8s.io/api/apps/v1"
@@ -121,7 +122,7 @@ func ResourceIsPresent(ctx context.Context, kind, name, namespace, present strin
 		case Gateway.String():
 			object = &networkingv1.Gateway{}
 		case EnvoyFilter.String():
-			object = &networkingv1.EnvoyFilter{}
+			object = &networkingv1alpha3.EnvoyFilter{}
 		case PeerAuthentication.String():
 			object = &securityv1.PeerAuthentication{}
 		case VirtualService.String():
@@ -300,7 +301,7 @@ func ResourceInNamespaceIsDeleted(ctx context.Context, kind, name, namespace str
 		})
 	case EnvoyFilter.String():
 		return retry.Do(func() error {
-			var r networkingv1.EnvoyFilter
+			var r networkingv1alpha3.EnvoyFilter
 			err := k8sClient.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, &r)
 			if err != nil {
 				return err

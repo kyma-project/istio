@@ -72,7 +72,7 @@ func getSidecarPods(ctx context.Context, c client.Client, logger *logr.Logger) (
 func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage SidecarImage, expectedResources v1.ResourceRequirements, predicates []filter.SidecarProxyPredicate, logger *logr.Logger) (outputPodsList *v1.PodList, err error) {
 	//Add predicate for image version and resources configuration
 	predicates = append(predicates, NewRestartProxyPredicate(expectedImage, expectedResources))
-	restartEvaluator, err := initRestartEvaluator(ctx, predicates)
+	evaluators, err := initRestartEvaluators(ctx, predicates)
 	if err != nil {
 		return &v1.PodList{}, err
 	}
@@ -86,7 +86,7 @@ func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage Sideca
 	outputPodsList.Items = make([]v1.Pod, 0, len(*pods))
 
 	for _, pod := range *pods {
-		for _, evaluator := range restartEvaluator {
+		for _, evaluator := range evaluators {
 			if evaluator.RequiresProxyRestart(pod) {
 				outputPodsList.Items = append(outputPodsList.Items, pod)
 				// To avoid adding the same pod multiple times, we need to skip the remaining evaluators
@@ -95,13 +95,11 @@ func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage Sideca
 		}
 	}
 
-	if outputPodsList != nil {
-		logger.Info("Pods to restart", "number of pods", len(outputPodsList.Items))
-	}
+	logger.Info("Pods to restart", "number of pods", len(outputPodsList.Items))
 	return outputPodsList, nil
 }
 
-func initRestartEvaluator(ctx context.Context, predicates []filter.SidecarProxyPredicate) ([]filter.ProxyRestartEvaluator, error) {
+func initRestartEvaluators(ctx context.Context, predicates []filter.SidecarProxyPredicate) ([]filter.ProxyRestartEvaluator, error) {
 	var evaluators []filter.ProxyRestartEvaluator
 
 	for _, predicate := range predicates {

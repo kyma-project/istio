@@ -1,4 +1,4 @@
-# Changes to Istio Ingress Gateway Deployment, Istiod Deployment, or Istio CNI DaemonSets Are Not Reverted After Reconciliation
+# Changes Not Reverted After Reconciliation
 
 ## Symptoms
 

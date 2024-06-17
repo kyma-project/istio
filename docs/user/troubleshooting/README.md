@@ -8,6 +8,9 @@ The troubleshooting section aims to identify the most common recurring problems 
 - [Incompatible Istio Sidecar Version](./03-40-incompatible-istio-sidecar-version.md)
 - [Istio Unintentionally Removed](./03-50-recovering-from-unintentional-istio-removal.md)
 - [Kyma Endpoint Returns a `not found` Error (404 Status Code)](./03-60-404-on-istio-gateway.md)
+- [Changes to Istio Resources Are Not Reverted After Reconciliation](./03-70-reconciliation-fails-on-istio-install.md)
+- [Issues with Connection to SAP HANA Database](./03-80-cannot-connect-to-hana-db.md)
+
 See also [Troubleshooting Istio](https://github.com/istio/istio/wiki/Troubleshooting-Istio).
 
-If you can't find a solution, check for open issues in the [Istio GitHub repository](https://github.com/kyma-project/istio/issues). If none of them addresses your problem, create a new one. You can also reach out to our [Slack channel](https://kyma-community.slack.com/) to get direct support from the community.
+If you can't find a solution, check for open issues in the [Istio GitHub repository](https://git[hub.com/kyma-project/istio/issues). If none of them addresses your problem, create a new one. You can also reach out to our [Slack channel](https://kyma-community.slack.com/) to get direct support from the community.

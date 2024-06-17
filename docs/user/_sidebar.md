@@ -24,5 +24,5 @@
   * [No Istio Sidecar](/istio/user/troubleshooting/03-30-istio-no-sidecar.md)
   * [Incompatible Istio Sidecar](/istio/user/troubleshooting/03-40-incompatible-istio-sidecar-version.md)
   * [Unintentional Istio Removal](/istio/user/troubleshooting/03-50-recovering-from-unintentional-istio-removal.md)
-  * [Modified Istio Resources](./troubleshooting/03-70-reconciliation-fails-on-istio-install.md)
-  * [SAP HANA Database Connection Issues](./troubleshooting/03-80-cannot-connect-to-hana-db.md)
+  * [Modified Istio Resources](/istio/user/troubleshooting/03-70-reconciliation-fails-on-istio-install.md)
+  * [SAP HANA Database Connection Issues](/istio/user/troubleshooting/03-80-cannot-connect-to-hana-db.md)

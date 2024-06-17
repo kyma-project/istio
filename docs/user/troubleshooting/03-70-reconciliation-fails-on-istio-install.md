@@ -1,4 +1,4 @@
-# Changes to Istio resources Are Not Reverted After Reconciliation
+# Changes to Istio Resources Are Not Reverted After Reconciliation
 
 ## Symptoms
 

@@ -89,6 +89,7 @@ func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage Sideca
 		for _, evaluator := range restartEvaluator {
 			if evaluator.RequiresProxyRestart(pod) {
 				outputPodsList.Items = append(outputPodsList.Items, pod)
+				// To avoid adding the same pod multiple times, we need to skip the remaining evaluators
 				break
 			}
 		}

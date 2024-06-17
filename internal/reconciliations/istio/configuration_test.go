@@ -1,9 +1,9 @@
-package istio
+package istio_test
 
 import (
 	"fmt"
-
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -22,14 +22,14 @@ var _ = Describe("Istio Configuration", func() {
 			istioCR := operatorv1alpha2.Istio{Spec: operatorv1alpha2.IstioSpec{Config: operatorv1alpha2.Config{NumTrustedProxies: &numTrustedProxies}}}
 
 			// when
-			err := UpdateLastAppliedConfiguration(&istioCR, mockIstioTag)
+			err := istio.UpdateLastAppliedConfiguration(&istioCR, mockIstioTag)
 
 			// then
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(istioCR.Annotations).To(Not(BeEmpty()))
 			Expect(istioCR.Annotations[lastAppliedConfiguration]).To(Equal(fmt.Sprintf(`{"config":{"numTrustedProxies":1},"IstioTag":"%s"}`, mockIstioTag)))
 
-			appliedConfig, err := getLastAppliedConfiguration(&istioCR)
+			appliedConfig, err := istio.GetLastAppliedConfiguration(&istioCR)
 
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(*appliedConfig.Config.NumTrustedProxies).To(Equal(1))

@@ -37,10 +37,12 @@ func (r RestartProxyPredicate) NewProxyRestartEvaluator(_ context.Context) (filt
 }
 
 func needsRestart(pod v1.Pod, expectedImage SidecarImage, expectedResources v1.ResourceRequirements) bool {
-	return HasIstioSidecarStatusAnnotation(pod) &&
-		IsPodReady(pod) &&
-		!hasCustomImageAnnotation(pod) &&
+	return !hasCustomImageAnnotation(pod) &&
 		(hasSidecarContainerWithWithDifferentImage(pod, expectedImage) || hasDifferentSidecarResources(pod, expectedResources))
+}
+
+func isReadyWithIstioAnnotation(pod v1.Pod) bool {
+	return IsPodReady(pod) && HasIstioSidecarStatusAnnotation(pod)
 }
 
 func HasIstioSidecarStatusAnnotation(pod v1.Pod) bool {

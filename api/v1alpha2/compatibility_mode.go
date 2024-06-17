@@ -39,7 +39,7 @@ func setCompatibilityPilot(op iopv1alpha1.IstioOperator) iopv1alpha1.IstioOperat
 	return op
 }
 
-var proxyMetaDataCompatibility = map[string]string{
+var ProxyMetaDataCompatibility = map[string]string{
 	"ISTIO_DELTA_XDS": "false",
 }
 
@@ -53,7 +53,7 @@ func setCompatibilityProxyMetadata(op iopv1alpha1.IstioOperator) (iopv1alpha1.Is
 		return op, err
 	}
 
-	for k, v := range proxyMetaDataCompatibility {
+	for k, v := range ProxyMetaDataCompatibility {
 		mcb.AddProxyMetadata(k, v)
 	}
 	newMeshConfig := mcb.Build()

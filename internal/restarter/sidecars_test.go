@@ -49,7 +49,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		fakeClient := createFakeClient(&istioCr, istiod)
 		statusHandler := status.NewStatusHandler(fakeClient)
 		sidecarsRestarter := restarter.NewSidecarsRestarter(logr.Discard(), createFakeClient(&istioCr, istiod),
-			&MergerMock{"1.16.1-distroless"}, sidecars.NewProxyResetter(), []filter.SidecarProxyPredicate{}, statusHandler)
+			&MergerMock{"1.16.1-distroless"}, sidecars.NewProxyResetter(), statusHandler)
 		// when
 		err := sidecarsRestarter.Restart(context.Background(), &istioCr)
 
@@ -106,7 +106,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		fakeClient := createFakeClient(&istioCr, istiod)
 		statusHandler := status.NewStatusHandler(fakeClient)
 		sidecarsRestarter := restarter.NewSidecarsRestarter(logr.Discard(), createFakeClient(&istioCr, istiod),
-			&MergerMock{"1.16.1-distroless"}, proxyResetter, []filter.SidecarProxyPredicate{}, statusHandler)
+			&MergerMock{"1.16.1-distroless"}, proxyResetter, statusHandler)
 
 		// when
 		err := sidecarsRestarter.Restart(context.Background(), &istioCr)
@@ -147,7 +147,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		fakeClient := createFakeClient(&istioCr, istiod)
 		statusHandler := status.NewStatusHandler(fakeClient)
 		sidecarsRestarter := restarter.NewSidecarsRestarter(logr.Discard(), createFakeClient(&istioCr, istiod),
-			&MergerMock{"1.16.1-distroless"}, proxyResetter, []filter.SidecarProxyPredicate{}, statusHandler)
+			&MergerMock{"1.16.1-distroless"}, proxyResetter, statusHandler)
 
 		// when
 		err := sidecarsRestarter.Restart(context.Background(), &istioCr)
@@ -177,7 +177,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		fakeClient := createFakeClient(&istioCr, istiod)
 		statusHandler := status.NewStatusHandler(fakeClient)
 		sidecarsRestarter := restarter.NewSidecarsRestarter(logr.Discard(), createFakeClient(&istioCr, istiod),
-			&MergerMock{"1.16.1-distroless"}, proxyResetter, []filter.SidecarProxyPredicate{}, statusHandler)
+			&MergerMock{"1.16.1-distroless"}, proxyResetter, statusHandler)
 
 		// when
 		err := sidecarsRestarter.Restart(context.Background(), &istioCr)

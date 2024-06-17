@@ -54,13 +54,6 @@ resources:
       kind: Telemetry
   - GroupVersionKind:
       group: networking.istio.io
-      version: v1alpha3
-      kind: VirtualService
-    ControlledList:
-      - name: "istio-healthz"
-        namespace: "istio-system"
-  - GroupVersionKind:
-      group: networking.istio.io
       version: v1
       kind: VirtualService
     ControlledList:

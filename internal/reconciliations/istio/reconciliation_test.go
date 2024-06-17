@@ -807,7 +807,7 @@ var _ = Describe("Installation reconciliation", func() {
 		}
 
 		mockClient := mockLibraryClient{}
-		c := createFakeClient(&istioCR, &networkingv1alpha3.VirtualService{
+		c := createFakeClient(&istioCR, &networkingv1.VirtualService{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "mock-vs",
 				Namespace: "mock-ns",

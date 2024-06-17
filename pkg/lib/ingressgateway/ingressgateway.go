@@ -2,10 +2,9 @@ package ingressgateway
 
 import (
 	"context"
-	"encoding/json"
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/filter"
-	"github.com/kyma-project/istio/operator/pkg/labels"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 )
 
 type RestartPredicate struct {
@@ -16,36 +15,15 @@ func NewRestartPredicate(istioCR *operatorv1alpha2.Istio) *RestartPredicate {
 	return &RestartPredicate{istioCR: istioCR}
 }
 
-type appliedConfig struct {
-	operatorv1alpha2.IstioSpec
-	IstioTag string
-}
-
-func getLastAppliedConfiguration(istioCR *operatorv1alpha2.Istio) (appliedConfig, error) {
-	lastAppliedConfig := appliedConfig{}
-	if len(istioCR.Annotations) == 0 {
-		return lastAppliedConfig, nil
-	}
-
-	if lastAppliedAnnotation, found := istioCR.Annotations[labels.LastAppliedConfiguration]; found {
-		err := json.Unmarshal([]byte(lastAppliedAnnotation), &lastAppliedConfig)
-		if err != nil {
-			return lastAppliedConfig, err
-		}
-	}
-
-	return lastAppliedConfig, nil
-}
-
 func (i RestartPredicate) NewIngressGatewayEvaluator(_ context.Context) (filter.IngressGatewayRestartEvaluator, error) {
-	lastAppliedConfig, err := getLastAppliedConfiguration(i.istioCR)
+	lastAppliedConfig, err := istio.GetLastAppliedConfiguration(i.istioCR)
 	if err != nil {
 		return nil, err
 	}
 
 	return NumTrustedProxiesRestartEvaluator{
 		NewNumTrustedProxies: i.istioCR.Spec.Config.NumTrustedProxies,
-		OldNumTrustedProxies: lastAppliedConfig.IstioSpec.Config.NumTrustedProxies,
+		OldNumTrustedProxies: lastAppliedConfig.Config.NumTrustedProxies,
 	}, nil
 }
 

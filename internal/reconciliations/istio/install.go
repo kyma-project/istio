@@ -32,10 +32,10 @@ func installIstio(ctx context.Context, args installArgs) (istiooperator.IstioIma
 	iopMerger := args.istioOperatorMerger
 	istioClient := args.istioClient
 
-	ctrl.Log.Info("Starting Istio install", "istio version", istioImageVersion.Version)
+	ctrl.Log.Info("Starting Istio install", "istio version", istioImageVersion.Version())
 
 	if _, ok := istioCR.Annotations[labels.LastAppliedConfiguration]; ok {
-		lastAppliedConfig, err := getLastAppliedConfiguration(istioCR)
+		lastAppliedConfig, err := GetLastAppliedConfiguration(istioCR)
 		if err != nil {
 			ctrl.Log.Error(err, "Error evaluating Istio CR changes")
 			return istioImageVersion, described_errors.NewDescribedError(err, "Istio install check failed")

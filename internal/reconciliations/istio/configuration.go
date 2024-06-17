@@ -3,25 +3,25 @@ package istio
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/pkg/labels"
 
 	"github.com/coreos/go-semver/semver"
-	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 )
 
-type appliedConfig struct {
-	operatorv1alpha2.IstioSpec
+type AppliedConfig struct {
+	v1alpha2.IstioSpec
 	IstioTag string
 }
 
 // UpdateLastAppliedConfiguration annotates the passed CR with LastAppliedConfiguration, which holds information about last applied
 // IstioCR spec and IstioTag (IstioVersion-IstioImageBase)
-func UpdateLastAppliedConfiguration(istioCR *operatorv1alpha2.Istio, istioTag string) error {
+func UpdateLastAppliedConfiguration(istioCR *v1alpha2.Istio, istioTag string) error {
 	if len(istioCR.Annotations) == 0 {
 		istioCR.Annotations = map[string]string{}
 	}
 
-	newAppliedConfig := appliedConfig{
+	newAppliedConfig := AppliedConfig{
 		IstioSpec: istioCR.Spec,
 		IstioTag:  istioTag,
 	}
@@ -35,8 +35,8 @@ func UpdateLastAppliedConfiguration(istioCR *operatorv1alpha2.Istio, istioTag st
 	return nil
 }
 
-func getLastAppliedConfiguration(istioCR *operatorv1alpha2.Istio) (appliedConfig, error) {
-	lastAppliedConfig := appliedConfig{}
+func GetLastAppliedConfiguration(istioCR *v1alpha2.Istio) (AppliedConfig, error) {
+	lastAppliedConfig := AppliedConfig{}
 	if len(istioCR.Annotations) == 0 {
 		return lastAppliedConfig, nil
 	}

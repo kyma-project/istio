@@ -7,8 +7,10 @@ Feature: gRPC performance tests with constant RPS
     Then the test should run successfully
 
     Examples:
-      | requests | rps | concurrency |
-      | 100      | 10  | 10          |
-      | 1000     | 100 | 10          |
-      | 100      | 10  | 1           |
-      | 1000     | 100 | 1           |
+      | requests  | rps   | concurrency    |
+      | 100       | 10    | 10             |
+      | 1000      | 100   | 10             |
+      | 10000     | 500   | 10             |
+      | 10000     | 1000  | 200            |
+      | 20000     | 5000  | 1000           |
+      | 100000    | 5000  | 1000           |

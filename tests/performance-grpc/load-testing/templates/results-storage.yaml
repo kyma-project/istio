@@ -24,35 +24,20 @@ spec:
   template:
     metadata:
       labels:
+        sidecar.istio.io/inject: "false"
         app: {{ .Release.Name }}-sftp
-      annotations:
-        container.apparmor.security.beta.kubernetes.io/sftp: runtime/default
     spec:
       containers:
       - name: sftp
-        image: atmoz/sftp:latest
+        image: drakkan/sftpgo:latest
         ports:
-        - containerPort: 22
-        env:
-        - name: SFTP_USERS
-          value: "goat:load:1001"
-        - name: SFTP_CHROOT
-          value: "/home"
-        - name: SFTP_READONLY
-          value: "no"
-        - name: SFTP_HOME
-          value: "/home"
-        - name: SFTP_UID
-          value: "1001"
-        - name: SFTP_GID
-          value: "1001"
-        - name: SFTP_ALLOW_PASSWORD_AUTH
-          value: "yes"
-        - name: SFTP_ALLOW_CHMOD
-          value: "yes"
-        - name: SFTP_ALLOW_WRITE
-          value: "yes"
-        - name: SFTP_UMASK
-          value: "000"
-        - name: SFTP_PUBKEY_AUTH
-          value: "no"
+        - containerPort: 5522
+          name: sftp
+        command:
+          - sftpgo
+          - portable
+          - --permissions=*
+          - --sftpd-port=5522
+          - --password=load
+          - --username=goat
+          - --directory=/tmp

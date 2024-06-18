@@ -32,7 +32,7 @@ spec:
         regex: /.*
     route:
     - destination:
-        host: {{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local
+        host: grpcbin.{{ .Release.Namespace }}.svc.cluster.local
         port:
           number: 50051
       weight: 100

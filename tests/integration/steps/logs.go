@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"github.com/avast/retry-go"
-	testcontext2 "github.com/kyma-project/istio/operator/tests/testcontext"
+	"github.com/kyma-project/istio/operator/tests/testcontext"
 	"github.com/pkg/errors"
 	"io"
 	v1 "k8s.io/api/apps/v1"
@@ -19,7 +19,7 @@ import (
 )
 
 func ContainerLogContainsString(ctx context.Context, containerName, depName, depNamespace, expectedString string) (context.Context, error) {
-	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return ctx, err
 	}
@@ -58,7 +58,7 @@ func ContainerLogContainsString(ctx context.Context, containerName, depName, dep
 		}
 
 		return nil
-	}, testcontext2.GetRetryOpts()...)
+	}, testcontext.GetRetryOpts()...)
 	return ctx, err
 }
 

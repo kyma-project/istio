@@ -2,7 +2,7 @@ package steps
 
 import (
 	"context"
-	testcontext2 "github.com/kyma-project/istio/operator/tests/testcontext"
+	"github.com/kyma-project/istio/operator/tests/testcontext"
 	"strconv"
 
 	"github.com/avast/retry-go"
@@ -14,7 +14,7 @@ import (
 )
 
 func EnableAccessLogging(ctx context.Context, provider string) (context.Context, error) {
-	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return ctx, err
 	}
@@ -39,14 +39,14 @@ func EnableAccessLogging(ctx context.Context, provider string) (context.Context,
 		if err != nil {
 			return err
 		}
-		ctx = testcontext2.AddCreatedTestObjectInContext(ctx, tm)
+		ctx = testcontext.AddCreatedTestObjectInContext(ctx, tm)
 		return nil
-	}, testcontext2.GetRetryOpts()...)
+	}, testcontext.GetRetryOpts()...)
 	return ctx, err
 }
 
 func EnableTracing(ctx context.Context, tracingProvider string) (context.Context, error) {
-	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return ctx, err
 	}
@@ -71,9 +71,9 @@ func EnableTracing(ctx context.Context, tracingProvider string) (context.Context
 		if err != nil {
 			return err
 		}
-		ctx = testcontext2.AddCreatedTestObjectInContext(ctx, tm)
+		ctx = testcontext.AddCreatedTestObjectInContext(ctx, tm)
 		return nil
-	}, testcontext2.GetRetryOpts()...)
+	}, testcontext.GetRetryOpts()...)
 	return ctx, err
 }
 
@@ -95,7 +95,7 @@ func CreateTelemetryCollectorMock(ctx context.Context, appName, namespace string
 }
 
 func CreateOpenTelemetryService(ctx context.Context, collectorDepName, namespace string) (context.Context, error) {
-	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return ctx, err
 	}
@@ -124,8 +124,8 @@ func CreateOpenTelemetryService(ctx context.Context, collectorDepName, namespace
 		if err != nil {
 			return err
 		}
-		ctx = testcontext2.AddCreatedTestObjectInContext(ctx, svc)
+		ctx = testcontext.AddCreatedTestObjectInContext(ctx, svc)
 		return nil
-	}, testcontext2.GetRetryOpts()...)
+	}, testcontext.GetRetryOpts()...)
 	return ctx, err
 }

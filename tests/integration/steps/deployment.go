@@ -3,7 +3,7 @@ package steps
 import (
 	"context"
 	"fmt"
-	testcontext2 "github.com/kyma-project/istio/operator/tests/testcontext"
+	"github.com/kyma-project/istio/operator/tests/testcontext"
 
 	"github.com/avast/retry-go"
 	"github.com/distribution/reference"
@@ -24,7 +24,7 @@ const (
 )
 
 func CreateDeployment(ctx context.Context, appName, namespace string, container corev1.Container, volumes ...corev1.Volume) (context.Context, error) {
-	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return ctx, err
 	}
@@ -67,9 +67,9 @@ func CreateDeployment(ctx context.Context, appName, namespace string, container 
 		if err != nil {
 			return err
 		}
-		ctx = testcontext2.AddCreatedTestObjectInContext(ctx, &dep)
+		ctx = testcontext.AddCreatedTestObjectInContext(ctx, &dep)
 		return nil
-	}, testcontext2.GetRetryOpts()...)
+	}, testcontext.GetRetryOpts()...)
 
 	return ctx, err
 }
@@ -84,7 +84,7 @@ func CreateApplicationDeployment(ctx context.Context, appName, image, namespace 
 }
 
 func ApplicationHasProxyResourcesSetToCpuAndMemory(ctx context.Context, appName, appNamespace, resourceType, cpu, memory string) error {
-	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -132,13 +132,13 @@ func ApplicationHasProxyResourcesSetToCpuAndMemory(ctx context.Context, appName,
 		}
 
 		return nil
-	}, testcontext2.GetRetryOpts()...)
+	}, testcontext.GetRetryOpts()...)
 }
 
 // ApplicationPodShouldHaveIstioProxy checks depending on the shouldBePresent parameter if the pod has an istio-proxy container.
 // If shouldBePresent is "present", it checks if the pod has istio-proxy container, any other string checks if the pod does not have istio-proxy container.
 func ApplicationPodShouldHaveIstioProxy(ctx context.Context, appName, namespace, shouldBePresent string) error {
-	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -185,7 +185,7 @@ func ApplicationPodShouldHaveIstioProxy(ctx context.Context, appName, namespace,
 		}
 
 		return fmt.Errorf("checking the istio-proxy for app %s in namespace %s failed", appName, namespace)
-	}, testcontext2.GetRetryOpts()...)
+	}, testcontext.GetRetryOpts()...)
 
 }
 
@@ -196,7 +196,7 @@ func ApplicationPodShouldHaveIstioProxyInRequiredVersion(ctx context.Context, ap
 		return err
 	}
 
-	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -241,7 +241,7 @@ func ApplicationPodShouldHaveIstioProxyInRequiredVersion(ctx context.Context, ap
 		}
 
 		return nil
-	}, testcontext2.GetRetryOpts()...)
+	}, testcontext.GetRetryOpts()...)
 
 }
 
@@ -289,7 +289,7 @@ func CreateExtAuthzApplication(ctx context.Context, appName, namespace string) (
 }
 
 func CreateServiceWithPort(ctx context.Context, appName, namespace string, port, targetPort int) (context.Context, error) {
-	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return ctx, err
 	}
@@ -322,9 +322,9 @@ func CreateServiceWithPort(ctx context.Context, appName, namespace string, port,
 		if err != nil {
 			return err
 		}
-		ctx = testcontext2.AddCreatedTestObjectInContext(ctx, &svc)
+		ctx = testcontext.AddCreatedTestObjectInContext(ctx, &svc)
 		return nil
-	}, testcontext2.GetRetryOpts()...)
+	}, testcontext.GetRetryOpts()...)
 
 	return ctx, err
 }

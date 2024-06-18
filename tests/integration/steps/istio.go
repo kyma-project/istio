@@ -3,7 +3,7 @@ package steps
 import (
 	"context"
 	"fmt"
-	testcontext2 "github.com/kyma-project/istio/operator/tests/testcontext"
+	"github.com/kyma-project/istio/operator/tests/testcontext"
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -28,7 +28,7 @@ const (
 )
 
 func IstioCRDsBePresentOnCluster(ctx context.Context, should string) error {
-	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -54,11 +54,11 @@ func IstioCRDsBePresentOnCluster(ctx context.Context, should string) error {
 			}
 		}
 		return nil
-	}, testcontext2.GetRetryOpts()...)
+	}, testcontext.GetRetryOpts()...)
 }
 
 func SetIstioInjection(ctx context.Context, enabled, namespace string) error {
-	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -71,11 +71,11 @@ func SetIstioInjection(ctx context.Context, enabled, namespace string) error {
 		}
 		ns.Labels["istio-injection"] = enabled
 		return k8sClient.Update(context.TODO(), &ns)
-	}, testcontext2.GetRetryOpts()...)
+	}, testcontext.GetRetryOpts()...)
 }
 
 func IstioComponentHasResourcesSetToCpuAndMemory(ctx context.Context, component, resourceType, cpu, memory string) (context.Context, error) {
-	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return ctx, err
 	}
@@ -139,7 +139,7 @@ func getResourcesForIstioComponent(k8sClient client.Client, component, resourceT
 
 // CreateIstioGateway creates an Istio Gateway with http port 80 configured and any host
 func CreateIstioGateway(ctx context.Context, name, namespace string) (context.Context, error) {
-	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return ctx, err
 	}
@@ -174,9 +174,9 @@ func CreateIstioGateway(ctx context.Context, name, namespace string) (context.Co
 		if err != nil {
 			return err
 		}
-		ctx = testcontext2.AddCreatedTestObjectInContext(ctx, gateway)
+		ctx = testcontext.AddCreatedTestObjectInContext(ctx, gateway)
 		return nil
-	}, testcontext2.GetRetryOpts()...)
+	}, testcontext.GetRetryOpts()...)
 
 	return ctx, err
 }
@@ -189,7 +189,7 @@ func CreateVirtualService(ctx context.Context, name, exposedService, gateway, na
 // CreateVirtualServiceWithPort creates a VirtualService that exposes the given service and port on any host
 func CreateVirtualServiceWithPort(ctx context.Context, name, exposedService string, exposedPort int, gateway, namespace string) (context.Context, error) {
 
-	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return ctx, err
 	}
@@ -237,15 +237,15 @@ func CreateVirtualServiceWithPort(ctx context.Context, name, exposedService stri
 		if err != nil {
 			return err
 		}
-		ctx = testcontext2.AddCreatedTestObjectInContext(ctx, vs)
+		ctx = testcontext.AddCreatedTestObjectInContext(ctx, vs)
 		return nil
-	}, testcontext2.GetRetryOpts()...)
+	}, testcontext.GetRetryOpts()...)
 
 	return ctx, err
 }
 
 func CreateAuthorizationPolicyExtAuthz(ctx context.Context, name, namespace, selector, provider, operation string) (context.Context, error) {
-	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return ctx, err
 	}
@@ -284,9 +284,9 @@ func CreateAuthorizationPolicyExtAuthz(ctx context.Context, name, namespace, sel
 		if err != nil {
 			return err
 		}
-		ctx = testcontext2.AddCreatedTestObjectInContext(ctx, ap)
+		ctx = testcontext.AddCreatedTestObjectInContext(ctx, ap)
 		return nil
-	}, testcontext2.GetRetryOpts()...)
+	}, testcontext.GetRetryOpts()...)
 
 	return ctx, err
 }

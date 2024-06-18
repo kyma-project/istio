@@ -3,7 +3,7 @@ package steps
 import (
 	"context"
 	"fmt"
-	testcontext2 "github.com/kyma-project/istio/operator/tests/testcontext"
+	"github.com/kyma-project/istio/operator/tests/testcontext"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -67,7 +67,7 @@ const (
 )
 
 func ResourceIsReady(ctx context.Context, kind, name, namespace string) error {
-	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -105,11 +105,11 @@ func ResourceIsReady(ctx context.Context, kind, name, namespace string) error {
 		}
 
 		return nil
-	}, testcontext2.GetRetryOpts()...)
+	}, testcontext.GetRetryOpts()...)
 }
 
 func ResourceIsPresent(ctx context.Context, kind, name, namespace, present string) error {
-	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -146,11 +146,11 @@ func ResourceIsPresent(ctx context.Context, kind, name, namespace, present strin
 			return fmt.Errorf("%s/%s in ns %s should have not been present", kind, name, namespace)
 		}
 		return nil
-	}, testcontext2.GetRetryOpts()...)
+	}, testcontext.GetRetryOpts()...)
 }
 
 func EvaluatedClusterSizeIs(ctx context.Context, size string) error {
-	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -168,7 +168,7 @@ func EvaluatedClusterSizeIs(ctx context.Context, size string) error {
 }
 
 func NamespaceIsCreated(ctx context.Context, name string) (context.Context, error) {
-	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return ctx, err
 	}
@@ -179,15 +179,15 @@ func NamespaceIsCreated(ctx context.Context, name string) (context.Context, erro
 		if err != nil {
 			return err
 		}
-		ctx = testcontext2.AddCreatedTestObjectInContext(ctx, &ns)
+		ctx = testcontext.AddCreatedTestObjectInContext(ctx, &ns)
 		return nil
-	}, testcontext2.GetRetryOpts()...)
+	}, testcontext.GetRetryOpts()...)
 
 	return ctx, err
 }
 
 func NamespaceIsPresent(ctx context.Context, name, shouldBePresent string) error {
-	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -202,11 +202,11 @@ func NamespaceIsPresent(ctx context.Context, name, shouldBePresent string) error
 			return nil
 		}
 		return err
-	}, testcontext2.GetRetryOpts()...)
+	}, testcontext.GetRetryOpts()...)
 }
 
 func NamespaceHasLabelAndAnnotation(ctx context.Context, name, label, annotation string) error {
-	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -221,11 +221,11 @@ func NamespaceHasLabelAndAnnotation(ctx context.Context, name, label, annotation
 			return fmt.Errorf("namespace %s does not contain %s annotation", name, annotation)
 		}
 		return err
-	}, testcontext2.GetRetryOpts()...)
+	}, testcontext.GetRetryOpts()...)
 }
 
 func ClusterResourceIsDeleted(ctx context.Context, kind, name string) error {
-	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -242,7 +242,7 @@ func ClusterResourceIsDeleted(ctx context.Context, kind, name string) error {
 }
 
 func ResourceInNamespaceIsDeleted(ctx context.Context, kind, name, namespace string) error {
-	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -354,7 +354,7 @@ func ResourceInNamespaceIsDeleted(ctx context.Context, kind, name, namespace str
 }
 
 func ResourceNotPresent(ctx context.Context, kind string) error {
-	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -384,7 +384,7 @@ func ResourceNotPresent(ctx context.Context, kind string) error {
 			return fmt.Errorf("can't check if resource is present for undefined kind %s", kind)
 		}
 		return nil
-	}, testcontext2.GetRetryOpts()...)
+	}, testcontext.GetRetryOpts()...)
 }
 
 func IstioResourceContainerHasRequiredVersion(ctx context.Context, containerName, kind, resourceName, namespace string) error {
@@ -394,7 +394,7 @@ func IstioResourceContainerHasRequiredVersion(ctx context.Context, containerName
 		return err
 	}
 
-	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -456,5 +456,5 @@ func IstioResourceContainerHasRequiredVersion(ctx context.Context, containerName
 		}
 
 		return nil
-	}, testcontext2.GetRetryOpts()...)
+	}, testcontext.GetRetryOpts()...)
 }

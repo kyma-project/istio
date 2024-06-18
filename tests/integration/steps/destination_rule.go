@@ -3,14 +3,14 @@ package steps
 import (
 	"context"
 	"github.com/avast/retry-go"
-	testcontext2 "github.com/kyma-project/istio/operator/tests/testcontext"
+	"github.com/kyma-project/istio/operator/tests/testcontext"
 	networkingv1alpha3 "istio.io/api/networking/v1alpha3"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func CreateDestinationRule(ctx context.Context, name, namespace, host string) (context.Context, error) {
-	k8sClient, err := testcontext2.GetK8sClientFromContext(ctx)
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return ctx, err
 	}
@@ -34,9 +34,9 @@ func CreateDestinationRule(ctx context.Context, name, namespace, host string) (c
 		if err != nil {
 			return err
 		}
-		ctx = testcontext2.AddCreatedTestObjectInContext(ctx, &d)
+		ctx = testcontext.AddCreatedTestObjectInContext(ctx, &d)
 		return nil
-	}, testcontext2.GetRetryOpts()...)
+	}, testcontext.GetRetryOpts()...)
 
 	return ctx, err
 }

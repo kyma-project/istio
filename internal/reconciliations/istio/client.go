@@ -164,6 +164,7 @@ func ConfigureIstioLogScopes() error {
 	o.SetDefaultOutputLevel("analysis", istiolog.WarnLevel)
 	o.SetDefaultOutputLevel("translator", istiolog.WarnLevel)
 	o.SetDefaultOutputLevel("adsc", istiolog.WarnLevel)
+	o.SetDefaultOutputLevel("klog", istiolog.WarnLevel)
 	// These scopes are too noisy even at warning level
 	o.SetDefaultOutputLevel("validation", istiolog.ErrorLevel)
 	o.SetDefaultOutputLevel("processing", istiolog.ErrorLevel)

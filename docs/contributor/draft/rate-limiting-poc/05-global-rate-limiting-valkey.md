@@ -1,6 +1,6 @@
 # Valkey
 
-1. Apply the following resources:
+Apply the following resources:
 ```
 kubectl create ns ratelimit
 cat <<EOF | kubectl apply -f -

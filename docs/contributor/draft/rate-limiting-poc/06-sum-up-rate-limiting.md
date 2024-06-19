@@ -2,7 +2,7 @@
 
 Istio supports rate limiting by using EnvoyFilter configurations to handle the rate limiting in the Envoy proxies. This can be set to local or global rate limiting. Local rate limiting does not require communication with a rate limit service, and each Envoy instance acts independently. Global rate limiting requires gRPC communication with a rate limit service, for example [envoy ratelimit service](https://github.com/envoyproxy/ratelimit).
 
-Envoy ratelimit service needs to use redis or memcached backend.
+Envoy rate limit service needs to use Redis or Memcached backend.
 
 # Memcached
 

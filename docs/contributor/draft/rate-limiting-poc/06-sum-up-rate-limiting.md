@@ -8,18 +8,18 @@ Envoy rate limit service needs to use Redis or Memcached backend.
 
 Pros:
 - Mature project, used in production by many
-- Easy to deploy in Kyma cluster
+- Easy to deploy in a Kyma cluster
 Cons:
 - Experimental support in Envoy
 - Key size limitation of 250 characters
-- Rate limiting based on client's certificate, or very long header values, is not possible
+- Rate limiting based on the client's certificate or very long header values is not possible
 
 # Redis
 
 Pros:
 - Mature and popular
 - Supported by Envoy
-- Some know how within goat team
+- Some know-how within the Goat team
 Cons:
 - Licence issues
 - [Hyperscaler Redis instance is not accessible from Kyma cluster](https://sap-btp.slack.com/archives/C01LGCBS196/p1718107858028479?thread_ts=1718018170.520259&cid=C01LGCBS196)
@@ -28,9 +28,9 @@ Cons:
 
 Pros:
 - Drop-in replacement for Redis
-- Fully compatible with Envoys ratelimit service
+- Fully compatible with Envoy's rate limit service
 - Considered stable
-- Easy to deploy in Kyma cluster
+- Easy to deploy in a Kyma cluster
 Cons:
-- Not known in the goat team
-- Much less popular, and less mature than Redis
+- Not known in the Goat team
+- Much less popular and less mature than Redis

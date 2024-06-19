@@ -16,6 +16,7 @@ type RestartProxyPredicate struct {
 	expectedResources v1.ResourceRequirements
 }
 
+// NewRestartProxyPredicate creates a new RestartProxyPredicate that checks if a pod needs a restart based on the expected image and resources.
 func NewRestartProxyPredicate(expectedImage SidecarImage, expectedResources v1.ResourceRequirements) *RestartProxyPredicate {
 	return &RestartProxyPredicate{expectedImage: expectedImage, expectedResources: expectedResources}
 }
@@ -37,10 +38,12 @@ func (r RestartProxyPredicate) NewProxyRestartEvaluator(_ context.Context) (filt
 }
 
 func needsRestart(pod v1.Pod, expectedImage SidecarImage, expectedResources v1.ResourceRequirements) bool {
-	return HasIstioSidecarStatusAnnotation(pod) &&
-		IsPodReady(pod) &&
-		!hasCustomImageAnnotation(pod) &&
+	return !hasCustomImageAnnotation(pod) &&
 		(hasSidecarContainerWithWithDifferentImage(pod, expectedImage) || hasDifferentSidecarResources(pod, expectedResources))
+}
+
+func isReadyWithIstioAnnotation(pod v1.Pod) bool {
+	return IsPodReady(pod) && HasIstioSidecarStatusAnnotation(pod)
 }
 
 func HasIstioSidecarStatusAnnotation(pod v1.Pod) bool {

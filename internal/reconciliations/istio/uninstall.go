@@ -21,7 +21,7 @@ type uninstallArgs struct {
 	istioCR           *operatorv1alpha2.Istio
 	statusHandler     status.Status
 	istioImageVersion istiooperator.IstioImageVersion
-	istioClient       LibraryClient
+	istioClient       libraryClient
 }
 
 func uninstallIstio(ctx context.Context, args uninstallArgs) (istiooperator.IstioImageVersion, described_errors.DescribedError) {

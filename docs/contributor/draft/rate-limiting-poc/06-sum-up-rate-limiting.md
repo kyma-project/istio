@@ -6,12 +6,31 @@ Envoy ratelimit service needs to use redis or memcached backend.
 
 # Memcached
 
-Memcached support is experimental, usage in production may not be recommended. It also has a key size limitation of 250 characters, therefore rate limiting based on client's certificate, or very long header values, is not possible. It cannot be considered as a viable option.
+Pros:
+- Mature project, used in production by many
+- Easy to deploy in Kyma cluster
+Cons:
+- Experimental support in Envoy
+- Key size limitation of 250 characters
+- Rate limiting based on client's certificate, or very long header values, is not possible
 
 # Redis
 
-Redis is considered stable, and is the recommended backend for rate limiting. Due to Redis licence we cannot deploy it in kyma cluster, and for now it's not possible (or very hard) to connect to BTP hyperscaler Redis instance from the Kyma cluster. We need to discuss the possibility of having redis managed by btp-operator.
+Pros:
+- Mature and popular
+- Supported by Envoy
+- Some know how within goat team
+Cons:
+- Licence issues
+- Hyperscaler Redis instance is not accessible from Kyma cluster, or it's very hard to connect to it
 
 # Valkey
 
-Valkey is a drop-in replacement for Redis, fully compatible with Envoys ratelimit service, considered stable, it does not have the key size limitation. It is also possible to deploy it in the Kyma cluster. Currently, it might be the only working option for rate limiting in Kyma.
+Pros:
+- Drop-in replacement for Redis
+- Fully compatible with Envoys ratelimit service
+- Considered stable
+- Easy to deploy in Kyma cluster
+Cons:
+- Not known in the goat team
+- Much less popular, and less mature than Redis

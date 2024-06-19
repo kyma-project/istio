@@ -22,7 +22,7 @@ Pros:
 - Some know how within goat team
 Cons:
 - Licence issues
-- Hyperscaler Redis instance is not accessible from Kyma cluster, or it's very hard to connect to it
+- [Hyperscaler Redis instance is not accessible from Kyma cluster](https://sap-btp.slack.com/archives/C01LGCBS196/p1718107858028479?thread_ts=1718018170.520259&cid=C01LGCBS196)
 
 # Valkey
 

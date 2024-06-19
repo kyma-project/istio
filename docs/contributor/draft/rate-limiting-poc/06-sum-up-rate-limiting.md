@@ -4,33 +4,36 @@ Istio supports rate limiting by using EnvoyFilter configurations to handle the r
 
 The Envoy rate limit service reference implementation needs to use Redis or Memcached backend.
 
+All the backends listed here are easy to deploy using Helm charts. 
+
 # Memcached
 
 Pros:
 - Mature project, used in production by many
-- Easy to deploy in a Kyma cluster
+- Fully open source, no licensing issues
 Cons:
-- Only experimental support in Envoy
+- Only experimental support in [Envoy rate limit service implementation](https://github.com/envoyproxy/ratelimit?tab=readme-ov-file#memcache), no further information available
 - Descriptor key size limitation of 250 characters
 - Rate limiting based on the client's certificate or very long header values is not possible
 
 # Redis
+Redis is offered in BTP as a service, making it best option for our needs. Unfortunately it is not accessible from the Kyma cluster.
 
 Pros:
 - Mature and popular
-- Supported by Envoy
+- Supported by Envoy rate limit service implementation
 - There are people in the Goat team who worked with Redis in the past
 Cons:
-- Licence issues
-- [Hyperscaler Redis instance is not accessible from Kyma cluster](https://sap-btp.slack.com/archives/C01LGCBS196/p1718107858028479?thread_ts=1718018170.520259&cid=C01LGCBS196)
+- License prevents us from offering it as a service in Kyma
+- Hyperscaler Redis instance is not accessible from Kyma cluster, it is only available within Cloud Foundry environment
+- If we choose managed Redis offering, it will not be available for OS Istio module
 
-# Valkey
+# [Valkey](https://github.com/valkey-io/valkey)
+Valkey is an open source, in memory datastore released under the BSD-3 Clause License. It is a continuation of the work that was being done on Redis 7.2.4.
 
 Pros:
-- Drop-in replacement for Redis
-- Fully compatible with Envoy's rate limit service
-- Considered stable
-- Easy to deploy in a Kyma cluster
+- Fully compatible with Envoy's rate limit service, according to our usage scenarios
+- Stable project [supported by the Linux Foundation](https://www.linuxfoundation.org/press/linux-foundation-launches-open-source-valkey-community)
 Cons:
 - Not known in the Goat team
-- Much less popular and less mature than Redis
+- Less popular than Redis

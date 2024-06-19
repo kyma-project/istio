@@ -25,7 +25,7 @@ var _ = Describe("Proxy Restarter", func() {
 			Expect(evaluator.RequiresProxyRestart(v1.Pod{})).To(BeTrue())
 		})
 
-		It("Should evaluate to false when proxy metadata values exist new and old compatibility mode is equal", func() {
+		It("Should evaluate to false when proxy metadata values exist and new and old compatibility mode is equal", func() {
 			evaluator := ProxiesRestartEvaluator{
 				oldCompatibilityMode: true,
 				newCompatibilityMode: true,
@@ -37,7 +37,7 @@ var _ = Describe("Proxy Restarter", func() {
 			Expect(evaluator.RequiresProxyRestart(v1.Pod{})).To(BeFalse())
 		})
 
-		It("Should evaluate to false when no proxy metadata values exist new and old compatibility mode is different", func() {
+		It("Should evaluate to false when no proxy metadata values exist and new and old compatibility mode is different", func() {
 			evaluator := ProxiesRestartEvaluator{
 				oldCompatibilityMode: true,
 				newCompatibilityMode: false,
@@ -46,7 +46,7 @@ var _ = Describe("Proxy Restarter", func() {
 			Expect(evaluator.RequiresProxyRestart(v1.Pod{})).To(BeFalse())
 		})
 
-		It("Should evaluate to false when no proxy metadata values exist new and old compatibility mode is equal", func() {
+		It("Should evaluate to false when no proxy metadata values exist and new and old compatibility mode is equal", func() {
 			evaluator := ProxiesRestartEvaluator{
 				oldCompatibilityMode: true,
 				newCompatibilityMode: true,

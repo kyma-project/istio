@@ -1,4 +1,4 @@
-# Rate limiting with [Valkey](https://github.com/valkey-io/valkey) as a key-value store
+# Configure Rate Limiting with [Valkey](https://github.com/valkey-io/valkey) as a Key-Value Store
 
 Apply the following resources:
 ```

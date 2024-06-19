@@ -103,11 +103,17 @@ To enable compatibility mode in the Istio module, you can set the **spec.compati
 
 The following Istio Pilot environment variables are applied when you set `spec.compatibilityMode: true` in Istio CR:
 
-Name                                                                 |           Value
- ----------                                                          | ---------------
-**PERSIST_OLDEST_FIRST_HEURISTIC_FOR_VIRTUAL_SERVICE_HOST_MATCHING** | `true`
-**VERIFY_CERTIFICATE_AT_CLIENT**                                     | `false`
-**ENABLE_AUTO_SNI**                                                  | `false`
+ Name                                   | Value   
+ ----------------------------------------|---------
+ **ENABLE_ENHANCED_RESOURCE_SCOPING**   | `false` 
+ **ENABLE_RESOLUTION_NONE_TARGET_PORT** | `false` 
+
+The following Istio Proxy environment variables are applied when you set `spec.compatibilityMode: true` in Istio CR:
+
+ Name                | Value   
+ ---------------------|---------
+ **ISTIO_DELTA_XDS** | `false` 
+
 
 > [!WARNING]
 > You can use the compatibility mode to retain the behavior of the current Istio version when a new version of the Istio module with a higher version of Istio is released. Then, the compatibility will be first set to a minor version lower than the one you are currently using. If this lower version’s behavior is not compatible with your current mesh setup, some configurations may be broken until the new release of the Istio module is rolled out. 

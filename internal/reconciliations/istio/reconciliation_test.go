@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/kyma-project/istio/operator/pkg/labels"
+	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
 	"time"
 
 	"github.com/kyma-project/istio/operator/internal/described_errors"
@@ -806,7 +807,7 @@ var _ = Describe("Installation reconciliation", func() {
 		}
 
 		mockClient := mockLibraryClient{}
-		c := createFakeClient(&istioCR, &networkingv1alpha3.VirtualService{
+		c := createFakeClient(&istioCR, &networkingv1.VirtualService{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "mock-vs",
 				Namespace: "mock-ns",
@@ -916,6 +917,8 @@ func createFakeClient(objects ...client.Object) client.Client {
 	err = appsv1.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
 	err = networkingv1alpha3.AddToScheme(scheme.Scheme)
+	Expect(err).ShouldNot(HaveOccurred())
+	err = networkingv1.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
 
 	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).WithStatusSubresource(objects...).Build()

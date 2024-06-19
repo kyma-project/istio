@@ -7,7 +7,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	securityv1beta1 "istio.io/client-go/pkg/apis/security/v1beta1"
+	securityv1 "istio.io/client-go/pkg/apis/security/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/yaml"
@@ -33,7 +33,7 @@ var _ = Describe("Apply", func() {
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(changed).To(Equal(controllerutil.OperationResultCreated))
 
-		var s securityv1beta1.PeerAuthenticationList
+		var s securityv1.PeerAuthenticationList
 		listErr := client.List(context.TODO(), &s)
 		Expect(listErr).To(Not(HaveOccurred()))
 		Expect(s.Items).To(HaveLen(1))
@@ -53,7 +53,7 @@ var _ = Describe("Apply", func() {
 
 	It("should return not changed if no change was applied", func() {
 		//given
-		var p securityv1beta1.PeerAuthentication
+		var p securityv1.PeerAuthentication
 		err := yaml.Unmarshal(paMtls, &p)
 		Expect(err).To(Not(HaveOccurred()))
 
@@ -68,7 +68,7 @@ var _ = Describe("Apply", func() {
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(changed).To(Equal(controllerutil.OperationResultNone))
 
-		var s securityv1beta1.PeerAuthenticationList
+		var s securityv1.PeerAuthenticationList
 		listErr := client.List(context.TODO(), &s)
 		Expect(listErr).To(Not(HaveOccurred()))
 		Expect(s.Items).To(HaveLen(1))
@@ -79,7 +79,7 @@ var _ = Describe("Apply", func() {
 
 	It("should return updated if change was applied", func() {
 		//given
-		var p securityv1beta1.PeerAuthentication
+		var p securityv1.PeerAuthentication
 		err := yaml.Unmarshal(paMtls, &p)
 		Expect(err).To(Not(HaveOccurred()))
 
@@ -95,7 +95,7 @@ var _ = Describe("Apply", func() {
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(changed).To(Equal(controllerutil.OperationResultUpdated))
 
-		var s securityv1beta1.PeerAuthenticationList
+		var s securityv1.PeerAuthenticationList
 		listErr := client.List(context.TODO(), &s)
 		Expect(listErr).To(Not(HaveOccurred()))
 		Expect(s.Items).To(HaveLen(1))

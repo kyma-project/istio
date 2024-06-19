@@ -2,14 +2,13 @@ package istio_resources
 
 import (
 	"context"
-
 	"strings"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
-	securityv1beta1 "istio.io/client-go/pkg/apis/security/v1beta1"
+	securityv1 "istio.io/client-go/pkg/apis/security/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/scheme"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -45,7 +44,7 @@ var _ = Describe("Reconciliation", func() {
 		//then
 		Expect(err).To(Not(HaveOccurred()))
 
-		var s securityv1beta1.PeerAuthenticationList
+		var s securityv1.PeerAuthenticationList
 		listErr := client.List(context.Background(), &s)
 		Expect(listErr).To(Not(HaveOccurred()))
 		Expect(s.Items).To(HaveLen(1))
@@ -129,7 +128,7 @@ func createFakeClient(objects ...ctrlclient.Object) ctrlclient.Client {
 	Expect(err).ShouldNot(HaveOccurred())
 	err = networkingv1alpha3.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
-	err = securityv1beta1.AddToScheme(scheme.Scheme)
+	err = securityv1.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
 
 	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build()

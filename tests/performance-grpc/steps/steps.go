@@ -37,6 +37,8 @@ func getRequestHost() string {
 		return ""
 	}
 
+	fmt.Printf("KYMA_DOMAIN is %s, running the tests against Istio ingress-gateway routing to external host", kymaDomain)
+
 	return fmt.Sprintf("%s.%s:443", "hello", kymaDomain)
 }
 
@@ -49,6 +51,8 @@ func getRequestAuthority() string {
 
 	return fmt.Sprintf("%s.%s", "hello", kymaDomain)
 }
+
+const istioIngressGatewayInternalHost = "istio-ingressgateway.istio-system.svc.cluster.local:443"
 
 //go:embed job.yaml
 var jobTemplate string
@@ -67,10 +71,15 @@ func (t *TemplatedPerformanceJob) ExecutePerformanceTest(ctx context.Context) er
 		host := getRequestHost()
 		if host != "" {
 			t.templatedValues["Address"] = host
+		} else {
+			return fmt.Errorf("host template value is not set, cannot run the tests against external host")
 		}
 	} else {
 		authority := getRequestAuthority()
 		if authority != "" {
+			fmt.Printf("Running the tests against %s with authority %s\n", istioIngressGatewayInternalHost, authority)
+
+			t.templatedValues["Address"] = istioIngressGatewayInternalHost
 			t.templatedValues["Authority"] = authority
 		}
 	}

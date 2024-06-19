@@ -42,6 +42,5 @@ spec:
         ports:
         - containerPort: 50051
           name: grpc
-        command:
-          - /manager
+        args:
           - --reflection={{ .Values.grpcbin.reflection.enabled }}

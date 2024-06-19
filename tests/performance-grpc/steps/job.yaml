@@ -9,10 +9,9 @@ spec:
       containers:
       - name: loadtest
         image: "europe-central2-docker.pkg.dev/sap-se-cx-kyma-goat/networking-dev-tools/grpc-loadtest:latest"
-        command:
-        - /manager
+        args:
         - --service={{ or .Service "HelloService.SayHello" }}
-        - --address={{ or .Address "istio-ingressgateway.istio-system.svc.cluster.local:443" }}
+        - --address={{ or .Address "grpcbin:50051" }}
         - --insecure={{ or .Insecure false }}
         {{- if .Authority }}
         - --authority={{ .Authority }}

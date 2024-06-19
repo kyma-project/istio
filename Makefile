@@ -218,7 +218,7 @@ istio-integration-test: install deploy
 	cd tests/integration && TEST_REQUEST_TIMEOUT=300s && EXPORT_RESULT=true go test -v -timeout 35m -run TestIstioMain
 
 .PHONY: grpc-performance-test
-grpc-performance-test: install deploy
+grpc-performance-test:
 	make -c tests/performance-grpc deploy-helm
 	make -c tests/performance-grpc grpc-load-test
 	make -c tests/performance-grpc export-results

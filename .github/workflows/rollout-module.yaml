@@ -87,6 +87,7 @@ jobs:
       - name: Setup git and clone repo
         shell: bash
         run: |
+          git config --global http.https://github.tools.sap.version "HTTP/1.1"
           git config --global user.email ${{ vars.GIT_USER_EMAIL }}
           git config --global user.name ${{ vars.GIT_USER_NAME }}
           git clone ${MODULE_MANIFESTS_WITH_USER}
@@ -108,7 +109,7 @@ jobs:
         env:
           CHANNEL: ${{ inputs.channel }}
         run: |
-          if "${CHANNEL}" == "experimental"; then
+          if [[ "${CHANNEL}" == "experimental" ]]; then
             curl -JL ${ISTIO_RELEASES_URL}/download/${TAG}/${EXPERIMENTAL_MANIFEST_FILENAME} >${MANIFEST_FILENAME}
           else
             curl -JL ${ISTIO_RELEASES_URL}/download/${TAG}/${MANIFEST_FILENAME} >${MANIFEST_FILENAME}
@@ -121,17 +122,19 @@ jobs:
         shell: bash
         run: |
           echo "Creating module configuration file:"
-          if "${CHANNEL}" == "experimental"; then
+          if [[ "${CHANNEL}" == "experimental" ]]; then
             MODULE_VERSION="${TAG}-experimental"
+            FILE_NAME="${EXPERIMENTAL_MANIFEST_FILENAME}"
           else
             MODULE_VERSION="${TAG}"
+            FILE_NAME="${MANIFEST_FILENAME}"
           fi
           
           cat <<EOF | tee module-config.yaml
           name: ${FULL_MODULE_NAME}
           channel: ${CHANNEL}
           version: "${MODULE_VERSION}"
-          manifest: ${MANIFEST_FILENAME}
+          manifest: ${FILE_NAME}
           defaultCR: ${DEFAULT_CR_FILENAME}
           labels:
             "operator.kyma-project.io/managed-by": "lifecycle-manager"

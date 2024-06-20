@@ -8,6 +8,9 @@ ratelimit:
   global:
     service: false
     gateway: false
+  globalMemcached:
+    service: false
+    gateway: false
 influxdb:
   initScripts:
     enabled: true

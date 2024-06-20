@@ -3,6 +3,7 @@ package steps
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/istio/operator/tests/testcontext"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -11,7 +12,6 @@ import (
 	istioCR "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
-	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	securityv1 "istio.io/client-go/pkg/apis/security/v1"

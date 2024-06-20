@@ -3,7 +3,7 @@ package steps
 import (
 	"context"
 	"github.com/avast/retry-go"
-	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
+	"github.com/kyma-project/istio/operator/tests/testcontext"
 	apinetworkingv1 "istio.io/api/networking/v1"
 	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/avast/retry-go"
-	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
+	"github.com/kyma-project/istio/operator/tests/testcontext"
 	"github.com/pkg/errors"
 	"net/http"
 	"time"

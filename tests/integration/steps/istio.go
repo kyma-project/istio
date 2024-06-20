@@ -3,6 +3,7 @@ package steps
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/istio/operator/tests/testcontext"
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -18,7 +19,6 @@ import (
 	"github.com/avast/retry-go"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	crds "github.com/kyma-project/istio/operator/tests/integration/pkg/crds"
-	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 )

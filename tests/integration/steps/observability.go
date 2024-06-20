@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/avast/retry-go"
-	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
+	"github.com/kyma-project/istio/operator/tests/testcontext"
 	apitelemetryv1 "istio.io/api/telemetry/v1"
 	telemetryv1 "istio.io/client-go/pkg/apis/telemetry/v1"
 	corev1 "k8s.io/api/core/v1"

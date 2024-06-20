@@ -2,6 +2,7 @@ package integration
 
 import (
 	"context"
+	"github.com/kyma-project/istio/operator/tests/testcontext"
 	"os"
 	"testing"
 	"time"
@@ -9,7 +10,6 @@ import (
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
 	iopv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
 	securityv1 "istio.io/client-go/pkg/apis/security/v1"
 	telemetryv1 "istio.io/client-go/pkg/apis/telemetry/v1"

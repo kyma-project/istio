@@ -110,7 +110,7 @@ jobs:
           CHANNEL: ${{ inputs.channel }}
         run: |
           if [[ "${CHANNEL}" == "experimental" ]]; then
-            curl -JL ${ISTIO_RELEASES_URL}/download/${TAG}/${EXPERIMENTAL_MANIFEST_FILENAME} >${MANIFEST_FILENAME}
+            curl -JL ${ISTIO_RELEASES_URL}/download/${TAG}/${EXPERIMENTAL_MANIFEST_FILENAME} >${EXPERIMENTAL_MANIFEST_FILENAME}
           else
             curl -JL ${ISTIO_RELEASES_URL}/download/${TAG}/${MANIFEST_FILENAME} >${MANIFEST_FILENAME}
           fi

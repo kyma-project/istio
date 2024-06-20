@@ -1,8 +1,13 @@
 # Summary of Rate Limiting POC
 
-Istio supports rate limiting by using EnvoyFilter configurations to handle the rate limiting in the Envoy proxies. This can be set to local or global rate limiting. Local rate limiting does not require communication with a rate limit service, and each Envoy instance acts independently. Global rate limiting requires gRPC communication with a rate limit service. Envoy provides a [reference implementation](https://github.com/envoyproxy/ratelimit) written in Go.
+Istio supports rate limiting by using EnvoyFilter configurations to handle the rate limiting in the Envoy proxies. This can be set to local or global rate limiting. Local rate limiting does not require communication with a rate limit service, and each Envoy instance acts independently. Global rate limiting requires gRPC communication with a rate limit service. Envoy provides a [reference implementation](https://github.com/envoyproxy/ratelimit) written in Go. The Envoy rate limit service reference implementation needs to use Redis or Memcached backend.
 
-The Envoy rate limit service reference implementation needs to use Redis or Memcached backend.
+Additional info about Envoy rate limit service usage:
+- Production use at Lyft [for over 2 years](https://github.com/envoyproxy/ratelimit?tab=readme-ov-file#api-deprecation-history)
+- Gloo Edge by solo.io [also uses the reference implementation for rate limiting](https://docs.solo.io/gloo-edge/latest/guides/security/rate_limiting/)
+- Tinder tried a few other solutions [before switching to Envoy rate limit service](https://www.youtube.com/watch?v=2EKU8zCQAow)
+
+The rate limit service had last release over four years ago, but it is still maintained and built on the main branch.
 
 All the backends listed here are easy to deploy using Helm charts. 
 

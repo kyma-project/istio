@@ -20,9 +20,11 @@ jobs:
           files_ignore: |
              docs/**
              **/*.md
+             **/*.yaml
              tests/performance/**
              OWNERS
              CODEOWNERS
+             .github/**
              .reuse/**
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}' >> $GITHUB_STEP_SUMMARY
@@ -85,6 +87,7 @@ jobs:
             OWNERS
             CODEOWNERS
             sec-scanners-config.yaml
+            .github/**
             .reuse/**
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}' >> $GITHUB_STEP_SUMMARY
@@ -111,7 +114,6 @@ jobs:
             config/crd/**
             tests/ui/**
             .github/workflows/ui-tests.yaml
-            .github/**
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}' >> $GITHUB_STEP_SUMMARY
   dispatch-ui:
@@ -167,11 +169,17 @@ jobs:
     runs-on: ubuntu-latest
     needs: [check-push-manager-image,wait-for-image-build]
     if: ${{ needs.check-wait-for-image-build.outputs.check== 'true' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - linux/amd64
+          - linux/arm64
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/build-manager-image
         with:
           operator-image-name: "europe-central2-docker.pkg.dev/sap-se-cx-kyma-goat/istio/istio-manager:PR-${{github.event.number}}"
-          platforms: 'linux/amd64'
+          platforms: ${{ matrix.platform }}
           push-image: 'true'
           push-sa-key: ${{ secrets.GCP_SA_KEY }}

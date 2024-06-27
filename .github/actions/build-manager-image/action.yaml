@@ -33,8 +33,6 @@ runs:
     - name: Build and Push
       if: ${{ inputs.push-image == 'true' }}
       uses: docker/build-push-action@v6
-      env:
-        DOCKER_BUILD_NO_SUMMARY: false
       with:
         context: .
         platforms: ${{ inputs.platforms }}
@@ -45,8 +43,6 @@ runs:
     - name: Build and Load
       if: ${{ inputs.push-image == 'false' }}
       uses: docker/build-push-action@v6
-      env:
-        DOCKER_BUILD_NO_SUMMARY: false
       with:
         context: .
         platforms: ${{ inputs.platforms }}

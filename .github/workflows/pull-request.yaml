@@ -143,38 +143,3 @@ jobs:
     uses: ./.github/workflows/verify-commit-pins.yaml
     if: ${{ needs.check-verify-pins.outputs.check == 'true' }}
     secrets: inherit
-
-  check-push-manager-image:
-    outputs:
-      check: ${{ steps.changed-files.outputs.any_modified }}
-    name: Check whether to run push-manager-image
-    runs-on: ubuntu-latest
-    if: ${{ github.event.pull_request.draft == false }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: tj-actions/changed-files@d6babd6899969df1a11d14c368283ea4436bca78
-        id: changed-files
-        with:
-          files_ignore: |
-            docs/**
-            **/*.md
-            **/*.yaml
-            tests/performance/**
-            OWNERS
-            CODEOWNERS
-            .github/**
-            .reuse/**
-      - name: List all changed files
-        run: echo '${{ steps.changed-files.outputs.all_changed_files }}' >> $GITHUB_STEP_SUMMARY
-  dispatch-push-manager-image:
-    name: Dispatch push manager image to GCP
-    runs-on: ubuntu-latest
-    needs: [check-push-manager-image,wait-for-image-build]
-    if: ${{ needs.check-wait-for-image-build.outputs.check== 'true' }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/build-manager-image
-        with:
-          operator-image-name: "europe-central2-docker.pkg.dev/sap-se-cx-kyma-goat/istio/istio-manager:PR-${{github.event.number}}"
-          push-image: 'true'
-          push-sa-key: ${{ secrets.GCP_SA_KEY }}

@@ -31,6 +31,7 @@ on:
       label:
         description: "Pull Request label"
         required: true
+        type: choice
         default: "patch"
         options:
           - patch

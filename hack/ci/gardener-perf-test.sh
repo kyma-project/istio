@@ -55,3 +55,7 @@ do
    sleep 15
 done
 
+if [ "$n" -ge 5 ]; then
+  echo "Failed to run performance tests"
+  exit 1
+fi

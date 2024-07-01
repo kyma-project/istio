@@ -19,3 +19,18 @@ Running the test will result in two reports:
 ## Access Grafana
 
 Grafana is available under <https://grafana.KYMA_DOMAIN>. Password is stored in `default/load-testing-grafana` secret.
+
+## Scale Istio Ingress Gateway
+
+```
+kubectl patch -n kyma-system istios.operator.kyma-project.io default --type merge --patch "$(cat <<EOF
+spec:
+    components:
+        ingressGateway:
+            k8s:
+                hpaSpec:
+                    maxReplicas: 10
+                    minReplicas: 10
+EOF
+)"
+```

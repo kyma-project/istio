@@ -33,8 +33,8 @@ jobs:
             .**
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
-  wait-for-image-build:
-    name: Wait for image build
+  build-image:
+    name: Build and push manager image
     needs: [filter-changes]
     environment: ${{ github.event.pull_request.author_association != 'COLLABORATOR' && github.event.pull_request.author_association != 'OWNER' && 'restricted' || 'internal' }}
     runs-on: ubuntu-latest
@@ -50,7 +50,7 @@ jobs:
   istio-integration-gcp:
     name: Istio integration test GCP
     runs-on: ubuntu-latest
-    needs: [wait-for-image-build]
+    needs: [build-image]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -81,7 +81,7 @@ jobs:
   istio-integration-aws-specific:
     name: Istio integration test AWS specific
     runs-on: ubuntu-latest
-    needs: [wait-for-image-build]
+    needs: [build-image]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -112,7 +112,7 @@ jobs:
   istio-integration-gcp-specific:
     name: Istio integration test GCP specific
     runs-on: ubuntu-latest
-    needs: [wait-for-image-build]
+    needs: [build-image]
     steps:
       - uses: actions/checkout@v4
         with:

@@ -34,13 +34,12 @@ runs:
     - name: Run integration tests
       shell: bash
       run: |    
-        echo "Event Name ${{ github.event_name }}"
-        if "${{ github.event_name }}" == "pull_request"; then
+        if [ "${{ github.event_name }}" == "pull_request" ]; then
           k3d image import ${{ inputs.operator-image-name }} -c test-cluster-1
         fi
         
         kubectl config use-context k3d-test-cluster-1
-        if "${{ inputs.evaluation }}" == "true"; then
+        if [ "${{ inputs.evaluation }}" == "true" ]; then
           TEST_EVALUATION=TRUE EXPORT_RESULT=true IMG=${{ inputs.operator-image-name }} make istio-integration-test
         else
           EXPORT_RESULT=true IMG=${{ inputs.operator-image-name }} make istio-integration-test

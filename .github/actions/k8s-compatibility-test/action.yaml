@@ -22,8 +22,8 @@ runs:
           --port 443:443@loadbalancer
           --k3s-arg "--disable=traefik@server:0"
     - name: Run integration tests
-      run: |       
-        if "${{ github.event_name }}" == "pull_request"; then
+      run: |
+        if [ "${{ github.event_name }}" == "pull_request" ]; then
           k3d image import ${{ inputs.operator-image-name }} -c test-cluster-1
         fi
 

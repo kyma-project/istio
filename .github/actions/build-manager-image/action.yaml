@@ -4,10 +4,6 @@ inputs:
   operator-image-name:
     description: 'Operator image name used for creation of Istio manager image'
     required: true
-  platforms:
-    description: 'Platforms to build the image for (comma-separated), e.g. linux/amd64,linux/arm64,linux/arm/v7'
-    required: false
-    default: 'linux/amd64'
   push-image:
     description: 'Push the image to GCP'
     required: false
@@ -19,8 +15,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v3
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
     - name: Login to Docker Hub
@@ -35,7 +29,7 @@ runs:
       uses: docker/build-push-action@v6
       with:
         context: .
-        platforms: ${{ inputs.platforms }}
+        platforms: 'linux/amd64'
         push: true
         tags: ${{ inputs.operator-image-name }}
         cache-from: type=gha
@@ -45,7 +39,7 @@ runs:
       uses: docker/build-push-action@v6
       with:
         context: .
-        platforms: ${{ inputs.platforms }}
+        platforms: 'linux/amd64'
         push: false
         load: true
         tags: ${{ inputs.operator-image-name }}

@@ -9,7 +9,7 @@ jobs:
   check-build-image:
     outputs:
       check: ${{ steps.changed-files.outputs.any_modified }}
-    name: Check whether to wait for image build
+    name: Check whether build image should run
     runs-on: ubuntu-latest
     if: ${{ github.event.pull_request.draft == false }}
     steps:

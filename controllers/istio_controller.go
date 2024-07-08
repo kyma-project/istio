@@ -146,7 +146,8 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return r.requeueReconciliation(ctx, &istioCR, resourcesErr, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonCRsReconcileFailed))
 	}
 
-	if err := restarter.Restart(ctx, &istioCR, r.restarters); err != nil {
+	err, requeue := restarter.Restart(ctx, &istioCR, r.restarters)
+	if err != nil {
 		// We don't want to use the requeueReconciliation function here, since there is condition handling in this function, and we
 		// need to clean this up, before we can use it here as conditions are already handled in the restarters.
 		statusUpdateErr := r.statusHandler.UpdateToError(ctx, &istioCR, err)
@@ -154,6 +155,8 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			r.log.Error(statusUpdateErr, "Error during updating status to error")
 		}
 		return ctrl.Result{}, err
+	} else if requeue {
+		return r.requeueReconciliation(ctx, &istioCR, installationErr, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIstioInstallUninstallFailed))
 	}
 
 	return r.finishReconcile(ctx, &istioCR, istioImageVersion.Tag())

@@ -44,12 +44,12 @@ func NewSidecarsRestarter(logger logr.Logger, client client.Client, merger istio
 }
 
 // Restart runs Proxy Reset action, which checks if any of sidecars need a restart and proceed with rollout.
-func (s *SidecarsRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio) described_errors.DescribedError {
+func (s *SidecarsRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio) (described_errors.DescribedError, bool) {
 	clusterSize, err := clusterconfig.EvaluateClusterSize(ctx, s.Client)
 	if err != nil {
 		s.Log.Error(err, "Error occurred during evaluation of cluster size")
 		s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarRestartFailed))
-		return described_errors.NewDescribedError(err, errorDescription)
+		return described_errors.NewDescribedError(err, errorDescription), false
 	}
 
 	ctrl.Log.Info("Istio proxy resetting with", "profile", clusterSize.String())
@@ -57,14 +57,14 @@ func (s *SidecarsRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio
 	if err != nil {
 		s.Log.Error(err, "Failed to get IstioOperator")
 		s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarRestartFailed))
-		return described_errors.NewDescribedError(err, errorDescription)
+		return described_errors.NewDescribedError(err, errorDescription), false
 	}
 
 	istioImageVersion, err := s.Merger.GetIstioImageVersion()
 	if err != nil {
 		ctrl.Log.Error(err, "Error getting Istio version from istio operator file")
 		s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarRestartFailed))
-		return described_errors.NewDescribedError(err, "Could not get Istio version from istio operator file")
+		return described_errors.NewDescribedError(err, "Could not get Istio version from istio operator file"), false
 	}
 
 	expectedImage := pods.NewSidecarImage(iop.Spec.Hub, iop.Spec.Tag.GetStringValue())
@@ -73,21 +73,21 @@ func (s *SidecarsRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio
 	err = gatherer.VerifyIstioPodsVersion(ctx, s.Client, istioImageVersion.Version())
 	if err != nil {
 		s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarRestartFailed))
-		return described_errors.NewDescribedError(err, "Verifying Pod versions in istio-system namespace failed")
+		return described_errors.NewDescribedError(err, "Verifying Pod versions in istio-system namespace failed"), false
 	}
 
 	expectedResources, err := istioCR.GetProxyResources(iop)
 	if err != nil {
 		s.Log.Error(err, "Failed to get Istio Proxy resources")
 		s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarRestartFailed))
-		return described_errors.NewDescribedError(err, errorDescription)
+		return described_errors.NewDescribedError(err, errorDescription), false
 	}
 
-	warnings, err := s.ProxyResetter.ProxyReset(ctx, s.Client, expectedImage, expectedResources, s.Predicates, &s.Log)
+	warnings, requeue, err := s.ProxyResetter.ProxyReset(ctx, s.Client, expectedImage, expectedResources, s.Predicates, &s.Log)
 	if err != nil {
 		s.Log.Error(err, "Failed to reset proxy")
 		s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarRestartFailed))
-		return described_errors.NewDescribedError(err, errorDescription)
+		return described_errors.NewDescribedError(err, errorDescription), false
 	}
 
 	warningsCount := len(warnings)
@@ -108,9 +108,9 @@ func (s *SidecarsRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio
 		warningErr := described_errors.NewDescribedError(errors.New("Istio controller could not restart one or more istio-injected pods."), "Not all pods with Istio injection could be restarted. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning").SetWarning()
 		s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarManualRestartRequired, warningMessage))
 		s.Log.Info(warningMessage)
-		return warningErr
+		return warningErr, false
 	}
 
 	s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarRestartSucceeded))
-	return nil
+	return nil, requeue
 }

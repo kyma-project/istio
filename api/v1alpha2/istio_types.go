@@ -70,12 +70,14 @@ const (
 	ConditionReasonCRsReconcileFailedMessage                    = "Custom resources reconciliation failed"
 
 	// proxy reset
-	ConditionReasonProxySidecarRestartSucceeded             ConditionReason = "ProxySidecarRestartSucceeded"
-	ConditionReasonProxySidecarRestartSucceededMessage                      = "Proxy sidecar restart succeeded"
-	ConditionReasonProxySidecarRestartFailed                ConditionReason = "ProxySidecarRestartFailed"
-	ConditionReasonProxySidecarRestartFailedMessage                         = "Proxy sidecar restart failed"
-	ConditionReasonProxySidecarManualRestartRequired        ConditionReason = "ProxySidecarManualRestartRequired"
-	ConditionReasonProxySidecarManualRestartRequiredMessage                 = "Proxy sidecar manual restart is required for some workloads"
+	ConditionReasonProxySidecarRestartSucceeded                 ConditionReason = "ProxySidecarRestartSucceeded"
+	ConditionReasonProxySidecarRestartSucceededMessage                          = "Proxy sidecar restart succeeded"
+	ConditionReasonProxySidecarRestartFailed                    ConditionReason = "ProxySidecarRestartFailed"
+	ConditionReasonProxySidecarRestartFailedMessage                             = "Proxy sidecar restart failed"
+	ConditionReasonProxySidecarRestartPartiallyCompleted        ConditionReason = "ProxySidecarRestartPartiallyCompleted"
+	ConditionReasonProxySidecarRestartPartiallyCompletedMessage                 = "Proxy sidecar restart partially completed"
+	ConditionReasonProxySidecarManualRestartRequired            ConditionReason = "ProxySidecarManualRestartRequired"
+	ConditionReasonProxySidecarManualRestartRequiredMessage                     = "Proxy sidecar manual restart is required for some workloads"
 
 	// ingress gateway
 	ConditionReasonIngressGatewayRestartSucceeded        ConditionReason = "IngressGatewayRestartSucceeded"

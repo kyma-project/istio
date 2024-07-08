@@ -2,6 +2,8 @@ package restarter_test
 
 import (
 	"context"
+	"time"
+
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/filter"
 	"github.com/kyma-project/istio/operator/internal/restarter"
@@ -14,7 +16,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"time"
 )
 
 var _ = Describe("Istio Ingress Gateway restart", func() {
@@ -38,11 +39,13 @@ var _ = Describe("Istio Ingress Gateway restart", func() {
 		igRestarter := restarter.NewIngressGatewayRestarter(fakeClient, []filter.IngressGatewayPredicate{mockIgPredicate{shouldRestart: true}}, statusHandler)
 
 		//when
-		err := igRestarter.Restart(context.Background(), istioCR)
+		err, requeue := igRestarter.Restart(context.Background(), istioCR)
 
 		//then
-		e := fakeClient.Get(context.Background(), client.ObjectKey{Namespace: gatherer.IstioNamespace, Name: "istio-ingressgateway"}, igDep)
 		Expect(err).Should(Not(HaveOccurred()))
+		Expect(requeue).To(BeFalse())
+
+		e := fakeClient.Get(context.Background(), client.ObjectKey{Namespace: gatherer.IstioNamespace, Name: "istio-ingressgateway"}, igDep)
 		Expect(e).Should(Not(HaveOccurred()))
 
 		Expect(annotations.HasRestartAnnotation(igDep.Spec.Template.Annotations)).To(BeTrue())
@@ -70,11 +73,13 @@ var _ = Describe("Istio Ingress Gateway restart", func() {
 		igRestarter := restarter.NewIngressGatewayRestarter(fakeClient, []filter.IngressGatewayPredicate{mockIgPredicate{shouldRestart: false}}, statusHandler)
 
 		//when
-		err := igRestarter.Restart(context.Background(), istioCR)
+		err, requeue := igRestarter.Restart(context.Background(), istioCR)
 
 		//then
-		e := fakeClient.Get(context.Background(), client.ObjectKey{Namespace: gatherer.IstioNamespace, Name: "istio-ingressgateway"}, igDep)
 		Expect(err).Should(Not(HaveOccurred()))
+		Expect(requeue).To(BeFalse())
+
+		e := fakeClient.Get(context.Background(), client.ObjectKey{Namespace: gatherer.IstioNamespace, Name: "istio-ingressgateway"}, igDep)
 		Expect(e).Should(Not(HaveOccurred()))
 
 		Expect(annotations.HasRestartAnnotation(igDep.Spec.Template.Annotations)).To(BeFalse())
@@ -100,10 +105,11 @@ var _ = Describe("Istio Ingress Gateway restart", func() {
 		igRestarter := restarter.NewIngressGatewayRestarter(fakeClient, []filter.IngressGatewayPredicate{mockIgPredicate{shouldRestart: true}}, statusHandler)
 
 		//when
-		err := igRestarter.Restart(context.Background(), istioCR)
+		err, requeue := igRestarter.Restart(context.Background(), istioCR)
 
 		//then
 		Expect(err).Should(Not(HaveOccurred()))
+		Expect(requeue).To(BeFalse())
 		Expect((*istioCR.Status.Conditions)[0].Reason).Should(Equal(string(operatorv1alpha2.ConditionReasonIngressGatewayRestartSucceeded)))
 		Expect((*istioCR.Status.Conditions)[0].Message).Should(Equal(operatorv1alpha2.ConditionReasonIngressGatewayRestartSucceededMessage))
 

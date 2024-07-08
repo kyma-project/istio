@@ -2,6 +2,7 @@ package restarter_test
 
 import (
 	"context"
+
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/kyma-project/istio/operator/internal/restarter"
@@ -42,14 +43,16 @@ var _ = Describe("Restart", func() {
 		r1 := &restarterMock{err: described_errors.NewDescribedError(errors.New("restart error"), "")}
 		r2 := &restarterMock{err: described_errors.NewDescribedError(errors.New("restart warning"), "").SetWarning()}
 
-		err := restarter.Restart(context.Background(), &operatorv1alpha2.Istio{}, []restarter.Restarter{r1, r2})
+		err, requeue := restarter.Restart(context.Background(), &operatorv1alpha2.Istio{}, []restarter.Restarter{r1, r2})
 
 		Expect(err).Should(MatchError("restart error"))
+		Expect(requeue).To(BeFalse())
 	})
 })
 
 type restarterMock struct {
 	err       described_errors.DescribedError
+	requeue   bool
 	restarted bool
 }
 
@@ -57,7 +60,7 @@ func (i *restarterMock) RestartCalled() bool {
 	return i.restarted
 }
 
-func (i *restarterMock) Restart(_ context.Context, _ *operatorv1alpha2.Istio) described_errors.DescribedError {
+func (i *restarterMock) Restart(_ context.Context, _ *operatorv1alpha2.Istio) (described_errors.DescribedError, bool) {
 	i.restarted = true
-	return i.err
+	return i.err, i.requeue
 }

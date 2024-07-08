@@ -1,7 +1,6 @@
 package pods_test
 
 import (
-	"context"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -14,9 +13,7 @@ var _ = Describe("Evaluate restart", func() {
 		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", map[string]string{"sidecar.istio.io/proxyImage": "istio/proxyv2:1.21.0"})
 
 		predicate := pods.NewRestartProxyPredicate(pods.NewSidecarImage("istio", "1.22.0"), v1.ResourceRequirements{})
-		evaluator, err := predicate.NewProxyRestartEvaluator(context.Background())
-		Expect(err).ToNot(HaveOccurred())
-		Expect(evaluator.RequiresProxyRestart(pod)).To(BeFalse())
+		Expect(predicate.RequiresProxyRestart(pod)).To(BeFalse())
 
 	})
 
@@ -24,9 +21,7 @@ var _ = Describe("Evaluate restart", func() {
 		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", map[string]string{})
 
 		predicate := pods.NewRestartProxyPredicate(pods.NewSidecarImage("istio", "1.22.0"), v1.ResourceRequirements{})
-		evaluator, err := predicate.NewProxyRestartEvaluator(context.Background())
-		Expect(err).ToNot(HaveOccurred())
-		Expect(evaluator.RequiresProxyRestart(pod)).To(BeTrue())
+		Expect(predicate.RequiresProxyRestart(pod)).To(BeTrue())
 
 	})
 })

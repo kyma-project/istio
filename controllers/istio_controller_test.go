@@ -966,6 +966,7 @@ var _ = Describe("Istio Controller", func() {
 
 type restarterMock struct {
 	err       described_errors.DescribedError
+	requeue   bool
 	restarted bool
 }
 
@@ -973,9 +974,9 @@ func (i *restarterMock) RestartCalled() bool {
 	return i.restarted
 }
 
-func (i *restarterMock) Restart(_ context.Context, _ *operatorv1alpha2.Istio) described_errors.DescribedError {
+func (i *restarterMock) Restart(_ context.Context, _ *operatorv1alpha2.Istio) (described_errors.DescribedError, bool) {
 	i.restarted = true
-	return i.err
+	return i.err, i.requeue
 }
 
 type istioResourcesReconciliationMock struct {

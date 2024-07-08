@@ -13,6 +13,8 @@ import (
 )
 
 const (
+	maxCountPodsToRestart = 10
+
 	istioSidecarContainerName string = "istio-proxy"
 )
 
@@ -36,13 +38,17 @@ func (r SidecarImage) matchesImageIn(container v1.Container) bool {
 	return container.Image == r.String()
 }
 
-func getAllRunningPods(ctx context.Context, c client.Client) (*v1.PodList, error) {
+func getRunningPods(ctx context.Context, c client.Client, continueToken string) (*v1.PodList, error) {
 	podList := &v1.PodList{}
 
 	isRunning := fields.OneTermEqualSelector("status.phase", string(v1.PodRunning))
 
 	err := retry.RetryOnError(retry.DefaultRetry, func() error {
-		return c.List(ctx, podList, client.MatchingFieldsSelector{Selector: isRunning})
+		listOps := []client.ListOption{client.MatchingFieldsSelector{Selector: isRunning}, client.Limit(maxCountPodsToRestart)}
+		if continueToken != "" {
+			listOps = append(listOps, client.Continue(continueToken))
+		}
+		return c.List(ctx, podList, listOps...)
 	})
 	if err != nil {
 		return podList, err
@@ -51,33 +57,38 @@ func getAllRunningPods(ctx context.Context, c client.Client) (*v1.PodList, error
 	return podList, nil
 }
 
-func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage SidecarImage, expectedResources v1.ResourceRequirements, predicates []filter.SidecarProxyPredicate, logger *logr.Logger) (outputPodsList *v1.PodList, err error) {
-	podList, err := getAllRunningPods(ctx, c)
-	if err != nil {
-		return nil, err
-	}
-
+func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage SidecarImage, expectedResources v1.ResourceRequirements, predicates []filter.SidecarProxyPredicate, logger *logr.Logger) (*v1.PodList, error) {
 	//Add predicate for image version and resources configuration
 	predicates = append(predicates, NewRestartProxyPredicate(expectedImage, expectedResources))
 
-	for _, predicate := range predicates {
-		evaluator, err := predicate.NewProxyRestartEvaluator(ctx)
+	continueToken := ""
+	podListToRestart := &v1.PodList{}
+
+	for while := true; while; {
+		podList, err := getRunningPods(ctx, c, continueToken)
 		if err != nil {
-			return &v1.PodList{}, err
+			return nil, err
 		}
 
-		outputPodsList = &v1.PodList{}
-		for _, pod := range podList.Items {
-			if evaluator.RequiresProxyRestart(pod) {
-				outputPodsList.Items = append(outputPodsList.Items, pod)
+		for _, predicate := range predicates {
+			for _, pod := range podList.Items {
+				if predicate.RequiresProxyRestart(pod) {
+					podListToRestart.Items = append(podListToRestart.Items, pod)
+				}
 			}
 		}
+
+		podListToRestart.Continue = podList.Continue
+		podListToRestart.RemainingItemCount = podList.RemainingItemCount
+
+		while = len(podListToRestart.Items) < maxCountPodsToRestart && podListToRestart.Continue != ""
 	}
 
-	if outputPodsList != nil {
-		logger.Info("Pods to restart", "number of pods", len(outputPodsList.Items))
+	if len(podListToRestart.Items) > 0 {
+		logger.Info("Pods to restart", "number of pods", len(podListToRestart.Items), "has more pods", podListToRestart.Continue != "")
 	}
-	return outputPodsList, nil
+
+	return podListToRestart, nil
 }
 
 func containsSidecar(pod v1.Pod) bool {

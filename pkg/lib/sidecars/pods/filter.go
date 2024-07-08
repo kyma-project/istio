@@ -1,8 +1,6 @@
 package pods
 
 import (
-	"context"
-	"github.com/kyma-project/istio/operator/internal/filter"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -20,20 +18,8 @@ func NewRestartProxyPredicate(expectedImage SidecarImage, expectedResources v1.R
 	return &RestartProxyPredicate{expectedImage: expectedImage, expectedResources: expectedResources}
 }
 
-type ProxyRestartEvaluator struct {
-	expectedImage     SidecarImage
-	expectedResources v1.ResourceRequirements
-}
-
-func (p ProxyRestartEvaluator) RequiresProxyRestart(pod v1.Pod) bool {
+func (p RestartProxyPredicate) RequiresProxyRestart(pod v1.Pod) bool {
 	return needsRestart(pod, p.expectedImage, *p.expectedResources.DeepCopy())
-}
-
-func (r RestartProxyPredicate) NewProxyRestartEvaluator(_ context.Context) (filter.ProxyRestartEvaluator, error) {
-	return ProxyRestartEvaluator{
-		expectedImage:     r.expectedImage,
-		expectedResources: *r.expectedResources.DeepCopy(),
-	}, nil
 }
 
 func needsRestart(pod v1.Pod, expectedImage SidecarImage, expectedResources v1.ResourceRequirements) bool {
@@ -72,7 +58,6 @@ func hasCustomImageAnnotation(pod v1.Pod) bool {
 }
 
 func hasSidecarContainerWithWithDifferentImage(pod v1.Pod, expectedImage SidecarImage) bool {
-
 	for _, container := range pod.Spec.Containers {
 		if isContainerIstioSidecar(container) && !expectedImage.matchesImageIn(container) {
 			return true
@@ -82,7 +67,6 @@ func hasSidecarContainerWithWithDifferentImage(pod v1.Pod, expectedImage Sidecar
 }
 
 func hasDifferentSidecarResources(pod v1.Pod, expectedResources v1.ResourceRequirements) bool {
-
 	for _, container := range pod.Spec.Containers {
 		if isContainerIstioSidecar(container) && !containerHasResources(container, expectedResources) {
 			return true

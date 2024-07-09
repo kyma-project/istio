@@ -7,7 +7,7 @@ metadata:
     kyma-project.io/module: istio
 spec:
   hub: europe-docker.pkg.dev/kyma-project/prod/external/istio
-  tag: "1.21.2-distroless"
+  tag: "1.22.2-distroless"
   components:
     base:
       enabled: true
@@ -260,7 +260,6 @@ spec:
         enabled: false
       network: ""
       omitSidecarInjectorConfigMap: false
-      oneNamespace: false
       operatorManageWebhooks: false
       pilotCertProvider: istiod
       priorityClassName: istio-kyma-priority

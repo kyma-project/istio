@@ -2,6 +2,7 @@ package integration
 
 import (
 	"context"
+	"github.com/kyma-project/istio/operator/tests/testcontext"
 	"os"
 	"testing"
 	"time"
@@ -9,10 +10,9 @@ import (
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
 	iopv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
-	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
-	securityv1beta1 "istio.io/client-go/pkg/apis/security/v1beta1"
-	telemetryv1alpha1 "istio.io/client-go/pkg/apis/telemetry/v1alpha1"
+	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
+	securityv1 "istio.io/client-go/pkg/apis/security/v1"
+	telemetryv1 "istio.io/client-go/pkg/apis/telemetry/v1"
 	iopapis "istio.io/istio/operator/pkg/apis"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
@@ -118,17 +118,17 @@ func createK8sClient() client.Client {
 		panic(err)
 	}
 
-	err = networkingv1alpha3.AddToScheme(c.Scheme())
+	err = networkingv1.AddToScheme(c.Scheme())
 	if err != nil {
 		panic(err)
 	}
 
-	err = securityv1beta1.AddToScheme(c.Scheme())
+	err = securityv1.AddToScheme(c.Scheme())
 	if err != nil {
 		panic(err)
 	}
 
-	err = telemetryv1alpha1.AddToScheme(c.Scheme())
+	err = telemetryv1.AddToScheme(c.Scheme())
 	if err != nil {
 		panic(err)
 	}

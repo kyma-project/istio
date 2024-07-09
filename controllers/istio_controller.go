@@ -53,13 +53,13 @@ const (
 	namespace = "kyma-system"
 )
 
-func NewReconciler(mgr manager.Manager, reconciliationInterval time.Duration) *IstioReconciler {
+func NewController(mgr manager.Manager, reconciliationInterval time.Duration) *IstioReconciler {
 	merger := istiooperator.NewDefaultIstioMerger()
 
 	statusHandler := status.NewStatusHandler(mgr.GetClient())
 	restarters := []restarter.Restarter{
 		restarter.NewIngressGatewayRestarter(mgr.GetClient(), []filter.IngressGatewayPredicate{}, statusHandler),
-		restarter.NewSidecarsRestarter(mgr.GetLogger(), mgr.GetClient(), &merger, sidecars.NewProxyResetter(), []filter.SidecarProxyPredicate{}, statusHandler),
+		restarter.NewSidecarsRestarter(mgr.GetLogger(), mgr.GetClient(), &merger, sidecars.NewProxyResetter(), statusHandler),
 	}
 
 	return &IstioReconciler{

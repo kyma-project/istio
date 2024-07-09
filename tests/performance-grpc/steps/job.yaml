@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+spec:
+  template:
+    metadata:
+      labels:
+        sidecar.istio.io/inject: "false"
+    spec:
+      containers:
+      - name: loadtest
+        image: "europe-central2-docker.pkg.dev/sap-se-cx-kyma-goat/networking-dev-tools/grpc-loadtest:latest"
+        args:
+        - --service={{ or .Service "HelloService.SayHello" }}
+        - --address={{ or .Address "grpcbin:50051" }}
+        - --insecure={{ or .Insecure false }}
+        {{- if .Authority }}
+        - --authority={{ .Authority }}
+        {{- end }}
+        - --requests={{ or .Requests 1000 }}
+        - --rps={{ or .RPS 0 }}
+        - --concurrency={{ or .Concurrency 1 }}
+        - --duration={{ or .Duration 0 }}
+        - --htmlReportPath={{ or .HTMLReportPath "/tmp/report.html" }}
+        - --sftpHost={{ or .SFTPHost "sftp:22" }}
+      restartPolicy: Never
+  backoffLimit: 4
+

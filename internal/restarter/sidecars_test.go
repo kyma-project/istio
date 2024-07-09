@@ -19,7 +19,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"google.golang.org/protobuf/types/known/structpb"
-	"istio.io/client-go/pkg/apis/networking/v1alpha3"
+	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
@@ -49,7 +49,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		fakeClient := createFakeClient(&istioCr, istiod)
 		statusHandler := status.NewStatusHandler(fakeClient)
 		sidecarsRestarter := restarter.NewSidecarsRestarter(logr.Discard(), createFakeClient(&istioCr, istiod),
-			&MergerMock{"1.16.1-distroless"}, sidecars.NewProxyResetter(), []filter.SidecarProxyPredicate{}, statusHandler)
+			&MergerMock{"1.16.1-distroless"}, sidecars.NewProxyResetter(), statusHandler)
 		// when
 		err, requeue := sidecarsRestarter.Restart(context.Background(), &istioCr)
 
@@ -107,7 +107,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		fakeClient := createFakeClient(&istioCr, istiod)
 		statusHandler := status.NewStatusHandler(fakeClient)
 		sidecarsRestarter := restarter.NewSidecarsRestarter(logr.Discard(), createFakeClient(&istioCr, istiod),
-			&MergerMock{"1.16.1-distroless"}, proxyResetter, []filter.SidecarProxyPredicate{}, statusHandler)
+			&MergerMock{"1.16.1-distroless"}, proxyResetter, statusHandler)
 
 		// when
 		err, requeue := sidecarsRestarter.Restart(context.Background(), &istioCr)
@@ -149,7 +149,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		fakeClient := createFakeClient(&istioCr, istiod)
 		statusHandler := status.NewStatusHandler(fakeClient)
 		sidecarsRestarter := restarter.NewSidecarsRestarter(logr.Discard(), createFakeClient(&istioCr, istiod),
-			&MergerMock{"1.16.1-distroless"}, proxyResetter, []filter.SidecarProxyPredicate{}, statusHandler)
+			&MergerMock{"1.16.1-distroless"}, proxyResetter, statusHandler)
 
 		// when
 		err, requeue := sidecarsRestarter.Restart(context.Background(), &istioCr)
@@ -180,7 +180,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		fakeClient := createFakeClient(&istioCr, istiod)
 		statusHandler := status.NewStatusHandler(fakeClient)
 		sidecarsRestarter := restarter.NewSidecarsRestarter(logr.Discard(), createFakeClient(&istioCr, istiod),
-			&MergerMock{"1.16.1-distroless"}, proxyResetter, []filter.SidecarProxyPredicate{}, statusHandler)
+			&MergerMock{"1.16.1-distroless"}, proxyResetter, statusHandler)
 
 		// when
 		err, requeue := sidecarsRestarter.Restart(context.Background(), &istioCr)
@@ -198,7 +198,7 @@ func createFakeClient(objects ...client.Object) client.Client {
 	Expect(err).ShouldNot(HaveOccurred())
 	err = corev1.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
-	err = v1alpha3.AddToScheme(scheme.Scheme)
+	err = networkingv1.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
 
 	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build()

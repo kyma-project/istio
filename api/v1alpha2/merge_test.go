@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/kyma-project/istio/operator/internal/tests"
 	"github.com/onsi/ginkgo/v2/types"
+	meshv1alpha1 "istio.io/api/mesh/v1alpha1"
 	operatorv1alpha1 "istio.io/api/operator/v1alpha1"
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	"istio.io/istio/pkg/config/mesh"
@@ -17,10 +18,8 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	meshv1alpha1 "istio.io/api/mesh/v1alpha1"
 
 	"google.golang.org/protobuf/types/known/structpb"
-	"istio.io/api/mesh/v1alpha1"
 	"istio.io/istio/pkg/util/protomarshal"
 )
 
@@ -207,7 +206,7 @@ var _ = Describe("Merge", func() {
 	It("should update numTrustedProxies on IstioOperator from 1 to 5", func() {
 		// given
 		m := mesh.DefaultMeshConfig()
-		m.DefaultConfig.GatewayTopology = &v1alpha1.Topology{NumTrustedProxies: 1}
+		m.DefaultConfig.GatewayTopology = &meshv1alpha1.Topology{NumTrustedProxies: 1}
 		meshConfig := convert(m)
 
 		iop := iopv1alpha1.IstioOperator{
@@ -303,7 +302,7 @@ var _ = Describe("Merge", func() {
 	It("should change nothing if config is empty", func() {
 		// given
 		m := mesh.DefaultMeshConfig()
-		m.DefaultConfig.GatewayTopology = &v1alpha1.Topology{NumTrustedProxies: 1}
+		m.DefaultConfig.GatewayTopology = &meshv1alpha1.Topology{NumTrustedProxies: 1}
 		meshConfig := convert(m)
 
 		iop := iopv1alpha1.IstioOperator{
@@ -326,7 +325,7 @@ var _ = Describe("Merge", func() {
 	})
 	It("should set numTrustedProxies on IstioOperator to 5 when there is no defaultConfig in meshConfig", func() {
 		// given
-		m := &v1alpha1.MeshConfig{
+		m := &meshv1alpha1.MeshConfig{
 			EnableTracing: true,
 		}
 		meshConfig := convert(m)
@@ -539,6 +538,7 @@ var _ = Describe("Merge", func() {
 			})
 		})
 	})
+
 	Context("IngressGateway", func() {
 		Context("When Istio CR has 500m configured for CPU and 500Mi for memory limits", func() {
 			It("should set CPU limits to 500m and 500Mi for memory in IOP", func() {
@@ -898,7 +898,7 @@ var _ = Describe("Merge", func() {
 
 })
 
-func convert(a *v1alpha1.MeshConfig) *structpb.Struct {
+func convert(a *meshv1alpha1.MeshConfig) *structpb.Struct {
 
 	mMap, err := protomarshal.ToJSONMap(a)
 	Expect(err).ShouldNot(HaveOccurred())

@@ -23,6 +23,10 @@ runs:
           --k3s-arg "--disable=traefik@server:0"
     - name: Run integration tests
       run: |
+        if [ "${{ github.event_name }}" == "pull_request" ]; then
+          k3d image import ${{ inputs.operator-image-name }} -c test-cluster-1
+        fi
+
         kubectl config use-context k3d-test-cluster-1
         EXPORT_RESULT=true IMG=${{ inputs.operator-image-name }} make istio-integration-test
       shell: bash

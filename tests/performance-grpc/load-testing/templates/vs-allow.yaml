@@ -1,0 +1,38 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  labels:
+    {{- include "load-testing.labels" . | nindent 4 }}
+  name: {{ .Release.Name }}
+spec:
+  gateways:
+  - {{ .Values.gateway.namespace }}/{{ .Values.gateway.name }}
+  hosts:
+  - hello.{{ .Values.Domain }}
+  http:
+  - corsPolicy:
+      allowHeaders:
+      - Authorization
+      - Content-Type
+      - '*'
+      allowMethods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+      - PATCH
+      allowOrigins:
+      - regex: .*
+    headers:
+      request:
+        set:
+          x-forwarded-host: hello.{{ .Values.Domain }}
+    match:
+    - uri:
+        regex: /.*
+    route:
+    - destination:
+        host: grpcbin.{{ .Release.Namespace }}.svc.cluster.local
+        port:
+          number: 50051
+      weight: 100

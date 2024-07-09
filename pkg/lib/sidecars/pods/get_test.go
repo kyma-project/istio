@@ -58,6 +58,7 @@ var _ = Describe("Get Pods", func() {
 		tests := []struct {
 			name       string
 			c          client.Client
+			predicates []filter.SidecarProxyPredicate
 			assertFunc func(val interface{})
 		}{
 			{
@@ -143,11 +144,26 @@ var _ = Describe("Get Pods", func() {
 				),
 				assertFunc: func(val interface{}) { Expect(val).To(BeEmpty()) },
 			},
+			{
+				name: "should contain only one pod when there are multiple predicates that would restart the pod",
+				c: createClientSet(
+					helpers.NewSidecarPodBuilder().
+						SetName("changedSidecarPod").
+						SetSidecarImageRepository("istio/different-proxy").
+						Build(),
+				),
+				predicates: []filter.SidecarProxyPredicate{pods.NewRestartProxyPredicate(expectedImage, helpers.DefaultSidecarResources)},
+				assertFunc: func(val interface{}) {
+					Expect(val).NotTo(BeEmpty())
+					resultPods := val.([]v1.Pod)
+					Expect(len(resultPods)).To(Equal(1))
+				},
+			},
 		}
 
 		for _, tt := range tests {
 			It(tt.name, func() {
-				podList, err := pods.GetPodsToRestart(ctx, tt.c, expectedImage, helpers.DefaultSidecarResources, []filter.SidecarProxyPredicate{}, &logger)
+				podList, err := pods.GetPodsToRestart(ctx, tt.c, expectedImage, helpers.DefaultSidecarResources, tt.predicates, &logger)
 
 				Expect(err).NotTo(HaveOccurred())
 				tt.assertFunc(podList.Items)

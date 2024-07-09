@@ -86,11 +86,11 @@ vet: ## Run go vet against code.
 
 .PHONY: test
 test: manifests generate fmt vet envtest ## Run tests.
-	KUBEBUILDER_CONTROLPLANE_START_TIMEOUT=2m KUBEBUILDER_CONTROLPLANE_STOP_TIMEOUT=2m KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test $(shell go list ./... | grep -v /tests/integration) -coverprofile cover.out
+	KUBEBUILDER_CONTROLPLANE_START_TIMEOUT=2m KUBEBUILDER_CONTROLPLANE_STOP_TIMEOUT=2m KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test $(shell go list ./... | grep -v /tests/integration | grep -v /tests/performance-grpc) -coverprofile cover.out
 
 .PHONY: test-experimental-tag
 test-experimental-tag: manifests generate fmt vet envtest ## Run tests.
-	KUBEBUILDER_CONTROLPLANE_START_TIMEOUT=2m KUBEBUILDER_CONTROLPLANE_STOP_TIMEOUT=2m KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test -tags experimental $(shell go list ./... | grep -v /tests/integration) -coverprofile cover.out
+	KUBEBUILDER_CONTROLPLANE_START_TIMEOUT=2m KUBEBUILDER_CONTROLPLANE_STOP_TIMEOUT=2m KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test -tags experimental $(shell go list ./... | grep -v /tests/integration | grep -v /tests/performance-grpc) -coverprofile cover.out
 
 ##@ Build
 
@@ -100,7 +100,7 @@ build: generate fmt vet ## Build manager binary.
 	go build -o $(ISTIO_INSTALL_BIN_PATH) cmd/istio-install/main.go
 
 .PHONY: run
-run: manifests install create-kyma-system-ns ## Run a controller from your host.
+run: manifests install build create-kyma-system-ns ## Run a controller from your host.
 	ISTIO_INSTALL_BIN_PATH=$(ISTIO_INSTALL_BIN_PATH) go run ./main.go
 
 .PHONY: docker-build
@@ -215,7 +215,13 @@ POST_IMAGE_VERSION=v$(shell date '+%Y%m%d')-$(shell printf %.8s ${PULL_BASE_SHA}
 .PHONY: istio-integration-test
 istio-integration-test: install deploy
 	# Increased TEST_REQUEST_TIMEOUT to 300s to avoid timeouts on newly created k3s clusters
-	cd tests/integration && TEST_REQUEST_TIMEOUT=300s && EXPORT_RESULT=true go test -v -timeout 35m -run TestIstioMain
+	cd tests/integration && TEST_REQUEST_TIMEOUT=300s && EXPORT_RESULT=true go test -v -timeout 50m -run TestIstioMain
+
+.PHONY: grpc-performance-test
+grpc-performance-test:
+	make -c tests/performance-grpc deploy-helm
+	make -c tests/performance-grpc grpc-load-test
+	make -c tests/performance-grpc export-results
 
 .PHONY: aws-integration-test
 aws-integration-test: install deploy

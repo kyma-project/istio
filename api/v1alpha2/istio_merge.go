@@ -40,6 +40,14 @@ func (i *Istio) MergeInto(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperat
 
 	externalNameAliasAnnotationFixOp := manageExternalNameAlias(i, mergedResourcesOp)
 
+	if i.Spec.CompatibilityMode {
+		compatibleIop, err := setCompatibilityMode(externalNameAliasAnnotationFixOp)
+		if err != nil {
+			return op, err
+		}
+		return compatibleIop, nil
+	}
+
 	return externalNameAliasAnnotationFixOp, nil
 }
 
@@ -123,6 +131,16 @@ func (m *meshConfigBuilder) BuildNumTrustedProxies(numTrustedProxiesPtr *int) *m
 	} else {
 		m.c.DefaultConfig.GatewayTopology = &meshv1alpha1.Topology{NumTrustedProxies: numTrustedProxies}
 	}
+
+	return m
+}
+
+func (m *meshConfigBuilder) AddProxyMetadata(key, value string) *meshConfigBuilder {
+
+	if m.c.DefaultConfig.ProxyMetadata == nil {
+		m.c.DefaultConfig.ProxyMetadata = make(map[string]string)
+	}
+	m.c.DefaultConfig.ProxyMetadata[key] = value
 
 	return m
 }

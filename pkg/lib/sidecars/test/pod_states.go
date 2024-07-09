@@ -81,6 +81,12 @@ func (s *scenario) WithSidecarInVersionXPods(sidecarTag string) error {
 	}
 
 	deployment := appsv1.Deployment{
+		// The TypeMeta needs to be set due to some recent changes in the fake client as it populates the TypeMeta only for
+		// unstructured since version 0.17.0. See: https://github.com/kubernetes-sigs/controller-runtime/pull/2633
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Deployment",
+			APIVersion: appsv1.SchemeGroupVersion.String(),
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: fmt.Sprintf("owner-injected-%s", sidecarTag),
 		},

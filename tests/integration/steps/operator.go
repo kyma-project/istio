@@ -3,10 +3,10 @@ package steps
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/istio/operator/tests/testcontext"
 
 	"github.com/avast/retry-go"
 	"github.com/kyma-project/istio/operator/tests/integration/pkg/manifestprocessor"
-	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
 	v1 "k8s.io/api/apps/v1"
 	v1c "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"

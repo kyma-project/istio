@@ -3,6 +3,10 @@ package istio
 import (
 	"context"
 	"fmt"
+	"os"
+	"os/exec"
+	"time"
+
 	"github.com/pkg/errors"
 	"istio.io/api/operator/v1alpha1"
 	"istio.io/istio/istioctl/pkg/install/k8sversion"
@@ -17,37 +21,37 @@ import (
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
-	"os"
-	"os/exec"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
-	"sync"
-	"time"
 
 	istio "istio.io/istio/operator/cmd/mesh"
 	"istio.io/istio/operator/pkg/util/clog"
 	istiolog "istio.io/istio/pkg/log"
 )
 
-type LibraryClient interface {
+type libraryClient interface {
 	Install(mergedIstioOperatorPath string) error
 	Uninstall(ctx context.Context) error
 }
 
 type IstioClient struct {
-	istioLogOptions *istiolog.Options
-	consoleLogger   *clog.ConsoleLogger
-	printer         istio.Printer
+	consoleLogger *clog.ConsoleLogger
+	printer       istio.Printer
+}
+
+const logScope = "istio-library"
+
+func CreateIstioLibraryLogger() *clog.ConsoleLogger {
+	registeredScope := istiolog.RegisterScope(logScope, logScope)
+	return clog.NewConsoleLogger(os.Stdout, os.Stderr, registeredScope)
 }
 
 func NewIstioClient() *IstioClient {
-	istioLogOptions := initializeLog()
-	registeredScope := istiolog.RegisterScope("installation", "installation")
-	consoleLogger := clog.NewConsoleLogger(os.Stdout, os.Stderr, registeredScope)
+	consoleLogger := CreateIstioLibraryLogger()
 	printer := istio.NewPrinterForWriter(os.Stdout)
 
-	return &IstioClient{istioLogOptions: istioLogOptions, consoleLogger: consoleLogger, printer: printer}
+	return &IstioClient{consoleLogger: consoleLogger, printer: printer}
 }
 
 func installIstioInExternalProcess(mergedIstioOperatorPath string) error {
@@ -86,11 +90,6 @@ func (c *IstioClient) Install(mergedIstioOperatorPath string) error {
 func (c *IstioClient) Uninstall(ctx context.Context) error {
 	// We don't use any revision capabilities yet
 	defaultRevision := ""
-
-	// Since we copied the internal uninstall function, we also need to make sure that Istio's internal logging is correctly configured
-	if err := initializeIstioLogSubsystem(c.istioLogOptions); err != nil {
-		return fmt.Errorf("could not configure logs: %s", err)
-	}
 
 	rc, err := kube.DefaultRestConfig("", "", func(config *rest.Config) {
 		config.QPS = 50
@@ -159,30 +158,17 @@ func (c *IstioClient) Uninstall(ctx context.Context) error {
 	return nil
 }
 
-func initializeLog() *istiolog.Options {
-	logoptions := istiolog.DefaultOptions()
-	logoptions.SetOutputLevel("validation", istiolog.ErrorLevel)
-	logoptions.SetOutputLevel("processing", istiolog.ErrorLevel)
-	logoptions.SetOutputLevel("analysis", istiolog.WarnLevel)
-	logoptions.SetOutputLevel("installation", istiolog.WarnLevel)
-	logoptions.SetOutputLevel("translator", istiolog.WarnLevel)
-	logoptions.SetOutputLevel("adsc", istiolog.WarnLevel)
-	logoptions.SetOutputLevel("default", istiolog.WarnLevel)
-	logoptions.SetOutputLevel("klog", istiolog.WarnLevel)
-	logoptions.SetOutputLevel("kube", istiolog.ErrorLevel)
+func ConfigureIstioLogScopes() error {
+	o := istiolog.DefaultOptions()
+	o.SetDefaultOutputLevel(logScope, istiolog.WarnLevel)
+	o.SetDefaultOutputLevel("analysis", istiolog.WarnLevel)
+	o.SetDefaultOutputLevel("translator", istiolog.WarnLevel)
+	o.SetDefaultOutputLevel("adsc", istiolog.WarnLevel)
+	o.SetDefaultOutputLevel("klog", istiolog.WarnLevel)
+	// These scopes are too noisy even at warning level
+	o.SetDefaultOutputLevel("validation", istiolog.ErrorLevel)
+	o.SetDefaultOutputLevel("processing", istiolog.ErrorLevel)
+	o.SetDefaultOutputLevel("kube", istiolog.ErrorLevel)
 
-	return logoptions
-}
-
-var istioLogMutex = sync.Mutex{}
-
-func initializeIstioLogSubsystem(opt *istiolog.Options) error {
-	istioLogMutex.Lock()
-	defer istioLogMutex.Unlock()
-	op := []string{"stderr"}
-	opt2 := *opt
-	opt2.OutputPaths = op
-	opt2.ErrorOutputPaths = op
-
-	return istiolog.Configure(&opt2)
+	return istiolog.Configure(o)
 }

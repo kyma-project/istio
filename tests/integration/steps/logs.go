@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"github.com/avast/retry-go"
-	"github.com/kyma-project/istio/operator/tests/integration/testcontext"
+	"github.com/kyma-project/istio/operator/tests/testcontext"
 	"github.com/pkg/errors"
 	"io"
 	v1 "k8s.io/api/apps/v1"

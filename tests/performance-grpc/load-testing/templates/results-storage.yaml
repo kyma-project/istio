@@ -1,0 +1,43 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sftp
+  labels:
+    app: {{ .Release.Name }}-sftp
+spec:
+  ports:
+  - name: sftp
+    port: 22
+    targetPort: sftp
+  selector:
+    app: {{ .Release.Name }}-sftp
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-sftp
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-sftp
+  template:
+    metadata:
+      labels:
+        sidecar.istio.io/inject: "false"
+        app: {{ .Release.Name }}-sftp
+    spec:
+      containers:
+      - name: sftp
+        image: drakkan/sftpgo:latest
+        ports:
+        - containerPort: 5522
+          name: sftp
+        command:
+          - sftpgo
+          - portable
+          - --permissions=*
+          - --sftpd-port=5522
+          - --password=load
+          - --username=goat
+          - --directory=/tmp

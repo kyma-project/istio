@@ -3,6 +3,7 @@ package restarter
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/istio/operator/internal/compatibility"
 	"strings"
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
@@ -28,17 +29,15 @@ type SidecarsRestarter struct {
 	Client        client.Client
 	Merger        istiooperator.Merger
 	ProxyResetter sidecars.ProxyResetter
-	Predicates    []filter.SidecarProxyPredicate
 	StatusHandler status.Status
 }
 
-func NewSidecarsRestarter(logger logr.Logger, client client.Client, merger istiooperator.Merger, resetter sidecars.ProxyResetter, predicates []filter.SidecarProxyPredicate, statusHandler status.Status) *SidecarsRestarter {
+func NewSidecarsRestarter(logger logr.Logger, client client.Client, merger istiooperator.Merger, resetter sidecars.ProxyResetter, statusHandler status.Status) *SidecarsRestarter {
 	return &SidecarsRestarter{
 		Log:           logger,
 		Client:        client,
 		Merger:        merger,
 		ProxyResetter: resetter,
-		Predicates:    predicates,
 		StatusHandler: statusHandler,
 	}
 }
@@ -83,7 +82,8 @@ func (s *SidecarsRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio
 		return described_errors.NewDescribedError(err, errorDescription), false
 	}
 
-	warnings, requeue, err := s.ProxyResetter.ProxyReset(ctx, s.Client, expectedImage, expectedResources, s.Predicates, &s.Log)
+	predicates := []filter.SidecarProxyPredicate{compatibility.NewRestartPredicate(istioCR)}
+	warnings, requeue, err := s.ProxyResetter.ProxyReset(ctx, s.Client, expectedImage, expectedResources, predicates, &s.Log)
 	if err != nil {
 		s.Log.Error(err, "Failed to reset proxy")
 		s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarRestartFailed))

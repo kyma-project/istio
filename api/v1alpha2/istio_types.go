@@ -99,6 +99,8 @@ type IstioSpec struct {
 	Components *Components `json:"components,omitempty"`
 	// +kubebuilder:validation:Optional
 	Experimental *Experimental `json:"experimental,omitempty"`
+	// +kubebuilder:validation:Optional
+	CompatibilityMode bool `json:"compatibilityMode,omitempty"`
 }
 
 //+kubebuilder:object:root=true

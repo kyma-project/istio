@@ -1,0 +1,7 @@
+gateway:
+  namespace: kyma-system
+  name: kyma-gateway
+
+grpcbin:
+  reflection:
+    enabled: false

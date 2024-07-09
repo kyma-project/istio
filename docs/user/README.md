@@ -9,8 +9,13 @@ Istio is an open-source service mesh that provides a uniform way to manage, conn
 Kyma Istio Operator is an essential part of the Istio module that handles the management and configuration of the Istio service mesh. It contains [Istio Controller](./00-10-overview-istio-controller.md) that is responsible for installing, uninstalling, and upgrading Istio.
 
 The latest release includes the following versions of Istio and Envoy:  
-**Istio version:** 1.21.2  
-**Envoy version:** 1.29.4
+
+**Istio version:** 1.22.2
+
+**Envoy version:** 1.30.3
+
+> [!NOTE]
+> If you want to enable compatibility with the previous minor version of Istio, see [Compatibility Mode](https://kyma-project.io/#/istio/user/00-10-overview-istio-controller?id=compatibility-mode).
 
 ## Useful Links
 

@@ -3,8 +3,9 @@ package restarter
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/istio/operator/internal/compatibility"
 	"strings"
+
+	"github.com/kyma-project/istio/operator/internal/compatibility"
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
@@ -82,8 +83,14 @@ func (s *SidecarsRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio
 		return described_errors.NewDescribedError(err, errorDescription), false
 	}
 
-	predicates := []filter.SidecarProxyPredicate{compatibility.NewRestartPredicate(istioCR)}
-	warnings, requeue, err := s.ProxyResetter.ProxyReset(ctx, s.Client, expectedImage, expectedResources, predicates, &s.Log)
+	compatibiltyPredicate, err := compatibility.NewRestartPredicate(istioCR)
+	if err != nil {
+		s.Log.Error(err, "Failed to create restart compatibility predicate")
+		s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarRestartFailed))
+		return described_errors.NewDescribedError(err, errorDescription), false
+	}
+
+	warnings, requeue, err := s.ProxyResetter.ProxyReset(ctx, s.Client, expectedImage, expectedResources, []filter.SidecarProxyPredicate{compatibiltyPredicate}, &s.Log)
 	if err != nil {
 		s.Log.Error(err, "Failed to reset proxy")
 		s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarRestartFailed))

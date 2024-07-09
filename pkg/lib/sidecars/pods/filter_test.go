@@ -22,7 +22,6 @@ var _ = Describe("Evaluate restart", func() {
 
 		predicate := pods.NewRestartProxyPredicate(pods.NewSidecarImage("istio", "1.22.0"), v1.ResourceRequirements{})
 		Expect(predicate.RequiresProxyRestart(pod)).To(BeTrue())
-
 	})
 })
 

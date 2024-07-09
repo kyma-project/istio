@@ -24,14 +24,15 @@ func NewProxyResetter() *ProxyReset {
 }
 
 func (p *ProxyReset) ProxyReset(ctx context.Context, c client.Client, expectedImage pods.SidecarImage, expectedResources v1.ResourceRequirements, predicates []filter.SidecarProxyPredicate, logger *logr.Logger) ([]restart.RestartWarning, bool, error) {
-	podListToRestart, err := pods.GetPodsToRestart(ctx, c, expectedImage, expectedResources, predicates, logger)
+	podsToRestart, err := pods.GetPodsToRestart(ctx, c, expectedImage, expectedResources, predicates, logger)
 	if err != nil {
 		return nil, false, err
 	}
 
 	// if there are more pods to restart there should be a continue token in the pod list
-	hasMorePodsToRestart := podListToRestart.Continue != ""
-	warnings, err := restart.Restart(ctx, c, podListToRestart, logger)
+	hasMorePodsToRestart := podsToRestart.Continue != ""
+
+	warnings, err := restart.Restart(ctx, c, podsToRestart, logger)
 	if err != nil {
 		return nil, hasMorePodsToRestart, err
 	}
@@ -39,11 +40,7 @@ func (p *ProxyReset) ProxyReset(ctx context.Context, c client.Client, expectedIm
 	if !hasMorePodsToRestart {
 		logger.Info("Proxy reset completed")
 	} else {
-		leftoverPodsToRestart := int64(0)
-		if podListToRestart.RemainingItemCount != nil {
-			leftoverPodsToRestart = *podListToRestart.RemainingItemCount
-		}
-		logger.Info("Proxy reset partially completed", "count of leftover pods", leftoverPodsToRestart)
+		logger.Info("Proxy reset partially completed")
 	}
 
 	return warnings, hasMorePodsToRestart, nil

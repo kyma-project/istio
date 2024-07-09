@@ -1,0 +1,12 @@
+apiVersion: operator.kyma-project.io/v1alpha2
+kind: Istio
+metadata:
+  name: default
+  namespace: kyma-system
+spec:
+  components:
+    ingressGateway:
+      k8s:
+        hpaSpec:
+          maxReplicas: 10
+          minReplicas: 10

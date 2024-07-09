@@ -31,7 +31,7 @@ import (
 )
 
 var _ = Describe("SidecarsRestarter reconciliation", func() {
-	It("should fail proxy reset if Istio pods do not match target version", func() {
+	It("Should fail proxy reset if Istio pods do not match target version", func() {
 		// given
 		numTrustedProxies := 1
 		istioCr := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
@@ -61,7 +61,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		Expect((*istioCr.Status.Conditions)[0].Message).To(Equal("Proxy sidecar restart failed"))
 	})
 
-	It("should succeed proxy reset even if more than 5 proxies could not be reset and will return a warning", func() {
+	It("Should succeed proxy reset even if more than 5 proxies could not be reset and will return a warning", func() {
 		// given
 		numTrustedProxies := 1
 		istioCr := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
@@ -103,6 +103,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 					Namespace: "ns6",
 				},
 			},
+			hasMorePods: true,
 		}
 		fakeClient := createFakeClient(&istioCr, istiod)
 		statusHandler := status.NewStatusHandler(fakeClient)
@@ -119,7 +120,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		Expect((*istioCr.Status.Conditions)[0].Message).To(ContainSubstring("The sidecars of the following workloads could not be restarted: ns1/name1, ns2/name2, ns3/name3, ns4/name4, ns5/name5 and 1 additional workload(s)"))
 	})
 
-	It("should succeed proxy reset even if less than 5 proxies could not be reset and will return a warning", func() {
+	It("Should succeed proxy reset even if less than 5 proxies could not be reset and will return a warning", func() {
 		// given
 		numTrustedProxies := 1
 		istioCr := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
@@ -145,6 +146,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 					Namespace: "ns2",
 				},
 			},
+			hasMorePods: true,
 		}
 		fakeClient := createFakeClient(&istioCr, istiod)
 		statusHandler := status.NewStatusHandler(fakeClient)
@@ -161,7 +163,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		Expect((*istioCr.Status.Conditions)[0].Message).To(Equal("The sidecars of the following workloads could not be restarted: ns1/name1, ns2/name2"))
 	})
 
-	It("should succeed proxy reset when there is no warning or errors", func() {
+	It("Should succeed proxy reset when there is no warning or errors", func() {
 		// given
 		numTrustedProxies := 1
 		istioCr := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
@@ -190,6 +192,39 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		Expect(requeue).To(BeFalse())
 		Expect((*istioCr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonProxySidecarRestartSucceeded)))
 		Expect((*istioCr.Status.Conditions)[0].Message).To(Equal(operatorv1alpha2.ConditionReasonProxySidecarRestartSucceededMessage))
+	})
+
+	It("Should succeed proxy reset even if not all proxies are reset and requeue is required", func() {
+		// given
+		numTrustedProxies := 1
+		istioCr := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
+			Name:            "default",
+			ResourceVersion: "1",
+			Annotations:     map[string]string{},
+		},
+			Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
+					NumTrustedProxies: &numTrustedProxies,
+				},
+			},
+		}
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.1")
+		proxyResetter := &proxyResetterMock{
+			hasMorePods: true,
+		}
+		fakeClient := createFakeClient(&istioCr, istiod)
+		statusHandler := status.NewStatusHandler(fakeClient)
+		sidecarsRestarter := restarter.NewSidecarsRestarter(logr.Discard(), createFakeClient(&istioCr, istiod),
+			&MergerMock{"1.16.1-distroless"}, proxyResetter, statusHandler)
+
+		// when
+		err, requeue := sidecarsRestarter.Restart(context.Background(), &istioCr)
+
+		// then
+		Expect(err).ToNot(HaveOccurred())
+		Expect(requeue).To(BeTrue())
+		Expect((*istioCr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonProxySidecarRestartPartiallySucceeded)))
+		Expect((*istioCr.Status.Conditions)[0].Message).To(Equal(operatorv1alpha2.ConditionReasonProxySidecarRestartPartiallySucceededMessage))
 	})
 })
 

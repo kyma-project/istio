@@ -12,6 +12,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const (
+	podsToRestartLimit = 10
+)
+
 type ProxyResetter interface {
 	ProxyReset(ctx context.Context, c client.Client, expectedImage pods.SidecarImage, expectedResources v1.ResourceRequirements, predicates []filter.SidecarProxyPredicate, logger *logr.Logger) ([]restart.RestartWarning, bool, error)
 }
@@ -24,7 +28,7 @@ func NewProxyResetter() *ProxyReset {
 }
 
 func (p *ProxyReset) ProxyReset(ctx context.Context, c client.Client, expectedImage pods.SidecarImage, expectedResources v1.ResourceRequirements, predicates []filter.SidecarProxyPredicate, logger *logr.Logger) ([]restart.RestartWarning, bool, error) {
-	podsToRestart, err := pods.GetPodsToRestart(ctx, c, expectedImage, expectedResources, predicates, logger)
+	podsToRestart, err := pods.GetPodsToRestart(ctx, c, expectedImage, expectedResources, predicates, podsToRestartLimit, logger)
 	if err != nil {
 		return nil, false, err
 	}
@@ -34,7 +38,7 @@ func (p *ProxyReset) ProxyReset(ctx context.Context, c client.Client, expectedIm
 
 	warnings, err := restart.Restart(ctx, c, podsToRestart, logger)
 	if err != nil {
-		return nil, hasMorePodsToRestart, err
+		return nil, false, err
 	}
 
 	if !hasMorePodsToRestart {

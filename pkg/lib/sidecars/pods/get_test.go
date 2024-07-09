@@ -48,7 +48,6 @@ var _ = ReportAfterSuite("custom reporter", func(report types.Report) {
 })
 
 var _ = Describe("Get Pods", func() {
-
 	ctx := context.Background()
 	logger := logr.Discard()
 
@@ -59,22 +58,25 @@ var _ = Describe("Get Pods", func() {
 			name       string
 			c          client.Client
 			predicates []filter.SidecarProxyPredicate
+			limit      int
 			assertFunc func(val interface{})
 		}{
 			{
-				name:       "should not return pods without istio sidecar",
+				name:       "Should not return pods without istio sidecar",
 				c:          createClientSet(helpers.FixPodWithoutSidecar("app", "custom")),
+				limit:      10,
 				assertFunc: func(val interface{}) { Expect(val).To(BeEmpty()) },
 			},
 			{
-				name: "should not return any pod when pods have correct image",
+				name: "Should not return any pod when pods have correct image",
 				c: createClientSet(
 					helpers.NewSidecarPodBuilder().Build(),
 				),
+				limit:      10,
 				assertFunc: func(val interface{}) { Expect(val).To(BeEmpty()) },
 			},
 			{
-				name: "should return pod with different image repository",
+				name: "Should return pod with different image repository",
 				c: createClientSet(
 					helpers.NewSidecarPodBuilder().Build(),
 					helpers.NewSidecarPodBuilder().
@@ -82,6 +84,7 @@ var _ = Describe("Get Pods", func() {
 						SetSidecarImageRepository("istio/different-proxy").
 						Build(),
 				),
+				limit: 10,
 				assertFunc: func(val interface{}) {
 					Expect(val).NotTo(BeEmpty())
 					resultPods := val.([]v1.Pod)
@@ -89,7 +92,7 @@ var _ = Describe("Get Pods", func() {
 				},
 			},
 			{
-				name: "should return pod with different image tag",
+				name: "Should return pod with different image tag",
 				c: createClientSet(
 					helpers.NewSidecarPodBuilder().Build(),
 					helpers.NewSidecarPodBuilder().
@@ -97,6 +100,7 @@ var _ = Describe("Get Pods", func() {
 						SetSidecarImageTag("1.11.0").
 						Build(),
 				),
+				limit: 10,
 				assertFunc: func(val interface{}) {
 					Expect(val).NotTo(BeEmpty())
 					resultPods := val.([]v1.Pod)
@@ -105,53 +109,58 @@ var _ = Describe("Get Pods", func() {
 				},
 			},
 			{
-				name: "should ignore pod that has different image tag when it has not all condition status as True",
+				name: "Should ignore pod that has different image tag when it has not all condition status as True",
 				c: createClientSet(
 					helpers.NewSidecarPodBuilder().
 						SetSidecarImageTag("1.12.0").
 						SetConditionStatus("False").
 						Build(),
 				),
+				limit:      10,
 				assertFunc: func(val interface{}) { Expect(val).To(BeEmpty()) },
 			},
 			{
-				name: "should ignore pod that has different image tag when phase is not running",
+				name: "Should ignore pod that has different image tag when phase is not running",
 				c: createClientSet(
 					helpers.NewSidecarPodBuilder().
 						SetSidecarImageTag("1.12.0").
 						SetPodStatusPhase("Pending").
 						Build(),
 				),
+				limit:      10,
 				assertFunc: func(val interface{}) { Expect(val).To(BeEmpty()) },
 			},
 			{
-				name: "should ignore pod that has different image tag when it has a deletion timestamp",
+				name: "Should ignore pod that has different image tag when it has a deletion timestamp",
 				c: createClientSet(
 					helpers.NewSidecarPodBuilder().
 						SetSidecarImageTag("1.12.0").
 						SetDeletionTimestamp(time.Now()).
 						Build(),
 				),
+				limit:      10,
 				assertFunc: func(val interface{}) { Expect(val).To(BeEmpty()) },
 			},
 			{
-				name: "should ignore pod that has different image tag when proxy container name is not in istio annotation",
+				name: "Should ignore pod that has different image tag when proxy container name is not in istio annotation",
 				c: createClientSet(
 					helpers.NewSidecarPodBuilder().
 						SetSidecarImageTag("1.12.0").
 						SetSidecarContainerName("custom-sidecar-proxy-container-name").
 						Build(),
 				),
+				limit:      10,
 				assertFunc: func(val interface{}) { Expect(val).To(BeEmpty()) },
 			},
 			{
-				name: "should contain only one pod when there are multiple predicates that would restart the pod",
+				name: "Should contain only one pod when there are multiple predicates that would restart the pod",
 				c: createClientSet(
 					helpers.NewSidecarPodBuilder().
 						SetName("changedSidecarPod").
 						SetSidecarImageRepository("istio/different-proxy").
 						Build(),
 				),
+				limit:      10,
 				predicates: []filter.SidecarProxyPredicate{pods.NewRestartProxyPredicate(expectedImage, helpers.DefaultSidecarResources)},
 				assertFunc: func(val interface{}) {
 					Expect(val).NotTo(BeEmpty())
@@ -163,7 +172,7 @@ var _ = Describe("Get Pods", func() {
 
 		for _, tt := range tests {
 			It(tt.name, func() {
-				podList, err := pods.GetPodsToRestart(ctx, tt.c, expectedImage, helpers.DefaultSidecarResources, tt.predicates, &logger)
+				podList, err := pods.GetPodsToRestart(ctx, tt.c, expectedImage, helpers.DefaultSidecarResources, tt.predicates, tt.limit, &logger)
 
 				Expect(err).NotTo(HaveOccurred())
 				tt.assertFunc(podList.Items)
@@ -172,21 +181,20 @@ var _ = Describe("Get Pods", func() {
 	})
 
 	When("Sidecar Resources changed", func() {
-
 		tests := []struct {
 			name       string
 			c          client.Client
 			assertFunc func(val interface{})
 		}{
 			{
-				name: "should not return any pod when pods have same resources",
+				name: "Should not return any pod when pods have same resources",
 				c: createClientSet(
 					helpers.NewSidecarPodBuilder().Build(),
 				),
 				assertFunc: func(val interface{}) { Expect(val).To(BeEmpty()) },
 			},
 			{
-				name: "should return pod with different sidecar resources",
+				name: "Should return pod with different sidecar resources",
 				c: createClientSet(
 					helpers.NewSidecarPodBuilder().Build(),
 					helpers.NewSidecarPodBuilder().
@@ -201,7 +209,7 @@ var _ = Describe("Get Pods", func() {
 				},
 			},
 			{
-				name: "should ignore pod that has different resources when it has not all condition status as True",
+				name: "Should ignore pod that has different resources when it has not all condition status as True",
 				c: createClientSet(
 					helpers.NewSidecarPodBuilder().
 						SetConditionStatus("False").
@@ -211,7 +219,7 @@ var _ = Describe("Get Pods", func() {
 				assertFunc: func(val interface{}) { Expect(val).To(BeEmpty()) },
 			},
 			{
-				name: "should ignore pod that has different resources when phase is not running",
+				name: "Should ignore pod that has different resources when phase is not running",
 				c: createClientSet(
 					helpers.NewSidecarPodBuilder().
 						SetPodStatusPhase("Pending").
@@ -221,7 +229,7 @@ var _ = Describe("Get Pods", func() {
 				assertFunc: func(val interface{}) { Expect(val).To(BeEmpty()) },
 			},
 			{
-				name: "should ignore pod that has different resources when it has a deletion timestamp",
+				name: "Should ignore pod that has different resources when it has a deletion timestamp",
 				c: createClientSet(
 					helpers.NewSidecarPodBuilder().
 						SetDeletionTimestamp(time.Now()).
@@ -231,7 +239,7 @@ var _ = Describe("Get Pods", func() {
 				assertFunc: func(val interface{}) { Expect(val).To(BeEmpty()) },
 			},
 			{
-				name: "should ignore pod that with different resources when proxy container name is not in istio annotation",
+				name: "Should ignore pod that with different resources when proxy container name is not in istio annotation",
 				c: createClientSet(
 					helpers.NewSidecarPodBuilder().
 						SetSidecarContainerName("custom-sidecar-proxy-container-name").
@@ -246,7 +254,7 @@ var _ = Describe("Get Pods", func() {
 			It(tt.name, func() {
 				expectedImage := pods.NewSidecarImage("istio", "1.10.0")
 
-				podList, err := pods.GetPodsToRestart(ctx, tt.c, expectedImage, helpers.DefaultSidecarResources, []filter.SidecarProxyPredicate{}, &logger)
+				podList, err := pods.GetPodsToRestart(ctx, tt.c, expectedImage, helpers.DefaultSidecarResources, []filter.SidecarProxyPredicate{}, 10, &logger)
 
 				Expect(err).NotTo(HaveOccurred())
 				tt.assertFunc(podList.Items)
@@ -256,7 +264,6 @@ var _ = Describe("Get Pods", func() {
 })
 
 var _ = Describe("GetAllInjectedPods", func() {
-
 	ctx := context.Background()
 
 	tests := []struct {
@@ -265,19 +272,19 @@ var _ = Describe("GetAllInjectedPods", func() {
 		assertFunc func(val interface{})
 	}{
 		{
-			name:       "should not return pods without istio sidecar",
+			name:       "Should not return pods without istio sidecar",
 			c:          createClientSet(helpers.FixPodWithoutSidecar("app", "custom")),
 			assertFunc: func(val interface{}) { Expect(val).To(BeEmpty()) },
 		},
 		{
-			name: "should return pod with istio sidecar",
+			name: "Should return pod with istio sidecar",
 			c: createClientSet(
 				helpers.NewSidecarPodBuilder().Build(),
 			),
 			assertFunc: func(val interface{}) { Expect(val).To(HaveLen(1)) },
 		},
 		{
-			name: "should not return pod with only istio sidecar",
+			name: "Should not return pod with only istio sidecar",
 			c: createClientSet(
 				helpers.FixPodWithOnlySidecar("app", "custom"),
 			),

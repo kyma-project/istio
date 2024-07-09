@@ -74,8 +74,8 @@ const (
 	ConditionReasonProxySidecarRestartSucceededMessage                          = "Proxy sidecar restart succeeded"
 	ConditionReasonProxySidecarRestartFailed                    ConditionReason = "ProxySidecarRestartFailed"
 	ConditionReasonProxySidecarRestartFailedMessage                             = "Proxy sidecar restart failed"
-	ConditionReasonProxySidecarRestartPartiallyCompleted        ConditionReason = "ProxySidecarRestartPartiallyCompleted"
-	ConditionReasonProxySidecarRestartPartiallyCompletedMessage                 = "Proxy sidecar restart partially completed"
+	ConditionReasonProxySidecarRestartPartiallySucceeded        ConditionReason = "ProxySidecarRestartPartiallySucceeded"
+	ConditionReasonProxySidecarRestartPartiallySucceededMessage                 = "Proxy sidecar restart partially succeeded"
 	ConditionReasonProxySidecarManualRestartRequired            ConditionReason = "ProxySidecarManualRestartRequired"
 	ConditionReasonProxySidecarManualRestartRequiredMessage                     = "Proxy sidecar manual restart is required for some workloads"
 

@@ -13,8 +13,6 @@ import (
 )
 
 const (
-	maxPodsToRestartAtOnce = 10
-
 	istioSidecarContainerName string = "istio-proxy"
 )
 
@@ -38,13 +36,13 @@ func (r SidecarImage) matchesImageIn(container v1.Container) bool {
 	return container.Image == r.String()
 }
 
-func listRunningPods(ctx context.Context, c client.Client, continueToken string) (*v1.PodList, error) {
+func listRunningPods(ctx context.Context, c client.Client, limit int, continueToken string) (*v1.PodList, error) {
 	podList := &v1.PodList{}
 
 	err := retry.RetryOnError(retry.DefaultRetry, func() error {
 		listOps := []client.ListOption{
 			client.MatchingFieldsSelector{Selector: fields.OneTermEqualSelector("status.phase", string(v1.PodRunning))},
-			client.Limit(maxPodsToRestartAtOnce),
+			client.Limit(limit),
 		}
 		if continueToken != "" {
 			listOps = append(listOps, client.Continue(continueToken))
@@ -55,8 +53,8 @@ func listRunningPods(ctx context.Context, c client.Client, continueToken string)
 	return podList, err
 }
 
-func getSidecarPods(ctx context.Context, c client.Client, logger *logr.Logger, continueToken string) (*v1.PodList, error) {
-	podList, err := listRunningPods(ctx, c, continueToken)
+func getSidecarPods(ctx context.Context, c client.Client, logger *logr.Logger, limit int, continueToken string) (*v1.PodList, error) {
+	podList, err := listRunningPods(ctx, c, limit, continueToken)
 	if err != nil {
 		return nil, err
 	}
@@ -77,13 +75,13 @@ func getSidecarPods(ctx context.Context, c client.Client, logger *logr.Logger, c
 	return podsWithSidecar, nil
 }
 
-func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage SidecarImage, expectedResources v1.ResourceRequirements, predicates []filter.SidecarProxyPredicate, logger *logr.Logger) (*v1.PodList, error) {
+func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage SidecarImage, expectedResources v1.ResourceRequirements, predicates []filter.SidecarProxyPredicate, limit int, logger *logr.Logger) (*v1.PodList, error) {
 	//Add predicate for image version and resources configuration
 	predicates = append(predicates, NewRestartProxyPredicate(expectedImage, expectedResources))
 
 	podsToRestart := &v1.PodList{}
 	for while := true; while; {
-		podsWithSidecar, err := getSidecarPods(ctx, c, logger, podsToRestart.Continue)
+		podsWithSidecar, err := getSidecarPods(ctx, c, logger, limit, podsToRestart.Continue)
 		if err != nil {
 			return nil, err
 		}
@@ -98,7 +96,7 @@ func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage Sideca
 		}
 
 		podsToRestart.Continue = podsWithSidecar.Continue
-		while = len(podsToRestart.Items) < maxPodsToRestartAtOnce && podsToRestart.Continue != ""
+		while = len(podsToRestart.Items) < limit && podsToRestart.Continue != ""
 	}
 
 	if len(podsToRestart.Items) > 0 {

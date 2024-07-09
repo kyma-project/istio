@@ -8,20 +8,29 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var _ = Describe("Evaluate restart", func() {
-	It("should should return false when pod has custom image annotation", func() {
+var _ = Describe("RequiresProxyRestart", func() {
+	It("Should should return false when pod has custom image annotation", func() {
+		// given
 		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", map[string]string{"sidecar.istio.io/proxyImage": "istio/proxyv2:1.21.0"})
-
 		predicate := pods.NewRestartProxyPredicate(pods.NewSidecarImage("istio", "1.22.0"), v1.ResourceRequirements{})
-		Expect(predicate.RequiresProxyRestart(pod)).To(BeFalse())
 
+		// when
+		shouldRestart := predicate.RequiresProxyRestart(pod)
+
+		// then
+		Expect(shouldRestart).To(BeFalse())
 	})
 
-	It("should should return true when pod does not have custom image annotation", func() {
+	It("Should should return true when pod does not have custom image annotation", func() {
+		// given
 		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", map[string]string{})
-
 		predicate := pods.NewRestartProxyPredicate(pods.NewSidecarImage("istio", "1.22.0"), v1.ResourceRequirements{})
-		Expect(predicate.RequiresProxyRestart(pod)).To(BeTrue())
+
+		// when
+		shouldRestart := predicate.RequiresProxyRestart(pod)
+
+		// then
+		Expect(shouldRestart).To(BeTrue())
 	})
 })
 

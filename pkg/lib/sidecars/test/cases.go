@@ -33,7 +33,6 @@ func (s *scenario) aRestartHappens(sidecarImage string) error {
 }
 
 func (s *scenario) aRestartHappensWithUpdatedResources(sidecarImage string, resourceType string, cpu string, memory string) error {
-
 	resources := helpers.DefaultSidecarResources
 
 	switch resourceType {

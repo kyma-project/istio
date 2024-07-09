@@ -39,7 +39,7 @@ var conditionReasons = map[ConditionReason]conditionMeta{
 
 	ConditionReasonProxySidecarRestartSucceeded:          {Type: ConditionTypeProxySidecarRestartSucceeded, Status: metav1.ConditionTrue, Message: ConditionReasonProxySidecarRestartSucceededMessage},
 	ConditionReasonProxySidecarRestartFailed:             {Type: ConditionTypeProxySidecarRestartSucceeded, Status: metav1.ConditionFalse, Message: ConditionReasonProxySidecarRestartFailedMessage},
-	ConditionReasonProxySidecarRestartPartiallyCompleted: {Type: ConditionTypeProxySidecarRestartSucceeded, Status: metav1.ConditionFalse, Message: ConditionReasonProxySidecarRestartPartiallyCompletedMessage},
+	ConditionReasonProxySidecarRestartPartiallySucceeded: {Type: ConditionTypeProxySidecarRestartSucceeded, Status: metav1.ConditionFalse, Message: ConditionReasonProxySidecarRestartPartiallySucceededMessage},
 	ConditionReasonProxySidecarManualRestartRequired:     {Type: ConditionTypeProxySidecarRestartSucceeded, Status: metav1.ConditionFalse, Message: ConditionReasonProxySidecarManualRestartRequiredMessage},
 
 	ConditionReasonIngressGatewayRestartSucceeded: {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonIngressGatewayRestartSucceededMessage},

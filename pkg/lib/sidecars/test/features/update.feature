@@ -18,7 +18,7 @@ Feature: Istio upgrade
     And no resource that is not supposed to be deleted is deleted
     And all required resources are restarted
     And all required resources are deleted
-  
+
   Scenario: Standard reconciliation
     Given there is a cluster with Istio "1.14.4", default injection == "false"
     And there are Pods with Istio "1.14.4" sidecar

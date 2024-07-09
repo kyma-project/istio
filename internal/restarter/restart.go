@@ -10,6 +10,7 @@ import (
 // Restarter is an interface for restarting Istio components.
 // It uses predicates to evaluate if the restart is needed.
 // If the evaluation returns true, the restarter restarts the component.
+// Additional boolean return parameter indicates if the reconciliation should be requeued.
 type Restarter interface {
 	Restart(ctx context.Context, istioCR *operatorv1alpha2.Istio) (described_errors.DescribedError, bool)
 }

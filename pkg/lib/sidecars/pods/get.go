@@ -81,11 +81,16 @@ func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage Sideca
 
 	podsToRestart := &v1.PodList{}
 	for while := true; while; {
+		fmt.Print("getting pods\n")
+		fmt.Printf("continue tocken beginning of loop: %v\n", podsToRestart.Continue)
 		podsWithSidecar, err := getSidecarPods(ctx, c, logger, limit, podsToRestart.Continue)
 		if err != nil {
 			return nil, err
 		}
-
+		fmt.Print("got:\n")
+		for _, pod := range podsWithSidecar.Items {
+			fmt.Printf("pod: %s\n", pod.Name)
+		}
 		for _, pod := range podsWithSidecar.Items {
 			for _, predicate := range predicates {
 				if predicate.RequiresProxyRestart(pod) {
@@ -94,8 +99,12 @@ func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage Sideca
 				}
 			}
 		}
-
+		fmt.Print("needs to restart\n")
+		for _, pod := range podsToRestart.Items {
+			fmt.Printf("pod: %s\n", pod.Name)
+		}
 		podsToRestart.Continue = podsWithSidecar.Continue
+		fmt.Printf("continue tocken end of loop: %v\n", podsToRestart.Continue)
 		while = len(podsToRestart.Items) < limit && podsToRestart.Continue != ""
 	}
 

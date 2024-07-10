@@ -2,14 +2,12 @@ package pods_test
 
 import (
 	"context"
-	"testing"
+	"errors"
 	"time"
 
 	"github.com/kyma-project/istio/operator/internal/filter"
 
-	"github.com/kyma-project/istio/operator/internal/tests"
 	. "github.com/onsi/ginkgo/v2"
-	"github.com/onsi/ginkgo/v2/types"
 	. "github.com/onsi/gomega"
 
 	"github.com/go-logr/logr"
@@ -38,42 +36,36 @@ func createClientSet(objects ...client.Object) client.Client {
 	return fakeClient
 }
 
-func TestGetPods(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Pods Get Suite")
-}
-
-var _ = ReportAfterSuite("custom reporter", func(report types.Report) {
-	tests.GenerateGinkgoJunitReport("pods-get-suite", report)
-})
-
-var _ = Describe("Get Pods", func() {
+var _ = Describe("GetPodsToRestart", func() {
 	ctx := context.Background()
 	logger := logr.Discard()
 
 	When("Istio image changed", func() {
 		expectedImage := pods.NewSidecarImage("istio", "1.10.0")
-
 		tests := []struct {
 			name       string
 			c          client.Client
 			predicates []filter.SidecarProxyPredicate
 			limit      int
-			assertFunc func(val interface{})
+			assertFunc func(podList *v1.PodList)
 		}{
 			{
-				name:       "Should not return pods without istio sidecar",
-				c:          createClientSet(helpers.FixPodWithoutSidecar("app", "custom")),
-				limit:      10,
-				assertFunc: func(val interface{}) { Expect(val).To(BeEmpty()) },
+				name:  "Should not return pods without istio sidecar",
+				c:     createClientSet(helpers.FixPodWithoutSidecar("app", "custom")),
+				limit: 10,
+				assertFunc: func(podList *v1.PodList) {
+					Expect(podList.Items).To(BeEmpty())
+				},
 			},
 			{
 				name: "Should not return any pod when pods have correct image",
 				c: createClientSet(
 					helpers.NewSidecarPodBuilder().Build(),
 				),
-				limit:      10,
-				assertFunc: func(val interface{}) { Expect(val).To(BeEmpty()) },
+				limit: 10,
+				assertFunc: func(podList *v1.PodList) {
+					Expect(podList.Items).To(BeEmpty())
+				},
 			},
 			{
 				name: "Should return pod with different image repository",
@@ -85,10 +77,9 @@ var _ = Describe("Get Pods", func() {
 						Build(),
 				),
 				limit: 10,
-				assertFunc: func(val interface{}) {
-					Expect(val).NotTo(BeEmpty())
-					resultPods := val.([]v1.Pod)
-					Expect(resultPods[0].Name).To(Equal("changedSidecarPod"))
+				assertFunc: func(podList *v1.PodList) {
+					Expect(podList.Items).To(HaveLen(1))
+					Expect(podList.Items[0].Name).To(Equal("changedSidecarPod"))
 				},
 			},
 			{
@@ -101,11 +92,9 @@ var _ = Describe("Get Pods", func() {
 						Build(),
 				),
 				limit: 10,
-				assertFunc: func(val interface{}) {
-					Expect(val).NotTo(BeEmpty())
-					resultPods := val.([]v1.Pod)
-					Expect(resultPods[0].Name).To(Equal("changedSidecarPod"))
-
+				assertFunc: func(podList *v1.PodList) {
+					Expect(podList.Items).To(HaveLen(1))
+					Expect(podList.Items[0].Name).To(Equal("changedSidecarPod"))
 				},
 			},
 			{
@@ -116,8 +105,10 @@ var _ = Describe("Get Pods", func() {
 						SetConditionStatus("False").
 						Build(),
 				),
-				limit:      10,
-				assertFunc: func(val interface{}) { Expect(val).To(BeEmpty()) },
+				limit: 10,
+				assertFunc: func(podList *v1.PodList) {
+					Expect(podList.Items).To(BeEmpty())
+				},
 			},
 			{
 				name: "Should ignore pod that has different image tag when phase is not running",
@@ -127,8 +118,10 @@ var _ = Describe("Get Pods", func() {
 						SetPodStatusPhase("Pending").
 						Build(),
 				),
-				limit:      10,
-				assertFunc: func(val interface{}) { Expect(val).To(BeEmpty()) },
+				limit: 10,
+				assertFunc: func(podList *v1.PodList) {
+					Expect(podList.Items).To(BeEmpty())
+				},
 			},
 			{
 				name: "Should ignore pod that has different image tag when it has a deletion timestamp",
@@ -138,8 +131,10 @@ var _ = Describe("Get Pods", func() {
 						SetDeletionTimestamp(time.Now()).
 						Build(),
 				),
-				limit:      10,
-				assertFunc: func(val interface{}) { Expect(val).To(BeEmpty()) },
+				limit: 10,
+				assertFunc: func(podList *v1.PodList) {
+					Expect(podList.Items).To(BeEmpty())
+				},
 			},
 			{
 				name: "Should ignore pod that has different image tag when proxy container name is not in istio annotation",
@@ -149,8 +144,10 @@ var _ = Describe("Get Pods", func() {
 						SetSidecarContainerName("custom-sidecar-proxy-container-name").
 						Build(),
 				),
-				limit:      10,
-				assertFunc: func(val interface{}) { Expect(val).To(BeEmpty()) },
+				limit: 10,
+				assertFunc: func(podList *v1.PodList) {
+					Expect(podList.Items).To(BeEmpty())
+				},
 			},
 			{
 				name: "Should contain only one pod when there are multiple predicates that would restart the pod",
@@ -162,20 +159,37 @@ var _ = Describe("Get Pods", func() {
 				),
 				limit:      10,
 				predicates: []filter.SidecarProxyPredicate{pods.NewRestartProxyPredicate(expectedImage, helpers.DefaultSidecarResources)},
-				assertFunc: func(val interface{}) {
-					Expect(val).NotTo(BeEmpty())
-					resultPods := val.([]v1.Pod)
-					Expect(len(resultPods)).To(Equal(1))
+				assertFunc: func(podList *v1.PodList) {
+					Expect(podList.Items).To(HaveLen(1))
+				},
+			},
+			{
+				name: "Should respect limit set when getting pods to restart",
+				c: &fakeClientWithLimit{
+					createClientSet(
+						helpers.NewSidecarPodBuilder().
+							SetName("changedSidecarPod1").
+							SetSidecarImageRepository("istio/different-proxy").
+							Build(),
+						helpers.NewSidecarPodBuilder().
+							SetName("changedSidecarPod2").
+							SetSidecarImageRepository("istio/different-proxy").
+							Build(),
+					),
+					1,
+				},
+				limit: 1,
+				assertFunc: func(podList *v1.PodList) {
+					Expect(podList.Items).To(HaveLen(1))
+					Expect(podList.Continue).ToNot(BeEmpty())
 				},
 			},
 		}
-
 		for _, tt := range tests {
 			It(tt.name, func() {
 				podList, err := pods.GetPodsToRestart(ctx, tt.c, expectedImage, helpers.DefaultSidecarResources, tt.predicates, tt.limit, &logger)
-
 				Expect(err).NotTo(HaveOccurred())
-				tt.assertFunc(podList.Items)
+				tt.assertFunc(podList)
 			})
 		}
 	})
@@ -249,13 +263,10 @@ var _ = Describe("Get Pods", func() {
 				assertFunc: func(val interface{}) { Expect(val).To(BeEmpty()) },
 			},
 		}
-
 		for _, tt := range tests {
 			It(tt.name, func() {
 				expectedImage := pods.NewSidecarImage("istio", "1.10.0")
-
 				podList, err := pods.GetPodsToRestart(ctx, tt.c, expectedImage, helpers.DefaultSidecarResources, []filter.SidecarProxyPredicate{}, 10, &logger)
-
 				Expect(err).NotTo(HaveOccurred())
 				tt.assertFunc(podList.Items)
 			})
@@ -291,7 +302,6 @@ var _ = Describe("GetAllInjectedPods", func() {
 			assertFunc: func(val interface{}) { Expect(val).To(HaveLen(0)) },
 		},
 	}
-
 	for _, tt := range tests {
 		It(tt.name, func() {
 			podList, err := pods.GetAllInjectedPods(ctx, tt.c)
@@ -301,3 +311,44 @@ var _ = Describe("GetAllInjectedPods", func() {
 		})
 	}
 })
+
+type fakeClientWithLimit struct {
+	client.Client
+	limit int64
+}
+
+func (p *fakeClientWithLimit) List(ctx context.Context, list client.ObjectList, opts ...client.ListOption) error {
+	foundLimitOpt := false
+
+	for _, opt := range opts {
+		switch opt.(type) {
+		case client.Limit:
+			limit := opt.(client.Limit)
+			if int64(limit) != p.limit {
+				return errors.New("limit not set as expected")
+			}
+			foundLimitOpt = true
+		}
+	}
+
+	if !foundLimitOpt {
+		return errors.New("limit not set when listing pods")
+	}
+
+	err := p.Client.List(ctx, list, opts...)
+	if err != nil {
+		return err
+	}
+
+	podList, ok := list.(*v1.PodList)
+	if !ok {
+		return errors.New("list is not a pod list")
+	}
+
+	if len(podList.Items) >= int(p.limit) {
+		podList.Continue = "continue"
+		podList.Items = podList.Items[:p.limit]
+	}
+
+	return nil
+}

@@ -23,39 +23,6 @@ trap cleanup EXIT INT
 
 tag=$(gcloud container images list-tags europe-docker.pkg.dev/kyma-project/prod/istio-manager --limit 1 --format json | jq '.[0].tags[1]')
 IMG=europe-docker.pkg.dev/kyma-project/prod/istio-manager:${tag} make install deploy
-kubectl apply -f config/samples/operator_v1alpha2_istio.yaml
-
-number=1
-	while [[ $number -le 100 ]] ; do
-		echo ">--> checking Istio status #$number"
-		STATUS=$(kubectl get -n kyma-system istio default -o jsonpath='{.status.state}')
-		echo "kyma status: ${STATUS:='UNKNOWN'}"
-		[[ "$STATUS" == "Ready" ]] && break
-		sleep 5
-        	((number = number + 1))
-	done
-number=1
-	while [[ $number -le 100 ]] ; do
-	    ip=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-	    [[ "$ip" != "" ]] && break
-      sleep 5
-             ((number = number + 1))
-	done
-
-domain=$(kubectl config view -o json | jq '.clusters[0].cluster.server' | sed -e "s/https:\/\/api.//" -e 's/"//g')
-kubectl annotate service -n istio-system istio-ingressgateway "dns.gardener.cloud/dnsnames=*.${domain}" --overwrite
 
 cd tests/performance || exit
-
-n=0
-until [ "$n" -ge 5 ]
-do
-   make test-performance && break
-   n=$((n+1))
-   sleep 15
-done
-
-if [ "$n" -ge 5 ]; then
-  echo "Failed to run performance tests"
-  exit 1
-fi
+make test-performance

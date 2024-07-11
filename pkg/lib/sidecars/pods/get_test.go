@@ -365,15 +365,14 @@ func (p *fakeClientWithLimit) List(ctx context.Context, list client.ObjectList, 
 	continueToken := ""
 
 	for _, opt := range opts {
-		switch opt.(type) {
+		switch opt := opt.(type) {
 		case client.Limit:
-			limit := opt.(client.Limit)
-			if int64(limit) != p.limit {
+			if int64(opt) != p.limit {
 				return errors.New("limit not set as expected")
 			}
 			limitOptFound = true
 		case client.Continue:
-			continueToken = string(opt.(client.Continue))
+			continueToken = string(opt)
 		}
 	}
 

@@ -43,13 +43,13 @@ var _ = Describe("GetPodsToRestart", func() {
 			name       string
 			c          client.Client
 			predicates []filter.SidecarProxyPredicate
-			limit      int
+			limits     *pods.PodsRestartLimits
 			assertFunc func(podList *v1.PodList)
 		}{
 			{
-				name:  "Should not return pods without istio sidecar",
-				c:     createClientSet(helpers.FixPodWithoutSidecar("app", "custom")),
-				limit: 10,
+				name:   "Should not return pods without istio sidecar",
+				c:      createClientSet(helpers.FixPodWithoutSidecar("app", "custom")),
+				limits: pods.NewPodsRestartLimits(5, 5),
 				assertFunc: func(podList *v1.PodList) {
 					Expect(podList.Items).To(BeEmpty())
 				},
@@ -59,7 +59,7 @@ var _ = Describe("GetPodsToRestart", func() {
 				c: createClientSet(
 					helpers.NewSidecarPodBuilder().Build(),
 				),
-				limit: 10,
+				limits: pods.NewPodsRestartLimits(5, 5),
 				assertFunc: func(podList *v1.PodList) {
 					Expect(podList.Items).To(BeEmpty())
 				},
@@ -73,7 +73,7 @@ var _ = Describe("GetPodsToRestart", func() {
 						SetSidecarImageRepository("istio/different-proxy").
 						Build(),
 				),
-				limit: 10,
+				limits: pods.NewPodsRestartLimits(5, 5),
 				assertFunc: func(podList *v1.PodList) {
 					Expect(podList.Items).To(HaveLen(1))
 					Expect(podList.Items[0].Name).To(Equal("changedSidecarPod"))
@@ -88,7 +88,7 @@ var _ = Describe("GetPodsToRestart", func() {
 						SetSidecarImageTag("1.11.0").
 						Build(),
 				),
-				limit: 10,
+				limits: pods.NewPodsRestartLimits(5, 5),
 				assertFunc: func(podList *v1.PodList) {
 					Expect(podList.Items).To(HaveLen(1))
 					Expect(podList.Items[0].Name).To(Equal("changedSidecarPod"))
@@ -102,7 +102,7 @@ var _ = Describe("GetPodsToRestart", func() {
 						SetConditionStatus("False").
 						Build(),
 				),
-				limit: 10,
+				limits: pods.NewPodsRestartLimits(5, 5),
 				assertFunc: func(podList *v1.PodList) {
 					Expect(podList.Items).To(BeEmpty())
 				},
@@ -115,7 +115,7 @@ var _ = Describe("GetPodsToRestart", func() {
 						SetPodStatusPhase("Pending").
 						Build(),
 				),
-				limit: 10,
+				limits: pods.NewPodsRestartLimits(5, 5),
 				assertFunc: func(podList *v1.PodList) {
 					Expect(podList.Items).To(BeEmpty())
 				},
@@ -128,7 +128,7 @@ var _ = Describe("GetPodsToRestart", func() {
 						SetDeletionTimestamp(time.Now()).
 						Build(),
 				),
-				limit: 10,
+				limits: pods.NewPodsRestartLimits(5, 5),
 				assertFunc: func(podList *v1.PodList) {
 					Expect(podList.Items).To(BeEmpty())
 				},
@@ -141,7 +141,7 @@ var _ = Describe("GetPodsToRestart", func() {
 						SetSidecarContainerName("custom-sidecar-proxy-container-name").
 						Build(),
 				),
-				limit: 10,
+				limits: pods.NewPodsRestartLimits(5, 5),
 				assertFunc: func(podList *v1.PodList) {
 					Expect(podList.Items).To(BeEmpty())
 				},
@@ -154,14 +154,34 @@ var _ = Describe("GetPodsToRestart", func() {
 						SetSidecarImageRepository("istio/different-proxy").
 						Build(),
 				),
-				limit:      10,
+				limits:     pods.NewPodsRestartLimits(5, 5),
 				predicates: []filter.SidecarProxyPredicate{pods.NewRestartProxyPredicate(expectedImage, helpers.DefaultSidecarResources)},
 				assertFunc: func(podList *v1.PodList) {
 					Expect(podList.Items).To(HaveLen(1))
 				},
 			},
 			{
-				name: "Should respect limit set when getting pods to restart",
+				name: "Should respect limit set when getting pods to restart if all pods listed",
+				c: NewFakeClientWithLimit(
+					createClientSet(
+						helpers.NewSidecarPodBuilder().
+							SetName("changedSidecarPod1").
+							SetSidecarImageRepository("istio/different-proxy").
+							Build(),
+						helpers.NewSidecarPodBuilder().
+							SetName("changedSidecarPod2").
+							SetSidecarImageRepository("istio/different-proxy").
+							Build(),
+					), 5),
+				limits: pods.NewPodsRestartLimits(1, 5),
+				assertFunc: func(podList *v1.PodList) {
+					Expect(podList.Items).To(HaveLen(1))
+					Expect(podList.Items[0].Name).To(Equal("changedSidecarPod1"))
+					Expect(podList.Continue).To(BeEmpty())
+				},
+			},
+			{
+				name: "Should respect limit set when getting pods to restart and set continue token if there are more pods to list",
 				c: NewFakeClientWithLimit(
 					createClientSet(
 						helpers.NewSidecarPodBuilder().
@@ -173,7 +193,7 @@ var _ = Describe("GetPodsToRestart", func() {
 							SetSidecarImageRepository("istio/different-proxy").
 							Build(),
 					), 1),
-				limit: 1,
+				limits: pods.NewPodsRestartLimits(1, 1),
 				assertFunc: func(podList *v1.PodList) {
 					Expect(podList.Items).To(HaveLen(1))
 					Expect(podList.Items[0].Name).To(Equal("changedSidecarPod1"))
@@ -181,7 +201,7 @@ var _ = Describe("GetPodsToRestart", func() {
 				},
 			},
 			{
-				name: "Should respect limit and use continue token to obtain rest of pods when getting pods to restart",
+				name: "Should respect limit and use continue token to obtain rest of pods when listing pods",
 				c: NewFakeClientWithLimit(createClientSet(
 					helpers.NewSidecarPodBuilder().
 						SetName("changedSidecarPod1").
@@ -192,8 +212,8 @@ var _ = Describe("GetPodsToRestart", func() {
 						SetName("changedSidecarPod2").
 						SetSidecarImageRepository("istio/different-proxy").
 						Build(),
-				), 2),
-				limit: 2,
+				), 1),
+				limits: pods.NewPodsRestartLimits(2, 1),
 				assertFunc: func(podList *v1.PodList) {
 					Expect(podList.Items).To(HaveLen(2))
 					Expect(podList.Items[0].Name).To(Equal("changedSidecarPod1"))
@@ -204,7 +224,7 @@ var _ = Describe("GetPodsToRestart", func() {
 		}
 		for _, tt := range tests {
 			It(tt.name, func() {
-				podList, err := pods.GetPodsToRestart(ctx, tt.c, expectedImage, helpers.DefaultSidecarResources, tt.predicates, tt.limit, &logger)
+				podList, err := pods.GetPodsToRestart(ctx, tt.c, expectedImage, helpers.DefaultSidecarResources, tt.predicates, tt.limits, &logger)
 				Expect(err).NotTo(HaveOccurred())
 				tt.assertFunc(podList)
 			})
@@ -282,7 +302,7 @@ var _ = Describe("GetPodsToRestart", func() {
 		for _, tt := range tests {
 			It(tt.name, func() {
 				expectedImage := pods.NewSidecarImage("istio", "1.10.0")
-				podList, err := pods.GetPodsToRestart(ctx, tt.c, expectedImage, helpers.DefaultSidecarResources, []filter.SidecarProxyPredicate{}, 10, &logger)
+				podList, err := pods.GetPodsToRestart(ctx, tt.c, expectedImage, helpers.DefaultSidecarResources, []filter.SidecarProxyPredicate{}, pods.NewPodsRestartLimits(5, 5), &logger)
 				Expect(err).NotTo(HaveOccurred())
 				tt.assertFunc(podList)
 			})
@@ -344,7 +364,7 @@ func createClientSet(objects ...client.Object) client.Client {
 
 type fakeClientWithLimit struct {
 	client.Client
-	limit              int64
+	listLimit          int64
 	callCount          int
 	expectContinueNext bool
 }
@@ -352,7 +372,7 @@ type fakeClientWithLimit struct {
 func NewFakeClientWithLimit(c client.Client, limit int64) *fakeClientWithLimit {
 	return &fakeClientWithLimit{
 		Client:             c,
-		limit:              limit,
+		listLimit:          limit,
 		callCount:          0,
 		expectContinueNext: false,
 	}
@@ -367,7 +387,7 @@ func (p *fakeClientWithLimit) List(ctx context.Context, list client.ObjectList, 
 	for _, opt := range opts {
 		switch opt := opt.(type) {
 		case client.Limit:
-			if int64(opt) != p.limit {
+			if int64(opt) != p.listLimit {
 				return errors.New("limit not set as expected")
 			}
 			limitOptFound = true
@@ -401,13 +421,13 @@ func (p *fakeClientWithLimit) List(ctx context.Context, list client.ObjectList, 
 		return errors.New("list is not a pod list")
 	}
 
-	if len(podList.Items) > int(p.limit) {
+	if len(podList.Items) > int(p.listLimit) {
 		if continueToken == "" {
 			podList.Continue = "continue"
-			podList.Items = podList.Items[:p.limit]
+			podList.Items = podList.Items[:p.listLimit]
 			p.expectContinueNext = true
 		} else {
-			podList.Items = podList.Items[p.limit:]
+			podList.Items = podList.Items[p.listLimit:]
 			podList.Continue = ""
 			p.expectContinueNext = false
 		}

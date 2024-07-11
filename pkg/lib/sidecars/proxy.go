@@ -13,7 +13,8 @@ import (
 )
 
 const (
-	podsToRestartLimit = 10
+	podsToRestartLimit = 30
+	podsToListLimit    = 100
 )
 
 type ProxyResetter interface {
@@ -28,7 +29,8 @@ func NewProxyResetter() *ProxyReset {
 }
 
 func (p *ProxyReset) ProxyReset(ctx context.Context, c client.Client, expectedImage pods.SidecarImage, expectedResources v1.ResourceRequirements, predicates []filter.SidecarProxyPredicate, logger *logr.Logger) ([]restart.RestartWarning, bool, error) {
-	podsToRestart, err := pods.GetPodsToRestart(ctx, c, expectedImage, expectedResources, predicates, podsToRestartLimit, logger)
+	limits := pods.NewPodsRestartLimits(podsToRestartLimit, podsToListLimit)
+	podsToRestart, err := pods.GetPodsToRestart(ctx, c, expectedImage, expectedResources, predicates, limits, logger)
 	if err != nil {
 		return nil, false, err
 	}

@@ -156,7 +156,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		}
 		return ctrl.Result{}, err
 	} else if requeue {
-		return r.requeueReconciliationWithoutError()
+		return r.requeueReconciliationWithoutError(ctx, &istioCR)
 	}
 
 	return r.finishReconcile(ctx, &istioCR, istioImageVersion.Tag())
@@ -171,12 +171,12 @@ func (r *IstioReconciler) requeueReconciliation(ctx context.Context, istioCR *op
 	if statusUpdateErr != nil {
 		r.log.Error(statusUpdateErr, "Error during updating status to error")
 	}
-
 	r.log.Error(err, "Reconcile failed")
 	return ctrl.Result{}, err
 }
 
-func (r *IstioReconciler) requeueReconciliationWithoutError() (ctrl.Result, error) {
+func (r *IstioReconciler) requeueReconciliationWithoutError(ctx context.Context, istioCR *operatorv1alpha2.Istio) (ctrl.Result, error) {
+	r.statusHandler.UpdateToProcessing(ctx, istioCR)
 	r.log.Info("Reconcile requeued")
 	return ctrl.Result{Requeue: true}, nil
 }

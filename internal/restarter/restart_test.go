@@ -12,7 +12,7 @@ import (
 )
 
 var _ = Describe("Restart", func() {
-	It("Should return nil if no restarters fail", func() {
+	It("should return nil if no restarters fail", func() {
 		// given
 		r1 := &restarterMock{}
 		r2 := &restarterMock{}
@@ -25,7 +25,7 @@ var _ = Describe("Restart", func() {
 		Expect(requeue).To(BeFalse())
 	})
 
-	It("Should return nil if no restarters are provided", func() {
+	It("should return nil if no restarters are provided", func() {
 		// when
 		err, requeue := restarter.Restart(context.Background(), &operatorv1alpha2.Istio{}, nil)
 
@@ -34,7 +34,7 @@ var _ = Describe("Restart", func() {
 		Expect(requeue).To(BeFalse())
 	})
 
-	It("Should invoke Restart", func() {
+	It("should invoke Restart", func() {
 		// given
 		r := &restarterMock{}
 
@@ -47,7 +47,7 @@ var _ = Describe("Restart", func() {
 		Expect(r.RestartCalled()).Should(BeTrue())
 	})
 
-	It("Should return error if Restart fails", func() {
+	It("should return error if Restart fails", func() {
 		// given
 		r := &restarterMock{err: described_errors.NewDescribedError(errors.New("restart error"), "")}
 
@@ -59,7 +59,7 @@ var _ = Describe("Restart", func() {
 		Expect(requeue).To(BeFalse())
 	})
 
-	It("Should return error with Error level when restarters return Error and Warning level errors", func() {
+	It("should return error with Error level when restarters return Error and Warning level errors", func() {
 		// given
 		r1 := &restarterMock{err: described_errors.NewDescribedError(errors.New("restart error"), "")}
 		r2 := &restarterMock{err: described_errors.NewDescribedError(errors.New("restart warning"), "").SetWarning()}
@@ -72,7 +72,7 @@ var _ = Describe("Restart", func() {
 		Expect(requeue).To(BeFalse())
 	})
 
-	It("Should respect requeue condition if one of the restarters return it", func() {
+	It("should respect requeue condition if one of the restarters return it", func() {
 		// given
 		r1 := &restarterMock{requeue: false}
 		r2 := &restarterMock{requeue: true}

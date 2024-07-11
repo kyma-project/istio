@@ -156,7 +156,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		}
 		return ctrl.Result{}, err
 	} else if requeue {
-		return r.requeueReconciliation(ctx, &istioCR, installationErr, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIstioInstallUninstallFailed))
+		return r.requeueReconciliationWithoutError()
 	}
 
 	return r.finishReconcile(ctx, &istioCR, istioImageVersion.Tag())
@@ -174,6 +174,11 @@ func (r *IstioReconciler) requeueReconciliation(ctx context.Context, istioCR *op
 
 	r.log.Error(err, "Reconcile failed")
 	return ctrl.Result{}, err
+}
+
+func (r *IstioReconciler) requeueReconciliationWithoutError() (ctrl.Result, error) {
+	r.log.Info("Reconcile requeued")
+	return ctrl.Result{Requeue: true}, nil
 }
 
 // terminateReconciliation stops the reconciliation and does not requeue the request.

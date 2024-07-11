@@ -25,7 +25,7 @@ Conditions:
 | Error      | Ready                        | False  | OlderCRExists                     | This Istio custom resource is not the oldest one and does not represent the module state |
 | Processing | Ready                        | False  | IstioInstallNotNeeded             | Istio installation is not needed                                                         |
 | Processing | Ready                        | False  | IstioInstallSucceeded             | Istio installation succeeded                                                             |
-| Processing | Ready                        | False  | IstioUninstallSucceeded           | Istio uninstallation succeeded                                                            |
+| Processing | Ready                        | False  | IstioUninstallSucceeded           | Istio uninstallation succeeded                                                           |
 | Error      | Ready                        | False  | IstioInstallUninstallFailed       | Istio install or uninstall failed                                                        |
 | Error      | Ready                        | False  | IstioCustomResourceMisconfigured  | Istio custom resource has invalid configuration                                          |
 | Warning    | Ready                        | False  | IstioCustomResourcesDangling      | Istio deletion blocked because of existing Istio custom resources                        |
@@ -33,6 +33,7 @@ Conditions:
 | Error      | Ready                        | False  | CustomResourcesReconcileFailed    | Custom resources reconciliation failed                                                   |
 | Processing | ProxySidecarRestartSucceeded | True   | ProxySidecarRestartSucceeded      | Proxy sidecar restart succeeded                                                          |
 | Error      | ProxySidecarRestartSucceeded | False  | ProxySidecarRestartFailed         | Proxy sidecar restart failed                                                             |
+| Processing | ProxySidecarRestartSucceeded | False  | ProxySidecarPartiallySucceeded    | Proxy sidecar restart partially succeeded                                                |
 | Warning    | ProxySidecarRestartSucceeded | False  | ProxySidecarManualRestartRequired | Proxy sidecar manual restart is required for some workloads                              |
 | Processing | Ready                        | False  | IngressGatewayReconcileSucceeded  | Istio Ingress Gateway reconciliation succeeded                                           |
 | Error      | Ready                        | False  | IngressGatewayReconcileFailed     | Istio Ingress Gateway reconciliation failed                                              |

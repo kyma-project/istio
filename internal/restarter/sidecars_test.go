@@ -31,7 +31,7 @@ import (
 )
 
 var _ = Describe("SidecarsRestarter reconciliation", func() {
-	It("Should fail proxy reset if Istio pods do not match target version", func() {
+	It("should fail proxy reset if Istio pods do not match target version", func() {
 		// given
 		numTrustedProxies := 1
 		istioCr := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
@@ -58,10 +58,13 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		Expect(err.Level()).To(Equal(described_errors.Error))
 		Expect(err.Error()).To(ContainSubstring("istio-system Pods version 1.16.0 do not match istio operator version 1.16.1"))
 		Expect(requeue).To(BeFalse())
+		Expect((*istioCr.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeProxySidecarRestartSucceeded)))
+		Expect((*istioCr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonProxySidecarRestartFailed)))
 		Expect((*istioCr.Status.Conditions)[0].Message).To(Equal("Proxy sidecar restart failed"))
+		Expect((*istioCr.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 	})
 
-	It("Should succeed proxy reset even if more than 5 proxies could not be reset and will return a warning", func() {
+	It("should succeed proxy reset even if more than 5 proxies could not be reset and will return a warning", func() {
 		// given
 		numTrustedProxies := 1
 		istioCr := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
@@ -117,10 +120,13 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Level()).To(Equal(described_errors.Warning))
 		Expect(requeue).To(BeFalse())
+		Expect((*istioCr.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeProxySidecarRestartSucceeded)))
+		Expect((*istioCr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonProxySidecarManualRestartRequired)))
 		Expect((*istioCr.Status.Conditions)[0].Message).To(ContainSubstring("The sidecars of the following workloads could not be restarted: ns1/name1, ns2/name2, ns3/name3, ns4/name4, ns5/name5 and 1 additional workload(s)"))
+		Expect((*istioCr.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 	})
 
-	It("Should succeed proxy reset even if less than 5 proxies could not be reset and will return a warning", func() {
+	It("should succeed proxy reset even if less than 5 proxies could not be reset and will return a warning", func() {
 		// given
 		numTrustedProxies := 1
 		istioCr := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
@@ -160,10 +166,13 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Level()).To(Equal(described_errors.Warning))
 		Expect(requeue).To(BeFalse())
+		Expect((*istioCr.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeProxySidecarRestartSucceeded)))
+		Expect((*istioCr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonProxySidecarManualRestartRequired)))
 		Expect((*istioCr.Status.Conditions)[0].Message).To(Equal("The sidecars of the following workloads could not be restarted: ns1/name1, ns2/name2"))
+		Expect((*istioCr.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 	})
 
-	It("Should succeed proxy reset when there is no warning or errors", func() {
+	It("should succeed proxy reset when there is no warning or errors", func() {
 		// given
 		numTrustedProxies := 1
 		istioCr := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
@@ -190,11 +199,13 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		// then
 		Expect(err).Should(Not(HaveOccurred()))
 		Expect(requeue).To(BeFalse())
+		Expect((*istioCr.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeProxySidecarRestartSucceeded)))
 		Expect((*istioCr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonProxySidecarRestartSucceeded)))
 		Expect((*istioCr.Status.Conditions)[0].Message).To(Equal(operatorv1alpha2.ConditionReasonProxySidecarRestartSucceededMessage))
+		Expect((*istioCr.Status.Conditions)[0].Status).To(Equal(metav1.ConditionTrue))
 	})
 
-	It("Should succeed proxy reset even if not all proxies are reset and requeue is required", func() {
+	It("should succeed proxy reset even if not all proxies are reset and requeue is required", func() {
 		// given
 		numTrustedProxies := 1
 		istioCr := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
@@ -223,8 +234,10 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		// then
 		Expect(err).ToNot(HaveOccurred())
 		Expect(requeue).To(BeTrue())
+		Expect((*istioCr.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeProxySidecarRestartSucceeded)))
 		Expect((*istioCr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonProxySidecarRestartPartiallySucceeded)))
 		Expect((*istioCr.Status.Conditions)[0].Message).To(Equal(operatorv1alpha2.ConditionReasonProxySidecarRestartPartiallySucceededMessage))
+		Expect((*istioCr.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 	})
 })
 

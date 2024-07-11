@@ -44,7 +44,7 @@ func (p *ProxyReset) ProxyReset(ctx context.Context, c client.Client, expectedIm
 	if !hasMorePodsToRestart {
 		logger.Info("Proxy reset completed")
 	} else {
-		logger.Info("Proxy reset partially completed")
+		logger.Info("Proxy reset only partially completed")
 	}
 
 	return warnings, hasMorePodsToRestart, nil

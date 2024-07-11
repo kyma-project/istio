@@ -2,6 +2,7 @@ package clusterconfig_test
 
 import (
 	"context"
+
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
@@ -23,7 +24,7 @@ const (
 )
 
 var _ = Describe("GetClusterProvider", func() {
-	It("Should return other when cluster provider is unknown", func() {
+	It("should return other when cluster provider is unknown", func() {
 		//given
 		node := corev1.Node{
 			ObjectMeta: v1.ObjectMeta{
@@ -41,7 +42,7 @@ var _ = Describe("GetClusterProvider", func() {
 		Expect(err).To(BeNil())
 		Expect(p).To(Equal("other"))
 	})
-	It("Should return 'aws' for clusters provisioned on AWS nodes", func() {
+	It("should return 'aws' for clusters provisioned on AWS nodes", func() {
 		//given
 		node := corev1.Node{
 			ObjectMeta: v1.ObjectMeta{
@@ -54,7 +55,7 @@ var _ = Describe("GetClusterProvider", func() {
 		Expect(err).To(BeNil())
 		Expect(p).To(Equal("aws"))
 	})
-	It("Should return 'other' for clusters without nodes", func() {
+	It("should return 'other' for clusters without nodes", func() {
 		//given
 		client := createFakeClient()
 		p, err := clusterconfig.GetClusterProvider(context.TODO(), client)

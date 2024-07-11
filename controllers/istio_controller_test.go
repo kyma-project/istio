@@ -322,7 +322,6 @@ var _ = Describe("Istio Controller", func() {
 
 			Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
 			Expect(*updatedIstioCR.Status.Conditions).To(HaveLen(1))
-
 			Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
 			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonReconcileSucceeded)))
 			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionTrue))
@@ -413,7 +412,6 @@ var _ = Describe("Istio Controller", func() {
 
 			Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
 			Expect(*updatedIstioCR.Status.Conditions).To(HaveLen(1))
-
 			Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
 			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonIstioInstallUninstallFailed)))
 			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
@@ -519,7 +517,6 @@ var _ = Describe("Istio Controller", func() {
 
 			Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
 			Expect(*updatedIstioCR.Status.Conditions).To(HaveLen(1))
-
 			Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
 			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonReconcileSucceeded)))
 			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionTrue))
@@ -574,7 +571,6 @@ var _ = Describe("Istio Controller", func() {
 
 			Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
 			Expect(*updatedIstioCR.Status.Conditions).To(HaveLen(1))
-
 			Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
 			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonOlderCRExists)))
 			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
@@ -618,7 +614,6 @@ var _ = Describe("Istio Controller", func() {
 
 			Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
 			Expect(*updatedIstioCR.Status.Conditions).To(HaveLen(1))
-
 			Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
 			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonReconcileFailed)))
 			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
@@ -680,7 +675,6 @@ var _ = Describe("Istio Controller", func() {
 
 			Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
 			Expect(*updatedIstioCR.Status.Conditions).To(HaveLen(1))
-
 			Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
 			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonValidationFailed)))
 			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
@@ -721,10 +715,9 @@ var _ = Describe("Istio Controller", func() {
 			updatedIstioCR := operatorv1alpha2.Istio{}
 			Expect(fakeClient.Get(context.Background(), client.ObjectKeyFromObject(istioCR), &updatedIstioCR)).Should(Succeed())
 
+			By("Verifying that Istio CR has Condition Ready with False")
 			Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
 			Expect(*updatedIstioCR.Status.Conditions).To(HaveLen(1))
-
-			By("Verifying that Istio CR has Condition Ready with False")
 			Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
 			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonIstioInstallUninstallFailed)))
 			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
@@ -753,10 +746,9 @@ var _ = Describe("Istio Controller", func() {
 			updatedIstioCR = operatorv1alpha2.Istio{}
 			Expect(fakeClient.Get(context.Background(), client.ObjectKeyFromObject(istioCR), &updatedIstioCR)).Should(Succeed())
 
+			By("Verifying that the condition lastTransitionTime is also updated when only the reason has changed")
 			Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
 			Expect(*updatedIstioCR.Status.Conditions).To(HaveLen(1))
-
-			By("Verifying that the condition lastTransitionTime is also updated when only the reason has changed")
 			Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
 			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonCRsReconcileFailed)))
 			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
@@ -766,7 +758,6 @@ var _ = Describe("Istio Controller", func() {
 		})
 
 		Context("Restarters", func() {
-
 			It("should restart if reconciliations are successful", func() {
 				//given
 				istioCR := &operatorv1alpha2.Istio{
@@ -959,6 +950,59 @@ var _ = Describe("Istio Controller", func() {
 
 				Expect(updatedIstioCR.Status.State).Should(Equal(operatorv1alpha2.Warning))
 				Expect(updatedIstioCR.Status.Description).To(ContainSubstring("Restart Warning description"))
+			})
+
+			It("should requeue reconcile request when a restarter needs to finish work on the next reconcile", func() {
+				//given
+				istioCR := &operatorv1alpha2.Istio{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:              istioCrName,
+						Namespace:         testNamespace,
+						UID:               "1",
+						CreationTimestamp: metav1.Unix(1494505756, 0),
+						Finalizers: []string{
+							"istios.operator.kyma-project.io/istio-installation",
+						},
+					},
+				}
+
+				fakeClient := createFakeClient(istioCR)
+				ingressGatewayRestarter := &restarterMock{restarted: false}
+				proxySidecarsRestarter := &restarterMock{restarted: false, requeue: true}
+				sut := &IstioReconciler{
+					Client:                 fakeClient,
+					Scheme:                 getTestScheme(),
+					istioInstallation:      &istioInstallationReconciliationMock{},
+					istioResources:         &istioResourcesReconciliationMock{},
+					restarters:             []restarter.Restarter{ingressGatewayRestarter, proxySidecarsRestarter},
+					log:                    logr.Discard(),
+					statusHandler:          status.NewStatusHandler(fakeClient),
+					reconciliationInterval: testReconciliationInterval,
+				}
+
+				//when
+				reconcileResult, err := sut.Reconcile(context.Background(), reconcile.Request{NamespacedName: types.NamespacedName{Namespace: testNamespace, Name: istioCrName}})
+
+				//then
+				Expect(err).ToNot(HaveOccurred())
+				Expect(reconcileResult.Requeue).To(BeTrue())
+
+				Expect(ingressGatewayRestarter.RestartCalled()).To(BeTrue())
+				Expect(proxySidecarsRestarter.RestartCalled()).To(BeTrue())
+
+				updatedIstioCR := operatorv1alpha2.Istio{}
+				err = fakeClient.Get(context.Background(), client.ObjectKeyFromObject(istioCR), &updatedIstioCR)
+				Expect(err).To(Not(HaveOccurred()))
+
+				Expect(updatedIstioCR.Status.State).To(Equal(operatorv1alpha2.Processing))
+
+				By("Verifying that Istio CR has Condition Ready status with Unknown")
+				Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
+				Expect(*updatedIstioCR.Status.Conditions).To(HaveLen(1))
+				Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
+				Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonReconcileUnknown)))
+				Expect((*updatedIstioCR.Status.Conditions)[0].Message).To(Equal(operatorv1alpha2.ConditionReasonReconcileUnknownMessage))
+				Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionUnknown))
 			})
 		})
 	})

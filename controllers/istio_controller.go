@@ -176,7 +176,10 @@ func (r *IstioReconciler) requeueReconciliation(ctx context.Context, istioCR *op
 }
 
 func (r *IstioReconciler) requeueReconciliationWithoutError(ctx context.Context, istioCR *operatorv1alpha2.Istio) (ctrl.Result, error) {
-	r.statusHandler.UpdateToProcessing(ctx, istioCR)
+	statusUpdateErr := r.statusHandler.UpdateToProcessing(ctx, istioCR)
+	if statusUpdateErr != nil {
+		r.log.Error(statusUpdateErr, "Error during updating status to error")
+	}
 	r.log.Info("Reconcile requeued")
 	return ctrl.Result{Requeue: true}, nil
 }

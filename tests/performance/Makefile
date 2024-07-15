@@ -36,7 +36,7 @@ test-performance: deploy-max-replicas-istio deploy-helm test-deploy
 deploy-max-replicas-istio:
 	kubectl apply -f istio-max-replicas.yaml
 	kubectl wait --for='jsonpath={.status.state}=Ready' --timeout=5m -n kyma-system istio default
-	kubectl wait -n istio-system --for=jsonpath='{.status.loadBalancer.ingress}' service/istio-ingressgateway
+	kubectl wait -n istio-system --for=jsonpath='{.status.loadBalancer.ingress}' --timeout=5m service/istio-ingressgateway
 
 	domain=$(shell kubectl config view -o json | jq '.clusters[0].cluster.server' | sed -e "s/https:\/\/api.//" -e 's/"//g');\
 	kubectl annotate service -n istio-system istio-ingressgateway "dns.gardener.cloud/dnsnames=*.${domain}" --overwrite

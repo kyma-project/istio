@@ -71,7 +71,7 @@ func getSidecarPods(ctx context.Context, c client.Client, logger *logr.Logger, l
 		return nil, err
 	}
 
-	logger.Info("Retrieved running pods for proxy restart", "number of pods", len(podList.Items), "has more pods", podList.Continue != "")
+	logger.Info("Got running pods for proxy restart", "number of pods", len(podList.Items), "has more pods", podList.Continue != "")
 
 	podsWithSidecar := &v1.PodList{}
 	podsWithSidecar.Continue = podList.Continue
@@ -83,7 +83,6 @@ func getSidecarPods(ctx context.Context, c client.Client, logger *logr.Logger, l
 	}
 
 	logger.Info("Filtered pods with Istio sidecar", "number of pods", len(podsWithSidecar.Items))
-
 	return podsWithSidecar, nil
 }
 

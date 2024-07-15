@@ -156,6 +156,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		}
 		return ctrl.Result{}, err
 	} else if requeue {
+		r.statusHandler.SetCondition(&istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileProxyResetRequeued))
 		return r.requeueReconciliationWithoutError(ctx, &istioCR)
 	}
 

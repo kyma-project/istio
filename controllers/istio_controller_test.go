@@ -996,13 +996,13 @@ var _ = Describe("Istio Controller", func() {
 
 				Expect(updatedIstioCR.Status.State).To(Equal(operatorv1alpha2.Processing))
 
-				By("Verifying that Istio CR has Condition Ready status with Unknown")
+				By("Verifying that Istio CR has Condition Ready status with ProxyResetRequeued reason")
 				Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
 				Expect(*updatedIstioCR.Status.Conditions).To(HaveLen(1))
 				Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
-				Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonReconcileUnknown)))
-				Expect((*updatedIstioCR.Status.Conditions)[0].Message).To(Equal(operatorv1alpha2.ConditionReasonReconcileUnknownMessage))
-				Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionUnknown))
+				Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonReconcileProxyResetRequeued)))
+				Expect((*updatedIstioCR.Status.Conditions)[0].Message).To(Equal(operatorv1alpha2.ConditionReasonReconcileProxyResetRequeuedMessage))
+				Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 			})
 		})
 	})

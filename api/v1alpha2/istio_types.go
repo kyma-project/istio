@@ -36,16 +36,18 @@ const (
 	ConditionTypeProxySidecarRestartSucceeded ConditionType = "ProxySidecarRestartSucceeded"
 
 	// general
-	ConditionReasonReconcileSucceeded        ConditionReason = "ReconcileSucceeded"
-	ConditionReasonReconcileSucceededMessage                 = "Reconciliation succeeded"
-	ConditionReasonReconcileUnknown          ConditionReason = "ReconcileUnknown"
-	ConditionReasonReconcileUnknownMessage                   = "Module readiness is unknown. Either a reconciliation is progressing, or failed previously. Check status of other conditions"
-	ConditionReasonReconcileFailed           ConditionReason = "ReconcileFailed"
-	ConditionReasonReconcileFailedMessage                    = "Reconciliation failed"
-	ConditionReasonValidationFailed          ConditionReason = "ValidationFailed"
-	ConditionReasonValidationFailedMessage                   = "Reconciliation did not happen as Istio Custom Resource failed to validate"
-	ConditionReasonOlderCRExists             ConditionReason = "OlderCRExists"
-	ConditionReasonOlderCRExistsMessage                      = "This Istio custom resource is not the oldest one and does not represent the module state"
+	ConditionReasonReconcileSucceeded                 ConditionReason = "ReconcileSucceeded"
+	ConditionReasonReconcileSucceededMessage                          = "Reconciliation succeeded"
+	ConditionReasonReconcileUnknown                   ConditionReason = "ReconcileUnknown"
+	ConditionReasonReconcileUnknownMessage                            = "Module readiness is unknown. Either a reconciliation is progressing, or failed previously. Check status of other conditions"
+	ConditionReasonReconcileProxyResetRequeued        ConditionReason = "ProxyResetRequeued"
+	ConditionReasonReconcileProxyResetRequeuedMessage                 = "Proxy reset is still ongoing. Reconciliation requeued"
+	ConditionReasonReconcileFailed                    ConditionReason = "ReconcileFailed"
+	ConditionReasonReconcileFailedMessage                             = "Reconciliation failed"
+	ConditionReasonValidationFailed                   ConditionReason = "ValidationFailed"
+	ConditionReasonValidationFailedMessage                            = "Reconciliation did not happen as Istio Custom Resource failed to validate"
+	ConditionReasonOlderCRExists                      ConditionReason = "OlderCRExists"
+	ConditionReasonOlderCRExistsMessage                               = "This Istio custom resource is not the oldest one and does not represent the module state"
 
 	// install / uninstall
 	ConditionReasonIstioInstallNotNeeded               ConditionReason = "IstioInstallNotNeeded"

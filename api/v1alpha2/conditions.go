@@ -20,11 +20,12 @@ func ConditionFromReason(reason ReasonWithMessage) *metav1.Condition {
 }
 
 var conditionReasons = map[ConditionReason]conditionMeta{
-	ConditionReasonReconcileSucceeded: {Type: ConditionTypeReady, Status: metav1.ConditionTrue, Message: ConditionReasonReconcileSucceededMessage},
-	ConditionReasonReconcileFailed:    {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonReconcileFailedMessage},
-	ConditionReasonReconcileUnknown:   {Type: ConditionTypeReady, Status: metav1.ConditionUnknown, Message: ConditionReasonReconcileUnknownMessage},
-	ConditionReasonValidationFailed:   {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonValidationFailedMessage},
-	ConditionReasonOlderCRExists:      {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonOlderCRExistsMessage},
+	ConditionReasonReconcileSucceeded:          {Type: ConditionTypeReady, Status: metav1.ConditionTrue, Message: ConditionReasonReconcileSucceededMessage},
+	ConditionReasonReconcileFailed:             {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonReconcileFailedMessage},
+	ConditionReasonReconcileUnknown:            {Type: ConditionTypeReady, Status: metav1.ConditionUnknown, Message: ConditionReasonReconcileUnknownMessage},
+	ConditionReasonReconcileProxyResetRequeued: {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonReconcileProxyResetRequeuedMessage},
+	ConditionReasonValidationFailed:            {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonValidationFailedMessage},
+	ConditionReasonOlderCRExists:               {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonOlderCRExistsMessage},
 
 	ConditionReasonIstioInstallNotNeeded:        {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonIstioInstallNotNeededMessage},
 	ConditionReasonIstioInstallSucceeded:        {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonIstioInstallSucceededMessage},

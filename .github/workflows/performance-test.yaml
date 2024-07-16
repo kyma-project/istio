@@ -21,7 +21,9 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: "go.mod"
-      - run: make IMG="europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{github.sha}}" gardener-perf-test
+      - run: |
+          sha=$(./scripts/get_latest_build_sha.sh)
+          make IMG="europe-docker.pkg.dev/kyma-project/prod/istio-manager:$sha" gardener-perf-test
         shell: bash
         env:
           GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"

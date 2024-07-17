@@ -20,7 +20,7 @@ extensionProviders:
 The [log format](https://github.com/kyma-project/istio/blob/main/internal/istiooperator/istio-operator.yaml#L160) is based on the Istio default format enhanced with the attributes relevant for identifying the related trace context conform to the [w3c-tracecontext](https://www.w3.org/TR/trace-context/) protocol. See [Kyma tracing](https://kyma-project.io/#/telemetry-manager/user/03-traces) for more details on tracing. See [Istio tracing](https://kyma-project.io/#/telemetry-manager/user/03-traces?id=istio) on how to enable trace context propagation with Istio.
 
 > [!WARNING]
->  Enabling access logs may drastically increase logs volume and might quickly fill up your log storage. Also, the provided feature uses an API in alpha state, which may change in future releases.
+>  Enabling access logs may drastically increase logs volume and might quickly fill up your log storage.
 
 ## Configuration
 
@@ -52,7 +52,7 @@ Use the Telemetry API to selectively enable Istio access logs. See:
 
     ```bash
     cat <<EOF | kubectl apply -f -
-    apiVersion: telemetry.istio.io/v1alpha1
+    apiVersion: telemetry.istio.io/v1
     kind: Telemetry
     metadata:
       name: access-config
@@ -80,7 +80,7 @@ To configure label-based selection of workloads, use a [selector](https://istio.
 2. Go to **Istio > Telemetries** and select **Create**.
 3. Switch to the `YAML` section and paste the following sample configuration into the editor:
     ```yaml
-    apiVersion: telemetry.istio.io/v1alpha1
+    apiVersion: telemetry.istio.io/v1
     kind: Telemetry
     metadata:
       name: access-config
@@ -107,7 +107,7 @@ To configure label-based selection of workloads, use a [selector](https://istio.
 2. To apply the configuration, run:
     ```bash
     cat <<EOF | kubectl apply -f -
-    apiVersion: telemetry.istio.io/v1alpha1
+    apiVersion: telemetry.istio.io/v1
     kind: Telemetry
     metadata:
       name: access-config
@@ -137,7 +137,7 @@ Instead of enabling the access logs for all the individual proxies of the worklo
 2. Go to **Istio > Telemetries** and select **Create**.
 3. Switch to the `YAML` section and paste the following sample configuration into the editor:
     ```yaml
-    apiVersion: telemetry.istio.io/v1alpha1
+    apiVersion: telemetry.istio.io/v1
     kind: Telemetry
     metadata:
       name: access-config
@@ -157,7 +157,7 @@ Instead of enabling the access logs for all the individual proxies of the worklo
 1. To apply the configuration, run:
     ```bash
     cat <<EOF | kubectl apply -f -
-    apiVersion: telemetry.istio.io/v1alpha1
+    apiVersion: telemetry.istio.io/v1
     kind: Telemetry
     metadata:
       name: access-config
@@ -187,7 +187,7 @@ Enable access logs for all individual proxies of the workloads and Istio Ingress
 2. Go to **Istio > Telemetries** and select **Create**.
 3. Switch to the `YAML` section and paste the following sample configuration into the editor:
     ```yaml
-    apiVersion: telemetry.istio.io/v1alpha1
+    apiVersion: telemetry.istio.io/v1
     kind: Telemetry
     metadata:
       name: access-config
@@ -206,7 +206,7 @@ Enable access logs for all individual proxies of the workloads and Istio Ingress
 1. To apply the configuration, run:
     ```bash
     cat <<EOF | kubectl apply -f -
-    apiVersion: telemetry.istio.io/v1alpha1
+    apiVersion: telemetry.istio.io/v1
     kind: Telemetry
     metadata:
       name: access-config

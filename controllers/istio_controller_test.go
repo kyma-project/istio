@@ -986,6 +986,7 @@ var _ = Describe("Istio Controller", func() {
 				//then
 				Expect(err).ToNot(HaveOccurred())
 				Expect(reconcileResult.Requeue).To(BeTrue())
+				Expect(reconcileResult.RequeueAfter).To(Equal(time.Minute * 1))
 
 				Expect(ingressGatewayRestarter.RestartCalled()).To(BeTrue())
 				Expect(proxySidecarsRestarter.RestartCalled()).To(BeTrue())

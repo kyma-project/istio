@@ -182,7 +182,7 @@ func (r *IstioReconciler) requeueReconciliationWithoutError(ctx context.Context,
 		r.log.Error(statusUpdateErr, "Error during updating status to error")
 	}
 	r.log.Info("Reconcile requeued")
-	return ctrl.Result{Requeue: true}, nil
+	return ctrl.Result{Requeue: true, RequeueAfter: time.Minute * 1}, nil
 }
 
 // terminateReconciliation stops the reconciliation and does not requeue the request.

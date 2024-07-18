@@ -115,7 +115,7 @@ The SidecarsRestarter is responsible for keeping the proxy sidecars in the desir
 The Istio CR and the [Istio version](#istio-version) represent the desired state. Pods are restarted in chunks with limits on the number that can be restarted in one reconciliation and the number that can be listed when requesting from the Kubernetes API Server. If the number of Pods that must be restarted exceeds the limits, it happens in the next reconciliation. In such a case, the reconciliation request is requeued with a 1-minute delay to allow time for the Kubernetes scheduler to restart the Deployments.
 
 During proxy sidecars restarting phase, Istio CR will be kept in `Processing` state having following status conditions:
-- `Ready` condition set to `false` with `ReconcileRequeued` reason.
+- The `Ready` condition is set to `false` with the reason `ReconcileRequeued`.
 - The `ProxySidecarRestartSucceeded` condition is set to `false` with the reason `ProxySidecarPartiallySucceeded`.
 
 This component covers the following restart triggers:

@@ -116,7 +116,7 @@ The Istio CR and the [Istio version](#istio-version) represent the desired state
 
 During proxy sidecars restarting phase, Istio CR will be kept in `Processing` state having following status conditions:
 - `Ready` condition set to `false` with `ReconcileRequeued` reason.
-- `ProxySidecarRestartSucceeded` condition set to `false` with `ProxySidecarPartiallySucceeded` reason.
+- The `ProxySidecarRestartSucceeded` condition is set to `false` with the reason `ProxySidecarPartiallySucceeded`.
 
 This component covers the following restart triggers:
 

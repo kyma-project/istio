@@ -111,7 +111,7 @@ The predicate initiates a restart of the sidecar and Ingress Gateway if the targ
 
 ### SidecarsRestarter
 
-The SidecarsRestarter is responsible for keeping the proxy sidecars in the desired state. It restarts Pods that are in running state and are part of the service mesh having the annotation `sidecar.istio.io/status`.
+The SidecarsRestarter is responsible for keeping the proxy sidecars in the desired state. It restarts Pods that are in the `Running` state, are part of the service mesh, and have the annotation `sidecar.istio.io/status`.
 The Istio CR and [Istio Version](#istio-version) represent the desired state. Pods will be restarted in chunks with limits on how many to restart with one reconciliation and how many to list when requesting from Kubernetes API Server. If more Pods need to be restarted this will happen in next reconciliation. This happens with requeuing the reconciliation request with a delay of 1 minute to give time for the Kubernetes scheduler to restart respective deployments.
 
 During proxy sidecars restarting phase, Istio CR will be kept in `Processing` state having following status conditions:

@@ -51,13 +51,17 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		sidecarsRestarter := restarter.NewSidecarsRestarter(logr.Discard(), createFakeClient(&istioCr, istiod),
 			&MergerMock{"1.16.1-distroless"}, sidecars.NewProxyResetter(), statusHandler)
 		// when
-		err := sidecarsRestarter.Restart(context.Background(), &istioCr)
+		err, requeue := sidecarsRestarter.Restart(context.Background(), &istioCr)
 
 		// then
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Level()).To(Equal(described_errors.Error))
 		Expect(err.Error()).To(ContainSubstring("istio-system Pods version 1.16.0 do not match istio operator version 1.16.1"))
+		Expect(requeue).To(BeFalse())
+		Expect((*istioCr.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeProxySidecarRestartSucceeded)))
+		Expect((*istioCr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonProxySidecarRestartFailed)))
 		Expect((*istioCr.Status.Conditions)[0].Message).To(Equal("Proxy sidecar restart failed"))
+		Expect((*istioCr.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 	})
 
 	It("should succeed proxy reset even if more than 5 proxies could not be reset and will return a warning", func() {
@@ -102,6 +106,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 					Namespace: "ns6",
 				},
 			},
+			hasMorePods: true,
 		}
 		fakeClient := createFakeClient(&istioCr, istiod)
 		statusHandler := status.NewStatusHandler(fakeClient)
@@ -109,12 +114,16 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 			&MergerMock{"1.16.1-distroless"}, proxyResetter, statusHandler)
 
 		// when
-		err := sidecarsRestarter.Restart(context.Background(), &istioCr)
+		err, requeue := sidecarsRestarter.Restart(context.Background(), &istioCr)
 
 		// then
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Level()).To(Equal(described_errors.Warning))
+		Expect(requeue).To(BeFalse())
+		Expect((*istioCr.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeProxySidecarRestartSucceeded)))
+		Expect((*istioCr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonProxySidecarManualRestartRequired)))
 		Expect((*istioCr.Status.Conditions)[0].Message).To(ContainSubstring("The sidecars of the following workloads could not be restarted: ns1/name1, ns2/name2, ns3/name3, ns4/name4, ns5/name5 and 1 additional workload(s)"))
+		Expect((*istioCr.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 	})
 
 	It("should succeed proxy reset even if less than 5 proxies could not be reset and will return a warning", func() {
@@ -143,6 +152,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 					Namespace: "ns2",
 				},
 			},
+			hasMorePods: true,
 		}
 		fakeClient := createFakeClient(&istioCr, istiod)
 		statusHandler := status.NewStatusHandler(fakeClient)
@@ -150,12 +160,16 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 			&MergerMock{"1.16.1-distroless"}, proxyResetter, statusHandler)
 
 		// when
-		err := sidecarsRestarter.Restart(context.Background(), &istioCr)
+		err, requeue := sidecarsRestarter.Restart(context.Background(), &istioCr)
 
 		// then
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Level()).To(Equal(described_errors.Warning))
+		Expect(requeue).To(BeFalse())
+		Expect((*istioCr.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeProxySidecarRestartSucceeded)))
+		Expect((*istioCr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonProxySidecarManualRestartRequired)))
 		Expect((*istioCr.Status.Conditions)[0].Message).To(Equal("The sidecars of the following workloads could not be restarted: ns1/name1, ns2/name2"))
+		Expect((*istioCr.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 	})
 
 	It("should succeed proxy reset when there is no warning or errors", func() {
@@ -180,12 +194,50 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 			&MergerMock{"1.16.1-distroless"}, proxyResetter, statusHandler)
 
 		// when
-		err := sidecarsRestarter.Restart(context.Background(), &istioCr)
+		err, requeue := sidecarsRestarter.Restart(context.Background(), &istioCr)
 
 		// then
 		Expect(err).Should(Not(HaveOccurred()))
+		Expect(requeue).To(BeFalse())
+		Expect((*istioCr.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeProxySidecarRestartSucceeded)))
 		Expect((*istioCr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonProxySidecarRestartSucceeded)))
 		Expect((*istioCr.Status.Conditions)[0].Message).To(Equal(operatorv1alpha2.ConditionReasonProxySidecarRestartSucceededMessage))
+		Expect((*istioCr.Status.Conditions)[0].Status).To(Equal(metav1.ConditionTrue))
+	})
+
+	It("should succeed proxy reset even if not all proxies are reset and requeue is required", func() {
+		// given
+		numTrustedProxies := 1
+		istioCr := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
+			Name:            "default",
+			ResourceVersion: "1",
+			Annotations:     map[string]string{},
+		},
+			Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
+					NumTrustedProxies: &numTrustedProxies,
+				},
+			},
+		}
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.1")
+		proxyResetter := &proxyResetterMock{
+			hasMorePods: true,
+		}
+		fakeClient := createFakeClient(&istioCr, istiod)
+		statusHandler := status.NewStatusHandler(fakeClient)
+		sidecarsRestarter := restarter.NewSidecarsRestarter(logr.Discard(), createFakeClient(&istioCr, istiod),
+			&MergerMock{"1.16.1-distroless"}, proxyResetter, statusHandler)
+
+		// when
+		err, requeue := sidecarsRestarter.Restart(context.Background(), &istioCr)
+
+		// then
+		Expect(err).ToNot(HaveOccurred())
+		Expect(requeue).To(BeTrue())
+		Expect((*istioCr.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeProxySidecarRestartSucceeded)))
+		Expect((*istioCr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonProxySidecarRestartPartiallySucceeded)))
+		Expect((*istioCr.Status.Conditions)[0].Message).To(Equal(operatorv1alpha2.ConditionReasonProxySidecarRestartPartiallySucceededMessage))
+		Expect((*istioCr.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 	})
 })
 
@@ -249,10 +301,11 @@ func (m MergerMock) GetIstioImageVersion() (istiooperator.IstioImageVersion, err
 func (m MergerMock) SetIstioInstallFlavor(_ clusterconfig.ClusterSize) {}
 
 type proxyResetterMock struct {
-	err             error
 	restartWarnings []restart.RestartWarning
+	hasMorePods     bool
+	err             error
 }
 
-func (p *proxyResetterMock) ProxyReset(_ context.Context, _ client.Client, _ pods.SidecarImage, _ v1.ResourceRequirements, _ []filter.SidecarProxyPredicate, _ *logr.Logger) ([]restart.RestartWarning, error) {
-	return p.restartWarnings, p.err
+func (p *proxyResetterMock) ProxyReset(_ context.Context, _ client.Client, _ pods.SidecarImage, _ v1.ResourceRequirements, _ []filter.SidecarProxyPredicate, _ *logr.Logger) ([]restart.RestartWarning, bool, error) {
+	return p.restartWarnings, p.hasMorePods, p.err
 }

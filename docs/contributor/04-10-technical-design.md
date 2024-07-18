@@ -103,7 +103,7 @@ Additionally, clear status reporting and the ability to provide detailed informa
 
 ### Restart Predicates
 
-The [SidecarRestarter](#sidecarsrestarter) and [IngressGatewayRestarter](#ingressgatewayrestarter)  components use Restart Predicates.
+The [SidecarRestarter](#sidecarsrestarter) and [IngressGatewayRestarter](#ingressgatewayrestarter) components use Restart Predicates.
 Depending on the implemented interfaces, a predicate can trigger a restart of Ingress Gateways, Proxy Sidecars, or both Ingress Gateways and Proxy Sidecars.
 
 For cases where it isn't trivial to check whether the configuration has been applied to the cluster state, Restart Predicates use a timestamp-based approach. For example, the `envoy_filter_allow_partial_referer` resource has the `istios.operator.kyma-project.io/updatedAt` annotation, which includes the timestamp of its last update.
@@ -111,9 +111,12 @@ The predicate initiates a restart of the sidecar and Ingress Gateway if the targ
 
 ### SidecarsRestarter
 
-The SidecarsRestarter is responsible for keeping the proxy sidecars in the desired state. It restarts Pods that are part of the service mesh or
-that must be added to the service mesh.
-The Istio CR and [Istio Version](#istio-version) represent the desired state.
+The SidecarsRestarter is responsible for keeping the proxy sidecars in the desired state. It restarts Pods that are in the `Running` state, are part of the service mesh, and have the annotation `sidecar.istio.io/status`.
+The Istio CR and the [Istio version](#istio-version) represent the desired state. Pods are restarted in chunks with limits on the number that can be restarted in one reconciliation and the number that can be listed when requesting from the Kubernetes API Server. If the number of Pods that must be restarted exceeds the limits, it happens in the next reconciliation. In such a case, the reconciliation request is requeued with a 1-minute delay to allow time for the Kubernetes scheduler to restart the Deployments.
+
+During the proxy sidecars restarting phase, the Istio CR remains in the `Processing` state having the following status conditions:
+- The `Ready` condition is set to `false` with the reason `ReconcileRequeued`.
+- The `ProxySidecarRestartSucceeded` condition is set to `false` with the reason `ProxySidecarPartiallySucceeded`.
 
 This component covers the following restart triggers:
 

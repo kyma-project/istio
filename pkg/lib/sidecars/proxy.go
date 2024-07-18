@@ -12,8 +12,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const (
+	podsToRestartLimit = 30
+	podsToListLimit    = 100
+)
+
 type ProxyResetter interface {
-	ProxyReset(ctx context.Context, c client.Client, expectedImage pods.SidecarImage, expectedResources v1.ResourceRequirements, predicates []filter.SidecarProxyPredicate, logger *logr.Logger) ([]restart.RestartWarning, error)
+	ProxyReset(ctx context.Context, c client.Client, expectedImage pods.SidecarImage, expectedResources v1.ResourceRequirements, predicates []filter.SidecarProxyPredicate, logger *logr.Logger) ([]restart.RestartWarning, bool, error)
 }
 
 type ProxyReset struct {
@@ -23,18 +28,26 @@ func NewProxyResetter() *ProxyReset {
 	return &ProxyReset{}
 }
 
-func (p *ProxyReset) ProxyReset(ctx context.Context, c client.Client, expectedImage pods.SidecarImage, expectedResources v1.ResourceRequirements, predicates []filter.SidecarProxyPredicate, logger *logr.Logger) ([]restart.RestartWarning, error) {
-	podListToRestart, err := pods.GetPodsToRestart(ctx, c, expectedImage, expectedResources, predicates, logger)
+func (p *ProxyReset) ProxyReset(ctx context.Context, c client.Client, expectedImage pods.SidecarImage, expectedResources v1.ResourceRequirements, predicates []filter.SidecarProxyPredicate, logger *logr.Logger) ([]restart.RestartWarning, bool, error) {
+	limits := pods.NewPodsRestartLimits(podsToRestartLimit, podsToListLimit)
+	podsToRestart, err := pods.GetPodsToRestart(ctx, c, expectedImage, expectedResources, predicates, limits, logger)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
-	warnings, err := restart.Restart(ctx, c, podListToRestart, logger)
+	// if there are more pods to restart there should be a continue token in the pod list
+	hasMorePodsToRestart := podsToRestart.Continue != ""
+
+	warnings, err := restart.Restart(ctx, c, podsToRestart, logger)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
-	logger.Info("Proxy reset done")
+	if !hasMorePodsToRestart {
+		logger.Info("Proxy reset completed")
+	} else {
+		logger.Info("Proxy reset only partially completed")
+	}
 
-	return warnings, nil
+	return warnings, hasMorePodsToRestart, nil
 }

@@ -37,28 +37,28 @@ func NewIngressGatewayRestarter(client client.Client, predicates []filter.Ingres
 	}
 }
 
-func (r *IngressGatewayRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio) described_errors.DescribedError {
+func (r *IngressGatewayRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio) (described_errors.DescribedError, bool) {
 	ctrl.Log.Info("Restarting Istio Ingress Gateway")
 
 	r.predicates = append(r.predicates, ingressgateway.NewRestartPredicate(istioCR))
 	for _, predicate := range r.predicates {
 		evaluator, err := predicate.NewIngressGatewayEvaluator(ctx)
 		if err != nil {
-			return described_errors.NewDescribedError(err, "Could not create Ingress Gateway restart evaluator")
+			return described_errors.NewDescribedError(err, "Could not create Ingress Gateway restart evaluator"), false
 		}
 
 		if evaluator.RequiresIngressGatewayRestart() {
 			err = restartIngressGateway(ctx, r.client)
 			if err != nil {
 				r.statusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonIngressGatewayRestartFailed))
-				return described_errors.NewDescribedError(err, "Failed to restart Ingress Gateway")
+				return described_errors.NewDescribedError(err, "Failed to restart Ingress Gateway"), false
 			}
 		}
 	}
 
 	r.statusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonIngressGatewayRestartSucceeded))
 	ctrl.Log.Info("Successfully restarted Istio Ingress Gateway")
-	return nil
+	return nil, false
 }
 
 func restartIngressGateway(ctx context.Context, k8sClient client.Client) error {

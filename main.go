@@ -18,13 +18,15 @@ package main
 
 import (
 	"flag"
+	"os"
+	"time"
+
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	v1 "k8s.io/api/apps/v1"
-	"os"
+	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"time"
 
 	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
@@ -153,12 +155,13 @@ func createManager(flagVar *FlagVar) (manager.Manager, error) {
 			Cache: &client.CacheOptions{
 				// The cache is disabled for these objects to avoid huge memory usage.
 				// Having the cache enabled had previously caused memory usage
-				//to have a significant peak when sidecar restart was triggered.
+				// to have a significant peak when sidecar restart was triggered.
 				DisableFor: []client.Object{
 					&v1.DaemonSet{},
 					&v1.Deployment{},
 					&v1.StatefulSet{},
 					&v1.ReplicaSet{},
+					&corev1.Pod{}, // this is required for the sidecar restart when listing pods with limit
 				},
 			},
 		},

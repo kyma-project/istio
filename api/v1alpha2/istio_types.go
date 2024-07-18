@@ -40,6 +40,8 @@ const (
 	ConditionReasonReconcileSucceededMessage                 = "Reconciliation succeeded"
 	ConditionReasonReconcileUnknown          ConditionReason = "ReconcileUnknown"
 	ConditionReasonReconcileUnknownMessage                   = "Module readiness is unknown. Either a reconciliation is progressing, or failed previously. Check status of other conditions"
+	ConditionReasonReconcileRequeued         ConditionReason = "ReconcileRequeued"
+	ConditionReasonReconcileRequeuedMessage                  = "Proxy reset is still ongoing. Reconciliation requeued"
 	ConditionReasonReconcileFailed           ConditionReason = "ReconcileFailed"
 	ConditionReasonReconcileFailedMessage                    = "Reconciliation failed"
 	ConditionReasonValidationFailed          ConditionReason = "ValidationFailed"
@@ -70,12 +72,14 @@ const (
 	ConditionReasonCRsReconcileFailedMessage                    = "Custom resources reconciliation failed"
 
 	// proxy reset
-	ConditionReasonProxySidecarRestartSucceeded             ConditionReason = "ProxySidecarRestartSucceeded"
-	ConditionReasonProxySidecarRestartSucceededMessage                      = "Proxy sidecar restart succeeded"
-	ConditionReasonProxySidecarRestartFailed                ConditionReason = "ProxySidecarRestartFailed"
-	ConditionReasonProxySidecarRestartFailedMessage                         = "Proxy sidecar restart failed"
-	ConditionReasonProxySidecarManualRestartRequired        ConditionReason = "ProxySidecarManualRestartRequired"
-	ConditionReasonProxySidecarManualRestartRequiredMessage                 = "Proxy sidecar manual restart is required for some workloads"
+	ConditionReasonProxySidecarRestartSucceeded                 ConditionReason = "ProxySidecarRestartSucceeded"
+	ConditionReasonProxySidecarRestartSucceededMessage                          = "Proxy sidecar restart succeeded"
+	ConditionReasonProxySidecarRestartFailed                    ConditionReason = "ProxySidecarRestartFailed"
+	ConditionReasonProxySidecarRestartFailedMessage                             = "Proxy sidecar restart failed"
+	ConditionReasonProxySidecarRestartPartiallySucceeded        ConditionReason = "ProxySidecarRestartPartiallySucceeded"
+	ConditionReasonProxySidecarRestartPartiallySucceededMessage                 = "Proxy sidecar restart partially succeeded"
+	ConditionReasonProxySidecarManualRestartRequired            ConditionReason = "ProxySidecarManualRestartRequired"
+	ConditionReasonProxySidecarManualRestartRequiredMessage                     = "Proxy sidecar manual restart is required for some workloads"
 
 	// ingress gateway
 	ConditionReasonIngressGatewayRestartSucceeded        ConditionReason = "IngressGatewayRestartSucceeded"

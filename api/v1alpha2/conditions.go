@@ -23,6 +23,7 @@ var conditionReasons = map[ConditionReason]conditionMeta{
 	ConditionReasonReconcileSucceeded: {Type: ConditionTypeReady, Status: metav1.ConditionTrue, Message: ConditionReasonReconcileSucceededMessage},
 	ConditionReasonReconcileFailed:    {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonReconcileFailedMessage},
 	ConditionReasonReconcileUnknown:   {Type: ConditionTypeReady, Status: metav1.ConditionUnknown, Message: ConditionReasonReconcileUnknownMessage},
+	ConditionReasonReconcileRequeued:  {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonReconcileRequeuedMessage},
 	ConditionReasonValidationFailed:   {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonValidationFailedMessage},
 	ConditionReasonOlderCRExists:      {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonOlderCRExistsMessage},
 
@@ -37,9 +38,10 @@ var conditionReasons = map[ConditionReason]conditionMeta{
 	ConditionReasonCRsReconcileSucceeded: {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonCRsReconcileSucceededMessage},
 	ConditionReasonCRsReconcileFailed:    {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonCRsReconcileFailedMessage},
 
-	ConditionReasonProxySidecarRestartSucceeded:      {Type: ConditionTypeProxySidecarRestartSucceeded, Status: metav1.ConditionTrue, Message: ConditionReasonProxySidecarRestartSucceededMessage},
-	ConditionReasonProxySidecarRestartFailed:         {Type: ConditionTypeProxySidecarRestartSucceeded, Status: metav1.ConditionFalse, Message: ConditionReasonProxySidecarRestartFailedMessage},
-	ConditionReasonProxySidecarManualRestartRequired: {Type: ConditionTypeProxySidecarRestartSucceeded, Status: metav1.ConditionFalse, Message: ConditionReasonProxySidecarManualRestartRequiredMessage},
+	ConditionReasonProxySidecarRestartSucceeded:          {Type: ConditionTypeProxySidecarRestartSucceeded, Status: metav1.ConditionTrue, Message: ConditionReasonProxySidecarRestartSucceededMessage},
+	ConditionReasonProxySidecarRestartFailed:             {Type: ConditionTypeProxySidecarRestartSucceeded, Status: metav1.ConditionFalse, Message: ConditionReasonProxySidecarRestartFailedMessage},
+	ConditionReasonProxySidecarRestartPartiallySucceeded: {Type: ConditionTypeProxySidecarRestartSucceeded, Status: metav1.ConditionFalse, Message: ConditionReasonProxySidecarRestartPartiallySucceededMessage},
+	ConditionReasonProxySidecarManualRestartRequired:     {Type: ConditionTypeProxySidecarRestartSucceeded, Status: metav1.ConditionFalse, Message: ConditionReasonProxySidecarManualRestartRequiredMessage},
 
 	ConditionReasonIngressGatewayRestartSucceeded: {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonIngressGatewayRestartSucceededMessage},
 	ConditionReasonIngressGatewayRestartFailed:    {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonIngressGatewayRestartFailedMessage},

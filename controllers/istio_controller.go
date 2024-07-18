@@ -146,7 +146,8 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return r.requeueReconciliation(ctx, &istioCR, resourcesErr, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonCRsReconcileFailed))
 	}
 
-	if err := restarter.Restart(ctx, &istioCR, r.restarters); err != nil {
+	err, requeue := restarter.Restart(ctx, &istioCR, r.restarters)
+	if err != nil {
 		// We don't want to use the requeueReconciliation function here, since there is condition handling in this function, and we
 		// need to clean this up, before we can use it here as conditions are already handled in the restarters.
 		statusUpdateErr := r.statusHandler.UpdateToError(ctx, &istioCR, err)
@@ -154,6 +155,9 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			r.log.Error(statusUpdateErr, "Error during updating status to error")
 		}
 		return ctrl.Result{}, err
+	} else if requeue {
+		r.statusHandler.SetCondition(&istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileRequeued))
+		return r.requeueReconciliationWithoutError(ctx, &istioCR)
 	}
 
 	return r.finishReconcile(ctx, &istioCR, istioImageVersion.Tag())
@@ -168,9 +172,17 @@ func (r *IstioReconciler) requeueReconciliation(ctx context.Context, istioCR *op
 	if statusUpdateErr != nil {
 		r.log.Error(statusUpdateErr, "Error during updating status to error")
 	}
-
 	r.log.Error(err, "Reconcile failed")
 	return ctrl.Result{}, err
+}
+
+func (r *IstioReconciler) requeueReconciliationWithoutError(ctx context.Context, istioCR *operatorv1alpha2.Istio) (ctrl.Result, error) {
+	statusUpdateErr := r.statusHandler.UpdateToProcessing(ctx, istioCR)
+	if statusUpdateErr != nil {
+		r.log.Error(statusUpdateErr, "Error during updating status to error")
+	}
+	r.log.Info("Reconcile requeued")
+	return ctrl.Result{Requeue: true, RequeueAfter: time.Minute * 1}, nil
 }
 
 // terminateReconciliation stops the reconciliation and does not requeue the request.

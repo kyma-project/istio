@@ -24,15 +24,15 @@ require (
 	golang.org/x/time v0.5.0
 	google.golang.org/protobuf v1.34.2
 	gopkg.in/yaml.v3 v3.0.1
-	istio.io/api v1.22.2-0.20240619002433-8214ad1c7bd7
-	istio.io/client-go v1.22.2-0.20240619002733-a3ff9edd813c
-	istio.io/istio v0.0.0-20240626183513-204da5ba47f2
+	istio.io/api v1.22.3
+	istio.io/client-go v1.22.3
+	istio.io/istio v0.0.0-20240703124446-b880f7040530
 	k8s.io/api v0.30.3
-	k8s.io/apiextensions-apiserver v0.30.3
+	k8s.io/apiextensions-apiserver v0.30.0
 	k8s.io/apimachinery v0.30.3
 	k8s.io/client-go v0.30.3
-	k8s.io/kubectl v0.30.3
-	k8s.io/utils v0.0.0-20240711033017-18e509b52bc8
+	k8s.io/kubectl v0.30.0
+	k8s.io/utils v0.0.0-20240423183400-0849a56e8f22
 	sigs.k8s.io/controller-runtime v0.18.0 // Since we are using the Istio library directly, we should also use the controller-runtime version that is used by Istio.
 	sigs.k8s.io/yaml v1.4.0
 )

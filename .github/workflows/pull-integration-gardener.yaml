@@ -41,6 +41,9 @@ jobs:
     if: ${{ github.event.pull_request.draft == false && needs.filter-changes.outputs.check == 'true' }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
       - uses: ./.github/actions/build-manager-image
         with:
           operator-image-name: "europe-central2-docker.pkg.dev/sap-se-cx-kyma-goat/istio/istio-manager:PR-${{github.event.number}}"

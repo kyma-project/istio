@@ -28,10 +28,10 @@ require (
 	istio.io/client-go v1.22.3
 	istio.io/istio v0.0.0-20240703124446-b880f7040530
 	k8s.io/api v0.30.3
-	k8s.io/apiextensions-apiserver v0.30.0
+	k8s.io/apiextensions-apiserver v0.30.3
 	k8s.io/apimachinery v0.30.3
 	k8s.io/client-go v0.30.3
-	k8s.io/kubectl v0.30.0
+	k8s.io/kubectl v0.30.3
 	k8s.io/utils v0.0.0-20240423183400-0849a56e8f22
 	sigs.k8s.io/controller-runtime v0.18.0 // Since we are using the Istio library directly, we should also use the controller-runtime version that is used by Istio.
 	sigs.k8s.io/yaml v1.4.0

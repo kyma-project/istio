@@ -4,7 +4,7 @@ This tutorial shows how to expose and secure an HTTPBin Service using an externa
 
 ## Prerequisites
 
-* Kyma installation with the Istio module enabled. If you use a Kyma domain, also the API Gateway module must be enabled.
+* Kyma installation with the Istio module added. If you use a Kyma domain, also the API Gateway module must be added.
 * Prepare a domain you want to use and export its name as an environment variable:
     ```
     export DOMAIN_TO_EXPOSE_WORKLOADS={DOMAIN_NAME}

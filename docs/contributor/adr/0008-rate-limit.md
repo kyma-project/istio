@@ -1,4 +1,4 @@
-****# Rate Limit
+# Rate Limit
 
 ## Status
 

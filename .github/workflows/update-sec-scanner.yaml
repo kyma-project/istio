@@ -1,7 +1,7 @@
 name: Update sec-scanners-config.yaml
 on:
   schedule:
-    - cron: '0 21 * * *'
+    - cron: '21 * * * *'
 permissions:
   contents: write
 jobs:

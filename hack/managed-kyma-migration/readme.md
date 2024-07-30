@@ -71,7 +71,7 @@ Executing `kcp taskrun` requires the path to the kubeconfig file of the correspo
    ```
 <!-- markdown-link-check-disable-next-line -->
 10. Verify that no APIGateway module is in Warning state. This can be done by using the [API-Gateway Monitoring Dashboard](https://plutono.cp.dev.kyma.cloud.sap/d/6meO06VSk/modules-api-gateway?orgId=1).
-11. If there are APIGateway CRs in the warning state, the cluster might have been created without Istio Module. In this case it needs to be enabled in the Kyma CR manually.
+11. If there are APIGateway CRs in the warning state, the cluster might have been created without Istio Module. In this case it needs to be added in the Kyma CR manually.
 
 
 ### Stage

@@ -22,6 +22,7 @@ This centralised approach enforces shared stateful rate limits, applicable to al
 mesh.
 Currently, there are limitations that prevent using Redis on managed Kyma clusters. Because global rate limiting relies
 on Redis for persistence, the global rate limiting is not in scope of this ADR.
+Additionally, the metrics for rate limiting is also not in scope of this ADR.
 
 ## Decision
 
@@ -52,25 +53,40 @@ For Istio Ingress Gateway rate limiting, the PatchContext must be set to `GATEWA
 
 ### Local Rate Limiting Descriptors Support
 
-The RateLimit CR must support configuration of rate limiting based on the request descriptors. It must be possible to configure different rate limits for different request descriptors.
-It is also possible to mix request descriptors, e.g. path and headers, in the same RateLimit CR.
-To support [RateLimit Action](https://www.envoyproxy.io/docs/envoy/latest/api-v3/config/route/v3/route_components.proto#envoy-v3-api-field-config-route-v3-ratelimit-action-request-headers), which is required for the descriptors, the Envoy rate limit filter must be applied to the `HTTP_ROUTE`. This requires applying a global rate limit filter with a minimalistic configuration to `HTTP_FILTER`.
+The RateLimit CR must support configuration of rate limiting based on the request descriptors. It must be possible to
+configure different rate limits for different request descriptors.
+It is also possible to combine request descriptors, for example rate limit on path and headers, in the same rate limit
+configuration. In this case the rate limit is applied only if all specified descriptors are present in the request.
+To
+support [RateLimit Action](https://www.envoyproxy.io/docs/envoy/latest/api-v3/config/route/v3/route_components.proto#envoy-v3-api-field-config-route-v3-ratelimit-action-request-headers),
+which is required for the descriptors, the Envoy rate limit filter must be applied to the `HTTP_ROUTE`. This requires
+applying a global rate limit filter with a minimalistic configuration to `HTTP_FILTER`.
 
-The RateLimit CR must have a default rate limit bucket configured as this is required by the [Envoy Local Rate limit filter](https://www.envoyproxy.io/docs/envoy/latest/api-v3/extensions/filters/http/local_ratelimit/v3/local_rate_limit.proto#extensions-filters-http-local-ratelimit-v3-localratelimit) if it's configured on the route level. 
-This default bucket is used as a fallback for requests that don't match any other local rate limit configuration in the CR.
-To support fallback behavior when multiple local configurations exist, the created EnvoyFilter must include`always_consume_default_token_bucket: false` in the Local Rate limit filter.
+The RateLimit CR must have a default rate limit bucket configured as this is required by
+the [Envoy Local Rate limit filter](https://www.envoyproxy.io/docs/envoy/latest/api-v3/extensions/filters/http/local_ratelimit/v3/local_rate_limit.proto#extensions-filters-http-local-ratelimit-v3-localratelimit)
+if it's configured on the route level.
+This default bucket is used as a fallback for requests that don't match any other local rate limit configuration in the
+CR.
+To support fallback behavior when multiple local configurations exist, the created EnvoyFilter must
+include `always_consume_default_token_bucket: false` in the Local Rate limit filter.
 
 #### Rate Limit by Path
-The RateLimit CR allows configuring rate limits for specific paths exposed by the workload. The `local.rateLimits` field is a list of additional rate limit configurations that contain matching criteria such as the path.
-Since a shared bucket between multiple paths is not possible for local rate limiting, each entry in the `local.rateLimits` list supports only a single path. To avoid confusion, if multiple paths have the same bucket configuration, 
+
+The RateLimit CR allows configuring rate limits for specific paths exposed by the workload. The `local.rateLimits` field
+is a list of additional rate limit configurations that contain matching criteria such as the path.
+Since a shared bucket between multiple paths is not possible for local rate limiting, each entry in
+the `local.rateLimits` list supports only a single path. To avoid confusion, if multiple paths have the same bucket
+configuration,
 they need to be added as separate entries in the `local.rateLimits` list.
 
-There is a limitation with path matching in local rate limiting. Descriptor values are static and do not support wildcards (`*`), so paths with path or query parameters will be treated as separate paths. 
+There is a limitation with path matching in local rate limiting. Descriptor values are static and do not support
+wildcards (`*`), so paths with path or query parameters will be treated as separate paths.
 For example, `/path`, `/path*`, and `/path?param=value` will be treated as distinct paths.
 
 Example for EnvoyFilter creation based on the RateLimit CR configuration:
 
 RateLimit CR
+
 ```yaml 
 apiVersion: operator.kyma-project.io/v1alpha1
 kind: RateLimit
@@ -95,7 +111,7 @@ spec:
         bucket:
           maxTokens: 2
           tokensPerFill: 2
-          fillInterval: 30s      
+          fillInterval: 30s
       - path: /ip
         bucket:
           maxTokens: 50
@@ -104,6 +120,7 @@ spec:
 ```
 
 EnvoyFilter
+
 ```yaml
 apiVersion: networking.istio.io/v1alpha3
 kind: EnvoyFilter
@@ -196,16 +213,20 @@ spec:
 
 #### Rate Limit by Request Header
 
-The RateLimit CR allows configuring rate limits for specific headers. The `local.rateLimits` field is a list of additional rate limit configurations that contain matching criteria such as headers.
-Each header must be configured with a name and value. If multiple headers are configured for a single bucket, the rate limit is applied only if all specified headers are present in the request with the given values.
+The RateLimit CR allows configuring rate limits for specific headers. The `local.rateLimits` field is a list of
+additional rate limit configurations that contain matching criteria such as headers.
+Each header must be configured with a name and value. If multiple headers are configured for a single bucket, the rate
+limit is applied only if all specified headers are present in the request with the given values.
 
-There is a limitation when it comes to header values for local rate limiting. Unlike global rate limiting, the `header_request` [RateLimit Action](https://www.envoyproxy.io/docs/envoy/latest/api-v3/config/route/v3/route_components.proto#envoy-v3-api-field-config-route-v3-ratelimit-action-request-headers)
-requires a static descriptor value for local rate limiting. This means that the header value is static and must be defined in RateLimit CR.
-
+There is a limitation when it comes to header values for local rate limiting. Unlike global rate limiting,
+the `header_request` [RateLimit Action](https://www.envoyproxy.io/docs/envoy/latest/api-v3/config/route/v3/route_components.proto#envoy-v3-api-field-config-route-v3-ratelimit-action-request-headers)
+requires a static descriptor value for local rate limiting. This means that the header value is static and must be
+defined in RateLimit CR.
 
 Example for EnvoyFilter creation based on the RateLimit CR configuration:
 
 RateLimit CR
+
 ```yaml
 apiVersion: operator.kyma-project.io/v1alpha1
 kind: RateLimit
@@ -260,6 +281,7 @@ spec:
 ```
 
 EnvoyFilter
+
 ```yaml
 apiVersion: networking.istio.io/v1alpha3
 kind: EnvoyFilter
@@ -368,30 +390,6 @@ spec:
                       fill_interval: 60s
 
 ```
-### Rate Limit Metrics
-
-The RateLimit CR allows to enable rate limit metrics by setting the boolean field **spec.enableMetrics**.
-The [Envoy LocalRateLimit filter](https://www.envoyproxy.io/docs/envoy/latest/api-v3/extensions/filters/http/local_ratelimit/v3/local_rate_limit.proto#local-rate-limit-proto) requires the field **stat_prefix** to be set. This field is used to generate the metrics for the rate limit.  
-The decision is not to expose the **stat_prefix** field to the user, but set it to the
-value `rate_limit`, because the specific name is set in the rate limit filter applied to `HTTP_ROUTE`.
-
-Since it is required to create a `HTTP_ROUTE` EnvoyFilter to support rate limit actions, an additional rate limit filter must be added to the `HTTP_FILTER` chain.
-This rate limit filter will only configure the **stat_prefix** field to prefix the rate limit metrics created by the filter.
-The decision is to set the **stat_prefix** field to the name of the RateLimit CR to distinguish the metrics generated by different RateLimit CRs.
-The metrics generated are always scoped to the RateLimit CR. This means that if multiple `local.rateLimits` are configured within a single RateLimit CR, the metrics will represent the aggregate of all these configurations.
-
-The metrics are generated in the following format:
-
-```
-rate_limit.rate-limit-cr-name.enabled: 6 
-rate_limit.rate-limit-cr-name.enforced: 0 
-rate_limit.rate-limit-cr-name.ok: 4 
-rate_limit.rate-limit-cr-name.rate_limited: 2 
-```
-
-If we introduce more configuration options in the RateLimit CR in the future, we might consider exposing the *
-*stat_prefix** in RateLimit CR or automatically derive additional **stat_prefix** values from the configuration, for
-example, `rate_limit.by_header`.
 
 ### Enforcing Rate Limit
 
@@ -408,7 +406,8 @@ While enabling rate limit feature on the HTTP layer, there is a possibility to g
 current rate limiting state e.g. how many requests are left to be done before being rate limited, or how much time is
 left until rate limit tokens are refilled.
 The decision is that the user can enable rate limit headers in the RateLimit CR by setting the boolean field *
-*spec.enableResponseHeaders**. Following security good practices, these headers are disabled by default to limit internal
+*spec.enableResponseHeaders**. Following security good practices, these headers are disabled by default to limit
+internal
 information exposure.
 
 ### RateLimit CR Spec
@@ -416,13 +415,13 @@ information exposure.
 | field                                 | type                | description                                                                                                                                                                                                                                                                                                                                                                                       | required |
 |---------------------------------------|---------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|
 | selectorLabels                        | map<string, string> | One or more labels that indicate a specific set of Pods on which the configuration should be applied. The scope of label search is restricted to the namespace in which the resource is present.                                                                                                                                                                                                  | yes      |
-| local                                | object              | Local rate limit configuration.                                                                                                                                                                                                                                                                                                                                                                   | yes      |
+| local                                 | object              | Local rate limit configuration.                                                                                                                                                                                                                                                                                                                                                                   | yes      |
 | local.default                         | object              | The default token bucket for rate limiting requests. If additional local rate limits are configured in the same RateLimit CR, this bucket serves as a fallback for requests that don't match any other bucket's criteria. <br/>Each request consumes a single token. If a token is available, the request is allowed. If no tokens are available, the request is rejected with status code `429`. | yes      |
 | local.default.maxTokens               | int                 | The maximum tokens that the bucket can hold. This is also the number of tokens that the bucket initially contains.                                                                                                                                                                                                                                                                                | yes      |
 | local.default.tokensPerFill           | int                 | The number of tokens added to the bucket during each fill interval.                                                                                                                                                                                                                                                                                                                               | yes      |
 | local.default.fillInterval            | duration            | The fill interval that tokens are added to the bucket. During each fill interval, `tokensPerFill` are added to the bucket. The bucket will never contain more than `maxTokens` tokens. The `fillInterval` must be greater than or equal to 50ms to avoid excessive refills.                                                                                                                       | yes      |
 | local.rateLimits                      | array               | List of additional rate limit configurations.                                                                                                                                                                                                                                                                                                                                                     | no       |
-| local.rateLimits.path                 | string              | Specifies the path that to be rate limited starting with `/`. Example: "/foo"                                                                                                                                                                                                                                                                                                                     | no       |
+| local.rateLimits.path                 | string              | Specifies the path to be rate limited starting with `/`. Example: "/foo"                                                                                                                                                                                                                                                                                                                          | no       |
 | local.rateLimits.headers              | map<string, string> | Specifies the request headers to be rate limited. All configured headers must be present in the request for this configuration to match.                                                                                                                                                                                                                                                          | no       |
 | local.rateLimits.headers.name         | string              | The header name to be rate limited.                                                                                                                                                                                                                                                                                                                                                               | yes      |
 | local.rateLimits.headers.value        | string              | The header value to be rate limited.                                                                                                                                                                                                                                                                                                                                                              | yes      |
@@ -431,7 +430,6 @@ information exposure.
 | local.rateLimits.bucket.tokensPerFill | int                 | The number of tokens added to the bucket during each fill interval.                                                                                                                                                                                                                                                                                                                               | yes      |
 | local.rateLimits.bucket.fillInterval  | duration            | The fill interval that tokens are added to the bucket. During each fill interval, `tokensPerFill` are added to the bucket. The bucket will never contain more than `maxTokens` tokens. The `fillInterval` must be greater than or equal to 50ms to avoid excessive refills.                                                                                                                       | yes      |
 | enableResponseHeaders                 | boolean             | Enables **x-rate-limit** response headers. The default value is `false`.                                                                                                                                                                                                                                                                                                                          | no       |
-| enableMetrics                         | boolean             | Enables the rate limit metrics. The default value is `false`.                                                                                                                                                                                                                                                                                                                                     | no       |
 | enforce                               | boolean             | Specifies whether the rate limit should be enforced. Default is `true`.                                                                                                                                                                                                                                                                                                                           | no       |
 
 ### Usage Example
@@ -463,7 +461,7 @@ spec:
         bucket:
           maxTokens: 20
           tokensPerFill: 10
-          fillInterval: 30s    
+          fillInterval: 30s
   enableResponseHeaders: true
 ```
 
@@ -484,3 +482,8 @@ Requests beyond the allowed rate limit threshold will get the HTTP `429` respons
 
 In general, it should not be necessary for users to create resources in the `istio-system` namespace. However, for rate
 limiting the Istio Ingress Gateway, the RateLimit CR must be created in the `istio-system` namespace.
+
+With RateLimit CR supporting multiple rate limit configuration entries it is hard to create accurate metrics for each of
+the rate limits. Per default the metrics are disabled and if enabled,
+the metrics will be aggregated, and it will be hard to distinguish which rate limit configuration is causing the rate
+limit to be hit. This can be mitigated by creating separate RateLimit CRs for each rate limit configuration.

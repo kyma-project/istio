@@ -36,6 +36,17 @@ The CRD is structured in a way that allows further extensions, such as introduci
 
 ### Scope of the RateLimit CR
 
+To maintain clarity and simplicity in rate limit configuration, only one RateLimit CR must match a
+workload. This ensures a single source of truth for rate limits. Each RateLimit CR includes a default bucket. Allowing
+multiple RateLimit CRs would require aggregating multiple default buckets, significantly increasing the complexity of
+the underlying EnvoyFilter and making the RateLimit CR behavior more difficult for users to understand. In some cases it
+might not even be possible to aggregate the default buckets.  
+Additionally, if there are additional buckets with `path` criteria in the RateLimit CR, they would also need to be
+merged into one Envoy configuration, further complicating the setup.  
+During the evaluation, it was observed that configuring multiple Envoy routes with a LocalRateLimit filter led to
+unexpected behavior. Specifically, rate limit headers were added multiple times, and the HTTP status code `503` was
+returned instead of the expected `429` when a request was rate limited.
+
 The RateLimit CR allows to configure rate limiting on sidecar proxies and Istio Ingress Gateways.  
 The workloads that should be rate limited are selected by the required `selectorLabels` field.
 The `selectorLabels` field contains a map of labels that indicate a specific set of Pods on which the
@@ -149,11 +160,6 @@ spec:
     - applyTo: HTTP_ROUTE
       match:
         context: SIDECAR_INBOUND
-        routeConfiguration:
-          vhost:
-            name: ""
-            route:
-              action: ANY
       patch:
         operation: MERGE
         value:
@@ -219,7 +225,8 @@ limit is applied only if all specified headers are present in the request with t
 There is a limitation when it comes to header values for local rate limiting. Unlike global rate limiting,
 the `header_request` [RateLimit Action](https://www.envoyproxy.io/docs/envoy/latest/api-v3/config/route/v3/route_components.proto#envoy-v3-api-field-config-route-v3-ratelimit-action-request-headers)
 requires a static descriptor value for local rate limiting. This means that the header value and must be
-defined in RateLimit CR. The header value doesn't support regex or wildcards (`*`), so the rate limit is applied only if the 
+defined in RateLimit CR. The header value doesn't support regex or wildcards (`*`), so the rate limit is applied only if
+the
 header value matches the configured value.
 
 Example for EnvoyFilter creation based on the RateLimit CR configuration:
@@ -242,28 +249,28 @@ spec:
       fillInterval: 60s
     buckets:
       - headers:
-          x-api-usage-key: BASIC
+          x-client-type: external
           x-api-version: v1
         bucket:
           maxTokens: 10
           tokensPerFill: 10
           fillInterval: 60s
       - headers:
-          x-api-usage-key: BASIC
+          x-client-type: external
           x-api-version: v2
         bucket:
           maxTokens: 15
           tokensPerFill: 15
           fillInterval: 60s
       - headers:
-          x-api-usage-key: PRO
+          x-client-type: internal
           x-api-version: v1
         bucket:
           maxTokens: 40
           tokensPerFill: 40
           fillInterval: 60s
       - headers:
-          x-api-usage-key: PRO
+          x-client-type: internal
           x-api-version: v2
         bucket:
           maxTokens: 60
@@ -303,11 +310,6 @@ spec:
     - applyTo: HTTP_ROUTE
       match:
         context: SIDECAR_INBOUND
-        routeConfiguration:
-          vhost:
-            name: ""
-            route:
-              action: ANY
       patch:
         operation: MERGE
         value:
@@ -315,8 +317,8 @@ spec:
             rate_limits:
               - actions:
                   - request_headers:
-                      header_name: "x-api-usage"
-                      descriptor_key: "x-api-usage-key"
+                      header_name: "x-client-type"
+                      descriptor_key: "x-client-type-key"
                   - request_headers:
                       header_name: "x-api-version"
                       descriptor_key: "x-api-version-key"
@@ -344,8 +346,8 @@ spec:
                   fill_interval: 60s
                 descriptors:
                   - entries:
-                      - key: x-api-usage-key
-                        value: BASIC
+                      - key: x-client-type-key
+                        value: external
                       - key: x-api-version-key
                         value: v1
                     token_bucket:
@@ -353,8 +355,8 @@ spec:
                       tokens_per_fill: 10
                       fill_interval: 60s
                   - entries:
-                      - key: x-api-usage-key
-                        value: BASIC
+                      - key: x-client-type-key
+                        value: external
                       - key: x-api-version-key
                         value: v2
                     token_bucket:
@@ -362,8 +364,8 @@ spec:
                       tokens_per_fill: 15
                       fill_interval: 60s
                   - entries:
-                      - key: x-api-usage-key
-                        value: PRO
+                      - key: x-client-type-key
+                        value: internal
                       - key: x-api-version-key
                         value: v1
                     token_bucket:
@@ -371,15 +373,14 @@ spec:
                       tokens_per_fill: 40
                       fill_interval: 60s
                   - entries:
-                      - key: x-api-usage-key
-                        value: PRO
+                      - key: x-client-type-key
+                        value: internal
                       - key: x-api-version-key
                         value: v2
                     token_bucket:
                       max_tokens: 60
                       tokens_per_fill: 60
                       fill_interval: 60s
-
 ```
 
 ### Enforcing Rate Limit
@@ -404,7 +405,7 @@ internal information exposure.
 
 | field                             | type                | description                                                                                                                                                                                                                                                                                                                                                                                        | required |
 |-----------------------------------|---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|
-| selectorLabels                    | map<string, string> | One or more labels that indicate a specific set of Pods on which the configuration should be applied. <br/>The scope of label search is restricted to the namespace in which the resource is present.                                                                                                                                                                                              | yes      |
+| selectorLabels                    | map<string, string> | Labels that specify the set of Pods to which the configuration applies.<br/> Each Pod can match only one RateLimit CR.<br/> The label search scope is limited to the namespace where the resource is located.                                                                                                                                                                                      | yes      |
 | local                             | object              | Local rate limit configuration.                                                                                                                                                                                                                                                                                                                                                                    | yes      |
 | local.defaultBucket               | object              | The default token bucket for rate limiting requests. <br/>If additional local buckets are configured in the same RateLimit CR, this bucket serves as a fallback for requests that don't match any other bucket's criteria. <br/>Each request consumes a single token. If a token is available, the request is allowed. If no tokens are available, the request is rejected with status code `429`. | yes      |
 | local.defaultBucket.maxTokens     | int                 | The maximum tokens that the bucket can hold. This is also the number of tokens that the bucket initially contains.                                                                                                                                                                                                                                                                                 | yes      |

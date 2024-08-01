@@ -471,5 +471,4 @@ limiting the Istio Ingress Gateway, the RateLimit CR must be created in the `ist
 
 With RateLimit CR supporting multiple rate limit configuration entries it is hard to create accurate metrics for each of
 the rate limits. Per default the metrics are disabled and if enabled, the metrics will be aggregated, and it will be
-hard to distinguish which rate limit configuration is causing the rate limit to be hit. This can be mitigated by
-creating separate RateLimit CRs for each rate limit configuration.
+hard to distinguish which rate limit configuration is causing the rate limit to be hit.

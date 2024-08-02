@@ -16,15 +16,8 @@ This tutorial shows how to expose a TCP Service using Gateway API.
 
 Edit the Istio custom resource by setting **enableAlphaGatewayAPI** to `true`:
 
-    ```
-    ...
-    spec:
-      config: {}
-      experimental:
-        pilot:
-          enableAlphaGatewayAPI: true
-          enableMultiNetworkDiscoverGatewayAPI: false
-    ...
+    ```bash
+    kubectl patch istios/default -n kyma-system --type merge -p '{"spec":{"experimental":{"pilot": {"enableAlphaGatewayAPI": true}}}}'
     ```
 
 ### Install the experimental version of Gateway API CustomResourceDefinitions

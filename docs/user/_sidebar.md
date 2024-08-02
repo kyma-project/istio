@@ -13,6 +13,8 @@
 * [Tutorials](/istio/user/tutorials/README.md)
   * [Forward Client IP](/istio/user/tutorials/01-00-x-forwarded-for-header.md)
   * [Use External Authorization Provider](/istio/user/tutorials/01-10-external-authorization-provider.md)
+  * [Use Gateway API to Expose HTTPBin](/istio/user/tutorials/01-20-expose-httbin-gateway-api.md)
+  * [Use Gateway API to Expose TCP Service](/istio/user/tutorials/01-30-expose-tcp-gateway-api.md)
 * [Technical Reference](/istio/user/technical-reference/README.md)
   * [Istio Controller Parameters](/istio/user/technical-reference/05-00-istio-controller-parameters.md)
   * [Istio Controller RBAC Configuration](/istio/user/technical-reference/05-10-istio-controller-rbac.md)

@@ -23,7 +23,7 @@ mesh.
 
 Currently, there are limitations that prevent using Redis on managed Kyma clusters. Because global rate limiting relies
 on Redis for persistence, the global rate limiting is not in scope of this ADR.
-Additionally, the metrics for rate limiting is also not in scope of this ADR.
+Additionally, the metrics for rate limiting are also not in scope of this ADR.
 
 ## Decision
 
@@ -39,17 +39,17 @@ The CRD is structured in a way that allows further extensions, such as introduci
 To maintain clarity and simplicity in rate limit configuration, only one RateLimit CR must match a
 workload. This ensures a single source of truth for rate limits. Each RateLimit CR includes a default bucket. Allowing
 multiple RateLimit CRs would require aggregating multiple default buckets, significantly increasing the complexity of
-the underlying EnvoyFilter and making the RateLimit CR behavior more difficult for users to understand. In some cases it
+the underlying EnvoyFilter and making the RateLimit CR behavior more difficult for users to understand. In some cases, it
 might not even be possible to aggregate the default buckets.  
-Additionally, if there are additional buckets with `path` criteria in the RateLimit CR, they would also need to be
-merged into one Envoy configuration, further complicating the setup.  
+Also, additional buckets with `path` criteria in the RateLimit CR must be
+merged into one Envoy configuration, which would further complicate the setup.  
 During the evaluation, it was observed that configuring multiple Envoy routes with a LocalRateLimit filter led to
 unexpected behavior. Specifically, rate limit headers were added multiple times, and the HTTP status code `503` was
 returned instead of the expected `429` when a request was rate limited.
 
 The RateLimit CR allows to configure rate limiting on sidecar proxies and Istio Ingress Gateways.  
-The workloads that should be rate limited are selected by the required `selectorLabels` field.
-The `selectorLabels` field contains a map of labels that indicate a specific set of Pods on which the
+The workloads that should be rate limited are selected by the required **selectorLabels** field.
+The **selectorLabels** field contains a map of labels that indicate a specific set of Pods on which the
 configuration should be applied.  
 The selector labels are restricted to the namespace in which the RateLimit CR is present. Due to restrictions by Istio
 module, the Istio Ingress Gateway can only be deployed to the `istio-system` namespace and the user must create a
@@ -72,7 +72,7 @@ support [RateLimit Action](https://www.envoyproxy.io/docs/envoy/latest/api-v3/co
 which is required for the descriptors, the Envoy rate limit filter must be applied to the `HTTP_ROUTE`. This requires
 applying a global rate limit filter with a minimalistic configuration to `HTTP_FILTER`.
 
-The RateLimit CR must have a default rate limit bucket configured as this is required by
+The RateLimit CR must have a default rate limit bucket configured, as this is required by
 the [Envoy Local Rate limit filter](https://www.envoyproxy.io/docs/envoy/latest/api-v3/extensions/filters/http/local_ratelimit/v3/local_rate_limit.proto#extensions-filters-http-local-ratelimit-v3-localratelimit)
 if it's configured on the route level.
 This default bucket is used as a fallback for requests that don't match any other local rate limit configuration in the
@@ -81,12 +81,12 @@ include `always_consume_default_token_bucket: false` in the Local Rate limit fil
 
 #### Rate Limit by Path
 
-The RateLimit CR allows configuring rate limits for specific paths exposed by the workload. The `local.rateLimits` field
+The RateLimit CR allows configuring rate limits for specific paths exposed by the workload. The **local.rateLimits** field
 is a list of additional rate limit configurations that contain matching criteria such as the path.
 
 Since a shared bucket between multiple paths is not possible for local rate limiting, each entry in
-the `local.rateLimits` list supports only a single path. To avoid confusion, if multiple paths have a similar bucket
-configuration, they need to be added as separate entries in the `local.rateLimits` list.
+the **local.rateLimits** list supports only a single path. To avoid confusion, if multiple paths have a similar bucket
+configuration, they must be added as separate entries in the **local.rateLimits** list.
 
 There is a limitation with path matching in local rate limiting. Descriptor values are static and do not support
 wildcards (`*`), so paths with path or query parameters will be treated as separate paths.
@@ -217,7 +217,7 @@ spec:
 
 #### Rate Limit by Request Header
 
-The RateLimit CR allows configuring rate limits for specific headers. The `local.rateLimits` field is a list of
+The RateLimit CR allows configuring rate limits for specific headers. The **local.rateLimits** field is a list of
 additional rate limit configurations that contain matching criteria such as headers.  
 Each header must be configured with a name and value. If multiple headers are configured for a single bucket, the rate
 limit is applied only if all specified headers are present in the request with the given values.
@@ -395,10 +395,10 @@ The decision is to hide the complexity of the Envoy enforcement configuration be
 ### Rate Limit HTTP Response Headers
 
 While enabling rate limit feature on the HTTP layer, there is a possibility to give insights to the client about the
-current rate limiting state e.g. how many requests are left to be done before being rate limited, or how much time is
+current rate limiting state, for example, how many requests are left to be done before being rate limited, or how much time is
 left until rate limit tokens are refilled.  
 The decision is that the user can enable rate limit headers in the RateLimit CR by setting the boolean field
-*spec.enableResponseHeaders*. Following security good practices, these headers are disabled by default to limit
+**spec.enableResponseHeaders**. Following security good practices, these headers are disabled by default to limit
 internal information exposure.
 
 ### RateLimit CR Spec
@@ -412,13 +412,13 @@ internal information exposure.
 | local.defaultBucket.tokensPerFill | int                 | The number of tokens added to the bucket during each fill interval.                                                                                                                                                                                                                                                                                                                                | yes      |
 | local.defaultBucket.fillInterval  | duration            | The fill interval that tokens are added to the bucket. <br/>During each fill interval, `tokensPerFill` are added to the bucket. The bucket will never contain more than `maxTokens` tokens. The `fillInterval` must be greater than or equal to 50ms to avoid excessive refills.                                                                                                                   | yes      |
 | local.buckets                     | array               | List of additional rate limit buckets for requests. <br/>Each bucket must specify either a `path` or `headers`. <br/>For each request matching the bucket's criteria, a single token is consumed. If a token is available, the request is allowed. If no tokens are available, the request is rejected with status code `429`.                                                                     | no       |
-| local.buckets.path                | string              | Specifies the path to be rate limited starting with `/`. <br/>Example: "/foo"                                                                                                                                                                                                                                                                                                                      | no       |
-| local.buckets.headers             | map<string, string> | Specifies the request headers to be rate limited. The key is the header name, and the value is the header value. All specified headers must be present in the request for this configuration to match. Example: "x-api-usage: BASIC".                                                                                                                                                              | no       |                                                                                                                                                                                    
+| local.buckets.path                | string              | Specifies the path to be rate limited starting with `/`. <br/>For example, `/foo`.                                                                                                                                                                                                                                                                                                                     | no       |
+| local.buckets.headers             | map<string, string> | Specifies the request headers to be rate limited. The key is the header name, and the value is the header value. All specified headers must be present in the request for this configuration to match. For example, `x-api-usage: BASIC`.                                                                                                                                                              | no       |                                                                                                                                                                                    
 | local.buckets.maxTokens           | int                 | The maximum tokens that the bucket can hold. This is also the number of tokens that the bucket initially contains.                                                                                                                                                                                                                                                                                 | yes      |
 | local.buckets.tokensPerFill       | int                 | The number of tokens added to the bucket during each fill interval.                                                                                                                                                                                                                                                                                                                                | yes      |
 | local.buckets.fillInterval        | duration            | The fill interval that tokens are added to the bucket. <br/>During each fill interval, `tokensPerFill` are added to the bucket. The bucket will never contain more than `maxTokens` tokens. The `fillInterval` must be greater than or equal to 50ms to avoid excessive refills.                                                                                                                   | yes      |
 | enableResponseHeaders             | boolean             | Enables **x-rate-limit** response headers. The default value is `false`.                                                                                                                                                                                                                                                                                                                           | no       |
-| enforce                           | boolean             | Specifies whether the rate limit should be enforced. Default is `true`.                                                                                                                                                                                                                                                                                                                            | no       |
+| enforce                           | boolean             | Specifies whether the rate limit should be enforced. The default value is `true`.                                                                                                                                                                                                                                                                                                                            | no       |
 
 ### Usage Example
 
@@ -470,5 +470,5 @@ In general, it should not be necessary for users to create resources in the `ist
 limiting the Istio Ingress Gateway, the RateLimit CR must be created in the `istio-system` namespace.
 
 With RateLimit CR supporting multiple rate limit configuration entries it is hard to create accurate metrics for each of
-the rate limits. Per default the metrics are disabled and if enabled, the metrics will be aggregated, and it will be
+the rate limits. Per default, the metrics are disabled. If enabled, the metrics will be aggregated, and it will be
 hard to distinguish which rate limit configuration is causing the rate limit to be hit.

@@ -36,20 +36,41 @@ requiredVars=(
 check_required_vars "${requiredVars[@]}"
 
 # render and applyshoot template
-shoot_template=$(envsubst < ./hack/ci/shoot_${GARDENER_PROVIDER}.yaml)
+shoot_template=$(envsubst < "./hack/ci/shoot_${GARDENER_PROVIDER}.yaml")
 
-echo "$shoot_template" | kubectl --kubeconfig "${GARDENER_KUBECONFIG}" apply -f -
-
+echo "trying to apply shoot template into seed cluster"
+retries=0
+until (echo "$shoot_template" | kubectl --kubeconfig "${GARDENER_KUBECONFIG}" apply -f -); do
+  retries+=1
+  if [[ retries -gt 2 ]]; then
+    echo "could not apply shoot spec after 3 tries, exiting"
+    exit 1
+  fi
+  echo "failed, retrying in 15s"
+  sleep 15
+done
 echo "waiting fo cluster to be ready..."
-kubectl wait  --kubeconfig "${GARDENER_KUBECONFIG}" --for=condition=EveryNodeReady shoot/${CLUSTER_NAME} --timeout=17m
+kubectl wait  --kubeconfig "${GARDENER_KUBECONFIG}" --for=condition=EveryNodeReady "shoot/${CLUSTER_NAME}" --timeout=17m
 
 # create kubeconfig request, that creates a kubeconfig which is valid for one day
 kubectl create  --kubeconfig "${GARDENER_KUBECONFIG}" \
     -f <(printf '{"spec":{"expirationSeconds":86400}}') \
-    --raw /apis/core.gardener.cloud/v1beta1/namespaces/garden-${GARDENER_PROJECT_NAME}/shoots/${CLUSTER_NAME}/adminkubeconfig | \
+    --raw "/apis/core.gardener.cloud/v1beta1/namespaces/garden-${GARDENER_PROJECT_NAME}/shoots/${CLUSTER_NAME}/adminkubeconfig" | \
     jq -r ".status.kubeconfig" | \
-    base64 -d > ${CLUSTER_NAME}_kubeconfig.yaml
+    base64 -d > "${CLUSTER_NAME}_kubeconfig.yaml"
+
+# wait until apiserver /readyz endpoint returns "ok"
+timeout=0
+until (kubectl --kubeconfig "${CLUSTER_NAME}_kubeconfig.yaml" get --raw "/readyz"); do
+  timeout+=1
+  # 5 minutes
+  if [[ $timeout -gt 300 ]]; then
+    echo "Timed out waiting for API Server to be ready"
+    exit 1
+  fi
+  sleep 1
+done
 
 # replace the default kubeconfig
 mkdir -p ~/.kube
-mv ${CLUSTER_NAME}_kubeconfig.yaml ~/.kube/config
+mv "${CLUSTER_NAME}_kubeconfig.yaml" ~/.kube/config

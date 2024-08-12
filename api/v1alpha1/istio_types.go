@@ -40,6 +40,7 @@ type IstioSpec struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+//+kubebuilder:unservedversion
 //+kubebuilder:printcolumn:JSONPath=".status.state",name="State",type="string"
 
 // Contains Istio CR specification and current status.

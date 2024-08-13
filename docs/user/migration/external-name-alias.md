@@ -1,4 +1,4 @@
-# Migration guide for external name alias behavior change
+# Migration Guide for External Name Alias's Behavior Change
 
 ## Context
 
@@ -14,16 +14,16 @@ We expect it to be a part of the 1.24 release.
 Due to that, deprecation on the annotation will be introduced.
 If you are affected by this change, you should update your configuration to align with the new behavior.
 
-## Virtual Service
+## VirtualService
 
-Due to the current Istio misbehavior, VirtualService cannot point with its destination to the Service of type ExternalName as the upgrade notes states [Ref](https://istio.io/latest/news/releases/1.21.x/announcing-1.21/upgrade-notes/).
+According to [Istio 1.21 Upgrade Notes](https://istio.io/latest/news/releases/1.21.x/announcing-1.21/upgrade-notes/), VirtualService cannot point with its destination to the Service of type ExternalName.
 The limitation exists in the traffic coming from the internal mesh clients.
 Creating a ServiceEntry, has no effect despite upgrade notes for 1.21.
 Routing to the Service of type ExternalName which alias other type of Service also will not work.
 Instead, it has to point to the actual host that is being aliased by the Service of type ExternalName.
 With [PR](https://github.com/istio/istio/pull/52589) merged, VirtualService should be able to point to the Service of type ExternalName for the internal mesh traffic.
 
-The following will not work:
+The following configuration will not work:
 
 ```yaml
 apiVersion: v1
@@ -59,7 +59,7 @@ spec:
 
 ```
 
-Do following instead:
+Use the following configuration instead:
 
 ```yaml
 apiVersion: networking.istio.io/v1alpha3
@@ -88,10 +88,10 @@ Remember to test if the new configuration works as expected and fits all your ne
 ## DestinationRule
 
 DestinationRule cannot point to the Service of type ExternalName.
-If you have a DestinationRule that points to a Service of type ExternalName, you need to update the DestinationRule to point to the actual host.
-To still have possibility to apply some of the Istio features in the given situation, you can create a ServiceEntry for the external host.
+If you have a DestinationRule that points to a Service of type ExternalName, update the DestinationRule to point to the actual host.
+To still have the possibility to apply some of the Istio features in the given situation, you can create a ServiceEntry for the external host.
 
-Following will no longer work:
+The following configuration will not work:
 
 ```yaml
 apiVersion: v1
@@ -117,7 +117,7 @@ spec:
       simple: ROUND_ROBIN
 ```
 
-Do following instead:
+Use the following configuration instead:
 
 ```yaml
 apiVersion: networking.istio.io/v1alpha3
@@ -148,7 +148,7 @@ spec:
 
 Remember to test if the new configuration works as expected and fits all your needs.
 
-## Service ExternalName ports
+## Service ExternalName Ports
 
-In the new behavior ports set in the Service of type ExternalName are ignored by Istio.
-In case if you rely on them in any way you need to update your configuration to align with the new behavior.
+In the new behavior, Istio ignores the ports set in the Service of type ExternalName.
+In case you rely on them in any way, you must update your configuration to align with the new behavior.

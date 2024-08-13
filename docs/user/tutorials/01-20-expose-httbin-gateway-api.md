@@ -15,10 +15,11 @@ This tutorial shows how to expose an HTTPBin Service using Gateway API.
 
 The Istio module does not install Gateway API CustomResourceDefinitions (CRDs). To install the CRDs from the standard channel, run the following command:
 
-    ```bash
-    kubectl get crd gateways.gateway.networking.k8s.io &> /dev/null || \
+```bash
+kubectl get crd gateways.gateway.networking.k8s.io &> /dev/null || \
     { kubectl kustomize "github.com/kubernetes-sigs/gateway-api/config/crd?ref=v1.1.0" | kubectl apply -f -; }
-    ```
+```
+
 > [!NOTE]
 > If you've already installed Gateway API CRDs from the experimental channel, you must delete them before installing Gateway API CRDs from the standard channel.
 

@@ -16,18 +16,19 @@ This tutorial shows how to expose a TCP Service using Gateway API.
 
 Edit the Istio custom resource by setting **enableAlphaGatewayAPI** to `true`:
 
-    ```bash
-    kubectl patch istios/default -n kyma-system --type merge -p '{"spec":{"experimental":{"pilot": {"enableAlphaGatewayAPI": true}}}}'
-    ```
+```bash
+kubectl patch istios/default -n kyma-system --type merge -p '{"spec":{"experimental":{"pilot": {"enableAlphaGatewayAPI": true}}}}'
+```
 
 ### Install the experimental version of Gateway API CustomResourceDefinitions
 
 The Istio module does not install Gateway API CustomResourceDefinitions (CRDs). To install the CRDs from the experimental channel, run the following command:
 
-    ```bash
-    kubectl get crd gateways.gateway.networking.k8s.io &> /dev/null || \
-    { kubectl kustomize "github.com/kubernetes-sigs/gateway-api/config/crd/experimental?ref=v1.1.0" | kubectl apply -f -; }
-    ```
+```bash
+kubectl get crd gateways.gateway.networking.k8s.io &> /dev/null || \
+{ kubectl kustomize "github.com/kubernetes-sigs/gateway-api/config/crd/experimental?ref=v1.1.0" | kubectl apply -f -; }
+```
+
 > [!NOTE]
 > If you've already installed Gateway API CRDs from the standard channel, you must delete them before installing Gateway API CRDs from the experimental channel.
 

@@ -7,13 +7,13 @@ Previously, for the Service of type ExternalName a separate `cluster` in the Env
 With the change, the Service of type ExternalName is treated as an alias of the Service that it points to.
 Istio introduced this change to align the way it handles the Service of type ExternalName with the Kubernetes behavior.
 Since it caused some issues for our users, we introduced a new annotation, **disable-external-name-alias**, to disable this behavior.
-If you are affected by this change, you should update your configuration to align with the new behavior.
+If you are affected by this change, update your configuration to align with the new behavior.
 
 ## VirtualService
 
 According to [Istio 1.21 Upgrade Notes](https://istio.io/latest/news/releases/1.21.x/announcing-1.21/upgrade-notes/), the destination of a VirtualService cannot point to the Service of type ExternalName.
 The limitation exists in the traffic coming from the internal mesh clients.
-Creating a ServiceEntry, has no effect despite upgrade notes for 1.21.
+Creating a ServiceEntry, has no effect despite upgrade notes for version 1.21.
 Routing to the Service of type ExternalName, which aliases another type of Service, will also not work.
 Instead, it has to point to the actual host aliased by the Service of type ExternalName.
 

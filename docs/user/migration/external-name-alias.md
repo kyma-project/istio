@@ -3,7 +3,6 @@
 ## Context
 
 Istio with 1.21 version has changed the behavior of the Service of type ExternalName.
-Previously, for the Service of type ExternalName a separate `cluster` in the Envoy config was created.
 With the change, the Service of type ExternalName is treated as an alias of the Service that it points to.
 Istio introduced this change to align the way it handles the Service of type ExternalName with the Kubernetes behavior.
 Since it caused some issues for our users, we introduced a new annotation, **disable-external-name-alias**, to disable this behavior.

@@ -5,8 +5,8 @@
 Istio with 1.21 version has changed the behavior of the Service of type ExternalName.
 With the change, the Service of type ExternalName is treated as an alias of the Service that it points to.
 Istio introduced this change to align the way it handles the Service of type ExternalName with the Kubernetes behavior.
-Since it caused some issues for our users, we introduced a new annotation, **disable-external-name-alias**, to disable this behavior.
-If you are affected by this change, update your configuration to align with the new behavior.
+Since it caused some issues for our users, we introduced a new annotation, **disable-external-name-alias**, to disable this change.
+However, use of this parameter is not recommended and if you are using it, please update your configuration according to the following points.
 
 ## VirtualService
 

@@ -10,14 +10,14 @@ runs:
     - uses: actions/setup-go@v5
       with:
         go-version-file: "go.mod"
-    - name: Create Single Cluster
+    - name: Create Cluster
       uses: ./.github/actions/provision-k3d-cluster
       with:
         version: "1.30.3"
     - name: Run integration tests
       run: |
         if [ "${{ github.event_name }}" == "pull_request" ]; then
-          k3d image import ${{ inputs.operator-image-name }} k3s-default
+          k3d image import ${{ inputs.operator-image-name }}
         fi
 
         kubectl config use-context k3d-k3s-default

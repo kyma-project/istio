@@ -20,7 +20,6 @@ jobs:
           files_ignore: |
              docs/**
              **/*.md
-             **/*.yaml
              tests/performance/**
              OWNERS
              CODEOWNERS

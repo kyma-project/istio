@@ -42,7 +42,7 @@ jobs:
         with:
           evaluation: false
           operator-image-name: "istio-manager:PR-${{github.event.number}}"
-          servers-memory: "16g"
+          servers-memory: "16"
           agents: 2
 
   istio-integration-test-evaluation:
@@ -57,5 +57,5 @@ jobs:
         with:
           evaluation: true
           operator-image-name: "istio-manager:PR-${{github.event.number}}"
-          servers-memory: "4g"
+          servers-memory: "4"
           agents: 0

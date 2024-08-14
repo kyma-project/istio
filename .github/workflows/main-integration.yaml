@@ -67,7 +67,7 @@ jobs:
       - uses: ./.github/actions/integration-test
         with:
           operator-image-name: "europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{github.sha}}"
-          servers-memory: "16g"
+          servers-memory: "16"
           agents: 2
 
   istio-integration-gcp:

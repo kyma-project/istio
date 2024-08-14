@@ -24,6 +24,8 @@ runs:
       uses: ./.github/actions/provision-k3d-cluster
       with:
         version: "1.29.7"
+        number-of-nodes: ${{ inputs.agents }}
+        nodes-memory: ${{ inputs.servers-memory }}
     - name: Run integration tests
       shell: bash
       run: |    

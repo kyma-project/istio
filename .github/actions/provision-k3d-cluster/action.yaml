@@ -4,6 +4,14 @@ inputs:
   version:
     description: 'Kubernetes version'
     required: true
+  number-of-nodes:
+    description: 'Number of nodes in the cluster'
+    required: false
+    default: 1
+  nodes-memory:
+    description: 'Number of GB for the node'
+    required: false
+    default: 16
 
 runs:
   using: "composite"
@@ -14,7 +22,7 @@ runs:
         curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
         k3d cluster create --agents 2 \
                            --image docker.io/rancher/k3s:v${{ inputs.version }}-k3s1 \
-                           --servers-memory=16g \
+                           --servers-memory=${{ inputs.size }}g \
                            --port 80:80@loadbalancer \
                            --port 443:443@loadbalancer \
                            --k3s-arg "--disable=traefik@server:0"

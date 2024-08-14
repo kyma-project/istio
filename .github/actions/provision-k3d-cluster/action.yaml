@@ -22,7 +22,7 @@ runs:
         curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
         k3d cluster create --agents ${{ inputs.agents }} \
                            --image docker.io/rancher/k3s:v${{ inputs.k3s-version }}-k3s1 \
-                           --servers-memory=${{ inputs.agents-memory }}g \
+                           --servers-memory=${{ inputs.servers-memory }}g \
                            --port 80:80@loadbalancer \
                            --port 443:443@loadbalancer \
                            --k3s-arg "--disable=traefik@server:0"

@@ -67,7 +67,7 @@ jobs:
       - uses: ./.github/actions/integration-test
         with:
           operator-image-name: "europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{github.sha}}"
-          servers-memory: "16g"
+          servers-memory: "16"
           agents: 2
 
   istio-integration-gcp:
@@ -93,7 +93,7 @@ jobs:
           GARDENER_PROVIDER_SECRET_NAME: "goat"
           GARDENER_PROVIDER: "gcp"
           GARDENER_REGION: "europe-west3"
-          GARDENER_CLUSTER_VERSION: "1.28"
+          GARDENER_CLUSTER_VERSION: "1.29.7"
           MACHINE_TYPE: "n2-standard-4"
           DISK_SIZE: 50
           DISK_TYPE: "pd-standard"
@@ -122,7 +122,7 @@ jobs:
           GARDENER_PROJECT_NAME: "goats"
           GARDENER_PROVIDER_SECRET_NAME: "aws-gardener-access"
           GARDENER_PROVIDER: "aws"
-          GARDENER_CLUSTER_VERSION: "1.28"
+          GARDENER_CLUSTER_VERSION: "1.29.7"
           GARDENER_REGION: "eu-west-1"
           MACHINE_TYPE: "m5.xlarge"
           DISK_SIZE: 50
@@ -153,7 +153,7 @@ jobs:
           GARDENER_PROVIDER_SECRET_NAME: "goat"
           GARDENER_PROVIDER: "gcp"
           GARDENER_REGION: "europe-west3"
-          GARDENER_CLUSTER_VERSION: "1.28"
+          GARDENER_CLUSTER_VERSION: "1.29.7"
           MACHINE_TYPE: "n2-standard-4"
           DISK_SIZE: 50
           DISK_TYPE: "pd-standard"
@@ -182,7 +182,7 @@ jobs:
           GARDENER_PROJECT_NAME: "goats"
           GARDENER_PROVIDER_SECRET_NAME: "aws-gardener-access"
           GARDENER_PROVIDER: "aws"
-          GARDENER_CLUSTER_VERSION: "1.28"
+          GARDENER_CLUSTER_VERSION: "1.29.7"
           GARDENER_REGION: "eu-west-1"
           MACHINE_TYPE: "m5.xlarge"
           DISK_SIZE: 50

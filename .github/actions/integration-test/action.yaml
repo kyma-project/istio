@@ -20,25 +20,20 @@ runs:
     - uses: actions/setup-go@v5
       with:
         go-version-file: "go.mod"
-    - name: Create Single Cluster
-      uses: AbsaOSS/k3d-action@4e8b3239042be1dc0aed6c5eb80c13b18200fc79 #v2.4.0
+    - name: Create Cluster
+      uses: ./.github/actions/provision-k3d-cluster
       with:
-        cluster-name: "test-cluster-1"
-        args: >-
-          --agents ${{ inputs.agents }}
-          --image docker.io/rancher/k3s:v1.28.2-k3s1
-          --servers-memory ${{ inputs.servers-memory }}
-          --port 80:80@loadbalancer
-          --port 443:443@loadbalancer
-          --k3s-arg "--disable=traefik@server:0"
+        k3s-version: "1.29.7"
+        agents: ${{ inputs.agents }}
+        servers-memory: ${{ inputs.servers-memory }}
     - name: Run integration tests
       shell: bash
       run: |    
         if [ "${{ github.event_name }}" == "pull_request" ]; then
-          k3d image import ${{ inputs.operator-image-name }} -c test-cluster-1
+          k3d image import ${{ inputs.operator-image-name }}
         fi
         
-        kubectl config use-context k3d-test-cluster-1
+        kubectl config use-context k3d-k3s-default
         if [ "${{ inputs.evaluation }}" == "true" ]; then
           TEST_EVALUATION=TRUE EXPORT_RESULT=true IMG=${{ inputs.operator-image-name }} make istio-integration-test
         else

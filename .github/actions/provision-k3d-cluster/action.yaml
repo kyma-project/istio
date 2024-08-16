@@ -1,0 +1,28 @@
+name: 'Provision k3d cluster'
+description: 'Provisions a k3d cluster'
+inputs:
+  k3s-version:
+    description: 'Kubernetes version'
+    required: true
+  agents:
+    description: 'Number of nodes in the cluster'
+    required: false
+    default: 1
+  servers-memory:
+    description: 'Number of GB for the node'
+    required: false
+    default: 16
+
+runs:
+  using: "composite"
+  steps:
+    - name: Provision k3d cluster
+      shell: bash
+      run: |
+        curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
+        k3d cluster create --agents ${{ inputs.agents }} \
+                           --image docker.io/rancher/k3s:v${{ inputs.k3s-version }}-k3s1 \
+                           --servers-memory=${{ inputs.servers-memory }}g \
+                           --port 80:80@loadbalancer \
+                           --port 443:443@loadbalancer \
+                           --k3s-arg "--disable=traefik@server:0"

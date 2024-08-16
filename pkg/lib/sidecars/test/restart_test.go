@@ -80,7 +80,7 @@ func generateReport() {
 	}
 	err := htmlReport.Generate()
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Fatal(err.Error())
 	}
 
 	err = filepath.Walk("reports", func(path string, info fs.FileInfo, err error) error {
@@ -108,7 +108,7 @@ func generateReport() {
 	})
 
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Fatal(err.Error())
 	}
 
 	if artifactsDir, ok := os.LookupEnv("ARTIFACTS"); ok {
@@ -125,12 +125,12 @@ func generateReport() {
 		})
 
 		if err != nil {
-			log.Fatalf(err.Error())
+			log.Fatal(err.Error())
 		}
 
 		_, err = copyReport("./junit-report.xml", fmt.Sprintf("%s/junit-report.xml", artifactsDir))
 		if err != nil {
-			log.Fatalf(err.Error())
+			log.Fatal(err.Error())
 		}
 	}
 

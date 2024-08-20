@@ -48,7 +48,7 @@ kubectl get crd gateways.gateway.networking.k8s.io &> /dev/null || \
     kubectl create -n $NAMESPACE -f https://raw.githubusercontent.com/istio/istio/release-1.22/samples/tcp-echo/tcp-echo.yaml
     ```
 
-### Expose an TCPEcho Service
+### Expose a TCPEcho Service
 
 1. Create a Kubernetes Gateway to deploy Istio Ingress Gateway:
 
@@ -71,8 +71,8 @@ kubectl get crd gateways.gateway.networking.k8s.io &> /dev/null || \
     EOF
     ```
 
-> [!NOTE]
-> This command deploys the Istio Ingress service in your namespace with the corresponding Kubernetes Service of type `LoadBalanced` and an assigned external IP address.
+    > [!NOTE]
+    > This command deploys the Istio Ingress service in your namespace with the corresponding Kubernetes Service of type `LoadBalanced` and an assigned external IP address.
 
 2. Create a TCPRoute to configure access to your worklad:
 
@@ -94,7 +94,7 @@ kubectl get crd gateways.gateway.networking.k8s.io &> /dev/null || \
     EOF
     ```
 
-### Send TCP Traffic to an TCPEcho Service
+### Send TCP Traffic to a TCPEcho Service
 
 1. Discover Istio Ingress Gateway's IP and port:
 

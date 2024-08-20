@@ -63,8 +63,8 @@ kubectl get crd gateways.gateway.networking.k8s.io &> /dev/null || \
     EOF
     ```
 
-> [!NOTE]
-> This command deploys the Istio Ingress service in your namespace with the corresponding Kubernetes Service of type `LoadBalanced` and an assigned external IP address.
+    > [!NOTE]
+    > This command deploys the Istio Ingress service in your namespace with the corresponding Kubernetes Service of type `LoadBalanced` and an assigned external IP address.
 
 2. Create an HTTPRoute to configure access to your workload:
 
@@ -100,11 +100,11 @@ kubectl get crd gateways.gateway.networking.k8s.io &> /dev/null || \
     export INGRESS_PORT=$(kubectl get gtw httpbin-gateway -n $NAMESPACE -o jsonpath='{.spec.listeners[?(@.name=="http")].port}')
     ```
 
-2. Call an HTTPBin Service:
+2. Call the HTTPBin Service:
 
     ```bash
     curl -s -I -HHost:httpbin.kyma.example.com "http://$INGRESS_HOST:$INGRESS_PORT/headers"
     ```
-> [!NOTE]
-> This tutorial assumes there's no DNS setup for the `httpbin.kyma.example.com` host, so the call contains the host header.
 
+    > [!NOTE]
+    > This tutorial assumes there's no DNS setup for the `httpbin.kyma.example.com` host, so the call contains the host header.

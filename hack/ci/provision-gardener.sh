@@ -3,7 +3,7 @@
 #
 ##Description: This script provisions a Gardener cluster with config specified in environmental variables and runs Istio module integration tests
 
-set -euo pipefail
+set -eo pipefail
 
 function check_required_vars() {
   local requiredVarMissing=false
@@ -14,6 +14,20 @@ function check_required_vars() {
     fi
   done
   if [ "${requiredVarMissing}" = true ] ; then
+    exit 2
+  fi
+}
+
+function check_required_files() {
+  local requiredFileMissing=false
+  for file in "$@"; do
+    path=$(eval echo "\$$file")
+    if [ ! -f "${path}" ]; then
+        >&2 echo "File '${path}' required but not found"
+        requiredFileMissing=true
+    fi
+  done
+  if [ "${requiredFileMissing}" = true ] ; then
     exit 2
   fi
 }
@@ -33,7 +47,17 @@ requiredVars=(
     SCALER_MIN
 )
 
+requiredFiles=(
+    GARDENER_KUBECONFIG
+)
+
 check_required_vars "${requiredVars[@]}"
+check_required_files "${requiredFiles[@]}"
+
+if [ ! -f "./hack/ci/shoot_${GARDENER_PROVIDER}.yaml" ]; then
+    >&2 echo "File './hack/ci/shoot_${GARDENER_PROVIDER}.yaml' required but not found"
+    exit 2
+fi
 
 # render and applyshoot template
 shoot_template=$(envsubst < "./hack/ci/shoot_${GARDENER_PROVIDER}.yaml")

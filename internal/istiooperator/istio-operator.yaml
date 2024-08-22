@@ -143,6 +143,7 @@ spec:
       holdApplicationUntilProxyStarts: true
       proxyMetadata:
         BOOTSTRAP_XDS_AGENT: "true"
+        CITADEL_SELF_SIGNED_CA_RSA_KEY_SIZE: "4096"
       tracingServiceName: CANONICAL_NAME_ONLY
     defaultProviders:
       tracing: []
@@ -322,7 +323,8 @@ spec:
       deploymentLabels: null
       enableProtocolSniffingForInbound: true
       enableProtocolSniffingForOutbound: true
-      env: {}
+      env:
+        CITADEL_SELF_SIGNED_CA_RSA_KEY_SIZE: "4096"
       image: pilot
       keepaliveMaxServerConnectionAge: 30m
       nodeSelector: {}

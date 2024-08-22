@@ -78,17 +78,17 @@ func (m *IstioMerger) GetIstioImageVersion() (IstioImageVersion, error) {
 }
 
 func (m *IstioMerger) GetIstioOperator(clusterSize clusterconfig.ClusterSize) (iopv1alpha1.IstioOperator, error) {
-	var istioOpertor []byte
+	var istioOperator []byte
 	switch clusterSize {
 	case clusterconfig.Production:
-		istioOpertor = ProductionOperator
+		istioOperator = ProductionOperator
 	case clusterconfig.Evaluation:
-		istioOpertor = EvaluationOperator
+		istioOperator = EvaluationOperator
 	default:
 		return iopv1alpha1.IstioOperator{}, errors.New("unsupported cluster size")
 	}
 	toBeInstalledIop := iopv1alpha1.IstioOperator{}
-	err := yaml.Unmarshal(istioOpertor, &toBeInstalledIop)
+	err := yaml.Unmarshal(istioOperator, &toBeInstalledIop)
 	if err != nil {
 		return iopv1alpha1.IstioOperator{}, err
 	}

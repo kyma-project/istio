@@ -7,12 +7,12 @@ Draft
 ## Context
 <!--- Describe the issue or problem that is motivating this decision or change. -->
 
-Geoblocking is a feature allowing to block incoming traffic from certain IP ranges, that are exclusive to certain countries or regions.
-It can work against anonymous users and system to system network communication that are identified by its source IP address.
+Geoblocking is a feature allowing to block incoming traffic coming from certain IP addresses, that are exclusive to certain countries or regions.
+Can be utilized against anonymous users and system to system network communication, where both are identified only by its source IP address.
+Many companies are using geoblocking to protect their services from unwanted traffic, such as DDoS attacks, or to comply with legal regulations.
+Therefore, creating this kind of feature is a convenience for the user, as it extracts the need to implement it on its own. 
+It allows to utilize service mesh vision and capabilities through extracting a networking related concept outside the application, into the mesh.
 Since it's a network related concern, it was decided to implement it as a part of the Istio module.
-
-
-
 
 ## Decision
 <!--- Explain the proposed change or action and the reason behind it. -->

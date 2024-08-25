@@ -16,8 +16,74 @@ Since it's a network related concern, it was decided to implement it as a part o
 
 ## Decision
 <!--- Explain the proposed change or action and the reason behind it. -->
+Istio allows to delegate the access control to an external authorization service, which may be just a regular Kubernetes service. This seems to be a simplest way to plug the geoblocking check of incomming connections.
 
-### Considered architectural approaches
+### ip-auth service
+
+For that purpose a new service 'ip-auth' is introduced. It has three main responsibilities:
+- obtaining IP policies (allow lists, block lists)
+- authorizing incomming connection requests
+- informing about access decision (for auditing purposes)
+
+![IP Auth](../../assets/ip-auth.svg)
+
+### Modes of operation
+
+The IP Auth service offers two modes of operation:
+1. with static IP block list
+2. with SAP geoblocking service (only SAP internal customers)
+
+In the first mode the list of blocked IP ranges is read from a config map and stored in ip-auth application memory. The end-user may update the list of IP ranges at any time, so the IP-auth application is obliged to refresh it regularly. 
+
+In the second mode the list of blocked IP ranges is received from the SAP geoblocking service. In order to connect to it the ip-auth requires a configmap with URLs and a secret with credentials. The list of blocked IP ranges is then in application memory and additionally in a configmap, which works as a persistent cache. This approach limits the number of list downloads and makes the whole solution more reliable if SAP geoblocking service is not available. The list of IP ranges should be refreshed once per hour.
+
+In the second mode the ip-auth service reports the following events:
+- policy list consumption (success, failure, unchanged)
+- access decision (allow, deny)
+
+![IP Auth modes](../../assets/ip-auth-modes.svg)
+
+In order to ensure reliability and configurability a new Geoblocking Custom Resource and a new Geoblocking Controller is introduced. The controller is responsible for:
+- managing the ip-auth service deployment
+- managing authorization policy that plugs ip-auth authorizer to all incomming requests
+- performing configuration checks (like external traffic policy)
+- reporting geoblocking state
+
+### Technical details
+
+#### Policy download optimization
+
+In order to reduce unnecessary updates of the list of blocked IP ranges the ip-auth service should use ETag mechanism, which is supported by the SAP geoblocking service.
+
+#### Quick IP check
+
+The list of blocked IP ranges may be big (thousands of entries), so analyzing the whole list with every incoming request will cause unnecessary delays.
+
+Because the list of blocked IP ranges usually changes rarely, it is better to build a data structure that supports quick comparision of IP addresses. The good candidate is a radix tree.
+
+#### IP Block list cache config map
+
+Config map size can't exceed 1MB. Thus, the IP addresses must be stored in a short form, like just an array of strings. It can't store original json messages received from SAP geoblocking service.
+
+#### Events retention
+
+In order to not cause unnecessary delays the access events should be sent asynchronously:
+- after making access decision the ip-auth should generate an event and store it in a memory queue
+- separate thread should grab events from the queue and send them to the SAP geoblocking service.
+
+This approach may cause issues if SAP geoblocking service responds slowly or does not respond at all. The ip-auth application must work reliably in this case and just drop events that can't be sent.
+
+#### Headers used in check
+
+The ip-auth service should take the following HTTP headers into consideration:
+1. x-envoy-external-address - contains a single trusted IP address
+2. x-forwarded-for - contains appendable list of IP addresses (modified by each compliant proxy)
+
+IP-auth should block the connection request if any IP address in any of above headers belongs to any IP range in the block list.
+
+
+
+## Considered architectural approaches
 
 | Approach                                              | Pros                                                                             | Cons                                                                                                           |
 |-------------------------------------------------------|----------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
@@ -78,3 +144,14 @@ spec:
 
 ## Consequences
 <!--- Discuss the impact of this change, including what becomes easier or more complicated as a result. -->
+
+
+## TODO:
+Think where to put (CR / configmap / hardcoded  / etc.)
+- ip-auth deployment settings
+  - replicas
+  - ip-auth image/version
+  - memory / cpu limits and requests
+- policy refresh interval
+- events queue params (queue size, event TTL)
+- protected URLs (does GB always protect all URLs?)

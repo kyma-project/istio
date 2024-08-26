@@ -14,7 +14,7 @@ jobs:
     if: ${{ github.event.pull_request.draft == false }}
     steps:
       - uses: actions/checkout@v4
-      - uses: tj-actions/changed-files@6b2903bdce6310cfbddd87c418f253cf29b2dec9
+      - uses: tj-actions/changed-files@40853de9f8ce2d6cfdc73c1b96f14e22ba44aec4
         id: changed-files
         with:
           files_ignore: |
@@ -46,7 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: tj-actions/changed-files@6b2903bdce6310cfbddd87c418f253cf29b2dec9
+      - uses: tj-actions/changed-files@40853de9f8ce2d6cfdc73c1b96f14e22ba44aec4
         id: changed-files
         with:
           files_ignore: |
@@ -74,7 +74,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: tj-actions/changed-files@6b2903bdce6310cfbddd87c418f253cf29b2dec9
+      - uses: tj-actions/changed-files@40853de9f8ce2d6cfdc73c1b96f14e22ba44aec4
         id: changed-files
         with:
           files_ignore: |
@@ -102,7 +102,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: tj-actions/changed-files@6b2903bdce6310cfbddd87c418f253cf29b2dec9
+      - uses: tj-actions/changed-files@40853de9f8ce2d6cfdc73c1b96f14e22ba44aec4
         id: changed-files
         with:
           files: |
@@ -126,7 +126,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: tj-actions/changed-files@6b2903bdce6310cfbddd87c418f253cf29b2dec9
+      - uses: tj-actions/changed-files@40853de9f8ce2d6cfdc73c1b96f14e22ba44aec4
         id: changed-files
         with:
           files: |

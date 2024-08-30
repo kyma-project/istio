@@ -1,9 +1,19 @@
 # Istio Controller
 
+- [Overview](#overview)
+- [Istio Version](#istio-version)
+- [Upgrades and Downgrades](#upgrades-and-downgrades)
+- [Compatibility Mode](#compatibility-mode)
+- [Restart of Workloads with Enabled Sidecar Injection](#restart-of-workloads-with-enabled-sidecar-injection)
+- [X-Forwarded-For HTTP Header](#x-forwarded-for-http-header)
+- [TLS termination](#tls-termination)
+- [Labeling Resources](#labeling-resources)
+
+
 ## Overview
 
 Istio Controller is part of Kyma Istio Operator. Its role is to manage the installation of Istio as defined by the Istio custom resource (CR). The controller is responsible for:
-- Installing, upgrading, and uninstalling Istio
+- Installing, upgrading, and uninstalling Istio.
 - Restarting workloads that have a proxy sidecar to ensure that these workloads are using the correct Istio version.
 
 ## Istio Version
@@ -12,53 +22,38 @@ The version of Istio is dependent on the version of Istio Controller that you us
 
 ## Upgrades and Downgrades
 
-You can only skip a version of Kyma Istio Operator if the difference between the minor version of Istio it contains and the minor version of Istio you're using is not greater than one (for example, 1.2.3 -> 1.3.0).
+You can only skip a version of the Istio module if the difference between the minor version of Istio it contains and the minor version of Istio you're using is not greater than one (for example, 1.2.3 -> 1.3.0).
 If the difference is greater than one minor version (for example, 1.2.3 -> 1.4.0), the reconciliation fails.
 The same happens if you try to update the major version (for example, 1.2.3 -> 2.0.0) or downgrade the version. 
 Such scenarios are not supported and cause the Istio CR to be in the `Warning` state with the `Ready` condition set to `false` and the reason being `IstioVersionUpdateNotAllowed`.
 
-## Istio Custom Resource
+## Compatibility Mode
 
-The `istios.operator.kyma-project.io` CustomResourceDefinition (CRD) describes the Istio CR that is used to manage the Istio installation. To learn more, read the [Istio CR documentation](04-00-istio-custom-resource.md).
+To enable compatibility mode in the Istio module, you can set the **spec.compatibilityMode** field in the Istio CR. This allows you to mitigate breaking changes when a new release introduces an Istio upgrade. The Istio module applies an opinionated subset of Istio compatibilityVersion, and supports compatibility with the previous minor version of Istio. For example, the Istio module with Istio 1.21.0 applies a compatibility version of Istio 1.20. For more information, see [Compatibility Versions](https://istio.io/latest/docs/setup/additional-setup/compatibility-versions/).
+
+
+The following Istio Pilot environment variables are applied when you set `spec.compatibilityMode: true` in Istio CR:
+
+Name                                   | Value
+---------------------------------------|--------
+**ENABLE_ENHANCED_RESOURCE_SCOPING**   | `false`
+**ENABLE_RESOLUTION_NONE_TARGET_PORT** | `false`
+
+The following Istio Proxy environment variables are applied when you set `spec.compatibilityMode: true` in Istio CR:
+
+Name                | Value
+--------------------|--------
+**ISTIO_DELTA_XDS** | `false`
+
+
+> [!WARNING]
+> You can use the compatibility mode to retain the behavior of the current Istio version when a new version of the Istio module with a higher version of Istio is released. Then, the compatibility will be first set to a minor version lower than the one you are currently using. If this lower version’s behavior is not compatible with your current mesh setup, some configurations may be broken until the new release of the Istio module is rolled out.
 
 ## Restart of Workloads with Enabled Sidecar Injection
 
 When the Istio version is updated or the configuration of the proxies is changed, the Pods that have Istio injection enabled are automatically restarted. This is possible for all resources that allow for a rolling restart. If Istio is uninstalled, the workloads are restarted again to remove the sidecars.
 However, if a resource is a job, a ReplicaSet that is not managed by any deployment, or a Pod that is not managed by any other resource, the restart cannot be performed automatically. In such cases, a warning is logged, and you must manually restart the resources.
 Istio Operator does not restart an Istio sidecar proxy, if it has a custom image set. See [Resource Annotations](https://istio.io/latest/docs/reference/config/annotations/#SidecarProxyImage).
-
-## Status Codes
-
-|     Code     | Description                                  |
-|:------------:|:---------------------------------------------|
-|   `Ready`    | Controller finished reconciliation.          |
-| `Processing` | Controller is installing or upgrading Istio. |
-|  `Deleting`  | Controller is uninstalling Istio.            |
-|   `Error`    | An error occurred during reconciliation.     |
-|  `Warning`   | Controller is misconfigured.                 |
-
-Conditions:
-
-| CR state   | Type                         | Status | Reason                             | Message                                                                                  |
-|------------|------------------------------|--------|------------------------------------|------------------------------------------------------------------------------------------|
-| Ready      | Ready                        | True   | ReconcileSucceeded                 | Reconciliation succeeded                                                                 |
-| Error      | Ready                        | False  | ReconcileFailed                    | Reconciliation failed                                                                    |
-| Warning    | Ready                        | False  | OlderCRExists                      | This Istio custom resource is not the oldest one and does not represent the module state |
-| Processing | Ready                        | False  | IstioInstallNotNeeded              | Istio installation is not needed                                                         |
-| Processing | Ready                        | False  | IstioInstallSucceeded              | Istio installation succeeded                                                             |
-| Processing | Ready                        | False  | IstioUninstallSucceeded            | Istio uninstallation succeded                                                            |
-| Error      | Ready                        | False  | IstioInstallUninstallFailed        | Istio install or uninstall failed                                                        |
-| Error      | Ready                        | False  | IstioCustomResourceMisconfigured   | Istio custom resource has invalid configuration                                          |
-| Warning    | Ready                        | False  | IstioCustomResourcesDangling       | Istio deletion blocked because of existing Istio custom resources                        |
-| Processing | Ready                        | False  | CustomResourcesReconcileSucceeded  | Custom resources reconciliation succeeded                                                |
-| Error      | Ready                        | False  | CustomResourcesReconcileFailed     | Custom resources reconciliation failed                                                   |
-| Processing | ProxySidecarRestartSucceeded | True   | ProxySidecarRestartSucceeded       | Proxy sidecar restart succeeded                                                          |
-| Error      | ProxySidecarRestartSucceeded | False  | ProxySidecarRestartFailed          | Proxy sidecar restart failed                                                             |
-| Processing | ProxySidecarRestartSucceeded | False  | ProxySidecarPartiallySucceeded     | Proxy sidecar restart partially succeeded                                                |
-| Warning    | ProxySidecarRestartSucceeded | False  | ProxySidecarManualRestartRequired  | Proxy sidecar manual restart is required for some workloads                              |
-| Processing | Ready                        | False  | IngressGatewayReconcileSucceeded   | Istio Ingress Gateway reconciliation succeeded                                           |
-| Error      | Ready                        | False  | IngressGatewayReconcileFailed      | Istio Ingress Gateway reconciliation failed                                              |
-| Warning    | Ready                        | False  | IstioVersionUpdateNotAllowed       | Update to the new Istio version is not allowed                                           |
 
 ## X-Forwarded-For HTTP Header
 
@@ -73,7 +68,7 @@ the TLS termination process is handled by the Ingress Gateway Envoy proxy, which
 
 ## Labeling Resources
 
-In accordance with the decision [Consistent Labeling of Kyma Modules](https://github.com/kyma-project/community/issues/864), the Istio Operator resources use the standard Kubernetes labels:
+In accordance with the decision [Consistent Labeling of Kyma Modules](https://github.com/kyma-project/community/issues/864), the Istio Operator's resources use the standard Kubernetes labels:
 
 
 ```yaml
@@ -96,24 +91,3 @@ Run this command to get all resources created by the Istio module:
 ```bash
 kubectl get all|<resources-kind> -A -l kyma-project.io/module=istio
 ```
-
-## Compatibility Mode
-
-To enable compatibility mode in the Istio module, you can set the **spec.compatibilityMode** field in the Istio CR. This allows you to mitigate breaking changes when a new release introduces an Istio upgrade. The Istio module applies an opinionated subset of Istio compatibilityVersion, and supports compatibility with the previous minor version of Istio. For example, the Istio module with Istio 1.21.0 applies a compatibility version of Istio 1.20. For more information, see [Compatibility Versions](https://istio.io/latest/docs/setup/additional-setup/compatibility-versions/).
-
-
-The following Istio Pilot environment variables are applied when you set `spec.compatibilityMode: true` in Istio CR:
-
-| Name                                 | Value   |
-|--------------------------------------|---------|
-| **ENABLE_DELIMITED_STATS_TAG_REGEX** | `false` |
-
-The following Istio Proxy environment variables are applied when you set `spec.compatibilityMode: true` in Istio CR:
-
-| Name                                 | Value   |
-|--------------------------------------|---------|
-| **ENABLE_DEFERRED_CLUSTER_CREATION** | `false` |
-| **ENABLE_DELIMITED_STATS_TAG_REGEX** | `false` |
-
-> [!WARNING]
-> You can use the compatibility mode to retain the behavior of the current Istio version when a new version of the Istio module with a higher version of Istio is released. Then, the compatibility will be first set to a minor version lower than the one you are currently using. If this lower version’s behavior is not compatible with your current mesh setup, some configurations may be broken until the new release of the Istio module is rolled out. 

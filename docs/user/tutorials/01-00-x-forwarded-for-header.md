@@ -1,7 +1,7 @@
 # Forward a Client IP in the X-Forwarded-For Header
 
-Many applications need to know the client IP address of an originating request to behave properly. Usual use cases include workloads that require the client IP address to restrict their access. The ability to provide client attributes to services has long been a staple of reverse proxies, which use the X-Forwarded-For (XFF) header to forward client attributes to destination workloads. For more information on XFF, see 
-the [IETF’s RFC documentation](https://datatracker.ietf.org/doc/html/rfc7239) and [Envoy documentation](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_conn_man/headers#x-forwarded-for).
+Many applications must know the client IP address of an originating request to behave properly. Usual use cases include workloads that require the client IP address to restrict their access. The ability to provide client attributes to services has long been a staple of reverse proxies, which use the X-Forwarded-For (XFF) header to forward client attributes to destination workloads. For more information on XFF, see 
+the [IETF’s RFC documentation](https://datatracker.ietf.org/doc/html/rfc7239) and [Envoy documentation](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_conn_man/headers#x-forwarded-for). 
 
 ## Prerequisites
 
@@ -13,8 +13,7 @@ the [IETF’s RFC documentation](https://datatracker.ietf.org/doc/html/rfc7239) 
 ### Configure the Number of Trusted Proxies in the Istio Custom Resource
 
 Applications rely on reverse proxies to forward the client IP address in a request using the XFF header. However, due to 
-the variety of network topologies, you must specify the configuration property **numTrustedProxies**, so that the client address can be extracted correctly. This property indicates the number of trusted proxies deployed
-in front of the Istio Gateway proxy.
+the variety of network topologies, you must specify the configuration property **numTrustedProxies**, so that the client address can be extracted correctly. This property indicates the number of trusted proxies deployed in front of the Istio Gateway proxy.
 
 Add **numTrustedProxies** to the Istio custom resource:
 
@@ -33,7 +32,7 @@ Run the following command:
 4. Select **Save**.
 <!-- tabs:end -->
 
-### Configure Gateway External Traffic Policy in the Istio Custom Resource (GCP and Azure only)
+### Configure Gateway External Traffic Policy in the Istio CR (Only Required for GCP and Azure)
 
 If you are using a GCP or Azure cluster, you must also set the **gatewayExternalTrafficPolicy** to `Local` in order to include the client's IP address in the XFF header. Skip this step if you're using a different cloud service provider.
 
@@ -60,7 +59,7 @@ Run the following command:
 
 
 #### **Kyma Dashboard**
-1. Navigate to **Cluster Details** and select **Modify Modules**.
+1. Go to **Cluster Details** and select **Modify Modules**.
 2. Choose the Istio module and select **Edit**.
 3. In the `General` section, set the Gateway external traffic policy to `Local`.
 4. Select **Save**.
@@ -68,13 +67,28 @@ Run the following command:
 
 ### Create a Workload for Verification
 
-1. [Create an HttpBin workload](https://kyma-project.io/#/api-gateway/user/tutorials/01-00-create-workload).
-2. Export the following values as environment variables.
+1. Export the name of the namespace in which you want to deploy the HTTPBin Service:
+
+    ```bash
+    export NAMESPACE={NAMESPACE_NAME}
+    ```
+
+2. Create a namespace with Istio injection enabled and deploy the HTTPBin Service:
+
+    ```bash
+    kubectl create ns $NAMESPACE
+    kubectl label namespace $NAMESPACE istio-injection=enabled --overwrite
+    kubectl create -n $NAMESPACE -f https://raw.githubusercontent.com/istio/istio/release-1.22/samples/tcp-echo/tcp-echo.yaml
+    ```
+
+3. Export the following values as environment variables.
+    
     ```bash
     export DOMAIN_TO_EXPOSE_WORKLOADS={GATEWAY_DOMAIN}
     export GATEWAY={GATEWAY_NAMESPACE}/GATEWAY_NAME}
-   ```
-3. Expose the HttpBin workload using a VirtualService.
+    ```
+    
+4. Expose the HttpBin workload using a VirtualService.
     ```bash
     cat <<EOF | kubectl apply -f -
     apiVersion: networking.istio.io/v1alpha3
@@ -100,6 +114,7 @@ Run the following command:
     ```
 
 ### Verify the X-Forwarded-For and X-Envoy-External-Address Headers
+
 1. Get your public IP address.
     ```bash
     curl -s https://api.ipify.org
@@ -129,4 +144,4 @@ Run the following command:
       "origin": "165.1.187.197",
       "url": "..."
     }
-    ``` 
+    ```

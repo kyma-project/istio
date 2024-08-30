@@ -10,15 +10,16 @@ kubectl get crd istios.operator.kyma-project.io -o yaml
 
 You are only allowed to use one Istio CR, which you must create in the `kyma-system` namespace. If the namespace contains multiple Istio CRs, the oldest one reconciles the module. Any additional Istio CR is placed in the `Warning` state.
 
-## Specification
 
-This table lists all the possible parameters of the given resource together with their descriptions:
+## Custom Resource Parameters
+
+This table lists all the possible parameters of Istio CR together with their descriptions:
 
 ### Spec
 
 | Parameter                                                   | Type           | Description                                                                                                                                                                                                                                                                                                                                 |
 |-------------------------------------------------------------|----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **compatibilityMode**                                       | bool           | Enables compatibility mode in Istio.                                                                                                                                                                                                                                     |
+| **compatibilityMode**                                       | bool           | Enables compatibility mode in Istio. See [Compatibility Mode](./00-10-overview-istio-controller.md#compatibility-mode).                                                                                                                                                                                                                                     |
 | **components.cni**                                          | object         | Defines component configuration for Istio CNI DaemonSet.                                                                                                                                                                                                                                                                                    |
 | **components.cni.k8s.affinity**                             | object         | Affinity is a group of affinity scheduling rules. To learn more, read about affininty in the [Istio documentation](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#Affinity).                                                                                                                                        |
 | **components.cni.k8s.resources**                            | object         | Defines [Kubernetes resources requests and limits configuration](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/). For more information, read about Resources in the [Istio documentation](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#Resources ).                               |
@@ -45,7 +46,7 @@ This table lists all the possible parameters of the given resource together with
 | **experimental.pilot.enableAlphaGatewayAPI**                | bool           | Enables support for alpha Kubernetes Gateway API.                                                                                                                                                                                                                                                                                           |
 | **experimental.pilot.enableMultiNetworkDiscoverGatewayAPI** | bool           | Enables support for multi-network discovery in Kubernetes Gateway API.                                                                                                                                                                                                                                                                      |
 
-**Authorizer**
+### Authorizer
 
 | Parameter              | Type    | Description                                                                                                                                   |
 |------------------------|---------|-----------------------------------------------------------------------------------------------------------------------------------------------|
@@ -54,7 +55,8 @@ This table lists all the possible parameters of the given resource together with
 | **port** (required)    | integer | Specifies the port number of the external authorizer used to make the authorization request.                                                  |
 | **headers**            | headers | Specifies headers to be included, added, or forwarded during authorization.                                                                   |
 
-**Headers**
+
+### Headers
 
 | Parameter                | Type       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 |--------------------------|------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -78,3 +80,40 @@ This table lists all the possible parameters of the given resource together with
 | **conditions.&#x200b;reason**             | string     | Defines the reason for the condition status change.                                                                      |
 | **conditions.&#x200b;status** (required)  | string     | Represents the status of the condition. The value is either `True`, `False`, or `Unknown`.                               |
 | **conditions.&#x200b;type**               | string     | Provides a short description of the condition.                                                                           |
+
+## Istio CR's State
+
+See the possible values of the **status.state** field:
+
+|     Code     | Description                                        |
+|:------------:|:---------------------------------------------------|
+|   `Ready`    | Istio Controller finished reconciliation.          |
+| `Processing` | Istio Controller is installing or upgrading Istio. |
+|  `Deleting`  | Istio Controller is uninstalling Istio.            |
+|   `Error`    | An error occurred during reconciliation.           |
+|  `Warning`   | Istio Controller is misconfigured.                 |
+
+## Istio CR's Status Conditions
+
+See the possible values of the **status.conditions** fields:
+
+| Istio CR's State    | Type                           | Status  | Reason                              | Message                                                                                  |
+|--------------|--------------------------------|---------|-------------------------------------|------------------------------------------------------------------------------------------|
+| `Ready`      | `Ready`                        | `True`  | `ReconcileSucceeded`                | Reconciliation succeeded                                                                 |
+| `Error`      | `Ready`                        | `False` | `ReconcileFailed`                   | Reconciliation failed                                                                    |
+| `Warning`    | `Ready`                        | `False` | `OlderCRExists`                     | This Istio custom resource is not the oldest one and does not represent the module state |
+| `Processing` | `Ready`                        | `False` | `IstioInstallNotNeeded`             | Istio installation is not needed                                                         |
+| `Processing` | `Ready`                        | `False` | `IstioInstallSucceeded`             | Istio installation succeeded                                                             |
+| `Processing` | `Ready`                        | `False` | `IstioUninstallSucceeded`           | Istio uninstallation succeded                                                            |
+| `Error`      | `Ready`                        | `False` | `IstioInstallUninstallFailed`       | Istio install or uninstall failed                                                        |
+| `Error`      | `Ready`                        | `False` | `IstioCustomResourceMisconfigured`  | Istio custom resource has invalid configuration                                          |
+| `Warning`    | `Ready`                        | `False` | `IstioCustomResourcesDangling`      | Istio deletion blocked because of existing Istio custom resources                        |
+| `Processing` | `Ready`                        | `False` | `CustomResourcesReconcileSucceeded` | Custom resources reconciliation succeeded                                                |
+| `Error`      | `Ready`                        | `False` | `CustomResourcesReconcileFailed`    | Custom resources reconciliation failed                                                   |
+| `Processing` | `ProxySidecarRestartSucceeded` | `True`  | `ProxySidecarRestartSucceeded`      | Proxy sidecar restart succeeded                                                          |
+| `Error`      | `ProxySidecarRestartSucceeded` | `False` | `ProxySidecarRestartFailed`         | Proxy sidecar restart failed                                                             |
+| `Processing` | `ProxySidecarRestartSucceeded` | `False` | `ProxySidecarPartiallySucceeded`    | Proxy sidecar restart partially succeeded                                                |
+| `Warning`    | `ProxySidecarRestartSucceeded` | `False` | `ProxySidecarManualRestartRequired` | Proxy sidecar manual restart is required for some workloads                              |
+| `Processing` | `Ready`                        | `False` | `IngressGatewayReconcileSucceeded`  | Istio Ingress Gateway reconciliation succeeded                                           |
+| `Error`      | `Ready`                        | `False` | `IngressGatewayReconcileFailed`     | Istio Ingress Gateway reconciliation failed                                              |
+| `Warning`    | `Ready`                        | `False` | `IstioVersionUpdateNotAllowed`      | Update to the new Istio version is not allowed                                           |

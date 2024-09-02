@@ -25,29 +25,39 @@ For that purpose a new service 'ip-auth' is introduced. It has three main respon
 - authorizing incomming connection requests
 - informing about access decision (for auditing purposes)
 
-![IP Auth](../../assets/ip-auth.svg)
+![IP Auth](../../assets/geoblocking.svg)
 
 ### Modes of operation
 
 The IP Auth service offers two modes of operation:
-1. with static IP block list
+1. with IP block list populated by customer
 2. with SAP geoblocking service (only SAP internal customers)
 
-In the first mode the list of blocked IP ranges is read from a config map and stored in ip-auth application memory. The end-user may update the list of IP ranges at any time, so the IP-auth application is obliged to refresh it regularly. 
+#### IP block list populated by customer
 
-In the second mode the list of blocked IP ranges is received from the SAP geoblocking service. In order to connect to it the ip-auth requires a configmap with URLs and a secret with credentials. The list of blocked IP ranges is then in application memory and additionally in a configmap, which works as a persistent cache. This approach limits the number of list downloads and makes the whole solution more reliable if SAP geoblocking service is not available. The list of IP ranges should be refreshed once per hour.
+In this mode the list of blocked IP ranges is read from a config map and stored in ip-auth application memory. The end-user may update the list of IP ranges at any time, so the IP-auth application is obliged to refresh it regularly. 
 
-In the second mode the ip-auth service reports the following events:
+![Static list](../../assets/geoblocking-custom-list.svg)
+
+#### IP block list obtained from SAP geoblocking service
+
+In this mode the list of blocked IP ranges is received from the SAP geoblocking service. In order to connect to it the ip-auth requires a secret with geoblocking service credentials. The list of blocked IP ranges is then in application memory and additionally in a configmap, which works as a persistent cache. This approach limits the number of list downloads and makes the whole solution more reliable if SAP geoblocking service is not available. The list of IP ranges should be refreshed once per hour.
+
+Additionally, the ip-auth service uses SAP geoblocking service to report the following events:
 - policy list consumption (success, failure, unchanged)
 - access decision (allow, deny)
 
-![IP Auth modes](../../assets/ip-auth-modes.svg)
+![SAP geoblocking service](../../assets/geoblocking-SAP-service.svg)
+
+### Geoblocking CR and controller
 
 In order to ensure reliability and configurability a new Geoblocking Custom Resource and a new Geoblocking Controller is introduced. The controller is responsible for:
 - managing the ip-auth service deployment
 - managing authorization policy that plugs ip-auth authorizer to all incomming requests
 - performing configuration checks (like external traffic policy)
 - reporting geoblocking state
+
+![Geoblocking controller](../../assets/geoblocking-cr-controller.svg)
 
 ### Technical details
 
@@ -127,9 +137,9 @@ metadata:
   name: default
   namespace: kyma-system
 spec:
-  service:
-    settingsConfigMap: "default/gb-settings"
-    secret: "default/gb-secret"
+  ipListFromService:
+    configMap: "gb-config"
+    secret: "gb-secret"
 ---
 #EXTERNAL
 apiVersion: geoblocking.kyma-project.io/v1alpha1
@@ -138,8 +148,8 @@ metadata:
     name: default
     namespace: kyma-system
 spec:
-  staticList:
-    configMap: "default/ip-list"
+  ipListFromConfigMap:
+    configMap: "custom-ip-list"
 ```
 
 ## Consequences

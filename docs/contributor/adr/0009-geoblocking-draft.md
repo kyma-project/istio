@@ -59,6 +59,42 @@ In order to ensure reliability and configurability a new Geoblocking Custom Reso
 
 ![Geoblocking controller](../../assets/geoblocking-cr-controller.svg)
 
+# CR examples
+```yaml
+# GB service
+apiVersion: geoblocking.kyma-project.io/v1alpha1
+kind: GeoBlocking
+metadata:
+  name: default
+  namespace: kyma-system
+spec:
+  gbService:
+    tokenUrl: https://example.com/oauth2/token
+    ipListUrl: https://example/com/v2/lists/some-project/some-list
+    eventsApiUrl: https://example.com/v1/events
+    secret: "gb-secret"
+    refreshInterval: 3600
+    events:
+      lobId: 123
+  protect:
+    paths: ["*"]
+```
+
+```yaml
+# Custom IP list
+apiVersion: geoblocking.kyma-project.io/v1alpha1
+kind: GeoBlocking
+metadata:
+    name: default
+    namespace: kyma-system
+spec:
+  ipList:
+    configMap: "custom-ip-list"
+    refreshInterval: 3600
+  protect:
+    paths: ["*"]
+```
+
 ### Technical details
 
 #### Policy download optimization
@@ -91,9 +127,19 @@ The ip-auth service should take the following HTTP headers into consideration:
 
 IP-auth should block the connection request if any IP address in any of above headers belongs to any IP range in the block list.
 
+#### ip-auth deployment settings
 
+The main responsibility of the controller is to reconcile the ip-auth deployment. The deployment details should be hardcoded for simplicity, similarly to [oathkeeper deployment](https://github.com/kyma-project/api-gateway/blob/fdef70be4ca9a9319ae4c547f4f6dad8c73b9846/internal/reconciliations/oathkeeper/deployment.yaml).
 
-## Considered architectural approaches
+#### Authorization Policy settings
+
+For simplicity reasons, we assume that geoblocking would be applied globally for the whole application.
+
+We may allow some basic configurability, like the list of URLs protected by the ip-auth authorizer.
+
+## Considered alternative architectural approaches
+
+### Where to put geoblocking
 
 | Approach                                              | Pros                                                                             | Cons                                                                                                           |
 |-------------------------------------------------------|----------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
@@ -127,62 +173,27 @@ IP-auth should block the connection request if any IP address in any of above he
 |                                                       | Resiliency compared to one module                                                |                                                                                                                |
 |                                                       | Istio does not gain another dependency                                           |                                                                                                                |
 |                                                       | We don't complicate Istio Module int/e2e tests                                   |                                                                                                                |
+### Workload resources and event queue parameters
 
-# API usage examples
+Events are stored in a queue, so there is a correlation between:
+- queue size
+- event TTL
+- ip-auth pod memory resources
+
+These parameters may be:
+- hardcoded
+- calculated based on current memory setup
+- configurable in the Custom Resource
+
+Configuration could look like:
 ```yaml
-#INTERNAL
-apiVersion: geoblocking.kyma-project.io/v1alpha1
-kind: GeoBlocking
-metadata:
-  name: default
-  namespace: kyma-system
 spec:
   gbService:
-    tokenUrl: https://example.com/oauth2/token
-    ipListUrl: https://example/com/v2/lists/some-project/some-list
-    eventsApiUrl: https://example.com/v1/events
-    secret: "gb-secret"
-    refreshInterval: 3600
     events:
-      lob:
-        id: 123
       queue:
         size: 100
         ttl: 360
-  rules:
-  - from:
-    - source:
-        namespaces: ["dev"]
-    to:
-    - operation:
-        methods: ["POST"]
-  deployment:
-    replicas: 5
-    resources:
-      requests:
-        memory: "64Mi"
-        cpu: "250m"
-      limits:
-        memory: "128Mi"
-        cpu: "500m"
----
-#EXTERNAL
-apiVersion: geoblocking.kyma-project.io/v1alpha1
-kind: GeoBlocking
-metadata:
-    name: default
-    namespace: kyma-system
-spec:
-  ipList:
-    configMap: "custom-ip-list"
-    refreshInterval: 3600
-  rules:
-  - to:
-    - operation:
-        methods: ["POST"]
-        ports: ["8080"]
-  deployment:
-    replicas: 5
+  deployment: 
     resources:
       requests:
         memory: "64Mi"
@@ -192,18 +203,22 @@ spec:
         cpu: "500m"
 ```
 
-## Consequences
-<!--- Discuss the impact of this change, including what becomes easier or more complicated as a result. -->
+Decision: it doesn't make sense to expose so many technical parameters related to the internal SAP service. It would be better to hardcode these parameters for now.
 
+### Configurability of target operations
 
-## TODO:
-- Think where to put (CR / configmap / hardcoded  / etc.)
-- ip-auth deployment settings
-  - replicas
-  - ip-auth image/version
-  - memory / cpu limits and requests
-- policy refresh interval
-- events queue params (queue size, event TTL)
-- protected URLs (does GB always protect all URLs?)
-- LOB data (for events?)
-- which pod updates the configmap (leader election?)
+Istio allows to specify a lot of conditions that are used to link a request with a given AuthorizationPolicy: https://istio.io/latest/docs/reference/config/security/authorization-policy/#Rule
+
+We can either:
+- expose them and make it configurable in the CR
+- hide it and doesn't allow such configurability
+
+Decision: it doesn't make sense to expose so many detailed parameters, because the idea behind Geoblocking is to be compliant with regulations, which are usually very global (apply to the whole company / product / application).
+
+# TODO:
+- which pod should update the configmap (leader election?)
+- which gateway to target?
+- how to get geoblocking status? (controller separated from workload)
+- image hardcoded?
+- queue size / resources - tuning mechanism
+- refresh (service / configmap)

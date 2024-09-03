@@ -137,9 +137,34 @@ metadata:
   name: default
   namespace: kyma-system
 spec:
-  ipListFromService:
-    configMap: "gb-config"
+  gbService:
+    tokenUrl: https://example.com/oauth2/token
+    ipListUrl: https://example/com/v2/lists/some-project/some-list
+    eventsApiUrl: https://example.com/v1/events
     secret: "gb-secret"
+    refreshInterval: 3600
+    events:
+      lob:
+        id: 123
+      queue:
+        size: 100
+        ttl: 360
+  rules:
+  - from:
+    - source:
+        namespaces: ["dev"]
+    to:
+    - operation:
+        methods: ["POST"]
+  deployment:
+    replicas: 5
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
 ---
 #EXTERNAL
 apiVersion: geoblocking.kyma-project.io/v1alpha1
@@ -148,8 +173,23 @@ metadata:
     name: default
     namespace: kyma-system
 spec:
-  ipListFromConfigMap:
+  ipList:
     configMap: "custom-ip-list"
+    refreshInterval: 3600
+  rules:
+  - to:
+    - operation:
+        methods: ["POST"]
+        ports: ["8080"]
+  deployment:
+    replicas: 5
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
 ```
 
 ## Consequences
@@ -157,7 +197,7 @@ spec:
 
 
 ## TODO:
-Think where to put (CR / configmap / hardcoded  / etc.)
+- Think where to put (CR / configmap / hardcoded  / etc.)
 - ip-auth deployment settings
   - replicas
   - ip-auth image/version
@@ -165,3 +205,5 @@ Think where to put (CR / configmap / hardcoded  / etc.)
 - policy refresh interval
 - events queue params (queue size, event TTL)
 - protected URLs (does GB always protect all URLs?)
+- LOB data (for events?)
+- which pod updates the configmap (leader election?)

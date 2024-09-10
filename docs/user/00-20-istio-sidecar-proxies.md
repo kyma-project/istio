@@ -1,6 +1,4 @@
-# Istio Service Mesh
-
-## What is the Istio service mesh?
+# Istio Sidecar Proxies
 
 A service mesh is an infrastructure layer that handles service-to-service communication, proxying, service discovery, traceability, and security, independently of the code of the services. To deliver this functionality, the Istio module uses the [Istio](https://istio.io/docs/concepts/what-is-istio/) service mesh that is customized for the specific needs of the implementation.
 
@@ -8,13 +6,13 @@ The main principle of the Istio service mesh is to inject Pods of every service 
 
 ## Purpose and Benefits of Istio Sidecars
 
-By default, Istio installed by Istio Operator is configured with automatic Istio sidecar proxy injection disabled. This means that none of the Pods of your workloads, except any workloads in the `kyma-system` namespace, get their own sidecar proxy container running next to your application. You can manage mTLS traffic in services or at a namespace level by creating [DestinationRule](https://istio.io/docs/reference/config/networking/destination-rule/) and [PeerAuthentication](https://istio.io/docs/tasks/security/authentication/authn-policy/) resources. If you disable sidecar injection for a service or for a namespace, you must manage their traffic configuration by creating appropriate DestinationRule and PeerAuthentication resources.
+By default, Istio installed as part of the Istio module is configured with automatic Istio sidecar proxy injection disabled. This means that none of your workloads' Pods, except those in the `kyma-system` namespace, get their own sidecar proxy container running next to your application. You can manage mTLS traffic in services or at a namespace level by creating [DestinationRule](https://istio.io/docs/reference/config/networking/destination-rule/) and [PeerAuthentication](https://istio.io/docs/tasks/security/authentication/authn-policy/) resources. If you disable sidecar injection for a service or for a namespace, you must manage their traffic configuration by creating appropriate DestinationRule and PeerAuthentication resources.
 
 With an Istio sidecar, the resource becomes part of the Istio service mesh, which brings the following benefits that would be complex to manage otherwise.
 
 ### Secure Communication
 <!-- markdown-link-check-disable-next-line -->
-In Kyma's [default Istio configuration](./00-40-overview-istio-setup.md), [peer authentication](https://istio.io/latest/docs/concepts/security/#peer-authentication) is set to cluster-wide `STRICT` mode. This ensures that your workload only accepts [mutual TLS traffic](https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/) where both client and server certificates are validated to ensure that all traffic is encrypted. This provides each service with a strong identity and a reliable system for managing keys and certificates.
+The Istio module sets [peer authentication](https://istio.io/latest/docs/concepts/security/#peer-authentication) to cluster-wide `STRICT` mode. This ensures that your workload only accepts [mutual TLS traffic](https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/) where both client and server certificates are validated to ensure that all traffic is encrypted. This provides each service with a strong identity and a reliable system for managing keys and certificates.
 
 Another security benefit of having a sidecar proxy is that you can perform [request authentication](https://istio.io/latest/docs/reference/config/security/request_authentication/) for your service. Istio enables request authentication with JSON Web Token (JWT) validation using a custom authentication provider.
 
@@ -34,3 +32,8 @@ To improve the resiliency of your applications, you can use [mirroring](https://
 
 Application resiliency is an important topic within traffic management. Traditionally, resiliency features like timeouts, retries, and circuit breakers were implemented by application libraries. However, with service mesh, you can delegate such tasks to the mesh, and the same configuration options will work regardless of the programming language of your application. See [Network Resilience and Testing](https://istio.io/latest/docs/concepts/traffic-management/#network-resilience-and-testing).
 
+## Restart of Workloads with Enabled Sidecar Injection
+
+When the Istio version is updated or the configuration of the proxies is changed, the Pods that have Istio injection enabled are automatically restarted. This is possible for all resources that allow for a rolling restart. If Istio is uninstalled, the workloads are restarted again to remove the sidecars.
+However, if a resource is a job, a ReplicaSet that is not managed by any Deployment, or a Pod that is not managed by any other resource, the restart cannot be performed automatically. In such cases, a warning is logged, and you must manually restart the resources.
+Istio Operator does not restart an Istio sidecar proxy, if it has a custom image set. See [Resource Annotations](https://istio.io/latest/docs/reference/config/annotations/#SidecarProxyImage).

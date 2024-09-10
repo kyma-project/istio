@@ -25,9 +25,17 @@ Within the Istio module, Istio Operator handles the management and configuration
 
 ### Istio Controller
 
-Istio Controller manages the installation of Istio as defined by the Istio custom resource (CR). It is responsible for tasks such as installing, upgrading, and uninstalling Istio, as well as restarting workloads with a proxy sidecar to ensure they are using the correct version of Istio.
+Istio Controller manages Istio and its resources as defined in the Istio custom resource (CR). Istio Controller is responsible for:
+- installing, upgrading, and uninstalling Istio
+- restarting workloads that have Istio sidecar proxy injected to ensure that these workloads are using the correct version of Istio
 
-For more information, see [Istio Controller](./00-10-overview-istio-controller.md).
+### Istio Module's Resources
+
+All Kubernetes resources created by the Istio module's and its conponents use the label  `kyma-project.io/module=istio`. To list the resources, run the command:
+
+```bash
+kubectl get all -A -l kyma-project.io/module=istio
+```
 
 ## API / Custom Resource Definitions
 
@@ -35,5 +43,4 @@ The `istios.operator.kyma-project.io` CustomResourceDefinition (CRD) describes t
 
 ## Resource Consumption
 
-To learn more about the resources used by the Telemetry module, see [Kyma's Modules Sizing](https://help.sap.com/docs/btp/sap-business-technology-platform/kyma-modules-sizing?version=Cloud#istio).
-
+To learn more about the resources used by the Istio module, see [Kyma's Modules Sizing](https://help.sap.com/docs/btp/sap-business-technology-platform/kyma-modules-sizing?version=Cloud#istio).

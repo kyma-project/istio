@@ -1,4 +1,5 @@
-# Can't Access a Kyma Endpoint (503 status code)
+# Can't Access a Kyma Endpoint (503 status code) 
+//zapytać goaty czy mozemy sugerowac delete podów 
 
 ## Symptom
 

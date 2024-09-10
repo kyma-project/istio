@@ -1,5 +1,5 @@
 # Changes to Istio Resources Are Not Reverted After Reconciliation
-
+//nie na hp, valid na os
 ## Symptoms
 
 - The Istio Ingress Gateway Deployment, Istiod Deployment, or  Istio CNI DaemonSets fails to start.

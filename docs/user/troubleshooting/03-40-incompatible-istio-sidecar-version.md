@@ -1,5 +1,5 @@
 # Incompatible Istio Sidecar Version After Istio Operator's Upgrade
-
+// zrobić taska na przerobienie, bez szukania podów patrząc na istio cr status, dokładniej opisać symptom 
 ## Symptom
 
 You upgraded Kyma Istio Operator, and mesh connectivity is broken.

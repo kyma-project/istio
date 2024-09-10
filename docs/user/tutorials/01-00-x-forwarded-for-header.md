@@ -5,7 +5,7 @@ the [IETF’s RFC documentation](https://datatracker.ietf.org/doc/html/rfc7239) 
 
 ## Prerequisites
 
-* The Istio module added or [Kyma Istio Operator](../../../README.md#install-kyma-istio-operator-and-istio-from-the-latest-release) installed
+* The Istio module added or [Istio Operator](../../../README.md#install-kyma-istio-operator-and-istio-from-the-latest-release) installed
 * [Istio Gateway](https://kyma-project.io/#/api-gateway/user/tutorials/01-20-set-up-tls-gateway) set up
 
 ## Steps
@@ -36,7 +36,7 @@ Run the following command:
 
 If you are using a GCP or Azure cluster, you must also set the **gatewayExternalTrafficPolicy** to `Local` in order to include the client's IP address in the XFF header. Skip this step if you're using a different cloud service provider.
 
-For production Deployments, it is strongly recommended to deploy an Ingress Gateway Pod to multiple nodes if you enable `externalTrafficPolicy: Local`. Otherwise, this creates a situation where only nodes with an active Ingress Gateway Pod are able to accept and distribute incoming NLB traffic to the rest of the cluster, creating potential ingress traffic bottlenecks and reduced internal load balancing capability, or even complete loss of ingress traffic incoming to the cluster if the subset of nodes with Ingress Gateway Pods goes down. See the source IP for Services with `Type=NodePort` for more information. For reference, see Istio [Network Load Balancer](https://istio.io/latest/docs/tasks/security/authorization/authz-ingress/#network) documentation.
+For production Deployments, it is strongly recommended to deploy an Ingress Gateway Pod to multiple nodes if you enable `externalTrafficPolicy: Local`. Otherwise, only nodes with an active Ingress Gateway Pod are able to accept and distribute incoming NLB traffic to the rest of the cluster, creating potential ingress traffic bottlenecks and reduced internal load balancing capability, or even complete loss of ingress traffic incoming to the cluster if the subset of nodes with Ingress Gateway Pods goes down. See the source IP for Services with `Type=NodePort` for more information. For reference, see [Network Load Balancer](https://istio.io/latest/docs/tasks/security/authorization/authz-ingress/#network).
 
 Default Kyma Istio installation profile configures **PodAntiAffinity** to ensure that Ingress Gateway Pods are evenly spread across all Nodes. This guarantees that the above requirement is satisfied if your IngressGateway autoscaling configuration **minReplicas** is at least equal to the number of Nodes. You can configure autoscaling options in the Istio custom resource using **spec.config.components.ingressGateway.k8s.hpaSpec.minReplicas**.
 
@@ -89,6 +89,7 @@ Run the following command:
     ```
     
 4. Expose the HttpBin workload using a VirtualService.
+    
     ```bash
     cat <<EOF | kubectl apply -f -
     apiVersion: networking.istio.io/v1alpha3

@@ -31,22 +31,38 @@ jobs:
             .**
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
-  wait-for-image-build:
-    name: Wait for image build
+
+  build-image:
+    name: Build manager image
     needs: [filter-changes]
     if: ${{ github.event.pull_request.draft == false && needs.filter-changes.outputs.check == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/wait-for-job-succeed-or-fail
-        with:
-          job-name: 'post-istio-operator-build'
-          github-auth-token: ${{ secrets.GITHUB_TOKEN }}
+    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main # Usage: kyma-project/test-infra/.github/workflows/image-builder.yml@main
+    with:
+      name: istio-manager
+      dockerfile: Dockerfile
+      context: .
+      build-args: |
+        "VERSION=${{ github.ref_name }}"
+      tags: ${{ github.sha }}
+
+  build-experimental-image:
+    name: Build manager image - experimental
+    needs: [filter-changes]
+    if: ${{ github.event.pull_request.draft == false && needs.filter-changes.outputs.check == 'true' }}
+    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main # Usage: kyma-project/test-infra/.github/workflows/image-builder.yml@main
+    with:
+      name: istio-manager
+      dockerfile: Dockerfile
+      context: .
+      build-args: |
+        "VERSION=${{ github.ref_name }}-experimental"
+        "GO_BUILD_TAGS=experimental"
+      tags: "${{ github.sha }}-experimental"
 
   istio-upgrade-integration-test:
     name: Istio upgrade integration test
     runs-on: ubuntu-latest
-    needs: [wait-for-image-build]
+    needs: [build-image]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -59,7 +75,7 @@ jobs:
   istio-integration-test:
     name: Istio integration test
     runs-on: ubuntu-latest
-    needs: [wait-for-image-build]
+    needs: [build-image]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -73,7 +89,7 @@ jobs:
   istio-integration-gcp:
     name: Istio integration test GCP
     runs-on: ubuntu-latest
-    needs: [wait-for-image-build]
+    needs: [build-image]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -103,7 +119,7 @@ jobs:
   istio-integration-aws-specific:
     name: Istio integration test AWS specific
     runs-on: ubuntu-latest
-    needs: [wait-for-image-build]
+    needs: [build-image]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -133,7 +149,7 @@ jobs:
   istio-integration-gcp-specific:
     name: Istio integration test GCP specific
     runs-on: ubuntu-latest
-    needs: [wait-for-image-build]
+    needs: [build-image]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -163,7 +179,7 @@ jobs:
   istio-integration-aws:
     name: Istio integration test AWS
     runs-on: ubuntu-latest
-    needs: [wait-for-image-build]
+    needs: [build-image]
     steps:
       - uses: actions/checkout@v4
         with:

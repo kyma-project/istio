@@ -3,6 +3,10 @@
 
 name: main integration tests
 
+permissions:
+  id-token: write # This is required for requesting the JWT token
+  contents: read # This is required for actions/checkouts
+
 on:
   push:
     branches:
@@ -42,8 +46,8 @@ jobs:
       dockerfile: Dockerfile
       context: .
       build-args: |
-        "VERSION=${{ github.ref_name }}"
-      tags: ${{ github.sha }}
+        VERSION=${{ github.ref_name }}
+      tags: "${{ github.sha }}"
 
   build-experimental-image:
     name: Build manager image - experimental
@@ -55,8 +59,8 @@ jobs:
       dockerfile: Dockerfile
       context: .
       build-args: |
-        "VERSION=${{ github.ref_name }}-experimental"
-        "GO_BUILD_TAGS=experimental"
+        VERSION=${{ github.ref_name }}-experimental
+        GO_BUILD_TAGS=experimental
       tags: "${{ github.sha }}-experimental"
 
   istio-upgrade-integration-test:

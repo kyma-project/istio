@@ -1,4 +1,4 @@
-# Kyma Endpoint Returns a `not found` Error (404 Status Code)
+# You Get 404 Not Found 
 
 ## Symptom
 

@@ -193,9 +193,6 @@ Enable access logs for all individual proxies of the workloads and Istio Ingress
       name: access-config
       namespace: istio-system
     spec:
-      selector:
-        matchLabels:
-          istio: ingressgateway
       accessLogging:
         - providers:
           - name: stdout-json
@@ -212,9 +209,6 @@ Enable access logs for all individual proxies of the workloads and Istio Ingress
       name: access-config
       namespace: istio-system
     spec:
-      selector:
-        matchLabels:
-          istio: ingressgateway
       accessLogging:
         - providers:
           - name: stdout-json

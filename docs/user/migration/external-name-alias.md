@@ -143,5 +143,5 @@ Remember to test if the new configuration works as expected and fits all your ne
 ## Service ExternalName Ports
 
 In the new behavior, Istio ignores the ports set in the Service of type ExternalName.
-In case you rely on them in any way, you must update your configuration to align with the new behavior.
+If you rely on them in any way, you must update your configuration to align with the new behavior.
 Since the solution heavily depends on the use case, it has to be adjusted to the particular case.

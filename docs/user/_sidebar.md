@@ -6,6 +6,7 @@
 * [Default Istio Setup](/istio/user/00-40-overview-istio-setup.md)
 * [Resource Configuration](/istio/user/00-50-resource-configuration.md)
 * [Istio Custom Resource](/istio/user/04-00-istio-custom-resource.md)
+* [External Name Migration Guide](/istio/user/migration/external-name-alias.md)
 * [Operation Guides](/istio/user/operation-guides/README.md)
   * [Check Istio Sidecar](/istio/user/operation-guides/02-10-check-if-sidecar-injection-is-enabled.md)
   * [Enable Istio Sidecar](/istio/user/operation-guides/02-20-enable-sidecar-injection.md)

@@ -13,7 +13,7 @@ According to [Istio 1.21 Upgrade Notes](https://istio.io/latest/news/releases/1.
 The limitation exists in the traffic coming from the internal mesh clients.
 Upgrade notes for version 1.21 describe a migration path by creating a ServiceEntry, although in currently released Istio versions it has no effect.
 Routing to a Service of type ExternalName, which aliases another type of Service, will also not work.
-Instead, it must point to the actual host aliased by the Service of type ExternalName.
+Instead, it must point to the actual host aliased by a Service of type ExternalName.
 
 The following configuration will **not** work:
 

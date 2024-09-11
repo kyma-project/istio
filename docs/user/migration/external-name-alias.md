@@ -9,13 +9,13 @@ However, this annotation has been deprecated. If you are using it, read this mig
 
 ## VirtualService
 
-According to [Istio 1.21 Upgrade Notes](https://istio.io/latest/news/releases/1.21.x/announcing-1.21/upgrade-notes/), the destination of a VirtualService cannot point to the Service of type ExternalName.
+According to [Istio 1.21 Upgrade Notes](https://istio.io/latest/news/releases/1.21.x/announcing-1.21/upgrade-notes/), the destination of a VirtualService cannot point to a Service of type ExternalName.
 The limitation exists in the traffic coming from the internal mesh clients.
 Upgrade notes for version 1.21 describe a migration path by creating a ServiceEntry, although in currently released Istio versions it has no effect.
-Routing to the Service of type ExternalName, which aliases another type of Service, will also not work.
-Instead, it has to point to the actual host aliased by the Service of type ExternalName.
+Routing to a Service of type ExternalName, which aliases another type of Service, will also not work.
+Instead, it must point to the actual host aliased by the Service of type ExternalName.
 
-The following configuration will not work:
+The following configuration will **not** work:
 
 ```yaml
 apiVersion: v1
@@ -79,11 +79,11 @@ Remember to test if the new configuration works as expected and fits all your ne
 
 ## DestinationRule
 
-DestinationRule cannot point to the Service of type ExternalName.
+DestinationRule cannot point to a Service of type ExternalName.
 If you have a DestinationRule that points to a Service of type ExternalName, update the DestinationRule to point to the actual host.
 To still have the possibility to apply some of the Istio features in the given situation, you can create a ServiceEntry for the external host.
 
-The following configuration will not work:
+The following configuration will **not** work:
 
 ```yaml
 apiVersion: v1
@@ -142,6 +142,6 @@ Remember to test if the new configuration works as expected and fits all your ne
 
 ## Service ExternalName Ports
 
-In the new behavior, Istio ignores the ports set in the Service of type ExternalName.
+In the new behavior, Istio ignores the ports set in a Service of type ExternalName.
 If you rely on them in any way, you must update your configuration to align with the new behavior.
 Since the solution heavily depends on the use case, it has to be adjusted to the particular case.

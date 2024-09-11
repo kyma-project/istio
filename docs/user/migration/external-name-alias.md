@@ -1,4 +1,4 @@
-# Migration Guide for External Name Alias's Behavior Change
+# Migration Guide for ExternalName Alias's Behavior Change
 
 ## Context
 

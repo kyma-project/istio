@@ -2,10 +2,10 @@
 
 ## Context
 
-Istio with 1.21 version has changed the behavior of the Service of type ExternalName.
-This Service is now treated as an alias of the Service that it points to, aligning with Kubernetes behavior.
+To align with Kubernetes behavior, Istio with 1.21 version changed the behavior of the Service of type ExternalName.
+This Service is now treated as an alias of the Service that it points to.
 Since this caused some issues for SAP BTP, Kyma runtime users, the Istio module introduced a new annotation, **disable-external-name-alias**, to disable the change.
-However, this annotation has become deprecated. If you are using it, read this migration guide and update your configuration accordingly.
+However, this annotation has been deprecated. If you are using it, read this migration guide and update your resources' configuration accordingly.
 
 ## VirtualService
 

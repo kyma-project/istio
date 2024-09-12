@@ -1,5 +1,9 @@
 name: "Create release"
 
+permissions:
+  id-token: write # This is required for requesting the JWT token
+  contents: read # This is required for actions/checkouts
+
 on:
   workflow_dispatch:
     inputs:
@@ -16,7 +20,6 @@ jobs:
   check-prerequisites:
     name: Check release prerequisites
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -44,7 +47,6 @@ jobs:
     name: Create draft release
     runs-on: ubuntu-latest
     needs: [check-prerequisites]
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -85,29 +87,26 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: autotelic/action-wait-for-status-check@6556cf50c8fb6608412945382eae73581f56cbb4
-        name: Build image
-        id: wait-for-build
+      - name: Build manager image
+        uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          statusName: "rel-istio-build"
-          intervalSeconds: "30"
-          timeoutSeconds: "1800"
-      - name: Check that module build status is success
-        if: steps.wait-for-build.outputs.state != 'success'
-        run: exit 1
+          name: istio-manager
+          dockerfile: Dockerfile
+          context: .
+          build-args: |
+            VERSION=${{ github.event.inputs.name }}
+          tags: "${{ github.event.inputs.name }}"
 
-      - uses: autotelic/action-wait-for-status-check@6556cf50c8fb6608412945382eae73581f56cbb4
-        name: Verify build of experimental image
-        id: wait-for-experimental-build
+      - name: Build manager image - experimental
+        uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          statusName: "rel-istio-experimental-build"
-          intervalSeconds: "30"
-          timeoutSeconds: "300"
-      - name: Check that experimental module build status is success
-        if: steps.wait-for-experimental-build.outputs.state != 'success'
-        run: exit 1
+          name: istio-manager
+          dockerfile: Dockerfile
+          context: .
+          build-args: |
+            VERSION=${{ github.event.inputs.name }}-experimental
+            GO_BUILD_TAGS=experimental
+          tags: "${{ github.event.inputs.name }}-experimental"
 
       - name: Publish release assets
         env:

@@ -11,6 +11,7 @@ Istio Operator provides baseline values for the Istio installation, which you ca
 - The use of HTTP 1.0 is enabled in the outbound HTTP listeners by the **PILOT_HTTP10** flag set in the Istiod component environment variables.
 - No Egress limitations are implemented - all applications deployed in the Kyma cluster can access outside resources without limitations.
 - The CNI component is provided as a DaemonSet, meaning that one replica is present on every node of the target cluster.
+- The self-signed CA certificate’s bit length is set to 4096 instead of the default 2048.
 
 ## Configuration Based on the Cluster Size
 

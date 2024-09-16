@@ -3,6 +3,12 @@
 ## Check If Sidecar Injection Is Enabled in the Pod's Namespace
 
 <!-- tabs:start -->
+#### **Kyma Dashboard**
+
+1. Go to the Pod's namespace.
+2. Verify if the `Labels` section contains `istio-injection=enabled`. If the section doesn't contain the label, the sidecar injection is disabled in this namespace.
+   Here's an example of a namespace where the Istio sidecar proxy injection is enabled:
+   ![Namespace with enabled Istio sidecar injection](../../assets/namespace-with-enabled-istio-sidecar.svg)
 
 #### **kubectl**
 To check if the Pod's namespace is labeled with `istio-injection=enabled`, run:
@@ -11,13 +17,6 @@ To check if the Pod's namespace is labeled with `istio-injection=enabled`, run:
   kubectl get namespaces {NAMESPACE} -o jsonpath='{ .metadata.labels.istio-injection }'
   ```
 If the command does not return `enabled`, the sidecar injection is disabled in this namespace.
-
-#### **Kyma Dashboard**
-
-1. Go to the Pod's namespace.
-2. Verify if the `Labels` section contains `istio-injection=enabled`. If the section doesn't contain the label, the sidecar injection is disabled in this namespace.
-   Here's an example of a namespace where the Istio sidecar proxy injection is enabled:
-   ![Namespace with enabled Istio sidecar injection](../../assets/namespace-with-enabled-istio-sidecar.svg)
 
 <!-- tabs:end -->
 

@@ -6,8 +6,8 @@ metadata:
   labels:
     kyma-project.io/module: istio
 spec:
-  hub: europe-docker.pkg.dev/kyma-project/prod/external/istio
-  tag: "1.22.3-distroless"
+  hub: docker.io/i566483
+  tag: "1.22.3-fips"
   components:
     base:
       enabled: true

@@ -1,7 +1,7 @@
 # This workflow is responsible for all kinds of integration tests run on pull request to release branch.
 # Those tests depend on a container image, so in the first job we wait for the image build to succeed.
 
-name: PR Integration Gardener
+name: PR-release Integration Gardener
 
 on:
   # pull_request_target runs workflows from the base of PR
@@ -9,7 +9,7 @@ on:
   pull_request_target:
     types: [ synchronize, opened, reopened, ready_for_review ]
     branches:
-      - 'main'
+      - 'release-**'
 
 jobs:
   filter-changes:
@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: tj-actions/changed-files@90a06d6ba9543371ab4df8eeca0be07ca6054959
+      - uses: tj-actions/changed-files@e9772d140489982e0e3704fea5ee93d536f1e275
         id: changed-files
         with:
           files_ignore: |
@@ -32,25 +32,23 @@ jobs:
             .**
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
-  wait-for-image-build:
-    name: Wait for image build
-    needs: [filter-changes]
-    environment: ${{ github.event.pull_request.author_association != 'COLLABORATOR' && github.event.pull_request.author_association != 'OWNER' && 'restricted' || 'internal' }}
-    runs-on: ubuntu-latest
+
+  build-image:
+    name: Build manager image
+    needs: [ filter-changes ]
     if: ${{ github.event.pull_request.draft == false && needs.filter-changes.outputs.check == 'true' }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: ./.github/actions/wait-for-job-succeed-or-fail
-        with:
-          job-name: 'pull-istio-operator-build'
-          github-auth-token: ${{ secrets.GITHUB_TOKEN }}
+    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main # Usage: kyma-project/test-infra/.github/workflows/image-builder.yml@main
+    with:
+      name: istio-manager
+      dockerfile: Dockerfile
+      context: .
+      build-args: |
+        VERSION=PR-${{ github.event.pull_request.head.sha }}
 
   istio-integration-gcp:
     name: Istio integration test GCP
     runs-on: ubuntu-latest
-    needs: [wait-for-image-build]
+    needs: [build-image]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -63,15 +61,16 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: "go.mod"
-      - run: make IMG="europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}" gardener-istio-integration-test
+      - run: make gardener-istio-integration-test
         shell: bash
         env:
+          IMG: "europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}"
           GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"
           GARDENER_PROJECT_NAME: "goats"
           GARDENER_PROVIDER_SECRET_NAME: "goat"
           GARDENER_PROVIDER: "gcp"
           GARDENER_REGION: "europe-west3"
-          GARDENER_CLUSTER_VERSION: "1.28"
+          GARDENER_CLUSTER_VERSION: "1.29.7"
           MACHINE_TYPE: "n2-standard-4"
           DISK_SIZE: 50
           DISK_TYPE: "pd-standard"
@@ -81,7 +80,7 @@ jobs:
   istio-integration-aws-specific:
     name: Istio integration test AWS specific
     runs-on: ubuntu-latest
-    needs: [wait-for-image-build]
+    needs: [build-image]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -94,14 +93,15 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: "go.mod"
-      - run: make IMG="europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}" gardener-aws-integration-test
+      - run: make gardener-aws-integration-test
         shell: bash
         env:
+          IMG: "europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}"
           GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"
           GARDENER_PROJECT_NAME: "goats"
           GARDENER_PROVIDER_SECRET_NAME: "aws-gardener-access"
           GARDENER_PROVIDER: "aws"
-          GARDENER_CLUSTER_VERSION: "1.28"
+          GARDENER_CLUSTER_VERSION: "1.29.7"
           GARDENER_REGION: "eu-west-1"
           MACHINE_TYPE: "m5.xlarge"
           DISK_SIZE: 50
@@ -112,7 +112,7 @@ jobs:
   istio-integration-gcp-specific:
     name: Istio integration test GCP specific
     runs-on: ubuntu-latest
-    needs: [wait-for-image-build]
+    needs: [build-image]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -125,15 +125,16 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: "go.mod"
-      - run: make IMG="europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}" gardener-gcp-integration-test
+      - run: make gardener-gcp-integration-test
         shell: bash
         env:
+          IMG: "europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}"
           GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"
           GARDENER_PROJECT_NAME: "goats"
           GARDENER_PROVIDER_SECRET_NAME: "goat"
           GARDENER_PROVIDER: "gcp"
           GARDENER_REGION: "europe-west3"
-          GARDENER_CLUSTER_VERSION: "1.28"
+          GARDENER_CLUSTER_VERSION: "1.29.7"
           MACHINE_TYPE: "n2-standard-4"
           DISK_SIZE: 50
           DISK_TYPE: "pd-standard"

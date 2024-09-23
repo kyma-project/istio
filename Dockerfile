@@ -5,7 +5,7 @@ ARG TARGETARCH
 ARG GO_BUILD_TAGS
 ARG VERSION=dev
 
-WORKDIR /workspace
+WORKDIR /istio-build
 # Copy the Go Modules manifests
 COPY go.mod go.mod
 COPY go.sum go.sum
@@ -33,8 +33,8 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH:-amd64} go build -
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
 FROM gcr.io/distroless/static:nonroot
 WORKDIR /
-COPY --from=builder /workspace/manager .
-COPY --from=builder /workspace/istio_install .
+COPY --from=builder /istio-build/manager .
+COPY --from=builder /istio-build/istio_install .
 
 USER 65532:65532
 

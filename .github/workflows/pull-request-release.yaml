@@ -90,7 +90,7 @@ jobs:
   dispatch-integration:
     name: Dispatch integration tests
     needs: [check-integration,build-image]
-    uses: ./.github/workflows/pull-integration.yaml
+    uses: ./.github/workflows/pull-integration-release.yaml
     if: ${{ needs.check-integration.outputs.check == 'true' }}
     secrets: inherit
   dispatch-integration-gardener:

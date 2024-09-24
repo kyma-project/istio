@@ -1,9 +1,9 @@
-name: Pull Request pipeline
+name: Release Pull Request pipeline
 on:
-  pull_request:
+  pull_request_target:
     types: [ synchronize, opened, reopened, ready_for_review ]
     branches:
-      - main
+      - 'release-**'
 jobs:
   check-build-image:
     outputs:
@@ -17,25 +17,26 @@ jobs:
         id: changed-files
         with:
           files_ignore: |
-             docs/**
-             **/*.md
-             tests/performance/**
-             OWNERS
-             CODEOWNERS
-             .reuse/**
+            docs/**
+            **/*.md
+            tests/performance/**
+            OWNERS
+            CODEOWNERS
+            .reuse/**
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}' >> $GITHUB_STEP_SUMMARY
-
   build-image:
     name: Build manager image
-    runs-on: ubuntu-latest
     needs: [check-build-image]
-    if: ${{ needs.check-build-image.outputs.check== 'true' }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/build-manager-image
-        with:
-          operator-image-name: "istio-manager:PR-${{github.event.number}}"
+    environment: ${{ github.event.pull_request.author_association != 'COLLABORATOR' && github.event.pull_request.author_association != 'OWNER' && 'restricted' || 'internal' }}
+    if: ${{ github.event.pull_request.draft == false && needs.filter-changes.outputs.check == 'true' }}
+    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main # Usage: kyma-project/test-infra/.github/workflows/image-builder.yml@main
+    with:
+      name: istio-manager
+      dockerfile: Dockerfile
+      context: .
+      build-args: |
+        VERSION=PR-${{ github.event.number }}
 
   check-unit-test:
     outputs:
@@ -90,6 +91,12 @@ jobs:
     name: Dispatch integration tests
     needs: [check-integration,build-image]
     uses: ./.github/workflows/pull-integration.yaml
+    if: ${{ needs.check-integration.outputs.check == 'true' }}
+    secrets: inherit
+  dispatch-integration-gardener:
+    name: Dispatch integration tests
+    needs: [check-integration,build-image]
+    uses: ./.github/workflows/pull-integration-gardener-release.yaml
     if: ${{ needs.check-integration.outputs.check == 'true' }}
     secrets: inherit
 

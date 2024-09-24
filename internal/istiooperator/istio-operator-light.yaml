@@ -303,7 +303,6 @@ spec:
         lightstep: {}
         stackdriver: {}
         zipkin: {}
-      useMCP: false
     istiodRemote:
       injectionURL: ""
     pilot:
@@ -314,8 +313,6 @@ spec:
       cpu:
         targetAverageUtilization: 80
       deploymentLabels: null
-      enableProtocolSniffingForInbound: true
-      enableProtocolSniffingForOutbound: true
       env:
         CITADEL_SELF_SIGNED_CA_RSA_KEY_SIZE: "4096"
       image: pilot
@@ -326,9 +323,6 @@ spec:
       traceSampling: 1
     sidecarInjectorWebhook:
       enableNamespacesByDefault: false
-      objectSelector:
-        autoInject: true
-        enabled: false
       rewriteAppHTTPProbe: true
     telemetry:
       enabled: true

@@ -153,7 +153,7 @@ var _ = Describe("Compatibility Mode", func() {
 
 			//then
 			Expect(err).ShouldNot(HaveOccurred())
-			field := getProxyMetadataField(out, "ISTIO_DELTA_XDS")
+			field := getProxyMetadataField(out, "ENABLE_DEFERRED_CLUSTER_CREATION")
 			Expect(field).ToNot(BeNil())
 			Expect(field.GetStringValue()).To(Equal("false"))
 		})
@@ -188,11 +188,11 @@ var _ = Describe("Compatibility Mode", func() {
 			//then
 			Expect(err).ShouldNot(HaveOccurred())
 
-			xdsAgent := getProxyMetadataField(out, "BOOTSTRAP_XDS_AGENT")
+			xdsAgent := getProxyMetadataField(out, "ENABLE_DEFERRED_CLUSTER_CREATION")
 			Expect(xdsAgent).ToNot(BeNil())
-			Expect(xdsAgent.GetStringValue()).To(Equal("true"))
+			Expect(xdsAgent.GetStringValue()).To(Equal("false"))
 
-			deltaXds := getProxyMetadataField(out, "ISTIO_DELTA_XDS")
+			deltaXds := getProxyMetadataField(out, "ENABLE_DELIMITED_STATS_TAG_REGEX")
 			Expect(deltaXds).ToNot(BeNil())
 			Expect(deltaXds.GetStringValue()).To(Equal("false"))
 		})

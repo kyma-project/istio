@@ -1,9 +1,9 @@
 module-name: istio
 protecode:
   - europe-docker.pkg.dev/kyma-project/prod/istio-manager:v20240911-bf4e9126
-  - europe-docker.pkg.dev/kyma-project/prod/external/istio/install-cni:1.22.3-distroless
-  - europe-docker.pkg.dev/kyma-project/prod/external/istio/proxyv2:1.22.3-distroless
-  - europe-docker.pkg.dev/kyma-project/prod/external/istio/pilot:1.22.3-distroless
+  - europe-docker.pkg.dev/kyma-project/prod/external/istio/install-cni:1.23.2-distroless
+  - europe-docker.pkg.dev/kyma-project/prod/external/istio/proxyv2:1.23.2-distroless
+  - europe-docker.pkg.dev/kyma-project/prod/external/istio/pilot:1.23.2-distroless
 whitesource:
   language: golang-mod
   subprojects: false

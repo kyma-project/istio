@@ -94,7 +94,7 @@ jobs:
     if: ${{ needs.check-integration.outputs.check == 'true' }}
     secrets: inherit
   dispatch-integration-gardener:
-    name: Dispatch integration tests
+    name: Dispatch Gardener integration tests
     needs: [check-integration,build-image]
     uses: ./.github/workflows/pull-integration-gardener-release.yaml
     if: ${{ needs.check-integration.outputs.check == 'true' }}

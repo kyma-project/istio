@@ -1,31 +1,40 @@
 # Istio Module
+Learn more about the Istio module. Use it to manage and configure the Istio service mesh.
 
 ## What Is Istio?
 
-Istio is an open-source service mesh that provides a uniform way to manage, connect, and secure microservices. It helps to manage traffic, enhance security capabilities, and provide telemetry data for understanding service behavior. To learn more, read the [Istio documentation](https://istio.io/latest/).
+[Istio](https://istio.io/latest/) is an open-source service mesh that provides a uniform way to manage, connect, and secure microservices. It helps to manage traffic, enhance security capabilities, and provide telemetry data for understanding service behavior.
 
-## Kyma Istio Operator
+## Features
 
-Kyma Istio Operator is an essential part of the Istio module that handles the management and configuration of the Istio service mesh. It contains [Istio Controller](./00-10-overview-istio-controller.md) that is responsible for installing, uninstalling, and upgrading Istio.
+## Scope
 
-The latest release includes the following versions of Istio and Envoy:  
+## Architecture
 
-**Istio version:** 1.22.3
+![Istio Operator Architecture](../assets/istio-controller-overview-user.svg)
 
-**Envoy version:** 1.30.5
+### Istio Operator
 
-> [!NOTE]
-> If you want to enable compatibility with the previous minor version of Istio, see [Compatibility Mode](https://kyma-project.io/#/istio/user/00-10-overview-istio-controller?id=compatibility-mode).
+Within the Istio module, Istio Operator handles the management and configuration of the Istio service mesh. It contains one controller, referred to as Istio Controller.
 
-## Useful Links
+### Istio Controller
 
-To gain a better understanding of the Istio module's capabilities, see the overview of:
-- [Istio Controller](./00-10-overview-istio-controller.md)
-- [Istio Service Mesh](./00-20-overview-service-mesh.md)
-- [Istio Sidecars](./00-30-overview-istio-sidecars.md)
-- [Default Istio Setup](./00-40-overview-istio-setup.md)
-- [Default Resources and Autoscaling Configuration](./00-50-resource-configuration.md)
+Istio Controller manages Istio and its resources as defined in the Istio custom resource (CR). Istio Controller is responsible for:
+- installing, upgrading, and uninstalling Istio
+- restarting workloads that have Istio sidecar proxy injected to ensure that these workloads are using the correct version of Istio
 
-To learn how to use the Istio module, follow the [tutorials](./tutorials/) and [operation guides](./operation-guides/). For more in-depth information, read [Istio Custom Resource specification](./04-00-istio-custom-resource.md) and [technical reference](./technical-reference/) documentation. If you face any problems, refer to the [troubleshooting guides](./troubleshooting/) for assistance.
+### Istio Module's Resources
 
-If you are interested in the detailed documentation of Kyma Istio Operator's design and technical aspects, check the [contributor](https://github.com/kyma-project/istio/tree/main/docs/contributor) directory.
+All Kubernetes resources created by the Istio module's and its conponents use the label  `kyma-project.io/module=istio`. To list the resources, run the command:
+
+```bash
+kubectl get all -A -l kyma-project.io/module=istio
+```
+
+## API / Custom Resource Definitions
+
+The `istios.operator.kyma-project.io` CustomResourceDefinition (CRD) describes the Istio CR that Istio Controller uses to manage the installation of Istio. See [Istio Custom Resource](https://kyma-project.io/#/istio/user/04-00-istio-custom-resource?id=istio-custom-resource).
+
+## Resource Consumption
+
+To learn more about the resources used by the Istio module, see [Kyma's Modules Sizing](https://help.sap.com/docs/btp/sap-business-technology-platform/kyma-modules-sizing?version=Cloud#istio).

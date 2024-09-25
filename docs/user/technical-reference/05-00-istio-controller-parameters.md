@@ -2,10 +2,6 @@
 
 You can configure [Istio Controller](../00-10-overview-istio-controller.md) using various parameters. All options are listed in this document.
 
-## Reconciliation Interval
-
-By default, Kyma Istio Operator is reconciled every 10 hours or whenever the custom resource is changed. You can adjust this interval by modifying the operator's parameters. For example, you can set the **-reconciliation-interval** parameter to `120s`.
-
 ## All Configuration Parameters
 
 | Parameter                        | Description                                                                                                                                                                                                                                                                                                  | Default   |
@@ -18,7 +14,7 @@ By default, Kyma Istio Operator is reconciled every 10 hours or whenever the cus
 | **-metrics-bind-address**        | Specifies the address the metric endpoint binds to.                                                                                                                                                                                                                                                          | `:8090`   |
 | **-rate-limiter-burst**          | Indicates the burst value for the bucket rate limiter.                                                                                                                                                                                                                                                       | `200`     |
 | **-rate-limiter-frequency**      | Indicates the bucket rate limiter frequency, which signifies the number of events per second.                                                                                                                                                                                                                | `30`      |
-| **-reconciliation-interval**     | Indicates the time-based reconciliation interval.                                                                                                                                                                                                                                                            | `10h0m0s` |
+| **-reconciliation-interval**     | Indicates the time-based reconciliation interval of Istio Operator. By default, Istio Operator is reconciled every 10 hours or whenever the custom resource changes. You can adjust this interval by modifying this parameter.                                                                               | `10h0m0s` |
 | **-zap-devel**                   | Allows for switching between development mode and production mode. In development mode, the default parameter values are: `(encoder=consoleEncoder,logLevel=Debug,stackTraceLevel=Warn)`. In production mode, the default parameter values are: `(encoder=jsonEncoder,logLevel=Info,stackTraceLevel=Error)`. | `true`    |
 | **-zap-encoder**                 | Indicates the way of Zap log encoding. The value is either `json` or `console`.                                                                                                                                                                                                                              | None      |
 | **-zap-log-level**               | Indicates Zap Level used to configure the verbosity of logging. The value is either `debug`, `info`, `error`, or any integer value greater than 0, corresponding to custom debug levels of increasing verbosity.                                                                                             | None      |

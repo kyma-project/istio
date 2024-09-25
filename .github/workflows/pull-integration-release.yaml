@@ -1,0 +1,57 @@
+# This workflow is responsible for all kinds of integration tests run on pull request.
+# Those tests depend on a container image so in the first job we wait for the image build to succeed.
+
+name: Release Pull Request integration tests
+
+on:
+  workflow_call:
+
+jobs:
+  k8s-compatibility-test:
+    name: Kubernetes version compatibility test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/k8s-compatibility-test
+        with:
+          operator-image-name: "europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}"
+
+  istio-upgrade-integration-test:
+    name: Istio upgrade integration test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/upgrade-integration-test
+        with:
+          operator-image-name: "europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}"
+          target_branch: ${{ github.base_ref }}
+
+  istio-integration-test:
+    name: Istio integration test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/integration-test
+        with:
+          evaluation: false
+          operator-image-name: "europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}"
+          servers-memory: "16"
+          agents: 2
+
+  istio-integration-test-evaluation:
+    name: Istio integration test evaluation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/integration-test
+        with:
+          evaluation: true
+          operator-image-name: "europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}"
+          servers-memory: "4"
+          agents: 0

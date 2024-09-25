@@ -27,7 +27,7 @@ runs:
         args: >-
           --agents ${{ inputs.agents }}
           --image docker.io/rancher/k3s:v1.28.2-k3s1
-          --servers-memory ${{ inputs.servers-memory }}
+          --servers-memory ${{ inputs.servers-memory }}g
           --port 80:80@loadbalancer
           --port 443:443@loadbalancer
           --k3s-arg "--disable=traefik@server:0"

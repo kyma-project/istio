@@ -45,6 +45,7 @@ jobs:
 
   build-image:
     uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main
+    needs: [check-prerequisites]
     with:
       name: istio-manager
       dockerfile: Dockerfile
@@ -55,6 +56,7 @@ jobs:
 
   build-image-experimental:
     uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main
+    needs: [ check-prerequisites ]
     with:
       name: istio-manager
       dockerfile: Dockerfile
@@ -67,7 +69,7 @@ jobs:
   create-draft:
     name: Create draft release
     runs-on: ubuntu-latest
-    needs: [check-prerequisites, build-image, build-image-experimental]
+    needs: [build-image, build-image-experimental]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

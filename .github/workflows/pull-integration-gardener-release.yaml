@@ -4,27 +4,6 @@ on:
   workflow_call:
 
 jobs:
-  filter-changes:
-    name: List relevant VCS changes
-    outputs:
-      check: ${{ steps.changed-files.outputs.any_modified }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: tj-actions/changed-files@e9772d140489982e0e3704fea5ee93d536f1e275
-        id: changed-files
-        with:
-          files_ignore: |
-            docs/**
-            **/*.md
-            OWNERS
-            CODEOWNERS
-            sec-scanners-config.yaml
-            .github/**
-            .**
-      - name: List all changed files
-        run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
-
   istio-integration-gcp:
     name: Istio integration test GCP
     runs-on: ubuntu-latest

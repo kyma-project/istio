@@ -9,6 +9,7 @@ jobs:
     outputs:
       check: ${{ steps.changed-files.outputs.any_modified }}
     name: Check whether build image should run
+    environment: ${{ github.event.pull_request.author_association != 'COLLABORATOR' && github.event.pull_request.author_association != 'OWNER' && 'restricted' || 'internal' }}g
     runs-on: ubuntu-latest
     if: ${{ github.event.pull_request.draft == false }}
     steps:
@@ -28,7 +29,6 @@ jobs:
   build-image:
     name: Build manager image
     needs: [check-build-image]
-    environment: ${{ github.event.pull_request.author_association != 'COLLABORATOR' && github.event.pull_request.author_association != 'OWNER' && 'restricted' || 'internal' }}
     if: ${{ needs.check-build-image.outputs.check == 'true' }}
     uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main # Usage: kyma-project/test-infra/.github/workflows/image-builder.yml@main
     with:

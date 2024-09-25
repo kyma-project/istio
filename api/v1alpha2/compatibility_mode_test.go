@@ -153,9 +153,12 @@ var _ = Describe("Compatibility Mode", func() {
 
 			//then
 			Expect(err).ShouldNot(HaveOccurred())
-			field := getProxyMetadataField(out, "ISTIO_DELTA_XDS")
+			field := getProxyMetadataField(out, "ENABLE_DEFERRED_CLUSTER_CREATION")
 			Expect(field).ToNot(BeNil())
 			Expect(field.GetStringValue()).To(Equal("false"))
+			fieldTwo := getProxyMetadataField(out, "ENABLE_DELIMITED_STATS_TAG_REGEX")
+			Expect(fieldTwo).ToNot(BeNil())
+			Expect(fieldTwo.GetStringValue()).To(Equal("false"))
 		})
 
 		It("should set compatibility variables in proxyMetadata without overwriting existing variables", func() {
@@ -188,13 +191,13 @@ var _ = Describe("Compatibility Mode", func() {
 			//then
 			Expect(err).ShouldNot(HaveOccurred())
 
-			xdsAgent := getProxyMetadataField(out, "BOOTSTRAP_XDS_AGENT")
-			Expect(xdsAgent).ToNot(BeNil())
-			Expect(xdsAgent.GetStringValue()).To(Equal("true"))
+			clusterCreation := getProxyMetadataField(out, "ENABLE_DEFERRED_CLUSTER_CREATION")
+			Expect(clusterCreation).ToNot(BeNil())
+			Expect(clusterCreation.GetStringValue()).To(Equal("false"))
 
-			deltaXds := getProxyMetadataField(out, "ISTIO_DELTA_XDS")
-			Expect(deltaXds).ToNot(BeNil())
-			Expect(deltaXds.GetStringValue()).To(Equal("false"))
+			stats := getProxyMetadataField(out, "ENABLE_DELIMITED_STATS_TAG_REGEX")
+			Expect(stats).ToNot(BeNil())
+			Expect(stats.GetStringValue()).To(Equal("false"))
 		})
 
 		It("should not set compatibility variables when compatibility mode is off", func() {
@@ -227,8 +230,10 @@ var _ = Describe("Compatibility Mode", func() {
 			//then
 			Expect(err).ShouldNot(HaveOccurred())
 
-			field := getProxyMetadataField(out, "ISTIO_DELTA_XDS")
+			field := getProxyMetadataField(out, "ENABLE_DEFERRED_CLUSTER_CREATION")
 			Expect(field).To(BeNil())
+			fieldTwo := getProxyMetadataField(out, "ENABLE_DELIMITED_STATS_TAG_REGEX")
+			Expect(fieldTwo).To(BeNil())
 		})
 	})
 })

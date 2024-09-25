@@ -6,8 +6,7 @@ import (
 )
 
 var pilotCompatibilityEnvVars = map[string]string{
-	"ENABLE_ENHANCED_RESOURCE_SCOPING":   "false",
-	"ENABLE_RESOLUTION_NONE_TARGET_PORT": "false",
+	"ENABLE_DELIMITED_STATS_TAG_REGEX": "false",
 }
 
 func setCompatibilityMode(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {
@@ -40,7 +39,8 @@ func setCompatibilityPilot(op iopv1alpha1.IstioOperator) iopv1alpha1.IstioOperat
 }
 
 var ProxyMetaDataCompatibility = map[string]string{
-	"ISTIO_DELTA_XDS": "false",
+	"ENABLE_DEFERRED_CLUSTER_CREATION": "false",
+	"ENABLE_DELIMITED_STATS_TAG_REGEX": "false",
 }
 
 func setCompatibilityProxyMetadata(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {

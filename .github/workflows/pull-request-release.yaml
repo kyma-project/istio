@@ -1,54 +1,53 @@
-name: Pull Request pipeline
+name: Release Pull Request pipeline
 on:
-  pull_request:
+  pull_request_target:
     types: [ synchronize, opened, reopened, ready_for_review ]
     branches:
-      - main
+      - 'release-**'
 jobs:
-  check-wait-for-image-build:
+  check-build-image:
     outputs:
       check: ${{ steps.changed-files.outputs.any_modified }}
-    name: Check whether to wait for image build
+    name: Check whether build image should run
+    environment: ${{ github.event.pull_request.author_association != 'COLLABORATOR' && github.event.pull_request.author_association != 'OWNER' && 'restricted' || 'internal' }}
     runs-on: ubuntu-latest
     if: ${{ github.event.pull_request.draft == false }}
     steps:
       - uses: actions/checkout@v4
-      - uses: tj-actions/changed-files@90a06d6ba9543371ab4df8eeca0be07ca6054959
+      - uses: tj-actions/changed-files@e9772d140489982e0e3704fea5ee93d536f1e275
         id: changed-files
         with:
           files_ignore: |
-             docs/**
-             **/*.md
-             **/*.yaml
-             tests/performance/**
-             OWNERS
-             CODEOWNERS
-             .github/**
-             .reuse/**
+            docs/**
+            **/*.md
+            tests/performance/**
+            OWNERS
+            CODEOWNERS
+            .reuse/**
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}' >> $GITHUB_STEP_SUMMARY
-
-  wait-for-image-build:
-    name: Wait for image build
-    runs-on: ubuntu-latest
-    needs: [check-wait-for-image-build]
-    if: ${{ needs.check-wait-for-image-build.outputs.check== 'true' }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/wait-for-job-succeed-or-fail
-        with:
-          job-name: 'pull-istio-operator-build'
-          github-auth-token: ${{ secrets.GITHUB_TOKEN }}
+  build-image:
+    name: Build manager image
+    needs: [check-build-image]
+    if: ${{ needs.check-build-image.outputs.check == 'true' }}
+    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main # Usage: kyma-project/test-infra/.github/workflows/image-builder.yml@main
+    with:
+      name: istio-manager
+      dockerfile: Dockerfile
+      context: .
+      build-args: |
+        VERSION=PR-${{ github.event.number }}
 
   check-unit-test:
     outputs:
       check: ${{ steps.changed-files.outputs.any_modified }}
     name: Check whether unit test & lint should run based on the changed files
+    environment: ${{ github.event.pull_request.author_association != 'COLLABORATOR' && github.event.pull_request.author_association != 'OWNER' && 'restricted' || 'internal' }}
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: tj-actions/changed-files@90a06d6ba9543371ab4df8eeca0be07ca6054959
+      - uses: tj-actions/changed-files@e9772d140489982e0e3704fea5ee93d536f1e275
         id: changed-files
         with:
           files_ignore: |
@@ -58,7 +57,6 @@ jobs:
             OWNERS
             CODEOWNERS
             sec-scanners-config.yaml
-            .github/**
             .reuse/**
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}' >> $GITHUB_STEP_SUMMARY
@@ -73,11 +71,12 @@ jobs:
     outputs:
       check: ${{ steps.changed-files.outputs.any_modified }}
     name: Check whether integration tests should run based on the changed files
+    environment: ${{ github.event.pull_request.author_association != 'COLLABORATOR' && github.event.pull_request.author_association != 'OWNER' && 'restricted' || 'internal' }}
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: tj-actions/changed-files@90a06d6ba9543371ab4df8eeca0be07ca6054959
+      - uses: tj-actions/changed-files@e9772d140489982e0e3704fea5ee93d536f1e275
         id: changed-files
         with:
           files_ignore: |
@@ -87,14 +86,19 @@ jobs:
             OWNERS
             CODEOWNERS
             sec-scanners-config.yaml
-            .github/**
             .reuse/**
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}' >> $GITHUB_STEP_SUMMARY
   dispatch-integration:
     name: Dispatch integration tests
-    needs: [check-integration,wait-for-image-build]
-    uses: ./.github/workflows/pull-integration.yaml
+    needs: [check-integration,build-image]
+    uses: ./.github/workflows/pull-integration-release.yaml
+    if: ${{ needs.check-integration.outputs.check == 'true' }}
+    secrets: inherit
+  dispatch-integration-gardener:
+    name: Dispatch Gardener integration tests
+    needs: [check-integration,build-image]
+    uses: ./.github/workflows/pull-integration-gardener-release.yaml
     if: ${{ needs.check-integration.outputs.check == 'true' }}
     secrets: inherit
 
@@ -102,11 +106,12 @@ jobs:
     outputs:
       check: ${{ steps.changed-files.outputs.any_modified }}
     name: Check whether UI tests should run based on the changed files
+    environment: ${{ github.event.pull_request.author_association != 'COLLABORATOR' && github.event.pull_request.author_association != 'OWNER' && 'restricted' || 'internal' }}
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: tj-actions/changed-files@90a06d6ba9543371ab4df8eeca0be07ca6054959
+      - uses: tj-actions/changed-files@e9772d140489982e0e3704fea5ee93d536f1e275
         id: changed-files
         with:
           files: |
@@ -118,7 +123,7 @@ jobs:
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}' >> $GITHUB_STEP_SUMMARY
   dispatch-ui:
     name: Dispatch UI tests
-    needs: [check-ui,wait-for-image-build]
+    needs: [check-ui,build-image]
     uses: ./.github/workflows/ui-tests.yaml
     if: ${{ needs.check-ui.outputs.check == 'true' }}
     secrets: inherit
@@ -127,10 +132,11 @@ jobs:
     outputs:
       check: ${{ steps.changed-files.outputs.any_modified }}
     name: Check whether to run verify-commit-pins
+    environment: ${{ github.event.pull_request.author_association != 'COLLABORATOR' && github.event.pull_request.author_association != 'OWNER' && 'restricted' || 'internal' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: tj-actions/changed-files@90a06d6ba9543371ab4df8eeca0be07ca6054959
+      - uses: tj-actions/changed-files@e9772d140489982e0e3704fea5ee93d536f1e275
         id: changed-files
         with:
           files: |

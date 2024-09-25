@@ -42,6 +42,7 @@ jobs:
     outputs:
       check: ${{ steps.changed-files.outputs.any_modified }}
     name: Check whether unit test & lint should run based on the changed files
+    environment: ${{ github.event.pull_request.author_association != 'COLLABORATOR' && github.event.pull_request.author_association != 'OWNER' && 'restricted' || 'internal' }}
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
@@ -70,6 +71,7 @@ jobs:
     outputs:
       check: ${{ steps.changed-files.outputs.any_modified }}
     name: Check whether integration tests should run based on the changed files
+    environment: ${{ github.event.pull_request.author_association != 'COLLABORATOR' && github.event.pull_request.author_association != 'OWNER' && 'restricted' || 'internal' }}
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
@@ -104,6 +106,7 @@ jobs:
     outputs:
       check: ${{ steps.changed-files.outputs.any_modified }}
     name: Check whether UI tests should run based on the changed files
+    environment: ${{ github.event.pull_request.author_association != 'COLLABORATOR' && github.event.pull_request.author_association != 'OWNER' && 'restricted' || 'internal' }}
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
@@ -129,6 +132,7 @@ jobs:
     outputs:
       check: ${{ steps.changed-files.outputs.any_modified }}
     name: Check whether to run verify-commit-pins
+    environment: ${{ github.event.pull_request.author_association != 'COLLABORATOR' && github.event.pull_request.author_association != 'OWNER' && 'restricted' || 'internal' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

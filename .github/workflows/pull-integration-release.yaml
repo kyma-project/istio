@@ -39,7 +39,7 @@ jobs:
         with:
           evaluation: false
           operator-image-name: "europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}"
-          servers-memory: "16gg"
+          servers-memory: "16g"
           agents: 2
 
   istio-integration-test-evaluation:

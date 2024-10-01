@@ -106,14 +106,14 @@ The following Istio Pilot environment variables are applied when you set `spec.c
 
 | Name                                 | Value   | Description                                                                                    |
 |--------------------------------------|---------|------------------------------------------------------------------------------------------------|
-| **ENABLE_DELIMITED_STATS_TAG_REGEX** | `false` | Prevents Istio Pilot from using the new delimited stat tag regex to generate Envoy stats tags. |
+| **ENABLE_DELIMITED_STATS_TAG_REGEX** | `false` | Prevents Istio Pilot from using the new delimited stat tag regex to generate Envoy cluster metrics. |
 
 The following Istio Proxy environment variables are applied when you set `spec.compatibilityMode: true` in Istio CR:
 
 | Name                                 | Value   | Description                                                                                                 |
 |--------------------------------------|---------|-------------------------------------------------------------------------------------------------------------|
-| **ENABLE_DEFERRED_CLUSTER_CREATION** | `false` | Disables an experimental feature that allows for cluster creation on worker threads inline during requests. |
-| **ENABLE_DELIMITED_STATS_TAG_REGEX** | `false` | Prevents Istio Proxy from using the new delimited stat tag regex to generate Envoy stats tags.              |
+| **ENABLE_DEFERRED_CLUSTER_CREATION** | `false` | Disables an experimental Envoy feature that optimizes Envoy configuration resources usage by inlining certain parts with already ongoing requests. |
+| **ENABLE_DELIMITED_STATS_TAG_REGEX** | `false` | Prevents Istio Proxy from using the new delimited stat tag regex to generate Envoy cluster metrics.              |
 
 > [!WARNING]
 > You can use the compatibility mode to retain the behavior of the current Istio version when a new version of the Istio module with a higher version of Istio is released. Then, the compatibility will be first set to a minor version lower than the one you are currently using. If this lower version’s behavior is not compatible with your current mesh setup, some configurations may be broken until the new release of the Istio module is rolled out. 

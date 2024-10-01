@@ -106,6 +106,7 @@ type IstioSpec struct {
 }
 
 //+kubebuilder:object:root=true
+//+kubebuilder:resource:categories={kyma,kyma-modules,kyma-istio}
 //+kubebuilder:subresource:status
 //+kubebuilder:printcolumn:JSONPath=".status.state",name="State",type="string"
 //+kubebuilder:storageversion

@@ -1,6 +1,9 @@
 name: UI Tests Periodic
 
 on:
+  push:
+    branches:
+      - perf-test
   schedule:
     - cron: '0 5 * * 1' #run on schedule every Monday 5:00 AM
 

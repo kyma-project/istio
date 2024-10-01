@@ -17,12 +17,18 @@ function cleanup() {
     exit
 }
 
-./hack/ci/provision-gardener.sh
 # Cleanup on exit, be it successful or on fail
 trap cleanup EXIT INT
 
-tag=$(gcloud container images list-tags europe-docker.pkg.dev/kyma-project/prod/istio-manager --limit 1 --format json | jq '.[0].tags[1]')
-IMG=europe-docker.pkg.dev/kyma-project/prod/istio-manager:${tag} make install deploy
+./hack/ci/provision-gardener.sh
+
+echo "waiting for Gardener to finish shoot reconcile..."
+kubectl wait --kubeconfig "${GARDENER_KUBECONFIG}" --for=jsonpath='{.status.lastOperation.state}'=Succeeded --timeout=600s "shoots/${CLUSTER_NAME}"
+
+make install deploy
+
+# Wait for istio to be ready until we start with applying Istio resources to avoid not correctly working Istio components
+kubectl wait -n kyma-system istios/default --for=jsonpath='{.status.state}'=Ready --timeout=5m
 
 cd tests/performance || exit
 make test-performance

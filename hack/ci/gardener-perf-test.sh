@@ -27,8 +27,5 @@ kubectl wait --kubeconfig "${GARDENER_KUBECONFIG}" --for=jsonpath='{.status.last
 
 make install deploy
 
-# Wait for istio to be ready until we start with applying Istio resources to avoid not correctly working Istio components
-kubectl wait -n kyma-system istios/default --for=jsonpath='{.status.state}'=Ready --timeout=5m
-
 cd tests/performance || exit
 make test-performance

@@ -7,13 +7,13 @@ You're unable to connect an application to a SAP HANA Database instance.
 ## Troubleshooting
 
 The Istio module's default configuration does not restrict outbound traffic. This means that the application should have no issues connecting to the SAP HANA Database instance.
-To determine the cause of the connection issue, follow the troubleshooting steps.
+To determine the cause of the connection issue, you must follow the troubleshooting steps.
 
 ### Connect to the SAP HANA Database Instance from Outside of the Cluster
 1. Download SAP HANA Client for your operating system from the [SAP Development Tools](https://tools.hana.ondemand.com/#hanatools).
 2. Unpack the downloaded archive.
 3. Install SAP HANA Client.
-4. Connect to SAP HANA Database instance using the following command:
+4. To connect to SAP HANA Database instance, use the following command:
     ```bash
     hdbsql -n {HANA_DB_INSTANCE_ADDRESS} -u {HANA_DB_USER} -p {HANA_DB_PASSWORD}
     ```
@@ -33,11 +33,12 @@ To determine the cause of the connection issue, follow the troubleshooting steps
 
     ENTRYPOINT ["sleep", "8000"]
     ```
-    Download the SAP HANA Client for Linux x86 64-bit from [SAP Development Tools](https://tools.hana.ondemand.com/#hanatools) and save it as `client.tar` in the same directory as the Dockerfile. Then, run the following command to build the image:
+2. Download the SAP HANA Client for Linux x86 64-bit from [SAP Development Tools](https://tools.hana.ondemand.com/#hanatools) and save it as `client.tar` in the same directory as the Dockerfile. 
+3. To build the image, run the following command:
     ```bash
     docker buildx build --platform=linux/amd64 -t hdbsql .
     ```
-2. To test your image, run the following command:
+4. To test your image, run the following command:
     ```bash
     docker run --entrypoint "hdbsql" hdbsql -v
     ```
@@ -46,15 +47,15 @@ To determine the cause of the connection issue, follow the troubleshooting steps
     HDBSQL version 2.20.20.1712178305, the SAP HANA Database interactive terminal.
     Copyright 2000-2024 by SAP SE.
     ```
-3. Publish the image to a container registry.
-4. Run the image in the Kubernetes cluster:
+5. Publish the image to a container registry.
+6. Run the image in the Kubernetes cluster:
     ```bash
     kubectl create deployment hdbsql --image={PUBLISHED_IMAGE_NAME}
     ```
-5. Attach to the Pod and try to connect to the SAP HANA Database instance using the following command:
+7. Attach to the Pod and try to connect to the SAP HANA Database instance using the following command:
     ```bash
     hdbsql -n {HANA_DB_INSTANCE_ADDRESS} -u {HANA_DB_USER} -p {HANA_DB_PASSWORD}
     ```
-6. If the connection is successful and you can execute queries, the issue is not related to the setup of the cluster.
-7. Check the connection from a Pod that has the Istio sidecar injected. In that case, create the Deployment in a namespace with Istio sidecar injection enabled. The connection should be successful.
+8. If the connection is successful and you can execute queries, the issue is not related to the setup of the cluster.
+9. Check the connection from a Pod that has the Istio sidecar injected. In that case, create the Deployment in a namespace with Istio sidecar injection enabled. The connection should be successful.
 

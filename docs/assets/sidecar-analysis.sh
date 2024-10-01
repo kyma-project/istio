@@ -26,9 +26,9 @@ log_pods_with () {
 }
 
 if [ -z "$target_namespace" ]; then
-    echo "Pods out of istio mesh:"
+    echo "See all Pods that are not part of the Istio service mesh:"
 
-    echo "  In namespace labeled with \"istio-injection=disabled\":"
+    echo "  Pods in namespaces labeled with \"istio-injection=disabled\":"
     disabled_namespaces=$(kubectl get ns -l "istio-injection=disabled" -o jsonpath='{.items[*].metadata.name}')
 
     for ns in $disabled_namespaces
@@ -38,7 +38,7 @@ if [ -z "$target_namespace" ]; then
         fi
     done
 
-    echo "  In namespace labeled with \"istio-injection=enabled\" with pod labeled with \"sidecar.istio.io/inject=false\":"
+    echo "  Pods labeled with \"sidecar.istio.io/inject=false\" in namespaces labeled with \"istio-injection=enabled\":"
     enabled_ns=$(kubectl get ns -l "istio-injection=enabled" -o jsonpath='{.items[*].metadata.name}')
     for ns in $enabled_ns
     do
@@ -47,7 +47,7 @@ if [ -z "$target_namespace" ]; then
         fi
     done
 
-    echo "  In not labeled ns with pod not labeled with \"sidecar.istio.io/inject=true\":"
+    echo "  Pods labeled with \"sidecar.istio.io/inject=true\" in not labeled namespaces:"
     not_labeled_ns=$(kubectl get ns -l "istio-injection!=disabled, istio-injection!=enabled" -o jsonpath='{.items[*].metadata.name}')
     for ns in $not_labeled_ns
     do

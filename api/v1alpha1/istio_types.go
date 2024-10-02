@@ -39,7 +39,7 @@ type IstioSpec struct {
 }
 
 //+kubebuilder:object:root=true
-//+kubebuilder:resource:categories={kyma,kyma-modules,kyma-istio}
+//+kubebuilder:resource:categories={kyma-modules,kyma-istio}
 //+kubebuilder:subresource:status
 //+kubebuilder:unservedversion
 //+kubebuilder:printcolumn:JSONPath=".status.state",name="State",type="string"

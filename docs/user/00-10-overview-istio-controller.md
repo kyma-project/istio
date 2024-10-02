@@ -106,7 +106,7 @@ The following Istio Pilot environment variables are applied when you set `spec.c
 
 | Name                                 | Value   |
 |--------------------------------------|---------|
-| **ENABLE_DELIMITED_STATS_TAG_REGEX** | `false` | 
+| **ENABLE_DELIMITED_STATS_TAG_REGEX** | `false` |
 
 The following Istio Proxy environment variables are applied when you set `spec.compatibilityMode: true` in Istio CR:
 

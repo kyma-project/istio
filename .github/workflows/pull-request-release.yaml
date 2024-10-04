@@ -56,7 +56,6 @@ jobs:
             tests/performance/**
             OWNERS
             CODEOWNERS
-            sec-scanners-config.yaml
             .reuse/**
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}' >> $GITHUB_STEP_SUMMARY
@@ -85,7 +84,6 @@ jobs:
             tests/performance/**
             OWNERS
             CODEOWNERS
-            sec-scanners-config.yaml
             .reuse/**
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}' >> $GITHUB_STEP_SUMMARY

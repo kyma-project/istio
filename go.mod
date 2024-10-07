@@ -21,7 +21,7 @@ require (
 	github.com/vrischmann/envconfig v1.3.0
 	gitlab.com/rodrigoodhin/gocure v0.0.0-20220718065339-f14dfe79276a
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
-	golang.org/x/time v0.6.0
+	golang.org/x/time v0.7.0
 	google.golang.org/protobuf v1.34.2
 	gopkg.in/yaml.v3 v3.0.1
 	istio.io/api v1.23.2

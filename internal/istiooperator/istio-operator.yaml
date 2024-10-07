@@ -144,6 +144,7 @@ spec:
       proxyMetadata:
         BOOTSTRAP_XDS_AGENT: "true"
         CITADEL_SELF_SIGNED_CA_RSA_KEY_SIZE: "4096"
+        WORKLOAD_RSA_KEY_SIZE: "3072"
       tracingServiceName: CANONICAL_NAME_ONLY
     defaultProviders:
       tracing: []

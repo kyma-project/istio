@@ -122,7 +122,7 @@ To learn more about oauth2-proxy, [see the documentation](https://github.com/oau
 1. Apply Istio CR configuration with an external authorization provider. Here's an example configuration:
     ```
     cat <<EOF | kubectl apply -f -
-    apiVersion: operator.kyma-project.io/v1alpha1
+    apiVersion: operator.kyma-project.io/v1alpha2
     kind: Istio
     metadata:
       name: default

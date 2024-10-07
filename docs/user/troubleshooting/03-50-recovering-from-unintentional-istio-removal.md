@@ -47,7 +47,7 @@ For example, the issue occurs when you delete Istio, but there are still Virtual
       ```
   2. Remove the indicated lines:
       ```diff
-      apiVersion: operator.kyma-project.io/v1alpha1
+      apiVersion: operator.kyma-project.io/v1alpha2
       kind: Istio
       metadata:
       < finalizers:

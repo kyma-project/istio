@@ -11,7 +11,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -20,7 +20,6 @@ import (
 const (
 	k3sMockKubeProxyVersion string = "v1.25.6+k3s1"
 	gkeMockKubeProxyVersion string = "v1.24.9-gke.3200"
-	gardenerMockOSImage     string = "Garden Linux 934.8"
 )
 
 var _ = Describe("GetClusterProvider", func() {
@@ -243,7 +242,7 @@ var _ = Describe("EvaluateClusterSize", func() {
 })
 
 func createFakeClient(objects ...client.Object) client.Client {
-	err := operatorv1alpha1.AddToScheme(scheme.Scheme)
+	err := operatorv1alpha2.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
 	err = corev1.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())

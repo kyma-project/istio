@@ -11,7 +11,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/kyma-project/istio/operator/api/v1alpha1"
+	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 	"github.com/masterminds/semver"
 	appsv1 "k8s.io/api/apps/v1"
@@ -53,7 +53,7 @@ var _ = Describe("Gatherer", func() {
 			},
 		}
 
-		istioKymaSystem := v1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+		istioKymaSystem := v1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:      IstioResourceName,
 			Namespace: IstioCRNamespace,
 			Labels: map[string]string{
@@ -82,7 +82,7 @@ var _ = Describe("Gatherer", func() {
 			},
 		}
 
-		istioKymaSystem := v1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+		istioKymaSystem := v1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:      IstioResourceName,
 			Namespace: IstioCRNamespace,
 			Labels: map[string]string{
@@ -90,7 +90,7 @@ var _ = Describe("Gatherer", func() {
 			},
 		}}
 
-		istioDefault := v1alpha1.Istio{ObjectMeta: metav1.ObjectMeta{
+		istioDefault := v1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 			Name:      IstioResourceName,
 			Namespace: DefaultNamespace,
 			Labels: map[string]string{
@@ -323,7 +323,7 @@ var _ = Describe("Gatherer", func() {
 })
 
 func createClientSet(objects ...client.Object) client.Client {
-	err := v1alpha1.AddToScheme(scheme.Scheme)
+	err := v1alpha2.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
 	err = corev1.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())

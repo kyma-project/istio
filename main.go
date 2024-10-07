@@ -44,7 +44,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
-	componentv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/controllers"
 	//+kubebuilder:scaffold:imports
@@ -79,7 +78,6 @@ func init() { //nolint:gochecknoinits
 
 	utilruntime.Must(networkingv1alpha3.AddToScheme(scheme))
 	utilruntime.Must(networkingv1.AddToScheme(scheme))
-	utilruntime.Must(componentv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(operatorv1alpha2.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }

@@ -13,7 +13,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 
-	"github.com/kyma-project/istio/operator/api/v1alpha1"
+	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -28,8 +28,8 @@ var IstiodAppLabel = map[string]string{"app": "istiod"}
 var NoVersion semver.Version
 
 // GetIstioCR fetches the Istio CR from the cluster using client with supplied name and namespace
-func GetIstioCR(ctx context.Context, client client.Client, name string, namespace string) (*v1alpha1.Istio, error) {
-	cr := v1alpha1.Istio{}
+func GetIstioCR(ctx context.Context, client client.Client, name string, namespace string) (*v1alpha2.Istio, error) {
+	cr := v1alpha2.Istio{}
 	err := client.Get(ctx, types.NamespacedName{Namespace: namespace, Name: name}, &cr)
 	if err != nil {
 		return nil, err
@@ -39,8 +39,8 @@ func GetIstioCR(ctx context.Context, client client.Client, name string, namespac
 }
 
 // ListIstioCR lists all Istio CRs on the cluster if no namespace is supplied, or from the supplied namespaces
-func ListIstioCR(ctx context.Context, kubeClient client.Client, namespace ...string) (*v1alpha1.IstioList, error) {
-	list := v1alpha1.IstioList{}
+func ListIstioCR(ctx context.Context, kubeClient client.Client, namespace ...string) (*v1alpha2.IstioList, error) {
+	list := v1alpha2.IstioList{}
 
 	if len(namespace) == 0 {
 		err := kubeClient.List(ctx, &list)
@@ -49,7 +49,7 @@ func ListIstioCR(ctx context.Context, kubeClient client.Client, namespace ...str
 		}
 	} else {
 		for _, n := range namespace {
-			namespacedList := v1alpha1.IstioList{}
+			namespacedList := v1alpha2.IstioList{}
 
 			err := kubeClient.List(ctx, &namespacedList, &client.ListOptions{Namespace: n})
 			if err != nil {

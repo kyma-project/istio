@@ -2,7 +2,6 @@ package resources_test
 
 import (
 	"context"
-	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
 	"github.com/kyma-project/istio/operator/internal/resources"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -62,9 +61,7 @@ var _ = Describe("Disclaimer annotation", func() {
 })
 
 func createFakeClient(objects ...ctrlClient.Object) ctrlClient.Client {
-	err := operatorv1alpha1.AddToScheme(scheme.Scheme)
-	Expect(err).ShouldNot(HaveOccurred())
-	err = corev1.AddToScheme(scheme.Scheme)
+	err := corev1.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
 	err = networkingv1alpha3.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())

@@ -28,7 +28,7 @@ updates:
       prefix: "docker"
       include: "scope"
   - package-ecosystem: "gomod"
-    target-branch: "release-1.8"
+    target-branch: "release-1.9"
     directory: "/"
     labels:
       - "go"
@@ -48,7 +48,7 @@ updates:
       - dependency-name: "istio.io/istio"
       - dependency-name: "k8s.io/*"
   - package-ecosystem: "docker"
-    target-branch: "release-1.8"
+    target-branch: "release-1.9"
     directory: "/"
     labels:
       - "docker"
@@ -65,6 +65,9 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    ignore:
+      - dependency-name: "*"
+        update-types: [ "version-update:semver-patch" ]
   # We only use npm for UI tests, therefore running it weekly and on main only is enough.
   - package-ecosystem: "npm"
     directory: "/tests/ui/"

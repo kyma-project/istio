@@ -2,7 +2,7 @@ package webhooks
 
 import (
 	"context"
-	operatorv1alpha1 "github.com/kyma-project/istio/operator/api/v1alpha1"
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/tests"
 	. "github.com/onsi/ginkgo/v2"
 	gingkoTypes "github.com/onsi/ginkgo/v2/types"
@@ -48,7 +48,7 @@ var deactivatedSelector = &metav1.LabelSelector{
 }
 
 func createFakeClient(objects ...client.Object) client.Client {
-	err := operatorv1alpha1.AddToScheme(scheme.Scheme)
+	err := operatorv1alpha2.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 	err = corev1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())

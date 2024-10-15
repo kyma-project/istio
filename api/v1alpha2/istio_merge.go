@@ -2,7 +2,6 @@ package v1alpha2
 
 import (
 	"encoding/json"
-	"github.com/kyma-project/istio/operator/pkg/lib/annotations"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"istio.io/api/operator/v1alpha1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -38,66 +37,19 @@ func (i *Istio) MergeInto(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperat
 		return op, err
 	}
 
-	externalNameAliasAnnotationFixOp := manageExternalNameAlias(i, mergedResourcesOp)
-
 	if i.Spec.CompatibilityMode {
-		compatibleIop, err := setCompatibilityMode(externalNameAliasAnnotationFixOp)
+		compatibleIop, err := setCompatibilityMode(mergedResourcesOp)
 		if err != nil {
 			return op, err
 		}
 		return compatibleIop, nil
 	}
 
-	return externalNameAliasAnnotationFixOp, nil
+	return mergedResourcesOp, nil
 }
 
 type meshConfigBuilder struct {
 	c *meshv1alpha1.MeshConfig
-}
-
-func manageExternalNameAlias(i *Istio, op iopv1alpha1.IstioOperator) iopv1alpha1.IstioOperator {
-	if op.Spec == nil {
-		op.Spec = &v1alpha1.IstioOperatorSpec{}
-	}
-	if op.Spec.Components == nil {
-		op.Spec.Components = &v1alpha1.IstioComponentSetSpec{}
-	}
-	if op.Spec.Components.Pilot == nil {
-		op.Spec.Components.Pilot = &v1alpha1.ComponentSpec{}
-	}
-	if op.Spec.Components.Pilot.K8S == nil {
-		op.Spec.Components.Pilot.K8S = &v1alpha1.KubernetesResourcesSpec{}
-	}
-
-	shouldDisable := annotations.ShouldDisableExternalNameAlias(i.Annotations)
-	found := false
-	for _, v := range op.Spec.Components.Pilot.K8S.Env {
-		if v.Name == "ENABLE_EXTERNAL_NAME_ALIAS" {
-			if shouldDisable {
-				v.Value = "false"
-			} else {
-				v.Value = "true"
-			}
-			found = true
-			break
-		}
-	}
-
-	if !found {
-		if shouldDisable {
-			op.Spec.Components.Pilot.K8S.Env = append(op.Spec.Components.Pilot.K8S.Env, &v1alpha1.EnvVar{
-				Name:  "ENABLE_EXTERNAL_NAME_ALIAS",
-				Value: "false",
-			})
-		} else {
-			op.Spec.Components.Pilot.K8S.Env = append(op.Spec.Components.Pilot.K8S.Env, &v1alpha1.EnvVar{
-				Name:  "ENABLE_EXTERNAL_NAME_ALIAS",
-				Value: "true",
-			})
-		}
-	}
-
-	return op
 }
 
 func newMeshConfigBuilder(op iopv1alpha1.IstioOperator) (*meshConfigBuilder, error) {

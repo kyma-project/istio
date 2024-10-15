@@ -1,4 +1,4 @@
-name: sync-external-images
+name: Sync External Images
 on:
   push:
     branches:

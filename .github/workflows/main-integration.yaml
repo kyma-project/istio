@@ -33,6 +33,7 @@ jobs:
             sec-scanners-config.yaml
             .github/**
             .**
+            external-images.yaml
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}'
 

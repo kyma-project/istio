@@ -202,6 +202,7 @@ module-image: docker-build docker-push ## Build the Module Image and push it to 
 generate-manifests: kustomize module-version
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default > istio-manager.yaml
+#cat config/namespace/istio_system_namespace.yaml >> istio-manager.yaml
 
 ########## Grafana Dashboard ###########
 .PHONY: grafana-dashboard

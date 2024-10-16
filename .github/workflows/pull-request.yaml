@@ -23,6 +23,7 @@ jobs:
              OWNERS
              CODEOWNERS
              .reuse/**
+             external-images.yaml
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}' >> $GITHUB_STEP_SUMMARY
 
@@ -56,6 +57,7 @@ jobs:
             CODEOWNERS
             sec-scanners-config.yaml
             .reuse/**
+            external-images.yaml
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}' >> $GITHUB_STEP_SUMMARY
   dispatch-unit-test:
@@ -84,6 +86,7 @@ jobs:
             CODEOWNERS
             sec-scanners-config.yaml
             .reuse/**
+            external-images.yaml
       - name: List all changed files
         run: echo '${{ steps.changed-files.outputs.all_changed_files }}' >> $GITHUB_STEP_SUMMARY
   dispatch-integration:

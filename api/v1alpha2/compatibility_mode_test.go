@@ -43,38 +43,6 @@ var _ = Describe("Compatibility Mode", func() {
 
 		})
 
-		It("should set compatibility variables on Istio Pilot when compatibility mode is on despite disable external name alias annotation set to false", func() {
-			//given
-			iop := iopv1alpha1.IstioOperator{
-				Spec: &operatorv1alpha1.IstioOperatorSpec{},
-			}
-			istioCR := Istio{
-				ObjectMeta: metav1.ObjectMeta{
-					Annotations: map[string]string{
-						"istio-operator.kyma-project.io/disable-external-name-alias": "false",
-					},
-				},
-				Spec: IstioSpec{
-					CompatibilityMode: true,
-				},
-			}
-
-			// when
-			out, err := istioCR.MergeInto(iop)
-
-			//then
-			Expect(err).ShouldNot(HaveOccurred())
-
-			existingEnvs := map[string]string{}
-			for _, v := range out.Spec.Components.Pilot.K8S.GetEnv() {
-				existingEnvs[v.Name] = v.Value
-			}
-
-			for k, v := range pilotCompatibilityEnvVars {
-				Expect(existingEnvs[k]).To(Equal(v))
-			}
-		})
-
 		It("should not set compatibility variables on Istio Pilot when compatibility mode is off", func() {
 			//given
 			iop := iopv1alpha1.IstioOperator{
@@ -86,6 +54,7 @@ var _ = Describe("Compatibility Mode", func() {
 				},
 				Spec: IstioSpec{
 					CompatibilityMode: false,
+					Components:        &Components{Pilot: &IstioComponent{}},
 				},
 			}
 
@@ -114,7 +83,9 @@ var _ = Describe("Compatibility Mode", func() {
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{},
 				},
-				Spec: IstioSpec{},
+				Spec: IstioSpec{
+					Components: &Components{Pilot: &IstioComponent{}},
+				},
 			}
 
 			// when

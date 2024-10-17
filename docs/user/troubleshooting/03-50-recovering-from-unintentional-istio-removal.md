@@ -3,7 +3,7 @@ Follow the steps outlined in this troubleshooting guide if you unintentionally d
 
 ## Symptom
 
-* The Istio custom resource (CR) is in the `Warning` state.
+The Istio custom resource (CR) is in the `Warning` state.
 
 
 ### Typical Log Output or Error Messages
@@ -31,7 +31,7 @@ There are Istio resources that block deletion. Please take a look at kyma-system
 
 Istio wasn't completely removed because the user's CRs still exist.
 
-For example, the issue occurs when you delete Istio, but there are still Virtual Service resources that either belong to the user or were installed by another Kyma component or module. In such cases, the hooked finalizer pauses the deletion of Istio until you remove all the related resources. This [blocking deletion strategy](https://github.com/kyma-project/community/issues/765) is intentionally designed and is enabled by default for Kyma Istio Operator.
+For example, the issue occurs when you delete Istio, but there are still VirtualService resources either created by you or installed by another Kyma component or module. In such cases, the hooked finalizer pauses the deletion of Istio until you remove all the related resources. This [blocking deletion strategy](https://github.com/kyma-project/community/issues/765) is intentionally designed and is enabled by default for Kyma Istio Operator.
 
 
 ## Remedy
@@ -47,7 +47,7 @@ For example, the issue occurs when you delete Istio, but there are still Virtual
       ```
   2. Remove the indicated lines:
       ```diff
-      apiVersion: operator.kyma-project.io/v1alpha2
+      apiVersion: operator.kyma-project.io/v1alpha1
       kind: Istio
       metadata:
       < finalizers:
@@ -77,4 +77,4 @@ For example, the issue occurs when you delete Istio, but there are still Virtual
 
 2. Reapply the Istio CR to install Istio once again.
 
-By completing the steps, the Kyma Istio Operator's reconciliation is triggered again. The Istio CR should return to the `Ready` state within a few seconds.
+By completing the steps, the Istio Operator's reconciliation is triggered again. The Istio CR should return to the `Ready` state within a few seconds.

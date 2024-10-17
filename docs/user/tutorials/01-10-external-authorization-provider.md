@@ -6,7 +6,8 @@ This tutorial shows how to expose and secure an HTTPBin Service using an externa
 
 * Kyma installation with the Istio module added. If you use a Kyma domain, also the API Gateway module must be added.
 * Prepare a domain you want to use and export its name as an environment variable:
-    ```
+    
+    ```bash
     export DOMAIN_TO_EXPOSE_WORKLOADS={DOMAIN_NAME}
     ```
 * Depending on whether you use your custom domain or a Kyma domain, export the necessary values as environment variables:
@@ -48,7 +49,7 @@ This tutorial shows how to expose and secure an HTTPBin Service using an externa
 
 Create a VirtualService to expose the HTTPBin workload.
 
-```
+```bash
 cat <<EOF | kubectl apply -f -
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
@@ -77,7 +78,8 @@ EOF
 To learn more about oauth2-proxy, [see the documentation](https://github.com/oauth2-proxy/manifests/tree/main/helm/oauth2-proxy).
 
 1. Export your configuration values as environment variables:
-    ```
+    
+    ```bash
     export CLIENT_ID={CLIENT_ID}
     export CLIENT_SECRET={CLIENT_SECRET}
     export COOKIE_SECRET={COOKIE_SECRET}
@@ -85,7 +87,8 @@ To learn more about oauth2-proxy, [see the documentation](https://github.com/oau
     ```
 
 2. Create a `values.yaml` file with the configuration of oauth2-proxy:
-    ```
+    
+    ```bash
     cat <<EOF > values.yaml
     config:
       clientID: $CLIENT_ID
@@ -112,7 +115,8 @@ To learn more about oauth2-proxy, [see the documentation](https://github.com/oau
     ```
 
 3. Install oauth2-proxy with your configuration using Helm:
-    ```
+    
+    ```bash
     helm repo add oauth2-proxy https://oauth2-proxy.github.io/manifests
     helm install custom oauth2-proxy/oauth2-proxy -f values.yaml
     ```
@@ -120,7 +124,8 @@ To learn more about oauth2-proxy, [see the documentation](https://github.com/oau
 ### Configure Istio Custom Resource (CR) with an External Authorization Provider
 
 1. Apply Istio CR configuration with an external authorization provider. Here's an example configuration:
-    ```
+    
+    ```bash
     cat <<EOF | kubectl apply -f -
     apiVersion: operator.kyma-project.io/v1alpha2
     kind: Istio
@@ -148,7 +153,8 @@ To learn more about oauth2-proxy, [see the documentation](https://github.com/oau
     ```
 
 2. Create an AuthorizationPolicy CR with the `CUSTOM` action and the `oauth2-proxy` provider:
-    ```
+    
+    ```bash
     cat <<EOF | kubectl apply -f -
     apiVersion: security.istio.io/v1
     kind: AuthorizationPolicy
@@ -171,7 +177,8 @@ To learn more about oauth2-proxy, [see the documentation](https://github.com/oau
     ```
 
 3. Create a DestinationRule with a traffic policy for the external authorization provider:
-    ```
+    
+    ```bash
     cat <<EOF | kubectl apply -f -
     apiVersion: networking.istio.io/v1
     kind: DestinationRule

@@ -61,3 +61,4 @@ Feature: Configuration of Istio module
     And Log of container "ext-authz" in deployment "ext-authz" in namespace "default" contains "X-Add-In-Check:[value] X-Ext-Authz:[allow]"
     And Request with header "x-ext-authz" with value "deny" to path "/headers" should have response code "403"
     And Log of container "ext-authz" in deployment "ext-authz" in namespace "default" contains "X-Add-In-Check:[value] X-Ext-Authz:[deny]"
+

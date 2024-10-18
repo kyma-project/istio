@@ -212,10 +212,8 @@ grafana-dashboard: ## Generating Grafana manifests to visualize controller statu
 PULL_IMAGE_VERSION=PR-${PULL_NUMBER}
 POST_IMAGE_VERSION=v$(shell date '+%Y%m%d')-$(shell printf %.8s ${PULL_BASE_SHA})
 
-.PHONY: istio-integration-test
-istio-integration-test: install deploy
-	# Increased TEST_REQUEST_TIMEOUT to 300s to avoid timeouts on newly created k3s clusters
-	cd tests/integration && TEST_REQUEST_TIMEOUT=300s && EXPORT_RESULT=true go test -v -timeout 50m -run TestIstioMain
+.PHONY: test-integration
+test-integration: configuration-integration-tests connection-integration-tests installation-integration-tests observability-integration-tests
 
 .PHONY: grpc-performance-test
 grpc-performance-test:
@@ -223,15 +221,35 @@ grpc-performance-test:
 	make -c tests/performance-grpc grpc-load-test
 	make -c tests/performance-grpc export-results
 
-.PHONY: aws-integration-test
-aws-integration-test: install deploy
+.PHONY: configuration-integration-test
+configuration-integration-test: install deploy
 	# Increased TEST_REQUEST_TIMEOUT to 600s to avoid timeouts on Gardener clusters
-	cd tests/integration && TEST_REQUEST_TIMEOUT=600s && EXPORT_RESULT=true go test -v -timeout 35m -run TestAws
+	cd tests/integration && TEST_REQUEST_TIMEOUT=600s && EXPORT_RESULT=true go test -v -timeout 35m -run TestConfiguration
+
+.PHONY: mesh-communication-integration-test
+mesh-communication-integration-test: install deploy
+	# Increased TEST_REQUEST_TIMEOUT to 600s to avoid timeouts on Gardener clusters
+	cd tests/integration && TEST_REQUEST_TIMEOUT=600s && EXPORT_RESULT=true go test -v -timeout 35m -run TestMeshCommunication
+
+.PHONY: installation-integration-test
+installation-integration-test: install deploy
+	# Increased TEST_REQUEST_TIMEOUT to 600s to avoid timeouts on Gardener clusters
+	cd tests/integration && TEST_REQUEST_TIMEOUT=600s && EXPORT_RESULT=true go test -v -timeout 35m -run TestInstallation
+
+.PHONY: observability-integration-test
+observability-integration-test: install deploy
+	# Increased TEST_REQUEST_TIMEOUT to 600s to avoid timeouts on Gardener clusters
+	cd tests/integration && TEST_REQUEST_TIMEOUT=600s && EXPORT_RESULT=true go test -v -timeout 35m -run TestObservability
 
 .PHONY: gcp-integration-test
 gcp-integration-test: install deploy
 	# Increased TEST_REQUEST_TIMEOUT to 600s to avoid timeouts on Gardener clusters
 	cd tests/integration && TEST_REQUEST_TIMEOUT=600s && EXPORT_RESULT=true go test -v -timeout 35m -run TestGcp
+
+.PHONY: evaluation-integration-test
+aws-integration-test: install deploy
+	# Increased TEST_REQUEST_TIMEOUT to 600s to avoid timeouts on Gardener clusters
+	cd tests/integration && TEST_REQUEST_TIMEOUT=600s && EXPORT_RESULT=true go test -v -timeout 35m -run TestEvaluation
 
 .PHONY: deploy-latest-release
 deploy-latest-release: create-kyma-system-ns
@@ -241,7 +259,7 @@ deploy-latest-release: create-kyma-system-ns
 .PHONY: istio-upgrade-integration-test
 istio-upgrade-integration-test: deploy-latest-release generate-integration-test-manifest
 	# Increased TEST_REQUEST_TIMEOUT to 300s to avoid timeouts on newly created k3s clusters
-	cd tests/integration &&  TEST_REQUEST_TIMEOUT=300s && EXPORT_RESULT=true go test -v -timeout 10m -run TestIstioUpgrade
+	cd tests/integration &&  TEST_REQUEST_TIMEOUT=300s && EXPORT_RESULT=true go test -v -timeout 10m -run TestUpgrade
 
 ########## Gardener specific ###########
 

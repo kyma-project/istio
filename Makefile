@@ -247,7 +247,7 @@ gcp-integration-test: install deploy
 	cd tests/integration && TEST_REQUEST_TIMEOUT=600s && EXPORT_RESULT=true go test -v -timeout 35m -run TestGcp
 
 .PHONY: evaluation-integration-test
-aws-integration-test: install deploy
+evaluation-integration-test: install deploy
 	# Increased TEST_REQUEST_TIMEOUT to 600s to avoid timeouts on Gardener clusters
 	cd tests/integration && TEST_REQUEST_TIMEOUT=600s && EXPORT_RESULT=true go test -v -timeout 35m -run TestEvaluation
 

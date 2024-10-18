@@ -4,6 +4,9 @@ inputs:
   operator-image-name:
     description: 'Operator image used for test'
     required: true
+  test_make_target:
+    description: 'Make target for integration tests to run'
+    default: 'test-integration'
 runs:
   using: "composite"
   steps:
@@ -21,7 +24,7 @@ runs:
         fi
 
         kubectl config use-context k3d-k3s-default
-        EXPORT_RESULT=true IMG=${{ inputs.operator-image-name }} make istio-integration-test
+        EXPORT_RESULT=true IMG=${{ inputs.operator-image-name }} make ${{ inputs.test_make_target }}
       shell: bash
     - name: Check deprecations
       run: |

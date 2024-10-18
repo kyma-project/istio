@@ -81,12 +81,17 @@ jobs:
     name: Istio integration test
     runs-on: ubuntu-latest
     needs: [build-image]
+    strategy:
+      fail-fast: false
+      matrix:
+        test_make_target: [ "configuration-integration-test", "mesh-communication-integration-test", "installation-integration-test", "observability-integration-test" ]
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - uses: ./.github/actions/integration-test
         with:
+          test_make_target: ${{ matrix.test_make_target }}
           operator-image-name: "europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{github.sha}}"
           servers-memory: "16"
           agents: 2

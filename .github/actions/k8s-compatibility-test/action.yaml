@@ -6,7 +6,7 @@ inputs:
     required: true
   test_make_target:
     description: 'Make target for integration tests to run'
-    default: 'test-integration'
+    default: 'istio-test-integration'
 runs:
   using: "composite"
   steps:
@@ -34,12 +34,12 @@ runs:
       shell: bash
     - uses: actions/upload-artifact@v4
       with:
-        name: html-reports
+        name: html-reports-${{ github.job }}-${{ inputs.test_make_target }}
         path: tests/integration/reports/
-    - uses: actions/upload-artifact@v4
-      with:
-        name: deprecation-report
-        path: deprecations.txt
     - name: Check that deprecations are empty
       run: if [[ $(wc -l deprecations.txt | awk '{print $1}' ) != '0' ]]; then exit 1; fi
       shell: bash
+    - uses: actions/upload-artifact@v4
+      with:
+        name: deprecation-report-${{ github.job }}-${{ inputs.test_make_target }}
+        path: deprecations.txt

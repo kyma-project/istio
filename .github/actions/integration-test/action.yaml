@@ -7,7 +7,7 @@ inputs:
     required: true
   test_make_target:
     description: 'Make target for integration tests to run'
-    default: 'test-integration'
+    default: 'istio-test-integration'
   agents:
     description: 'Number of k3d agents created'
     required: true

@@ -212,8 +212,8 @@ grafana-dashboard: ## Generating Grafana manifests to visualize controller statu
 PULL_IMAGE_VERSION=PR-${PULL_NUMBER}
 POST_IMAGE_VERSION=v$(shell date '+%Y%m%d')-$(shell printf %.8s ${PULL_BASE_SHA})
 
-.PHONY: test-integration
-test-integration: configuration-integration-tests connection-integration-tests installation-integration-tests observability-integration-tests
+.PHONY: istio-integration-test
+istio-integration-test: configuration-integration-test mesh-communication-integration-test installation-integration-test observability-integration-test
 
 .PHONY: grpc-performance-test
 grpc-performance-test:

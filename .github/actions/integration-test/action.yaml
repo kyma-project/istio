@@ -2,12 +2,12 @@
 name: 'Istio integration test'
 description: 'Runs Istio integration tests'
 inputs:
-  evaluation:
-    description: 'Controls whether the test should run for Evaluation or Production'
-    required: false
   operator-image-name:
     description: 'Operator image used for test'
     required: true
+  test_make_target:
+    description: 'Make target for integration tests to run'
+    default: 'istio-test-integration'
   agents:
     description: 'Number of k3d agents created'
     required: true
@@ -35,7 +35,7 @@ runs:
         
         kubectl config use-context k3d-k3s-default
         if [ "${{ inputs.evaluation }}" == "true" ]; then
-          TEST_EVALUATION=TRUE EXPORT_RESULT=true IMG=${{ inputs.operator-image-name }} make istio-integration-test
+          TEST_EVALUATION=TRUE EXPORT_RESULT=true IMG=${{ inputs.operator-image-name }} make ${{ inputs.test_make_target }}
         else
-          EXPORT_RESULT=true IMG=${{ inputs.operator-image-name }} make istio-integration-test
+          EXPORT_RESULT=true IMG=${{ inputs.operator-image-name }} make ${{ inputs.test_make_target }}
         fi

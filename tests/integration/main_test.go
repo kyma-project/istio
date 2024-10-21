@@ -20,42 +20,41 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
 
-const (
-	evaluationEnv string = "TEST_EVALUATION"
-
-	productionMainSuitePath    string = "features/istio/production/main-suite"
-	productionAwsSuitePath     string = "features/istio/production/aws-suite"
-	productionGcpSuitePath     string = "features/istio/production/gcp-suite"
-	productionUpgradeSuitePath string = "features/istio/production/upgrade-suite"
-	evaluationPath             string = "features/istio/evaluation"
-)
-
-func TestIstioMain(t *testing.T) {
-	suiteName := "Istio Install"
-	featurePath := productionMainSuitePath
-	ev, ok := os.LookupEnv(evaluationEnv)
-	if ok {
-		if ev == "TRUE" {
-			featurePath = evaluationPath
-		}
-	}
-
-	runTestSuite(t, initScenario, featurePath, suiteName)
+func TestEvaluation(t *testing.T) {
+	suiteName := "Evaluation"
+	runTestSuite(t, initScenario, "features/evaluation-suite", suiteName)
 }
 
-func TestIstioUpgrade(t *testing.T) {
-	suiteName := "Istio Upgrade"
-	runTestSuite(t, upgradeInitScenario, productionUpgradeSuitePath, suiteName)
+func TestConfiguration(t *testing.T) {
+	suiteName := "Configuration"
+	runTestSuite(t, initScenario, "features/configuration-suite", suiteName)
+}
+func TestMeshCommunication(t *testing.T) {
+	suiteName := "Mesh Communication"
+	runTestSuite(t, initScenario, "features/mesh-communication-suite", suiteName)
+}
+func TestInstallation(t *testing.T) {
+	suiteName := "Installation"
+	runTestSuite(t, initScenario, "features/installation-suite", suiteName)
+}
+func TestObservability(t *testing.T) {
+	suiteName := "Observability"
+	runTestSuite(t, initScenario, "features/observability-suite", suiteName)
+}
+
+func TestUpgrade(t *testing.T) {
+	suiteName := "Upgrade"
+	runTestSuite(t, upgradeInitScenario, "features/upgrade-suite", suiteName)
 }
 
 func TestAws(t *testing.T) {
-	suiteName := "AWS"
-	runTestSuite(t, initScenario, productionAwsSuitePath, suiteName)
+	suiteName := "AWS Specific"
+	runTestSuite(t, initScenario, "features/aws-suite", suiteName)
 }
 
 func TestGcp(t *testing.T) {
-	suiteName := "GCP"
-	runTestSuite(t, initScenario, productionGcpSuitePath, suiteName)
+	suiteName := "GCP Specific"
+	runTestSuite(t, initScenario, "features/gcp-suite", suiteName)
 }
 
 func runTestSuite(t *testing.T, scenarioInit func(ctx *godog.ScenarioContext), featurePath string, suiteName string) {
@@ -72,7 +71,7 @@ func runTestSuite(t *testing.T, scenarioInit func(ctx *godog.ScenarioContext), f
 		TestingT:       t,
 	}
 	if shouldExportResults() {
-		goDogOpts.Format = "pretty,junit:junit-report.xml,cucumber:cucumber-report.json"
+		goDogOpts.Format = "pretty,cucumber:cucumber-report.json"
 	}
 
 	suite := godog.TestSuite{

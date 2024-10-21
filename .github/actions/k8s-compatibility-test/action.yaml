@@ -4,6 +4,9 @@ inputs:
   operator-image-name:
     description: 'Operator image used for test'
     required: true
+  test_make_target:
+    description: 'Make target for integration tests to run'
+    default: 'istio-test-integration'
 runs:
   using: "composite"
   steps:
@@ -21,7 +24,7 @@ runs:
         fi
 
         kubectl config use-context k3d-k3s-default
-        EXPORT_RESULT=true IMG=${{ inputs.operator-image-name }} make istio-integration-test
+        EXPORT_RESULT=true IMG=${{ inputs.operator-image-name }} make ${{ inputs.test_make_target }}
       shell: bash
     - name: Check deprecations
       run: |
@@ -31,12 +34,12 @@ runs:
       shell: bash
     - uses: actions/upload-artifact@v4
       with:
-        name: html-reports
+        name: html-reports-${{ github.job }}-${{ inputs.test_make_target }}
         path: tests/integration/reports/
-    - uses: actions/upload-artifact@v4
-      with:
-        name: deprecation-report
-        path: deprecations.txt
     - name: Check that deprecations are empty
       run: if [[ $(wc -l deprecations.txt | awk '{print $1}' ) != '0' ]]; then exit 1; fi
       shell: bash
+    - uses: actions/upload-artifact@v4
+      with:
+        name: deprecation-report-${{ github.job }}-${{ inputs.test_make_target }}
+        path: deprecations.txt

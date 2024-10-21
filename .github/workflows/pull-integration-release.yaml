@@ -10,10 +10,15 @@ jobs:
   k8s-compatibility-test:
     name: Kubernetes version compatibility test
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        test_make_target: [ "configuration-integration-test", "mesh-communication-integration-test", "installation-integration-test", "observability-integration-test" ]
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/k8s-compatibility-test
         with:
+          test_make_target: ${{ matrix.test_make_target }}
           operator-image-name: "europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}"
 
   istio-upgrade-integration-test:
@@ -32,6 +37,10 @@ jobs:
   istio-integration-test:
     name: Istio integration test
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        test_make_target: [ "configuration-integration-test", "mesh-communication-integration-test", "installation-integration-test", "observability-integration-test" ]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -39,7 +48,7 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/integration-test
         with:
-          evaluation: false
+          test_make_target: ${{ matrix.test_make_target }}
           operator-image-name: "europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}"
           servers-memory: "16"
           agents: 2
@@ -54,7 +63,7 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/integration-test
         with:
-          evaluation: true
+          test_make_target: "evaluation-integration-test"
           operator-image-name: "europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}"
           servers-memory: "4"
           agents: 0

@@ -21,4 +21,5 @@ function cleanup() {
 # Cleanup on exit, be it successful or on fail
 trap cleanup EXIT INT
 
-make install deploy istio-integration-test
+export MAKE_TEST_TARGET="${MAKE_TEST_TARGET:-istio-integration-test}"
+make install deploy "$MAKE_TEST_TARGET"

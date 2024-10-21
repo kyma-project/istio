@@ -7,6 +7,10 @@ jobs:
   istio-integration-gcp:
     name: Istio integration test GCP
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        test_make_target: [ "configuration-integration-test", "mesh-communication-integration-test", "installation-integration-test", "observability-integration-test" ]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -34,6 +38,7 @@ jobs:
           DISK_TYPE: "pd-standard"
           SCALER_MAX: 20
           SCALER_MIN: 3
+          MAKE_TEST_TARGET: ${{ matrix.test_make_target }}
 
   istio-integration-aws-specific:
     name: Istio integration test AWS specific

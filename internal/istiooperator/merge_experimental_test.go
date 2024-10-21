@@ -37,7 +37,7 @@ var _ = Describe("Merge", func() {
 		// populates the state object which invalidates strict reflect
 		// validation. If loaded CR from file (Evaluation) changes, this
 		// size needs to be updated...
-		Expect(len(iop.Spec.Components.Pilot.K8S.Env)).To(Equal(6))
+		Expect(len(iop.Spec.Components.Pilot.K8S.Env)).To(Equal(5))
 	})
 	Context("ParseExperimentalFeatures", func() {
 		It("should update IstioOperator with managed environment variables when all experimental options are set to true and source struct is populated", func() {

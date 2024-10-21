@@ -5,8 +5,7 @@ import (
 )
 
 const (
-	restartAnnotationName         = "istio-operator.kyma-project.io/restartedAt"
-	disableExternalNameAnnotation = "istio-operator.kyma-project.io/disable-external-name-alias"
+	restartAnnotationName = "istio-operator.kyma-project.io/restartedAt"
 )
 
 func AddRestartAnnotation(annotations map[string]string) map[string]string {
@@ -21,12 +20,4 @@ func AddRestartAnnotation(annotations map[string]string) map[string]string {
 func HasRestartAnnotation(annotations map[string]string) bool {
 	_, found := annotations[restartAnnotationName]
 	return found
-}
-
-func ShouldDisableExternalNameAlias(annotations map[string]string) bool {
-	val, found := annotations[disableExternalNameAnnotation]
-	if found && val == "true" {
-		return true
-	}
-	return false
 }

@@ -3,6 +3,7 @@ package steps
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/istio/operator/tests/testcontext"
 
 	"github.com/avast/retry-go"
@@ -14,28 +15,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func DeployIstioOperator(ctx context.Context, manifestType, should string) error {
-	var manifestFileName string
-	switch manifestType {
-	case "generated":
-		manifestFileName = "operator_generated_manifest.yaml"
-	case "failing":
-		manifestFileName = "operator_failing_manifest.yaml"
-	default:
-		return fmt.Errorf("unsupported manifest type: %s", manifestType)
-	}
-
-	expectSuccess := false
-	if should == "succeed" {
-		expectSuccess = true
-	}
-
+func DeployIstioOperator(ctx context.Context) error {
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
 	}
 
-	resources, err := manifestprocessor.ParseYamlFromFile(manifestFileName)
+	resources, err := manifestprocessor.ParseYamlFromFile("operator_generated_manifest.yaml")
 	if err != nil {
 		return err
 	}
@@ -64,11 +50,7 @@ func DeployIstioOperator(ctx context.Context, manifestType, should string) error
 			resource.SetResourceVersion(existingResource.GetResourceVersion())
 			err = k8sClient.Update(ctx, &resource)
 			if err != nil {
-				if expectSuccess {
-					return err
-				} else {
-					return nil
-				}
+				return err
 			}
 		}
 

@@ -46,7 +46,7 @@ The latest release includes the following versions of Istio and Envoy:
    ```bash
    kubectl apply -f https://github.com/kyma-project/istio/releases/latest/download/istio-manager-experimental.yaml
    ```
-   
+
 3. To get Istio installed, apply the default Istio CR:
 
    ```bash

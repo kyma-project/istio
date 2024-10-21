@@ -17,4 +17,4 @@ This might, for example, cause the JWKS fetch from the JWKS URI to fail.
 
 To ensure that the certificate is trusted by Istio, make sure that you are using the most up-to-date version of the Istio module. If you are on BTP Kyma Runtime this is guaranteed by the solution.
 
-In case your Istio module version is up-to-date, but the verification is still failing, you might want to consider [plugging your own Root CA](../operation-guides/02-40-plug-in-root-ca.md) into istio pilot.
+In case your Istio module version is up-to-date, but the verification is still failing, make sure that the CA root cert is trusted by istiod.

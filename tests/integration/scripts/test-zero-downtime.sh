@@ -80,7 +80,6 @@ send_requests() {
     ((request_count = request_count + 1))
 
     if [ "$response" != "200" ]; then
-      # TODO: ADAPT
       # If there is an error and the Virtual Service still exists, the test is failed, but if an error is received only when the
       # Virtual Service is deleted, the test is successful, because without an Virtual Service the request must fail as no host
       # is exposed. This was the most reliable way to detect when to stop the requests, since only sending requests

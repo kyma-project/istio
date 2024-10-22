@@ -23,12 +23,18 @@ run_zero_downtime_requests() {
   wait_for_virtual_service_to_exist
   echo "zero-downtime: Virtual Service found"
 
+  # Get the IP of the Gardener cluster if the shoot-info ConfigMap exists
   if kubectl get configmap shoot-info -n kube-system &> /dev/null; then
-    echo "zero-downtime: Running on Gardener cluster is not supported."
-    exit 1
+    ip=$(get_load_balancer_ip)
+    if [ -z "$ip" ]; then
+      echo "zero-downtime: Cannot get the IP of the Gardener cluster"
+      exit 1
+    fi
+    host="$ip:80"
+  else
+    host="localhost:80"
   fi
 
-  host="localhost:80"
   local url_under_test="http://$host/headers"
 
   # Wait until the host in the Virtual Service is available. This may take a very long time because the httpbin application
@@ -82,6 +88,33 @@ wait_for_virtual_service_to_exist() {
   exit 1
 }
 
+get_load_balancer_ip() {
+  local namespace="istio-system"
+  local service="istio-ingressgateway"
+  local attempts=1
+  local ip
+
+  # Wait for 2 min
+  while [[ $attempts -le 120 ]] ; do
+    ip=$(kubectl get svc "$service" -n "$namespace" -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+
+    if [ -z "$ip" ]; then
+      # If IP is not available, fallback to hostname and resolve it to IP
+      hostname=$(kubectl get svc "$service" -n "$namespace" -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+      if [ -n "$hostname" ]; then
+        ip=$(dig +short "$hostname" | tail -n1)
+      fi
+    fi
+
+    if [ -n "$ip" ]; then
+      break
+    fi
+  	sleep 1
+    ((attempts = attempts + 1))
+  done
+
+  echo "$ip"
+}
 
 wait_for_url() {
   local url="$1"
@@ -89,8 +122,8 @@ wait_for_url() {
 
   echo "zero-downtime: Waiting for URL '$url' to be available"
 
-  # Wait for 1 min
-  while [[ $attempts -le 300 ]] ; do
+  # Wait for 2 min
+  while [[ $attempts -le 120 ]] ; do
     response=$(curl -sk -o /dev/null -L -w "%{http_code}" "$url")
   	if [ "$response" == "200" ]; then
       echo "zero-downtime: $url is available for requests"

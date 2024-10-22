@@ -1,10 +1,22 @@
-# Istio Unintentionally Removed
-Follow the steps outlined in this troubleshooting guide if you unintentionally deleted Istio and want to restore the system to its normal state without losing any user-created resources. However, if you intended to delete Istio, the symptoms described in this document are expected, and you must clean up the orphaned resources by yourself. To check which resources are blocking the deletion, see the logs of the `manager` container.
+# Reverting the Istio Module's Deletion
+Follow the steps outlined in this troubleshooting guide if you unintentionally deleted the Istio module and want to restore the cluster to its normal state without losing any resources created in the cluster.
 
 ## Symptom
 
-The Istio custom resource (CR) is in the `Warning` state.
+The Istio custom resource (CR) is in the Warning state. The condition of type **Ready** is set to `false` with the reason `IstioCustomResourcesDangling`. To verify this, run the command:
 
+```bash
+kubectl get istio default -n kyma-system -o jsonpath='{.status.conditions[0]}'
+```
+
+You get an output similar to this one:
+
+```bash
+{"lastTransitionTime":"2024-09-26T18:23:00Z","message":"Istio deletion blocked because of existing Istio custom resources","reason":"IstioCustomResourcesDangling","status":"False","type":"Ready"}
+```
+
+>[!NOTE]
+> If you intended to delete the Istio module, the symptoms described in this document are expected, and you must clean up the remaining resources yourself. To check which resources are blocking the deletion, see the logs of the `istio-controller-manager` container.
 
 ### Typical Log Output or Error Messages
 
@@ -29,52 +41,43 @@ There are Istio resources that block deletion. Please take a look at kyma-system
 
 ## Cause
 
-Istio wasn't completely removed because the user's CRs still exist.
+The Istio module wasn't completely removed because related resources still exist in the cluster.
 
-For example, the issue occurs when you delete Istio, but there are still VirtualService resources either created by you or installed by another Kyma component or module. In such cases, the hooked finalizer pauses the deletion of Istio until you remove all the related resources. This [blocking deletion strategy](https://github.com/kyma-project/community/issues/765) is intentionally designed and is enabled by default for Kyma Istio Operator.
+For example, the issue occurs when you delete Istio, but there are still VirtualService resources either created by you or installed by another Kyma component or module. In such cases, the hooked finalizer pauses the deletion of Istio until you remove all the related resources. This [blocking deletion strategy](https://github.com/kyma-project/community/issues/765) is intentionally designed and is enabled by default for the Istio module.
 
 
 ## Remedy
 
-1. Edit the Istio CR and remove the finalizer.
-
 <!-- tabs:start -->
-  #### **kubectl**
+#### **Kyma dashboard**
 
-  1. To edit the Istio CR, run:
-      ```
-      kubectl edit istio -n kyma-system default
-      ```
-  2. Remove the indicated lines:
-      ```diff
-      apiVersion: operator.kyma-project.io/v1alpha1
-      kind: Istio
-      metadata:
-      < finalizers:
-      < - istios.operator.kyma-project.io/istio-installation
-        generation: 3
-        labels:
-          ...
-        name: default
-        namespace: kyma-system
-          ...
-        status:
-          description: 'There are Istio resources that block deletion. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning'
-          state: Warning
-      ```
+1. In the **Cluster Details** section, select **Modify Modules**.
+2. Select the Istio module.
+3. Choose **Edit**.
+4. Switch to the **YAML** section.
+5. To remove the finalizers from the Istio custom resource, delete the following lines:
+    ```bash
+    finalizers:
+    - istios.operator.kyma-project.io/istio-installation
+    ```
+    When the finalizers are removed, the Istio module is deleted. All the other resources remain in the cluster.
+6. Choose **Save**.
+7. Add the Istio module again.
     
-  #### **Kyma Dashboard**
+#### **Kyma Dashboard**
 
-  1. Go to the `kyma-system` namespace. 
-  2. In the **Kyma** section, choose **Istio**.
-  3. Select your Istio instance and click **Edit**.
-  4. Switch to the **YAML** section and remove the indicated lines:
-    ![Remove the finalizers from the Istio CR](../../assets/istio-cr-delete-finalizers.svg)
+1. To edit the Istio CR, run:
+  ```bash
+  kubectl edit istio -n kyma-system default
+  ```
+2. To remove the finalizers from the Istio custom resource, delete the following lines:
+    ```bash
+    finalizers:
+    - istios.operator.kyma-project.io/istio-installation
+    ```
+    When the finalizers are removed, the Istio module is deleted. All the other resources remain in the cluster.
+3. Save the changes.
+4. Add the Istio module again.
 <!-- tabs:end -->
 
-
-1. When the finalizer is removed, the Istio CR is deleted. Other resources, such as the `istiod` Deployment, remain in the cluster.
-
-2. Reapply the Istio CR to install Istio once again.
-
-By completing the steps, the Istio Operator's reconciliation is triggered again. The Istio CR should return to the `Ready` state within a few seconds.
+When you re-add the Istio module, its reconciliation is reinitiated. The Istio CR returns to the Ready state within a few seconds.

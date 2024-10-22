@@ -4,10 +4,10 @@
 
 You're unable to connect an application to a SAP HANA Database instance.
 
-## Troubleshooting
+## Cause
+The Istio module's default configuration does not restrict outbound traffic. This means that the application should have no issues connecting to a SAP HANA Database instance. If you are experiencing issues, they may be related to the SAP HANA Database instance or your cluster configuration. To identify the source of the problem, follow the troubleshooting steps.
 
-The Istio module's default configuration does not restrict outbound traffic. This means that the application should have no issues connecting to the SAP HANA Database instance.
-To determine the cause of the connection issue, you must follow the troubleshooting steps.
+## Remedy
 
 ### Connect to the SAP HANA Database Instance from Outside of the Cluster
 1. Download SAP HANA Client for your operating system from the [SAP Development Tools](https://tools.hana.ondemand.com/#hanatools).
@@ -22,6 +22,7 @@ To determine the cause of the connection issue, you must follow the troubleshoot
     hdbsql -n aaa.bbb.ccc.ddd:30015 -u my_user -p mypassword
     ```
 5. If the connection is successful and you can execute queries, the issue is not related to the SAP HANA Database instance.
+
 ### Connect to the SAP HANA Database Instance from Inside of the Cluster
 1. Build a Docker image with the SAP HANA Client installed. You can use the following Dockerfile:
     ```Dockerfile
@@ -57,5 +58,4 @@ To determine the cause of the connection issue, you must follow the troubleshoot
     hdbsql -n {HANA_DB_INSTANCE_ADDRESS} -u {HANA_DB_USER} -p {HANA_DB_PASSWORD}
     ```
 8. If the connection is successful and you can execute queries, the issue is not related to the setup of the cluster.
-9. Check the connection from a Pod that has the Istio sidecar injected. In that case, create the Deployment in a namespace with Istio sidecar injection enabled. The connection should be successful.
-
+9. Check the connection from a Pod that has the Istio sidecar injected. To do this, create a Deployment in a namespace with Istio sidecar injection enabled.

@@ -1,5 +1,5 @@
 # Incompatible Istio Sidecar Version After Istio Operator's Upgrade
-// zrobić taska na przerobienie, bez szukania podów patrząc na istio cr status, dokładniej opisać symptom 
+
 ## Symptom
 
 You upgraded the Istio module, and mesh connectivity is broken.

@@ -5,7 +5,7 @@
 - Istiod logs include multiple warnings/errors that include `x509: certificate signed by unknown authority`.
 - A set up JWT authorization flow does not work, and requests with valid tokens end up with a 401 Status error `Jwt verification fails`.
 - Istio sidecars Envoy configuration for JWT is not up-to-date.
-- Checking server certificate chain reveals different Root CAs then for working servers.
+- Checking server certificate chain reveals different Root CAs than for working servers.
 
 ## Cause
 

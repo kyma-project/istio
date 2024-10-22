@@ -23,9 +23,13 @@ run_zero_downtime_requests() {
   wait_for_virtual_service_to_exist
   echo "zero-downtime: Virtual Service found"
 
-  # Get the host set in the APIRule
-  exposed_host=$(kubectl get virtualservices upgrade-test-vs -n default -o jsonpath='{.spec.hosts[0]}')
-  local url_under_test="http://localhost:80/headers"
+  if kubectl get configmap shoot-info -n kube-system &> /dev/null; then
+    echo "zero-downtime: Running on Gardener cluster is not supported."
+    exit 1
+  fi
+
+  host="localhost:80"
+  local url_under_test="http://$host/headers"
 
   # Wait until the host in the Virtual Service is available. This may take a very long time because the httpbin application
   # used in the integration tests takes a very long time to start successfully processing requests, even though it is

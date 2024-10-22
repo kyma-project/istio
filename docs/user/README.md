@@ -3,7 +3,9 @@ Learn more about the Istio module. Use it to manage and configure the Istio serv
 
 ## What Is Istio?
 
-[Istio](https://istio.io/latest/) is an open-source service mesh that provides a uniform way to manage, connect, and secure microservices. It helps to manage traffic, enhance security capabilities, and provide telemetry data for understanding service behavior.
+Istio is an open-source service mesh that provides a uniform way to manage, connect, and secure microservices. It helps to manage traffic, enhance security capabilities, and provide telemetry data for understanding service behavior. See the [open-source Istio documentation](https://istio.io/latest/docs/).
+
+The Istio module installs and manages Istio in your Kyma cluster. By default, the Istio module is added when you create a Kyma runtime instance.
 
 The latest release includes the following versions of Istio and Envoy:  
 
@@ -13,7 +15,12 @@ The latest release includes the following versions of Istio and Envoy:
 
 ## Features
 
-## Scope
+The Istio module offers the following features:
+- **Management of Istio installation and upgrades**: The module installs Istio and simplifies the process of managing its installation, reducing the complexity and time required for maintenance.
+- **Default Istio configuration**: You can quickly have Istio installed with default settings.
+- **Fine-tuning capabilities**: You can optimize Istio and fine-tune its settings according to specific performance or operational requirements.
+- **Synchronization of the data plane with the Istio control plane**: This ensures that changes you make to the control plane are consistently reflected in the data plane, ensuring that the network operates consistently and reliably without any discrepancies.
+- **Support for the X-Forwarded-For (XFF) header**: You can configure the XFF header to manage and track the source of incoming requests.
 
 ## Architecture
 
@@ -26,16 +33,8 @@ Within the Istio module, Istio Operator handles the management and configuration
 ### Istio Controller
 
 Istio Controller manages Istio and its resources as defined in the Istio custom resource (CR). Istio Controller is responsible for:
-- installing, upgrading, and uninstalling Istio
-- restarting workloads that have Istio sidecar proxy injected to ensure that these workloads are using the correct version of Istio
-
-### Istio Module's Resources
-
-All Kubernetes resources created by the Istio module's and its conponents use the label  `kyma-project.io/module=istio`. To list the resources, run the command:
-
-```bash
-kubectl get all -A -l kyma-project.io/module=istio
-```
+- Installing, upgrading, and uninstalling Istio
+- Restarting workloads that have Istio sidecar proxy injected to ensure that these workloads are using the correct version of Istio
 
 ## API / Custom Resource Definitions
 

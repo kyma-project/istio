@@ -1,21 +1,21 @@
 # Default Istio Configuration
 
-Istio Operator provides baseline values for the Istio installation, which you can override in the Istio custom resource (CR). It applies the following changes to customize Istio:
+Within the Istio module, Istio Operator provides baseline values for the Istio installation, which you can override in the Istio custom resource (CR).
+
+See the major differences in the configuration of Istio Operator compared to upstream Istio:
 
 - Istiod (Pilot) and Ingress Gateway components are enabled by default.
-- Automatic sidecar injection is disabled by default.
-- To enhance  security and performance, both [Istio control plane and data plane](https://istio.io/latest/docs/ops/deployment/architecture/) use distroless version of Istio images. Those images are not Debian-based and are slimmed down to reduce any potential attack surface and increase startup time. To learn more, see [Harden Docker Container Images](https://istio.io/latest/docs/ops/configuration/security/harden-docker-images/).
-- Resource requests and limits for Istio sidecars are modified to best suit the needs of the evaluation and production profiles. // czy to w czymś pomaga
-- [Mutual TLS (mTLS)](https://istio.io/docs/concepts/security/#mutual-tls-authentication) is enabled cluster-wide in the `STRICT` mode.
-- Ingress Gateway is expanded to handle HTTPS requests on port `443`. It redirects HTTP requests to HTTPS on port `80`. //do api gateway
-- The use of HTTP 1.0 is enabled in the outbound HTTP listeners by the **PILOT_HTTP10** flag set in the Istiod component environment variables.
-- No Egress limitations are implemented - all applications deployed in the Kyma cluster can access outside resources without limitations.
-- The CNI component is provided as a DaemonSet, meaning that one replica is present on every node of the target cluster.
-- The self-signed CA certificate’s bit length is set to 4096 instead of the default 2048.
+- Automatic Istio sidecar proxy injection is disabled by default.
+- To enhance security and performance, both [Istio control plane and data plane](https://istio.io/latest/docs/ops/deployment/architecture/) use the distroless version of Istio images. Those images are not Debian-based and are slimmed down to reduce any potential attack surface. To learn more, see [Harden Docker Container Images](https://istio.io/latest/docs/ops/configuration/security/harden-docker-images/).
+- Resource requests and limits for Istio sidecars proxies are modified to best suit the needs of the evaluation and production profiles.
+- [Mutual TLS (mTLS)](https://istio.io/docs/concepts/security/#mutual-tls-authentication) is enabled in the STRICT mode for workloads in the Istio service mesh.
+- Egress traffic is not controlled. All applications deployed in the Kyma cluster can access outside resources without limitations.
+- The CNI component, used for the installation of an Istio sidecar, is provided as a DaemonSet. This means that one replica is present on every node of the target cluster.
+- The self-signed CA certificate’s bit length is set to `4096` instead of the default `2048`.
 
 ## Configuration Based on the Cluster Size
 
-The configuration of Istio resources depends on the cluster capabilities. If your cluster has less than 5 total virtual CPU cores or its total memory capacity is less than 10 Gigabytes, the default setup for resources and autoscaling is lighter. If your cluster exceeds both of these thresholds, Istio is installed with the higher resource configuration.
+The configuration of Istio resources depends on the cluster capabilities. If your cluster has less than 5 total virtual CPU cores or its total memory capacity is less than 10 gigabytes, the default setup for resources and autoscaling is lighter. If your cluster exceeds both of these thresholds, Istio is installed with the higher resource configuration.
 
 ### Default Resource Configuration for Smaller Clusters
 

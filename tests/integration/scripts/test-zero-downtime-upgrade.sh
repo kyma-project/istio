@@ -20,6 +20,9 @@ PARALLEL_REQUESTS=5
 
 run_zero_downtime_requests() {
 
+  wait_for_virtual_service_to_exist
+  echo "zero-downtime: Virtual Service found"
+
   # Get the host set in the APIRule
   exposed_host=$(kubectl get virtualservices upgrade-test-vs -n default -o jsonpath='{.spec.hosts[0]}')
   local url_under_test="https://$exposed_host/headers"
@@ -49,13 +52,41 @@ run_zero_downtime_requests() {
   exit 0
 }
 
+wait_for_virtual_service_to_exist() {
+  local attempts=1
+  echo "zero-downtime: Waiting for the Virtual Service to exist"
+  # Wait for 5min
+  while [[ $attempts -le 300 ]] ; do
+
+    vs_crd=$(kubectl get crds virtualservices.networking.istio.io -A --ignore-not-found)
+    if [ -z "$vs_crd" ]; then
+      sleep 1
+      ((attempts = attempts + 1))
+      continue
+    fi
+    echo "zero-downtime: Virtual Service CRD found"
+
+    vs=$(kubectl get virtualservice -A --ignore-not-found) && kubectl_exit_code=$? || kubectl_exit_code=$?
+    if [ $kubectl_exit_code -ne 0 ]; then
+        echo "zero-downtime: kubectl failed when listing Virtual Services, exit code: $kubectl_exit_code"
+        exit 2
+    fi
+  	[[ -n "$vs" ]] && return 0
+  	sleep 1
+    ((attempts = attempts + 1))
+  done
+  echo "zero-downtime: Virtual Service not found"
+  exit 1
+}
+
+
 wait_for_url() {
   local url="$1"
   local attempts=1
 
   echo "zero-downtime: Waiting for URL '$url' to be available"
 
-  # Wait for 5 min
+  # Wait for 1 min
   while [[ $attempts -le 300 ]] ; do
     response=$(curl -sk -o /dev/null -L -w "%{http_code}" "$url")
   	if [ "$response" == "200" ]; then

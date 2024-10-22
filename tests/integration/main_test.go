@@ -44,7 +44,7 @@ func TestObservability(t *testing.T) {
 
 func TestUpgrade(t *testing.T) {
 	suiteName := "Upgrade"
-	runTestSuite(t, upgradeInitScenario, "features/upgrade-suite", suiteName)
+	runTestSuite(t, initScenario, "features/upgrade-suite", suiteName)
 }
 
 func TestAws(t *testing.T) {

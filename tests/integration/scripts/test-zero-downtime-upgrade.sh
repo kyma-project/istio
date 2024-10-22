@@ -25,7 +25,7 @@ run_zero_downtime_requests() {
 
   # Get the host set in the APIRule
   exposed_host=$(kubectl get virtualservices upgrade-test-vs -n default -o jsonpath='{.spec.hosts[0]}')
-  local url_under_test="https://$exposed_host/headers"
+  local url_under_test="http://localhost:80/headers"
 
   # Wait until the host in the Virtual Service is available. This may take a very long time because the httpbin application
   # used in the integration tests takes a very long time to start successfully processing requests, even though it is
@@ -64,7 +64,6 @@ wait_for_virtual_service_to_exist() {
       ((attempts = attempts + 1))
       continue
     fi
-    echo "zero-downtime: Virtual Service CRD found"
 
     vs=$(kubectl get virtualservice -A --ignore-not-found) && kubectl_exit_code=$? || kubectl_exit_code=$?
     if [ $kubectl_exit_code -ne 0 ]; then

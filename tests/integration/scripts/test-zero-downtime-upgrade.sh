@@ -55,8 +55,8 @@ wait_for_url() {
 
   echo "zero-downtime: Waiting for URL '$url' to be available"
 
-  # Wait for 1min
-  while [[ $attempts -le 60 ]] ; do
+  # Wait for 5 min
+  while [[ $attempts -le 300 ]] ; do
     response=$(curl -sk -o /dev/null -L -w "%{http_code}" "$url")
   	if [ "$response" == "200" ]; then
       echo "zero-downtime: $url is available for requests"

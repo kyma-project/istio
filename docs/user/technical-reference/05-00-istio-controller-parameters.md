@@ -1,6 +1,6 @@
 # Istio Controller Parameters 
 
-You can configure [Istio Controller](../00-10-overview-istio-controller.md) using various parameters. All options are listed in this document.
+You can configure Istio Controller using various parameters. All options are listed in this document.
 
 ## All Configuration Parameters
 

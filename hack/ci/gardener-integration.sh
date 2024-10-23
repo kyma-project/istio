@@ -22,4 +22,4 @@ function cleanup() {
 trap cleanup EXIT INT
 
 export MAKE_TEST_TARGET="${MAKE_TEST_TARGET:-istio-integration-test}"
-make install deploy "$MAKE_TEST_TARGET"
+make "$MAKE_TEST_TARGET"

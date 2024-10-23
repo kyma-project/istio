@@ -1,11 +1,13 @@
 #!/bin/bash
 # Script to run zero downtime tests by executing the godog upgrade integration test and sending requests to
-# the url exposed by a Virtual Service.
+# the test application.
 #
 # The following process is executed:
 # 1. Start the zero downtime requests in the background. The requests will be sent once the
 # exposed host is reachable. The requests will be sent in a loop until the Virtual Service is deleted.
-#  - Wait for 1 min until the host in the Virtual Service is available
+#  - Wait for 5 min until the Virtual Service exists
+#  - If the test runs against a Gardener cluster, try to get the IP of the Gardener cluster for 1 min
+#  - Wait for the exposed test application to be available for 2 min
 #  - Send requests in parallel to the exposed host until the requests fail and in this case check if the Virtual Service
 #    still exists to determine if the test failed or succeeded.
 # 2. Run the godog upgrade test
@@ -137,7 +139,7 @@ wait_for_url() {
   exit 1
 }
 
-# Function to send requests to a given url with optional bearer token
+# Function to send requests to a given url
 send_requests() {
   local url="$1"
   local request_count=0

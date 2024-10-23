@@ -5,3 +5,4 @@ metadata:
   name: istio-system
   labels:
     operator.kyma-project.io/managed-by: kyma
+    namespaces.warden.kyma-project.io/validate: enabled

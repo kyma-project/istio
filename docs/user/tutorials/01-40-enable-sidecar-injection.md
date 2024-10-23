@@ -25,7 +25,7 @@ Enabling Istio sidecar proxy injection for a namespace allows istiod to watch al
 
 1. Select the namespace where you want to enable sidecar proxy injection.
 2. Choose **Edit**.
-3. In the `Form` section, siwtch the toggle to enable Istio sidecar proxy injection.
+3. In the **UI Form** section, siwtch the toggle to enable Istio sidecar proxy injection.
 4. Choose **Save**.
 
 #### **kubectl**
@@ -62,12 +62,12 @@ Enabling Istio sidecar proxy injection for a Deployment injects an Istio sidecar
 
 #### **Kyma Dashboard**
 
-1. Select the namespace of the Pod's Deployment.
+1. Select the namespace of the Deployment for which you want to enable Istio sidecar proxy injection.
 2. In the **Workloads** section, select **Deployments**.
-3. Select the Pod's Deployment and click **Edit**.
-4. In the `UI Form` section, set the **sidecar.istio.io/inject** label to `true`.
-![Switch the toggle to enable Istio sidecar injection](../../assets/sidecar-injection-toggle-deployment.svg)
-1. Click **Update**.
+3. Select the Deployment. 
+4. Choose **Edit**.
+5. In the **UI Form** section, switch the toggle to enable Istio sidecar proxy injection.
+6. Choose **Save**.
 
 #### **kubectl**
 

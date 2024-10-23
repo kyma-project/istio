@@ -26,4 +26,4 @@ When you set spec.compatibilityMode: true, the Istio module applies an opinionat
 | Istio Proxy     | **ENABLE_DEFERRED_CLUSTER_CREATION** | `false` |
 | Istio Proxy     | **ENABLE_DELIMITED_STATS_TAG_REGEX** | `false` |
 
-To learn more about the changes that specific compatibility versions revert, follow What's New notes.
+To learn more about the changes that specific compatibility versions revert, follow the [Istio release notes](https://github.com/kyma-project/istio/releases).

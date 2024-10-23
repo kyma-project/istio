@@ -20,10 +20,10 @@ To enable compatibility mode, set the spec.compatibilityMode field in the Istio 
 
 When you set spec.compatibilityMode: true, the Istio module applies an opinionated subset of Istio compatibilityVersion variables. The compatibility version of Istio 1.22 includes the following Istio Pilot and Istio Proxy environment variables:
 
-|Istio Component | Name                                 | Value   |
-|--------------------------------------|---------|
-|Istio Pilot| **ENABLE_DELIMITED_STATS_TAG_REGEX** | `false` |
-|Istio Proxy| **ENABLE_DEFERRED_CLUSTER_CREATION** | `false` |
-|Istio Proxy| **ENABLE_DELIMITED_STATS_TAG_REGEX** | `false` |
+| Istio Component | Name                                 | Value   |
+|-----------------|--------------------------------------|---------|
+| Istio Pilot     | **ENABLE_DELIMITED_STATS_TAG_REGEX** | `false` |
+| Istio Proxy     | **ENABLE_DEFERRED_CLUSTER_CREATION** | `false` |
+| Istio Proxy     | **ENABLE_DELIMITED_STATS_TAG_REGEX** | `false` |
 
 To learn more about the changes that specific compatibility versions revert, follow What's New notes.

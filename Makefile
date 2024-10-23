@@ -255,7 +255,7 @@ deploy-latest-release: create-kyma-system-ns
 # Latest release deployed on cluster is a prerequisite, it is handled by deploy-latest-release target
 .PHONY: istio-upgrade-integration-test
 istio-upgrade-integration-test: deploy-latest-release generate-integration-test-manifest
-	cd tests/integration &&  TEST_REQUEST_TIMEOUT=300s && EXPORT_RESULT=true go test -v -timeout 10m -run TestUpgrade
+	TEST_REQUEST_TIMEOUT=300s && EXPORT_RESULT=true && ./tests/integration/scripts/test-zero-downtime-upgrade.sh
 
 ########## Gardener specific ###########
 

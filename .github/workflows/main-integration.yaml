@@ -67,15 +67,34 @@ jobs:
   istio-upgrade-integration-test:
     name: Istio upgrade integration test
     runs-on: ubuntu-latest
-    needs: [build-image]
+    needs: [ build-image ]
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: ./.github/actions/upgrade-integration-test
+      - run: ./tests/integration/scripts/gardener-kubeconfig.sh
+        shell: bash
+        env:
+          GARDENER_TOKEN: ${{ secrets.GARDENER_TOKEN }}
+      - uses: actions/setup-go@v5
         with:
-          operator-image-name: "europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{github.sha}}"
-          target_branch: ${{github.ref_name}}
+          go-version-file: "go.mod"
+      - run: make IMG="europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{github.sha}}" gardener-istio-integration-test
+        shell: bash
+        env:
+          MAKE_TEST_TARGET: "istio-upgrade-integration-test"
+          TARGET_BRANCH: ${{github.ref_name}}
+          GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"
+          GARDENER_PROJECT_NAME: "goats"
+          GARDENER_PROVIDER_SECRET_NAME: "goat"
+          GARDENER_PROVIDER: "gcp"
+          GARDENER_REGION: "europe-west3"
+          GARDENER_CLUSTER_VERSION: "1.29.7"
+          MACHINE_TYPE: "n2-standard-4"
+          DISK_SIZE: 50
+          DISK_TYPE: "pd-standard"
+          SCALER_MAX: 20
+          SCALER_MIN: 3
 
   istio-integration-test:
     name: Istio integration test

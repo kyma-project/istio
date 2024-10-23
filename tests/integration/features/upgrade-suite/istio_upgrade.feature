@@ -9,6 +9,9 @@ Feature: Upgrade Istio
     And Istio injection is "enabled" in namespace "default"
     And Httpbin application "test-app" deployment is created in namespace "default"
     And Application pod "test-app" in namespace "default" has Istio proxy "present"
+    And Istio gateway "test-gateway" is configured in namespace "default"
+    And Virtual service "upgrade-test-vs" exposing service "test-app.default.svc.cluster.local" by gateway "default/test-gateway" is configured in namespace "default"
+    And Request to path "/headers" should have response code "200"
     When Istio controller has been upgraded
     Then "Deployment" "istio-controller-manager" in namespace "kyma-system" is ready
     And Istio CR "istio-sample" in namespace "kyma-system" status update happened in the last 20 seconds

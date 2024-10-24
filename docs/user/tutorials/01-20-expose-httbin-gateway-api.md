@@ -1,60 +1,54 @@
 # Use Gateway API to Expose HTTPBin
 
-This tutorial shows how to expose an HTTPBin Service using Gateway API.
+Use [Gateway API](https://gateway-api.sigs.k8s.io/) to expose a workload.
 
 > [!WARNING]
 > Exposing a workload to the outside world is a potential security vulnerability, so tread carefully. This example is not meant to be used in the production environment. 
 
 ## Prerequisites
 
-* Kyma installation with the Istio module added. 
+* You have the Istio module added.
+* You have a deployed workload. 
 
-## Steps
-
-### Install Gateway API CustomResourceDefinitions
-
-The Istio module does not install Gateway API CustomResourceDefinitions (CRDs). To install the CRDs from the standard channel, run the following command:
-
-```bash
-kubectl get crd gateways.gateway.networking.k8s.io &> /dev/null || \
-{ kubectl kustomize "github.com/kubernetes-sigs/gateway-api/config/crd?ref=v1.1.0" | kubectl apply -f -; }
-```
-
-> [!NOTE]
-> If you've already installed Gateway API CRDs from the experimental channel, you must delete them before installing Gateway API CRDs from the standard channel.
-
-### Create a Workload
-
-1. Export the name of the namespace in which you want to deploy the HTTPBin Service:
+## Procedure
+1. Export the following values as environment variables:
 
     ```bash
-    export NAMESPACE={NAMESPACE_NAME}
+    export NAMESAPCE={service-namespace}
+    export BACKENDNAME={service-name}
+    export PORT={service-port}
     ```
 
-2. Create a namespace with Istio injection enabled and deploy the HTTPBin Service:
+    Option | Description |
+    ---------|----------|
+    NAMESPACE | The name of a namespace you want to use. |
+    BACKENDNAME | 	The name of the backend service that you want to use for routing the incoming HTTP traffic. |
+    PORT | The port number of the backend server to which requests should be forwarded. |
+
+2. Install Gateway API CustomResourceDefinitions (CRDs) from the standard channel:
 
     ```bash
-    kubectl create ns $NAMESPACE
-    kubectl label namespace $NAMESPACE istio-injection=enabled --overwrite
-    kubectl create -n $NAMESPACE -f https://raw.githubusercontent.com/istio/istio/master/samples/httpbin/httpbin.yaml
+    kubectl get crd gateways.gateway.networking.k8s.io &> /dev/null || \
+    { kubectl kustomize "github.com/kubernetes-sigs/gateway-api/config/crd?ref=v1.1.0" | kubectl apply -f -; }
     ```
 
-### Expose an HTTPBin Service
+    >[!NOTE]
+    > If you’ve already installed Gateway API CRDs from the experimental channel, you must delete them before installing Gateway API CRDs from the standard channel.
 
-1. Create a Kubernetes Gateway to deploy Istio Ingress Gateway.
+3. Create a Kubernetes Gateway to deploy Istio Ingress Gateway:
 
     ```bash
     cat <<EOF | kubectl apply -f -
     apiVersion: gateway.networking.k8s.io/v1
     kind: Gateway
     metadata:
-      name: httpbin-gateway
+      name: gateway
       namespace: ${NAMESPACE}
     spec:
       gatewayClassName: istio
       listeners:
       - name: http
-        hostname: "httpbin.kyma.example.com"
+        hostname: "your-domain.kyma.example.com"
         port: 80
         protocol: HTTP
         allowedRoutes:
@@ -63,48 +57,48 @@ kubectl get crd gateways.gateway.networking.k8s.io &> /dev/null || \
     EOF
     ```
 
-    > [!NOTE]
-    > This command deploys the Istio Ingress service in your namespace with the corresponding Kubernetes Service of type `LoadBalanced` and an assigned external IP address.
+    This command deploys the Istio Ingress service in your namespace with the corresponding Kubernetes Service of type LoadBalanced and an assigned external IP address.
 
-2. Create an HTTPRoute to configure access to your workload:
+4. Create an HTTPRoute to configure access to your workload:
 
     ```bash
     cat <<EOF | kubectl apply -f -
     apiVersion: gateway.networking.k8s.io/v1
     kind: HTTPRoute
     metadata:
-      name: httpbin
+      name: httproute
       namespace: ${NAMESPACE}
     spec:
       parentRefs:
-      - name: httpbin-gateway
-      hostnames: ["httpbin.kyma.example.com"]
+      - name: gateway
+      hostnames: ["your-domain.kyma.example.com"]
       rules:
       - matches:
         - path:
             type: PathPrefix
             value: /headers
         backendRefs:
-        - name: httpbin
+        - name: ${BACKENDNAME}
           namespace: ${NAMESPACE}
-          port: 8000
+          port: ${PORT}
     EOF
     ```
 
-### Access an HTTPBin Service
+### Results
+You've exposed your workload. To access it, follow the steps:
 
-1. Discover Istio Ingress Gateway's IP and port:
-
+1. Discover Istio Ingress Gateway’s IP and port.
+    
     ```bash
-    export INGRESS_HOST=$(kubectl get gtw httpbin-gateway -n $NAMESPACE -o jsonpath='{.status.addresses[0].value}')
-    export INGRESS_PORT=$(kubectl get gtw httpbin-gateway -n $NAMESPACE -o jsonpath='{.spec.listeners[?(@.name=="http")].port}')
+    export INGRESS_HOST=$(kubectl get gtw gateway -n $NAMESPACE -o jsonpath='{.status.addresses[0].value}')
+    export INGRESS_PORT=$(kubectl get gtw gateway -n $NAMESPACE -o jsonpath='{.spec.listeners[?(@.name=="http")].port}')
     ```
 
-2. Call the HTTPBin Service:
-
+2. Call the service.
+    
     ```bash
-    curl -s -I -HHost:httpbin.kyma.example.com "http://$INGRESS_HOST:$INGRESS_PORT/headers"
+    curl -s -I -HHost:your-domain.kyma.example.com "http://$INGRESS_HOST:$INGRESS_PORT/headers"
     ```
 
-    > [!NOTE]
-    > This tutorial assumes there's no DNS setup for the `httpbin.kyma.example.com` host, so the call contains the host header.
+    >[!NOTE]
+    > This task assumes there’s no DNS setup for the httpbin.kyma.example.com host, so the call contains the host header.

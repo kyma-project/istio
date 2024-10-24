@@ -28,4 +28,4 @@ kubectl wait --kubeconfig "${GARDENER_KUBECONFIG}" --for=jsonpath='{.status.last
 make install deploy
 
 cd tests/performance || exit
-make test-performance
+make test-performance-web

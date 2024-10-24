@@ -6,7 +6,7 @@ load-testing/charts/plutono:
 	curl -sL https://github.com/credativ/helmcharts/releases/download/plutono-0.1.0/plutono-0.1.0.tgz > plutono.tgz
 	tar -xf plutono.tgz -C load-testing/charts
 
-deploy-helm: load-testing/charts/plutono
+deploy-helm:
 	kubectl wait --kubeconfig "${GARDENER_KUBECONFIG}" --for=jsonpath='{.status.lastOperation.state}'=Succeeded --timeout=600s "shoots/${CLUSTER_NAME}"
 	helm dependency update load-testing
 	helm upgrade --install load-testing load-testing --set IngressGatewayIP=$(shell kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}') --set Domain=${KYMA_DOMAIN} --create-namespace --wait

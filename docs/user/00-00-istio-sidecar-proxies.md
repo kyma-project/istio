@@ -6,7 +6,7 @@ Learn more about Istio sidecar proxies: what they are, what benefits they bring,
 
 A service mesh is an infrastructure layer that handles service-to-service communication, proxying, service discovery, traceability, and security, independently of the code of the services. To deliver this functionality, the Istio module uses the [Istio service mesh](https://istio.io/docs/concepts/what-is-istio/) that is customized for the specific needs of an implementation. The main principle of the Istio service mesh is to inject Pods of every service with Istio sidecar proxy, which is an extended version of the Envoy proxy. Envoy intercepts the communication between the services and regulates it by applying and enforcing the rules you create.
 
-## Purpose and Benefits of Istio Sidecars
+## Purpose and Benefits of Istio Sidecars Proxies
 
 By default, Istio installed as part of the Istio module is configured with automatic Istio sidecar proxy injection disabled. This means that none of your workloads' Pods, except those in the `kyma-system` namespace, get their own sidecar proxy container running next to the application. When Istio sidecar proxy injection is disabled for a service or for a namespace, you must manage mutual TLS (mTLS) traffic in services or at a namespace level by creating [DestinationRule](https://istio.io/docs/reference/config/networking/destination-rule/) and [PeerAuthentication](https://istio.io/docs/tasks/security/authentication/authn-policy/) resources. With an Istio sidecar proxy injected, a resource becomes part of the Istio service mesh, which brings the following benefits that would be complex to manage otherwise.
 

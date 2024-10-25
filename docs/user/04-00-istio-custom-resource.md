@@ -99,21 +99,21 @@ See the possible values of the **status.conditions** fields:
 
 | Istio CR's State    | Type                           | Status  | Reason                              | Message                                                                                  |
 |--------------|--------------------------------|---------|-------------------------------------|------------------------------------------------------------------------------------------|
-| `Ready`      | `Ready`                        | `True`  | `ReconcileSucceeded`                | Reconciliation succeeded                                                                 |
-| `Error`      | `Ready`                        | `False` | `ReconcileFailed`                   | Reconciliation failed                                                                    |
-| `Warning`    | `Ready`                        | `False` | `OlderCRExists`                     | This Istio custom resource is not the oldest one and does not represent the module state |
-| `Processing` | `Ready`                        | `False` | `IstioInstallNotNeeded`             | Istio installation is not needed                                                         |
-| `Processing` | `Ready`                        | `False` | `IstioInstallSucceeded`             | Istio installation succeeded                                                             |
-| `Processing` | `Ready`                        | `False` | `IstioUninstallSucceeded`           | Istio uninstallation succeded                                                            |
-| `Error`      | `Ready`                        | `False` | `IstioInstallUninstallFailed`       | Istio install or uninstall failed                                                        |
-| `Error`      | `Ready`                        | `False` | `IstioCustomResourceMisconfigured`  | Istio custom resource has invalid configuration                                          |
-| `Warning`    | `Ready`                        | `False` | `IstioCustomResourcesDangling`      | Istio deletion blocked because of existing Istio custom resources                        |
-| `Processing` | `Ready`                        | `False` | `CustomResourcesReconcileSucceeded` | Custom resources reconciliation succeeded                                                |
-| `Error`      | `Ready`                        | `False` | `CustomResourcesReconcileFailed`    | Custom resources reconciliation failed                                                   |
-| `Processing` | `ProxySidecarRestartSucceeded` | `True`  | `ProxySidecarRestartSucceeded`      | Proxy sidecar restart succeeded                                                          |
-| `Error`      | `ProxySidecarRestartSucceeded` | `False` | `ProxySidecarRestartFailed`         | Proxy sidecar restart failed                                                             |
-| `Processing` | `ProxySidecarRestartSucceeded` | `False` | `ProxySidecarPartiallySucceeded`    | Proxy sidecar restart partially succeeded                                                |
-| `Warning`    | `ProxySidecarRestartSucceeded` | `False` | `ProxySidecarManualRestartRequired` | Proxy sidecar manual restart is required for some workloads                              |
-| `Processing` | `Ready`                        | `False` | `IngressGatewayReconcileSucceeded`  | Istio Ingress Gateway reconciliation succeeded                                           |
-| `Error`      | `Ready`                        | `False` | `IngressGatewayReconcileFailed`     | Istio Ingress Gateway reconciliation failed                                              |
-| `Warning`    | `Ready`                        | `False` | `IstioVersionUpdateNotAllowed`      | Update to the new Istio version is not allowed                                           |
+| `Ready`      | `Ready`                        | `True`  | `ReconcileSucceeded`                | Reconciliation succeeded.                                                                 |
+| `Error`      | `Ready`                        | `False` | `ReconcileFailed`                   | Reconciliation failed.                                                                    |
+| `Warning`    | `Ready`                        | `False` | `OlderCRExists`                     | This Istio custom resource is not the oldest one and does not represent the module state. |
+| `Processing` | `Ready`                        | `False` | `IstioInstallNotNeeded`             | Istio installation is not needed.                                                         |
+| `Processing` | `Ready`                        | `False` | `IstioInstallSucceeded`             | Istio installation succeeded.                                                             |
+| `Processing` | `Ready`                        | `False` | `IstioUninstallSucceeded`           | Istio uninstallation succeded.                                                            |
+| `Error`      | `Ready`                        | `False` | `IstioInstallUninstallFailed`       | Istio install or uninstall failed.                                                        |
+| `Error`      | `Ready`                        | `False` | `IstioCustomResourceMisconfigured`  | Istio custom resource has invalid configuration.                                          |
+| `Warning`    | `Ready`                        | `False` | `IstioCustomResourcesDangling`      | Istio deletion blocked because of existing Istio custom resources.                        |
+| `Processing` | `Ready`                        | `False` | `CustomResourcesReconcileSucceeded` | Custom resources reconciliation succeeded.                                                |
+| `Error`      | `Ready`                        | `False` | `CustomResourcesReconcileFailed`    | Custom resources reconciliation failed.                                                   |
+| `Processing` | `ProxySidecarRestartSucceeded` | `True`  | `ProxySidecarRestartSucceeded`      | Proxy sidecar restart succeeded.                                                          |
+| `Error`      | `ProxySidecarRestartSucceeded` | `False` | `ProxySidecarRestartFailed`         | Proxy sidecar restart failed.                                                             |
+| `Processing` | `ProxySidecarRestartSucceeded` | `False` | `ProxySidecarPartiallySucceeded`    | Proxy sidecar restart partially succeeded.                                                |
+| `Warning`    | `ProxySidecarRestartSucceeded` | `False` | `ProxySidecarManualRestartRequired` | Proxy sidecar manual restart is required for some workloads.                              |
+| `Processing` | `Ready`                        | `False` | `IngressGatewayReconcileSucceeded`  | Istio Ingress Gateway reconciliation succeeded.                                           |
+| `Error`      | `Ready`                        | `False` | `IngressGatewayReconcileFailed`     | Istio Ingress Gateway reconciliation failed.                                              |
+| `Warning`    | `Ready`                        | `False` | `IstioVersionUpdateNotAllowed`      | Update to the new Istio version is not allowed.                                           |

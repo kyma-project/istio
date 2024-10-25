@@ -56,6 +56,8 @@ spec:
 
 ## Default values
 
+By default, the `egressGateway` component will be disabled.
+
 The `egressGateway` component needs to have default values set for when the user does not set up `k8s` values. Since the component will most likely have high load, the best course of action would be to propose the exact values after execution of performance tests, and making sure that the availability does not drop when the component is in place.
 
 A baseline could be the values we use for Istio ingress-gateway:

@@ -7,7 +7,7 @@ load-testing/charts/plutono:
 	tar -xf plutono.tgz -C load-testing/charts
 
 deploy-helm:
-	kubectl wait --kubeconfig "${GARDENER_KUBECONFIG}" --for=jsonpath='{.status.lastOperation.state}'=Succeeded --timeout=600s "shoots/${CLUSTER_NAME}"
+	#kubectl wait --kubeconfig "${GARDENER_KUBECONFIG}" --for=jsonpath='{.status.lastOperation.state}'=Succeeded --timeout=600s "shoots/${CLUSTER_NAME}"
 	helm dependency update load-testing
 	helm upgrade --install load-testing load-testing --set IngressGatewayIP=$(shell kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}') --set Domain=${KYMA_DOMAIN} --create-namespace --wait
 
@@ -50,8 +50,6 @@ test-performance-web: deploy-max-replicas-istio deploy-helm test-deploy
 	echo "Performance test with sidecar test completed with exit code $$EXIT_CODE"
 	sleep 5
 	kubectl cp $(shell kubectl get pods --selector=app=k6 -o jsonpath='{.items[0].metadata.name}'):summary.html summary-sidecar.html
-
-	cd hack/puppeteer && KYMA_DOMAIN=${KYMA_DOMAIN} ./export.sh
 
 deploy-max-replicas-istio:
 	kubectl apply -f istio-max-replicas.yaml

@@ -37,7 +37,7 @@ test-performance: deploy-max-replicas-istio deploy-helm test-deploy
 test-performance-web: deploy-max-replicas-istio deploy-helm test-deploy
 	kubectl patch deployment/load-testing --type merge --patch-file istio-disabled.yaml
 	kubectl rollout status deployment/load-testing
-	kubectl exec -q $(shell kubectl get pods --selector=app=k6 -o jsonpath='{.items[0].metadata.name}') -- K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_EXPORT=summary.html k6 run run.js -d 1m --vus 500 --log-output none --system-tags=method,name,status,tag -e DOMAIN=${KYMA_DOMAIN};\
+	kubectl exec -q $(shell kubectl get pods --selector=app=k6 -o jsonpath='{.items[0].metadata.name}') -- k6 run run.js -d 1m --vus 500 --log-output none --system-tags=method,name,status,tag -e DOMAIN=${KYMA_DOMAIN} -e K6_WEB_DASHBOARD=true -e K6_WEB_DASHBOARD_EXPORT=summary.html;\
 	EXIT_CODE=$$?;\
 	echo "Performance test without sidecar test completed with exit code $$EXIT_CODE"
 	sleep 5
@@ -45,7 +45,7 @@ test-performance-web: deploy-max-replicas-istio deploy-helm test-deploy
 
 	kubectl patch deployment/load-testing --type merge --patch-file istio-enabled.yaml
 	kubectl rollout status deployment/load-testing
-	kubectl exec -q $(shell kubectl get pods --selector=app=k6 -o jsonpath='{.items[0].metadata.name}') -- K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_EXPORT=summary.html k6 run run.js -d 1m --vus 500 --log-output none --system-tags=method,name,status,tag -e DOMAIN=${KYMA_DOMAIN};\
+	kubectl exec -q $(shell kubectl get pods --selector=app=k6 -o jsonpath='{.items[0].metadata.name}') -- k6 run run.js -d 1m --vus 500 --log-output none --system-tags=method,name,status,tag -e DOMAIN=${KYMA_DOMAIN} -e K6_WEB_DASHBOARD=true -e K6_WEB_DASHBOARD_EXPORT=summary.html;\
 	EXIT_CODE=$$?;\
 	echo "Performance test with sidecar test completed with exit code $$EXIT_CODE"
 	sleep 5

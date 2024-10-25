@@ -1,4 +1,4 @@
-# Issues with Istio Sidecar Injection
+# Istio Sidecar Proxy Injection Issues
 
 ## Symptom
 

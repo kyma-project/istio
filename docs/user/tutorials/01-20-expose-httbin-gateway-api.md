@@ -1,4 +1,4 @@
-# Use Gateway API to Expose HTTPBin
+# Exposing a Workload Using Gateway API 
 
 Use [Gateway API](https://gateway-api.sigs.k8s.io/) to expose a workload.
 

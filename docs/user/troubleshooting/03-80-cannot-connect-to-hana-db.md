@@ -1,4 +1,4 @@
-# Issues with Connection to SAP HANA Database
+# SAP HANA Database Connection Issues
 
 ## Symptom
 

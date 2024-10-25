@@ -4,7 +4,7 @@ Learn how to configure [oauth2-proxy](https://github.com/oauth2-proxy/manifests/
 
 ## Prerequisites
 * You have the Istio module added. If you use a Kyma domain to expose a workload, also the API Gateway module must be added.
-* You have installed Helm.
+* You have installed [Helm](https://helm.sh/docs/intro/install/).
 * You have a deployed workload.
 
 ## Context
@@ -65,8 +65,8 @@ The Istio CR allows configuring external authorization providers that operate ov
     Option | Description |
     ---------|----------|
     CLIENT_ID | 	The unique identifier for the client application that is registered with the external authorizer. |
-    CLIENT_SECRET | A secret key known only to the client and the external authorizer. It is used to authenticate the client when communicating with the external authorizer. To generate this value, you can use the command `openssl rand -base64 32 | head -c 32 | base64.` |
-    CLIENT_COOKIE | A secret key used to sign and encrypt the cookies that are used for session management and user authentication. To generate this value, you can use the command `openssl rand -base64 32 | head -c 32 | base64`. |
+    CLIENT_SECRET | A secret key known only to the client and the external authorizer. It is used to authenticate the client when communicating with the external authorizer. To generate this value, you can use the command <code>openssl rand -base64 32 | head -c 32 | base64.</code> |
+    CLIENT_COOKIE | A secret key used to sign and encrypt the cookies that are used for session management and user authentication. To generate this value, you can use the command <code>openssl rand -base64 32 | head -c 32 | base64</code>. |
     OIDC_ISSUER_URL | This is the URL of the OpenID Connect (OIDC) issuer. Typically, you can find the issuer at `https://{YOUR_IDENTITY_PROVIDER_INSTANCE}/.well-known/openid-configuration`. |
 
 4. Create a `values.yaml` file with the oauth2-proxy configuration for your authorization server:

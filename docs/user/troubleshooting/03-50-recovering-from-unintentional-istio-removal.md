@@ -18,27 +18,6 @@ You get an output similar to this one:
 >[!NOTE]
 > If you intended to delete the Istio module, the symptoms described in this document are expected, and you must clean up the remaining resources yourself. To check which resources are blocking the deletion, see the logs of the `istio-controller-manager` container.
 
-### Typical Log Output or Error Messages
-
-<!-- tabs:start -->
-#### **kubectl**
-
-```
-kubectl get istio -n kyma-system
-
-NAME      STATE
-default   Warning
-```
-```
-kubectl get istio default -n kyma-system -o jsonpath='{.status.description}'
-
-There are Istio resources that block deletion. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning
-```
-#### **Kyma Dashboard**
-
-![Istio CR in the Warning state](../../assets/istio-cr-warning-state.svg)
-<!-- tabs:end -->
-
 ## Cause
 
 The Istio module wasn't completely removed because related resources still exist in the cluster.
@@ -63,13 +42,15 @@ For example, the issue occurs when you delete Istio, but there are still Virtual
     When the finalizers are removed, the Istio module is deleted. All the other resources remain in the cluster.
 6. Choose **Save**.
 7. Add the Istio module again.
+
+When you re-add the Istio module, its reconciliation is reinitiated. The Istio CR returns to the Ready state within a few seconds.
     
 #### **kubectl**
 
 1. To edit the Istio CR, run:
-  ```bash
-  kubectl edit istio -n kyma-system default
-  ```
+    ```bash
+    kubectl edit istio -n kyma-system default
+    ```
 2. To remove the finalizers from the Istio custom resource, delete the following lines:
     ```bash
     finalizers:
@@ -78,6 +59,7 @@ For example, the issue occurs when you delete Istio, but there are still Virtual
     When the finalizers are removed, the Istio module is deleted. All the other resources remain in the cluster.
 3. Save the changes.
 4. Add the Istio module again.
-<!-- tabs:end -->
 
-When you re-add the Istio module, its reconciliation is reinitiated. The Istio CR returns to the `Ready` state within a few seconds.
+When you re-add the Istio module, its reconciliation is reinitiated. The Istio CR returns to the Ready state within a few seconds.
+
+<!-- tabs:end -->

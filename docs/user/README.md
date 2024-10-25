@@ -1,5 +1,5 @@
 # Istio Module
-Learn more about the Istio module. Use it to manage and configure the Istio service mesh.
+Use the Istio module to manage and configure the Istio service mesh.
 
 ## What Is Istio?
 

@@ -31,9 +31,9 @@ The [log format](https://github.com/kyma-project/istio/blob/main/internal/istioo
 Use the Telemetry API to selectively enable Istio access logs. See:
 
 <!-- no toc -->
-- [Configure Istio Access Logs for a Namespace](#configure-istio-access-logs-for-the-entire-namespace)
+- [Configure Istio Access Logs for a Namespace](#configure-istio-access-logs-for-a-namespace)
 - [Configure Istio Access Logs for a Selective Workload](#configure-istio-access-logs-for-a-selective-workload)
-- [Configure Istio Access Logs for a Specific Gateway](#configure-istio-access-logs-for-a-specific-gateway)
+- [Configure Istio Access Logs for a Specific Gateway](#configure-istio-access-logs-for-a-selective-gateway)
 - [Configure Istio Access Logs for the Entire Mesh](#configure-istio-access-logs-for-the-entire-mesh)
 
 ### Configure Istio Access Logs for a Namespace

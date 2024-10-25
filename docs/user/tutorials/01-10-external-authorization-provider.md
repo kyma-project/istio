@@ -69,7 +69,7 @@ The Istio CR allows configuring external authorization providers that operate ov
     CLIENT_COOKIE | A secret key used to sign and encrypt the cookies that are used for session management and user authentication. To generate this value, you can use the command `openssl rand -base64 32 | head -c 32 | base64`. |
     OIDC_ISSUER_URL | This is the URL of the OpenID Connect (OIDC) issuer. Typically, you can find the issuer at `https://{YOUR_IDENTITY_PROVIDER_INSTANCE}/.well-known/openid-configuration`. |
 
-4. Create a values.yaml file with the oauth2-proxy configuration for your authorization server:
+4. Create a `values.yaml` file with the oauth2-proxy configuration for your authorization server:
 
     >[!TIP]
     > You can adapt this configuration to better suit your needs. See the [additional configuration parameters](https://oauth2-proxy.github.io/oauth2-proxy/configuration/overview/#config-options).
@@ -158,7 +158,7 @@ The Istio CR allows configuring external authorization providers that operate ov
     EOF
     ```
 
-8. Create a DestinationRule resource with a traffic policy for the external authorization provider:
+8. Create a `DestinationRule` resource with a traffic policy for the external authorization provider:
     ```bash
     cat <<EOF | kubectl apply -f -
     apiVersion: networking.istio.io/v1

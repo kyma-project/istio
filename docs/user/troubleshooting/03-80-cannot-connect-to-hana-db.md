@@ -10,7 +10,7 @@ The Istio module's default configuration does not restrict outbound traffic. Thi
 ## Remedy
 
 ### Connect to the SAP HANA Database Instance from Outside of the Cluster
-1. Download SAP HANA Client for your operating system from the [SAP Development Tools](https://tools.hana.ondemand.com/#hanatools).
+1. Download SAP HANA Client for your operating system from [SAP Development Tools](https://tools.hana.ondemand.com/#hanatools).
 2. Unpack the downloaded archive.
 3. Install SAP HANA Client.
 4. To connect to SAP HANA Database instance, use the following command:
@@ -21,7 +21,7 @@ The Istio module's default configuration does not restrict outbound traffic. Thi
     ```bash
     hdbsql -n aaa.bbb.ccc.ddd:30015 -u my_user -p mypassword
     ```
-5. If the connection is successful and you can execute queries, the issue is not related to the SAP HANA Database instance.
+   If the connection is successful and you can execute queries, the issue is not related to the SAP HANA Database instance.
 
 ### Connect to the SAP HANA Database Instance from Inside of the Cluster
 1. Build a Docker image with the SAP HANA Client installed. You can use the following Dockerfile:
@@ -53,9 +53,9 @@ The Istio module's default configuration does not restrict outbound traffic. Thi
     ```bash
     kubectl create deployment hdbsql --image={PUBLISHED_IMAGE_NAME}
     ```
-7. Attach to the Pod and try to connect to the SAP HANA Database instance using the following command:
+7. To attach to the Pod and connect to the SAP HANA Database instance, run the following command:
     ```bash
     hdbsql -n {HANA_DB_INSTANCE_ADDRESS} -u {HANA_DB_USER} -p {HANA_DB_PASSWORD}
     ```
-8. If the connection is successful and you can execute queries, the issue is not related to the setup of the cluster.
-9. Check the connection from a Pod that has the Istio sidecar injected. To do this, create a Deployment in a namespace with Istio sidecar injection enabled.
+   If the connection is successful and you can execute queries, the issue is not related to the setup of the cluster.
+8. Check the connection from a Pod that has the Istio sidecar injected. To do this, create a Deployment in a namespace with Istio sidecar injection enabled.

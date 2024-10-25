@@ -15,7 +15,7 @@ Enabling Istio sidecar proxy injection for a namespace allows istiod to watch al
 >[!NOTE]
 > A Pod is not injected with an Istio sidecar proxy if:
 > - Istio sidecar proxy injection is disabled at the namespace level
-> - The `sidecar.istio.io/inject` label on the Pod is set to false
+> - The `sidecar.istio.io/inject` label on the Pod is set to `false`
 > - The Pod's spec contains `hostNetwork: true`
 
 ### Procedure
@@ -38,8 +38,7 @@ kubectl label namespace {YOUR_NAMESPACE} istio-injection=enabled
 <!-- tabs:end -->
 
 ### Results
-You've enabled Istio sidecar proxy injection for the specified namespace. The namespace is labeled with `istio-injection: enabled`, which means that all Pods created in it from now on will have the Istio sidecar proxy injected.
-
+You've enabled Istio sidecar proxy injection for the specified namespace. The namespace is labeled with `istio-injection: enabled`, which means that all Pods created in it from now on have the Istio sidecar proxy injected.
 
 ## Enable Sidecar Injection for a Deployment
 
@@ -53,7 +52,7 @@ Enabling Istio sidecar proxy injection for a Deployment injects an Istio sidecar
 >[!NOTE]
 > A Pod is not injected with an Istio sidecar proxy if:
 > - Istio sidecar proxy injection is disabled at the namespace level
-> - The `sidecar.istio.io/inject` label on the Pod is set to false
+> - The `sidecar.istio.io/inject` label on the Pod is set to `false`
 > - The Pod's spec contains `hostNetwork: true`
 
 ### Procedure

@@ -8,17 +8,17 @@ A service mesh is an infrastructure layer that handles service-to-service commun
 
 ## Purpose and Benefits of Istio Sidecars
 
-By default, Istio installed as part of the Istio module is configured with automatic Istio sidecar proxy injection disabled. This means that none of your workloads' Pods, except those in the kyma-system namespace, get their own sidecar proxy container running next to the application. When Istio sidecar proxy injection is disabled for a service or for a namespace, you must manage mutual TLS (mTLS) traffic in services or at a namespace level by creating [DestinationRule](https://istio.io/docs/reference/config/networking/destination-rule/) and [PeerAuthentication](https://istio.io/docs/tasks/security/authentication/authn-policy/) resources. With an Istio sidecar proxy injected, a resource becomes part of the Istio service mesh, which brings the following benefits that would be complex to manage otherwise.
+By default, Istio installed as part of the Istio module is configured with automatic Istio sidecar proxy injection disabled. This means that none of your workloads' Pods, except those in the `kyma-system` namespace, get their own sidecar proxy container running next to the application. When Istio sidecar proxy injection is disabled for a service or for a namespace, you must manage mutual TLS (mTLS) traffic in services or at a namespace level by creating [DestinationRule](https://istio.io/docs/reference/config/networking/destination-rule/) and [PeerAuthentication](https://istio.io/docs/tasks/security/authentication/authn-policy/) resources. With an Istio sidecar proxy injected, a resource becomes part of the Istio service mesh, which brings the following benefits that would be complex to manage otherwise.
 
 ### Secure Communication
 <!-- markdown-link-check-disable-next-line -->
-The Istio module sets [peer authentication](https://istio.io/latest/docs/concepts/security/#peer-authentication) to cluster-wide `STRICT` mode. This ensures that your workload only accepts [mutual TLS traffic](https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/) traffic where both client and server certificates are validated to ensure that all traffic is encrypted. This provides each service with a strong identity and a reliable system for managing keys and certificates.
+The Istio module sets [peer authentication](https://istio.io/latest/docs/concepts/security/#peer-authentication) to cluster-wide `STRICT` mode. This ensures that your workload only accepts [mutual TLS (mTLS) traffic](https://www.cloudflare.com/learning/access-management/what-is-mutual-tls/) where both client and server certificates are validated to ensure that all traffic is encrypted. This provides each service with a strong identity and a reliable system for managing keys and certificates.
 
 Also, with Istio sidecar proxy injected, you can perform [request authentication](https://istio.io/latest/docs/reference/config/security/request_authentication/) for your service. Istio enables request authentication with JSON Web Token (JWT) validation using a custom authentication provider.
 
 ### Observability
 
-Istio proxies enhance tracing capabilities by performing global tracing and forwarding the data to a tracing backend using the [OTLP protocol](https://opentelemetry.io/docs/reference/specification/protocol/). By being part of the Istio service mesh, you can access advanced observability features that would otherwise require complex instrumentation code within your application.
+Istio sidecar proxies enhance tracing capabilities by performing global tracing and forwarding the data to a tracing backend using the [OTLP protocol](https://opentelemetry.io/docs/reference/specification/protocol/). When you integrate your application into the Istio service mesh, you can easily access advanced observability features without needing to implement complex instrumentation within the application.
 
 ### Traffic Management
 
@@ -28,7 +28,7 @@ If you have an Istio sidecar proxy injected into every workload, you can use Ist
 
 ### Resiliency
 
-Application resiliency is an important topic within traffic management. Traditionally, resiliency features like timeouts, retries, and circuit breakers were implemented by application libraries. However, with service mesh, you can delegate such tasks to the mesh, and the same configuration options will work regardless of the programming language of your application. See [Network Resilience and Testing](https://istio.io/latest/docs/concepts/traffic-management/#network-resilience-and-testing).
+Application resiliency is an important topic within traffic management. Traditionally, application libraries implemented resiliency features like timeouts, retries, and circuit breakers. However, with service mesh, you can delegate such tasks to the mesh, and the same configuration options work regardless of the programming language of your application. See [Network Resilience and Testing](https://istio.io/latest/docs/concepts/traffic-management/#network-resilience-and-testing).
 
 ## Restart of Workloads with Enabled Istio Sidecar Injection
 

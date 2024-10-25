@@ -101,4 +101,4 @@ You've exposed your workload. To access it, follow the steps:
     ```
 
     >[!NOTE]
-    > This task assumes there’s no DNS setup for the httpbin.kyma.example.com host, so the call contains the host header.
+    > This task assumes there’s no DNS setup for the `httpbin.kyma.example.com` host, so the call contains the host header.

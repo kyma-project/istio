@@ -3,7 +3,7 @@ Follow the steps outlined in this troubleshooting guide if you unintentionally d
 
 ## Symptom
 
-The Istio custom resource (CR) is in the Warning state. The condition of type **Ready** is set to `false` with the reason `IstioCustomResourcesDangling`. To verify this, run the command:
+The Istio custom resource (CR) is in the `Warning` state. The condition of type **Ready** is set to `false` with the reason `IstioCustomResourcesDangling`. To verify this, run the command:
 
 ```bash
 kubectl get istio default -n kyma-system -o jsonpath='{.status.conditions[0]}'
@@ -64,7 +64,7 @@ For example, the issue occurs when you delete Istio, but there are still Virtual
 6. Choose **Save**.
 7. Add the Istio module again.
     
-#### **Kyma Dashboard**
+#### **kubectl**
 
 1. To edit the Istio CR, run:
   ```bash
@@ -80,4 +80,4 @@ For example, the issue occurs when you delete Istio, but there are still Virtual
 4. Add the Istio module again.
 <!-- tabs:end -->
 
-When you re-add the Istio module, its reconciliation is reinitiated. The Istio CR returns to the Ready state within a few seconds.
+When you re-add the Istio module, its reconciliation is reinitiated. The Istio CR returns to the `Ready` state within a few seconds.

@@ -29,8 +29,8 @@ This results in the folowing Go structure:
 type EgressGateway struct {
 	// +kubebuilder:validation:Optional
 	K8s *KubernetesResourcesConfig `json:"k8s"`
-    // +kubebuilder:validation:Optional
-    Enabled *bool
+        // +kubebuilder:validation:Optional
+        Enabled *bool
 }
 ```
 

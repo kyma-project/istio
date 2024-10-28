@@ -29,5 +29,3 @@ dependencies:
   - name: prometheus
     version: "25.18.0"
     repository: https://prometheus-community.github.io/helm-charts
-  - name: plutono
-    version: 0.1.0

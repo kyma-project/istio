@@ -5,8 +5,5 @@ dependencies:
 - name: prometheus
   repository: https://prometheus-community.github.io/helm-charts
   version: 25.18.0
-- name: plutono
-  repository: ""
-  version: 0.1.0
-digest: sha256:79ea23cb2fcb000e7fe982d309b6fa5afb652bda79b94694f4b96f045a281e75
-generated: "2024-03-28T11:30:20.875871+01:00"
+digest: sha256:1131695b3edde525d2b8daf87fd552e9f88bd4acc827ece9da598d1b396294bb
+generated: "2024-10-28T08:31:07.456127+01:00"

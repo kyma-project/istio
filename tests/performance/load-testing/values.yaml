@@ -13,32 +13,6 @@ prometheus:
     customLabels:
       sidecar.istio.io/inject: "false"
 
-#plutono:
-#  volumes:
-#    - name: dashboards
-#      configMap:
-#        name: load-testing-grafana-dashboard
-#        defaultMode: 444
-#    - name: datasources
-#      configMap:
-#        name: load-testing-grafana-datasources
-#        defaultMode: 444
-#    - name: providers
-#      configMap:
-#        name: load-testing-grafana-providers
-#        defaultMode: 444
-#
-#  volumeMounts:
-#    - name: datasources
-#      subPath: datasource.yaml
-#      mountPath: "/etc/plutono/provisioning/datasources/datasources.yaml"
-#    - name: dashboards
-#      subPath: grafana-load-test.json
-#      mountPath: "/var/load-testing-dashboards/grafana-load-test.json"
-#    - name: providers
-#      subPath: providers.yaml
-#      mountPath: "/etc/plutono/provisioning/dashboards/providers.yaml"
-
 gateway:
   namespace: kyma-system
   name: kyma-gateway

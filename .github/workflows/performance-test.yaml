@@ -5,6 +5,7 @@ name: main performance tests
 on:
   schedule:
     - cron: '0 5 * * *' # Run every day at 05:00 AM
+  workflow_dispatch: {}
 jobs:
   build-image:
     name: Build manager image

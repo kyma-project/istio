@@ -11,7 +11,7 @@ However, if a resource is a Job, a ReplicaSet that is not managed by any Deploym
 
 You must manually restart such user-defined workloads to ensure proper functionality with the updated Istio version.
 
-## Remedy
+## Solution
 
 To learn if any Pods or workloads require a manual restart, follow these steps:
 

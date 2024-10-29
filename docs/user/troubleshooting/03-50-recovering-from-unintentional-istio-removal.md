@@ -25,7 +25,7 @@ The Istio module wasn't completely removed because related resources still exist
 For example, the issue occurs when you delete Istio, but there are still VirtualService resources either created by you or installed by another Kyma component or module. In such cases, the hooked finalizer pauses the deletion of Istio until you remove all the related resources. This [blocking deletion strategy](https://github.com/kyma-project/community/issues/765) is intentionally designed and is enabled by default for the Istio module.
 
 
-## Remedy
+## Solution
 
 <!-- tabs:start -->
 #### **Kyma dashboard**

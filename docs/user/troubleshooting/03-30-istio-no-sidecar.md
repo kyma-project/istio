@@ -13,7 +13,7 @@ A Pod is not injected with an Istio sidecar proxy if:
 - The **sidecar.istio.io/inject** label on the Pod is set to `false`
 - The Pod's `spec` contains `hostNetwork: true`
 
-## Remedy
+## Solution
 
 Find out which Pods do not have Istio sidecar proxy injection enabled and why. You can either inspect Pods across all namespaces, focus on a specific namespace, or verify why a selective Pod is not injected.
 

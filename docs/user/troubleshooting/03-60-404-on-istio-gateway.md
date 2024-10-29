@@ -10,6 +10,6 @@ The error might be caused by conflicts in the Istio Gateway host. For example, i
 
 Note that when you create `Ingress` resources using Istio as their ingress class, a `Gateway` entry is also created underneath. Use the `istioctl x internal-debug configz` command to check the cluster's configuration.
 
-## Remedy
+## Solution
 
 Make sure that a host matches only one Gateway.

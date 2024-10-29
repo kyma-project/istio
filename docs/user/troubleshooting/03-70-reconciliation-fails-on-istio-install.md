@@ -11,7 +11,7 @@
 
 - If an external component, like a mutating webhook, adds a container to the Istio Ingress Gateway Deployment, Istiod Deployment, or Istio CNI DaemonSets, and that new container fails to start for any reason, the Pod is unable to reach the `Running` state. As a result, the Istio module reconciliation fails.
 
-## Remedy
+## Solution
 
 1. Check if a given resource's Pod template has been modified to include an additional container.
 2. Check if the newly injected container fails to start.

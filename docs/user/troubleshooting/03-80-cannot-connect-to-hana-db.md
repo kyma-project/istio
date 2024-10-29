@@ -7,7 +7,7 @@ You're unable to connect an application to a SAP HANA Database instance.
 ## Cause
 The Istio module's default configuration does not restrict outbound traffic. This means that the application should have no issues connecting to a SAP HANA Database instance. If you are experiencing issues, they may be related to the SAP HANA Database instance or your cluster configuration. To identify the source of the problem, follow the troubleshooting steps.
 
-## Remedy
+## Solution
 
 ### Connect to the SAP HANA Database Instance from Outside of the Cluster
 1. Download SAP HANA Client for your operating system from [SAP Development Tools](https://tools.hana.ondemand.com/#hanatools).

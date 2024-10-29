@@ -3,7 +3,7 @@
 Use [Gateway API](https://gateway-api.sigs.k8s.io/) to expose a workload.
 
 > [!WARNING]
-> Exposing a workload to the outside world is a potential security vulnerability, so tread carefully. This example is not meant to be used in the production environment. 
+> Exposing an unsecured workload to the outside world is a potential security vulnerability, so tread carefully. If you want to use this example in production environment, make sure to secure your workload.
 
 ## Prerequisites
 

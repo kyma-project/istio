@@ -3,8 +3,7 @@
 This tutorial shows how to expose a TCP Service using Gateway API.
 
 > [!WARNING]
-> This tutorial is based on the experimental version of the Istio module.
-> Exposing a workload to the outside world is a potential security vulnerability, so tread carefully. This example is not meant to be used in the production environment. 
+> Exposing an unsecured workload to the outside world is a potential security vulnerability, so tread carefully. This tutorial is based on the experimental version of the Istio module, so it is not meant to be used in a production environment.
 
 ## Prerequisites
 

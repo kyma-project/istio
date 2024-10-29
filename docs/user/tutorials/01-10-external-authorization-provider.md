@@ -65,8 +65,8 @@ The Istio CR allows configuring external authorization providers that operate ov
     Option | Description |
     ---------|----------|
     CLIENT_ID | 	The unique identifier for the client application that is registered with the external authorizer. |
-    CLIENT_SECRET | A secret key known only to the client and the external authorizer. It is used to authenticate the client when communicating with the external authorizer. To generate this value, you can use the command <code>openssl rand -base64 32 | head -c 32 | base64.</code> |
-    CLIENT_COOKIE | A secret key used to sign and encrypt the cookies that are used for session management and user authentication. To generate this value, you can use the command <code>openssl rand -base64 32 | head -c 32 | base64</code>. |
+    CLIENT_SECRET | A secret key known only to the client and the external authorizer. It is used to authenticate the client when communicating with the external authorizer. To generate this value, you can use the command <code>openssl rand -base64 32 | head -c 32 | base64</code> |
+    CLIENT_COOKIE | A secret key used to sign and encrypt the cookies that are used for session management and user authentication. To generate this value, you can use the command <code>openssl rand -base64 32 | head -c 32 | base64</code> |
     OIDC_ISSUER_URL | This is the URL of the OpenID Connect (OIDC) issuer. Typically, you can find the issuer at `https://{YOUR_IDENTITY_PROVIDER_INSTANCE}/.well-known/openid-configuration`. |
 
 4. Create a `values.yaml` file with the oauth2-proxy configuration for your authorization server:

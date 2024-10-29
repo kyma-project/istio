@@ -6,7 +6,7 @@ Learn what the X-Forwarded-For (XFF) header is. Use it to forward client attribu
 
 * You have the Istio module added.
 * To use CLI instruction, you must install [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl) and [curl](https://curl.se/). Alternatively, you can use Kyma dashboard.
-* You have [Istio Ingress Gateway](https://kyma-project.io/#/api-gateway/user/tutorials/01-20-set-up-tls-gateway) set up.
+* You have Istio Ingress Gateway set up. See [Set Up a TLS Gateway in Simple Mode](https://kyma-project.io/#/api-gateway/user/tutorials/01-20-set-up-tls-gateway).
 
 ## Context
 

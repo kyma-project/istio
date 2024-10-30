@@ -7,8 +7,8 @@ Accepted
 ## Context
 
 To support cluster configurations that require control of outbound traffic
-besides routing of incoming traffic, Istio module needs to support `egressGateway`.
-This Istio component allows for intercepting traffic coming from in-mesh pods to 
+besides routing of incoming traffic, the Istio module needs to support `egressGateway`.
+This Istio component allows for intercepting traffic coming from in-mesh Pods to 
 targets outside of the cluster scope. This allows users to perform tasks that include
 monitoring and securing access to outbound resources.
 
@@ -20,7 +20,7 @@ the `egressGateway` as well as configuration for [KubernetesResourcesSpec(k8s)](
 
 ## Consequences
 
-The Istio CustomResource API will be extended by configuration related to egressGateway. The `components` section will now include additional `egressGateway` field, that will contain a boolean `enabled` flag, as well as configuration for `KubernetesResourcesSpec(k8s)`. The `k8s` configuration will have the exact same structure as for `ingressGateway`.
+The Istio CR API will be extended with configuration related to `egressGateway`. The `components` section will now include an additional `egressGateway` field containing a boolean `enabled` flag as well as configuration for `KubernetesResourcesSpec(k8s)`. The `k8s` configuration will have the exact same structure as for `ingressGateway`.
 
 This results in the folowing Go structure:
 
@@ -34,9 +34,9 @@ type EgressGateway struct {
 }
 ```
 
-The `KubernetesResourcesConfig` struct is defined [already](https://github.com/kyma-project/istio/blob/04890425c106ffd564d4c209994f99b4e692f9ec/api/v1alpha2/istio_structs.go#L37) in the Istio controller.
+The `KubernetesResourcesConfig` struct is [already defined](https://github.com/kyma-project/istio/blob/04890425c106ffd564d4c209994f99b4e692f9ec/api/v1alpha2/istio_structs.go#L37) in the Istio controller.
 
-This results in a CRD in a example Istio CR looking as follows:
+An example Istio CR could look as follows:
 
 ```yaml
 apiVersion: operator.kyma-project.io/v1alpha2
@@ -54,13 +54,13 @@ spec:
           minReplicas: 3
 ```
 
-## Default values
+## Default Values
 
 By default, the `egressGateway` component will be disabled.
 
-The `egressGateway` component needs to have default values set for when the user does not set up `k8s` values. Since the component will most likely have high load, the best course of action would be to propose the exact values after execution of performance tests, and making sure that the availability does not drop when the component is in place.
+The `egressGateway` component must have default values set for when the user does not set up `k8s` values. Since the component will most likely have a high load, the best course of action would be to propose the exact values after executing performance tests and ensure that the availability does not drop when the component is in place.
 
-A baseline could be the values we use for Istio ingress-gateway:
+The baseline values could be the same as we use for Istio Ingress Gateway:
 
 ```yaml
 # Full installation

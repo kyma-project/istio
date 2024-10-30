@@ -28,7 +28,7 @@ To use the XFF header, you must configure the corresponding settings in the Isti
   Due to the variety of network topologies, the Istio CR must specify the number of trusted proxies deployed in front of the Istio Ingress Gateway proxy in the Istio CR, so that the client address can be extracted correctly.
 6. If you use a GCP or Azure cluster, navigate to the Gateway section and set the Gateway traffic policy to Local. If you use a different cloud service provider, skip this step.
    >[!WARNING]
-   > For production Deployments, it is strongly recommended to deploy Istio Ingress Gateway Pod to multiple nodes if you enable externalTrafficPolicy : Local. For more information, see Network Load Balancer.
+   > For production Deployments, it is strongly recommended to deploy Istio Ingress Gateway Pod to multiple nodes if you enable externalTrafficPolicy : Local. For more information, see [Network Load Balancer](https://istio.io/latest/docs/tasks/security/authorization/authz-ingress/#network).
    >
    >Default Istio installation profile configures PodAntiAffinity to ensure that Ingress Gateway Pods are evenly spread across all nodes. This guarantees that the above requirement is satisfied if your IngressGateway autoscaling configuration minReplicas is equal to or greater than the number of nodes. You can configure autoscaling options in the Istio CR using the field spec.config.components.ingressGateway.k8s.hpaSpec.minReplicas.<br>
    

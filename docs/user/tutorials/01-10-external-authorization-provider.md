@@ -1,91 +1,80 @@
-# Use an External Authorization Provider to Expose and Secure a Workload
+# Exposing Workloads with oauth2-proxy
 
-This tutorial shows how to expose and secure an HTTPBin Service using an external authorization provider.
+Learn how to configure [oauth2-proxy](https://github.com/oauth2-proxy/manifests/tree/main/helm/oauth2-proxy) external authorization provider in the Istio custom resource (CR).
 
 ## Prerequisites
+* You have the Istio module added. If you use a Kyma domain to expose a workload, also the API Gateway module must be added.
+* You have installed [Helm](https://helm.sh/docs/intro/install/).
+* You have a deployed workload.
 
-* Kyma installation with the Istio module added. If you use a Kyma domain, also the API Gateway module must be added.
-* Prepare a domain you want to use and export its name as an environment variable:
-    ```
-    export DOMAIN_TO_EXPOSE_WORKLOADS={DOMAIN_NAME}
-    ```
-* Depending on whether you use your custom domain or a Kyma domain, export the necessary values as environment variables:
+## Context
+The Istio CR allows configuring external authorization providers that operate over HTTP. To set up the oauth2-proxy external authorization provider in the Istio CR and expose your workload using an Istio VirtualService, follow these steps.
 
-    <!-- tabs:start -->
-    #### **Custom Domain**
-
-    ```bash
-    export DOMAIN_TO_EXPOSE_WORKLOADS={DOMAIN_NAME}
-    export GATEWAY=$NAMESPACE/httpbin-gateway
-    ```
-    #### **Kyma Domain**
+## Procedure
+1. Export the following values as environment variables:
 
     ```bash
-    export DOMAIN_TO_EXPOSE_WORKLOADS={KYMA_DOMAIN_NAME}
-    export GATEWAY=kyma-system/kyma-gateway
-    ```
-    <!-- tabs:end -->
-
-## Steps
-
-### Create a Workload
-
-1. Export the name of the namespace in which you want to deploy the HTTPBin Service:
-
-    ```
-    export NAMESPACE={NAMESPACE_NAME}
+    export WORKLOAD_NAME={WORKLOAD_NAME}
+    export NAMESPACE={WORKLOAD_NAMESPACE}
+    export DOMAIN_TO_EXPOSE_WORKLOADS={YOUR_DOMAIN}
+    export GATEWAY={YOUR_GATEWAY}
     ```
 
-2. Create a namespace with Istio injection enabled and deploy the HTTPBin Service:
+    Option | Description |
+    ---------|----------|
+    WORKLOAD_NAME | The name of your workload. |
+    NAMESPACE | The name of your workload's namespace. |
+    DOMAIN_TO_EXPOSE_WORKLOADS | The domain that should be used to expose the workloads. |
+    GATEWAY | The Gateway that the VirtualService should use to route traffic to the workload. |
 
-    ```
-    kubectl create ns $NAMESPACE
-    kubectl label namespace $NAMESPACE istio-injection=enabled --overwrite
-    kubectl create -n $NAMESPACE -f https://raw.githubusercontent.com/istio/istio/master/samples/httpbin/httpbin.yaml
-    ```
+2. Create a VirtualService to expose the workload:
 
-### Expose an HTTPBin Service
-
-Create a VirtualService to expose the HTTPBin workload.
-
-```
-cat <<EOF | kubectl apply -f -
-apiVersion: networking.istio.io/v1alpha3
-kind: VirtualService
-metadata:
-  name: httpbin
-  namespace: $NAMESPACE
-spec:
-  hosts:
-  - "httpbin.$DOMAIN_TO_EXPOSE_WORKLOADS"
-  gateways:
-  - $GATEWAY
-  http:
-  - match:
-    - uri:
-        prefix: /
-    route:
-    - destination:
-        port:
-          number: 80
-        host: httpbin.$NAMESPACE.svc.cluster.local
-EOF
-```
-
-### Install and Configure oauth2-proxy
-
-To learn more about oauth2-proxy, [see the documentation](https://github.com/oauth2-proxy/manifests/tree/main/helm/oauth2-proxy).
-
-1. Export your configuration values as environment variables:
-    ```
-    export CLIENT_ID={CLIENT_ID}
-    export CLIENT_SECRET={CLIENT_SECRET}
-    export COOKIE_SECRET={COOKIE_SECRET}
-    export OIDC_ISSUER_URL={OIDC_ISSUER_URL}
+    ```bash
+    cat <<EOF | kubectl apply -f -
+    apiVersion: networking.istio.io/v1alpha3
+    kind: VirtualService
+    metadata:
+      name: ext-authz
+      namespace: $NAMESPACE
+    spec:
+      hosts:
+      - "$WORKLOAD_NAME.$DOMAIN_TO_EXPOSE_WORKLOADS"
+      gateways:
+      - $GATEWAY
+      http:
+      - match:
+        - uri:
+            prefix: /
+        route:
+        - destination:
+            port:
+              number: 80
+            host: $WORKLOAD_NAME.$NAMESPACE.svc.cluster.local
+    EOF
     ```
 
-2. Create a `values.yaml` file with the configuration of oauth2-proxy:
+3. Export the following configuration values as environment variables:
+
+    ```bash
+    export CLIENT_ID={YOUR_CLIENT_ID}
+    export CLIENT_SECRET={YOUR_CLIENT_SECRET}
+    export COOKIE_SECRET={YOUR_COOKIE_SECRET}
+    export OIDC_ISSUER_URL={YOUR_OIDC_ISSUER_URL}
     ```
+
+    Option | Description |
+    ---------|----------|
+    CLIENT_ID | 	The unique identifier for the client application that is registered with the external authorizer. |
+    CLIENT_SECRET | A secret key known only to the client and the external authorizer. It is used to authenticate the client when communicating with the external authorizer. To generate this value, you can use the command <code>openssl rand -base64 32 | head -c 32 | base64</code> |
+    CLIENT_COOKIE | A secret key used to sign and encrypt the cookies that are used for session management and user authentication. To generate this value, you can use the command <code>openssl rand -base64 32 | head -c 32 | base64</code> |
+    OIDC_ISSUER_URL | This is the URL of the OpenID Connect (OIDC) issuer. Typically, you can find the issuer at `https://{YOUR_IDENTITY_PROVIDER_INSTANCE}/.well-known/openid-configuration`. |
+
+4. Create a `values.yaml` file with the oauth2-proxy configuration for your authorization server:
+
+    >[!TIP]
+    > You can adapt this configuration to better suit your needs. See the [additional configuration parameters](https://oauth2-proxy.github.io/oauth2-proxy/configuration/overview/#config-options).
+
+    ```bash
     cat <<EOF > values.yaml
     config:
       clientID: $CLIENT_ID
@@ -111,18 +100,18 @@ To learn more about oauth2-proxy, [see the documentation](https://github.com/oau
     EOF
     ```
 
-3. Install oauth2-proxy with your configuration using Helm:
-    ```
+5. To install oauth2-proxy with the defined configuration, use [oauth2-proxy helm chart](https://github.com/oauth2-proxy/manifests):
+
+    ```bash
     helm repo add oauth2-proxy https://oauth2-proxy.github.io/manifests
     helm install custom oauth2-proxy/oauth2-proxy -f values.yaml
     ```
 
-### Configure Istio Custom Resource (CR) with an External Authorization Provider
+6. Register oauth2-proxy as an authorization provider in the Istio module:
 
-1. Apply Istio CR configuration with an external authorization provider. Here's an example configuration:
-    ```
+    ```bash
     cat <<EOF | kubectl apply -f -
-    apiVersion: operator.kyma-project.io/v1alpha2
+    apiVersion: operator.kyma-project.io/v1alpha1
     kind: Istio
     metadata:
       name: default
@@ -146,9 +135,8 @@ To learn more about oauth2-proxy, [see the documentation](https://github.com/oau
               onDeny: ["content-type", "set-cookie"]
     EOF
     ```
-
-2. Create an AuthorizationPolicy CR with the `CUSTOM` action and the `oauth2-proxy` provider:
-    ```
+7. Create an AuthorizationPolicy CR with the CUSTOM action and the oauth2-proxy provider:
+    ```bash
     cat <<EOF | kubectl apply -f -
     apiVersion: security.istio.io/v1
     kind: AuthorizationPolicy
@@ -170,8 +158,8 @@ To learn more about oauth2-proxy, [see the documentation](https://github.com/oau
     EOF
     ```
 
-3. Create a DestinationRule with a traffic policy for the external authorization provider:
-    ```
+8. Create a `DestinationRule` resource with a traffic policy for the external authorization provider:
+    ```bash
     cat <<EOF | kubectl apply -f -
     apiVersion: networking.istio.io/v1
     kind: DestinationRule
@@ -186,4 +174,6 @@ To learn more about oauth2-proxy, [see the documentation](https://github.com/oau
     EOF
     ```
 
-4. To test the configuration, visit the `https://httpbin.$DOMAIN_TO_EXPOSE_WORKLOADS/headers` URL. You should be redirected to the authorization provider.
+
+### Results
+When you access the URL of the exposed service `https://httpbin.$DOMAIN_TO_EXPOSE_WORKLOADS/headers`, you are redirected to the authorization provider's page.

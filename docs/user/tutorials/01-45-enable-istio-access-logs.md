@@ -1,6 +1,10 @@
----
-title: Enable Istio Access Logs
----
+# Configuring Istio Access Logs
+
+## Prerequisites
+* You have the Istio module added.
+* To use CLI instruction, you must install [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl) and [curl](https://curl.se/). Alternatively, you can use Kyma dashboard.
+
+## Context
 
 You can enable [Istio access logs](https://istio.io/latest/docs/tasks/observability/logs/access-log/) to provide fine-grained details about the access to workloads that are part of the Istio service mesh. This can help indicate the four “golden signals” of monitoring (latency, traffic, errors, and saturation) and troubleshooting anomalies.
 The Istio setup shipped with the Istio module provides a pre-configured [extension provider](https://istio.io/latest/docs/tasks/observability/telemetry) for access logs, which configures the Istio proxies to print access logs to stdout using the JSON format. It uses a configuration similar to the following one:
@@ -25,12 +29,14 @@ The [log format](https://github.com/kyma-project/istio/blob/main/internal/istioo
 ## Configuration
 
 Use the Telemetry API to selectively enable Istio access logs. See:
-- [Configure Istio Access Logs for the Entire Namespace](#configure-istio-access-logs-for-the-entire-namespace)
+
+<!-- no toc -->
+- [Configure Istio Access Logs for a Namespace](#configure-istio-access-logs-for-a-namespace)
 - [Configure Istio Access Logs for a Selective Workload](#configure-istio-access-logs-for-a-selective-workload)
-- [Configure Istio Access Logs for a Specific Gateway](#configure-istio-access-logs-for-a-specific-gateway)
+- [Configure Istio Access Logs for a Specific Gateway](#configure-istio-access-logs-for-a-selective-gateway)
 - [Configure Istio Access Logs for the Entire Mesh](#configure-istio-access-logs-for-the-entire-mesh)
 
-### Configure Istio Access Logs for the Entire Namespace
+### Configure Istio Access Logs for a Namespace
 
 <!-- tabs:start -->
 
@@ -38,7 +44,7 @@ Use the Telemetry API to selectively enable Istio access logs. See:
 
 1. Go to the namespace for which you want to configure Istio access logs.
 2. Go to **Istio > Telemetries** and select **Create**.
-3. Provide the name, for example, `access-config`.
+3. Provide a name, for example, `access-config`.
 4. Select **Create**.
 
 #### **kubectl**
@@ -127,15 +133,16 @@ To configure label-based selection of workloads, use a [selector](https://istio.
     ```
 <!-- tabs:end -->
 
-### Configure Istio Access Logs for a Specific Gateway
+### Configure Istio Access Logs for a Selective Gateway
 
 Instead of enabling the access logs for all the individual proxies of the workloads you have, you can enable the logs for the proxy used by the related Istio Ingress Gateway.
 
 <!-- tabs:start -->
 #### **Kyma Dashboard**
 1. Go to the `istio-system` namespace.
-2. Go to **Istio > Telemetries** and select **Create**.
-3. Switch to the `YAML` section and paste the following sample configuration into the editor:
+2. Go to **Istio > Telemetries**.
+3. Select **Create**.
+4. Switch to the `YAML` section and paste the following sample configuration into the editor:
     ```yaml
     apiVersion: telemetry.istio.io/v1
     kind: Telemetry
@@ -150,7 +157,7 @@ Instead of enabling the access logs for all the individual proxies of the worklo
         - providers:
           - name: stdout-json
     ```
-4. Select **Create**.
+5. Select **Create**.
 
 #### **kubectl**
 

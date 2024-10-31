@@ -1,3 +1,4 @@
+<!-- open-source-only -->
 # You Get 404 Not Found 
 
 ## Symptom

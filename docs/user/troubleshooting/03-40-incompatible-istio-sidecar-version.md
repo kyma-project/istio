@@ -1,3 +1,4 @@
+<!-- open-source-only -->
 # Incompatible Istio Sidecar Version After Istio Operator's Upgrade
 
 ## Symptom

@@ -1,3 +1,4 @@
+<!-- open-source-only -->
 # Can't Access a Kyma Endpoint (503 status code)
 
 ## Symptom

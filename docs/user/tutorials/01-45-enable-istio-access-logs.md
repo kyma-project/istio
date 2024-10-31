@@ -1,4 +1,4 @@
-# Configuring Istio Access Logs
+# Configure Istio Access Logs
 
 ## Prerequisites
 * You have the Istio module added.

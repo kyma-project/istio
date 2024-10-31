@@ -31,7 +31,7 @@ The Istio module installs and manages Istio in your Kyma cluster. The latest rel
    kubectl label namespace kyma-system istio-injection=enabled --overwrite
    ```
 
-2. Install the latest version of Istio Operator and Istio CustomResourceDefinition. You can either install the standard version or the experimental version.
+2. Install the latest version of Istio Operator and Istio CustomResourceDefinition. You can install either the standard or experimental version.
    
    - To install the standard version, run:
       ```bash

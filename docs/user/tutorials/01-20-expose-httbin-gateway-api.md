@@ -1,9 +1,9 @@
-# Exposing a Workload Using Gateway API 
+# Expose Workloads Using Gateway API 
 
 Use [Gateway API](https://gateway-api.sigs.k8s.io/) to expose a workload.
 
 > [!WARNING]
-> Exposing an unsecured workload to the outside world is a potential security vulnerability, so tread carefully. If you want to use this example in production environment, make sure to secure your workload.
+> Exposing an unsecured workload to the outside world is a potential security vulnerability, so tread carefully. If you want to use this example in a production environment, make sure to secure your workload.
 
 ## Prerequisites
 

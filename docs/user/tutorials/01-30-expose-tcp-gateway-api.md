@@ -1,4 +1,4 @@
-# Use Gateway API to Expose a TCP Service
+# Expose a TCP Service Using Gateway API Aplha Support
 
 This tutorial shows how to expose a TCP Service using Gateway API.
 

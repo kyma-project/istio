@@ -82,6 +82,7 @@ if [ $? -ne 0 ]; then
   kubectl --kubeconfig "${GARDENER_KUBECONFIG}" get shoot "${CLUSTER_NAME}" -o yaml
   exit 1
 fi
+set -e
 
 # create kubeconfig request, that creates a kubeconfig which is valid for one day
 kubectl create --kubeconfig "${GARDENER_KUBECONFIG}" \

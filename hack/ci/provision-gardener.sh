@@ -75,7 +75,14 @@ until (echo "$shoot_template" | kubectl --kubeconfig "${GARDENER_KUBECONFIG}" ap
 done
 
 echo "waiting fo cluster to be ready..."
-kubectl wait --kubeconfig "${GARDENER_KUBECONFIG}" --for=condition=EveryNodeReady "shoot/${CLUSTER_NAME}" --timeout=25m
+set +e
+kubectl wait --kubeconfig "${GARDENER_KUBECONFIG}" --for=condition=EveryNodeReady "shoot/${CLUSTER_NAME}" --timeout=17m
+if [ $? -ne 0 ]; then
+  echo "Cluster did not become ready in time"
+  kubectl --kubeconfig "${GARDENER_KUBECONFIG}" get shoot "${CLUSTER_NAME}" -o yaml
+  exit 1
+fi
+
 # create kubeconfig request, that creates a kubeconfig which is valid for one day
 kubectl create --kubeconfig "${GARDENER_KUBECONFIG}" \
     -f <(printf '{"spec":{"expirationSeconds":86400}}') \

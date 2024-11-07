@@ -198,7 +198,7 @@ func NamespaceIsPresent(ctx context.Context, name, shouldBePresent string) error
 		err := k8sClient.Get(context.TODO(), types.NamespacedName{Name: name}, &ns)
 		if shouldBePresent != "present" {
 			if !k8serrors.IsNotFound(err) {
-				return fmt.Errorf("namespace %s is present but shouldn't", name)
+				return fmt.Errorf("namespace %s is present but shouldn't and has status: %s", name, ns.Status)
 			}
 			return nil
 		}

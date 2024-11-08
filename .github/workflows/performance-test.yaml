@@ -38,6 +38,7 @@ jobs:
           make IMG="europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{ github.sha }}" gardener-perf-test
         shell: bash
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"
           GARDENER_PROJECT_NAME: "goats"
           GARDENER_PROVIDER_SECRET_NAME: "goat"

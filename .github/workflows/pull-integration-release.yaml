@@ -7,9 +7,31 @@ on:
   workflow_call:
 
 jobs:
+  changed-files:
+    outputs:
+      any_modified: ${{ steps.changed-files.outputs.any_modified }}
+    name: Check whether integration tests should run based on the changed files
+    environment: ${{ github.event.pull_request.author_association != 'COLLABORATOR' && github.event.pull_request.author_association != 'OWNER' && 'restricted' || 'internal' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: tj-actions/changed-files@e9772d140489982e0e3704fea5ee93d536f1e275
+        id: changed-files
+        with:
+          files_ignore: |
+            docs/**
+            **/*.md
+            tests/performance/**
+            OWNERS
+            CODEOWNERS
+            .reuse/**
+            external-images.yaml
+
   k8s-compatibility-test:
     name: Kubernetes version compatibility test
     runs-on: ubuntu-latest
+    needs: [changed-files]
+    if: ${{ needs.changed-files.outputs.any_modified }}
     strategy:
       fail-fast: false
       matrix:
@@ -17,6 +39,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/k8s-compatibility-test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           test_make_target: ${{ matrix.test_make_target }}
           operator-image-name: "europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}"
@@ -24,12 +48,16 @@ jobs:
   istio-upgrade-integration-test:
     name: Istio upgrade integration test
     runs-on: ubuntu-latest
+    needs: [ changed-files ]
+    if: ${{ needs.changed-files.outputs.any_modified }}
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
       - uses: ./.github/actions/upgrade-integration-test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           operator-image-name: "europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}"
           target_branch: ${{ github.base_ref }}
@@ -37,6 +65,8 @@ jobs:
   istio-integration-test:
     name: Istio integration test
     runs-on: ubuntu-latest
+    needs: [ changed-files ]
+    if: ${{ needs.changed-files.outputs.any_modified }}
     strategy:
       fail-fast: false
       matrix:
@@ -47,6 +77,8 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
       - uses: ./.github/actions/integration-test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           test_make_target: ${{ matrix.test_make_target }}
           operator-image-name: "europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}"
@@ -56,12 +88,16 @@ jobs:
   istio-integration-test-evaluation:
     name: Istio integration test evaluation
     runs-on: ubuntu-latest
+    needs: [ changed-files ]
+    if: ${{ needs.changed-files.outputs.any_modified }}
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
       - uses: ./.github/actions/integration-test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           test_make_target: "evaluation-integration-test"
           operator-image-name: "europe-docker.pkg.dev/kyma-project/dev/istio-manager:PR-${{github.event.number}}"

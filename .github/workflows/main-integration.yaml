@@ -82,6 +82,7 @@ jobs:
       - run: make IMG="europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{github.sha}}" gardener-istio-integration-test
         shell: bash
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MAKE_TEST_TARGET: "istio-upgrade-integration-test"
           TARGET_BRANCH: ${{github.ref_name}}
           GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"
@@ -109,6 +110,8 @@ jobs:
         with:
           fetch-depth: 0
       - uses: ./.github/actions/integration-test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           test_make_target: ${{ matrix.test_make_target }}
           operator-image-name: "europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{github.sha}}"
@@ -137,6 +140,7 @@ jobs:
       - run: make IMG="europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{github.sha}}" gardener-istio-integration-test
         shell: bash
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"
           GARDENER_PROJECT_NAME: "goats"
           GARDENER_PROVIDER_SECRET_NAME: "goat"
@@ -168,6 +172,7 @@ jobs:
       - run: make IMG="europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{github.sha}}" gardener-aws-integration-test
         shell: bash
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"
           GARDENER_PROJECT_NAME: "goats"
           GARDENER_PROVIDER_SECRET_NAME: "aws-gardener-access"
@@ -198,6 +203,7 @@ jobs:
       - run: make IMG="europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{github.sha}}" gardener-gcp-integration-test
         shell: bash
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"
           GARDENER_PROJECT_NAME: "goats"
           GARDENER_PROVIDER_SECRET_NAME: "goat"
@@ -232,6 +238,7 @@ jobs:
       - run: make IMG="europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{github.sha}}" gardener-istio-integration-test
         shell: bash
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"
           GARDENER_PROJECT_NAME: "goats"
           GARDENER_PROVIDER_SECRET_NAME: "aws-gardener-access"

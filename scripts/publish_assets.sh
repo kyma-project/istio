@@ -13,7 +13,7 @@ RELEASE_ID=$2
 REPOSITORY=${REPOSITORY:-kyma-project/istio}
 GITHUB_URL=https://uploads.github.com/repos/${REPOSITORY}
 GITHUB_AUTH_HEADER="Authorization: Bearer ${GITHUB_TOKEN}"
-IMG="europe-docker.pkg.dev/kyma-project/prod/istio-manager:${RELEASE_TAG}"
+IMG="europe-docker.pkg.dev/kyma-project/prod/istio/releases/istio-manager:${RELEASE_TAG}"
 VERSION="${RELEASE_TAG}"
 
 IMG="${IMG}" VERSION="${VERSION}" make generate-manifests

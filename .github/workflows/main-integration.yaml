@@ -43,7 +43,7 @@ jobs:
     if: ${{ github.event.pull_request.draft == false && needs.filter-changes.outputs.check == 'true' }}
     uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main # Usage: kyma-project/test-infra/.github/workflows/image-builder.yml@main
     with:
-      name: istio-manager
+      name: istio/main/istio-manager
       dockerfile: Dockerfile
       context: .
       build-args: |
@@ -56,7 +56,7 @@ jobs:
     if: ${{ github.event.pull_request.draft == false && needs.filter-changes.outputs.check == 'true' }}
     uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main # Usage: kyma-project/test-infra/.github/workflows/image-builder.yml@main
     with:
-      name: istio-manager
+      name: istio/main/istio-manager
       dockerfile: Dockerfile
       context: .
       build-args: |
@@ -79,7 +79,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: "go.mod"
-      - run: make IMG="europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{github.sha}}" gardener-istio-integration-test
+      - run: make IMG="europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager:${{github.sha}}" gardener-istio-integration-test
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -114,7 +114,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           test_make_target: ${{ matrix.test_make_target }}
-          operator-image-name: "europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{github.sha}}"
+          operator-image-name: "europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager:${{github.sha}}"
           servers-memory: "16"
           agents: 2
 
@@ -137,7 +137,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: "go.mod"
-      - run: make IMG="europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{github.sha}}" gardener-istio-integration-test
+      - run: make IMG="europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager:${{github.sha}}" gardener-istio-integration-test
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -169,7 +169,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: "go.mod"
-      - run: make IMG="europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{github.sha}}" gardener-aws-integration-test
+      - run: make IMG="europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager:${{github.sha}}" gardener-aws-integration-test
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -200,7 +200,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: "go.mod"
-      - run: make IMG="europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{github.sha}}" gardener-gcp-integration-test
+      - run: make IMG="europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager:${{github.sha}}" gardener-gcp-integration-test
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -235,7 +235,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: "go.mod"
-      - run: make IMG="europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{github.sha}}" gardener-istio-integration-test
+      - run: make IMG="europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager:${{github.sha}}" gardener-istio-integration-test
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -35,7 +35,7 @@ jobs:
         with:
           go-version-file: "go.mod"
       - run: |
-          make IMG="europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{ github.sha }}" gardener-perf-test
+          make IMG="europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager:${{ github.sha }}" gardener-perf-test
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

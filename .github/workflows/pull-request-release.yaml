@@ -10,7 +10,7 @@ jobs:
     if: github.event.pull_request.draft == false
     uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main # Usage: kyma-project/test-infra/.github/workflows/image-builder.yml@main
     with:
-      name: istio-manager
+      name: istio/pr/istio-manager
       dockerfile: Dockerfile
       context: .
       build-args: |

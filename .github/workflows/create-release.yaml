@@ -32,7 +32,7 @@ jobs:
       - name: Check security-scanner config
         shell: bash
         run: |
-          if [[ $( yq eval ".protecode[0]" sec-scanners-config.yaml ) == "europe-docker.pkg.dev/kyma-project/prod/istio-manager:${{ github.event.inputs.name }}" ]]; then
+          if [[ $( yq eval ".protecode[0]" sec-scanners-config.yaml ) == "europe-docker.pkg.dev/kyma-project/prod/istio/releases/istio-manager:${{ github.event.inputs.name }}" ]]; then
             exit 0
           else
             echo "Error: istio-manager image tag in sec-scanners-config doesn't match release ${{ github.event.inputs.name }}"

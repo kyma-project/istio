@@ -6,9 +6,9 @@ Proposed
 
 ## Context
 
-As requested we need to to support cluster configuration on AWS for the type of the `istio-ingressgateway`'s `LoadBalancer`. AWS supports [different load balancers](https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/how-elastic-load-balancing-works.html). Per default Istio deploys a Service for the `istio-ingressgateway` without specifying anything and [AWS LoadBalancer controller](https://github.com/kubernetes-sigs/aws-load-balancer-controller) applies a `classic` (aka ELB v1) `LoadBalancer` on AWS side, which we will refer as type `elb`. ELB works at both layers 4 (TCP/Network) and 7 (HTTP/Application).
+As requested we need to to support cluster configuration on AWS for the type of the `istio-ingressgateway`'s load balancer. AWS supports [different load balancers](https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/how-elastic-load-balancing-works.html). Per default Istio deploys a `Service` for the `istio-ingressgateway` without specifying anything and [AWS LoadBalancer controller](https://github.com/kubernetes-sigs/aws-load-balancer-controller) applies a `classic` (aka ELB v1) load balancer on AWS side, which we will refer as type `elb`. ELB works at both layers 4 (TCP/Network) and 7 (HTTP/Application).
 
-Since ELB has quite a few limitations, we would like to extend the configuration for a Network Load Balancer (NLB), which we will refer as type `nlb`. A NLB works at layer 4 only and can handle both TCP and UDP, as well as TCP connections encrypted with TLS. Its main feature is that it has a very high performance.
+Since classic ELB has quite a few limitations (e.g. supports only IPv4), we would like to extend the configuration for selecting a Network Load Balancer (NLB), which we will refer as type `nlb`. A NLB works at layer 4 only and can handle both TCP and UDP, supports IPv6, as well as TCP connections encrypted with TLS. Its main feature is that it has a very high performance.
 
 ## Decision
 
@@ -25,7 +25,7 @@ This results in the folowing Go structure:
 type Config struct {
 	...
 
-  // if not specified, it defaults to `elb` for existing Istio installation and to `nlb` for new Istio installation
+  // optional, if not specified it defaults to `elb` for existing Istio installation and to `nlb` for new Istio installation
 	// +kubebuilder:validation:Enum=elb,nlb
 	AWSLoadBalancerType *string `json:"awsLoadBalancerType,omitempty"`
 }
@@ -44,7 +44,7 @@ spec:
     awsLoadBalancerType: nlb
 ```
 
-When switching to NLB Istio Module operator should apply additionally the following `serviceAnnotations` with Istio Operator Manifest:
+* When switching to NLB Istio Module operator should apply additionally the following `serviceAnnotations` with Istio Operator Manifest:
 ```yaml
 serviceAnnotations:
     service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
@@ -52,10 +52,10 @@ serviceAnnotations:
     service.beta.kubernetes.io/aws-load-balancer-type: external
 ```
 
-When switching to the classic ELB Istio Module operator should remove the `serviceAnnotations`.
+* When switching to the classic ELB Istio Module operator should remove the above `serviceAnnotations`.
 
-> No downtime is expected when changing the LoadBalancer type on Istio Module reconciliations and no changes to the Kyma domain DNS entries are expected.
+> No downtime is expected when changing the LoadBalancer type on Istio Module reconciliation and no changes to the Kyma domain DNS entries are expected.
 
 ## Default Values
 
-If `spec.config.awsLoadBalancerType` is not configured, it will default to `elb` for existing Istio installations and to `nlb` for new Istio installations.
+If `spec.config.awsLoadBalancerType` is not configured it defaults to `elb` for existing Istio installation and to `nlb` for new Istio installation. This will be determined at runtime (reconcile) time.

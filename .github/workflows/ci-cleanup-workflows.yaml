@@ -1,0 +1,21 @@
+on:
+  schedule:
+    - cron: "11 0 * * *"
+
+permissions:
+  actions: write
+
+jobs:
+  cleanup-workflows:
+    runs-on: ubuntu-latest
+    steps:
+      - id: cleanup
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DAYS_AFTER: 90 days
+          LIMIT: 500
+        run: |
+          DATE="$(date -d "-$DAYS_AFTER" +%F)"
+          echo "Removing workflow runs older than $DATE..."
+          gh run list --json databaseId -q '.[].databaseId' --created "<=$DATE" --limit "$LIMIT" |
+            xargs -IID -P 15 gh run delete ID

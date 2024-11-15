@@ -18,7 +18,7 @@ We will introduce configuration for `awsLoadBalancerType` within the `spec.confi
 
 The Istio CR API will be extended with configuration for `awsLoadBalancerType`, including validation for the only supported values: `elb` and `nlb`.
 
-This results in the folowing Go structure:
+This results in the following Go structure:
 
 ```go
 // Config is the configuration for the Istio installation.

@@ -25,7 +25,7 @@ This results in the folowing Go structure:
 type Config struct {
 	...
 
-  // optional, if not specified it defaults to `elb` for existing Istio installation and to `nlb` for new Istio installation
+	// optional, if not specified it defaults to `elb` for existing Istio installation and to `nlb` for new Istio installation
 	// +kubebuilder:validation:Enum=elb,nlb
 	AWSLoadBalancerType *string `json:"awsLoadBalancerType,omitempty"`
 }

@@ -152,7 +152,7 @@ send_requests() {
       # If there is an error and the test-app Deployment, Gateway or Virtual Service still exists, the test is failed,
       # but if an error is received only when the one of those resources is deleted, the test is successful, because
       # without any of them the request will fail.
-      ! kubectl get deployment test-app -n default || ! kubectl get gateways test-gateway -n default || ! kubectl get virtualservices upgrade-test-vs -n default; then
+      if ! kubectl get deployment test-app -n default || ! kubectl get gateways test-gateway -n default || ! kubectl get virtualservices upgrade-test-vs -n default; then
         echo "zero-downtime: Test successful after $request_count requests. Stopping requests because on of the required resources is deleted."
         exit 0
       else

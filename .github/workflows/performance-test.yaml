@@ -11,7 +11,7 @@ jobs:
     name: Build manager image
     uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main
     with:
-      name: istio-manager
+      name: istio/main/istio-manager
       dockerfile: Dockerfile
       context: .
       build-args: |

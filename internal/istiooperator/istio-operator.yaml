@@ -114,6 +114,15 @@ spec:
                     - istiod
                 topologyKey: kubernetes.io/hostname
               weight: 100
+            - podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - istiod
+                topologyKey: topology.kubernetes.io/zone
+              weight: 100
         env:
         - name: PILOT_HTTP10
           value: "1"

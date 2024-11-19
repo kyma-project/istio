@@ -60,6 +60,15 @@ spec:
                     - istio-ingressgateway
                 topologyKey: kubernetes.io/hostname
               weight: 100
+            - podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                      - istio-ingressgateway
+                topologyKey: topology.kubernetes.io/zone
+              weight: 100
         hpaSpec:
           maxReplicas: 10
           metrics:

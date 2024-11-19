@@ -5,26 +5,27 @@ on:
 permissions:
   contents: write
   pull-requests: write
+
 jobs:
   update-sec-scanners:
     name: update sec-scanners-config.yaml
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - shell: bash
-        name: get latest tag
+      - name: get latest tag
+        id: ensure-head-sha
         env:
           IMAGE_TAG_REGEXP: v[0-9]{8}-[a-f0-9]{6,9}
         run: |
-          # grab latest tag from sorted list of tags for given TAG_REGEXP
-          IMAGE_TAG=$(skopeo list-tags docker://europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager | jq -r ".Tags[] | select(.| test(\"$IMAGE_TAG_REGEXP\"))" | sort | tail -1)
-          if [[ -z $IMAGE_TAG ]]; then
-            echo Fetched image tag is empty, most likely your IMAGE_TAG_REGEXP is incorrect
-            exit 1
+          # grab HEAD SHA and check if it contains the tag
+          HEAD_SHA="$(git rev-parse HEAD)"
+          if ! skopeo inspect "docker://europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager:$HEAD_SHA"; then
+            echo "::warning::The repository does not contain an image assigned to HEAD tag"
+            exit 0
           fi
-          echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_ENV"
-      - shell: bash
-        name: Schedule security-config update
+          echo "image-tag=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+      - name: Schedule security-config update
+        if: steps.ensure-head-sha.outputs.image-tag != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

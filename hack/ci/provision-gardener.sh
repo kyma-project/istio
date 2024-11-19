@@ -76,7 +76,7 @@ done
 
 echo "waiting fo cluster to be ready..."
 set +e
-kubectl wait --kubeconfig "${GARDENER_KUBECONFIG}" --for=condition=EveryNodeReady "shoot/${CLUSTER_NAME}" --timeout=17m
+kubectl wait --kubeconfig "${GARDENER_KUBECONFIG}" --for=condition=EveryNodeReady "shoot/${CLUSTER_NAME}" --timeout=25m
 if [ $? -ne 0 ]; then
   echo "Cluster did not become ready in time"
   kubectl --kubeconfig "${GARDENER_KUBECONFIG}" get shoot "${CLUSTER_NAME}" -o yaml

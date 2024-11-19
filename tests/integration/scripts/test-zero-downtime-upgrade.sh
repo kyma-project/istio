@@ -149,16 +149,15 @@ send_requests() {
     ((request_count = request_count + 1))
 
     if [ "$response" != "200" ]; then
-      # If there is an error and the Virtual Service still exists, the test is failed, but if an error is received only when the
-      # Virtual Service is deleted, the test is successful, because without an Virtual Service the request must fail as no host
-      # is exposed. This was the most reliable way to detect when to stop the requests, since only sending requests
-      # when the Virtual Service exists led to flaky results.
-      if kubectl get virtualservices -A --ignore-not-found | grep -q .; then
+      # If there is an error and the test-app Deployment, Gateway or Virtual Service still exists, the test is failed,
+      # but if an error is received only when the one of those resources is deleted, the test is successful, because
+      # without any of them the request will fail.
+      if ! kubectl get deployment test-app -n default || ! kubectl get gateways test-gateway -n default || ! kubectl get virtualservices upgrade-test-vs -n default; then
+        echo "zero-downtime: Test successful after $request_count requests. Stopping requests because on of the required resources is deleted."
+        exit 0
+      else
         echo "zero-downtime: Test failed after $request_count requests. Canceling requests because of HTTP status code $response"
         exit 1
-      else
-        echo "zero-downtime: Test successful after $request_count requests. Stopping requests because Virtual Service is deleted."
-        exit 0
       fi
     fi
   done

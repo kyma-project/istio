@@ -10,24 +10,28 @@ jobs:
   update-sec-scanners:
     name: update sec-scanners-config.yaml
     runs-on: ubuntu-latest
+    env:
+      IMAGE: europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager
     steps:
       - uses: actions/checkout@v4
       - name: get latest tag
-        id: ensure-head-sha
+        id: latest-sha
         env:
           IMAGE_TAG_REGEXP: v[0-9]{8}-[a-f0-9]{6,9}
         run: |
-          # grab HEAD SHA and check if it contains the tag
-          HEAD_SHA="$(git rev-parse HEAD)"
-          if ! skopeo inspect "docker://europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager:$HEAD_SHA"; then
-            echo "::warning::The repository does not contain an image assigned to HEAD tag"
-            exit 0
-          fi
-          echo "image-tag=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+          # grab latest image associated with a commit in git history
+          while read -r SHA; do
+            if skopeo inspect "docker://$IMAGE:$SHA" &> /dev/null; then
+              echo "found image: $IMAGE:$SHA"
+              echo "image-tag=$SHA" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          done < <(git rev-list HEAD)
       - name: Schedule security-config update
-        if: steps.ensure-head-sha.outputs.image-tag != ''
+        if: steps.latest-sha.outputs.image-tag != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE_TAG: ${{ steps.latest-sha.outputs.image-tag }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

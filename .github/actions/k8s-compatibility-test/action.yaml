@@ -43,3 +43,17 @@ runs:
       with:
         name: deprecation-report-${{ github.job }}-${{ inputs.test_make_target }}
         path: deprecations.txt
+    - shell: bash
+      name: gather logs
+      if: failure()
+      run: |
+        mkdir logs
+        (kubectl logs -n kyma-system deployments/istio-controller-manager || true) > logs/istio-controller-manager.log
+        (kubectl logs -n istio-system deployments/istio-ingressgateway || true) > logs/istio-ingressgateway.log
+        (kubectl logs -n istio-system deployments/istiod || true) > logs/istiod.log
+    - name: Uploads logs
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: logs-${{ github.job }}-${{ inputs.test_make_target }}
+        path: logs/

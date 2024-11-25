@@ -2,9 +2,6 @@ version: 2
 updates:
   - package-ecosystem: "gomod"
     directory: "/"
-    labels:
-      - "go"
-      - "area/dependency"
     schedule:
       interval: "daily"
     commit-message:
@@ -19,9 +16,6 @@ updates:
       - dependency-name: "k8s.io/*"
   - package-ecosystem: "docker"
     directory: "/"
-    labels:
-      - "docker"
-      - "area/dependency"
     schedule:
       interval: "daily"
     commit-message:
@@ -30,9 +24,6 @@ updates:
   - package-ecosystem: "gomod"
     target-branch: "release-1.10"
     directory: "/"
-    labels:
-      - "go"
-      - "area/dependency"
     schedule:
       interval: "daily"
     commit-message:
@@ -50,9 +41,6 @@ updates:
   - package-ecosystem: "docker"
     target-branch: "release-1.10"
     directory: "/"
-    labels:
-      - "docker"
-      - "area/dependency"
     schedule:
       interval: "daily"
     commit-message:

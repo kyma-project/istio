@@ -35,8 +35,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GOAT_BOT_REPO_ACCESS }}
           IMAGE_TAG: ${{ steps.latest-sha.outputs.image-tag }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "kyma-goat-bot"
+          git config user.email "goattest@sap.com"
           
           git fetch origin
           git checkout -f autobump/sec-scanners-config

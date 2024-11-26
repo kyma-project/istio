@@ -6,7 +6,7 @@ import (
 	"github.com/imdario/mergo"
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
-	"istio.io/api/operator/v1alpha1"
+	"istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	istiov1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	"k8s.io/apimachinery/pkg/util/errors"
 	"os"

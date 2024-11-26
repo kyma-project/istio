@@ -8,7 +8,7 @@ import (
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"istio.io/istio/operator/pkg/apis/istio/v1alpha1"
+	"istio.io/api/operator/v1alpha1"
 	istiov1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"reflect"

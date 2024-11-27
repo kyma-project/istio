@@ -3,9 +3,9 @@ package steps
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"github.com/avast/retry-go"
 	"github.com/kyma-project/istio/operator/tests/testcontext"
-	"github.com/pkg/errors"
 	"io"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -42,22 +42,18 @@ func ContainerLogContainsString(ctx context.Context, containerName, depName, dep
 			return err
 		}
 
-		found := false
-		var str = ""
+		var logStr = ""
 		for _, pod := range pods.Items {
-			str, err = getLogsFromPodsContainer(ctx, pod, containerName)
+			logStr, err = getLogsFromPodsContainer(ctx, pod, containerName)
 			if err != nil {
 				return err
 			}
-			if sub := strings.Contains(str, expectedString); sub {
-				found = true
+			if sub := strings.Contains(logStr, expectedString); sub {
+				return nil
 			}
 		}
-		if !found {
-			return errors.New("log entry not found" + str)
-		}
 
-		return nil
+		return fmt.Errorf("log entry not found. got log: %s", logStr)
 	}, testcontext.GetRetryOpts()...)
 	return ctx, err
 }

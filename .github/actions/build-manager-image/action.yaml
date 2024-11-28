@@ -24,16 +24,39 @@ runs:
         registry: europe-central2-docker.pkg.dev
         username: _json_key_base64
         password: ${{ inputs.push-sa-key }}
-    - name: Build and Push
+    - name: Build and Push linux/amd64
       if: ${{ inputs.push-image == 'true' }}
       uses: docker/build-push-action@v6
       with:
         context: .
         platforms: 'linux/amd64'
+        provenance: false
         push: true
-        tags: ${{ inputs.operator-image-name }}
+        tags: ${{ inputs.operator-image-name }}-amd64
         cache-from: type=gha
         cache-to: type=gha,mode=max
+    - name: Build and Push linux/arm64
+      if: ${{ inputs.push-image == 'true' }}
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        platforms: 'linux/arm64'
+        provenance: false
+        push: true
+        tags: ${{ inputs.operator-image-name }}-arm64
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    - name: Build manifest
+      if: ${{ inputs.push-image == 'true' }}
+      shell: bash
+      run: |
+        docker manifest create ${{ inputs.operator-image-name }} \
+        ${{ inputs.operator-image-name }}-amd64 ${{ inputs.operator-image-name }}-arm64
+    - name: Push manifest
+      if: ${{ inputs.push-image == 'true' }}
+      shell: bash
+      run: |
+        docker manifest push ${{ inputs.operator-image-name }}
     - name: Build and Load
       if: ${{ inputs.push-image == 'false' }}
       uses: docker/build-push-action@v6

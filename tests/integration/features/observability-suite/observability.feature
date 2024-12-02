@@ -46,6 +46,10 @@ Feature: Observability
   Scenario: Istio calls OpenTelemetry API on default service configured in kyma-traces extension provider
     Given Tracing is enabled for the mesh using provider "kyma-traces"
     # For a simpler setup we use a tcp-echo as OpenTelemetry collector mock, because we only want to verify that the OpenTelemetry API is called by checking the echoed request logs.
+    And Istio gateway "test-gateway" is configured in namespace "default"
+    And Httpbin application "httpbin" deployment is created in namespace "default"
+    And Virtual service "httpbin" exposing service "httpbin.default.svc.cluster.local" with port "8000" by gateway "default/test-gateway" is configured in namespace "default"
     And OTEL Collector mock "otel-collector-mock" deployment is created in namespace "kyma-system"
     And Service is created for the otel collector "otel-collector-mock" in namespace "kyma-system"
+    When Request to path "/ip" should have response code "200"
     Then Log of container "otel-collector-mock" in deployment "otel-collector-mock" in namespace "kyma-system" contains "POST /opentelemetry.proto.collector.trace.v1.TraceService/Export"

@@ -9,9 +9,9 @@ The Istio module installs and manages Istio in your Kyma cluster. By default, th
 
 The latest release includes the following versions of Istio and Envoy:  
 
-**Istio version:** 1.23.2
+**Istio version:** 1.24.1
 
-**Envoy version:** 1.31.2
+**Envoy version:** 1.32.2
 
 ## Features
 

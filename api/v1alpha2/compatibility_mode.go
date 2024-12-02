@@ -6,7 +6,11 @@ import (
 )
 
 var pilotCompatibilityEnvVars = map[string]string{
-	"ENABLE_DELIMITED_STATS_TAG_REGEX": "false",
+	"ENABLE_INBOUND_RETRY_POLICY":                      "false",
+	"EXCLUDE_UNSAFE_503_FROM_DEFAULT_RETRY":            "false",
+	"PREFER_DESTINATIONRULE_TLS_FOR_EXTERNAL_SERVICES": "false",
+	"ENABLE_ENHANCED_DESTINATIONRULE_MERGE":            "false",
+	"PILOT_UNIFIED_SIDECAR_SCOPE":                      "false",
 }
 
 func setCompatibilityMode(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {
@@ -39,8 +43,8 @@ func setCompatibilityPilot(op iopv1alpha1.IstioOperator) iopv1alpha1.IstioOperat
 }
 
 var ProxyMetaDataCompatibility = map[string]string{
-	"ENABLE_DEFERRED_CLUSTER_CREATION": "false",
-	"ENABLE_DELIMITED_STATS_TAG_REGEX": "false",
+	"ENABLE_DEFERRED_STATS_CREATION":               "false",
+	"BYPASS_OVERLOAD_MANAGER_FOR_STATIC_LISTENERS": "false",
 }
 
 func setCompatibilityProxyMetadata(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {

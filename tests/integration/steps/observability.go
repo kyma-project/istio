@@ -2,6 +2,7 @@ package steps
 
 import (
 	"context"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 	"strconv"
 
 	"github.com/avast/retry-go"
@@ -59,6 +60,7 @@ func EnableTracing(ctx context.Context, tracingProvider string) (context.Context
 			Spec: apitelemetryv1.Telemetry{
 				Tracing: []*apitelemetryv1.Tracing{
 					{
+						RandomSamplingPercentage: &wrapperspb.DoubleValue{Value: 100},
 						Providers: []*apitelemetryv1.ProviderRef{
 							{Name: tracingProvider},
 						},

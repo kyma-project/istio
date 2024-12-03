@@ -1,5 +1,5 @@
 <!-- open-source-only -->
-# Expose a TCP Service Using Gateway API Aplha Support
+# Expose a TCP Service Using Gateway API Alpha Support
 
 This tutorial shows how to expose a TCP Service using Gateway API.
 

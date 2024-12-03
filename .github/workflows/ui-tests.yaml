@@ -20,6 +20,7 @@ jobs:
             tests/ui/**
             .github/workflows/ui-tests.yaml
       - uses: ./.github/actions/load-manager-image
+        if: ${{ github.base_ref == 'refs/heads/main' }}
       - uses: actions/setup-go@v5
         with:
           go-version-file: "go.mod"

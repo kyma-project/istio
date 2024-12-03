@@ -1,0 +1,199 @@
+# This workflow is responsible for all kinds of integration tests that are run after push to main.
+# Those tests depend on a container image so in the first job we wait for the image build to succeed.
+
+name: integration tests
+
+permissions:
+  id-token: write # This is required for requesting the JWT token
+  contents: read # This is required for actions/checkouts
+
+on:
+  workflow_call:
+    inputs:
+      image:
+        description: Image used to run tests
+        required: true
+        type: string
+
+jobs:
+  istio-upgrade-integration-test:
+    name: Istio upgrade integration test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: ./tests/integration/scripts/gardener-kubeconfig.sh
+        shell: bash
+        env:
+          GARDENER_TOKEN: ${{ secrets.GARDENER_TOKEN }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+      - run: make IMG="${{ inputs.image }}" gardener-istio-integration-test
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MAKE_TEST_TARGET: "istio-upgrade-integration-test"
+          TARGET_BRANCH: ${{github.ref_name}}
+          GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"
+          GARDENER_PROJECT_NAME: "goats"
+          GARDENER_PROVIDER_SECRET_NAME: "goat"
+          GARDENER_PROVIDER: "gcp"
+          GARDENER_REGION: "europe-west3"
+          GARDENER_CLUSTER_VERSION: "1.29.7"
+          MACHINE_TYPE: "n2-standard-4"
+          DISK_SIZE: 50
+          DISK_TYPE: "pd-standard"
+          SCALER_MAX: 20
+          SCALER_MIN: 3
+
+  istio-integration-test:
+    name: Istio integration test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        test_make_target: [ "configuration-integration-test", "mesh-communication-integration-test", "installation-integration-test", "observability-integration-test" ]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/integration-test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          test_make_target: ${{ matrix.test_make_target }}
+          operator-image-name: "${{ inputs.image }}"
+          servers-memory: "16"
+          agents: 2
+
+  istio-integration-gcp:
+    name: Istio integration test GCP
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        test_make_target: [ "configuration-integration-test", "mesh-communication-integration-test", "installation-integration-test", "observability-integration-test" ]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: ./tests/integration/scripts/gardener-kubeconfig.sh
+        shell: bash
+        env:
+          GARDENER_TOKEN: ${{ secrets.GARDENER_TOKEN }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+      - run: make IMG="${{ inputs.image }}" gardener-istio-integration-test
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"
+          GARDENER_PROJECT_NAME: "goats"
+          GARDENER_PROVIDER_SECRET_NAME: "goat"
+          GARDENER_PROVIDER: "gcp"
+          GARDENER_REGION: "europe-west3"
+          GARDENER_CLUSTER_VERSION: "1.29.7"
+          MACHINE_TYPE: "n2-standard-4"
+          DISK_SIZE: 50
+          DISK_TYPE: "pd-standard"
+          SCALER_MAX: 20
+          SCALER_MIN: 3
+          MAKE_TEST_TARGET: ${{ matrix.test_make_target }}
+
+  istio-integration-aws-specific:
+    name: Istio integration test AWS specific
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: ./tests/integration/scripts/gardener-kubeconfig.sh
+        shell: bash
+        env:
+          GARDENER_TOKEN: ${{ secrets.GARDENER_TOKEN }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+      - run: make IMG="${{ inputs.image }}" gardener-aws-integration-test
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"
+          GARDENER_PROJECT_NAME: "goats"
+          GARDENER_PROVIDER_SECRET_NAME: "aws-gardener-access"
+          GARDENER_PROVIDER: "aws"
+          GARDENER_CLUSTER_VERSION: "1.29.7"
+          GARDENER_REGION: "eu-west-1"
+          MACHINE_TYPE: "m5.xlarge"
+          DISK_SIZE: 50
+          DISK_TYPE: "gp2"
+          SCALER_MAX: 3
+          SCALER_MIN: 1
+
+  istio-integration-gcp-specific:
+    name: Istio integration test GCP specific
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: ./tests/integration/scripts/gardener-kubeconfig.sh
+        shell: bash
+        env:
+          GARDENER_TOKEN: ${{ secrets.GARDENER_TOKEN }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+      - run: make IMG="${{ inputs.image }}" gardener-gcp-integration-test
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"
+          GARDENER_PROJECT_NAME: "goats"
+          GARDENER_PROVIDER_SECRET_NAME: "goat"
+          GARDENER_PROVIDER: "gcp"
+          GARDENER_REGION: "europe-west3"
+          GARDENER_CLUSTER_VERSION: "1.29.7"
+          MACHINE_TYPE: "n2-standard-4"
+          DISK_SIZE: 50
+          DISK_TYPE: "pd-standard"
+          SCALER_MAX: 20
+          SCALER_MIN: 3
+
+  istio-integration-aws:
+    name: Istio integration test AWS
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        test_make_target: [ "configuration-integration-test", "mesh-communication-integration-test", "installation-integration-test", "observability-integration-test" ]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: ./tests/integration/scripts/gardener-kubeconfig.sh
+        shell: bash
+        env:
+          GARDENER_TOKEN: ${{ secrets.GARDENER_TOKEN }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+      - run: make IMG="${{ inputs.image }}" gardener-istio-integration-test
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"
+          GARDENER_PROJECT_NAME: "goats"
+          GARDENER_PROVIDER_SECRET_NAME: "aws-gardener-access"
+          GARDENER_PROVIDER: "aws"
+          GARDENER_CLUSTER_VERSION: "1.29.7"
+          GARDENER_REGION: "eu-west-1"
+          MACHINE_TYPE: "m5.xlarge"
+          DISK_SIZE: 50
+          DISK_TYPE: "gp2"
+          SCALER_MAX: 3
+          SCALER_MIN: 1
+          MAKE_TEST_TARGET: ${{ matrix.test_make_target }}

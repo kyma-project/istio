@@ -18,7 +18,7 @@ jobs:
             config/ui-extensions/**
             config/crd/**
             tests/ui/**
-            .github/workflows/ui-tests.yaml
+            .github/workflows/call-ui-tests.yaml
       - uses: ./.github/actions/load-manager-image
       - uses: actions/setup-go@v5
         with:

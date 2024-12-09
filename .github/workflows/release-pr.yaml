@@ -1,4 +1,4 @@
-name: "Release: PR"
+name: "Release PR"
 on:
   pull_request_target:
     types: [ synchronize, opened, reopened, ready_for_review ]
@@ -57,13 +57,13 @@ jobs:
   ui-tests:
     name: Dispatch UI tests
     needs: [upload-image]
-    uses: ./.github/workflows/ui-tests.yaml
+    uses: ./.github/workflows/call-ui-tests.yaml
     if: github.event.pull_request.draft == false
     secrets: inherit
 
   verify-pins:
     name: Dispatch verify-commit-pins
-    uses: ./.github/workflows/verify-commit-pins.yaml
+    uses: ./.github/workflows/call-verify-commit-pins.yaml
     if: github.event.pull_request.draft == false
     secrets: inherit
 

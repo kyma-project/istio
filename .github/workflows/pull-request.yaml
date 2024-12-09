@@ -48,13 +48,13 @@ jobs:
   ui-tests:
     name: Dispatch UI tests
     needs: [build-image]
-    uses: ./.github/workflows/ui-tests.yaml
+    uses: ./.github/workflows/call-ui-tests.yaml
     if: github.event.pull_request.draft == false
     secrets: inherit
 
   verify-pins:
     name: Dispatch verify-commit-pins
-    uses: ./.github/workflows/verify-commit-pins.yaml
+    uses: ./.github/workflows/call-verify-commit-pins.yaml
     if: github.event.pull_request.draft == false
     secrets: inherit
 

@@ -1,5 +1,5 @@
 
-name: Rollout to channel via module-manifests
+name: Release rollout to channel via module-manifests
 #  Workflow requires the following variables to be defined
 #     GIT_USER_NAME - user creating head branch and PR
 #     GIT_USER_EMAIL - this user email
@@ -73,13 +73,13 @@ jobs:
         shell: bash
         run: |
           tags=$(curl -s -H "Accept: application/vnd.github+json" ${ISTIO_API_URL}/tags | jq -r '.[] | .name')
-          
+
           if  echo $tags | tr " " '\n' | grep -F -q -x ${{ inputs.releaseTag }}; then
               echo "TAG=${{ inputs.releaseTag }}" >> $GITHUB_ENV
               echo "tag found"
           else
               echo "tag not found: ${{ inputs.releaseTag }}"
-              exit 1  
+              exit 1
           fi
       - name: Set branch name
         shell: bash
@@ -130,7 +130,7 @@ jobs:
             MODULE_VERSION="${TAG}"
             FILE_NAME="${MANIFEST_FILENAME}"
           fi
-          
+
           cat <<EOF | tee module-config.yaml
           name: ${FULL_MODULE_NAME}
           channel: ${CHANNEL}

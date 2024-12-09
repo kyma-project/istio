@@ -43,14 +43,14 @@ jobs:
   integration-tests:
     name: Dispatch integration tests
     needs: [upload-image]
-    uses: ./.github/workflows/release-pr-integration.yaml
+    uses: ./.github/workflows/call-release-pr-integration.yaml
     if: github.event.pull_request.draft == false
     secrets: inherit
 
   integration-tests-gardener:
     name: Dispatch Gardener integration tests
     needs: [upload-image]
-    uses: ./.github/workflows/release-pr-integration-gardener.yaml
+    uses: ./.github/workflows/call-release-pr-integration-gardener.yaml
     if: github.event.pull_request.draft == false
     secrets: inherit
 

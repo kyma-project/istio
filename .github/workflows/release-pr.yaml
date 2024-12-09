@@ -1,4 +1,4 @@
-name: Release Pull Request pipeline
+name: "Release: PR"
 on:
   pull_request_target:
     types: [ synchronize, opened, reopened, ready_for_review ]
@@ -43,14 +43,14 @@ jobs:
   integration-tests:
     name: Dispatch integration tests
     needs: [upload-image]
-    uses: ./.github/workflows/pull-integration-release.yaml
+    uses: ./.github/workflows/release-pr-integration.yaml
     if: github.event.pull_request.draft == false
     secrets: inherit
 
   integration-tests-gardener:
     name: Dispatch Gardener integration tests
     needs: [upload-image]
-    uses: ./.github/workflows/pull-integration-gardener-release.yaml
+    uses: ./.github/workflows/release-pr-integration-gardener.yaml
     if: github.event.pull_request.draft == false
     secrets: inherit
 

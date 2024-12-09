@@ -1,10 +1,10 @@
-name: "Create release"
+name: "Release: Create new release"
 
 on:
   workflow_dispatch:
     inputs:
-      name:
-        description: "Create release"
+      version:
+        description: "Version"
         default: ""
         required: true
       since:
@@ -32,10 +32,10 @@ jobs:
       - name: Check security-scanner config
         shell: bash
         run: |
-          if [[ $( yq eval ".protecode[0]" sec-scanners-config.yaml ) == "europe-docker.pkg.dev/kyma-project/prod/istio/releases/istio-manager:${{ github.event.inputs.name }}" ]]; then
+          if [[ $( yq eval ".protecode[0]" sec-scanners-config.yaml ) == "europe-docker.pkg.dev/kyma-project/prod/istio/releases/istio-manager:${{ github.event.inputs.version }}" ]]; then
             exit 0
           else
-            echo "Error: istio-manager image tag in sec-scanners-config doesn't match release ${{ github.event.inputs.name }}"
+            echo "Error: istio-manager image tag in sec-scanners-config doesn't match release ${{ github.event.inputs.version }}"
             exit 1
           fi
 
@@ -47,8 +47,8 @@ jobs:
       dockerfile: Dockerfile
       context: .
       build-args: |
-        VERSION=${{ github.event.inputs.name }}
-      tags: "${{ github.event.inputs.name }}"
+        VERSION=${{ github.event.inputs.version }}
+      tags: "${{ github.event.inputs.version }}"
 
   build-image-experimental:
     uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main
@@ -58,9 +58,9 @@ jobs:
       dockerfile: Dockerfile
       context: .
       build-args: |
-        VERSION=${{ github.event.inputs.name }}-experimental
+        VERSION=${{ github.event.inputs.version }}-experimental
         GO_BUILD_TAGS=experimental
-      tags: "${{ github.event.inputs.name }}-experimental"
+      tags: "${{ github.event.inputs.version }}-experimental"
 
   unit-tests:
     uses: ./.github/workflows/call-unit-lint.yaml
@@ -69,7 +69,7 @@ jobs:
     needs: [build-image, build-image-experimental, unit-tests]
     uses: ./.github/workflows/call-integration-tests.yaml
     with:
-      image: "europe-docker.pkg.dev/kyma-project/prod/istio/releases/istio-manager:${{ github.event.inputs.name }}"
+      image: "europe-docker.pkg.dev/kyma-project/prod/istio/releases/istio-manager:${{ github.event.inputs.version }}"
     secrets: inherit
 
   create-draft:
@@ -85,22 +85,22 @@ jobs:
       - name: Create changelog
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./scripts/create_changelog.sh ${{ github.event.inputs.name }} ${{ github.event.inputs.since }}
+        run: ./scripts/create_changelog.sh ${{ github.event.inputs.version }} ${{ github.event.inputs.since }}
 
       - name: Create draft release
         id: create-draft
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          RELEASE_ID=$(./scripts/create_draft_release.sh ${{ github.event.inputs.name }})
+          RELEASE_ID=$(./scripts/create_draft_release.sh ${{ github.event.inputs.version }})
           echo "release_id=$RELEASE_ID" >> $GITHUB_OUTPUT
 
       - name: Create lightweight tag
         run: |
-          git tag ${{ github.event.inputs.name }}
-          git push origin ${{ github.event.inputs.name }}
-          git tag ${{ github.event.inputs.name }}-experimental
-          git push origin ${{ github.event.inputs.name }}-experimental
+          git tag ${{ github.event.inputs.version }}
+          git push origin ${{ github.event.inputs.version }}
+          git tag ${{ github.event.inputs.version }}-experimental
+          git push origin ${{ github.event.inputs.version }}-experimental
 
     outputs:
       release_id: ${{ steps.create-draft.outputs.release_id }}
@@ -118,7 +118,7 @@ jobs:
       - name: Publish release assets
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./scripts/publish_assets.sh ${{ github.event.inputs.name }} ${{ needs.create-draft.outputs.release_id }}
+        run: ./scripts/publish_assets.sh ${{ github.event.inputs.version }} ${{ needs.create-draft.outputs.release_id }}
 
       - name: Publish release
         env:
@@ -136,7 +136,7 @@ jobs:
           payload: |
             {
               "repository": "${{ github.repository }}",
-              "release": "${{ inputs.name }}"
+              "release": "${{ inputs.version }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_RELEASE_WEBHOOK }}

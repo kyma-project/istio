@@ -1,4 +1,4 @@
-name: PR-release Integration Gardener
+name: "Release: PR Integration Gardener"
 
 on:
   workflow_call:

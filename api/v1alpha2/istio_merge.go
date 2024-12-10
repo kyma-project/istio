@@ -251,6 +251,12 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 				return op, err
 			}
 		}
+		if i.Spec.Components.EgressGateway.Enabled != nil {
+			if op.Spec.Components.EgressGateways[0].Enabled == nil {
+				op.Spec.Components.EgressGateways[0].Enabled = &wrapperspb.BoolValue{}
+			}
+			op.Spec.Components.EgressGateways[0].Enabled.Value = *i.Spec.Components.EgressGateway.Enabled
+		}
 	}
 
 	if i.Spec.Components.Pilot != nil {

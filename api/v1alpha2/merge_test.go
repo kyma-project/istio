@@ -598,6 +598,9 @@ var _ = Describe("Merge", func() {
 
 				iopMemoryRequests := out.Spec.Components.EgressGateways[0].K8S.Resources.Requests["memory"]
 				Expect(iopMemoryRequests).To(Equal(memoryRequests))
+
+				iopEnabled := out.Spec.Components.EgressGateways[0].Enabled.GetValue()
+				Expect(iopEnabled).To(Equal(enabled))
 			})
 		})
 	})

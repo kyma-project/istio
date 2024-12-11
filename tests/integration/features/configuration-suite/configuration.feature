@@ -46,8 +46,9 @@ Feature: Configuration of Istio module
 
   Scenario: Egress Gateway has correct configuration
     When Template value "EgressGatewayEnabled" is set to "true"
-    And Istio CR "istio-sample" from "istio_cr_template" is updated in namespace "kyma-system"
-    Then Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
+    And Istio CR "istio-sample" from "istio_cr_template" is applied in namespace "kyma-system"
+    And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
+    Then "Deployment" "istio-egressgateway" in namespace "istio-system" is ready
 
   Scenario: External authorizer
     When Template value "Namespace" is set to "default"

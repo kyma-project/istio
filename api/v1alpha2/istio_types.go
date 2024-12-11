@@ -86,6 +86,12 @@ const (
 	ConditionReasonIngressGatewayRestartSucceededMessage                 = "Istio Ingress Gateway restart succeeded"
 	ConditionReasonIngressGatewayRestartFailed           ConditionReason = "IngressGatewayRestartFailed"
 	ConditionReasonIngressGatewayRestartFailedMessage                    = "Istio Ingress Gateway restart failed"
+
+	// egress gateway
+	ConditionReasonEgressGatewayRestartSucceeded        ConditionReason = "EgressGatewayRestartSucceeded"
+	ConditionReasonEgressGatewayRestartSucceededMessage                 = "Istio Egress Gateway restart succeeded"
+	ConditionReasonEgressGatewayRestartFailed           ConditionReason = "EgressGatewayRestartFailed"
+	ConditionReasonEgressGatewayRestartFailedMessage                    = "Istio Egress Gateway restart failed"
 )
 
 type ReasonWithMessage struct {

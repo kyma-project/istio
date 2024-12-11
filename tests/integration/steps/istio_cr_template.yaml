@@ -38,6 +38,23 @@ spec:
         hpaSpec:
           maxReplicas: {{.IGMaxReplicas}}
           minReplicas: {{.IGMinReplicas}}
+    egressGateway:
+      enabled: {{.EgressGatewayEnabled}}
+      k8s:
+        resources:
+          limits:
+            cpu: {{.EGCPULimit}}
+            memory: {{.EGMemoryLimit}}
+          requests:
+            cpu: {{.EGCPURequests}}
+            memory: {{.EGMemoryRequests}}
+        strategy:
+          rollingUpdate:
+            maxSurge: {{.EGMaxSurge}}
+            maxUnavailable: {{.EGMaxUnavailable}}
+        hpaSpec:
+          maxReplicas: {{.EGMaxReplicas}}
+          minReplicas: {{.EGMinReplicas}}
     proxy:
       k8s:
         resources:

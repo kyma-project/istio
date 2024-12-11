@@ -19,8 +19,8 @@ import (
 )
 
 const (
-	namespace      string = "istio-system"
-	deploymentName string = "istio-ingressgateway"
+	ingressNamespace      string = "istio-system"
+	ingressDeploymentName string = "istio-ingressgateway"
 )
 
 type IngressGatewayRestarter struct {
@@ -65,7 +65,7 @@ func restartIngressGateway(ctx context.Context, k8sClient client.Client) error {
 	ctrl.Log.Info("Restarting istio-ingressgateway")
 
 	deployment := appsv1.Deployment{}
-	err := k8sClient.Get(ctx, types.NamespacedName{Namespace: namespace, Name: deploymentName}, &deployment)
+	err := k8sClient.Get(ctx, types.NamespacedName{Namespace: ingressNamespace, Name: ingressDeploymentName}, &deployment)
 	if err != nil {
 		// If ingress gateway deployment is missing, we should not fail, as it may have not yet been created
 		// In that case, the upcoming creation of the deployment will do the same thing as we would require from the restart

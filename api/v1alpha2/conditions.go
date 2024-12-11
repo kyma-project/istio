@@ -45,6 +45,9 @@ var conditionReasons = map[ConditionReason]conditionMeta{
 
 	ConditionReasonIngressGatewayRestartSucceeded: {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonIngressGatewayRestartSucceededMessage},
 	ConditionReasonIngressGatewayRestartFailed:    {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonIngressGatewayRestartFailedMessage},
+
+	ConditionReasonEgressGatewayRestartSucceeded: {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonEgressGatewayRestartSucceededMessage},
+	ConditionReasonEgressGatewayRestartFailed:    {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonEgressGatewayRestartFailedMessage},
 }
 
 type conditionMeta struct {

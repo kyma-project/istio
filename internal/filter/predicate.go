@@ -19,3 +19,13 @@ type IngressGatewayRestartEvaluator interface {
 	//as there is only one Ingress Gateway deployment under Istio module control.
 	RequiresIngressGatewayRestart() bool
 }
+
+type EgressGatewayPredicate interface {
+	NewEgressGatewayEvaluator(context.Context) (EgressGatewayRestartEvaluator, error)
+}
+
+type EgressGatewayRestartEvaluator interface {
+	// The RequiresEgressGatewayRestart method does not evaluate the restart per pod,
+	// as there is only one Egress Gateway deployment under Istio module control.
+	RequiresEgressGatewayRestart() bool
+}

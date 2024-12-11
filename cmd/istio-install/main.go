@@ -46,6 +46,15 @@ func main() {
 		os.Exit(1)
 	}
 
+	for _, name := range iopFileNames {
+		iop, err := os.ReadFile(name)
+		if err != nil {
+			consoleLogger.LogAndError("Failed to read IstioOperator CR file: ", err)
+			os.Exit(1)
+		}
+		consoleLogger.LogAndPrintf("Applying IstioOperator CR %s", string(iop))
+	}
+
 	// We don't want to verify after installation, because it is unreliable
 	installArgs := &istio.InstallArgs{ReadinessTimeout: 150 * time.Second, SkipConfirmation: true, Verify: false, InFilenames: iopFileNames}
 

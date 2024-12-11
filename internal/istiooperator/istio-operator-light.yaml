@@ -71,9 +71,9 @@ spec:
             cpu: 10m
             memory: 32Mi
         securityContext:
-          runAsGroup: "65534"
+          runAsGroup: 65534
           runAsNonRoot: true
-          runAsUser: "65534"
+          runAsUser: 65534
           seccompProfile:
             type: RuntimeDefault
         strategy:
@@ -120,9 +120,9 @@ spec:
             cpu: 50m
             memory: 128Mi
         securityContext:
-          runAsGroup: "65534"
+          runAsGroup: 65534
           runAsNonRoot: true
-          runAsUser: "65534"
+          runAsUser: 65534
           seccompProfile:
             type: RuntimeDefault
         serviceAnnotations:

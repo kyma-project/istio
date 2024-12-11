@@ -20,7 +20,7 @@ import (
 	. "github.com/onsi/gomega"
 	"google.golang.org/protobuf/types/known/structpb"
 	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
-	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
+	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

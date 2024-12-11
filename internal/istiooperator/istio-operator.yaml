@@ -71,6 +71,10 @@ spec:
               weight: 100
         hpaSpec:
           maxReplicas: 10
+          scaleTargetRef:
+            apiVersion: apps/v1
+            kind: Deployment
+            name: istio-ingressgateway
           metrics:
           - resource:
               name: cpu
@@ -87,9 +91,9 @@ spec:
             cpu: 100m
             memory: 128Mi
         securityContext:
-          runAsGroup: "65534"
+          runAsGroup: 65534
           runAsNonRoot: true
-          runAsUser: "65534"
+          runAsUser: 65534
           seccompProfile:
             type: RuntimeDefault
         strategy:
@@ -131,6 +135,10 @@ spec:
         - name: METRIC_GRACEFUL_DELETION_INTERVAL
           value: "5m0s"
         hpaSpec:
+          scaleTargetRef:
+            apiVersion: apps/v1
+            kind: Deployment
+            name: istiod
           maxReplicas: 5
           minReplicas: 2
         podAnnotations:
@@ -145,9 +153,9 @@ spec:
             cpu: 100m
             memory: 512Mi
         securityContext:
-          runAsGroup: "65534"
+          runAsGroup: 65534
           runAsNonRoot: true
-          runAsUser: "65534"
+          runAsUser: 65534
           seccompProfile:
             type: RuntimeDefault
         serviceAnnotations:

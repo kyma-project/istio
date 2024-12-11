@@ -3,6 +3,7 @@ package restarter
 import (
 	"context"
 	"fmt"
+	"google.golang.org/protobuf/types/known/structpb"
 	"strings"
 
 	"github.com/kyma-project/istio/operator/internal/compatibility"
@@ -67,7 +68,7 @@ func (s *SidecarsRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio
 		return described_errors.NewDescribedError(err, "Could not get Istio version from istio operator file"), false
 	}
 
-	expectedImage := pods.NewSidecarImage(iop.Spec.Hub, iop.Spec.Tag.GetStringValue())
+	expectedImage := pods.NewSidecarImage(iop.Spec.Hub, iop.Spec.Tag.(*structpb.Value).GetStringValue())
 	s.Log.Info("Running proxy sidecar reset", "expected image", expectedImage)
 
 	err = gatherer.VerifyIstioPodsVersion(ctx, s.Client, istioImageVersion.Version())

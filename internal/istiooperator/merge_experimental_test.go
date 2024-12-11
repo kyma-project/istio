@@ -8,8 +8,9 @@ import (
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"istio.io/api/operator/v1alpha1"
-	istiov1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
+	"istio.io/api/extensions/v1alpha1"
+	istiov1alpha1 "istio.io/istio/operator/pkg/apis"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"reflect"
 )
@@ -37,7 +38,7 @@ var _ = Describe("Merge", func() {
 		// populates the state object which invalidates strict reflect
 		// validation. If loaded CR from file (Evaluation) changes, this
 		// size needs to be updated...
-		Expect(len(iop.Spec.Components.Pilot.K8S.Env)).To(Equal(5))
+		Expect(len(iop.Spec.Components.Pilot.Kubernetes.Env)).To(Equal(5))
 	})
 	Context("ParseExperimentalFeatures", func() {
 		It("should update IstioOperator with managed environment variables when all experimental options are set to true and source struct is populated", func() {
@@ -56,7 +57,7 @@ var _ = Describe("Merge", func() {
 			iop := readIOP("../../internal/istiooperator/istio-operator-light.yaml")
 			Expect(istiooperator.ParseExperimentalFeatures(&istioCR, &iop)).To(Succeed())
 			Expect(iop.Spec.Components.Pilot).ToNot(BeNil())
-			Expect(iop.Spec.Components.Pilot.K8S.Env).To(ContainElements(
+			Expect(iop.Spec.Components.Pilot.Kubernetes.Env).To(ContainElements(
 				&v1alpha1.EnvVar{Name: "PILOT_ENABLE_ALPHA_GATEWAY_API", Value: "true"},
 				&v1alpha1.EnvVar{Name: "PILOT_MULTI_NETWORK_DISCOVER_GATEWAY_API", Value: "true"}))
 		})
@@ -75,7 +76,7 @@ var _ = Describe("Merge", func() {
 			iop := istiov1alpha1.IstioOperator{}
 			Expect(istiooperator.ParseExperimentalFeatures(&istioCR, &iop)).To(Succeed())
 			Expect(iop.Spec.Components.Pilot).ToNot(BeNil())
-			Expect(iop.Spec.Components.Pilot.K8S.Env).To(ContainElements(
+			Expect(iop.Spec.Components.Pilot.Kubernetes.Env).To(ContainElements(
 				&v1alpha1.EnvVar{Name: "PILOT_ENABLE_ALPHA_GATEWAY_API", Value: "true"},
 				&v1alpha1.EnvVar{Name: "PILOT_MULTI_NETWORK_DISCOVER_GATEWAY_API", Value: "true"}))
 		})
@@ -92,14 +93,14 @@ var _ = Describe("Merge", func() {
 				},
 			}
 			iop := istiov1alpha1.IstioOperator{
-				Spec: &v1alpha1.IstioOperatorSpec{Components: &v1alpha1.IstioComponentSetSpec{Pilot: &v1alpha1.ComponentSpec{K8S: &v1alpha1.KubernetesResourcesSpec{Env: []*v1alpha1.EnvVar{
+				Spec: istiov1alpha1.IstioOperatorSpec{Components: &istiov1alpha1.IstioComponentSpec{Pilot: &istiov1alpha1.ComponentSpec{Kubernetes: &istiov1alpha1.KubernetesResources{Env: []*v1.EnvVar{
 					{Name: "PILOT_ENABLE_ALPHA_GATEWAY_API", Value: "asdasd"},
 					{Name: "PILOT_MULTI_NETWORK_DISCOVER_GATEWAY_API", Value: "asdasd"},
 				}}}}},
 			}
 			Expect(istiooperator.ParseExperimentalFeatures(&istioCR, &iop)).To(Succeed())
 			Expect(iop.Spec.Components.Pilot).ToNot(BeNil())
-			Expect(iop.Spec.Components.Pilot.K8S.Env).To(ContainElements(
+			Expect(iop.Spec.Components.Pilot.Kubernetes.Env).To(ContainElements(
 				&v1alpha1.EnvVar{Name: "PILOT_ENABLE_ALPHA_GATEWAY_API", Value: "true"},
 				&v1alpha1.EnvVar{Name: "PILOT_MULTI_NETWORK_DISCOVER_GATEWAY_API", Value: "true"}))
 		})

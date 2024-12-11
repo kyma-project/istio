@@ -1,8 +1,13 @@
 package istiooperator_test
 
 import (
+	"encoding/json"
+	meshv1alpha1 "istio.io/api/mesh/v1alpha1"
+	"istio.io/istio/operator/pkg/values"
 	"os"
 	"path"
+	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
@@ -14,7 +19,7 @@ import (
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
-	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
+	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
 )
@@ -29,6 +34,21 @@ var _ = ReportAfterSuite("custom reporter", func(report types.Report) {
 	tests.GenerateGinkgoJunitReport("istiooperator-suite", report)
 })
 
+func jsonTagsToSnakeCase(camelCaseMarshaledJson []byte) string {
+	jsonString := string(camelCaseMarshaledJson)
+	tagMatch := regexp.MustCompile(`"[^ ]*" *:`)
+	return tagMatch.ReplaceAllStringFunc(jsonString, toSnakeCase)
+}
+
+func toSnakeCase(str string) string {
+	matchFirstCap := regexp.MustCompile("(.)([A-Z][a-z]+)")
+	matchAllCap := regexp.MustCompile("([a-z0-9])([A-Z])")
+
+	snake := matchFirstCap.ReplaceAllString(str, "${1}_${2}")
+	snake = matchAllCap.ReplaceAllString(snake, "${1}_${2}")
+	return strings.ToLower(snake)
+}
+
 var _ = Describe("Merge", func() {
 	numTrustedProxies := 4
 	istioCR := &v1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
@@ -42,7 +62,7 @@ var _ = Describe("Merge", func() {
 		},
 	}
 
-	DescribeTable("Merge for differnt cluster sizes", func(clusterSize clusterconfig.ClusterSize, shouldError bool, igwMinReplicas int) {
+	DescribeTable("Merge for different cluster sizes", func(clusterSize clusterconfig.ClusterSize, shouldError bool, igwMinReplicas int) {
 		// given
 		sut := istiooperator.NewDefaultIstioMerger()
 
@@ -60,11 +80,15 @@ var _ = Describe("Merge", func() {
 
 			iop := readIOP(mergedIstioOperatorPath)
 
-			numTrustedProxies := iop.Spec.MeshConfig.Fields["defaultConfig"].
-				GetStructValue().Fields["gatewayTopology"].GetStructValue().Fields["numTrustedProxies"].GetNumberValue()
-			Expect(numTrustedProxies).To(Equal(float64(numTrustedProxies)))
+			var meshConfigTyped meshv1alpha1.MeshConfig
 
-			Expect(iop.Spec.Components.IngressGateways[0].K8S.HpaSpec.MinReplicas).To(Equal(int32(igwMinReplicas)))
+			meshConfigSnakeCase := jsonTagsToSnakeCase(iop.Spec.MeshConfig)
+			err = json.Unmarshal([]byte(meshConfigSnakeCase), &meshConfigTyped)
+
+			numTrustedProxies := meshConfigTyped.DefaultConfig.GetGatewayTopology().GetNumTrustedProxies()
+			Expect(numTrustedProxies).To(Equal(numTrustedProxies))
+
+			Expect(*iop.Spec.Components.IngressGateways[0].Kubernetes.HpaSpec.MinReplicas).To(Equal(int32(igwMinReplicas)))
 
 			err = os.Remove(mergedIstioOperatorPath)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -105,18 +129,23 @@ var _ = Describe("Merge", func() {
 
 		iop := readIOP(mergedIstioOperatorPath)
 
-		numTrustedProxies := iop.Spec.MeshConfig.Fields["defaultConfig"].
-			GetStructValue().Fields["gatewayTopology"].GetStructValue().Fields["numTrustedProxies"].GetNumberValue()
+		var typedMeshConfig meshv1alpha1.MeshConfig
+		snakeCaseMeshConfig := jsonTagsToSnakeCase(iop.Spec.MeshConfig)
 
-		Expect(numTrustedProxies).To(Equal(float64(4)))
+		err = json.Unmarshal([]byte(snakeCaseMeshConfig), &typedMeshConfig)
 
-		baseEnabled := iop.Spec.Components.Base.Enabled.Value
+		numTrustedProxies := typedMeshConfig.DefaultConfig.GetGatewayTopology().GetNumTrustedProxies()
+
+		Expect(numTrustedProxies).To(Equal(uint32(4)))
+
+		baseEnabled := iop.Spec.Components.Base.Enabled.GetValueOrTrue()
 		Expect(baseEnabled).To(BeFalse())
 
-		Expect(iop.Spec.Values.Fields["cni"]).NotTo(BeNil())
-		Expect(iop.Spec.Values.Fields["cni"].GetStructValue().Fields["cniBinDir"]).NotTo(BeNil())
-		cniBinDir := iop.Spec.Values.Fields["cni"].GetStructValue().Fields["cniBinDir"].GetStringValue()
-		Expect(cniBinDir).To(Equal(newCniBinDirPath))
+		valuesMap, err := values.MapFromObject(iop.Spec.Values)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		Expect(valuesMap["cni"]).NotTo(BeNil())
+		Expect(valuesMap["cni"].(map[string]interface{})["cniBinDir"]).To(Equal(newCniBinDirPath))
 
 		err = os.Remove(mergedIstioOperatorPath)
 		Expect(err).ShouldNot(HaveOccurred())
@@ -162,9 +191,9 @@ var _ = Describe("GetIstioImageVersion", func() {
 		Expect(err).Should(Not(HaveOccurred()))
 
 		// then
-		Expect(imageVersion.Tag()).To(Equal(ioProduction.Spec.Tag.GetStringValue()))
+		Expect(imageVersion.Tag()).To(Equal(ioProduction.Spec.Tag.(string)))
 		Expect(ioProduction.Spec.Hub).To(Equal(ioEvaluation.Spec.Hub))
-		Expect(ioProduction.Spec.Tag.GetStringValue()).To(Equal(ioEvaluation.Spec.Tag.GetStringValue()))
+		Expect(ioProduction.Spec.Tag.(string)).To(Equal(ioEvaluation.Spec.Tag.(string)))
 	})
 })
 

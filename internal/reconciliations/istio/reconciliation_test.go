@@ -19,8 +19,7 @@ import (
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
-	operatorv1alpha1 "istio.io/api/operator/v1alpha1"
-	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
+	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -974,7 +973,7 @@ func (m MergerMock) Merge(_ clusterconfig.ClusterSize, _ *operatorv1alpha2.Istio
 
 func (m MergerMock) GetIstioOperator(_ clusterconfig.ClusterSize) (iopv1alpha1.IstioOperator, error) {
 	iop := iopv1alpha1.IstioOperator{
-		Spec: &operatorv1alpha1.IstioOperatorSpec{
+		Spec: iopv1alpha1.IstioOperatorSpec{
 			Tag: structpb.NewStringValue(m.tag),
 		},
 	}

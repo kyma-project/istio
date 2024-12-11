@@ -8,7 +8,7 @@ import (
 	"github.com/coreos/go-semver/semver"
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
-	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
+	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
 	"sigs.k8s.io/yaml"
 )
 
@@ -74,7 +74,12 @@ func (m *IstioMerger) GetIstioImageVersion() (IstioImageVersion, error) {
 		return IstioImageVersion{}, err
 	}
 
-	return NewIstioImageVersionFromTag(iop.Spec.Tag.GetStringValue())
+	istioTag, success := iop.Spec.Tag.(string)
+	if !success {
+		return IstioImageVersion{}, errors.New("failed to get tag from IstioOperator")
+	}
+
+	return NewIstioImageVersionFromTag(istioTag)
 }
 
 func (m *IstioMerger) GetIstioOperator(clusterSize clusterconfig.ClusterSize) (iopv1alpha1.IstioOperator, error) {
@@ -96,12 +101,12 @@ func (m *IstioMerger) GetIstioOperator(clusterSize clusterconfig.ClusterSize) (i
 }
 
 func applyIstioCR(istioCR *operatorv1alpha2.Istio, toBeInstalledIop iopv1alpha1.IstioOperator) ([]byte, error) {
-	_, err := istioCR.MergeInto(toBeInstalledIop)
+	mergedIOP, err := istioCR.MergeInto(toBeInstalledIop)
 	if err != nil {
 		return nil, err
 	}
 
-	outputManifest, err := yaml.Marshal(toBeInstalledIop)
+	outputManifest, err := yaml.Marshal(mergedIOP)
 	if err != nil {
 		return nil, err
 	}

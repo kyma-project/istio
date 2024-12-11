@@ -6,8 +6,8 @@ import (
 	"github.com/imdario/mergo"
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
-	"istio.io/api/operator/v1alpha1"
-	istiov1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
+	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/errors"
 	"os"
 	"path"
@@ -42,7 +42,7 @@ func (m *IstioMerger) Merge(clusterSize clusterconfig.ClusterSize, istioCR *oper
 // and sets the required features in the output operator CR.
 // Handles changes in ExperimentalFeaturesApplied condition which is only managed
 // in experimental flavour of image
-func ParseExperimentalFeatures(istioCR *operatorv1alpha2.Istio, op *istiov1alpha1.IstioOperator) error {
+func ParseExperimentalFeatures(istioCR *operatorv1alpha2.Istio, op *iopv1alpha1.IstioOperator) error {
 	if istioCR.Spec.Experimental == nil {
 		return nil
 	}
@@ -66,32 +66,32 @@ func ParseExperimentalFeatures(istioCR *operatorv1alpha2.Istio, op *istiov1alpha
 	}
 	return nil
 }
-func enableGatewayAlphaAPI(op *istiov1alpha1.IstioOperator) error {
-	env := v1alpha1.EnvVar{
+func enableGatewayAlphaAPI(op *iopv1alpha1.IstioOperator) error {
+	env := v1.EnvVar{
 		Name:  "PILOT_ENABLE_ALPHA_GATEWAY_API",
 		Value: "true",
 	}
 
-	toMerge := istiov1alpha1.IstioOperator{Spec: &v1alpha1.IstioOperatorSpec{
-		Components: &v1alpha1.IstioComponentSetSpec{
-			Pilot: &v1alpha1.ComponentSpec{
-				K8S: &v1alpha1.KubernetesResourcesSpec{
-					Env: []*v1alpha1.EnvVar{&env}}},
+	toMerge := iopv1alpha1.IstioOperator{Spec: iopv1alpha1.IstioOperatorSpec{
+		Components: &iopv1alpha1.IstioComponentSpec{
+			Pilot: &iopv1alpha1.ComponentSpec{
+				Kubernetes: &iopv1alpha1.KubernetesResources{
+					Env: []*v1.EnvVar{&env}}},
 		}}}
 
 	return mergo.Merge(op, toMerge, mergo.WithAppendSlice)
 }
-func enableMultiNetworkDiscoverGatewayAPI(op *istiov1alpha1.IstioOperator) error {
-	env := v1alpha1.EnvVar{
+func enableMultiNetworkDiscoverGatewayAPI(op *iopv1alpha1.IstioOperator) error {
+	env := v1.EnvVar{
 		Name:  "PILOT_MULTI_NETWORK_DISCOVER_GATEWAY_API",
 		Value: "true",
 	}
 
-	toMerge := istiov1alpha1.IstioOperator{Spec: &v1alpha1.IstioOperatorSpec{
-		Components: &v1alpha1.IstioComponentSetSpec{
-			Pilot: &v1alpha1.ComponentSpec{
-				K8S: &v1alpha1.KubernetesResourcesSpec{
-					Env: []*v1alpha1.EnvVar{&env}}},
+	toMerge := iopv1alpha1.IstioOperator{Spec: iopv1alpha1.IstioOperatorSpec{
+		Components: &iopv1alpha1.IstioComponentSpec{
+			Pilot: &iopv1alpha1.ComponentSpec{
+				Kubernetes: &iopv1alpha1.KubernetesResources{
+					Env: []*v1.EnvVar{&env}}},
 		}}}
 
 	return mergo.Merge(op, toMerge, mergo.WithAppendSlice)

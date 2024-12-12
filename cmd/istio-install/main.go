@@ -4,6 +4,8 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	istioclient "github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	"os"
 	"time"
@@ -14,8 +16,30 @@ import (
 	"k8s.io/client-go/rest"
 )
 
+const (
+	iopFileNameFlag   = "iop-file"
+	debugPrintIopFlag = "debug-print-iop"
+)
+
+type arrayFlags []string
+
+// String is an implementation of the flag.Value interface
+func (i *arrayFlags) String() string {
+	return fmt.Sprintf("%v", *i)
+}
+
+// Set is an implementation of the flag.Value interface
+func (i *arrayFlags) Set(value string) error {
+	*i = append(*i, value)
+	return nil
+}
+
 func main() {
-	iopFileNames := []string{os.Args[1]}
+	var iopFileNames arrayFlags
+	flag.Var(&iopFileNames, iopFileNameFlag, "IstioOperator CR file names")
+	debugPrintIop := flag.Bool(debugPrintIopFlag, false, "Print IstioOperator CR")
+
+	flag.Parse()
 
 	consoleLogger := istioclient.CreateIstioLibraryLogger()
 
@@ -46,13 +70,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	for _, name := range iopFileNames {
-		iop, err := os.ReadFile(name)
-		if err != nil {
-			consoleLogger.LogAndError("Failed to read IstioOperator CR file: ", err)
-			os.Exit(1)
+	if debugPrintIop != nil && *debugPrintIop {
+		for _, name := range iopFileNames {
+			iop, err := os.ReadFile(name)
+			if err != nil {
+				consoleLogger.LogAndError("Failed to read IstioOperator CR file: ", err)
+				os.Exit(1)
+			}
+			consoleLogger.LogAndPrintf("Applying IstioOperator CR\n%s", string(iop))
 		}
-		consoleLogger.LogAndPrintf("Applying IstioOperator CR %s", string(iop))
 	}
 
 	// We don't want to verify after installation, because it is unreliable

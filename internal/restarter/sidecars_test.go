@@ -18,7 +18,6 @@ import (
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/restart"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"google.golang.org/protobuf/types/known/structpb"
 	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
 	corev1 "k8s.io/api/core/v1"
@@ -290,7 +289,7 @@ func (m MergerMock) GetIstioOperator(_ clusterconfig.ClusterSize) (iopv1alpha1.I
 	if err == nil {
 		err = yaml.Unmarshal(istioOperator, &iop)
 	}
-	iop.Spec.Tag = structpb.NewStringValue(m.tag)
+	iop.Spec.Tag = m.tag
 	return iop, err
 }
 

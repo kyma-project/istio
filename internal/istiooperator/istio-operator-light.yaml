@@ -143,7 +143,7 @@ spec:
       tracing: []
       metrics:
       - prometheus
-    enablePrometheusMerge: true
+    enablePrometheusMerge: false
     enableTracing: false
     extensionProviders:
     - name: kyma-traces

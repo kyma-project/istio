@@ -36,7 +36,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          
+
           git fetch origin
           git checkout -f autobump/sec-scanners-config
           git reset --hard origin/main

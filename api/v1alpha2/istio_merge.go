@@ -260,34 +260,37 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 
 	if i.Spec.Components.Proxy != nil && i.Spec.Components.Proxy.K8S != nil && i.Spec.Components.Proxy.K8S.Resources != nil {
 		if i.Spec.Components.Proxy.K8S.Resources.Limits != nil {
-			err = valuesMap.SetPath("global.proxy.resources.limits.cpu", *i.Spec.Components.Proxy.K8S.Resources.Limits.Cpu)
-			if err != nil {
-				return iopv1alpha1.IstioOperator{}, err
+			if i.Spec.Components.Proxy.K8S.Resources.Limits.Cpu != nil {
+				err = valuesMap.SetPath("global.proxy.resources.limits.cpu", *i.Spec.Components.Proxy.K8S.Resources.Limits.Cpu)
+				if err != nil {
+					return iopv1alpha1.IstioOperator{}, err
+				}
 			}
-		}
-		if i.Spec.Components.Proxy.K8S.Resources.Limits != nil {
-			err = valuesMap.SetPath("global.proxy.resources.limits.memory", *i.Spec.Components.Proxy.K8S.Resources.Limits.Memory)
-			if err != nil {
-				return iopv1alpha1.IstioOperator{}, err
+			if i.Spec.Components.Proxy.K8S.Resources.Limits.Memory != nil {
+				err = valuesMap.SetPath("global.proxy.resources.limits.memory", *i.Spec.Components.Proxy.K8S.Resources.Limits.Memory)
+				if err != nil {
+					return iopv1alpha1.IstioOperator{}, err
+				}
 			}
 		}
 
 		if i.Spec.Components.Proxy.K8S.Resources.Requests != nil {
-			if i.Spec.Components.Proxy.K8S.Resources.Requests.Cpu != nil {
-				err = valuesMap.SetPath("global.proxy.resources.requests.cpu", *i.Spec.Components.Proxy.K8S.Resources.Requests.Cpu)
-				if err != nil {
-					return iopv1alpha1.IstioOperator{}, err
+			if i.Spec.Components.Proxy.K8S.Resources.Requests != nil {
+				if i.Spec.Components.Proxy.K8S.Resources.Requests.Cpu != nil {
+					err = valuesMap.SetPath("global.proxy.resources.requests.cpu", *i.Spec.Components.Proxy.K8S.Resources.Requests.Cpu)
+					if err != nil {
+						return iopv1alpha1.IstioOperator{}, err
+					}
 				}
-			}
 
-			if i.Spec.Components.Proxy.K8S.Resources.Requests.Memory != nil {
-				err = valuesMap.SetPath("global.proxy.resources.requests.memory", *i.Spec.Components.Proxy.K8S.Resources.Requests.Memory)
-				if err != nil {
-					return iopv1alpha1.IstioOperator{}, err
+				if i.Spec.Components.Proxy.K8S.Resources.Requests.Memory != nil {
+					err = valuesMap.SetPath("global.proxy.resources.requests.memory", *i.Spec.Components.Proxy.K8S.Resources.Requests.Memory)
+					if err != nil {
+						return iopv1alpha1.IstioOperator{}, err
+					}
 				}
 			}
 		}
-
 		op.Spec.Values, err = values.ConvertMap[json.RawMessage](valuesMap)
 	}
 

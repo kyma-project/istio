@@ -61,6 +61,10 @@ spec:
                   topologyKey: kubernetes.io/hostname
                 weight: 100
         hpaSpec:
+          scaleTargetRef:
+            apiVersion: apps/v1
+            kind: Deployment
+            name: istio-ingressgateway
           maxReplicas: 1
           minReplicas: 1
         resources:
@@ -106,6 +110,10 @@ spec:
         - name: METRIC_GRACEFUL_DELETION_INTERVAL
           value: "5m0s"
         hpaSpec:
+          scaleTargetRef:
+            apiVersion: apps/v1
+            kind: Deployment
+            name: istiod
           maxReplicas: 1
           minReplicas: 1
         podAnnotations:

@@ -116,7 +116,7 @@ func (c *IstioClient) Uninstall(ctx context.Context) error {
 
 	pl := progress.NewLog()
 
-	objectsList, err := uninstall.GetPrunedResources(kubeClient, "", "", "default", false)
+	objectsList, err := uninstall.GetPrunedResources(kubeClient, "", "", "default", true)
 	if err != nil {
 		return err
 	}

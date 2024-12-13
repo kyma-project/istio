@@ -71,7 +71,6 @@ manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and Cust
 generate-integration-test-manifest: manifests kustomize module-version
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default -o tests/integration/steps/operator_generated_manifest.yaml
-	yq eval '(.spec.template.spec.containers[0].env //= []) += {"name": "DEBUG_PRINT_IOP", "value": "true"}' -i my-app-deployment.yaml
 
 .PHONY: generate
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.

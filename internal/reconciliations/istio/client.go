@@ -35,11 +35,7 @@ type IstioClient struct {
 }
 
 const (
-	debugPrintIopFlag = "-debug-print-iop"
-	debugPrintIopEnv  = "DEBUG_PRINT_IOP"
-
-	iopFileNamesFlag = "-iop-file"
-	logScope         = "istio-library"
+	logScope = "istio-library"
 )
 
 func CreateIstioLibraryLogger() *clog.ConsoleLogger {
@@ -63,10 +59,7 @@ func installIstioInExternalProcess(mergedIstioOperatorPath string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*6)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, istioInstallPath, iopFileNamesFlag, mergedIstioOperatorPath)
-	if os.Getenv(debugPrintIopEnv) == "true" {
-		cmd = exec.CommandContext(ctx, istioInstallPath, iopFileNamesFlag, mergedIstioOperatorPath, debugPrintIopFlag)
-	}
+	cmd := exec.CommandContext(ctx, istioInstallPath, mergedIstioOperatorPath)
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

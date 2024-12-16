@@ -190,6 +190,19 @@ rules:
   - update
   - watch
 - apiGroups:
+    - k8s.cni.cncf.io
+  resources:
+    - networkattachmentdefinitions
+  verbs:
+    - create
+    - deletecollection
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+- apiGroups:
   - autoscaling
   resources:
   - horizontalpodautoscalers

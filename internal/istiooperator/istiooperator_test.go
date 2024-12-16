@@ -1,13 +1,11 @@
 package istiooperator_test
 
 import (
-	"encoding/json"
 	meshv1alpha1 "istio.io/api/mesh/v1alpha1"
 	"istio.io/istio/operator/pkg/values"
+	"istio.io/istio/pkg/util/protomarshal"
 	"os"
 	"path"
-	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
@@ -33,21 +31,6 @@ func TestManifest(t *testing.T) {
 var _ = ReportAfterSuite("custom reporter", func(report types.Report) {
 	tests.GenerateGinkgoJunitReport("istiooperator-suite", report)
 })
-
-func jsonTagsToSnakeCase(camelCaseMarshaledJson []byte) string {
-	jsonString := string(camelCaseMarshaledJson)
-	tagMatch := regexp.MustCompile(`"[^ ]*" *:`)
-	return tagMatch.ReplaceAllStringFunc(jsonString, toSnakeCase)
-}
-
-func toSnakeCase(str string) string {
-	matchFirstCap := regexp.MustCompile("(.)([A-Z][a-z]+)")
-	matchAllCap := regexp.MustCompile("([a-z0-9])([A-Z])")
-
-	snake := matchFirstCap.ReplaceAllString(str, "${1}_${2}")
-	snake = matchAllCap.ReplaceAllString(snake, "${1}_${2}")
-	return strings.ToLower(snake)
-}
 
 var _ = Describe("Merge", func() {
 	numTrustedProxies := 4
@@ -82,8 +65,7 @@ var _ = Describe("Merge", func() {
 
 			var meshConfigTyped meshv1alpha1.MeshConfig
 
-			meshConfigSnakeCase := jsonTagsToSnakeCase(iop.Spec.MeshConfig)
-			err = json.Unmarshal([]byte(meshConfigSnakeCase), &meshConfigTyped)
+			err = protomarshal.Unmarshal(iop.Spec.MeshConfig, &meshConfigTyped)
 			Expect(err).ShouldNot(HaveOccurred())
 
 			numTrustedProxies := meshConfigTyped.DefaultConfig.GetGatewayTopology().GetNumTrustedProxies()
@@ -131,9 +113,8 @@ var _ = Describe("Merge", func() {
 		iop := readIOP(mergedIstioOperatorPath)
 
 		var typedMeshConfig meshv1alpha1.MeshConfig
-		snakeCaseMeshConfig := jsonTagsToSnakeCase(iop.Spec.MeshConfig)
 
-		err = json.Unmarshal([]byte(snakeCaseMeshConfig), &typedMeshConfig)
+		err = protomarshal.Unmarshal(iop.Spec.MeshConfig, &typedMeshConfig)
 		Expect(err).ShouldNot(HaveOccurred())
 
 		numTrustedProxies := typedMeshConfig.DefaultConfig.GetGatewayTopology().GetNumTrustedProxies()

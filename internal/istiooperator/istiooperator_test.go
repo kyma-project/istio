@@ -84,6 +84,7 @@ var _ = Describe("Merge", func() {
 
 			meshConfigSnakeCase := jsonTagsToSnakeCase(iop.Spec.MeshConfig)
 			err = json.Unmarshal([]byte(meshConfigSnakeCase), &meshConfigTyped)
+			Expect(err).ShouldNot(HaveOccurred())
 
 			numTrustedProxies := meshConfigTyped.DefaultConfig.GetGatewayTopology().GetNumTrustedProxies()
 			Expect(numTrustedProxies).To(Equal(numTrustedProxies))
@@ -133,6 +134,7 @@ var _ = Describe("Merge", func() {
 		snakeCaseMeshConfig := jsonTagsToSnakeCase(iop.Spec.MeshConfig)
 
 		err = json.Unmarshal([]byte(snakeCaseMeshConfig), &typedMeshConfig)
+		Expect(err).ShouldNot(HaveOccurred())
 
 		numTrustedProxies := typedMeshConfig.DefaultConfig.GetGatewayTopology().GetNumTrustedProxies()
 

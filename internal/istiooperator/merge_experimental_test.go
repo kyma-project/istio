@@ -8,7 +8,6 @@ import (
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"istio.io/api/extensions/v1alpha1"
 	istiov1alpha1 "istio.io/istio/operator/pkg/apis"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -58,8 +57,8 @@ var _ = Describe("Merge", func() {
 			Expect(istiooperator.ParseExperimentalFeatures(&istioCR, &iop)).To(Succeed())
 			Expect(iop.Spec.Components.Pilot).ToNot(BeNil())
 			Expect(iop.Spec.Components.Pilot.Kubernetes.Env).To(ContainElements(
-				&v1alpha1.EnvVar{Name: "PILOT_ENABLE_ALPHA_GATEWAY_API", Value: "true"},
-				&v1alpha1.EnvVar{Name: "PILOT_MULTI_NETWORK_DISCOVER_GATEWAY_API", Value: "true"}))
+				&v1.EnvVar{Name: "PILOT_ENABLE_ALPHA_GATEWAY_API", Value: "true"},
+				&v1.EnvVar{Name: "PILOT_MULTI_NETWORK_DISCOVER_GATEWAY_API", Value: "true"}))
 		})
 		It("should update IstioOperator with managed environment variables when all experimental options are set to true and source struct is empty", func() {
 			istioCR := v1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
@@ -77,8 +76,8 @@ var _ = Describe("Merge", func() {
 			Expect(istiooperator.ParseExperimentalFeatures(&istioCR, &iop)).To(Succeed())
 			Expect(iop.Spec.Components.Pilot).ToNot(BeNil())
 			Expect(iop.Spec.Components.Pilot.Kubernetes.Env).To(ContainElements(
-				&v1alpha1.EnvVar{Name: "PILOT_ENABLE_ALPHA_GATEWAY_API", Value: "true"},
-				&v1alpha1.EnvVar{Name: "PILOT_MULTI_NETWORK_DISCOVER_GATEWAY_API", Value: "true"}))
+				&v1.EnvVar{Name: "PILOT_ENABLE_ALPHA_GATEWAY_API", Value: "true"},
+				&v1.EnvVar{Name: "PILOT_MULTI_NETWORK_DISCOVER_GATEWAY_API", Value: "true"}))
 		})
 		It("should update IstioOperator with managed environment variables when all experimental options are set to true source struct already contains those variables set to non-managed ones", func() {
 			istioCR := v1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
@@ -101,8 +100,8 @@ var _ = Describe("Merge", func() {
 			Expect(istiooperator.ParseExperimentalFeatures(&istioCR, &iop)).To(Succeed())
 			Expect(iop.Spec.Components.Pilot).ToNot(BeNil())
 			Expect(iop.Spec.Components.Pilot.Kubernetes.Env).To(ContainElements(
-				&v1alpha1.EnvVar{Name: "PILOT_ENABLE_ALPHA_GATEWAY_API", Value: "true"},
-				&v1alpha1.EnvVar{Name: "PILOT_MULTI_NETWORK_DISCOVER_GATEWAY_API", Value: "true"}))
+				&v1.EnvVar{Name: "PILOT_ENABLE_ALPHA_GATEWAY_API", Value: "true"},
+				&v1.EnvVar{Name: "PILOT_MULTI_NETWORK_DISCOVER_GATEWAY_API", Value: "true"}))
 		})
 		It("should succeed if experimental fields are not defined", func() {
 			istioCR := v1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{

@@ -146,9 +146,9 @@ func DiscoverClusterFlavour(ctx context.Context, k8sClient client.Client) (Clust
 	}
 
 	for _, node := range nodeList.Items {
-		if matcherGKE.MatchString(node.Status.NodeInfo.KubeProxyVersion) {
+		if matcherGKE.MatchString(node.Status.NodeInfo.KubeletVersion) {
 			return GKE, nil
-		} else if matcherk3d.MatchString(node.Status.NodeInfo.KubeProxyVersion) {
+		} else if matcherk3d.MatchString(node.Status.NodeInfo.KubeletVersion) {
 			return k3d, nil
 		} else if matcherGardener.MatchString(node.Status.NodeInfo.OSImage) {
 			return Gardener, nil

@@ -15,16 +15,6 @@ import (
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
 )
 
-const (
-	cpu            string = "cpu"
-	memory         string = "memory"
-	globalField           = "global"
-	proxyField            = "proxy"
-	resourcesField        = "resources"
-	limitsField           = "limits"
-	requestsField         = "requests"
-)
-
 func (i *Istio) MergeInto(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {
 	mergedConfigOp, err := i.mergeConfig(op)
 	if err != nil {
@@ -145,6 +135,9 @@ func (m *meshConfigBuilder) BuildExternalAuthorizerConfiguration(authorizers []*
 			}
 			var providerMap map[string]interface{}
 			err = json.Unmarshal(marshaledProvider, &providerMap)
+			if err != nil {
+				return nil
+			}
 
 			extensionProviders = append(extensionProviders, providerMap)
 			err = m.c.SetPath("extensionProviders", &extensionProviders)
@@ -292,6 +285,9 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 			}
 		}
 		op.Spec.Values, err = values.ConvertMap[json.RawMessage](valuesMap)
+		if err != nil {
+			return op, err
+		}
 	}
 
 	if i.Spec.Components.Cni != nil {

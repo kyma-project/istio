@@ -59,7 +59,6 @@ func NewController(mgr manager.Manager, reconciliationInterval time.Duration) *I
 	statusHandler := status.NewStatusHandler(mgr.GetClient())
 	restarters := []restarter.Restarter{
 		restarter.NewIngressGatewayRestarter(mgr.GetClient(), []filter.IngressGatewayPredicate{}, statusHandler),
-		restarter.NewEgressGatewayRestarter(mgr.GetClient(), []filter.EgressGatewayPredicate{}, statusHandler),
 		restarter.NewSidecarsRestarter(mgr.GetLogger(), mgr.GetClient(), &merger, sidecars.NewProxyResetter(), statusHandler),
 	}
 

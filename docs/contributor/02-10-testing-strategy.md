@@ -16,9 +16,11 @@ The testing strategy for the Istio module will be implemented according to the f
 4. In the event of a test failure during a post-merge workflow, the PR owner is responsible for resolving the issue.
 5. PR tests should generally avoid relying on external resources.
    This especially means that secrets should not be required for running PR tests whenever possible.
+   This allows for more secure testing and reduces the risk of leaking secrets.
 6. Integration tests for PRs will run on a local Kubernetes cluster using the k3d platform.
 7. Compatibility, performance, and UI tests will run only on scheduled runs.
 8. Tests ensuring release stability and readiness will be triggered during the release workflow.
+9. Generally, we do not want to test the functionality of Istio service mesh itself.
 
 Additionally, the following naming conventions will be adopted for workflows:
 - Workflows that run before merge should be prefixed with `pull`.
@@ -39,6 +41,13 @@ due to its reduced initialization time and higher reliability in controlled envi
 The probability of Gardener-specific test failures when k3d-based tests pass is considered low.
 In the event of Gardener-related test failures after a PR has been merged,
 the responsibility for stabilizing the associated workflows lies with the author of the merged PR.
+As generally the tests do not rely on specific cloud provider configurations,
+we perform Gardener-related tests mainly on AWS cloud, 
+as this is the most common cloud provider for BTP Kyma Runtime.
+To ensure stability of image building, PRs build their own local image,
+with the post-merge workflow using the image-builder image.
+As the last point to catch any issues before the release,
+the release workflow will run all tests, including compatibility, performance, and UI tests.
 
 ## Separation of concerns
 
@@ -48,7 +57,15 @@ that are defined as follows:
 - `unit tests` that run without any external dependencies, and do not require any pre-existing resources.
 - `integration tests` that require external dependencies,
 but do not require a full Kubernetes cluster (for example, they might run on controller-runtime `envtest` environment).
-- `e2e tests` that require a full Kubernetes cluster.
+- `lighweight e2e tests` that require a Kubernetes cluster but can run on a local cluster (k3d).
+- `full e2e tests` that require a full production-like Kubernetes cluster (Gardener).
+
+Additionally, the tests will be separated into the following groups:
+- `compatibility tests` that ensure compatibility with Kubernetes versions.
+- `performance tests` that ensure the performance of the module.
+- `UI tests` that ensure the UI of the module, presented in the Kyma Dashboard is working as expected.
+- `upgrade tests` that ensure the module can be upgraded without any issues.
+- `zero downtime tests` that ensure the module can be upgraded without any downtime.
 
 ## Consequences
 

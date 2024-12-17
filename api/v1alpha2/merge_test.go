@@ -560,7 +560,10 @@ var _ = Describe("Merge", func() {
 				Expect(iopCpuLimit).To(Equal(cpuLimit))
 
 				iopMemoryLimit := out.Spec.Components.EgressGateways[0].K8S.Resources.Limits["memory"]
-				Expect(iopMemoryLimit).To(Equal(iopMemoryLimit))
+				Expect(iopMemoryLimit).To(Equal(memoryLimit))
+
+				iopEnabled := out.Spec.Components.EgressGateways[0].Enabled.GetValue()
+				Expect(iopEnabled).To(Equal(enabled))
 			})
 		})
 

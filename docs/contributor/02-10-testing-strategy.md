@@ -35,15 +35,18 @@ The primary objective is to ensure that the module remains stable and prepared f
 while providing prompt feedback for PRs.
 This testing strategy prioritizes comprehensive e2e evaluations during post-merge and release pipeline stages,
 while PR-level assessments focus on unit tests and fundamental integration tests.
+
 Testing on Gardener clusters incurs significant computational and time costs.
 End-to-end (e2e) Kubernetes scenarios are instead evaluated using k3d where feasible,
 due to its reduced initialization time and higher reliability in controlled environments.
 The probability of Gardener-specific test failures when k3d-based tests pass is considered low.
 In the event of Gardener-related test failures after a PR has been merged,
 the responsibility for stabilizing the associated workflows lies with the author of the merged PR.
+
 As generally the tests do not rely on specific cloud provider configurations,
 we perform Gardener-related tests mainly on AWS cloud, 
 as this is the most common cloud provider for BTP Kyma Runtime.
+
 To ensure stability of image building, PRs build their own local image,
 with the post-merge workflow using the image-builder image.
 As the last point to catch any issues before the release,

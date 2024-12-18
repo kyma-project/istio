@@ -31,6 +31,11 @@ Feature: Installing and uninstalling Istio module
     And Template value "IGMemoryLimit" is set to "1200Mi"
     And Template value "IGCPURequests" is set to "80m"
     And Template value "IGMemoryRequests" is set to "200Mi"
+    And Template value "EgressGatewayEnabled" is set to "true"
+    And Template value "EGCPULimit" is set to "1400m"
+    And Template value "EGMemoryLimit" is set to "1100Mi"
+    And Template value "EGCPURequests" is set to "70m"
+    And Template value "EGMemoryRequests" is set to "190Mi"
     When Istio CR "istio-sample" from "istio_cr_template" is applied in namespace "kyma-system"
     Then Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
     And Istio CR "istio-sample" in namespace "kyma-system" has condition with reason "ReconcileSucceeded" of type "Ready" and status "True"
@@ -38,11 +43,14 @@ Feature: Installing and uninstalling Istio module
     And Namespace "istio-system" has "namespaces.warden.kyma-project.io/validate" label and "istios.operator.kyma-project.io/managed-by-disclaimer" annotation
     And "Deployment" "istiod" in namespace "istio-system" is ready
     And "Deployment" "istio-ingressgateway" in namespace "istio-system" is ready
+    And "Deployment" "istio-egressgateway" in namespace "istio-system" is ready
     And "DaemonSet" "istio-cni-node" in namespace "istio-system" is ready
     And "pilot" has "limits" set to cpu - "1200m" and memory - "1200Mi"
     And "pilot" has "requests" set to cpu - "15m" and memory - "200Mi"
     And "ingress-gateway" has "limits" set to cpu - "1500m" and memory - "1200Mi"
     And "ingress-gateway" has "requests" set to cpu - "80m" and memory - "200Mi"
+    And "egress-gateway" has "limits" set to cpu - "1400m" and memory - "1100Mi"
+    And "egress-gateway" has "requests" set to cpu - "70m" and memory - "190Mi"
 
   Scenario: Additional Istio resources are present
     Given Istio CR "istio-sample" from "istio_cr_template" is applied in namespace "kyma-system"

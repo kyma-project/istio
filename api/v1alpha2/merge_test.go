@@ -549,6 +549,88 @@ var _ = Describe("Merge", func() {
 		})
 	})
 
+	Context("EgressGateway", func() {
+		Context("When Istio CR has 500m configured for CPU and 500Mi for memory limits", func() {
+			It("should set CPU limits to 500m and 500Mi for memory in IOP", func() {
+				//given
+				iop := iopv1alpha1.IstioOperator{
+					Spec: &operatorv1alpha1.IstioOperatorSpec{},
+				}
+				cpuLimit := "500m"
+				memoryLimit := "500Mi"
+				enabled := true
+
+				istioCR := Istio{Spec: IstioSpec{Components: &Components{
+					EgressGateway: &EgressGateway{
+						Enabled: &enabled,
+						K8s: &KubernetesResourcesConfig{
+							Resources: &Resources{
+								Limits: &ResourceClaims{
+									Cpu:    &cpuLimit,
+									Memory: &memoryLimit,
+								},
+							},
+						},
+					}}}}
+
+				// when
+				out, err := istioCR.MergeInto(iop)
+
+				// then
+				Expect(err).ShouldNot(HaveOccurred())
+
+				iopCpuLimit := out.Spec.Components.EgressGateways[0].K8S.Resources.Limits["cpu"]
+				Expect(iopCpuLimit).To(Equal(cpuLimit))
+
+				iopMemoryLimit := out.Spec.Components.EgressGateways[0].K8S.Resources.Limits["memory"]
+				Expect(iopMemoryLimit).To(Equal(memoryLimit))
+
+				iopEnabled := out.Spec.Components.EgressGateways[0].Enabled.GetValue()
+				Expect(iopEnabled).To(Equal(enabled))
+			})
+		})
+
+		Context("When Istio CR has 500m configured for CPU and 500Mi for memory requests", func() {
+			It("should set CPU requests to 500m and 500Mi for memory in IOP", func() {
+				//given
+				iop := iopv1alpha1.IstioOperator{
+					Spec: &operatorv1alpha1.IstioOperatorSpec{},
+				}
+				cpuRequests := "500m"
+				memoryRequests := "500Mi"
+				enabled := true
+
+				istioCR := Istio{Spec: IstioSpec{Components: &Components{
+					EgressGateway: &EgressGateway{
+						Enabled: &enabled,
+						K8s: &KubernetesResourcesConfig{
+							Resources: &Resources{
+								Requests: &ResourceClaims{
+									Cpu:    &cpuRequests,
+									Memory: &memoryRequests,
+								},
+							},
+						},
+					}}}}
+
+				// when
+				out, err := istioCR.MergeInto(iop)
+
+				// then
+				Expect(err).ShouldNot(HaveOccurred())
+
+				iopCpuRequests := out.Spec.Components.EgressGateways[0].K8S.Resources.Requests["cpu"]
+				Expect(iopCpuRequests).To(Equal(cpuRequests))
+
+				iopMemoryRequests := out.Spec.Components.EgressGateways[0].K8S.Resources.Requests["memory"]
+				Expect(iopMemoryRequests).To(Equal(memoryRequests))
+
+				iopEnabled := out.Spec.Components.EgressGateways[0].Enabled.GetValue()
+				Expect(iopEnabled).To(Equal(enabled))
+			})
+		})
+	})
+
 	Context("Strategy", func() {
 		It("should update RollingUpdate when it is present in Istio CR", func() {
 			//given

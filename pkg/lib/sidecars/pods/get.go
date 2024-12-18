@@ -120,7 +120,7 @@ func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage Sideca
 
 func containsSidecar(pod v1.Pod) bool {
 	// If the pod has one container it is not injected
-	// This skips IngressGateway pods, as those only have istio-proxy
+	// This skips IngressGateway and EgressGateway pods, as those only have istio-proxy
 	if len(pod.Spec.Containers) == 1 {
 		return false
 	}

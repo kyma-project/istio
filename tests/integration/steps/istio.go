@@ -114,8 +114,24 @@ func getResourcesForIstioComponent(k8sClient client.Client, component, resourceT
 			res.Memory = *igDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory()
 			res.Cpu = *igDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu()
 		}
-
 		return &res, nil
+
+	case "egress-gateway":
+		var egDeployment appsv1.Deployment
+		err := k8sClient.Get(context.Background(), types.NamespacedName{Name: "istio-egressgateway", Namespace: defaultIstioNamespace}, &egDeployment)
+		if err != nil {
+			return nil, err
+		}
+
+		if resourceType == "limits" {
+			res.Memory = *egDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Memory()
+			res.Cpu = *egDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu()
+		} else {
+			res.Memory = *egDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory()
+			res.Cpu = *egDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu()
+		}
+		return &res, nil
+
 	case "pilot":
 		var idDeployment appsv1.Deployment
 		err := k8sClient.Get(context.Background(), types.NamespacedName{Name: "istiod", Namespace: defaultIstioNamespace}, &idDeployment)
@@ -130,8 +146,8 @@ func getResourcesForIstioComponent(k8sClient client.Client, component, resourceT
 			res.Memory = *idDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory()
 			res.Cpu = *idDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu()
 		}
-
 		return &res, nil
+
 	default:
 		return nil, fmt.Errorf("resources for component %s are not implemented", component)
 	}

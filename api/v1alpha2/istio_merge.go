@@ -216,6 +216,7 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 	if i.Spec.Components == nil {
 		return op, nil
 	}
+
 	if i.Spec.Components.IngressGateway != nil {
 		if op.Spec.Components == nil {
 			op.Spec.Components = &v1alpha1.IstioComponentSetSpec{}
@@ -226,15 +227,38 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 		if op.Spec.Components.IngressGateways[0].K8S == nil {
 			op.Spec.Components.IngressGateways[0].K8S = &v1alpha1.KubernetesResourcesSpec{}
 		}
-
 		if i.Spec.Components.IngressGateway.K8s != nil {
 			err := mergeK8sConfig(op.Spec.Components.IngressGateways[0].K8S, *i.Spec.Components.IngressGateway.K8s)
 			if err != nil {
 				return op, err
 			}
 		}
-
 	}
+
+	if i.Spec.Components.EgressGateway != nil {
+		if op.Spec.Components == nil {
+			op.Spec.Components = &v1alpha1.IstioComponentSetSpec{}
+		}
+		if len(op.Spec.Components.EgressGateways) == 0 {
+			op.Spec.Components.EgressGateways = append(op.Spec.Components.EgressGateways, &v1alpha1.GatewaySpec{})
+		}
+		if op.Spec.Components.EgressGateways[0].K8S == nil {
+			op.Spec.Components.EgressGateways[0].K8S = &v1alpha1.KubernetesResourcesSpec{}
+		}
+		if i.Spec.Components.EgressGateway.K8s != nil {
+			err := mergeK8sConfig(op.Spec.Components.EgressGateways[0].K8S, *i.Spec.Components.EgressGateway.K8s)
+			if err != nil {
+				return op, err
+			}
+		}
+		if i.Spec.Components.EgressGateway.Enabled != nil {
+			if op.Spec.Components.EgressGateways[0].Enabled == nil {
+				op.Spec.Components.EgressGateways[0].Enabled = &wrapperspb.BoolValue{}
+			}
+			op.Spec.Components.EgressGateways[0].Enabled.Value = *i.Spec.Components.EgressGateway.Enabled
+		}
+	}
+
 	if i.Spec.Components.Pilot != nil {
 		if op.Spec.Components == nil {
 			op.Spec.Components = &v1alpha1.IstioComponentSetSpec{}

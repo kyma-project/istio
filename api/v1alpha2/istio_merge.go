@@ -226,25 +226,40 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 
 	if i.Spec.Components.EgressGateway != nil {
 		if op.Spec.Components == nil {
-			op.Spec.Components = &v1alpha1.IstioComponentSetSpec{}
+			op.Spec.Components = &iopv1alpha1.IstioComponentSpec{}
 		}
 		if len(op.Spec.Components.EgressGateways) == 0 {
-			op.Spec.Components.EgressGateways = append(op.Spec.Components.EgressGateways, &v1alpha1.GatewaySpec{})
+			op.Spec.Components.EgressGateways = append(op.Spec.Components.EgressGateways, iopv1alpha1.GatewayComponentSpec{})
 		}
-		if op.Spec.Components.EgressGateways[0].K8S == nil {
-			op.Spec.Components.EgressGateways[0].K8S = &v1alpha1.KubernetesResourcesSpec{}
+		if op.Spec.Components.EgressGateways[0].Kubernetes == nil {
+			op.Spec.Components.EgressGateways[0].Kubernetes = &iopv1alpha1.KubernetesResources{}
 		}
 		if i.Spec.Components.EgressGateway.K8s != nil {
-			err := mergeK8sConfig(op.Spec.Components.EgressGateways[0].K8S, *i.Spec.Components.EgressGateway.K8s)
+			err := mergeK8sConfig(op.Spec.Components.EgressGateways[0].Kubernetes, *i.Spec.Components.EgressGateway.K8s)
 			if err != nil {
 				return op, err
 			}
 		}
 		if i.Spec.Components.EgressGateway.Enabled != nil {
 			if op.Spec.Components.EgressGateways[0].Enabled == nil {
-				op.Spec.Components.EgressGateways[0].Enabled = &wrapperspb.BoolValue{}
+				op.Spec.Components.EgressGateways[0].Enabled = &iopv1alpha1.BoolValue{}
 			}
-			op.Spec.Components.EgressGateways[0].Enabled.Value = *i.Spec.Components.EgressGateway.Enabled
+			boolValue := iopv1alpha1.BoolValue{}
+			// This terrible if statement is necessary, because Istio decided to use a custom type for booleans,
+			//that stores bool as a private field, and does not have a constructor/setter, only an unmarshal method.
+			if *i.Spec.Components.EgressGateway.Enabled {
+				err := boolValue.UnmarshalJSON([]byte("true"))
+				if err != nil {
+					return op, err
+				}
+				op.Spec.Components.EgressGateways[0].Enabled = &boolValue
+			} else {
+				err := boolValue.UnmarshalJSON([]byte("false"))
+				if err != nil {
+					return op, err
+				}
+				op.Spec.Components.EgressGateways[0].Enabled = &boolValue
+			}
 		}
 	}
 

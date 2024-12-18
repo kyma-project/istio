@@ -554,7 +554,7 @@ var _ = Describe("Merge", func() {
 			It("should set CPU limits to 500m and 500Mi for memory in IOP", func() {
 				//given
 				iop := iopv1alpha1.IstioOperator{
-					Spec: &operatorv1alpha1.IstioOperatorSpec{},
+					Spec: iopv1alpha1.IstioOperatorSpec{},
 				}
 				cpuLimit := "500m"
 				memoryLimit := "500Mi"
@@ -579,13 +579,13 @@ var _ = Describe("Merge", func() {
 				// then
 				Expect(err).ShouldNot(HaveOccurred())
 
-				iopCpuLimit := out.Spec.Components.EgressGateways[0].K8S.Resources.Limits["cpu"]
-				Expect(iopCpuLimit).To(Equal(cpuLimit))
+				iopCpuLimit := ptr.To(out.Spec.Components.EgressGateways[0].Kubernetes.Resources.Limits["cpu"])
+				Expect(iopCpuLimit.String()).To(Equal(cpuLimit))
 
-				iopMemoryLimit := out.Spec.Components.EgressGateways[0].K8S.Resources.Limits["memory"]
-				Expect(iopMemoryLimit).To(Equal(memoryLimit))
+				iopMemoryLimit := ptr.To(out.Spec.Components.EgressGateways[0].Kubernetes.Resources.Limits["memory"])
+				Expect(iopMemoryLimit.String()).To(Equal(memoryLimit))
 
-				iopEnabled := out.Spec.Components.EgressGateways[0].Enabled.GetValue()
+				iopEnabled := out.Spec.Components.EgressGateways[0].Enabled.GetValueOrFalse()
 				Expect(iopEnabled).To(Equal(enabled))
 			})
 		})
@@ -594,7 +594,7 @@ var _ = Describe("Merge", func() {
 			It("should set CPU requests to 500m and 500Mi for memory in IOP", func() {
 				//given
 				iop := iopv1alpha1.IstioOperator{
-					Spec: &operatorv1alpha1.IstioOperatorSpec{},
+					Spec: iopv1alpha1.IstioOperatorSpec{},
 				}
 				cpuRequests := "500m"
 				memoryRequests := "500Mi"
@@ -619,13 +619,13 @@ var _ = Describe("Merge", func() {
 				// then
 				Expect(err).ShouldNot(HaveOccurred())
 
-				iopCpuRequests := out.Spec.Components.EgressGateways[0].K8S.Resources.Requests["cpu"]
-				Expect(iopCpuRequests).To(Equal(cpuRequests))
+				iopCpuRequests := ptr.To(out.Spec.Components.EgressGateways[0].Kubernetes.Resources.Requests["cpu"])
+				Expect(iopCpuRequests.String()).To(Equal(cpuRequests))
 
-				iopMemoryRequests := out.Spec.Components.EgressGateways[0].K8S.Resources.Requests["memory"]
-				Expect(iopMemoryRequests).To(Equal(memoryRequests))
+				iopMemoryRequests := ptr.To(out.Spec.Components.EgressGateways[0].Kubernetes.Resources.Requests["memory"])
+				Expect(iopMemoryRequests.String()).To(Equal(memoryRequests))
 
-				iopEnabled := out.Spec.Components.EgressGateways[0].Enabled.GetValue()
+				iopEnabled := out.Spec.Components.EgressGateways[0].Enabled.GetValueOrFalse()
 				Expect(iopEnabled).To(Equal(enabled))
 			})
 		})

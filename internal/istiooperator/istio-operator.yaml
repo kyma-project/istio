@@ -37,6 +37,27 @@ spec:
     egressGateways:
     - enabled: false
       k8s:
+        affinity:
+          podAntiAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - podAffinityTerm:
+                  labelSelector:
+                    matchExpressions:
+                      - key: app
+                        operator: In
+                        values:
+                          - istio-egressgateway
+                  topologyKey: kubernetes.io/hostname
+                weight: 100
+              - podAffinityTerm:
+                  labelSelector:
+                    matchExpressions:
+                      - key: app
+                        operator: In
+                        values:
+                          - istio-egressgateway
+                  topologyKey: topology.kubernetes.io/zone
+                weight: 100
         resources:
           limits:
             cpu: 2000m

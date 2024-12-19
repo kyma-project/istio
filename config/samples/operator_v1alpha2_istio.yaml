@@ -5,3 +5,7 @@ metadata:
   namespace: kyma-system
   labels:
     app.kubernetes.io/name: default
+spec:
+  components:
+    egressGateway:
+      enabled: true

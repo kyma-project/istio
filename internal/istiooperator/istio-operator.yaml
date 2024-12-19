@@ -43,7 +43,7 @@ spec:
             memory: 1024Mi
           requests:
             cpu: 10m
-            memory: 120Mi
+            memory: 128Mi
         hpaSpec:
           maxReplicas: 10
           scaleTargetRef:

@@ -21,6 +21,10 @@ type Config struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum=Local;Cluster
 	GatewayExternalTrafficPolicy *string `json:"gatewayExternalTrafficPolicy,omitempty"`
+
+	// Defines whether the prometheusMerge feature is enabled. If yes, appropriate prometheus.io annotations will be added to all data plane pods to set up scraping. If these annotations already exist, they will be overwritten. With this option, the Envoy sidecar will merge Istio’s metrics with the application metrics. The merged metrics will be scraped from :15020/stats/prometheus.
+	// +kubebuilder:validation:Optional
+	EnablePrometheusMerge bool `json:"enablePrometheusMerge,omitempty"`
 }
 
 type Components struct {

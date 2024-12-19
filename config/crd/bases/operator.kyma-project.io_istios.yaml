@@ -1391,6 +1391,14 @@ spec:
                       - service
                       type: object
                     type: array
+                  enablePrometheusMerge:
+                    description: Defines whether the prometheusMerge feature is enabled.
+                      If yes, appropriate prometheus.io annotations will be added
+                      to all data plane pods to set up scraping. If these annotations
+                      already exist, they will be overwritten. With this option, the
+                      Envoy sidecar will merge Istio’s metrics with the application
+                      metrics. The merged metrics will be scraped from :15020/stats/prometheus.
+                    type: boolean
                   gatewayExternalTrafficPolicy:
                     description: |-
                       Defines the external traffic policy for the Istio Ingress Gateway Service. Valid configurations are "Local" or "Cluster". The external traffic policy set to "Local" preserves the client IP in the request, but also introduces the risk of unbalanced traffic distribution.

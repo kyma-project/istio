@@ -23,6 +23,7 @@ The configuration of Istio resources depends on the cluster capabilities. If you
 |-----------------|--------------|------------|-----------------|---------------|
 | Proxy           | 10 m         | 250 m      | 32 Mi           | 254 Mi        |
 | Ingress Gateway | 10 m         | 1000 m     | 32 Mi           | 1024 Mi       |
+| Egress Gateway  | 10 m         | 1000 m     | 128 Mi          | 1024 Mi       |
 | Pilot           | 50 m         | 1000 m     | 128 Mi          | 1024 Mi       |
 | CNI             | 10 m         | 250 m      | 128 Mi          | 384 Mi        |
 
@@ -30,21 +31,24 @@ The configuration of Istio resources depends on the cluster capabilities. If you
 
 | Component       | CPU Requests | CPU Limits | Memory Requests | Memory Limits |
 |-----------------|--------------|------------|-----------------|---------------|
-| Proxy           | 10m          | 1000m      | 192Mi           | 1024Mi        |
-| Ingress Gateway | 100m         | 2000m      | 128Mi           | 1024Mi        |
-| Pilot           | 100m         | 4000m      | 512Mi           | 2Gi           |
-| CNI             | 100m         | 500m       | 512Mi           | 1024Mi        |
+| Proxy           | 10 m         | 1000 m     | 192 Mi          | 1024 Mi       |
+| Ingress Gateway | 10 m         | 1000 m     | 32 Mi           | 1024 Mi       |
+| Egress Gateway  | 10 m         | 2000 m     | 128 Mi          | 1024 Mi       |
+| Pilot           | 100 m        | 4000 m     | 512 Mi          | 2 Gi          |
+| CNI             | 100 m        | 500 m      | 512 Mi          | 1024 Mi       |
 
 ### Default Autoscaling Configuration for Smaller Clusters
 
 | Component       | minReplicas | maxReplicas |
 |-----------------|-------------|-------------|
 | Ingress Gateway | 1           | 1           |
+| Egress Gateway  | 1           | 1           |
 | Pilot           | 1           | 1           |
 
 ### Default Autoscaling Configuration for Larger Clusters
 
 | Component       | minReplicas | maxReplicas |
-|-----------------|--------------|--------------|
-| Ingress Gateway | 3            | 10           |
-| Pilot           | 2            | 5            |
+|-----------------|-------------|-------------|
+| Ingress Gateway | 3           | 10          |
+| Egress Gateway  | 3           | 10          |
+| Pilot           | 2           | 5           |

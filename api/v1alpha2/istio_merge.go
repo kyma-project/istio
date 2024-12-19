@@ -9,7 +9,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"google.golang.org/protobuf/types/known/wrapperspb"
+
 	"google.golang.org/protobuf/types/known/structpb"
 	meshv1alpha1 "istio.io/api/mesh/v1alpha1"
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
@@ -67,8 +67,10 @@ func (m *meshConfigBuilder) BuildNumTrustedProxies(numTrustedProxies *int) *mesh
 }
 
 func (m *meshConfigBuilder) BuildPrometheusMergeConfig(prometheusMerge bool) *meshConfigBuilder {
-	m.c.EnablePrometheusMerge = wrapperspb.Bool(prometheusMerge)
-
+	err := m.c.SetPath("enablePrometheusMerge", prometheusMerge)
+	if err != nil {
+		return nil
+	}
 	return m
 }
 

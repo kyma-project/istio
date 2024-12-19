@@ -379,11 +379,11 @@ var _ = Describe("Merge", func() {
 		m := &meshv1alpha1.MeshConfig{
 			EnablePrometheusMerge: wrapperspb.Bool(false),
 		}
-		meshConfig := convert(m)
+		meshConfigRaw := convert(m)
 
 		iop := iopv1alpha1.IstioOperator{
-			Spec: &operatorv1alpha1.IstioOperatorSpec{
-				MeshConfig: meshConfig,
+			Spec: iopv1alpha1.IstioOperatorSpec{
+				MeshConfig: meshConfigRaw,
 			},
 		}
 		istioCR := Istio{Spec: IstioSpec{Config: Config{EnablePrometheusMerge: true}}}
@@ -394,8 +394,11 @@ var _ = Describe("Merge", func() {
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
 
-		enabledPrometheusMerge := out.Spec.MeshConfig.Fields["enablePrometheusMerge"].GetBoolValue()
+		meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
+		Expect(err).ShouldNot(HaveOccurred())
 
+		enabledPrometheusMerge, exists := meshConfig.GetPath("enablePrometheusMerge")
+		Expect(exists).To(BeTrue())
 		Expect(enabledPrometheusMerge).To(BeTrue())
 
 	})

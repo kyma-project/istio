@@ -1,8 +1,8 @@
 package v1alpha2
 
 import (
-	"istio.io/api/operator/v1alpha1"
-	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
+	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
+	v1 "k8s.io/api/core/v1"
 )
 
 var pilotCompatibilityEnvVars = map[string]string{
@@ -19,21 +19,18 @@ func setCompatibilityMode(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperat
 }
 
 func setCompatibilityPilot(op iopv1alpha1.IstioOperator) iopv1alpha1.IstioOperator {
-	if op.Spec == nil {
-		op.Spec = &v1alpha1.IstioOperatorSpec{}
-	}
 	if op.Spec.Components == nil {
-		op.Spec.Components = &v1alpha1.IstioComponentSetSpec{}
+		op.Spec.Components = &iopv1alpha1.IstioComponentSpec{}
 	}
 	if op.Spec.Components.Pilot == nil {
-		op.Spec.Components.Pilot = &v1alpha1.ComponentSpec{}
+		op.Spec.Components.Pilot = &iopv1alpha1.ComponentSpec{}
 	}
-	if op.Spec.Components.Pilot.K8S == nil {
-		op.Spec.Components.Pilot.K8S = &v1alpha1.KubernetesResourcesSpec{}
+	if op.Spec.Components.Pilot.Kubernetes == nil {
+		op.Spec.Components.Pilot.Kubernetes = &iopv1alpha1.KubernetesResources{}
 	}
 
 	for k, v := range pilotCompatibilityEnvVars {
-		op.Spec.Components.Pilot.K8S.Env = append(op.Spec.Components.Pilot.K8S.Env, &v1alpha1.EnvVar{
+		op.Spec.Components.Pilot.Kubernetes.Env = append(op.Spec.Components.Pilot.Kubernetes.Env, &v1.EnvVar{
 			Name:  k,
 			Value: v,
 		})
@@ -48,26 +45,19 @@ var ProxyMetaDataCompatibility = map[string]string{
 }
 
 func setCompatibilityProxyMetadata(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {
-	if op.Spec == nil {
-		op.Spec = &v1alpha1.IstioOperatorSpec{}
-	}
-
 	mcb, err := newMeshConfigBuilder(op)
 	if err != nil {
 		return op, err
 	}
 
 	for k, v := range ProxyMetaDataCompatibility {
-		mcb.AddProxyMetadata(k, v)
-	}
-	newMeshConfig := mcb.Build()
-
-	updatedConfig, err := marshalMeshConfig(newMeshConfig)
-	if err != nil {
-		return op, err
+		mcb, err = mcb.AddProxyMetadata(k, v)
+		if err != nil {
+			return iopv1alpha1.IstioOperator{}, err
+		}
 	}
 
-	op.Spec.MeshConfig = updatedConfig
+	op.Spec.MeshConfig = mcb.Build()
 
 	return op, nil
 }

@@ -3,28 +3,22 @@ package istio
 import (
 	"context"
 	"fmt"
-	"os"
-	"os/exec"
-	"time"
-
-	"github.com/pkg/errors"
-	"istio.io/api/operator/v1alpha1"
 	"istio.io/istio/istioctl/pkg/install/k8sversion"
-	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
-	"istio.io/istio/operator/pkg/cache"
-	"istio.io/istio/operator/pkg/helmreconciler"
-	"istio.io/istio/operator/pkg/translate"
+	"istio.io/istio/operator/pkg/uninstall"
 	"istio.io/istio/operator/pkg/util/progress"
 	"istio.io/istio/pkg/config/constants"
 	"istio.io/istio/pkg/kube"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
+	"os"
+	"os/exec"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
+	"time"
 
+	"github.com/pkg/errors"
 	istio "istio.io/istio/operator/cmd/mesh"
 	"istio.io/istio/operator/pkg/util/clog"
 	istiolog "istio.io/istio/pkg/log"
@@ -40,7 +34,9 @@ type IstioClient struct {
 	printer       istio.Printer
 }
 
-const logScope = "istio-library"
+const (
+	logScope = "istio-library"
+)
 
 func CreateIstioLibraryLogger() *clog.ConsoleLogger {
 	registeredScope := istiolog.RegisterScope(logScope, logScope)
@@ -64,6 +60,7 @@ func installIstioInExternalProcess(mergedIstioOperatorPath string) error {
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, istioInstallPath, mergedIstioOperatorPath)
+
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
@@ -88,9 +85,6 @@ func (c *IstioClient) Install(mergedIstioOperatorPath string) error {
 }
 
 func (c *IstioClient) Uninstall(ctx context.Context) error {
-	// We don't use any revision capabilities yet
-	defaultRevision := ""
-
 	rc, err := kube.DefaultRestConfig("", "", func(config *rest.Config) {
 		config.QPS = 50
 		config.Burst = 100
@@ -99,7 +93,7 @@ func (c *IstioClient) Uninstall(ctx context.Context) error {
 		return fmt.Errorf("failed to create default REST config: %v", err)
 	}
 
-	kubeClient, err := kube.NewClient(kube.NewClientConfigForRestConfig(rc), "")
+	kubeClient, err := kube.NewCLIClient(kube.NewClientConfigForRestConfig(rc))
 	if err != nil {
 		return fmt.Errorf("failed to create Istio kube client: %v", err)
 	}
@@ -113,39 +107,33 @@ func (c *IstioClient) Uninstall(ctx context.Context) error {
 		return fmt.Errorf("failed to create Kubernetes ctrl client: %v", err)
 	}
 
-	cache.FlushObjectCaches()
+	pl := progress.NewLog()
 
-	emptyiops := &v1alpha1.IstioOperatorSpec{Profile: "empty", Revision: defaultRevision}
-	iop, err := translate.IOPStoIOP(emptyiops, "empty", iopv1alpha1.Namespace(emptyiops))
-	if err != nil {
-		return err
-	}
-
-	opts := &helmreconciler.Options{DryRun: false, Log: c.consoleLogger, ProgressLog: progress.NewLog()}
-	h, err := helmreconciler.NewHelmReconciler(ctrlClient, kubeClient, iop, opts)
-	if err != nil {
-		return fmt.Errorf("failed to create reconciler: %v", err)
-	}
-
-	objectsList, err := h.GetPrunedResources(defaultRevision, true, "")
+	objectsList, err := uninstall.GetPrunedResources(kubeClient, "", "", "default", true)
 	if err != nil {
 		return err
 	}
 
 	ctrl.Log.Info(istio.AllResourcesRemovedWarning)
 
-	if err := h.DeleteObjectsList(objectsList, ""); err != nil {
+	consoleLogger := CreateIstioLibraryLogger()
+	if err := ConfigureIstioLogScopes(); err != nil {
+		consoleLogger.LogAndError("Failed to configure Istio log: ", err)
+		return err
+	}
+
+	if err := uninstall.DeleteObjectsList(kubeClient, false, consoleLogger, objectsList); err != nil {
 		return fmt.Errorf("failed to delete control plane resources by revision: %v", err)
 	}
 	ctrl.Log.Info("Deletion of istio resources completed")
 
 	deletePolicy := metav1.DeletePropagationForeground
 	// We need to manually delete the control plane namespace from Istio because the namespace is not removed by default.
-	err = ctrlClient.Delete(ctx, &v1.Namespace{
+	err = ctrlClient.Delete(ctx, &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: constants.IstioSystemNamespace,
 		},
-	}, &ctrlclient.DeleteOptions{
+	}, &client.DeleteOptions{
 		PropagationPolicy: &deletePolicy,
 	})
 	if err != nil && !apiErrors.IsNotFound(err) {
@@ -153,7 +141,7 @@ func (c *IstioClient) Uninstall(ctx context.Context) error {
 	}
 	ctrl.Log.Info("Deleted istio control plane namespace", "namespace", constants.IstioSystemNamespace)
 
-	opts.ProgressLog.SetState(progress.StateUninstallComplete)
+	pl.SetState(progress.StateUninstallComplete)
 
 	return nil
 }

@@ -1,6 +1,9 @@
 package istiooperator_test
 
 import (
+	meshv1alpha1 "istio.io/api/mesh/v1alpha1"
+	"istio.io/istio/operator/pkg/values"
+	"istio.io/istio/pkg/util/protomarshal"
 	"os"
 	"path"
 	"testing"
@@ -14,7 +17,7 @@ import (
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
-	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
+	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
 )
@@ -42,7 +45,7 @@ var _ = Describe("Merge", func() {
 		},
 	}
 
-	DescribeTable("Merge for differnt cluster sizes", func(clusterSize clusterconfig.ClusterSize, shouldError bool, igwMinReplicas int) {
+	DescribeTable("Merge for different cluster sizes", func(clusterSize clusterconfig.ClusterSize, shouldError bool, igwMinReplicas int) {
 		// given
 		sut := istiooperator.NewDefaultIstioMerger()
 
@@ -60,11 +63,15 @@ var _ = Describe("Merge", func() {
 
 			iop := readIOP(mergedIstioOperatorPath)
 
-			numTrustedProxies := iop.Spec.MeshConfig.Fields["defaultConfig"].
-				GetStructValue().Fields["gatewayTopology"].GetStructValue().Fields["numTrustedProxies"].GetNumberValue()
-			Expect(numTrustedProxies).To(Equal(float64(numTrustedProxies)))
+			var meshConfigTyped meshv1alpha1.MeshConfig
 
-			Expect(iop.Spec.Components.IngressGateways[0].K8S.HpaSpec.MinReplicas).To(Equal(int32(igwMinReplicas)))
+			err = protomarshal.Unmarshal(iop.Spec.MeshConfig, &meshConfigTyped)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			numTrustedProxies := meshConfigTyped.DefaultConfig.GetGatewayTopology().GetNumTrustedProxies()
+			Expect(numTrustedProxies).To(Equal(numTrustedProxies))
+
+			Expect(*iop.Spec.Components.IngressGateways[0].Kubernetes.HpaSpec.MinReplicas).To(Equal(int32(igwMinReplicas)))
 
 			err = os.Remove(mergedIstioOperatorPath)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -105,18 +112,23 @@ var _ = Describe("Merge", func() {
 
 		iop := readIOP(mergedIstioOperatorPath)
 
-		numTrustedProxies := iop.Spec.MeshConfig.Fields["defaultConfig"].
-			GetStructValue().Fields["gatewayTopology"].GetStructValue().Fields["numTrustedProxies"].GetNumberValue()
+		var typedMeshConfig meshv1alpha1.MeshConfig
 
-		Expect(numTrustedProxies).To(Equal(float64(4)))
+		err = protomarshal.Unmarshal(iop.Spec.MeshConfig, &typedMeshConfig)
+		Expect(err).ShouldNot(HaveOccurred())
 
-		baseEnabled := iop.Spec.Components.Base.Enabled.Value
+		numTrustedProxies := typedMeshConfig.DefaultConfig.GetGatewayTopology().GetNumTrustedProxies()
+
+		Expect(numTrustedProxies).To(Equal(uint32(4)))
+
+		baseEnabled := iop.Spec.Components.Base.Enabled.GetValueOrTrue()
 		Expect(baseEnabled).To(BeFalse())
 
-		Expect(iop.Spec.Values.Fields["cni"]).NotTo(BeNil())
-		Expect(iop.Spec.Values.Fields["cni"].GetStructValue().Fields["cniBinDir"]).NotTo(BeNil())
-		cniBinDir := iop.Spec.Values.Fields["cni"].GetStructValue().Fields["cniBinDir"].GetStringValue()
-		Expect(cniBinDir).To(Equal(newCniBinDirPath))
+		valuesMap, err := values.MapFromObject(iop.Spec.Values)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		Expect(valuesMap["cni"]).NotTo(BeNil())
+		Expect(valuesMap["cni"].(map[string]interface{})["cniBinDir"]).To(Equal(newCniBinDirPath))
 
 		err = os.Remove(mergedIstioOperatorPath)
 		Expect(err).ShouldNot(HaveOccurred())
@@ -162,9 +174,9 @@ var _ = Describe("GetIstioImageVersion", func() {
 		Expect(err).Should(Not(HaveOccurred()))
 
 		// then
-		Expect(imageVersion.Tag()).To(Equal(ioProduction.Spec.Tag.GetStringValue()))
+		Expect(imageVersion.Tag()).To(Equal(ioProduction.Spec.Tag.(string)))
 		Expect(ioProduction.Spec.Hub).To(Equal(ioEvaluation.Spec.Hub))
-		Expect(ioProduction.Spec.Tag.GetStringValue()).To(Equal(ioEvaluation.Spec.Tag.GetStringValue()))
+		Expect(ioProduction.Spec.Tag.(string)).To(Equal(ioEvaluation.Spec.Tag.(string)))
 	})
 })
 

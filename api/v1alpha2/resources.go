@@ -2,8 +2,8 @@ package v1alpha2
 
 import (
 	"github.com/pkg/errors"
-	"google.golang.org/protobuf/types/known/structpb"
-	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
+	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
+	"istio.io/istio/operator/pkg/values"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
@@ -19,15 +19,20 @@ func (i *Istio) GetProxyResources(op iopv1alpha1.IstioOperator) (v1.ResourceRequ
 		return v1.ResourceRequirements{}, errors.New("proxy resources missing in merged IstioOperator")
 	}
 
-	resources := mergedOp.Spec.Values.
-		Fields[globalField].GetStructValue().
-		Fields[proxyField].GetStructValue().
-		Fields[resourcesField].GetStructValue()
+	valuesMap, err := values.MapFromObject(mergedOp.Spec.Values)
+	if err != nil {
+		return v1.ResourceRequirements{}, err
+	}
 
-	cpuRequest := resources.Fields[requestsField].GetStructValue().Fields[cpu].GetStringValue()
-	memoryRequest := resources.Fields[requestsField].GetStructValue().Fields[memory].GetStringValue()
-	cpuLimit := resources.Fields[limitsField].GetStructValue().Fields[cpu].GetStringValue()
-	memoryLimit := resources.Fields[limitsField].GetStructValue().Fields[memory].GetStringValue()
+	resources, exists := valuesMap.GetPathMap("global.proxy.resources")
+	if !exists {
+		return v1.ResourceRequirements{}, err
+	}
+
+	cpuRequest := resources.GetPathString("requests.cpu")
+	memoryRequest := resources.GetPathString("requests.memory")
+	cpuLimit := resources.GetPathString("limits.cpu")
+	memoryLimit := resources.GetPathString("limits.memory")
 
 	return v1.ResourceRequirements{
 		Requests: v1.ResourceList{
@@ -42,30 +47,33 @@ func (i *Istio) GetProxyResources(op iopv1alpha1.IstioOperator) (v1.ResourceRequ
 }
 
 func hasResources(op iopv1alpha1.IstioOperator) bool {
-	if op.Spec.Values.Fields[globalField] == nil {
+	valuesMap, err := values.MapFromObject(op.Spec.Values)
+	if err != nil {
+		return false
+	}
+	resourcesMap, exists := valuesMap.GetPathMap("global.proxy.resources")
+	if !exists {
 		return false
 	}
 
-	if op.Spec.Values.Fields[globalField].GetStructValue().Fields[proxyField] == nil {
+	requests, exists := resourcesMap.GetPathMap("requests")
+	if !exists {
 		return false
 	}
-
-	if op.Spec.Values.Fields[globalField].GetStructValue().Fields[proxyField].GetStructValue().Fields[resourcesField] == nil {
+	limits, exists := resourcesMap.GetPathMap("limits")
+	if !exists {
 		return false
 	}
-
-	resources := op.Spec.Values.Fields[globalField].GetStructValue().Fields[proxyField].GetStructValue().Fields[resourcesField].GetStructValue()
-	if resources.Fields[requestsField] == nil || hasNoCpuAndMemory(resources.Fields[requestsField]) {
+	if hasNoCpuAndMemory(requests) {
 		return false
 	}
-	if resources.Fields[limitsField] == nil || hasNoCpuAndMemory(resources.Fields[limitsField]) {
+	if hasNoCpuAndMemory(limits) {
 		return false
 	}
 
 	return true
 }
 
-func hasNoCpuAndMemory(v *structpb.Value) bool {
-	return v.GetStructValue().Fields[cpu] == nil ||
-		v.GetStructValue().Fields[memory] == nil
+func hasNoCpuAndMemory(m values.Map) bool {
+	return m.GetPathString("cpu") == "" || m.GetPathString("memory") == ""
 }

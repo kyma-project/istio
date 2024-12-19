@@ -46,7 +46,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
-	"sigs.k8s.io/controller-runtime/pkg/ratelimiter"
 )
 
 const (
@@ -237,13 +236,14 @@ func (r *IstioReconciler) SetupWithManager(mgr ctrl.Manager, rateLimiter RateLim
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&operatorv1alpha2.Istio{}).
-		WithEventFilter(predicate.Or(predicate.GenerationChangedPredicate{}, predicate.AnnotationChangedPredicate{})).
+		WithEventFilter(predicate.Or[client.Object](predicate.GenerationChangedPredicate{}, predicate.AnnotationChangedPredicate{})).
 		WithOptions(controller.Options{
-			RateLimiter: TemplateRateLimiter(
-				rateLimiter.BaseDelay,
-				rateLimiter.FailureMaxDelay,
-				rateLimiter.Frequency,
-				rateLimiter.Burst,
+			RateLimiter: workqueue.NewTypedMaxOfRateLimiter[ctrl.Request](
+				workqueue.NewTypedItemExponentialFailureRateLimiter[ctrl.Request](rateLimiter.BaseDelay,
+					rateLimiter.FailureMaxDelay),
+				&workqueue.TypedBucketRateLimiter[ctrl.Request]{
+					Limiter: rate.NewLimiter(rate.Limit(rateLimiter.Frequency), rateLimiter.Burst),
+				},
 			),
 		}).
 		Complete(r)
@@ -253,10 +253,10 @@ func (r *IstioReconciler) SetupWithManager(mgr ctrl.Manager, rateLimiter RateLim
 // both an overall (token bucket) and per-item (exponential) rate limiting.
 func TemplateRateLimiter(failureBaseDelay time.Duration, failureMaxDelay time.Duration,
 	frequency int, burst int,
-) ratelimiter.RateLimiter {
-	return workqueue.NewMaxOfRateLimiter(
-		workqueue.NewItemExponentialFailureRateLimiter(failureBaseDelay, failureMaxDelay),
-		&workqueue.BucketRateLimiter{Limiter: rate.NewLimiter(rate.Limit(frequency), burst)})
+) workqueue.TypedRateLimiter[client.Object] {
+	return workqueue.NewTypedMaxOfRateLimiter[client.Object](
+		workqueue.NewTypedItemExponentialFailureRateLimiter[client.Object](failureBaseDelay, failureMaxDelay),
+		&workqueue.TypedBucketRateLimiter[client.Object]{Limiter: rate.NewLimiter(rate.Limit(frequency), burst)})
 }
 
 func (r *IstioReconciler) getOldestCR(istioCRs *operatorv1alpha2.IstioList) *operatorv1alpha2.Istio {

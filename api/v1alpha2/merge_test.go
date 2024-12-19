@@ -4,23 +4,20 @@ import (
 	"encoding/json"
 	"github.com/kyma-project/istio/operator/internal/tests"
 	"github.com/onsi/ginkgo/v2/types"
+	"google.golang.org/protobuf/types/known/structpb"
 	meshv1alpha1 "istio.io/api/mesh/v1alpha1"
-	operatorv1alpha1 "istio.io/api/operator/v1alpha1"
-	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
+	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
+	"istio.io/istio/operator/pkg/values"
 	"istio.io/istio/pkg/config/mesh"
-	v1 "k8s.io/api/core/v1"
+	"istio.io/istio/pkg/util/protomarshal"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
-	"regexp"
-	"strings"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-
-	"google.golang.org/protobuf/types/known/structpb"
-	"istio.io/istio/pkg/util/protomarshal"
 )
 
 func TestAPIs(t *testing.T) {
@@ -33,34 +30,24 @@ var _ = ReportAfterSuite("custom reporter", func(report types.Report) {
 	tests.GenerateGinkgoJunitReport("merge-api-suite", report)
 })
 
-func toSnakeCase(str string) string {
-	matchFirstCap := regexp.MustCompile("(.)([A-Z][a-z]+)")
-	matchAllCap := regexp.MustCompile("([a-z0-9])([A-Z])")
-
-	snake := matchFirstCap.ReplaceAllString(str, "${1}_${2}")
-	snake = matchAllCap.ReplaceAllString(snake, "${1}_${2}")
-	return strings.ToLower(snake)
-}
-
-// Struct_pb uses different conventions for json tags (snake case) and unmarshalling (camel case).
-// Because of this difference, json tags need to be translated to snake_case before unmarshalling;
-// otherwise those fields would become nil.
-func jsonTagsToSnakeCase(camelCaseMarshaledJson []byte) string {
-	jsonString := string(camelCaseMarshaledJson)
-	tagMatch := regexp.MustCompile(`"[^ ]*" *:`)
-	return tagMatch.ReplaceAllStringFunc(jsonString, toSnakeCase)
-}
+const (
+	HeadersToUpstreamOnAllow        = "headersToUpstreamOnAllow"
+	HeadersToDownstreamOnAllow      = "headersToDownstreamOnAllow"
+	HeadersToDownstreamOnDeny       = "headersToDownstreamOnDeny"
+	IncludeAdditionalHeadersInCheck = "includeAdditionalHeadersInCheck"
+	IncludeRequestHeadersInCheck    = "includeRequestHeadersInCheck"
+)
 
 var _ = Describe("Merge", func() {
 	Context("Authorizations", func() {
 		It("should set authorizer with no headers setup", func() {
 			// given
 			m := mesh.DefaultMeshConfig()
-			meshConfig := convert(m)
+			meshConfigRaw := convert(m)
 
 			iop := iopv1alpha1.IstioOperator{
-				Spec: &operatorv1alpha1.IstioOperatorSpec{
-					MeshConfig: meshConfig,
+				Spec: iopv1alpha1.IstioOperatorSpec{
+					MeshConfig: meshConfigRaw,
 				},
 			}
 
@@ -81,20 +68,29 @@ var _ = Describe("Merge", func() {
 			// then
 			Expect(err).ShouldNot(HaveOccurred())
 
-			extensionProviders := out.Spec.MeshConfig.Fields["extensionProviders"].GetListValue().GetValues()
+			meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			extensionProvidersInt, exists := meshConfig.GetPath("extensionProviders")
+			Expect(exists).To(BeTrue())
+
+			extensionProviders := extensionProvidersInt.([]interface{})
+
 			var foundAuthorizer bool
-			for _, extensionProvider := range extensionProviders {
-				if extensionProvider.GetStructValue().Fields["name"].GetStringValue() == provName {
-					jsonAuthProvider, err := extensionProvider.GetStructValue().Fields["envoyExtAuthzHttp"].MarshalJSON()
-					jsonAuthProvider = []byte(jsonTagsToSnakeCase(jsonAuthProvider))
-					Expect(err).ToNot(HaveOccurred())
+			for _, extensionProviderInt := range extensionProviders {
+				extensionProvider, ok := extensionProviderInt.(map[string]interface{})
+				Expect(ok).To(BeTrue())
 
-					var authProvider meshv1alpha1.MeshConfig_ExtensionProvider_EnvoyExternalAuthorizationHttpProvider
-					err = json.Unmarshal(jsonAuthProvider, &authProvider)
-					Expect(err).ToNot(HaveOccurred())
+				if extensionProvider["name"] == provName {
+					extensionProviderMap, err := values.MapFromObject(extensionProvider)
+					Expect(err).ShouldNot(HaveOccurred())
 
-					Expect(authProvider.Port).To(BeEquivalentTo(1337))
-					Expect(authProvider.Service).To(Equal("xauth"))
+					authProvider, ok := extensionProviderMap.GetPathMap("envoyExtAuthzHttp")
+					Expect(ok).To(BeTrue())
+
+					Expect(authProvider).ShouldNot(BeNil())
+					Expect(authProvider["port"]).To(BeEquivalentTo(1337))
+					Expect(authProvider["service"]).To(Equal("xauth"))
 
 					foundAuthorizer = true
 					break
@@ -107,11 +103,11 @@ var _ = Describe("Merge", func() {
 		It("should set headers for authorizer", func() {
 			// given
 			m := mesh.DefaultMeshConfig()
-			meshConfig := convert(m)
+			meshConfigRaw := convert(m)
 
 			iop := iopv1alpha1.IstioOperator{
-				Spec: &operatorv1alpha1.IstioOperatorSpec{
-					MeshConfig: meshConfig,
+				Spec: iopv1alpha1.IstioOperatorSpec{
+					MeshConfig: meshConfigRaw,
 				},
 			}
 
@@ -171,28 +167,37 @@ var _ = Describe("Merge", func() {
 			// then
 			Expect(err).ShouldNot(HaveOccurred())
 
-			extensionProviders := out.Spec.MeshConfig.Fields["extensionProviders"].GetListValue().GetValues()
+			meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			extensionProvidersInt, exists := meshConfig.GetPath("extensionProviders")
+			Expect(exists).To(BeTrue())
+
+			extensionProviders := extensionProvidersInt.([]interface{})
+
 			var foundAuthorizer bool
-			for _, extensionProvider := range extensionProviders {
-				if extensionProvider.GetStructValue().Fields["name"].GetStringValue() == provName {
-					jsonAuthProvider, err := extensionProvider.GetStructValue().Fields["envoyExtAuthzHttp"].MarshalJSON()
-					jsonAuthProvider = []byte(jsonTagsToSnakeCase(jsonAuthProvider))
-					Expect(err).ToNot(HaveOccurred())
+			for _, extensionProviderInt := range extensionProviders {
+				extensionProvider, ok := extensionProviderInt.(map[string]interface{})
+				Expect(ok).To(BeTrue())
 
-					var authProvider meshv1alpha1.MeshConfig_ExtensionProvider_EnvoyExternalAuthorizationHttpProvider
-					err = json.Unmarshal(jsonAuthProvider, &authProvider)
-					Expect(err).ToNot(HaveOccurred())
+				if extensionProvider["name"] == provName {
+					extensionProviderMap, err := values.MapFromObject(extensionProvider)
+					Expect(err).ShouldNot(HaveOccurred())
 
-					Expect(authProvider.Port).To(BeEquivalentTo(1337))
-					Expect(authProvider.Service).To(Equal("xauth"))
+					authProvider, ok := extensionProviderMap.GetPathMap("envoyExtAuthzHttp")
+					Expect(ok).To(BeTrue())
 
-					Expect(authProvider.HeadersToUpstreamOnAllow).To(ConsistOf(toUpstreamOnAllow))
-					Expect(authProvider.HeadersToDownstreamOnAllow).To(ConsistOf(toDownstreamOnAllow))
-					Expect(authProvider.HeadersToDownstreamOnDeny).To(ConsistOf(toDownstreamOnDeny))
+					Expect(authProvider).ShouldNot(BeNil())
+					Expect(authProvider["port"]).To(BeEquivalentTo(1337))
+					Expect(authProvider["service"]).To(Equal("xauth"))
 
-					Expect(authProvider.IncludeAdditionalHeadersInCheck).To(HaveKeyWithValue("a", "a"))
-					Expect(authProvider.IncludeAdditionalHeadersInCheck).To(HaveKeyWithValue("b", "b"))
-					Expect(authProvider.IncludeRequestHeadersInCheck).To(ConsistOf(inCheckInclude))
+					Expect(authProvider[HeadersToUpstreamOnAllow]).To(ConsistOf(toUpstreamOnAllow))
+					Expect(authProvider[HeadersToDownstreamOnAllow]).To(ConsistOf(toDownstreamOnAllow))
+					Expect(authProvider[HeadersToDownstreamOnDeny]).To(ConsistOf(toDownstreamOnDeny))
+
+					Expect(authProvider[IncludeAdditionalHeadersInCheck]).To(HaveKeyWithValue("a", "a"))
+					Expect(authProvider[IncludeAdditionalHeadersInCheck]).To(HaveKeyWithValue("b", "b"))
+					Expect(authProvider[IncludeRequestHeadersInCheck]).To(ConsistOf(inCheckInclude))
 
 					foundAuthorizer = true
 					break
@@ -207,11 +212,11 @@ var _ = Describe("Merge", func() {
 		// given
 		m := mesh.DefaultMeshConfig()
 		m.DefaultConfig.GatewayTopology = &meshv1alpha1.Topology{NumTrustedProxies: 1}
-		meshConfig := convert(m)
+		meshConfigRaw := convert(m)
 
 		iop := iopv1alpha1.IstioOperator{
-			Spec: &operatorv1alpha1.IstioOperatorSpec{
-				MeshConfig: meshConfig,
+			Spec: iopv1alpha1.IstioOperatorSpec{
+				MeshConfig: meshConfigRaw,
 			},
 		}
 
@@ -224,19 +229,22 @@ var _ = Describe("Merge", func() {
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
 
-		numTrustedProxies := out.Spec.MeshConfig.Fields["defaultConfig"].
-			GetStructValue().Fields["gatewayTopology"].GetStructValue().Fields["numTrustedProxies"].GetNumberValue()
+		meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		numTrustedProxies, exists := meshConfig.GetPath("defaultConfig.gatewayTopology.numTrustedProxies")
+		Expect(exists).To(BeTrue())
 		Expect(numTrustedProxies).To(Equal(float64(5)))
 	})
 
 	It("should set numTrustedProxies on IstioOperator to 5 when no GatewayTopology is configured", func() {
 		// given
 		m := mesh.DefaultMeshConfig()
-		meshConfig := convert(m)
+		meshConfigRaw := convert(m)
 
 		iop := iopv1alpha1.IstioOperator{
-			Spec: &operatorv1alpha1.IstioOperatorSpec{
-				MeshConfig: meshConfig,
+			Spec: iopv1alpha1.IstioOperatorSpec{
+				MeshConfig: meshConfigRaw,
 			},
 		}
 
@@ -250,15 +258,18 @@ var _ = Describe("Merge", func() {
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
 
-		numTrustedProxies := out.Spec.MeshConfig.Fields["defaultConfig"].
-			GetStructValue().Fields["gatewayTopology"].GetStructValue().Fields["numTrustedProxies"].GetNumberValue()
+		meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		numTrustedProxies, exists := meshConfig.GetPath("defaultConfig.gatewayTopology.numTrustedProxies")
+		Expect(exists).To(BeTrue())
 		Expect(numTrustedProxies).To(Equal(float64(numProxies)))
 	})
 
 	It("should set numTrustedProxies on IstioOperator to 5 when IstioOperator has nil spec", func() {
 		// given
 		iop := iopv1alpha1.IstioOperator{
-			Spec: nil,
+			Spec: iopv1alpha1.IstioOperatorSpec{},
 		}
 
 		numProxies := 5
@@ -271,15 +282,18 @@ var _ = Describe("Merge", func() {
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
 
-		numTrustedProxies := out.Spec.MeshConfig.Fields["defaultConfig"].
-			GetStructValue().Fields["gatewayTopology"].GetStructValue().Fields["numTrustedProxies"].GetNumberValue()
+		meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		numTrustedProxies, exists := meshConfig.GetPath("defaultConfig.gatewayTopology.numTrustedProxies")
+		Expect(exists).To(BeTrue())
 		Expect(numTrustedProxies).To(Equal(float64(numProxies)))
 	})
 
 	It("should set numTrustedProxies on IstioOperator to 5 when IstioOperator has nil mesh config", func() {
 		// given
 		iop := iopv1alpha1.IstioOperator{
-			Spec: &operatorv1alpha1.IstioOperatorSpec{
+			Spec: iopv1alpha1.IstioOperatorSpec{
 				MeshConfig: nil,
 			},
 		}
@@ -294,8 +308,11 @@ var _ = Describe("Merge", func() {
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
 
-		numTrustedProxies := out.Spec.MeshConfig.Fields["defaultConfig"].
-			GetStructValue().Fields["gatewayTopology"].GetStructValue().Fields["numTrustedProxies"].GetNumberValue()
+		meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		numTrustedProxies, exists := meshConfig.GetPath("defaultConfig.gatewayTopology.numTrustedProxies")
+		Expect(exists).To(BeTrue())
 		Expect(numTrustedProxies).To(Equal(float64(numProxies)))
 	})
 
@@ -303,11 +320,11 @@ var _ = Describe("Merge", func() {
 		// given
 		m := mesh.DefaultMeshConfig()
 		m.DefaultConfig.GatewayTopology = &meshv1alpha1.Topology{NumTrustedProxies: 1}
-		meshConfig := convert(m)
+		meshConfigRaw := convert(m)
 
 		iop := iopv1alpha1.IstioOperator{
-			Spec: &operatorv1alpha1.IstioOperatorSpec{
-				MeshConfig: meshConfig,
+			Spec: iopv1alpha1.IstioOperatorSpec{
+				MeshConfig: meshConfigRaw,
 			},
 		}
 
@@ -319,8 +336,11 @@ var _ = Describe("Merge", func() {
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
 
-		numTrustedProxies := out.Spec.MeshConfig.Fields["defaultConfig"].
-			GetStructValue().Fields["gatewayTopology"].GetStructValue().Fields["numTrustedProxies"].GetNumberValue()
+		meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		numTrustedProxies, exists := meshConfig.GetPath("defaultConfig.gatewayTopology.numTrustedProxies")
+		Expect(exists).To(BeTrue())
 		Expect(numTrustedProxies).To(Equal(float64(1)))
 	})
 	It("should set numTrustedProxies on IstioOperator to 5 when there is no defaultConfig in meshConfig", func() {
@@ -328,11 +348,11 @@ var _ = Describe("Merge", func() {
 		m := &meshv1alpha1.MeshConfig{
 			EnableTracing: true,
 		}
-		meshConfig := convert(m)
+		meshConfigRaw := convert(m)
 
 		iop := iopv1alpha1.IstioOperator{
-			Spec: &operatorv1alpha1.IstioOperatorSpec{
-				MeshConfig: meshConfig,
+			Spec: iopv1alpha1.IstioOperatorSpec{
+				MeshConfig: meshConfigRaw,
 			},
 		}
 		numProxies := 5
@@ -345,8 +365,11 @@ var _ = Describe("Merge", func() {
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
 
-		numTrustedProxies := out.Spec.MeshConfig.Fields["defaultConfig"].
-			GetStructValue().Fields["gatewayTopology"].GetStructValue().Fields["numTrustedProxies"].GetNumberValue()
+		meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		numTrustedProxies, exists := meshConfig.GetPath("defaultConfig.gatewayTopology.numTrustedProxies")
+		Expect(exists).To(BeTrue())
 		Expect(numTrustedProxies).To(Equal(float64(5)))
 	})
 
@@ -354,7 +377,7 @@ var _ = Describe("Merge", func() {
 		// given
 
 		iop := iopv1alpha1.IstioOperator{
-			Spec: &operatorv1alpha1.IstioOperatorSpec{},
+			Spec: iopv1alpha1.IstioOperatorSpec{},
 		}
 		istioCR := Istio{Spec: IstioSpec{
 			Config: Config{
@@ -368,7 +391,7 @@ var _ = Describe("Merge", func() {
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
 
-		externalTrafficPolicy := out.Spec.Components.IngressGateways[0].K8S.Overlays[0].Patches[0].Value.GetStringValue()
+		externalTrafficPolicy := out.Spec.Components.IngressGateways[0].Kubernetes.Overlays[0].Patches[0].Value.(*structpb.Value).GetStringValue()
 		Expect(externalTrafficPolicy).To(Equal("Local"))
 	})
 
@@ -376,7 +399,7 @@ var _ = Describe("Merge", func() {
 		// given
 
 		iop := iopv1alpha1.IstioOperator{
-			Spec: &operatorv1alpha1.IstioOperatorSpec{},
+			Spec: iopv1alpha1.IstioOperatorSpec{},
 		}
 		istioCR := Istio{Spec: IstioSpec{
 			Config: Config{
@@ -390,7 +413,7 @@ var _ = Describe("Merge", func() {
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
 
-		externalTrafficPolicy := out.Spec.Components.IngressGateways[0].K8S.Overlays[0].Patches[0].Value.GetStringValue()
+		externalTrafficPolicy := out.Spec.Components.IngressGateways[0].Kubernetes.Overlays[0].Patches[0].Value.(*structpb.Value).GetStringValue()
 		Expect(externalTrafficPolicy).To(Equal("Cluster"))
 
 	})
@@ -400,7 +423,7 @@ var _ = Describe("Merge", func() {
 			It("should set CPU limits to 500m in IOP", func() {
 				//given
 				iop := iopv1alpha1.IstioOperator{
-					Spec: &operatorv1alpha1.IstioOperatorSpec{},
+					Spec: iopv1alpha1.IstioOperatorSpec{},
 				}
 				cpuLimit := "500m"
 
@@ -420,8 +443,8 @@ var _ = Describe("Merge", func() {
 				// then
 				Expect(err).ShouldNot(HaveOccurred())
 
-				iopCpuLimit := out.Spec.Components.Pilot.K8S.Resources.Limits["cpu"]
-				Expect(iopCpuLimit).To(Equal(cpuLimit))
+				iopCpuLimit := out.Spec.Components.Pilot.Kubernetes.Resources.Limits["cpu"]
+				Expect(iopCpuLimit.String()).To(Equal(cpuLimit))
 			})
 		})
 
@@ -429,7 +452,7 @@ var _ = Describe("Merge", func() {
 			It("should set CPU requests to 500m in IOP", func() {
 				//given
 				iop := iopv1alpha1.IstioOperator{
-					Spec: &operatorv1alpha1.IstioOperatorSpec{},
+					Spec: iopv1alpha1.IstioOperatorSpec{},
 				}
 				cpuLimit := "500m"
 
@@ -449,8 +472,8 @@ var _ = Describe("Merge", func() {
 				// then
 				Expect(err).ShouldNot(HaveOccurred())
 
-				iopCpuLimit := out.Spec.Components.Pilot.K8S.Resources.Requests["cpu"]
-				Expect(iopCpuLimit).To(Equal(cpuLimit))
+				iopCpuLimit := out.Spec.Components.Pilot.Kubernetes.Resources.Requests["cpu"]
+				Expect(iopCpuLimit.String()).To(Equal(cpuLimit))
 			})
 		})
 	})
@@ -460,7 +483,7 @@ var _ = Describe("Merge", func() {
 			It("should set CPU limits to 500m and 500Mi for memory in IOP", func() {
 				//given
 				iop := iopv1alpha1.IstioOperator{
-					Spec: &operatorv1alpha1.IstioOperatorSpec{},
+					Spec: iopv1alpha1.IstioOperatorSpec{},
 				}
 				cpuLimit := "500m"
 				memoryLimit := "500Mi"
@@ -483,11 +506,11 @@ var _ = Describe("Merge", func() {
 				// then
 				Expect(err).ShouldNot(HaveOccurred())
 
-				iopCpuLimit := out.Spec.Components.IngressGateways[0].K8S.Resources.Limits["cpu"]
-				Expect(iopCpuLimit).To(Equal(cpuLimit))
+				iopCpuLimit := out.Spec.Components.IngressGateways[0].Kubernetes.Resources.Limits["cpu"]
+				Expect(iopCpuLimit.String()).To(Equal(cpuLimit))
 
-				iopMemoryLimit := out.Spec.Components.IngressGateways[0].K8S.Resources.Limits["memory"]
-				Expect(iopMemoryLimit).To(Equal(iopMemoryLimit))
+				iopMemoryLimit := out.Spec.Components.IngressGateways[0].Kubernetes.Resources.Limits["memory"]
+				Expect(iopMemoryLimit.String()).To(Equal(memoryLimit))
 			})
 		})
 
@@ -495,7 +518,7 @@ var _ = Describe("Merge", func() {
 			It("should set CPU requests to 500m and 500Mi for memory in IOP", func() {
 				//given
 				iop := iopv1alpha1.IstioOperator{
-					Spec: &operatorv1alpha1.IstioOperatorSpec{},
+					Spec: iopv1alpha1.IstioOperatorSpec{},
 				}
 				cpuRequests := "500m"
 				memoryRequests := "500Mi"
@@ -517,11 +540,11 @@ var _ = Describe("Merge", func() {
 				// then
 				Expect(err).ShouldNot(HaveOccurred())
 
-				iopCpuRequests := out.Spec.Components.IngressGateways[0].K8S.Resources.Requests["cpu"]
-				Expect(iopCpuRequests).To(Equal(cpuRequests))
+				iopCpuRequests := out.Spec.Components.IngressGateways[0].Kubernetes.Resources.Requests["cpu"]
+				Expect(iopCpuRequests.String()).To(Equal(cpuRequests))
 
-				iopMemoryRequests := out.Spec.Components.IngressGateways[0].K8S.Resources.Requests["memory"]
-				Expect(iopMemoryRequests).To(Equal(memoryRequests))
+				iopMemoryRequests := out.Spec.Components.IngressGateways[0].Kubernetes.Resources.Requests["memory"]
+				Expect(iopMemoryRequests.String()).To(Equal(memoryRequests))
 			})
 		})
 	})
@@ -531,7 +554,7 @@ var _ = Describe("Merge", func() {
 			It("should set CPU limits to 500m and 500Mi for memory in IOP", func() {
 				//given
 				iop := iopv1alpha1.IstioOperator{
-					Spec: &operatorv1alpha1.IstioOperatorSpec{},
+					Spec: iopv1alpha1.IstioOperatorSpec{},
 				}
 				cpuLimit := "500m"
 				memoryLimit := "500Mi"
@@ -556,13 +579,13 @@ var _ = Describe("Merge", func() {
 				// then
 				Expect(err).ShouldNot(HaveOccurred())
 
-				iopCpuLimit := out.Spec.Components.EgressGateways[0].K8S.Resources.Limits["cpu"]
-				Expect(iopCpuLimit).To(Equal(cpuLimit))
+				iopCpuLimit := ptr.To(out.Spec.Components.EgressGateways[0].Kubernetes.Resources.Limits["cpu"])
+				Expect(iopCpuLimit.String()).To(Equal(cpuLimit))
 
-				iopMemoryLimit := out.Spec.Components.EgressGateways[0].K8S.Resources.Limits["memory"]
-				Expect(iopMemoryLimit).To(Equal(memoryLimit))
+				iopMemoryLimit := ptr.To(out.Spec.Components.EgressGateways[0].Kubernetes.Resources.Limits["memory"])
+				Expect(iopMemoryLimit.String()).To(Equal(memoryLimit))
 
-				iopEnabled := out.Spec.Components.EgressGateways[0].Enabled.GetValue()
+				iopEnabled := out.Spec.Components.EgressGateways[0].Enabled.GetValueOrFalse()
 				Expect(iopEnabled).To(Equal(enabled))
 			})
 		})
@@ -571,7 +594,7 @@ var _ = Describe("Merge", func() {
 			It("should set CPU requests to 500m and 500Mi for memory in IOP", func() {
 				//given
 				iop := iopv1alpha1.IstioOperator{
-					Spec: &operatorv1alpha1.IstioOperatorSpec{},
+					Spec: iopv1alpha1.IstioOperatorSpec{},
 				}
 				cpuRequests := "500m"
 				memoryRequests := "500Mi"
@@ -596,13 +619,13 @@ var _ = Describe("Merge", func() {
 				// then
 				Expect(err).ShouldNot(HaveOccurred())
 
-				iopCpuRequests := out.Spec.Components.EgressGateways[0].K8S.Resources.Requests["cpu"]
-				Expect(iopCpuRequests).To(Equal(cpuRequests))
+				iopCpuRequests := ptr.To(out.Spec.Components.EgressGateways[0].Kubernetes.Resources.Requests["cpu"])
+				Expect(iopCpuRequests.String()).To(Equal(cpuRequests))
 
-				iopMemoryRequests := out.Spec.Components.EgressGateways[0].K8S.Resources.Requests["memory"]
-				Expect(iopMemoryRequests).To(Equal(memoryRequests))
+				iopMemoryRequests := ptr.To(out.Spec.Components.EgressGateways[0].Kubernetes.Resources.Requests["memory"])
+				Expect(iopMemoryRequests.String()).To(Equal(memoryRequests))
 
-				iopEnabled := out.Spec.Components.EgressGateways[0].Enabled.GetValue()
+				iopEnabled := out.Spec.Components.EgressGateways[0].Enabled.GetValueOrFalse()
 				Expect(iopEnabled).To(Equal(enabled))
 			})
 		})
@@ -612,7 +635,7 @@ var _ = Describe("Merge", func() {
 		It("should update RollingUpdate when it is present in Istio CR", func() {
 			//given
 			iop := iopv1alpha1.IstioOperator{
-				Spec: &operatorv1alpha1.IstioOperatorSpec{},
+				Spec: iopv1alpha1.IstioOperatorSpec{},
 			}
 
 			maxUnavailable := intstr.IntOrString{
@@ -642,11 +665,11 @@ var _ = Describe("Merge", func() {
 			// then
 			Expect(err).ShouldNot(HaveOccurred())
 
-			unavailable := out.Spec.Components.IngressGateways[0].K8S.Strategy.RollingUpdate.MaxUnavailable
-			Expect(unavailable.StrVal.GetValue()).To(Equal(maxUnavailable.StrVal))
+			unavailable := out.Spec.Components.IngressGateways[0].Kubernetes.Strategy.RollingUpdate.MaxUnavailable
+			Expect(unavailable.StrVal).To(Equal(maxUnavailable.StrVal))
 
-			surge := out.Spec.Components.IngressGateways[0].K8S.Strategy.RollingUpdate.MaxSurge
-			Expect(surge.IntVal.GetValue()).To(Equal(maxSurge.IntVal))
+			surge := out.Spec.Components.IngressGateways[0].Kubernetes.Strategy.RollingUpdate.MaxSurge
+			Expect(surge.IntVal).To(Equal(maxSurge.IntVal))
 		})
 	})
 
@@ -654,7 +677,7 @@ var _ = Describe("Merge", func() {
 		It("should update HPASpec when it is present in Istio CR", func() {
 			//given
 			iop := iopv1alpha1.IstioOperator{
-				Spec: &operatorv1alpha1.IstioOperatorSpec{},
+				Spec: iopv1alpha1.IstioOperatorSpec{},
 			}
 			maxReplicas := int32(5)
 			minReplicas := int32(4)
@@ -674,10 +697,10 @@ var _ = Describe("Merge", func() {
 			// then
 			Expect(err).ShouldNot(HaveOccurred())
 
-			replicas := out.Spec.Components.IngressGateways[0].K8S.HpaSpec.MaxReplicas
+			replicas := out.Spec.Components.IngressGateways[0].Kubernetes.HpaSpec.MaxReplicas
 			Expect(replicas).To(Equal(maxReplicas))
 
-			replicas = out.Spec.Components.IngressGateways[0].K8S.HpaSpec.MinReplicas
+			replicas = *out.Spec.Components.IngressGateways[0].Kubernetes.HpaSpec.MinReplicas
 			Expect(replicas).To(Equal(minReplicas))
 		})
 	})
@@ -688,14 +711,14 @@ var _ = Describe("Merge", func() {
 				It("should update CNI affinity when it is present in Istio CR", func() {
 					//given
 					iop := iopv1alpha1.IstioOperator{
-						Spec: &operatorv1alpha1.IstioOperatorSpec{},
+						Spec: iopv1alpha1.IstioOperatorSpec{},
 					}
 
 					istioCR := Istio{Spec: IstioSpec{Components: &Components{
 						Cni: &CniComponent{K8S: &CniK8sConfig{
-							Affinity: &v1.Affinity{
-								PodAffinity: &v1.PodAffinity{
-									RequiredDuringSchedulingIgnoredDuringExecution: []v1.PodAffinityTerm{
+							Affinity: &corev1.Affinity{
+								PodAffinity: &corev1.PodAffinity{
+									RequiredDuringSchedulingIgnoredDuringExecution: []corev1.PodAffinityTerm{
 										{
 											LabelSelector: &metav1.LabelSelector{
 												MatchExpressions: []metav1.LabelSelectorRequirement{
@@ -719,12 +742,12 @@ var _ = Describe("Merge", func() {
 					// then
 					Expect(err).ShouldNot(HaveOccurred())
 
-					Expect(out.Spec.Components.Cni.K8S.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution).To(HaveLen(1))
-					Expect(out.Spec.Components.Cni.K8S.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions).To(HaveLen(1))
-					Expect(out.Spec.Components.Cni.K8S.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Key).To(Equal("app-new"))
-					Expect(out.Spec.Components.Cni.K8S.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Operator).To(BeEquivalentTo("In"))
-					Expect(out.Spec.Components.Cni.K8S.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Values).To(HaveLen(1))
-					Expect(out.Spec.Components.Cni.K8S.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Values[0]).To(BeEquivalentTo("istio-cni-node1"))
+					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution).To(HaveLen(1))
+					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions).To(HaveLen(1))
+					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Key).To(Equal("app-new"))
+					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Operator).To(BeEquivalentTo("In"))
+					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Values).To(HaveLen(1))
+					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Values[0]).To(BeEquivalentTo("istio-cni-node1"))
 				})
 			})
 
@@ -732,14 +755,14 @@ var _ = Describe("Merge", func() {
 				It("should update CNI PodAntiAffinity when it is present in Istio CR", func() {
 					//given
 					iop := iopv1alpha1.IstioOperator{
-						Spec: &operatorv1alpha1.IstioOperatorSpec{},
+						Spec: iopv1alpha1.IstioOperatorSpec{},
 					}
 
 					istioCR := Istio{Spec: IstioSpec{Components: &Components{
 						Cni: &CniComponent{K8S: &CniK8sConfig{
-							Affinity: &v1.Affinity{
-								PodAntiAffinity: &v1.PodAntiAffinity{
-									RequiredDuringSchedulingIgnoredDuringExecution: []v1.PodAffinityTerm{
+							Affinity: &corev1.Affinity{
+								PodAntiAffinity: &corev1.PodAntiAffinity{
+									RequiredDuringSchedulingIgnoredDuringExecution: []corev1.PodAffinityTerm{
 										{
 											LabelSelector: &metav1.LabelSelector{
 												MatchExpressions: []metav1.LabelSelectorRequirement{
@@ -763,12 +786,12 @@ var _ = Describe("Merge", func() {
 					// then
 					Expect(err).ShouldNot(HaveOccurred())
 
-					Expect(out.Spec.Components.Cni.K8S.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution).To(HaveLen(1))
-					Expect(out.Spec.Components.Cni.K8S.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions).To(HaveLen(1))
-					Expect(out.Spec.Components.Cni.K8S.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Key).To(Equal("app-new"))
-					Expect(out.Spec.Components.Cni.K8S.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Operator).To(BeEquivalentTo("In"))
-					Expect(out.Spec.Components.Cni.K8S.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Values).To(HaveLen(1))
-					Expect(out.Spec.Components.Cni.K8S.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Values[0]).To(BeEquivalentTo("istio-cni-node1"))
+					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution).To(HaveLen(1))
+					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions).To(HaveLen(1))
+					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Key).To(Equal("app-new"))
+					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Operator).To(BeEquivalentTo("In"))
+					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Values).To(HaveLen(1))
+					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Values[0]).To(BeEquivalentTo("istio-cni-node1"))
 				})
 			})
 
@@ -776,17 +799,17 @@ var _ = Describe("Merge", func() {
 				It("should update CNI NodeAffinity when it is present in Istio CR", func() {
 					//given
 					iop := iopv1alpha1.IstioOperator{
-						Spec: &operatorv1alpha1.IstioOperatorSpec{},
+						Spec: iopv1alpha1.IstioOperatorSpec{},
 					}
 
 					istioCR := Istio{Spec: IstioSpec{Components: &Components{
 						Cni: &CniComponent{K8S: &CniK8sConfig{
-							Affinity: &v1.Affinity{
-								NodeAffinity: &v1.NodeAffinity{
-									RequiredDuringSchedulingIgnoredDuringExecution: &v1.NodeSelector{
-										NodeSelectorTerms: []v1.NodeSelectorTerm{
+							Affinity: &corev1.Affinity{
+								NodeAffinity: &corev1.NodeAffinity{
+									RequiredDuringSchedulingIgnoredDuringExecution: &corev1.NodeSelector{
+										NodeSelectorTerms: []corev1.NodeSelectorTerm{
 											{
-												MatchExpressions: []v1.NodeSelectorRequirement{
+												MatchExpressions: []corev1.NodeSelectorRequirement{
 													{
 														Key:      "app-new",
 														Operator: "In",
@@ -807,12 +830,12 @@ var _ = Describe("Merge", func() {
 					// then
 					Expect(err).ShouldNot(HaveOccurred())
 
-					Expect(out.Spec.Components.Cni.K8S.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms).To(HaveLen(1))
-					Expect(out.Spec.Components.Cni.K8S.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions).To(HaveLen(1))
-					Expect(out.Spec.Components.Cni.K8S.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions[0].Key).To(Equal("app-new"))
-					Expect(out.Spec.Components.Cni.K8S.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions[0].Operator).To(BeEquivalentTo("In"))
-					Expect(out.Spec.Components.Cni.K8S.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions[0].Values).To(HaveLen(1))
-					Expect(out.Spec.Components.Cni.K8S.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions[0].Values[0]).To(BeEquivalentTo("istio-cni-node1"))
+					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms).To(HaveLen(1))
+					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions).To(HaveLen(1))
+					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions[0].Key).To(Equal("app-new"))
+					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions[0].Operator).To(BeEquivalentTo("In"))
+					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions[0].Values).To(HaveLen(1))
+					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions[0].Values[0]).To(BeEquivalentTo("istio-cni-node1"))
 				})
 			})
 		})
@@ -821,7 +844,7 @@ var _ = Describe("Merge", func() {
 			It("should update CNI resources when those are present in Istio CR", func() {
 				//given
 				iop := iopv1alpha1.IstioOperator{
-					Spec: &operatorv1alpha1.IstioOperatorSpec{},
+					Spec: iopv1alpha1.IstioOperatorSpec{},
 				}
 				cpuRequests := "500m"
 				memoryRequests := "500Mi"
@@ -843,11 +866,11 @@ var _ = Describe("Merge", func() {
 				// then
 				Expect(err).ShouldNot(HaveOccurred())
 
-				iopCpuRequests := out.Spec.Components.Cni.K8S.Resources.Requests["cpu"]
-				Expect(iopCpuRequests).To(Equal(cpuRequests))
+				iopCpuRequests := out.Spec.Components.Cni.Kubernetes.Resources.Requests["cpu"]
+				Expect(iopCpuRequests.String()).To(Equal(cpuRequests))
 
-				iopMemoryRequests := out.Spec.Components.Cni.K8S.Resources.Requests["memory"]
-				Expect(iopMemoryRequests).To(Equal(memoryRequests))
+				iopMemoryRequests := out.Spec.Components.Cni.Kubernetes.Resources.Requests["memory"]
+				Expect(iopMemoryRequests.String()).To(Equal(memoryRequests))
 			})
 		})
 	})
@@ -856,7 +879,7 @@ var _ = Describe("Merge", func() {
 		It("should update Proxy resources configuration if they are present in Istio CR", func() {
 			//given
 			iop := iopv1alpha1.IstioOperator{
-				Spec: &operatorv1alpha1.IstioOperatorSpec{},
+				Spec: iopv1alpha1.IstioOperatorSpec{},
 			}
 
 			cpuRequests := "500m"
@@ -885,24 +908,21 @@ var _ = Describe("Merge", func() {
 			// then
 			Expect(err).ShouldNot(HaveOccurred())
 
-			resources := out.Spec.Values.Fields["global"].GetStructValue().Fields["proxy"].GetStructValue().Fields["resources"].GetStructValue()
-			Expect(resources.Fields["requests"].GetStructValue().Fields["cpu"].GetStringValue()).To(Equal(cpuRequests))
-			Expect(resources.Fields["requests"].GetStructValue().Fields["memory"].GetStringValue()).To(Equal(memoryRequests))
+			valuesMap, err := values.MapFromObject(out.Spec.Values)
+			Expect(err).ShouldNot(HaveOccurred())
 
-			Expect(resources.Fields["limits"].GetStructValue().Fields["cpu"].GetStringValue()).To(Equal(cpuLimits))
-			Expect(resources.Fields["limits"].GetStructValue().Fields["memory"].GetStringValue()).To(Equal(memoryLimits))
+			Expect(values.TryGetPathAs[string](valuesMap, "global.proxy.resources.requests.cpu")).To(Equal(cpuRequests))
+			Expect(values.TryGetPathAs[string](valuesMap, "global.proxy.resources.requests.memory")).To(Equal(memoryRequests))
+			Expect(values.TryGetPathAs[string](valuesMap, "global.proxy.resources.limits.cpu")).To(Equal(cpuLimits))
+			Expect(values.TryGetPathAs[string](valuesMap, "global.proxy.resources.limits.memory")).To(Equal(memoryLimits))
 		})
 	})
 
 })
 
-func convert(a *meshv1alpha1.MeshConfig) *structpb.Struct {
-
-	mMap, err := protomarshal.ToJSONMap(a)
+func convert(a *meshv1alpha1.MeshConfig) json.RawMessage {
+	jsonConfig, err := protomarshal.Marshal(a)
 	Expect(err).ShouldNot(HaveOccurred())
 
-	mStruct, err := structpb.NewStruct(mMap)
-	Expect(err).ShouldNot(HaveOccurred())
-
-	return mStruct
+	return jsonConfig
 }

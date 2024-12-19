@@ -2,7 +2,7 @@
 package v1alpha2
 
 import (
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -62,8 +62,8 @@ type CniComponent struct {
 
 // CniK8sConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec
 type CniK8sConfig struct {
-	Affinity  *v1.Affinity `json:"affinity,omitempty"`
-	Resources *Resources   `json:"resources,omitempty"`
+	Affinity  *corev1.Affinity `json:"affinity,omitempty"`
+	Resources *Resources       `json:"resources,omitempty"`
 }
 
 // HPASpec defines configuration for HorizontalPodAutoscaler

@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	k3sMockKubeProxyVersion string = "v1.25.6+k3s1"
-	gkeMockKubeProxyVersion string = "v1.24.9-gke.3200"
+	k3sMockKubeletVersion string = "v1.26.6+k3s1"
+	gkeMockKubeletVersion string = "v1.30.6-gke.1125000"
 )
 
 var _ = Describe("GetClusterProvider", func() {
@@ -32,7 +32,7 @@ var _ = Describe("GetClusterProvider", func() {
 			Spec: corev1.NodeSpec{ProviderID: "kubernetes://asdadsads"},
 			Status: corev1.NodeStatus{
 				NodeInfo: corev1.NodeSystemInfo{
-					KubeProxyVersion: k3sMockKubeProxyVersion,
+					KubeletVersion: k3sMockKubeletVersion,
 				},
 			},
 		}
@@ -73,7 +73,7 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 				},
 				Status: corev1.NodeStatus{
 					NodeInfo: corev1.NodeSystemInfo{
-						KubeProxyVersion: k3sMockKubeProxyVersion,
+						KubeletVersion: k3sMockKubeletVersion,
 					},
 				},
 			}
@@ -107,7 +107,7 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 				},
 				Status: corev1.NodeStatus{
 					NodeInfo: corev1.NodeSystemInfo{
-						KubeProxyVersion: gkeMockKubeProxyVersion,
+						KubeletVersion: gkeMockKubeletVersion,
 					},
 				},
 			}

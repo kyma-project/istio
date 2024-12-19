@@ -67,7 +67,14 @@ func (s *SidecarsRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio
 		return described_errors.NewDescribedError(err, "Could not get Istio version from istio operator file"), false
 	}
 
-	expectedImage := pods.NewSidecarImage(iop.Spec.Hub, iop.Spec.Tag.GetStringValue())
+	tag, ok := iop.Spec.Tag.(string)
+	if !ok {
+		ctrl.Log.Error(err, "Error getting Istio tag from istio operator file")
+		s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarRestartFailed))
+		return described_errors.NewDescribedError(err, "Could not get Istio tag from istio operator file"), false
+	}
+
+	expectedImage := pods.NewSidecarImage(iop.Spec.Hub, tag)
 	s.Log.Info("Running proxy sidecar reset", "expected image", expectedImage)
 
 	err = gatherer.VerifyIstioPodsVersion(ctx, s.Client, istioImageVersion.Version())

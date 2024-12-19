@@ -22,6 +22,7 @@ import (
 
 const (
 	revLabelKey   = "istio.io/rev"
+	tagLabelKey   = "istio.io/tag"
 	defaultWhName = "istio-sidecar-injector"
 	taggedWhName  = "istio-revision-tag-default"
 )
@@ -84,7 +85,7 @@ var _ = Describe("DeleteConflictedDefaultTag", func() {
 	It("should not delete tagged webhook when old webhook is deactivated", func() {
 		// given
 		defaultMwcObj := createMutatingWebhookWithSelector(defaultWhName, map[string]string{revLabelKey: tag.DefaultRevisionName}, deactivatedSelector)
-		taggedMwcObj := createMutatingWebhookWithSelector(taggedWhName, map[string]string{tag.IstioTagLabel: tag.DefaultRevisionName, revLabelKey: tag.DefaultRevisionName}, validSelector)
+		taggedMwcObj := createMutatingWebhookWithSelector(taggedWhName, map[string]string{tagLabelKey: tag.DefaultRevisionName, revLabelKey: tag.DefaultRevisionName}, validSelector)
 		kubeclient := createFakeClient(defaultMwcObj, taggedMwcObj)
 		// when
 		err := DeleteConflictedDefaultTag(ctx, kubeclient)
@@ -105,7 +106,7 @@ var _ = Describe("DeleteConflictedDefaultTag", func() {
 	It("should delete conflicted tagged webhook if old one is not deactivated", func() {
 		// given
 		defaultMwcObj := createMutatingWebhookWithSelector(defaultWhName, map[string]string{revLabelKey: tag.DefaultRevisionName}, validSelector)
-		taggedMwcObj := createMutatingWebhookWithSelector(taggedWhName, map[string]string{tag.IstioTagLabel: tag.DefaultRevisionName, revLabelKey: tag.DefaultRevisionName}, validSelector)
+		taggedMwcObj := createMutatingWebhookWithSelector(taggedWhName, map[string]string{tagLabelKey: tag.DefaultRevisionName, revLabelKey: tag.DefaultRevisionName}, validSelector)
 		kubeclient := createFakeClient(defaultMwcObj, taggedMwcObj)
 		// when
 		err := DeleteConflictedDefaultTag(ctx, kubeclient)
@@ -124,7 +125,7 @@ var _ = Describe("DeleteConflictedDefaultTag", func() {
 	})
 	It("should not delete tagged webhook if there is no old default webhook", func() {
 		// given
-		taggedMwcObj := createMutatingWebhookWithSelector(taggedWhName, map[string]string{tag.IstioTagLabel: tag.DefaultRevisionName, revLabelKey: tag.DefaultRevisionName}, validSelector)
+		taggedMwcObj := createMutatingWebhookWithSelector(taggedWhName, map[string]string{tagLabelKey: tag.DefaultRevisionName, revLabelKey: tag.DefaultRevisionName}, validSelector)
 		kubeclient := createFakeClient(taggedMwcObj)
 
 		// when

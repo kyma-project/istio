@@ -6,8 +6,7 @@ import (
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	operatorv1alpha1 "istio.io/api/operator/v1alpha1"
-	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
+	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/yaml"
 )
@@ -16,7 +15,7 @@ var _ = Describe("GetProxyResources", func() {
 	It("should get resources from merged Istio CR and istio operator", func() {
 		//given
 		iop := iopv1alpha1.IstioOperator{
-			Spec: &operatorv1alpha1.IstioOperatorSpec{},
+			Spec: iopv1alpha1.IstioOperatorSpec{},
 		}
 
 		cpuRequests := "500m"
@@ -53,7 +52,7 @@ var _ = Describe("GetProxyResources", func() {
 	It("should validate that resources can be returned", func() {
 		//given
 		iop := iopv1alpha1.IstioOperator{
-			Spec: &operatorv1alpha1.IstioOperatorSpec{},
+			Spec: iopv1alpha1.IstioOperatorSpec{},
 		}
 
 		istioCR := v1alpha2.Istio{Spec: v1alpha2.IstioSpec{Components: &v1alpha2.Components{

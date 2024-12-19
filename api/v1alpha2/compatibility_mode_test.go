@@ -3,9 +3,8 @@ package v1alpha2
 import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"google.golang.org/protobuf/types/known/structpb"
-	operatorv1alpha1 "istio.io/api/operator/v1alpha1"
-	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
+	operatorv1alpha1 "istio.io/istio/operator/pkg/apis"
+	"istio.io/istio/operator/pkg/values"
 	"istio.io/istio/pkg/config/mesh"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -14,8 +13,8 @@ var _ = Describe("Compatibility Mode", func() {
 	Context("Istio Pilot", func() {
 		It("should set compatibility variables on Istio Pilot when compatibility mode is on", func() {
 			//given
-			iop := iopv1alpha1.IstioOperator{
-				Spec: &operatorv1alpha1.IstioOperatorSpec{},
+			iop := operatorv1alpha1.IstioOperator{
+				Spec: operatorv1alpha1.IstioOperatorSpec{},
 			}
 			istioCR := Istio{
 				ObjectMeta: metav1.ObjectMeta{
@@ -33,7 +32,7 @@ var _ = Describe("Compatibility Mode", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 
 			existingEnvs := map[string]string{}
-			for _, v := range out.Spec.Components.Pilot.K8S.GetEnv() {
+			for _, v := range out.Spec.Components.Pilot.Kubernetes.Env {
 				existingEnvs[v.Name] = v.Value
 			}
 
@@ -45,8 +44,8 @@ var _ = Describe("Compatibility Mode", func() {
 
 		It("should not set compatibility variables on Istio Pilot when compatibility mode is off", func() {
 			//given
-			iop := iopv1alpha1.IstioOperator{
-				Spec: &operatorv1alpha1.IstioOperatorSpec{},
+			iop := operatorv1alpha1.IstioOperator{
+				Spec: operatorv1alpha1.IstioOperatorSpec{},
 			}
 			istioCR := Istio{
 				ObjectMeta: metav1.ObjectMeta{
@@ -65,7 +64,7 @@ var _ = Describe("Compatibility Mode", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 
 			variableCounter := 0
-			for _, value := range out.Spec.Components.Pilot.K8S.GetEnv() {
+			for _, value := range out.Spec.Components.Pilot.Kubernetes.Env {
 				if v, ok := pilotCompatibilityEnvVars[value.Name]; ok && value.Value == v {
 					variableCounter++
 				}
@@ -76,8 +75,8 @@ var _ = Describe("Compatibility Mode", func() {
 
 		It("should not set compatibility variables on Istio Pilot when compatibility mode is is not configured in IstioCR", func() {
 			//given
-			iop := iopv1alpha1.IstioOperator{
-				Spec: &operatorv1alpha1.IstioOperatorSpec{},
+			iop := operatorv1alpha1.IstioOperator{
+				Spec: operatorv1alpha1.IstioOperatorSpec{},
 			}
 			istioCR := Istio{
 				ObjectMeta: metav1.ObjectMeta{
@@ -95,7 +94,7 @@ var _ = Describe("Compatibility Mode", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 
 			variableCounter := 0
-			for _, value := range out.Spec.Components.Pilot.K8S.GetEnv() {
+			for _, value := range out.Spec.Components.Pilot.Kubernetes.Env {
 				if v, ok := pilotCompatibilityEnvVars[value.Name]; ok && value.Value == v {
 					variableCounter++
 				}
@@ -107,8 +106,8 @@ var _ = Describe("Compatibility Mode", func() {
 	Context("MeshConfig ProxyMetadata", func() {
 		It("should set compatibility variables in proxyMetadata when no meshConfig is defined", func() {
 			//given
-			iop := iopv1alpha1.IstioOperator{
-				Spec: &operatorv1alpha1.IstioOperatorSpec{},
+			iop := operatorv1alpha1.IstioOperator{
+				Spec: operatorv1alpha1.IstioOperatorSpec{},
 			}
 			istioCR := Istio{
 				ObjectMeta: metav1.ObjectMeta{
@@ -126,9 +125,9 @@ var _ = Describe("Compatibility Mode", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 
 			for fieldName, value := range ProxyMetaDataCompatibility {
-				field := getProxyMetadataField(out, fieldName)
-				Expect(field).ToNot(BeNil())
-				Expect(field.GetStringValue()).To(Equal(value))
+				field, exist := getProxyMetadataField(out, fieldName)
+				Expect(exist).To(BeTrue())
+				Expect(field.(string)).To(Equal(value))
 			}
 		})
 
@@ -141,8 +140,8 @@ var _ = Describe("Compatibility Mode", func() {
 
 			meshConfig := convert(m)
 
-			iop := iopv1alpha1.IstioOperator{
-				Spec: &operatorv1alpha1.IstioOperatorSpec{
+			iop := operatorv1alpha1.IstioOperator{
+				Spec: operatorv1alpha1.IstioOperatorSpec{
 					MeshConfig: meshConfig,
 				},
 			}
@@ -163,9 +162,9 @@ var _ = Describe("Compatibility Mode", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 
 			for fieldName, value := range ProxyMetaDataCompatibility {
-				field := getProxyMetadataField(out, fieldName)
-				Expect(field).ToNot(BeNil())
-				Expect(field.GetStringValue()).To(Equal(value))
+				field, exist := getProxyMetadataField(out, fieldName)
+				Expect(exist).To(BeTrue())
+				Expect(field.(string)).To(Equal(value))
 			}
 		})
 
@@ -178,8 +177,8 @@ var _ = Describe("Compatibility Mode", func() {
 
 			meshConfig := convert(m)
 
-			iop := iopv1alpha1.IstioOperator{
-				Spec: &operatorv1alpha1.IstioOperatorSpec{
+			iop := operatorv1alpha1.IstioOperator{
+				Spec: operatorv1alpha1.IstioOperatorSpec{
 					MeshConfig: meshConfig,
 				},
 			}
@@ -200,14 +199,15 @@ var _ = Describe("Compatibility Mode", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 
 			for fieldName, _ := range ProxyMetaDataCompatibility {
-				field := getProxyMetadataField(out, fieldName)
-				Expect(field).To(BeNil())
+				_, exist := getProxyMetadataField(out, fieldName)
+				Expect(exist).To(BeFalse())
 			}
 		})
 	})
 })
 
-func getProxyMetadataField(iop iopv1alpha1.IstioOperator, fieldName string) *structpb.Value {
-	return iop.Spec.MeshConfig.Fields["defaultConfig"].GetStructValue().
-		Fields["proxyMetadata"].GetStructValue().Fields[fieldName]
+func getProxyMetadataField(iop operatorv1alpha1.IstioOperator, fieldName string) (any, bool) {
+	mapMeshConfig, err := values.MapFromObject(iop.Spec.MeshConfig)
+	Expect(err).ShouldNot(HaveOccurred())
+	return mapMeshConfig.GetPath("defaultConfig.proxyMetadata." + fieldName)
 }

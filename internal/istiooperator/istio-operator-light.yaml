@@ -50,7 +50,7 @@ spec:
             memory: 1024Mi
           requests:
             cpu: 10m
-            memory: 128Mi
+            memory: 32Mi
       name: istio-egressgateway
     ingressGateways:
     - enabled: true

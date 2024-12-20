@@ -23,7 +23,7 @@ The configuration of Istio resources depends on the cluster capabilities. If you
 |-----------------|--------------|------------|-----------------|---------------|
 | Proxy           | 10 m         | 250 m      | 32 Mi           | 254 Mi        |
 | Ingress Gateway | 10 m         | 1000 m     | 32 Mi           | 1024 Mi       |
-| Egress Gateway  | 10 m         | 1000 m     | 128 Mi          | 1024 Mi       |
+| Egress Gateway  | 10 m         | 1000 m     | 32 Mi           | 1024 Mi       |
 | Pilot           | 50 m         | 1000 m     | 128 Mi          | 1024 Mi       |
 | CNI             | 10 m         | 250 m      | 128 Mi          | 384 Mi        |
 
@@ -33,7 +33,7 @@ The configuration of Istio resources depends on the cluster capabilities. If you
 |-----------------|--------------|------------|-----------------|---------------|
 | Proxy           | 10 m         | 1000 m     | 192 Mi          | 1024 Mi       |
 | Ingress Gateway | 10 m         | 1000 m     | 32 Mi           | 1024 Mi       |
-| Egress Gateway  | 10 m         | 2000 m     | 128 Mi          | 1024 Mi       |
+| Egress Gateway  | 10 m         | 1000 m     | 32 Mi           | 1024 Mi       |
 | Pilot           | 100 m        | 4000 m     | 512 Mi          | 2 Gi          |
 | CNI             | 100 m        | 500 m      | 512 Mi          | 1024 Mi       |
 

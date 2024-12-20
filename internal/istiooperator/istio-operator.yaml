@@ -60,11 +60,11 @@ spec:
                 weight: 100
         resources:
           limits:
-            cpu: 1000m
+            cpu: 2000m
             memory: 1024Mi
           requests:
-            cpu: 10m
-            memory: 32Mi
+            cpu: 100m
+            memory: 128Mi
         hpaSpec:
           maxReplicas: 10
           scaleTargetRef:

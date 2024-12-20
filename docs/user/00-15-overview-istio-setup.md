@@ -32,8 +32,8 @@ The configuration of Istio resources depends on the cluster capabilities. If you
 | Component       | CPU Requests | CPU Limits | Memory Requests | Memory Limits |
 |-----------------|--------------|------------|-----------------|---------------|
 | Proxy           | 10 m         | 1000 m     | 192 Mi          | 1024 Mi       |
-| Ingress Gateway | 10 m         | 1000 m     | 32 Mi           | 1024 Mi       |
-| Egress Gateway  | 10 m         | 1000 m     | 32 Mi           | 1024 Mi       |
+| Ingress Gateway | 100 m        | 2000 m     | 128 Mi          | 1024 Mi       |
+| Egress Gateway  | 100 m        | 2000 m     | 128 Mi          | 1024 Mi       |
 | Pilot           | 100 m        | 4000 m     | 512 Mi          | 2 Gi          |
 | CNI             | 100 m        | 500 m      | 512 Mi          | 1024 Mi       |
 

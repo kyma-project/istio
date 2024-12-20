@@ -63,7 +63,7 @@ spec:
             cpu: 2000m
             memory: 1024Mi
           requests:
-            cpu: 10m
+            cpu: 100m
             memory: 128Mi
         hpaSpec:
           maxReplicas: 10

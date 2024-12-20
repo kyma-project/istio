@@ -4,7 +4,6 @@
 * [Istio Version](/istio/user/00-10-istio-version.md)
 * [Default Istio Configuration](/istio/user/00-15-overview-istio-setup.md)
 * [Istio Custom Resource](/istio/user/04-00-istio-custom-resource.md)
-* [ExternalName Migration Guide](/istio/user/migration/external-name-alias.md)
 * [Tutorials](/istio/user/tutorials/README.md)
   * [Enable Istio Sidecar Injection](/istio/user/tutorials/01-40-enable-sidecar-injection.md)
   * [Forward a Client IP in the XFF Header](/istio/user/tutorials/01-00-x-forwarded-for-header.md)

@@ -30,7 +30,6 @@ jobs:
             OWNERS
             CODEOWNERS
             sec-scanners-config.yaml
-            .github/**
             .**
             external-images.yaml
       - name: List all changed files

@@ -9,7 +9,7 @@ import (
 
 type Config struct {
 	ClientTimeout time.Duration `envconfig:"TEST_CLIENT_TIMEOUT,default=10s"`
-	ReqTimeout    time.Duration `envconfig:"TEST_REQUEST_TIMEOUT,default=180s"`
+	ReqTimeout    time.Duration `envconfig:"TEST_REQUEST_TIMEOUT,default=300s"`
 	ReqDelay      time.Duration `envconfig:"TEST_REQUEST_DELAY,default=5s"`
 }
 

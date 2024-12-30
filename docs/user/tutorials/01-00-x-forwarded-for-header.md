@@ -17,7 +17,7 @@ Expose your workload and configure IP-based access to it using the X-Forwarded-F
 
 ## Context
 
-The X-Forwarded-For (XFF) header is a standard HTTP header that conveys the client IP address in the chain of intermediary proxies that the request traverses to reach the Istio service mesh. It is particularly useful when an application must be provided with the client IP address of an originating request, for example, for access control.
+The X-Forwarded-For (XFF) header is a standard HTTP header that conveys the client IP address and the chain of intermediary proxies that the request traverses to reach the Istio service mesh. This is particularly useful when an application must be provided with the client IP address of an originating request, for example, for access control.
 
 However, there are some technical limitations to be aware of when using the XFF header. The header might not include all IP addresses if an intermediary proxy does not support modifying the header. Due to [technical limitations of AWS Classic ELBs](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-proxy-protocol.html#proxy-protocol), when using an IPv4 connection, the header does not include the public IP of the load balancer in front of Istio Ingress Gateway. Moreover, Istio Ingress Gateway's Envoy does not append the private IP address of the load balancer to the XFF header, effectively removing this information from the request. For more information on XFF, see the [IETF’s RFC documentation](https://datatracker.ietf.org/doc/html/rfc7239) and [Envoy documentation](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_conn_man/headers#x-forwarded-for).
 

@@ -36,44 +36,45 @@ To use the XFF header, you must configure the corresponding settings in the Isti
       > If you use a GCP or Azure cluster, you can find your load balancer's IP address in the field status.loadBalancer.ingress of the ingress-gateway Service.
    5. Choose **Save**.
 2. To expose your workload, create an APIRule custom resource with the `noAuth` access strategy. 
-  1. Go to **Discovery and Network > API Rules** and choose **Create**.
-  2. Provide all the required configuration details.
-  3. Add a rule with the following configuration:
-      - **Path**: `/headers`
-      - **Handler**: `no_auth`
-      - **Methods**: `GET`
-  4. Choose **Create**.
+     1. Go to **Discovery and Network > API Rules** and choose **Create**.
+     2. Provide all the required configuration details.
+     3. Add a rule with the following configuration:
+         - **Path**: `/headers`
+         - **Handler**: `no_auth`
+         - **Methods**: `GET`
+     4. Choose **Create**.
    
-  **Step result:** When you go to `https:/{SUBDOMAIN}.{DOMAIN}/headers`, the response contains the **X-Forwarded-For** and **X-Envoy-External-Address** headers with your public IP address. See an example response for the Client IP `165.1.187.197`:
-    ```json
-    {
-      "args": {
-        "show_env": "true"
-      },
-      "headers": {
-        "Accept": "...",
-        "Host": "...",
-        "User-Agent": "...",
-        "X-Envoy-Attempt-Count": "...",
-        "X-Envoy-External-Address": "165.1.187.197",
-        "X-Forwarded-Client-Cert": "...",
-        "X-Forwarded-For": "165.1.187.197",
-        "X-Forwarded-Proto": "...",
-        "X-Request-Id": "..."
-      },
-      "origin": "165.1.187.197",
-      "url": "..."
-    }
-    ``` 
-    >[!TIP]
-    > You can check your public IP address at https://api.ipify.org.
+    **Step result:** When you go to `https:/{SUBDOMAIN}.{DOMAIN}/headers`, the response contains the **X-Forwarded-For** and **X-Envoy-External-Address** headers with your public IP address. See an example response for the Client IP `165.1.187.197`:
+      ```json
+      {
+        "args": {
+          "show_env": "true"
+        },
+        "headers": {
+          "Accept": "...",
+          "Host": "...",
+          "User-Agent": "...",
+          "X-Envoy-Attempt-Count": "...",
+          "X-Envoy-External-Address": "165.1.187.197",
+          "X-Forwarded-Client-Cert": "...",
+          "X-Forwarded-For": "165.1.187.197",
+          "X-Forwarded-Proto": "...",
+          "X-Request-Id": "..."
+        },
+        "origin": "165.1.187.197",
+        "url": "..."
+      }
+      ``` 
+
+      >[!TIP]
+      > You can check your public IP address at https://api.ipify.org.
 
 3. To configure IP-based access to the exposed workload, create an AuthorizationPolicy resource.
-   1. Go to **Istio > Authorization Policies** and choose `Create`.
-   2. Add a selector to specify the workload for which access should be configured.
-   3. Add a rule with a `From` field.
-   4. In the **RemoteIpBlocks** field, specify the IP addresses that should be allowed access to the workload.
-   5. Choose **Create**.
+    1. Go to **Istio > Authorization Policies** and choose `Create`.
+    2. Add a selector to specify the workload for which access should be configured.
+    3. Add a rule with a `From` field.
+    4. In the **RemoteIpBlocks** field, specify the IP addresses that should be allowed access to the workload.
+    5. Choose **Create**.
 
 
 #### **kubectl**
@@ -146,6 +147,7 @@ To use the XFF header, you must configure the corresponding settings in the Isti
     > You can check your public IP address at https://api.ipify.org.    
 
 3. To configure IP-based access to the exposed workload, create an AuthorizationPolicy resource.
+    
     ```bash
     apiVersion: security.istio.io/v1beta1
     kind: AuthorizationPolicy

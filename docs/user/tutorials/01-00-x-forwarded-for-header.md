@@ -153,6 +153,8 @@ To use the XFF header, you must configure the corresponding settings in the Isti
     > You can check your public IP address at https://api.ipify.org.    
 
 3. To configure IP-based access to the exposed workload, create an AuthorizationPolicy resource.
+
+  The selector to specifies the workload for which access should be configured, and the **RemoteIpBlocks** field, specifies the IP addresses, for which access should be allowed.
     
     ```bash
     apiVersion: security.istio.io/v1beta1
@@ -175,4 +177,4 @@ To use the XFF header, you must configure the corresponding settings in the Isti
 <!-- tabs:end -->
 
 ### Results
-Only the specified IP adresses can access the exposed workload.
+You have configured the XFF header in the Istio CR and exposed your workload to the internet. Access to the workload is limited to specific IP addresses that you have specified.

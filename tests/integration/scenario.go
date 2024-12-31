@@ -6,6 +6,7 @@ import (
 )
 
 func initScenario(ctx *godog.ScenarioContext) {
+	ctx.After(getFailedTestIstioCRStatus)
 	ctx.After(testObjectsTearDown)
 	ctx.After(istioCrTearDown)
 

@@ -198,7 +198,7 @@ var _ = Describe("Compatibility Mode", func() {
 			//then
 			Expect(err).ShouldNot(HaveOccurred())
 
-			for fieldName, _ := range ProxyMetaDataCompatibility {
+			for fieldName := range ProxyMetaDataCompatibility {
 				_, exist := getProxyMetadataField(out, fieldName)
 				Expect(exist).To(BeFalse())
 			}

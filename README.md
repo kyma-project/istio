@@ -11,8 +11,8 @@ The Istio module installs and manages Istio in your Kyma cluster. The latest rel
 
 | **Component** | **Version** |
 |---------------|-------------|
-| Istio         | 1.24.1      |
-| Envoy         | 1.32.2      |
+| Istio         | 1.24.2      |
+| Envoy         | 1.32.3      |
 
 > [!NOTE]
 > If you want to enable compatibility with the previous minor version of Istio, see [Compatibility Mode](./docs/user/00-10-istio-version.md#compatibility-mode).

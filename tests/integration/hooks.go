@@ -3,16 +3,33 @@ package integration
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/istio/operator/tests/testcontext"
-
 	"github.com/avast/retry-go"
 	"github.com/cucumber/godog"
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/tests/testcontext"
 	"github.com/pkg/errors"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+var getFailedTestIstioCRStatus = func(ctx context.Context, sc *godog.Scenario, testError error) (context.Context, error) {
+	if testError == nil {
+		return ctx, nil
+	}
+
+	t, err := testcontext.GetTestingFromContext(ctx)
+	if err != nil {
+		return ctx, err
+	}
+
+	if istios, ok := testcontext.GetIstioCRsFromContext(ctx); ok {
+		for _, istio := range istios {
+			t.Logf("Istio CR status: %v", istio.Status)
+		}
+	}
+	return ctx, nil
+}
 
 var testObjectsTearDown = func(ctx context.Context, sc *godog.Scenario, _ error) (context.Context, error) {
 	if objects, ok := testcontext.GetCreatedTestObjectsFromContext(ctx); ok {

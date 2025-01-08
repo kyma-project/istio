@@ -2,6 +2,8 @@ package v1alpha2
 
 import (
 	"encoding/json"
+	"testing"
+
 	"github.com/kyma-project/istio/operator/internal/tests"
 	"github.com/onsi/ginkgo/v2/types"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -15,7 +17,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
-	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -374,7 +375,7 @@ var _ = Describe("Merge", func() {
 		Expect(numTrustedProxies).To(Equal(float64(5)))
 	})
 
-	It("should set enablePrometheusMerge on IstioOperator to true when meshConfig has a enablePrometheusMerge with true", func() {
+	It("should set prometheusMerge on IstioOperator Telemetry Metrics to true when meshConfig has a enablePrometheusMerge with true", func() {
 		// given
 		m := &meshv1alpha1.MeshConfig{
 			EnablePrometheusMerge: wrapperspb.Bool(false),
@@ -386,7 +387,13 @@ var _ = Describe("Merge", func() {
 				MeshConfig: meshConfigRaw,
 			},
 		}
-		istioCR := Istio{Spec: IstioSpec{Config: Config{EnablePrometheusMerge: true}}}
+		istioCR := Istio{Spec: IstioSpec{Config: Config{
+			Telemetry: Telemetry{
+				Metrics: Metrics{
+					PrometheusMerge: true,
+				},
+			},
+		}}}
 
 		// when
 		out, err := istioCR.MergeInto(iop)

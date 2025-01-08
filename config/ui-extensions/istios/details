@@ -23,6 +23,9 @@ body:
     - source: spec.compatibilityMode
       name: compatibilityMode
       placeholder: 'false'
+    - source: spec.config.telemetry.metrics.prometheusMerge
+      name: config.prometheusMerge
+      placeholder: 'false'
 
     - name: config.authorizers
       widget: Table

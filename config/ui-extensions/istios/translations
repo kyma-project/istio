@@ -13,6 +13,7 @@ en:
   config.authorizers.headers.toDownstream.onAllow: Forward To Downstream On Allow
   config.authorizers.headers.toDownstream.onDeny: Forward To Downstream On Deny
   config.gatewayExternalTrafficPolicy: Gateway external traffic policy
+  config.prometheusMerge: Enable PrometheusMerge
 
   k8s.hpaSpec: Horizontal Pod Autoscaler
   k8s.hpaSpec.minReplicas: Minimum number of replicas

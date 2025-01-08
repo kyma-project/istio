@@ -11,17 +11,17 @@ import (
 
 var _ = Describe("Proxy Restarter", func() {
 	Context("RequiresProxyRestart", func() {
-		It("should evaluate to true when new and old enablePrometheusMerge value is different", func() {
+		It("should evaluate to true when new and old prometheusMerge value is different", func() {
 			predicate := ProxyRestartPredicate{
-				oldEnablePrometheusMerge: true,
-				newEnablePrometheusMerge: false,
+				oldPrometheusMerge: true,
+				newPrometheusMerge: false,
 			}
 			Expect(predicate.RequiresProxyRestart(v1.Pod{})).To(BeTrue())
 		})
-		It("should evaluate to false when new an old enablePrometheusMerge value is same", func() {
+		It("should evaluate to false when new an old prometheusMerge value is same", func() {
 			predicate := ProxyRestartPredicate{
-				oldEnablePrometheusMerge: true,
-				newEnablePrometheusMerge: false,
+				oldPrometheusMerge: true,
+				newPrometheusMerge: false,
 			}
 			Expect(predicate.RequiresProxyRestart(v1.Pod{})).To(BeTrue())
 		})
@@ -31,13 +31,13 @@ var _ = Describe("Proxy Restarter", func() {
 			_, err := NewRestartPredicate(&operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
-						labels.LastAppliedConfiguration: `{"config":{"enablePrometheusMerge":true}}`,
+						labels.LastAppliedConfiguration: `{"config":{"telemetry":{"metrics":{"prometheusMerge":true}}}}`,
 					},
 				},
 			})
 			Expect(err).ToNot(HaveOccurred())
 		})
-		It("should return false for old enablePrometheusMerge if lastAppliedConfiguration is empty", func() {
+		It("should return false for old prometheusMerge if lastAppliedConfiguration is empty", func() {
 			predicate, err := NewRestartPredicate(&operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{},
@@ -45,31 +45,35 @@ var _ = Describe("Proxy Restarter", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(predicate).NotTo(BeNil())
-			Expect(predicate.oldEnablePrometheusMerge).To(BeFalse())
+			Expect(predicate.oldPrometheusMerge).To(BeFalse())
 		})
-		It("should return value for old enablePrometheusMerge from lastAppliedConfiguration", func() {
+		It("should return value for old prometheusMerge from lastAppliedConfiguration", func() {
 			predicate, err := NewRestartPredicate(&operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
-						labels.LastAppliedConfiguration: `{"config":{"enablePrometheusMerge":true}}`,
+						labels.LastAppliedConfiguration: `{"config":{"telemetry":{"metrics":{"prometheusMerge":true}}}}`,
 					},
 				},
 			})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(predicate).NotTo(BeNil())
-			Expect(predicate.oldEnablePrometheusMerge).To(BeTrue())
+			Expect(predicate.oldPrometheusMerge).To(BeTrue())
 		})
-		It("should return value for new enablePrometheusMerge from istio CR", func() {
+		It("should return value for new prometheusMerge from istio CR", func() {
 			predicate, err := NewRestartPredicate(&operatorv1alpha2.Istio{
 				Spec: operatorv1alpha2.IstioSpec{
 					Config: operatorv1alpha2.Config{
-						EnablePrometheusMerge: true,
+						Telemetry: operatorv1alpha2.Telemetry{
+							Metrics: operatorv1alpha2.Metrics{
+								PrometheusMerge: true,
+							},
+						},
 					},
 				},
 			})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(predicate).NotTo(BeNil())
-			Expect(predicate.newEnablePrometheusMerge).To(BeTrue())
+			Expect(predicate.newPrometheusMerge).To(BeTrue())
 		})
 	})
 })

@@ -7,8 +7,8 @@ import (
 )
 
 type ProxyRestartPredicate struct {
-	oldEnablePrometheusMerge bool
-	newEnablePrometheusMerge bool
+	oldPrometheusMerge bool
+	newPrometheusMerge bool
 }
 
 func NewRestartPredicate(istioCR *v1alpha2.Istio) (*ProxyRestartPredicate, error) {
@@ -18,11 +18,11 @@ func NewRestartPredicate(istioCR *v1alpha2.Istio) (*ProxyRestartPredicate, error
 	}
 
 	return &ProxyRestartPredicate{
-		oldEnablePrometheusMerge: lastAppliedConfig.IstioSpec.Config.EnablePrometheusMerge,
-		newEnablePrometheusMerge: istioCR.Spec.Config.EnablePrometheusMerge,
+		oldPrometheusMerge: lastAppliedConfig.IstioSpec.Config.Telemetry.Metrics.PrometheusMerge,
+		newPrometheusMerge: istioCR.Spec.Config.Telemetry.Metrics.PrometheusMerge,
 	}, nil
 }
 
 func (p ProxyRestartPredicate) RequiresProxyRestart(_ v1.Pod) bool {
-	return p.oldEnablePrometheusMerge != p.newEnablePrometheusMerge
+	return p.oldPrometheusMerge != p.newPrometheusMerge
 }

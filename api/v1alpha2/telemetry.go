@@ -3,7 +3,7 @@ package v1alpha2
 type Telemetry struct {
 	// Istio telemetry configuration related to metrics
 	// +kubebuilder:validation:Optional
-	Metrics Metrics `json:"metrics"`
+	Metrics Metrics `json:"metrics,omitempty"`
 }
 
 type Metrics struct {
@@ -11,5 +11,5 @@ type Metrics struct {
 	// If these annotations already exist, they will be overwritten. With this option, the Envoy sidecar will merge Istio’s metrics with the application metrics.
 	// The merged metrics will be scraped from :15020/stats/prometheus.
 	// +kubebuilder:validation:Optional
-	PrometheusMerge bool `json:"prometheusMerge"`
+	PrometheusMerge bool `json:"prometheusMerge,omitempty"`
 }

@@ -27,6 +27,8 @@ spec:
        prometheusMerge: false
 ```
 
+The `telemetry` and `metrics` fields are introduced here to account for future plans to introduce more feature from the Istio Telemetry API into the CR.
+
 ## Consequences
 Istio CustomResourceDefinition will be extended with an additional configuration field of `telemetry.metrics.prometheusMerge` that will allow for configuration of the `prometheusMerge` setting in Istio Mesh Config. The field will be an optional configuration with the default value of `false`.
 

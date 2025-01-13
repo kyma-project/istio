@@ -36,7 +36,7 @@ jobs:
 
   unit-tests:
     name: Dispatch unit test
-    uses: ./.github/workflows/call-unit-lint.yaml
+    uses: ./.github/workflows/call-unit-lint-head-ref.yaml
     if: github.event.pull_request.draft == false
     secrets: inherit
 

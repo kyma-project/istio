@@ -22,7 +22,7 @@ require (
 	gitlab.com/rodrigoodhin/gocure v0.0.0-20220718065339-f14dfe79276a
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 	golang.org/x/time v0.8.0
-	google.golang.org/protobuf v1.36.2
+	google.golang.org/protobuf v1.36.3
 	gopkg.in/yaml.v3 v3.0.1
 	istio.io/api v1.24.2-0.20241206152109-43afb8563706
 	istio.io/client-go v1.24.2-0.20241206152608-3892aa679051

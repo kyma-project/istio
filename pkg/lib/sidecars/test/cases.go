@@ -21,7 +21,7 @@ const restartAnnotationName = "istio-operator.kyma-project.io/restartedAt"
 
 func (s *scenario) aRestartHappens(sidecarImage string) error {
 	pr := sidecars.NewProxyResetter()
-	warnings, hasMorePods, err := pr.ProxyReset(context.TODO(),
+	warnings, hasMorePods := pr.ProxyReset(context.TODO(),
 		s.Client,
 		pods.SidecarImage{Repository: "istio/proxyv2", Tag: sidecarImage},
 		helpers.DefaultSidecarResources,
@@ -29,7 +29,7 @@ func (s *scenario) aRestartHappens(sidecarImage string) error {
 		&s.logger)
 	s.restartWarnings = warnings
 	s.hasMorePodsToRestart = hasMorePods
-	return err
+	return nil
 }
 
 func (s *scenario) aRestartHappensWithUpdatedResources(sidecarImage string, resourceType string, cpu string, memory string) error {
@@ -46,7 +46,7 @@ func (s *scenario) aRestartHappensWithUpdatedResources(sidecarImage string, reso
 		return fmt.Errorf("unknown resource type %s", resourceType)
 	}
 	pr := sidecars.NewProxyResetter()
-	warnings, hasMorePods, err := pr.ProxyReset(context.TODO(),
+	warnings, hasMorePods := pr.ProxyReset(context.TODO(),
 		s.Client,
 		pods.SidecarImage{Repository: "istio/proxyv2", Tag: sidecarImage},
 		resources,
@@ -54,7 +54,7 @@ func (s *scenario) aRestartHappensWithUpdatedResources(sidecarImage string, reso
 		&s.logger)
 	s.restartWarnings = warnings
 	s.hasMorePodsToRestart = hasMorePods
-	return err
+	return nil
 }
 
 func (s *scenario) allRequiredResourcesAreDeleted() error {

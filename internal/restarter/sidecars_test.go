@@ -302,9 +302,8 @@ func (m MergerMock) SetIstioInstallFlavor(_ clusterconfig.ClusterSize) {}
 type proxyResetterMock struct {
 	restartWarnings []restart.RestartWarning
 	hasMorePods     bool
-	err             error
 }
 
-func (p *proxyResetterMock) ProxyReset(_ context.Context, _ client.Client, _ pods.SidecarImage, _ v1.ResourceRequirements, _ []filter.SidecarProxyPredicate, _ *logr.Logger) ([]restart.RestartWarning, bool, error) {
-	return p.restartWarnings, p.hasMorePods, p.err
+func (p *proxyResetterMock) ProxyReset(_ context.Context, _ client.Client, _ pods.SidecarImage, _ v1.ResourceRequirements, _ []filter.SidecarProxyPredicate, _ *logr.Logger) ([]restart.RestartWarning, bool) {
+	return p.restartWarnings, p.hasMorePods
 }

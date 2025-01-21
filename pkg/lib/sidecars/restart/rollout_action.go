@@ -63,7 +63,6 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 			rs := obj.(*appsv1.ReplicaSet)
 			patch := client.StrategicMergeFrom(rs.DeepCopy())
 			rs.Spec.Template.Annotations = annotations.AddRestartAnnotation(rs.Spec.Template.Annotations)
-
 			return k8sclient.Patch(ctx, rs, patch)
 		})
 	case "StatefulSet":

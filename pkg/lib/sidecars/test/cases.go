@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kyma-project/istio/operator/internal/filter"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/test/helpers"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -21,20 +20,20 @@ const restartAnnotationName = "istio-operator.kyma-project.io/restartedAt"
 
 func (s *scenario) aRestartHappens(sidecarImage string) error {
 	pr := sidecars.NewProxyResetter()
-	warnings, hasMorePods := pr.ProxyReset(context.TODO(),
+	istioCR := helpers.GetIstioCR(sidecarImage)
+	warnings, hasMorePods, err := pr.ProxyReset(context.TODO(),
 		s.Client,
 		pods.SidecarImage{Repository: "istio/proxyv2", Tag: sidecarImage},
 		helpers.DefaultSidecarResources,
-		[]filter.SidecarProxyPredicate{},
+		&istioCR,
 		&s.logger)
 	s.restartWarnings = warnings
 	s.hasMorePodsToRestart = hasMorePods
-	return nil
+	return err
 }
 
 func (s *scenario) aRestartHappensWithUpdatedResources(sidecarImage string, resourceType string, cpu string, memory string) error {
 	resources := helpers.DefaultSidecarResources
-
 	switch resourceType {
 	case "requests":
 		resources.Requests[v1.ResourceCPU] = resource.MustParse(cpu)
@@ -46,15 +45,16 @@ func (s *scenario) aRestartHappensWithUpdatedResources(sidecarImage string, reso
 		return fmt.Errorf("unknown resource type %s", resourceType)
 	}
 	pr := sidecars.NewProxyResetter()
-	warnings, hasMorePods := pr.ProxyReset(context.TODO(),
+	istioCR := helpers.GetIstioCR(sidecarImage)
+	warnings, hasMorePods, err := pr.ProxyReset(context.TODO(),
 		s.Client,
 		pods.SidecarImage{Repository: "istio/proxyv2", Tag: sidecarImage},
 		resources,
-		[]filter.SidecarProxyPredicate{},
+		&istioCR,
 		&s.logger)
 	s.restartWarnings = warnings
 	s.hasMorePodsToRestart = hasMorePods
-	return nil
+	return err
 }
 
 func (s *scenario) allRequiredResourcesAreDeleted() error {

@@ -1,7 +1,8 @@
-package ingressgateway
+package predicates
 
 import (
 	"context"
+
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/filter"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
@@ -11,7 +12,7 @@ type RestartPredicate struct {
 	istioCR *operatorv1alpha2.Istio
 }
 
-func NewRestartPredicate(istioCR *operatorv1alpha2.Istio) *RestartPredicate {
+func NewIngressGatewayRestartPredicate(istioCR *operatorv1alpha2.Istio) *RestartPredicate {
 	return &RestartPredicate{istioCR: istioCR}
 }
 

@@ -2,6 +2,7 @@ package restart
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/go-logr/logr"
 
@@ -27,7 +28,7 @@ func newRestartWarning(o actionObject, message string) RestartWarning {
 	}
 }
 
-func Restart(ctx context.Context, c client.Client, podList *v1.PodList, logger *logr.Logger) []RestartWarning {
+func Restart(ctx context.Context, c client.Client, podList *v1.PodList, logger *logr.Logger, failOnError bool) ([]RestartWarning, error) {
 	warnings := make([]RestartWarning, 0)
 	processedActionObjects := make(map[string]bool)
 
@@ -35,6 +36,9 @@ func Restart(ctx context.Context, c client.Client, podList *v1.PodList, logger *
 		action, err := restartActionFactory(ctx, c, pod)
 		if err != nil {
 			logger.Error(err, "pod", action.object.getKey(), "Creating pod restart action failed")
+			if failOnError {
+				return []RestartWarning{}, fmt.Errorf("creating pod restart action failed: %w", err)
+			}
 			continue
 		}
 
@@ -43,6 +47,9 @@ func Restart(ctx context.Context, c client.Client, podList *v1.PodList, logger *
 			currentWarnings, err := action.run(ctx, c, action.object, logger)
 			if err != nil {
 				logger.Error(err, "pod", action.object.getKey(), "Running pod restart action failed")
+				if failOnError {
+					return []RestartWarning{}, fmt.Errorf("running pod restart action failed: %w", err)
+				}
 			}
 			warnings = append(warnings, currentWarnings...)
 			processedActionObjects[action.object.getKey()] = true
@@ -50,5 +57,5 @@ func Restart(ctx context.Context, c client.Client, podList *v1.PodList, logger *
 
 	}
 
-	return warnings
+	return warnings, nil
 }

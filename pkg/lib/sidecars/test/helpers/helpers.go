@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"time"
 
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/pkg/labels"
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	v1 "k8s.io/api/core/v1"
@@ -34,6 +36,17 @@ var DefaultSidecarResources = v1.ResourceRequirements{
 	Requests: v1.ResourceList{
 		v1.ResourceCPU:    resource.MustParse("200m"),
 		v1.ResourceMemory: resource.MustParse("400Mi"),
+	},
+}
+
+var DifferentSidecarResources = v1.ResourceRequirements{
+	Limits: v1.ResourceList{
+		v1.ResourceCPU:    resource.MustParse("150m"),
+		v1.ResourceMemory: resource.MustParse("250Mi"),
+	},
+	Requests: v1.ResourceList{
+		v1.ResourceCPU:    resource.MustParse("250m"),
+		v1.ResourceMemory: resource.MustParse("450Mi"),
 	},
 }
 
@@ -276,4 +289,22 @@ func Clone(oldObj interface{}) interface{} {
 	}
 
 	return newObj.Interface()
+}
+
+func GetIstioCR(sidecarImage string) operatorv1alpha2.Istio {
+	numTrustedProxies := 1
+	return operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
+		Name:            "default",
+		ResourceVersion: "1",
+		Annotations: map[string]string{
+			labels.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"compatibilityMode":false,"IstioTag":"%s"}`, numTrustedProxies, sidecarImage),
+		},
+	},
+		Spec: operatorv1alpha2.IstioSpec{
+			Config: operatorv1alpha2.Config{
+				NumTrustedProxies: &numTrustedProxies,
+			},
+			CompatibilityMode: false,
+		},
+	}
 }

@@ -87,7 +87,6 @@ func getSidecarPods(ctx context.Context, c client.Client, logger *logr.Logger, l
 }
 
 func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage SidecarImage, expectedResources v1.ResourceRequirements, predicates []filter.SidecarProxyPredicate, limits *PodsRestartLimits, logger *logr.Logger) (*v1.PodList, error) {
-	//Add predicate for image version and resources configuration
 	predicates = append(predicates, NewRestartProxyPredicate(expectedImage, expectedResources))
 
 	podsToRestart := &v1.PodList{}
@@ -97,7 +96,7 @@ func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage Sideca
 			return nil, err
 		}
 		for _, pod := range podsWithSidecar.Items {
-			for _, predicate := range predicates {
+			for _, predicate := range predicates { // any predicate will require a restart
 				if predicate.RequiresProxyRestart(pod) {
 					podsToRestart.Items = append(podsToRestart.Items, pod)
 					break

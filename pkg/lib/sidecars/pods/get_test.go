@@ -155,7 +155,7 @@ var _ = Describe("GetPodsToRestart", func() {
 						Build(),
 				),
 				limits:     pods.NewPodsRestartLimits(5, 5),
-				predicates: []filter.SidecarProxyPredicate{pods.NewRestartProxyPredicate(expectedImage, helpers.DefaultSidecarResources)},
+				predicates: []filter.SidecarProxyPredicate{pods.NewRestartProxyPredicate(expectedImage, helpers.DifferentSidecarResources)},
 				assertFunc: func(podList *v1.PodList) {
 					Expect(podList.Items).To(HaveLen(1))
 				},

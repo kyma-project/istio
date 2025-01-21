@@ -1,4 +1,4 @@
-package ingressgateway_test
+package predicates_test
 
 import (
 	"context"
@@ -8,16 +8,16 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/pkg/lib/ingressgateway"
+	predicates "github.com/kyma-project/istio/operator/internal/restarter/predicates"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/utils/ptr"
 )
 
-var _ = Describe("Ingress Gateway Restarter", func() {
+var _ = Describe("Ingress Gateway Predicate", func() {
 	Context("RequiresIngressGatewayRestart", func() {
 		It("should evaluate to true if new is nil and old is not nil", func() {
-			evaluator := ingressgateway.NumTrustedProxiesRestartEvaluator{
+			evaluator := predicates.NumTrustedProxiesRestartEvaluator{
 				NewNumTrustedProxies: nil,
 				OldNumTrustedProxies: new(int),
 			}
@@ -26,7 +26,7 @@ var _ = Describe("Ingress Gateway Restarter", func() {
 		})
 
 		It("should evaluate to true if new is not nil and old is nil", func() {
-			evaluator := ingressgateway.NumTrustedProxiesRestartEvaluator{
+			evaluator := predicates.NumTrustedProxiesRestartEvaluator{
 				NewNumTrustedProxies: new(int),
 				OldNumTrustedProxies: nil,
 			}
@@ -38,7 +38,7 @@ var _ = Describe("Ingress Gateway Restarter", func() {
 			newNumTrustedProxies := 1
 			oldNumTrustedProxies := 2
 
-			evaluator := ingressgateway.NumTrustedProxiesRestartEvaluator{
+			evaluator := predicates.NumTrustedProxiesRestartEvaluator{
 				NewNumTrustedProxies: &newNumTrustedProxies,
 				OldNumTrustedProxies: &oldNumTrustedProxies,
 			}
@@ -50,7 +50,7 @@ var _ = Describe("Ingress Gateway Restarter", func() {
 			numTrustedProxies := 1
 			oldNumTrustedProxies := 1
 
-			evaluator := ingressgateway.NumTrustedProxiesRestartEvaluator{
+			evaluator := predicates.NumTrustedProxiesRestartEvaluator{
 				NewNumTrustedProxies: &oldNumTrustedProxies,
 				OldNumTrustedProxies: &numTrustedProxies,
 			}
@@ -67,7 +67,7 @@ var _ = Describe("Ingress Gateway Restarter", func() {
 		)
 
 		It("should return an error if getLastAppliedConfiguration fails", func() {
-			predicate := ingressgateway.NewRestartPredicate(&operatorv1alpha2.Istio{
+			predicate := predicates.NewIngressGatewayRestartPredicate(&operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
 						lastAppliedConfiguration: `{"config":{"numTrustedProxies":abc},"IstioTag":w}`,
@@ -80,7 +80,7 @@ var _ = Describe("Ingress Gateway Restarter", func() {
 		})
 
 		It("should return nil for old numTrustedProxies if lastAppliedConfiguration is empty", func() {
-			predicate := ingressgateway.NewRestartPredicate(&operatorv1alpha2.Istio{
+			predicate := predicates.NewIngressGatewayRestartPredicate(&operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{},
 				},
@@ -89,7 +89,7 @@ var _ = Describe("Ingress Gateway Restarter", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(evaluator).NotTo(BeNil())
-			Expect(evaluator.(ingressgateway.NumTrustedProxiesRestartEvaluator).OldNumTrustedProxies).To(BeNil())
+			Expect(evaluator.(predicates.NumTrustedProxiesRestartEvaluator).OldNumTrustedProxies).To(BeNil())
 		})
 
 		It("should return correct not nil value for new and old numTrustedProxies", func() {
@@ -104,13 +104,13 @@ var _ = Describe("Ingress Gateway Restarter", func() {
 				},
 			}
 
-			predicate := ingressgateway.NewRestartPredicate(istio)
+			predicate := predicates.NewIngressGatewayRestartPredicate(istio)
 			evaluator, err := predicate.NewIngressGatewayEvaluator(context.Background())
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(evaluator).NotTo(BeNil())
-			Expect(*(evaluator.(ingressgateway.NumTrustedProxiesRestartEvaluator).NewNumTrustedProxies)).To(Equal(1))
-			Expect(*(evaluator.(ingressgateway.NumTrustedProxiesRestartEvaluator).OldNumTrustedProxies)).To(Equal(2))
+			Expect(*(evaluator.(predicates.NumTrustedProxiesRestartEvaluator).NewNumTrustedProxies)).To(Equal(1))
+			Expect(*(evaluator.(predicates.NumTrustedProxiesRestartEvaluator).OldNumTrustedProxies)).To(Equal(2))
 		})
 
 		It("should return correct nil value for new and old numTrustedProxies", func() {
@@ -125,13 +125,13 @@ var _ = Describe("Ingress Gateway Restarter", func() {
 				},
 			}
 
-			predicate := ingressgateway.NewRestartPredicate(istio)
+			predicate := predicates.NewIngressGatewayRestartPredicate(istio)
 			evaluator, err := predicate.NewIngressGatewayEvaluator(context.Background())
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(evaluator).NotTo(BeNil())
-			Expect(evaluator.(ingressgateway.NumTrustedProxiesRestartEvaluator).NewNumTrustedProxies).To(BeNil())
-			Expect(evaluator.(ingressgateway.NumTrustedProxiesRestartEvaluator).OldNumTrustedProxies).To(BeNil())
+			Expect(evaluator.(predicates.NumTrustedProxiesRestartEvaluator).NewNumTrustedProxies).To(BeNil())
+			Expect(evaluator.(predicates.NumTrustedProxiesRestartEvaluator).OldNumTrustedProxies).To(BeNil())
 		})
 
 	})

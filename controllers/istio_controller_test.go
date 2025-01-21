@@ -1043,7 +1043,7 @@ type shouldFailClient struct {
 
 func (p *shouldFailClient) List(ctx context.Context, list client.ObjectList, _ ...client.ListOption) error {
 	if p.FailOnList {
-		return errors.New("intentionally failing client on list")
+		return errors.New("intentionally failing client on client.List")
 	}
 	return p.Client.List(ctx, list)
 }

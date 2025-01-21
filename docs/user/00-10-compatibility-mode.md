@@ -1,15 +1,5 @@
-# Istio Version
-Learn which version of Istio the Istio module contains and how to enable compatibility mode with the previous minor version of Istio.
-
-The version of Istio depends on the version of the Istio module that you use. If a new version of the Istio module introduces a new version of Istio, an upgrade of the module causes an automatic upgrade of Istio.
-
-The latest release includes the following versions of Istio and Envoy:  
-
-**Istio version:** 1.22.3
-
-**Envoy version:** 1.30.5
-
-## Compatibility Mode
+# Compatibility Mode
+To revert certain changes in Istio's behavior when you encounter compatibility issues with its new version, consider enabling compatibility mode.
 
 Compatibility mode allows you to revert certain changes in Istio's behavior, and it is recommended only when you encounter compatibility issues with the new version of Istio. The Istio module supports compatibility with the previous minor version of Istio. For example, for the version of the Istio module that contains Istio 1.21, you can apply a compatibility version of Istio 1.20. See [Compatibility Versions](https://istio.io/latest/docs/setup/additional-setup/compatibility-versions/).
 

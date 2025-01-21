@@ -2,6 +2,7 @@ package restart
 
 import (
 	"context"
+
 	"github.com/go-logr/logr"
 
 	v1 "k8s.io/api/core/v1"
@@ -26,14 +27,14 @@ func newRestartWarning(o actionObject, message string) RestartWarning {
 	}
 }
 
-func Restart(ctx context.Context, c client.Client, podList *v1.PodList, logger *logr.Logger) ([]RestartWarning, error) {
+func Restart(ctx context.Context, c client.Client, podList *v1.PodList, logger *logr.Logger) []RestartWarning {
 	warnings := make([]RestartWarning, 0)
 	processedActionObjects := make(map[string]bool)
 
 	for _, pod := range podList.Items {
 		action, err := restartActionFactory(ctx, c, pod)
 		if err != nil {
-			logger.Error(err, "creating an action for a pod failed")
+			logger.Error(err, "pod", action.object.getKey(), "Creating pod restart action failed")
 			continue
 		}
 
@@ -41,7 +42,7 @@ func Restart(ctx context.Context, c client.Client, podList *v1.PodList, logger *
 		if _, exists := processedActionObjects[action.object.getKey()]; !exists {
 			currentWarnings, err := action.run(ctx, c, action.object, logger)
 			if err != nil {
-				logger.Error(err, "running an action for a pod failed")
+				logger.Error(err, "pod", action.object.getKey(), "Running pod restart action failed")
 			}
 			warnings = append(warnings, currentWarnings...)
 			processedActionObjects[action.object.getKey()] = true
@@ -49,5 +50,5 @@ func Restart(ctx context.Context, c client.Client, podList *v1.PodList, logger *
 
 	}
 
-	return warnings, nil
+	return warnings
 }

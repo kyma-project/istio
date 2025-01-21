@@ -13,7 +13,6 @@ import (
 )
 
 func getReplicaSetAction(ctx context.Context, c client.Client, pod v1.Pod, replicaSetRef *metav1.OwnerReference) (restartAction, error) {
-
 	replicaSetKey := client.ObjectKey{
 		Namespace: pod.Namespace,
 		Name:      replicaSetRef.Name,

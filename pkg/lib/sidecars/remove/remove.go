@@ -15,5 +15,5 @@ func RemoveSidecars(ctx context.Context, k8sclient client.Client, logger *logr.L
 		return nil, err
 	}
 
-	return restart.Restart(ctx, k8sclient, toRestart, logger)
+	return restart.Restart(ctx, k8sclient, toRestart, logger), nil
 }

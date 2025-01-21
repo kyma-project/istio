@@ -18,7 +18,7 @@ const (
 )
 
 type ProxyResetter interface {
-	ProxyReset(ctx context.Context, c client.Client, expectedImage pods.SidecarImage, expectedResources v1.ResourceRequirements, predicates []filter.SidecarProxyPredicate, logger *logr.Logger) ([]restart.RestartWarning, bool, error)
+	ProxyReset(ctx context.Context, c client.Client, expectedImage pods.SidecarImage, expectedResources v1.ResourceRequirements, predicates []filter.SidecarProxyPredicate, logger *logr.Logger) ([]restart.RestartWarning, bool)
 }
 
 type ProxyReset struct {
@@ -28,20 +28,16 @@ func NewProxyResetter() *ProxyReset {
 	return &ProxyReset{}
 }
 
-func (p *ProxyReset) ProxyReset(ctx context.Context, c client.Client, expectedImage pods.SidecarImage, expectedResources v1.ResourceRequirements, predicates []filter.SidecarProxyPredicate, logger *logr.Logger) ([]restart.RestartWarning, bool, error) {
+func (p *ProxyReset) ProxyReset(ctx context.Context, c client.Client, expectedImage pods.SidecarImage, expectedResources v1.ResourceRequirements, predicates []filter.SidecarProxyPredicate, logger *logr.Logger) ([]restart.RestartWarning, bool) {
 	limits := pods.NewPodsRestartLimits(podsToRestartLimit, podsToListLimit)
 	podsToRestart, err := pods.GetPodsToRestart(ctx, c, expectedImage, expectedResources, predicates, limits, logger)
 	if err != nil {
-		return nil, false, err
+		logger.Error(err, "Getting pods to restart failed")
 	}
 
 	// if there are more pods to restart there should be a continue token in the pod list
 	hasMorePodsToRestart := podsToRestart.Continue != ""
-
-	warnings, err := restart.Restart(ctx, c, podsToRestart, logger)
-	if err != nil {
-		return nil, false, err
-	}
+	warnings := restart.Restart(ctx, c, podsToRestart, logger)
 
 	if !hasMorePodsToRestart {
 		logger.Info("Proxy reset completed")
@@ -49,5 +45,5 @@ func (p *ProxyReset) ProxyReset(ctx context.Context, c client.Client, expectedIm
 		logger.Info("Proxy reset only partially completed")
 	}
 
-	return warnings, hasMorePodsToRestart, nil
+	return warnings, hasMorePodsToRestart
 }

@@ -20,6 +20,11 @@
     name: compatibilityMode
     value:
       type: bool
+  - path: config.telemetry.metrics.prometheusMerge
+    simple: true
+    name: config.prometheusMerge
+    value:
+      type: bool
 - path: spec.config.authorizers
   name: config.authorizers
   widget: GenericList

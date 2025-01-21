@@ -2,6 +2,7 @@ package v1alpha2
 
 import (
 	"encoding/json"
+
 	"istio.io/istio/operator/pkg/values"
 	"istio.io/istio/pkg/util/protomarshal"
 	appsv1 "k8s.io/api/apps/v1"
@@ -59,6 +60,15 @@ func (m *meshConfigBuilder) BuildNumTrustedProxies(numTrustedProxies *int) *mesh
 	}
 
 	err := m.c.SetPath("defaultConfig.gatewayTopology.numTrustedProxies", numTrustedProxies)
+	if err != nil {
+		return nil
+	}
+
+	return m
+}
+
+func (m *meshConfigBuilder) BuildPrometheusMergeConfig(prometheusMerge bool) *meshConfigBuilder {
+	err := m.c.SetPath("enablePrometheusMerge", prometheusMerge)
 	if err != nil {
 		return nil
 	}
@@ -160,6 +170,7 @@ func (i *Istio) mergeConfig(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOper
 	newMeshConfig := mcb.
 		BuildNumTrustedProxies(i.Spec.Config.NumTrustedProxies).
 		BuildExternalAuthorizerConfiguration(i.Spec.Config.Authorizers).
+		BuildPrometheusMergeConfig(i.Spec.Config.Telemetry.Metrics.PrometheusMerge).
 		Build()
 
 	op.Spec.MeshConfig = newMeshConfig

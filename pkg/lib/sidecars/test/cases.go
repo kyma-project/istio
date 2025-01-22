@@ -21,7 +21,7 @@ const restartAnnotationName = "istio-operator.kyma-project.io/restartedAt"
 func (s *scenario) aRestartHappens(sidecarImage string) error {
 	pr := sidecars.NewProxyRestarter()
 	istioCR := helpers.GetIstioCR(sidecarImage)
-	warnings, hasMorePods, err := pr.RestartProxies(context.TODO(),
+	warnings, hasMorePods, err := pr.RestartProxies(context.Background(),
 		s.Client,
 		predicates.SidecarImage{Repository: "istio/proxyv2", Tag: sidecarImage},
 		helpers.DefaultSidecarResources,
@@ -46,7 +46,7 @@ func (s *scenario) aRestartHappensWithUpdatedResources(sidecarImage string, reso
 	}
 	pr := sidecars.NewProxyRestarter()
 	istioCR := helpers.GetIstioCR(sidecarImage)
-	warnings, hasMorePods, err := pr.RestartProxies(context.TODO(),
+	warnings, hasMorePods, err := pr.RestartProxies(context.Background(),
 		s.Client,
 		predicates.SidecarImage{Repository: "istio/proxyv2", Tag: sidecarImage},
 		resources,
@@ -60,7 +60,7 @@ func (s *scenario) aRestartHappensWithUpdatedResources(sidecarImage string, reso
 func (s *scenario) allRequiredResourcesAreDeleted() error {
 	for _, v := range s.ToBeDeletedObjects {
 		obj := v
-		err := s.Client.Get(context.TODO(), types.NamespacedName{Name: v.GetName(), Namespace: v.GetNamespace()}, obj)
+		err := s.Client.Get(context.Background(), types.NamespacedName{Name: v.GetName(), Namespace: v.GetNamespace()}, obj)
 		if err == nil {
 			return fmt.Errorf("the pod %s/%s should have been deleted, but was not deleted", v.GetNamespace(), v.GetName())
 		}
@@ -75,7 +75,7 @@ func (s *scenario) allRequiredResourcesAreDeleted() error {
 func (s *scenario) allRequiredResourcesAreRestarted() error {
 	for _, v := range s.ToBeRestartedObjects {
 		obj := v
-		err := s.Client.Get(context.TODO(), types.NamespacedName{Name: v.GetName(), Namespace: v.GetNamespace()}, obj)
+		err := s.Client.Get(context.Background(), types.NamespacedName{Name: v.GetName(), Namespace: v.GetNamespace()}, obj)
 		if err != nil {
 			return err
 		}
@@ -115,7 +115,7 @@ func (s *scenario) allRequiredResourcesAreRestarted() error {
 func (s *scenario) onlyRequiredResourcesAreDeleted() error {
 	for _, v := range s.NotToBeDeletedObjects {
 		obj := v
-		err := s.Client.Get(context.TODO(), types.NamespacedName{Name: v.GetName(), Namespace: v.GetNamespace()}, obj)
+		err := s.Client.Get(context.Background(), types.NamespacedName{Name: v.GetName(), Namespace: v.GetNamespace()}, obj)
 		if err != nil {
 			return err
 		}
@@ -126,7 +126,7 @@ func (s *scenario) onlyRequiredResourcesAreDeleted() error {
 func (s *scenario) onlyRequiredresourcesAreRestarted() error {
 	for _, v := range s.NotToBeRestartedObjects {
 		obj := v
-		err := s.Client.Get(context.TODO(), types.NamespacedName{Name: v.GetName(), Namespace: v.GetNamespace()}, obj)
+		err := s.Client.Get(context.Background(), types.NamespacedName{Name: v.GetName(), Namespace: v.GetNamespace()}, obj)
 		if err != nil {
 			return err
 		}

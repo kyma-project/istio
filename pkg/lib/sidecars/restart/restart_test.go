@@ -34,7 +34,7 @@ var _ = ReportAfterSuite("custom reporter", func(report ginkgotypes.Report) {
 })
 
 var _ = Describe("Restart Pods", func() {
-	ctx := context.TODO()
+	ctx := context.Background()
 	logger := logr.Discard()
 
 	It("should return warning when pod has no owner", func() {
@@ -97,7 +97,7 @@ var _ = Describe("Restart Pods", func() {
 		Expect(warnings).To(BeEmpty())
 
 		obj := appsv1.Deployment{}
-		err = c.Get(context.TODO(), types.NamespacedName{Namespace: "test-ns", Name: "owner"}, &obj)
+		err = c.Get(context.Background(), types.NamespacedName{Namespace: "test-ns", Name: "owner"}, &obj)
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(obj.Spec.Template.Annotations[restartAnnotationName]).NotTo(BeEmpty())
@@ -122,7 +122,7 @@ var _ = Describe("Restart Pods", func() {
 		Expect(warnings).To(BeEmpty())
 
 		obj := appsv1.Deployment{}
-		err = c.Get(context.TODO(), types.NamespacedName{Namespace: "test-ns", Name: "owner"}, &obj)
+		err = c.Get(context.Background(), types.NamespacedName{Namespace: "test-ns", Name: "owner"}, &obj)
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(obj.Spec.Template.Annotations[restartAnnotationName]).NotTo(BeEmpty())
@@ -146,7 +146,7 @@ var _ = Describe("Restart Pods", func() {
 		Expect(warnings).To(BeEmpty())
 
 		obj := appsv1.DaemonSet{}
-		err = c.Get(context.TODO(), types.NamespacedName{Namespace: "test-ns", Name: "owner"}, &obj)
+		err = c.Get(context.Background(), types.NamespacedName{Namespace: "test-ns", Name: "owner"}, &obj)
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(obj.Spec.Template.Annotations[restartAnnotationName]).NotTo(BeEmpty())
@@ -169,7 +169,7 @@ var _ = Describe("Restart Pods", func() {
 		Expect(warnings).To(BeEmpty())
 
 		obj := v1.Pod{}
-		err = c.Get(context.TODO(), types.NamespacedName{Namespace: "test-ns", Name: "p1"}, &obj)
+		err = c.Get(context.Background(), types.NamespacedName{Namespace: "test-ns", Name: "p1"}, &obj)
 
 		Expect(err).To(HaveOccurred())
 		Expect(k8serrors.IsNotFound(err)).To(BeTrue())
@@ -192,7 +192,7 @@ var _ = Describe("Restart Pods", func() {
 		Expect(warnings).To(BeEmpty())
 
 		obj := v1.Pod{}
-		err = c.Get(context.TODO(), types.NamespacedName{Namespace: "test-ns", Name: "p1"}, &obj)
+		err = c.Get(context.Background(), types.NamespacedName{Namespace: "test-ns", Name: "p1"}, &obj)
 
 		Expect(err).To(HaveOccurred())
 		Expect(k8serrors.IsNotFound(err)).To(BeTrue())
@@ -218,7 +218,7 @@ var _ = Describe("Restart Pods", func() {
 		Expect(warnings).To(BeEmpty())
 
 		obj := appsv1.StatefulSet{}
-		err = c.Get(context.TODO(), types.NamespacedName{Namespace: "test-ns", Name: "owner"}, &obj)
+		err = c.Get(context.Background(), types.NamespacedName{Namespace: "test-ns", Name: "owner"}, &obj)
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(obj.Spec.Template.Annotations[restartAnnotationName]).NotTo(BeEmpty())
@@ -244,7 +244,7 @@ var _ = Describe("Restart Pods", func() {
 		Expect(warnings).NotTo(BeEmpty())
 
 		pods := v1.PodList{}
-		err = c.List(context.TODO(), &pods)
+		err = c.List(context.Background(), &pods)
 
 		Expect(err).NotTo(HaveOccurred())
 		Expect(pods.Items).NotTo(BeEmpty())
@@ -279,7 +279,7 @@ var _ = Describe("Restart Pods", func() {
 		Expect(warnings).To(BeEmpty())
 
 		pods := v1.PodList{}
-		err = c.List(context.TODO(), &pods)
+		err = c.List(context.Background(), &pods)
 
 		Expect(err).NotTo(HaveOccurred())
 		Expect(pods.Items).NotTo(BeEmpty())
@@ -304,7 +304,7 @@ var _ = Describe("Restart Pods", func() {
 		Expect(warnings).To(BeEmpty())
 
 		dep := appsv1.StatefulSet{}
-		err = c.Get(context.TODO(), types.NamespacedName{Namespace: "test-ns", Name: "podOwner"}, &dep)
+		err = c.Get(context.Background(), types.NamespacedName{Namespace: "test-ns", Name: "podOwner"}, &dep)
 		Expect(err).NotTo(HaveOccurred())
 		// "StatefulSet should patch only once"
 		Expect(dep.ResourceVersion).To(Equal("1000"))
@@ -339,7 +339,7 @@ var _ = Describe("Restart Pods", func() {
 		Expect(warnings).To(BeEmpty())
 
 		replicaSet := appsv1.ReplicaSet{}
-		err = c.Get(context.TODO(), types.NamespacedName{Name: "rsOwner", Namespace: "test-ns"}, &replicaSet)
+		err = c.Get(context.Background(), types.NamespacedName{Name: "rsOwner", Namespace: "test-ns"}, &replicaSet)
 
 		Expect(err).NotTo(HaveOccurred())
 		Expect(replicaSet.Spec.Template.Annotations[restartAnnotationName]).NotTo(BeEmpty())
@@ -367,7 +367,7 @@ var _ = Describe("Restart Pods", func() {
 		Expect(warnings).To(BeEmpty())
 
 		pods := v1.PodList{}
-		err = c.List(context.TODO(), &pods)
+		err = c.List(context.Background(), &pods)
 
 		Expect(err).NotTo(HaveOccurred())
 		Expect(pods.Items).NotTo(BeEmpty())
@@ -405,7 +405,7 @@ var _ = Describe("Restart Pods", func() {
 		Expect(warnings).To(BeEmpty())
 
 		pods := v1.PodList{}
-		err = c.List(context.TODO(), &pods)
+		err = c.List(context.Background(), &pods)
 
 		Expect(err).NotTo(HaveOccurred())
 		Expect(pods.Items).NotTo(BeEmpty())

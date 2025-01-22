@@ -41,13 +41,13 @@ func (p *ProxyRestart) RestartProxies(ctx context.Context, c client.Client, expe
 		predicates.NewImageResourcesPredicate(expectedImage, expectedResources),
 	}
 
-	err = p.resetKymaProxies(ctx, c, predicates, logger)
+	err = p.restartKymaProxies(ctx, c, predicates, logger)
 	if err != nil {
 		logger.Error(err, "Failed to restart Kyma proxies")
 		return nil, false, err
 	}
 
-	warnings, hasMorePodsToRestart, err := p.resetCustomerProxies(ctx, c, predicates, logger)
+	warnings, hasMorePodsToRestart, err := p.restartCustomerProxies(ctx, c, predicates, logger)
 	if err != nil {
 		logger.Error(err, "Failed to restart Customer proxies")
 	}
@@ -55,7 +55,7 @@ func (p *ProxyRestart) RestartProxies(ctx context.Context, c client.Client, expe
 	return warnings, hasMorePodsToRestart, nil
 }
 
-func (p *ProxyRestart) resetKymaProxies(ctx context.Context, c client.Client, preds []predicates.SidecarProxyPredicate, logger *logr.Logger) error {
+func (p *ProxyRestart) restartKymaProxies(ctx context.Context, c client.Client, preds []predicates.SidecarProxyPredicate, logger *logr.Logger) error {
 	preds = append(preds, predicates.KymaWorkloadRestartPredicate{})
 	limits := pods.NewPodsRestartLimits(math.MaxInt, math.MaxInt)
 
@@ -65,11 +65,11 @@ func (p *ProxyRestart) resetKymaProxies(ctx context.Context, c client.Client, pr
 		return err
 	}
 
-	logger.Info("Kyma proxy reset completed")
+	logger.Info("Kyma proxy restart completed")
 	return nil
 }
 
-func (p *ProxyRestart) resetCustomerProxies(ctx context.Context, c client.Client, preds []predicates.SidecarProxyPredicate, logger *logr.Logger) ([]restart.RestartWarning, bool, error) {
+func (p *ProxyRestart) restartCustomerProxies(ctx context.Context, c client.Client, preds []predicates.SidecarProxyPredicate, logger *logr.Logger) ([]restart.RestartWarning, bool, error) {
 	preds = append(preds, predicates.CustomerWorkloadRestartPredicate{})
 	limits := pods.NewPodsRestartLimits(podsToRestartLimit, podsToListLimit)
 
@@ -79,6 +79,7 @@ func (p *ProxyRestart) resetCustomerProxies(ctx context.Context, c client.Client
 		return nil, false, err
 	}
 
+	logger.Info("Customer proxy restart completed")
 	return warnings, hasMorePodsToRestart, nil
 }
 
@@ -99,9 +100,9 @@ func (p *ProxyRestart) restart(ctx context.Context, c client.Client, preds []pre
 	hasMorePodsToRestart := podsToRestart.Continue != ""
 
 	if !hasMorePodsToRestart {
-		logger.Info("Proxy reset completed")
+		logger.Info("Proxy restart completed")
 	} else {
-		logger.Info("Proxy reset only partially completed")
+		logger.Info("Proxy restart only partially completed")
 	}
 
 	return warnings, hasMorePodsToRestart, nil

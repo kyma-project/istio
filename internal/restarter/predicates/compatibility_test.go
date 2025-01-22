@@ -11,7 +11,7 @@ import (
 )
 
 var _ = Describe("Compatibility Predicate", func() {
-	Context("RequiresProxyRestart", func() {
+	Context("Matches", func() {
 		It("should evaluate to true when proxy metadata values exist and new and old compatibility mode is different", func() {
 			predicate := CompatibilityRestartPredicate{
 				oldCompatibilityMode: true,
@@ -20,7 +20,7 @@ var _ = Describe("Compatibility Predicate", func() {
 					proxyMetadata: map[string]string{"key": "value"},
 				},
 			}
-			Expect(predicate.RequiresProxyRestart(v1.Pod{})).To(BeTrue())
+			Expect(predicate.Matches(v1.Pod{})).To(BeTrue())
 		})
 
 		It("should evaluate to false when proxy metadata values exist and new and old compatibility mode is equal", func() {
@@ -31,7 +31,7 @@ var _ = Describe("Compatibility Predicate", func() {
 					proxyMetadata: map[string]string{"key": "value"},
 				},
 			}
-			Expect(predicate.RequiresProxyRestart(v1.Pod{})).To(BeFalse())
+			Expect(predicate.Matches(v1.Pod{})).To(BeFalse())
 		})
 
 		It("should evaluate to false when no proxy metadata values exist and new and old compatibility mode is different", func() {
@@ -39,7 +39,7 @@ var _ = Describe("Compatibility Predicate", func() {
 				oldCompatibilityMode: true,
 				newCompatibilityMode: false,
 			}
-			Expect(predicate.RequiresProxyRestart(v1.Pod{})).To(BeFalse())
+			Expect(predicate.Matches(v1.Pod{})).To(BeFalse())
 		})
 
 		It("should evaluate to false when no proxy metadata values exist and new and old compatibility mode is equal", func() {
@@ -47,7 +47,7 @@ var _ = Describe("Compatibility Predicate", func() {
 				oldCompatibilityMode: true,
 				newCompatibilityMode: true,
 			}
-			Expect(predicate.RequiresProxyRestart(v1.Pod{})).To(BeFalse())
+			Expect(predicate.Matches(v1.Pod{})).To(BeFalse())
 		})
 	})
 

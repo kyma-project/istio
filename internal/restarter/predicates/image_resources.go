@@ -41,8 +41,12 @@ func NewImageResourcesPredicate(expectedImage SidecarImage, expectedResources v1
 	return &ImageResourcesPredicate{expectedImage: expectedImage, expectedResources: expectedResources}
 }
 
-func (p ImageResourcesPredicate) RequiresProxyRestart(pod v1.Pod) bool {
+func (p ImageResourcesPredicate) Matches(pod v1.Pod) bool {
 	return needsRestart(pod, p.expectedImage, *p.expectedResources.DeepCopy())
+}
+
+func (p ImageResourcesPredicate) MustMatch() bool {
+	return false
 }
 
 func needsRestart(pod v1.Pod, expectedImage SidecarImage, expectedResources v1.ResourceRequirements) bool {

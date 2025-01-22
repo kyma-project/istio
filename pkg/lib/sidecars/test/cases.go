@@ -19,9 +19,9 @@ import (
 const restartAnnotationName = "istio-operator.kyma-project.io/restartedAt"
 
 func (s *scenario) aRestartHappens(sidecarImage string) error {
-	pr := sidecars.NewProxyResetter()
+	pr := sidecars.NewProxyRestarter()
 	istioCR := helpers.GetIstioCR(sidecarImage)
-	warnings, hasMorePods, err := pr.ProxyReset(context.TODO(),
+	warnings, hasMorePods, err := pr.RestartProxies(context.TODO(),
 		s.Client,
 		predicates.SidecarImage{Repository: "istio/proxyv2", Tag: sidecarImage},
 		helpers.DefaultSidecarResources,
@@ -44,9 +44,9 @@ func (s *scenario) aRestartHappensWithUpdatedResources(sidecarImage string, reso
 	default:
 		return fmt.Errorf("unknown resource type %s", resourceType)
 	}
-	pr := sidecars.NewProxyResetter()
+	pr := sidecars.NewProxyRestarter()
 	istioCR := helpers.GetIstioCR(sidecarImage)
-	warnings, hasMorePods, err := pr.ProxyReset(context.TODO(),
+	warnings, hasMorePods, err := pr.RestartProxies(context.TODO(),
 		s.Client,
 		predicates.SidecarImage{Repository: "istio/proxyv2", Tag: sidecarImage},
 		resources,

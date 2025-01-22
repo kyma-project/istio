@@ -224,7 +224,8 @@ var _ = Describe("GetPodsToRestart", func() {
 		}
 		for _, tt := range tests {
 			It(tt.name, func() {
-				podList, err := pods.GetPodsToRestart(ctx, tt.c, expectedImage, helpers.DefaultSidecarResources, tt.predicates, tt.limits, &logger)
+				tt.predicates = append(tt.predicates, predicates.NewImageResourcesPredicate(expectedImage, helpers.DefaultSidecarResources))
+				podList, err := pods.GetPodsToRestart(ctx, tt.c, tt.predicates, tt.limits, &logger)
 				Expect(err).NotTo(HaveOccurred())
 				tt.assertFunc(podList)
 			})
@@ -302,7 +303,7 @@ var _ = Describe("GetPodsToRestart", func() {
 		for _, tt := range tests {
 			It(tt.name, func() {
 				expectedImage := predicates.NewSidecarImage("istio", "1.10.0")
-				podList, err := pods.GetPodsToRestart(ctx, tt.c, expectedImage, helpers.DefaultSidecarResources, []predicates.SidecarProxyPredicate{}, pods.NewPodsRestartLimits(5, 5), &logger)
+				podList, err := pods.GetPodsToRestart(ctx, tt.c, []predicates.SidecarProxyPredicate{predicates.NewImageResourcesPredicate(expectedImage, helpers.DefaultSidecarResources)}, pods.NewPodsRestartLimits(5, 5), &logger)
 				Expect(err).NotTo(HaveOccurred())
 				tt.assertFunc(podList)
 			})

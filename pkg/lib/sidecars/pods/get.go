@@ -65,9 +65,7 @@ func getSidecarPods(ctx context.Context, c client.Client, logger *logr.Logger, l
 	return podsWithSidecar, nil
 }
 
-func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage predicates.SidecarImage, expectedResources v1.ResourceRequirements, preds []predicates.SidecarProxyPredicate, limits *PodsRestartLimits, logger *logr.Logger) (*v1.PodList, error) {
-	preds = append(preds, predicates.NewImageResourcesPredicate(expectedImage, expectedResources))
-
+func GetPodsToRestart(ctx context.Context, c client.Client, preds []predicates.SidecarProxyPredicate, limits *PodsRestartLimits, logger *logr.Logger) (*v1.PodList, error) {
 	podsToRestart := &v1.PodList{}
 	for while := true; while; {
 		podsWithSidecar, err := getSidecarPods(ctx, c, logger, limits.podsToListLimit, podsToRestart.Continue)
@@ -75,11 +73,20 @@ func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage predic
 			return nil, err
 		}
 		for _, pod := range podsWithSidecar.Items {
+			matchFound := false
+			allRequiredMatched := true
 			for _, predicate := range preds { // any predicate match will trigger a restart
-				if predicate.RequiresProxyRestart(pod) {
-					podsToRestart.Items = append(podsToRestart.Items, pod)
+				matched := predicate.Matches(pod)
+				if !matchFound && matched {
+					matchFound = true
+				}
+				if predicate.MustMatch() && !matched {
+					allRequiredMatched = false
 					break
 				}
+			}
+			if matchFound && allRequiredMatched {
+				podsToRestart.Items = append(podsToRestart.Items, pod)
 			}
 			if len(podsToRestart.Items) >= limits.podsToRestartLimit {
 				break

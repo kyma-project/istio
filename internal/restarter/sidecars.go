@@ -22,26 +22,26 @@ import (
 
 const errorDescription = "Error occurred during reconciliation of Istio Sidecars"
 
-type SidecarsRestarter struct {
-	Log           logr.Logger
-	Client        client.Client
-	Merger        istiooperator.Merger
-	ProxyResetter sidecars.ProxyResetter
-	StatusHandler status.Status
+type SidecarRestarter struct {
+	Log            logr.Logger
+	Client         client.Client
+	Merger         istiooperator.Merger
+	ProxyRestarter sidecars.ProxyRestarter
+	StatusHandler  status.Status
 }
 
-func NewSidecarsRestarter(logger logr.Logger, client client.Client, merger istiooperator.Merger, resetter sidecars.ProxyResetter, statusHandler status.Status) *SidecarsRestarter {
-	return &SidecarsRestarter{
-		Log:           logger,
-		Client:        client,
-		Merger:        merger,
-		ProxyResetter: resetter,
-		StatusHandler: statusHandler,
+func NewSidecarsRestarter(logger logr.Logger, client client.Client, merger istiooperator.Merger, proxyRestarter sidecars.ProxyRestarter, statusHandler status.Status) *SidecarRestarter {
+	return &SidecarRestarter{
+		Log:            logger,
+		Client:         client,
+		Merger:         merger,
+		ProxyRestarter: proxyRestarter,
+		StatusHandler:  statusHandler,
 	}
 }
 
 // Restart runs Proxy Reset action, which checks if any of sidecars need a restart and proceed with rollout.
-func (s *SidecarsRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio) (described_errors.DescribedError, bool) {
+func (s *SidecarRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio) (described_errors.DescribedError, bool) {
 	clusterSize, err := clusterconfig.EvaluateClusterSize(ctx, s.Client)
 	if err != nil {
 		s.Log.Error(err, "Error occurred during evaluation of cluster size")
@@ -87,7 +87,7 @@ func (s *SidecarsRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio
 		return described_errors.NewDescribedError(err, errorDescription), false
 	}
 
-	warnings, hasMorePods, err := s.ProxyResetter.ProxyReset(ctx, s.Client, expectedImage, expectedResources, istioCR, &s.Log)
+	warnings, hasMorePods, err := s.ProxyRestarter.RestartProxies(ctx, s.Client, expectedImage, expectedResources, istioCR, &s.Log)
 	if err != nil {
 		s.Log.Error(err, "Failed to reset proxy")
 		s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarRestartFailed))

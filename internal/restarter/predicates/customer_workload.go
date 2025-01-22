@@ -7,6 +7,10 @@ import (
 type CustomerWorkloadRestartPredicate struct {
 }
 
-func (p CustomerWorkloadRestartPredicate) RequiresProxyRestart(pod v1.Pod) bool {
+func (p CustomerWorkloadRestartPredicate) Matches(pod v1.Pod) bool {
 	return pod.Namespace != "kyma-system" && pod.Labels["kyma-project.io/module"] == ""
+}
+
+func (p CustomerWorkloadRestartPredicate) MustMatch() bool {
+	return true
 }

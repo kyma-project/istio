@@ -9,10 +9,10 @@ import (
 )
 
 var _ = Describe("Customer Workload Predicate", func() {
-	Context("RequiresProxyRestart", func() {
+	Context("Matches", func() {
 		It("should return true if pod in default namespace", func() {
 			predicate := CustomerWorkloadRestartPredicate{}
-			Expect(predicate.RequiresProxyRestart(v1.Pod{
+			Expect(predicate.Matches(v1.Pod{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "default",
 				},
@@ -21,7 +21,7 @@ var _ = Describe("Customer Workload Predicate", func() {
 
 		It("should return false if pod in kyma-system", func() {
 			predicate := CustomerWorkloadRestartPredicate{}
-			Expect(predicate.RequiresProxyRestart(v1.Pod{
+			Expect(predicate.Matches(v1.Pod{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "kyma-system",
 				},
@@ -30,7 +30,7 @@ var _ = Describe("Customer Workload Predicate", func() {
 
 		It("should return false if pod has kyma label", func() {
 			predicate := CustomerWorkloadRestartPredicate{}
-			Expect(predicate.RequiresProxyRestart(v1.Pod{
+			Expect(predicate.Matches(v1.Pod{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "default",
 					Labels: map[string]string{

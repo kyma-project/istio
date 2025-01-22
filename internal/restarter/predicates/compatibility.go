@@ -33,10 +33,14 @@ func (c config) hasProxyMetadata() bool {
 	return len(c.proxyMetadata) > 0
 }
 
-func (p CompatibilityRestartPredicate) RequiresProxyRestart(_ v1.Pod) bool {
+func (p CompatibilityRestartPredicate) Matches(_ v1.Pod) bool {
 	if p.config.hasProxyMetadata() && p.oldCompatibilityMode != p.newCompatibilityMode {
 		return true
 	}
 
+	return false
+}
+
+func (p CompatibilityRestartPredicate) MustMatch() bool {
 	return false
 }

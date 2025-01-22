@@ -98,6 +98,8 @@ func GetPodsToRestart(ctx context.Context, c client.Client, preds []predicates.S
 
 	if len(podsToRestart.Items) > 0 {
 		logger.Info("Pods to restart", "number of pods", len(podsToRestart.Items), "has more pods", podsToRestart.Continue != "")
+	} else {
+		logger.Info("No pods to restart with matching predicates")
 	}
 
 	return podsToRestart, nil

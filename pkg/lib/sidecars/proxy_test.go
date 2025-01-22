@@ -2,9 +2,12 @@ package sidecars_test
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/go-logr/logr"
+	"github.com/go-logr/logr/funcr"
 	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
 	"github.com/kyma-project/istio/operator/internal/tests"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars"
@@ -21,6 +24,71 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
+func NewStdoutLogger() logr.Logger {
+	l := &stdoutlogger{
+		Formatter: funcr.NewFormatter(funcr.Options{}),
+	}
+	return logr.New(l)
+}
+
+type stdoutlogger struct {
+	funcr.Formatter
+	logMsgType bool
+}
+
+func (l stdoutlogger) WithName(name string) logr.LogSink {
+	l.Formatter.AddName(name)
+	return &l
+}
+
+func (l stdoutlogger) WithValues(kvList ...interface{}) logr.LogSink {
+	l.Formatter.AddValues(kvList)
+	return &l
+}
+
+func (l stdoutlogger) WithCallDepth(depth int) logr.LogSink {
+	l.Formatter.AddCallDepth(depth)
+	return &l
+}
+
+func (l stdoutlogger) Info(level int, msg string, kvList ...interface{}) {
+	prefix, args := l.FormatInfo(level, msg, kvList)
+	l.write("INFO", prefix, args)
+}
+
+func (l stdoutlogger) Error(err error, msg string, kvList ...interface{}) {
+	prefix, args := l.FormatError(err, msg, kvList)
+	l.write("ERROR", prefix, args)
+}
+
+func (l stdoutlogger) write(msgType, prefix, args string) {
+	var parts []string
+	if l.logMsgType {
+		parts = append(parts, msgType)
+	}
+	if prefix != "" {
+		parts = append(parts, prefix)
+	}
+	parts = append(parts, args)
+	fmt.Println(strings.Join(parts, ": "))
+}
+
+// WithLogMsgType returns a copy of the logger with new settings for
+// logging the message type. It returns the original logger if the
+// underlying LogSink is not a stdoutlogger.
+func WithLogMsgType(log logr.Logger, logMsgType bool) logr.Logger {
+	if l, ok := log.GetSink().(*stdoutlogger); ok {
+		clone := *l
+		clone.logMsgType = logMsgType
+		log = log.WithSink(&clone)
+	}
+	return log
+}
+
+// Assert conformance to the interfaces.
+var _ logr.LogSink = &stdoutlogger{}
+var _ logr.CallDepthLogSink = &stdoutlogger{}
+
 func TestRestartProxies(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Proxy Restart Suite")
@@ -32,35 +100,16 @@ var _ = ReportAfterSuite("custom reporter", func(report ginkgotypes.Report) {
 
 var _ = Describe("RestartProxies", func() {
 	ctx := context.Background()
-	logger := logr.Discard()
+	//logger := logr.Discard()
+	logger := NewStdoutLogger()
 
 	It("should succeed without warnings", func() {
 		// given
-		c := fakeClient(&v1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test-pod",
-				Namespace: "test-namespace",
-				OwnerReferences: []metav1.OwnerReference{
-					{Kind: "ReplicaSet"},
-				},
-			},
-			TypeMeta: metav1.TypeMeta{
-				Kind:       "Pod",
-				APIVersion: "v1",
-			},
-			Status: v1.PodStatus{
-				Phase: "Running",
-			},
-			Spec: v1.PodSpec{
-				Containers: []v1.Container{
-					{
-						Name:      "istio-proxy",
-						Image:     "istio/istio-proxy:1.0.0",
-						Resources: helpers.DefaultSidecarResources,
-					},
-				},
-			},
-		})
+		pod := getPod("test-pods", "test-namespace", "podOwner", "ReplicaSet")
+		rsOwner := getReplicaSet("podOwner", "test-namespace", "rsOwner", "ReplicaSet")
+		rsOwnerRS := getReplicaSet("rsOwner", "test-namespace", "base", "ReplicaSet")
+
+		c := fakeClient(pod, rsOwner, rsOwnerRS)
 
 		// when
 		proxyRestarter := sidecars.NewProxyRestarter()
@@ -72,6 +121,10 @@ var _ = Describe("RestartProxies", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(warnings).To(BeEmpty())
 		Expect(hasMorePods).To(BeFalse())
+
+		err = c.Get(ctx, client.ObjectKey{Name: rsOwnerRS.Name, Namespace: rsOwnerRS.Namespace}, rsOwnerRS)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(rsOwnerRS.Spec.Template.Annotations).To(HaveKey("istio-operator.kyma-project.io/restartedAt"))
 	})
 })
 
@@ -88,6 +141,62 @@ func fakeClient(objects ...client.Object) client.Client {
 		Build()
 
 	return fakeClient
+}
+
+func getPod(name, namespace, ownerName, ownerKind string) *v1.Pod {
+	return &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					Name: ownerName,
+					Kind: ownerKind,
+				},
+			},
+			Annotations: map[string]string{
+				"sidecar.istio.io/status": "abc",
+			},
+		},
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Pod",
+			APIVersion: "v1",
+		},
+		Status: v1.PodStatus{
+			Phase: "Running",
+		},
+		Spec: v1.PodSpec{
+			Containers: []v1.Container{
+				{
+					Name:      "istio-proxy",
+					Image:     "istio/istio-proxy:1.0.0",
+					Resources: helpers.DefaultSidecarResources,
+				},
+			},
+		},
+	}
+}
+
+func getReplicaSet(name, namespace, ownerName, ownerKind string) *appsv1.ReplicaSet {
+	return &appsv1.ReplicaSet{
+		ObjectMeta: metav1.ObjectMeta{
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					Name: ownerName,
+					Kind: ownerKind,
+				},
+			},
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: appsv1.ReplicaSetSpec{
+			Template: v1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{"dummy": "annotation"},
+				},
+			},
+		},
+	}
 }
 
 // type shouldFailClient struct {

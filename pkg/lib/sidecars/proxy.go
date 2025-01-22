@@ -79,7 +79,12 @@ func (p *ProxyRestart) restartCustomerProxies(ctx context.Context, c client.Clie
 		return nil, false, err
 	}
 
-	logger.Info("Customer proxy restart completed")
+	if !hasMorePodsToRestart {
+		logger.Info("Customer proxy restart completed")
+	} else {
+		logger.Info("Customer proxy restart only partially completed")
+	}
+
 	return warnings, hasMorePodsToRestart, nil
 }
 
@@ -97,13 +102,5 @@ func (p *ProxyRestart) restart(ctx context.Context, c client.Client, preds []pre
 	}
 
 	// if there are more pods to restart there should be a continue token in the pod list
-	hasMorePodsToRestart := podsToRestart.Continue != ""
-
-	if !hasMorePodsToRestart {
-		logger.Info("Proxy restart completed")
-	} else {
-		logger.Info("Proxy restart only partially completed")
-	}
-
-	return warnings, hasMorePodsToRestart, nil
+	return warnings, podsToRestart.Continue != "", nil
 }

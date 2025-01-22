@@ -37,7 +37,7 @@ var _ = Describe("GetPodsToRestart", func() {
 	ctx := context.Background()
 	logger := logr.Discard()
 
-	When("Istio image changed", func() {
+	When("Image changed", func() {
 		expectedImage := predicates.NewSidecarImage("istio", "1.10.0")
 		tests := []struct {
 			name       string
@@ -147,17 +147,53 @@ var _ = Describe("GetPodsToRestart", func() {
 				},
 			},
 			{
-				name: "Should contain only one pod when there are multiple predicates that would restart the pod",
+				name: "Should contain only one pod when there are multiple predicates that match the pod",
 				c: createClientSet(
 					helpers.NewSidecarPodBuilder().
 						SetName("changedSidecarPod").
 						SetSidecarImageRepository("istio/different-proxy").
 						Build(),
 				),
-				limits:     pods.NewPodsRestartLimits(5, 5),
-				predicates: []predicates.SidecarProxyPredicate{predicates.NewImageResourcesPredicate(expectedImage, helpers.DifferentSidecarResources)},
+				limits: pods.NewPodsRestartLimits(5, 5),
+				predicates: []predicates.SidecarProxyPredicate{
+					predicates.NewImageResourcesPredicate(expectedImage, helpers.DifferentSidecarResources),
+				},
 				assertFunc: func(podList *v1.PodList) {
 					Expect(podList.Items).To(HaveLen(1))
+				},
+			},
+			{
+				name: "Should contain only one pod when there are must match predicates that do match the pod",
+				c: createClientSet(
+					helpers.NewSidecarPodBuilder().
+						SetName("changedSidecarPod").
+						SetSidecarImageRepository("istio/different-proxy").
+						Build(),
+				),
+				limits: pods.NewPodsRestartLimits(5, 5),
+				predicates: []predicates.SidecarProxyPredicate{
+					predicates.NewImageResourcesPredicate(expectedImage, helpers.DifferentSidecarResources),
+					predicates.CustomerWorkloadRestartPredicate{},
+				},
+				assertFunc: func(podList *v1.PodList) {
+					Expect(podList.Items).To(HaveLen(1))
+				},
+			},
+			{
+				name: "Should ignore the pod when there are must match predicates that do not match the pod",
+				c: createClientSet(
+					helpers.NewSidecarPodBuilder().
+						SetName("changedSidecarPod").
+						SetSidecarImageRepository("istio/different-proxy").
+						Build(),
+				),
+				limits: pods.NewPodsRestartLimits(5, 5),
+				predicates: []predicates.SidecarProxyPredicate{
+					predicates.NewImageResourcesPredicate(expectedImage, helpers.DifferentSidecarResources),
+					predicates.KymaWorkloadRestartPredicate{},
+				},
+				assertFunc: func(podList *v1.PodList) {
+					Expect(podList.Items).To(BeEmpty())
 				},
 			},
 			{
@@ -232,7 +268,7 @@ var _ = Describe("GetPodsToRestart", func() {
 		}
 	})
 
-	When("Sidecar Resources changed", func() {
+	When("Resources changed", func() {
 		tests := []struct {
 			name       string
 			c          client.Client

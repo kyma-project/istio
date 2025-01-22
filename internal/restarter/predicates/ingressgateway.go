@@ -4,8 +4,7 @@ import (
 	"context"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/internal/filter"
-	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/configuration"
 )
 
 type RestartPredicate struct {
@@ -16,8 +15,8 @@ func NewIngressGatewayRestartPredicate(istioCR *operatorv1alpha2.Istio) *Restart
 	return &RestartPredicate{istioCR: istioCR}
 }
 
-func (i RestartPredicate) NewIngressGatewayEvaluator(_ context.Context) (filter.IngressGatewayRestartEvaluator, error) {
-	lastAppliedConfig, err := istio.GetLastAppliedConfiguration(i.istioCR)
+func (i RestartPredicate) NewIngressGatewayEvaluator(_ context.Context) (IngressGatewayRestartEvaluator, error) {
+	lastAppliedConfig, err := configuration.GetLastAppliedConfiguration(i.istioCR)
 	if err != nil {
 		return nil, err
 	}

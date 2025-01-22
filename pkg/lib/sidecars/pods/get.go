@@ -2,10 +2,9 @@ package pods
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/go-logr/logr"
-	"github.com/kyma-project/istio/operator/internal/filter"
+	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -15,26 +14,6 @@ import (
 const (
 	istioSidecarContainerName string = "istio-proxy"
 )
-
-type SidecarImage struct {
-	Repository string
-	Tag        string
-}
-
-func NewSidecarImage(hub, tag string) SidecarImage {
-	return SidecarImage{
-		Repository: fmt.Sprintf("%s/proxyv2", hub),
-		Tag:        tag,
-	}
-}
-
-func (r SidecarImage) String() string {
-	return fmt.Sprintf("%s:%s", r.Repository, r.Tag)
-}
-
-func (r SidecarImage) matchesImageIn(container v1.Container) bool {
-	return container.Image == r.String()
-}
 
 type PodsRestartLimits struct {
 	podsToRestartLimit int
@@ -77,7 +56,7 @@ func getSidecarPods(ctx context.Context, c client.Client, logger *logr.Logger, l
 	podsWithSidecar.Continue = podList.Continue
 
 	for _, pod := range podList.Items {
-		if isReadyWithIstioAnnotation(pod) {
+		if predicates.IsReadyWithIstioAnnotation(pod) {
 			podsWithSidecar.Items = append(podsWithSidecar.Items, pod)
 		}
 	}
@@ -86,8 +65,8 @@ func getSidecarPods(ctx context.Context, c client.Client, logger *logr.Logger, l
 	return podsWithSidecar, nil
 }
 
-func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage SidecarImage, expectedResources v1.ResourceRequirements, predicates []filter.SidecarProxyPredicate, limits *PodsRestartLimits, logger *logr.Logger) (*v1.PodList, error) {
-	predicates = append(predicates, NewRestartProxyPredicate(expectedImage, expectedResources))
+func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage predicates.SidecarImage, expectedResources v1.ResourceRequirements, preds []predicates.SidecarProxyPredicate, limits *PodsRestartLimits, logger *logr.Logger) (*v1.PodList, error) {
+	preds = append(preds, predicates.NewImageResourcesPredicate(expectedImage, expectedResources))
 
 	podsToRestart := &v1.PodList{}
 	for while := true; while; {
@@ -96,7 +75,7 @@ func GetPodsToRestart(ctx context.Context, c client.Client, expectedImage Sideca
 			return nil, err
 		}
 		for _, pod := range podsWithSidecar.Items {
-			for _, predicate := range predicates { // any predicate will require a restart
+			for _, predicate := range preds { // any predicate match will trigger a restart
 				if predicate.RequiresProxyRestart(pod) {
 					podsToRestart.Items = append(podsToRestart.Items, pod)
 					break

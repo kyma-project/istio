@@ -5,8 +5,7 @@ import (
 	"math"
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/internal/filter"
-	predicates "github.com/kyma-project/istio/operator/internal/restarter/predicates"
+	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
 
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
@@ -21,7 +20,7 @@ const (
 )
 
 type ProxyResetter interface {
-	ProxyReset(ctx context.Context, c client.Client, expectedImage pods.SidecarImage, expectedResources v1.ResourceRequirements, istioCR *v1alpha2.Istio, logger *logr.Logger) ([]restart.RestartWarning, bool, error)
+	ProxyReset(ctx context.Context, c client.Client, expectedImage predicates.SidecarImage, expectedResources v1.ResourceRequirements, istioCR *v1alpha2.Istio, logger *logr.Logger) ([]restart.RestartWarning, bool, error)
 }
 
 type ProxyReset struct {
@@ -31,7 +30,7 @@ func NewProxyResetter() *ProxyReset {
 	return &ProxyReset{}
 }
 
-func (p *ProxyReset) ProxyReset(ctx context.Context, c client.Client, expectedImage pods.SidecarImage, expectedResources v1.ResourceRequirements, istioCR *v1alpha2.Istio, logger *logr.Logger) ([]restart.RestartWarning, bool, error) {
+func (p *ProxyReset) ProxyReset(ctx context.Context, c client.Client, expectedImage predicates.SidecarImage, expectedResources v1.ResourceRequirements, istioCR *v1alpha2.Istio, logger *logr.Logger) ([]restart.RestartWarning, bool, error) {
 	// _, _, err := p.resetKymaProxies(ctx, c, expectedImage, expectedResources, istioCR, logger)
 	// if err != nil {
 	// 	logger.Error(err, "Failed to restart Kyma proxies")
@@ -47,14 +46,14 @@ func (p *ProxyReset) ProxyReset(ctx context.Context, c client.Client, expectedIm
 	return warnings, hasMorePodsToRestart, err
 }
 
-func (p *ProxyReset) resetKymaProxies(ctx context.Context, c client.Client, expectedImage pods.SidecarImage, expectedResources v1.ResourceRequirements, istioCR *v1alpha2.Istio, logger *logr.Logger) ([]restart.RestartWarning, bool, error) {
+func (p *ProxyReset) resetKymaProxies(ctx context.Context, c client.Client, expectedImage predicates.SidecarImage, expectedResources v1.ResourceRequirements, istioCR *v1alpha2.Istio, logger *logr.Logger) ([]restart.RestartWarning, bool, error) {
 	compatibiltyPredicate, err := predicates.NewCompatibilityRestartPredicate(istioCR)
 	if err != nil {
 		logger.Error(err, "Failed to create restart compatibility predicate")
 		return nil, false, err
 	}
 
-	predicates := []filter.SidecarProxyPredicate{compatibiltyPredicate, predicates.KymaWorkloadRestartPredicate{}}
+	predicates := []predicates.SidecarProxyPredicate{compatibiltyPredicate, predicates.KymaWorkloadRestartPredicate{}}
 	limits := pods.NewPodsRestartLimits(math.MaxInt, math.MaxInt)
 
 	podsToRestart, err := pods.GetPodsToRestart(ctx, c, expectedImage, expectedResources, predicates, limits, logger)
@@ -73,14 +72,14 @@ func (p *ProxyReset) resetKymaProxies(ctx context.Context, c client.Client, expe
 	return warnings, false, nil
 }
 
-func (p *ProxyReset) resetCustomerProxies(ctx context.Context, c client.Client, expectedImage pods.SidecarImage, expectedResources v1.ResourceRequirements, istioCR *v1alpha2.Istio, logger *logr.Logger) ([]restart.RestartWarning, bool, error) {
+func (p *ProxyReset) resetCustomerProxies(ctx context.Context, c client.Client, expectedImage predicates.SidecarImage, expectedResources v1.ResourceRequirements, istioCR *v1alpha2.Istio, logger *logr.Logger) ([]restart.RestartWarning, bool, error) {
 	compatibiltyPredicate, err := predicates.NewCompatibilityRestartPredicate(istioCR)
 	if err != nil {
 		logger.Error(err, "Failed to create restart compatibility predicate")
 		return nil, false, err
 	}
 
-	predicates := []filter.SidecarProxyPredicate{compatibiltyPredicate /*, predicates.CustomerWorkloadRestartPredicate{}*/}
+	predicates := []predicates.SidecarProxyPredicate{compatibiltyPredicate /*, predicates.CustomerWorkloadRestartPredicate{}*/}
 	limits := pods.NewPodsRestartLimits(podsToRestartLimit, podsToListLimit)
 
 	podsToRestart, err := pods.GetPodsToRestart(ctx, c, expectedImage, expectedResources, predicates, limits, logger)

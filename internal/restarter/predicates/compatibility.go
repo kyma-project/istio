@@ -2,7 +2,7 @@ package predicates
 
 import (
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/configuration"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -13,7 +13,7 @@ type CompatibilityRestartPredicate struct {
 }
 
 func NewCompatibilityRestartPredicate(istioCR *v1alpha2.Istio) (*CompatibilityRestartPredicate, error) {
-	lastAppliedConfig, err := istio.GetLastAppliedConfiguration(istioCR)
+	lastAppliedConfig, err := configuration.GetLastAppliedConfiguration(istioCR)
 	if err != nil {
 		return nil, err
 	}

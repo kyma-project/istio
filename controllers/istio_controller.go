@@ -22,12 +22,13 @@ import (
 	"time"
 
 	"github.com/kyma-project/istio/operator/internal/restarter"
+	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
 	"github.com/kyma-project/istio/operator/internal/validation"
 
-	"github.com/kyma-project/istio/operator/internal/filter"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars"
 
 	"github.com/kyma-project/istio/operator/internal/described_errors"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/configuration"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio_resources"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"k8s.io/client-go/util/retry"
@@ -57,7 +58,7 @@ func NewController(mgr manager.Manager, reconciliationInterval time.Duration) *I
 
 	statusHandler := status.NewStatusHandler(mgr.GetClient())
 	restarters := []restarter.Restarter{
-		restarter.NewIngressGatewayRestarter(mgr.GetClient(), []filter.IngressGatewayPredicate{}, statusHandler),
+		restarter.NewIngressGatewayRestarter(mgr.GetClient(), []predicates.IngressGatewayPredicate{}, statusHandler),
 		restarter.NewSidecarsRestarter(mgr.GetLogger(), mgr.GetClient(), &merger, sidecars.NewProxyResetter(), statusHandler),
 	}
 
@@ -276,7 +277,7 @@ func (r *IstioReconciler) updateLastAppliedConfiguration(ctx context.Context, ob
 		if err := r.Client.Get(ctx, objectKey, &lacIstioCR); err != nil {
 			return err
 		}
-		lastAppliedErr := istio.UpdateLastAppliedConfiguration(&lacIstioCR, istioTag)
+		lastAppliedErr := configuration.UpdateLastAppliedConfiguration(&lacIstioCR, istioTag)
 		if lastAppliedErr != nil {
 			return lastAppliedErr
 		}

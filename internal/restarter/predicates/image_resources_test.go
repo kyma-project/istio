@@ -1,7 +1,7 @@
-package pods_test
+package predicates_test
 
 import (
-	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
+	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
@@ -12,7 +12,7 @@ var _ = Describe("RequiresProxyRestart", func() {
 	It("should should return false when pod has custom image annotation", func() {
 		// given
 		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", map[string]string{"sidecar.istio.io/proxyImage": "istio/proxyv2:1.21.0"})
-		predicate := pods.NewRestartProxyPredicate(pods.NewSidecarImage("istio", "1.22.0"), v1.ResourceRequirements{})
+		predicate := predicates.NewImageResourcesPredicate(predicates.NewSidecarImage("istio", "1.22.0"), v1.ResourceRequirements{})
 
 		// when
 		shouldRestart := predicate.RequiresProxyRestart(pod)
@@ -24,7 +24,7 @@ var _ = Describe("RequiresProxyRestart", func() {
 	It("should should return true when pod does not have custom image annotation", func() {
 		// given
 		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", map[string]string{})
-		predicate := pods.NewRestartProxyPredicate(pods.NewSidecarImage("istio", "1.22.0"), v1.ResourceRequirements{})
+		predicate := predicates.NewImageResourcesPredicate(predicates.NewSidecarImage("istio", "1.22.0"), v1.ResourceRequirements{})
 
 		// when
 		shouldRestart := predicate.RequiresProxyRestart(pod)
@@ -64,3 +64,40 @@ func createPodWithProxySidecar(name, namespace, proxyIstioVersion string, annota
 		},
 	}
 }
+
+var _ = Describe("IsReadyWithIstioAnnotation", func() {
+	It("should return true when pod is ready and has istio sidecar status annotation", func() {
+		// given
+		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", map[string]string{"sidecar.istio.io/status": "true"})
+
+		// when
+		isReady := predicates.IsReadyWithIstioAnnotation(pod)
+
+		// then
+		Expect(isReady).To(BeTrue())
+	})
+
+	It("should return false when pod is not ready", func() {
+		// given
+		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", map[string]string{"sidecar.istio.io/status": "true"})
+		pod.Status.Conditions[0].Status = v1.ConditionFalse
+
+		// when
+		isReady := predicates.IsReadyWithIstioAnnotation(pod)
+
+		// then
+		Expect(isReady).To(BeFalse())
+	})
+
+	It("should return false when pod does not have istio sidecar status annotation", func() {
+		// given
+		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", nil)
+		delete(pod.Annotations, "sidecar.istio.io/status")
+
+		// when
+		isReady := predicates.IsReadyWithIstioAnnotation(pod)
+
+		// then
+		Expect(isReady).To(BeFalse())
+	})
+})

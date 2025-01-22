@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/test/helpers"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/cucumber/godog"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars"
-	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
 	appsv1 "k8s.io/api/apps/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
@@ -23,7 +23,7 @@ func (s *scenario) aRestartHappens(sidecarImage string) error {
 	istioCR := helpers.GetIstioCR(sidecarImage)
 	warnings, hasMorePods, err := pr.ProxyReset(context.TODO(),
 		s.Client,
-		pods.SidecarImage{Repository: "istio/proxyv2", Tag: sidecarImage},
+		predicates.SidecarImage{Repository: "istio/proxyv2", Tag: sidecarImage},
 		helpers.DefaultSidecarResources,
 		&istioCR,
 		&s.logger)
@@ -48,7 +48,7 @@ func (s *scenario) aRestartHappensWithUpdatedResources(sidecarImage string, reso
 	istioCR := helpers.GetIstioCR(sidecarImage)
 	warnings, hasMorePods, err := pr.ProxyReset(context.TODO(),
 		s.Client,
-		pods.SidecarImage{Repository: "istio/proxyv2", Tag: sidecarImage},
+		predicates.SidecarImage{Repository: "istio/proxyv2", Tag: sidecarImage},
 		resources,
 		&istioCR,
 		&s.logger)

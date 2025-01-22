@@ -7,6 +7,7 @@ import (
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
+	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
 	"github.com/pkg/errors"
 
 	"github.com/go-logr/logr"
@@ -15,7 +16,6 @@ import (
 	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars"
-	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -71,7 +71,7 @@ func (s *SidecarsRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio
 		return described_errors.NewDescribedError(err, "Could not get Istio tag from istio operator file"), false
 	}
 
-	expectedImage := pods.NewSidecarImage(iop.Spec.Hub, tag)
+	expectedImage := predicates.NewSidecarImage(iop.Spec.Hub, tag)
 	s.Log.Info("Running proxy sidecar reset", "expected image", expectedImage)
 
 	err = gatherer.VerifyIstioPodsVersion(ctx, s.Client, istioImageVersion.Version())

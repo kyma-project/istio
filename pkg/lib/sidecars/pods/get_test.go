@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kyma-project/istio/operator/internal/filter"
+	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
 	"github.com/kyma-project/istio/operator/internal/tests"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -15,12 +15,12 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
+	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/test/helpers"
 )
 
@@ -38,11 +38,11 @@ var _ = Describe("GetPodsToRestart", func() {
 	logger := logr.Discard()
 
 	When("Istio image changed", func() {
-		expectedImage := pods.NewSidecarImage("istio", "1.10.0")
+		expectedImage := predicates.NewSidecarImage("istio", "1.10.0")
 		tests := []struct {
 			name       string
 			c          client.Client
-			predicates []filter.SidecarProxyPredicate
+			predicates []predicates.SidecarProxyPredicate
 			limits     *pods.PodsRestartLimits
 			assertFunc func(podList *v1.PodList)
 		}{
@@ -155,7 +155,7 @@ var _ = Describe("GetPodsToRestart", func() {
 						Build(),
 				),
 				limits:     pods.NewPodsRestartLimits(5, 5),
-				predicates: []filter.SidecarProxyPredicate{pods.NewRestartProxyPredicate(expectedImage, helpers.DifferentSidecarResources)},
+				predicates: []predicates.SidecarProxyPredicate{predicates.NewImageResourcesPredicate(expectedImage, helpers.DifferentSidecarResources)},
 				assertFunc: func(podList *v1.PodList) {
 					Expect(podList.Items).To(HaveLen(1))
 				},
@@ -301,8 +301,8 @@ var _ = Describe("GetPodsToRestart", func() {
 		}
 		for _, tt := range tests {
 			It(tt.name, func() {
-				expectedImage := pods.NewSidecarImage("istio", "1.10.0")
-				podList, err := pods.GetPodsToRestart(ctx, tt.c, expectedImage, helpers.DefaultSidecarResources, []filter.SidecarProxyPredicate{}, pods.NewPodsRestartLimits(5, 5), &logger)
+				expectedImage := predicates.NewSidecarImage("istio", "1.10.0")
+				podList, err := pods.GetPodsToRestart(ctx, tt.c, expectedImage, helpers.DefaultSidecarResources, []predicates.SidecarProxyPredicate{}, pods.NewPodsRestartLimits(5, 5), &logger)
 				Expect(err).NotTo(HaveOccurred())
 				tt.assertFunc(podList)
 			})

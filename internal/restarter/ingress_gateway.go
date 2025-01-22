@@ -5,8 +5,7 @@ import (
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
-	"github.com/kyma-project/istio/operator/internal/filter"
-	predicates "github.com/kyma-project/istio/operator/internal/restarter/predicates"
+	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/pkg/lib/annotations"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
@@ -25,11 +24,11 @@ const (
 
 type IngressGatewayRestarter struct {
 	client        client.Client
-	predicates    []filter.IngressGatewayPredicate
+	predicates    []predicates.IngressGatewayPredicate
 	statusHandler status.Status
 }
 
-func NewIngressGatewayRestarter(client client.Client, predicates []filter.IngressGatewayPredicate, statusHandler status.Status) *IngressGatewayRestarter {
+func NewIngressGatewayRestarter(client client.Client, predicates []predicates.IngressGatewayPredicate, statusHandler status.Status) *IngressGatewayRestarter {
 	return &IngressGatewayRestarter{
 		client:        client,
 		predicates:    predicates,

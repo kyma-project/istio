@@ -2,10 +2,12 @@ package istio
 
 import (
 	"context"
+
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/configuration"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/internal/webhooks"
 	"github.com/kyma-project/istio/operator/pkg/labels"
@@ -35,13 +37,13 @@ func installIstio(ctx context.Context, args installArgs) (istiooperator.IstioIma
 	ctrl.Log.Info("Starting Istio install", "istio version", istioImageVersion.Version())
 
 	if _, ok := istioCR.Annotations[labels.LastAppliedConfiguration]; ok {
-		lastAppliedConfig, err := GetLastAppliedConfiguration(istioCR)
+		lastAppliedConfig, err := configuration.GetLastAppliedConfiguration(istioCR)
 		if err != nil {
 			ctrl.Log.Error(err, "Error evaluating Istio CR changes")
 			return istioImageVersion, described_errors.NewDescribedError(err, "Istio install check failed")
 		}
 
-		if err := checkIstioVersionUpdate(lastAppliedConfig.IstioTag, istioImageVersion.Tag()); err != nil {
+		if err := configuration.CheckIstioVersionUpdate(lastAppliedConfig.IstioTag, istioImageVersion.Tag()); err != nil {
 			statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIstioVersionUpdateNotAllowed))
 			// We are already updating the condition, that's why we need to avoid another condition update by applying SetCondition(false)
 			return istioImageVersion, described_errors.NewDescribedError(err, "Istio version update is not allowed").SetWarning().SetCondition(false)

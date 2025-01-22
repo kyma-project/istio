@@ -1,6 +1,8 @@
-package pods
+package predicates
 
 import (
+	"fmt"
+
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -9,17 +11,37 @@ const (
 	istioSidecarCustomImageAnnotation string = "sidecar.istio.io/proxyImage"
 )
 
-type RestartProxyPredicate struct {
+type SidecarImage struct {
+	Repository string
+	Tag        string
+}
+
+func NewSidecarImage(hub, tag string) SidecarImage {
+	return SidecarImage{
+		Repository: fmt.Sprintf("%s/proxyv2", hub),
+		Tag:        tag,
+	}
+}
+
+func (r SidecarImage) String() string {
+	return fmt.Sprintf("%s:%s", r.Repository, r.Tag)
+}
+
+func (r SidecarImage) matchesImageIn(container v1.Container) bool {
+	return container.Image == r.String()
+}
+
+type ImageResourcesPredicate struct {
 	expectedImage     SidecarImage
 	expectedResources v1.ResourceRequirements
 }
 
 // NewRestartProxyPredicate creates a new RestartProxyPredicate that checks if a pod needs a restart based on the expected image and resources.
-func NewRestartProxyPredicate(expectedImage SidecarImage, expectedResources v1.ResourceRequirements) *RestartProxyPredicate {
-	return &RestartProxyPredicate{expectedImage: expectedImage, expectedResources: expectedResources}
+func NewImageResourcesPredicate(expectedImage SidecarImage, expectedResources v1.ResourceRequirements) *ImageResourcesPredicate {
+	return &ImageResourcesPredicate{expectedImage: expectedImage, expectedResources: expectedResources}
 }
 
-func (p RestartProxyPredicate) RequiresProxyRestart(pod v1.Pod) bool {
+func (p ImageResourcesPredicate) RequiresProxyRestart(pod v1.Pod) bool {
 	return needsRestart(pod, p.expectedImage, *p.expectedResources.DeepCopy())
 }
 
@@ -28,7 +50,7 @@ func needsRestart(pod v1.Pod, expectedImage SidecarImage, expectedResources v1.R
 		(hasSidecarContainerWithWithDifferentImage(pod, expectedImage) || hasDifferentSidecarResources(pod, expectedResources))
 }
 
-func isReadyWithIstioAnnotation(pod v1.Pod) bool {
+func IsReadyWithIstioAnnotation(pod v1.Pod) bool {
 	return IsPodReady(pod) && HasIstioSidecarStatusAnnotation(pod)
 }
 

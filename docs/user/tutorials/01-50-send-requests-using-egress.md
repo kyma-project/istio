@@ -4,7 +4,7 @@
 
 * You have the Istio module added.
 * To use CLI instruction, you must install [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl)
-  and [curl](https://curl.se/). Alternatively, you can use Kyma dashboard.
+  and [curl](https://curl.se/).
 
 ### Configuration
 
@@ -20,7 +20,7 @@
     kubectl label namespace $NAMESPACE istio-injection=enabled --overwrite
     ```
 
-3. Enable additional sidecar logs to see egresGateway being used in requests:
+3. Enable additional sidecar logs to see egressGateway being used in requests:
     ```bash
     kubectl apply -f - <<EOF
     apiVersion: telemetry.istio.io/v1
@@ -123,82 +123,82 @@
    ```
 
 6. Create an egress `Gateway`, `DestinationRule` and `VirtualService` to direct traffic:
-
-```bash
-kubectl apply -f - <<EOF
-apiVersion: networking.istio.io/v1
-kind: Gateway
-metadata:
-  name: istio-egressgateway
-  namespace: ${NAMESPACE}
-spec:
-  selector:
-    istio: egressgateway
-  servers:
-  - port:
-      number: 443
-      name: tls
-      protocol: TLS
-    hosts:
-    - kyma-project.io
-    tls:
-      mode: PASSTHROUGH
----
-apiVersion: networking.istio.io/v1
-kind: DestinationRule
-metadata:
-  name: egressgateway-for-kyma-project
-  namespace: ${NAMESPACE}
-spec:
-  host: istio-egressgateway.istio-system.svc.cluster.local
-  subsets:
-  - name: kyma-project
----
-apiVersion: networking.istio.io/v1
-kind: VirtualService
-metadata:
-  name: direct-kyma-project-through-egress-gateway
-  namespace: ${NAMESPACE}
-spec:
-  hosts:
-  - kyma-project.io
-  gateways:
-  - mesh
-  - istio-egressgateway
-  tls:
-  - match:
-    - gateways:
-      - mesh
-      port: 443
-      sniHosts:
-      - kyma-project.io
-    route:
-    - destination:
-        host: istio-egressgateway.istio-system.svc.cluster.local
-        subset: kyma-project
-        port:
-          number: 443
-  - match:
-    - gateways:
-      - istio-egressgateway
-      port: 443
-      sniHosts:
-      - kyma-project.io
-    route:
-    - destination:
-        host: kyma-project.io
-        port:
-          number: 443
-      weight: 100
-EOF
-```
-
-Once again, send an HTTPS reqest:
-```bash
-kubectl exec -n "$NAMESPACE" "$SOURCE_POD" -c curl -- curl -sSL -o /dev/null -D - https://kyma-project.io
-```
-
-Check egress gateway log:
-```bash
-kubectl logs -l istio=egressgateway -n istio-system
-```
+   
+   ```bash
+   kubectl apply -f - <<EOF
+   apiVersion: networking.istio.io/v1
+   kind: Gateway
+   metadata:
+     name: istio-egressgateway
+     namespace: ${NAMESPACE}
+   spec:
+     selector:
+       istio: egressgateway
+     servers:
+     - port:
+         number: 443
+         name: tls
+         protocol: TLS
+       hosts:
+       - kyma-project.io
+       tls:
+         mode: PASSTHROUGH
+   ---
+   apiVersion: networking.istio.io/v1
+   kind: DestinationRule
+   metadata:
+     name: egressgateway-for-kyma-project
+     namespace: ${NAMESPACE}
+   spec:
+     host: istio-egressgateway.istio-system.svc.cluster.local
+     subsets:
+     - name: kyma-project
+   ---
+   apiVersion: networking.istio.io/v1
+   kind: VirtualService
+   metadata:
+     name: direct-kyma-project-through-egress-gateway
+     namespace: ${NAMESPACE}
+   spec:
+     hosts:
+     - kyma-project.io
+     gateways:
+     - mesh
+     - istio-egressgateway
+     tls:
+     - match:
+       - gateways:
+         - mesh
+         port: 443
+         sniHosts:
+         - kyma-project.io
+       route:
+       - destination:
+           host: istio-egressgateway.istio-system.svc.cluster.local
+           subset: kyma-project
+           port:
+             number: 443
+     - match:
+       - gateways:
+         - istio-egressgateway
+         port: 443
+         sniHosts:
+         - kyma-project.io
+       route:
+       - destination:
+           host: kyma-project.io
+           port:
+             number: 443
+         weight: 100
+   EOF
+   ```
+   
+   Once again, send an HTTPS request:
+   ```bash
+   kubectl exec -n "$NAMESPACE" "$SOURCE_POD" -c curl -- curl -sSL -o /dev/null -D - https://kyma-project.io
+   ```
+   
+   You should see the request to `kyma-project.io` in egress gateway log:
+   ```bash
+   kubectl logs -l istio=egressgateway -n istio-system
+   ```

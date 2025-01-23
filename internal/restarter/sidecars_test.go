@@ -15,6 +15,7 @@ import (
 	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars"
+	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/restart"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -307,5 +308,9 @@ type proxyRestarterMock struct {
 }
 
 func (p *proxyRestarterMock) RestartProxies(_ context.Context, _ client.Client, _ predicates.SidecarImage, _ v1.ResourceRequirements, _ *v1alpha2.Istio, _ *logr.Logger) ([]restart.RestartWarning, bool, error) {
+	return p.restartWarnings, p.hasMorePods, p.err
+}
+
+func (p *proxyRestarterMock) RestartWithPredicates(ctx context.Context, c client.Client, preds []predicates.SidecarProxyPredicate, limits *pods.PodsRestartLimits, logger *logr.Logger) ([]restart.RestartWarning, bool, error) {
 	return p.restartWarnings, p.hasMorePods, p.err
 }

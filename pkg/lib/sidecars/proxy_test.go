@@ -2,6 +2,7 @@ package sidecars_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -11,6 +12,7 @@ import (
 	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
 	"github.com/kyma-project/istio/operator/internal/tests"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars"
+	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/test/helpers"
 	. "github.com/onsi/ginkgo/v2"
 	ginkgotypes "github.com/onsi/ginkgo/v2/types"
@@ -103,7 +105,7 @@ var _ = Describe("RestartProxies", func() {
 	//logger := logr.Discard()
 	logger := NewStdoutLogger()
 
-	It("should succeed without warnings", func() {
+	It("should succeed without errors or warnings", func() {
 		// given
 		pod := getPod("test-pods", "test-namespace", "podOwner", "ReplicaSet")
 		rsOwner := getReplicaSet("podOwner", "test-namespace", "rsOwner", "ReplicaSet")
@@ -142,6 +144,108 @@ func fakeClient(objects ...client.Object) client.Client {
 
 	return fakeClient
 }
+
+var _ = Describe("RestartWithPredicates", func() {
+	ctx := context.Background()
+	logger := NewStdoutLogger()
+
+	It("should succeed without errors or warnings", func() {
+		// given
+		pod := getPod("test-pod", "test-namespace", "podOwner", "ReplicaSet")
+		rsOwner := getReplicaSet("podOwner", "test-namespace", "rsOwner", "ReplicaSet")
+		rsOwnerRS := getReplicaSet("rsOwner", "test-namespace", "base", "ReplicaSet")
+
+		c := fakeClient(pod, rsOwner, rsOwnerRS)
+		preds := []predicates.SidecarProxyPredicate{
+			predicates.NewImageResourcesPredicate(predicates.SidecarImage{Repository: "istio", Tag: "1.1.0"}, helpers.DefaultSidecarResources),
+		}
+		limits := pods.NewPodsRestartLimits(10, 10)
+
+		// when
+		proxyRestarter := sidecars.NewProxyRestarter()
+		warnings, hasMorePods, err := proxyRestarter.RestartWithPredicates(ctx, c, preds, limits, &logger)
+
+		// then
+		Expect(err).NotTo(HaveOccurred())
+		Expect(warnings).To(BeEmpty())
+		Expect(hasMorePods).To(BeFalse())
+
+		err = c.Get(ctx, client.ObjectKey{Name: rsOwnerRS.Name, Namespace: rsOwnerRS.Namespace}, rsOwnerRS)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(rsOwnerRS.Spec.Template.Annotations).To(HaveKey("istio-operator.kyma-project.io/restartedAt"))
+	})
+
+	It("should return warning that pod not have OwnerReferences", func() {
+		// given
+		pod := getPod("test-pod", "test-namespace", "podOwner", "ReplicaSet")
+		c := fakeClient(pod)
+
+		preds := []predicates.SidecarProxyPredicate{
+			predicates.NewImageResourcesPredicate(predicates.SidecarImage{Repository: "istio", Tag: "1.1.0"}, helpers.DefaultSidecarResources),
+		}
+		limits := pods.NewPodsRestartLimits(2, 2)
+
+		// when
+		proxyRestarter := sidecars.NewProxyRestarter()
+		warnings, hasMorePods, err := proxyRestarter.RestartWithPredicates(ctx, c, preds, limits, &logger)
+
+		// then
+		Expect(err).NotTo(HaveOccurred())
+		Expect(warnings).ToNot(BeEmpty())
+		Expect(hasMorePods).To(BeFalse())
+
+		Expect(warnings).To(HaveLen(1))
+		Expect(warnings[0].Message).To(Equal("pod sidecar could not be updated because OwnerReferences was not found."))
+	})
+
+	It("should return error if getting pods to restart fails", func() {
+		// given
+		preds := []predicates.SidecarProxyPredicate{
+			predicates.NewImageResourcesPredicate(predicates.SidecarImage{Repository: "istio", Tag: "1.1.0"}, helpers.DefaultSidecarResources),
+		}
+		limits := pods.NewPodsRestartLimits(2, 2)
+
+		// when
+		c := fakeClient()
+		failClient := &shouldFailClient{c, true, false}
+
+		proxyRestarter := sidecars.NewProxyRestarter()
+		warnings, hasMorePods, err := proxyRestarter.RestartWithPredicates(ctx, failClient, preds, limits, &logger)
+
+		// then
+		Expect(err).To(HaveOccurred())
+		Expect(warnings).To(BeNil())
+		Expect(hasMorePods).To(BeFalse())
+
+		Expect(err.Error()).To(Equal("intentionally failing client on client.List"))
+	})
+
+	It("should return error if restarting pods fails", func() {
+		// given
+		pod := getPod("test-pod", "test-namespace", "podOwner", "ReplicaSet")
+		rsOwner := getReplicaSet("podOwner", "test-namespace", "rsOwner", "ReplicaSet")
+		rsOwnerRS := getReplicaSet("rsOwner", "test-namespace", "base", "ReplicaSet")
+		c := fakeClient(pod, rsOwner, rsOwnerRS)
+
+		preds := []predicates.SidecarProxyPredicate{
+			predicates.NewImageResourcesPredicate(predicates.SidecarImage{Repository: "istio", Tag: "1.1.0"}, helpers.DefaultSidecarResources),
+		}
+		limits := pods.NewPodsRestartLimits(2, 2)
+
+		// when
+		failClient := &shouldFailClient{c, false, true}
+
+		proxyRestarter := sidecars.NewProxyRestarter()
+		warnings, hasMorePods, err := proxyRestarter.RestartWithPredicates(ctx, failClient, preds, limits, &logger)
+
+		// then
+		Expect(err).To(HaveOccurred())
+		Expect(warnings).To(BeNil())
+		Expect(hasMorePods).To(BeFalse())
+
+		Expect(err.Error()).To(Equal("running pod restart action failed: intentionally failing client on client.Patch"))
+	})
+})
 
 func getPod(name, namespace, ownerName, ownerKind string) *v1.Pod {
 	return &v1.Pod{
@@ -199,22 +303,22 @@ func getReplicaSet(name, namespace, ownerName, ownerKind string) *appsv1.Replica
 	}
 }
 
-// type shouldFailClient struct {
-// 	client.Client
-// 	FailOnGet   bool
-// 	FailOnPatch bool
-// }
+type shouldFailClient struct {
+	client.Client
+	FailOnList  bool
+	FailOnPatch bool
+}
 
-// func (p *shouldFailClient) Get(ctx context.Context, key client.ObjectKey, obj client.Object, opts ...client.GetOption) error {
-// 	if p.FailOnGet {
-// 		return errors.New("intentionally failing client on client.Get")
-// 	}
-// 	return p.Client.Get(ctx, key, obj, opts...)
-// }
+func (p *shouldFailClient) List(ctx context.Context, list client.ObjectList, opts ...client.ListOption) error {
+	if p.FailOnList {
+		return errors.New("intentionally failing client on client.List")
+	}
+	return p.Client.List(ctx, list, opts...)
+}
 
-// func (p *shouldFailClient) Patch(ctx context.Context, obj client.Object, patch client.Patch, opts ...client.PatchOption) error {
-// 	if p.FailOnPatch {
-// 		return errors.New("intentionally failing client on client.Patch")
-// 	}
-// 	return p.Client.Patch(ctx, obj, patch, opts...)
-// }
+func (p *shouldFailClient) Patch(ctx context.Context, obj client.Object, patch client.Patch, opts ...client.PatchOption) error {
+	if p.FailOnPatch {
+		return errors.New("intentionally failing client on client.Patch")
+	}
+	return p.Client.Patch(ctx, obj, patch, opts...)
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"strings"
 	"testing"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/go-logr/logr/funcr"
 	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
 	"github.com/kyma-project/istio/operator/internal/tests"
+	"github.com/kyma-project/istio/operator/pkg/labels"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/test/helpers"
@@ -115,9 +117,9 @@ var _ = Describe("RestartProxies", func() {
 
 		// when
 		podsLister := pods.NewPods(c, &logger)
-		proxyRestarter := sidecars.NewProxyRestarter(c, podsLister, &logger)
 		expectedImage := predicates.NewSidecarImage("istio", "1.1.0")
 		istioCR := helpers.GetIstioCR(expectedImage.Tag)
+		proxyRestarter := sidecars.NewProxyRestarter(c, podsLister, &logger)
 		warnings, hasMorePods, err := proxyRestarter.RestartProxies(ctx, expectedImage, helpers.DefaultSidecarResources, &istioCR)
 
 		// then
@@ -128,6 +130,100 @@ var _ = Describe("RestartProxies", func() {
 		err = c.Get(ctx, client.ObjectKey{Name: rsOwnerRS.Name, Namespace: rsOwnerRS.Namespace}, rsOwnerRS)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(rsOwnerRS.Spec.Template.Annotations).To(HaveKey("istio-operator.kyma-project.io/restartedAt"))
+	})
+
+	It("should call restart proxies with respective predicates", func() {
+		// given
+		c := fakeClient()
+
+		// when
+		failClient := &shouldFailClient{c, false, true}
+
+		podsListerMock := NewPodsMock()
+		expectedImage := predicates.NewSidecarImage("istio", "1.1.0")
+		istioCR := helpers.GetIstioCR(expectedImage.Tag)
+		proxyRestarter := sidecars.NewProxyRestarter(failClient, podsListerMock, &logger)
+		warnings, hasMorePods, err := proxyRestarter.RestartProxies(ctx, expectedImage, helpers.DefaultSidecarResources, &istioCR)
+
+		// then
+		Expect(err).ToNot(HaveOccurred())
+		Expect(warnings).To(BeEmpty())
+		Expect(hasMorePods).To(BeFalse())
+
+		Expect(podsListerMock.Called).To(Equal(2))
+
+		Expect(podsListerMock.Predicates).To(HaveLen(2))
+		Expect(podsListerMock.Predicates[0]).To(HaveLen(3))
+		Expect(podsListerMock.Predicates[0][0]).To(BeAssignableToTypeOf(&predicates.CompatibilityRestartPredicate{}))
+		Expect(podsListerMock.Predicates[0][1]).To(BeAssignableToTypeOf(&predicates.ImageResourcesPredicate{}))
+		Expect(podsListerMock.Predicates[0][2]).To(BeAssignableToTypeOf(&predicates.KymaWorkloadRestartPredicate{}))
+		Expect(podsListerMock.Predicates[1]).To(HaveLen(3))
+		Expect(podsListerMock.Predicates[0][0]).To(BeAssignableToTypeOf(&predicates.CompatibilityRestartPredicate{}))
+		Expect(podsListerMock.Predicates[1][1]).To(BeAssignableToTypeOf(&predicates.ImageResourcesPredicate{}))
+		Expect(podsListerMock.Predicates[1][2]).To(BeAssignableToTypeOf(&predicates.CustomerWorkloadRestartPredicate{}))
+
+		Expect(podsListerMock.Limits).To(HaveLen(2))
+		Expect(podsListerMock.Limits[0].PodsToRestartLimit).To(Equal(math.MaxInt))
+		Expect(podsListerMock.Limits[0].PodsToListLimit).To(Equal(math.MaxInt))
+		Expect(podsListerMock.Limits[1].PodsToRestartLimit).To(Equal(30))
+		Expect(podsListerMock.Limits[1].PodsToListLimit).To(Equal(100))
+	})
+
+	It("should return error if compatibility predicate creation fails", func() {
+		// given
+		c := fakeClient()
+		podsListerMock := NewPodsMock()
+		expectedImage := predicates.NewSidecarImage("istio", "1.1.0")
+		istioCR := helpers.GetIstioCR(expectedImage.Tag)
+		istioCR.Annotations[labels.LastAppliedConfiguration] = "invalid-last-applied-configuration" // This should cause the compatibility predicate to fail
+		proxyRestarter := sidecars.NewProxyRestarter(c, podsListerMock, &logger)
+
+		// when
+		warnings, hasMorePods, err := proxyRestarter.RestartProxies(ctx, expectedImage, helpers.DefaultSidecarResources, &istioCR)
+
+		// then
+		Expect(err).To(HaveOccurred())
+		Expect(warnings).To(BeNil())
+		Expect(hasMorePods).To(BeFalse())
+		Expect(err.Error()).To(ContainSubstring("invalid character"))
+	})
+
+	It("should log error if restarting Kyma proxies fails", func() {
+		// given
+		c := fakeClient()
+		podsListerMock := NewPodsMock()
+		podsListerMock.FailOnKymaWorkload = true
+		expectedImage := predicates.NewSidecarImage("istio", "1.1.0")
+		istioCR := helpers.GetIstioCR(expectedImage.Tag)
+		proxyRestarter := sidecars.NewProxyRestarter(c, podsListerMock, &logger)
+
+		// when
+		warnings, hasMorePods, err := proxyRestarter.RestartProxies(ctx, expectedImage, helpers.DefaultSidecarResources, &istioCR)
+
+		// then
+		Expect(err).To(HaveOccurred())
+		Expect(warnings).To(BeNil())
+		Expect(hasMorePods).To(BeFalse())
+		Expect(err.Error()).To(ContainSubstring("intentionally failed on Kyma workload predicate"))
+	})
+
+	It("should log error if restarting Customer proxies fails", func() {
+		// given
+		c := fakeClient()
+
+		podsListerMock := NewPodsMock()
+		podsListerMock.FailOnCustomerWorkload = true
+		expectedImage := predicates.NewSidecarImage("istio", "1.1.0")
+		istioCR := helpers.GetIstioCR(expectedImage.Tag)
+		proxyRestarter := sidecars.NewProxyRestarter(c, podsListerMock, &logger)
+
+		// when
+		warnings, hasMorePods, err := proxyRestarter.RestartProxies(ctx, expectedImage, helpers.DefaultSidecarResources, &istioCR)
+
+		// then
+		Expect(err).ToNot(HaveOccurred())
+		Expect(warnings).To(BeNil())
+		Expect(hasMorePods).To(BeFalse())
 	})
 })
 
@@ -165,7 +261,7 @@ var _ = Describe("RestartWithPredicates", func() {
 		// when
 		podsLister := pods.NewPods(c, &logger)
 		proxyRestarter := sidecars.NewProxyRestarter(c, podsLister, &logger)
-		warnings, hasMorePods, err := proxyRestarter.RestartWithPredicates(ctx, preds, limits)
+		warnings, hasMorePods, err := proxyRestarter.RestartWithPredicates(ctx, preds, limits, true)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -190,7 +286,7 @@ var _ = Describe("RestartWithPredicates", func() {
 		// when
 		podsLister := pods.NewPods(c, &logger)
 		proxyRestarter := sidecars.NewProxyRestarter(c, podsLister, &logger)
-		warnings, hasMorePods, err := proxyRestarter.RestartWithPredicates(ctx, preds, limits)
+		warnings, hasMorePods, err := proxyRestarter.RestartWithPredicates(ctx, preds, limits, true)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -214,7 +310,7 @@ var _ = Describe("RestartWithPredicates", func() {
 
 		podsLister := pods.NewPods(failClient, &logger)
 		proxyRestarter := sidecars.NewProxyRestarter(failClient, podsLister, &logger)
-		warnings, hasMorePods, err := proxyRestarter.RestartWithPredicates(ctx, preds, limits)
+		warnings, hasMorePods, err := proxyRestarter.RestartWithPredicates(ctx, preds, limits, true)
 
 		// then
 		Expect(err).To(HaveOccurred())
@@ -241,7 +337,7 @@ var _ = Describe("RestartWithPredicates", func() {
 
 		podsLister := pods.NewPods(failClient, &logger)
 		proxyRestarter := sidecars.NewProxyRestarter(failClient, podsLister, &logger)
-		warnings, hasMorePods, err := proxyRestarter.RestartWithPredicates(ctx, preds, limits)
+		warnings, hasMorePods, err := proxyRestarter.RestartWithPredicates(ctx, preds, limits, true)
 
 		// then
 		Expect(err).To(HaveOccurred())
@@ -326,4 +422,45 @@ func (p *shouldFailClient) Patch(ctx context.Context, obj client.Object, patch c
 		return errors.New("intentionally failing client on client.Patch")
 	}
 	return p.Client.Patch(ctx, obj, patch, opts...)
+}
+
+type PodsMock struct {
+	Called                 int
+	Predicates             map[int][]predicates.SidecarProxyPredicate
+	Limits                 map[int]*pods.PodsRestartLimits
+	FailOnKymaWorkload     bool
+	FailOnCustomerWorkload bool
+}
+
+func NewPodsMock() *PodsMock {
+	return &PodsMock{
+		Called:                 0,
+		Predicates:             map[int][]predicates.SidecarProxyPredicate{},
+		Limits:                 map[int]*pods.PodsRestartLimits{},
+		FailOnKymaWorkload:     false,
+		FailOnCustomerWorkload: false,
+	}
+}
+
+func (p *PodsMock) GetPodsToRestart(_ context.Context, preds []predicates.SidecarProxyPredicate, limits *pods.PodsRestartLimits) (*v1.PodList, error) {
+	if p.FailOnKymaWorkload {
+		_, ok := preds[len(preds)-1].(*predicates.KymaWorkloadRestartPredicate)
+		if ok {
+			return &v1.PodList{}, errors.New("intentionally failed on Kyma workload predicate")
+		}
+	}
+	if p.FailOnCustomerWorkload {
+		_, ok := preds[len(preds)-1].(*predicates.CustomerWorkloadRestartPredicate)
+		if ok {
+			return &v1.PodList{}, errors.New("intentionally failed on Customer workload predicate")
+		}
+	}
+	p.Predicates[p.Called] = preds
+	p.Limits[p.Called] = limits
+	p.Called++
+	return &v1.PodList{}, nil
+}
+
+func (p *PodsMock) GetAllInjectedPods(_ context.Context) (*v1.PodList, error) {
+	return &v1.PodList{}, nil
 }

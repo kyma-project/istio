@@ -16,20 +16,20 @@ const (
 )
 
 type PodsRestartLimits struct {
-	podsToRestartLimit int
-	podsToListLimit    int
+	PodsToRestartLimit int
+	PodsToListLimit    int
 }
 
 func NewPodsRestartLimits(restartLimit, listLimit int) *PodsRestartLimits {
 	return &PodsRestartLimits{
-		podsToRestartLimit: restartLimit,
-		podsToListLimit:    listLimit,
+		PodsToRestartLimit: restartLimit,
+		PodsToListLimit:    listLimit,
 	}
 }
 
 type PodsGetter interface {
 	GetPodsToRestart(ctx context.Context, preds []predicates.SidecarProxyPredicate, limits *PodsRestartLimits) (*v1.PodList, error)
-	GetAllInjectedPods(context context.Context) (outputPodList *v1.PodList, err error)
+	GetAllInjectedPods(context context.Context) (*v1.PodList, error)
 }
 
 type Pods struct {
@@ -47,7 +47,7 @@ func NewPods(k8sClient client.Client, logger *logr.Logger) *Pods {
 func (p *Pods) GetPodsToRestart(ctx context.Context, preds []predicates.SidecarProxyPredicate, limits *PodsRestartLimits) (*v1.PodList, error) {
 	podsToRestart := &v1.PodList{}
 	for while := true; while; {
-		podsWithSidecar, err := getSidecarPods(ctx, p.k8sClient, p.logger, limits.podsToListLimit, podsToRestart.Continue)
+		podsWithSidecar, err := getSidecarPods(ctx, p.k8sClient, p.logger, limits.PodsToListLimit, podsToRestart.Continue)
 		if err != nil {
 			return nil, err
 		}
@@ -67,12 +67,12 @@ func (p *Pods) GetPodsToRestart(ctx context.Context, preds []predicates.SidecarP
 			if matchFound && allRequiredMatched {
 				podsToRestart.Items = append(podsToRestart.Items, pod)
 			}
-			if len(podsToRestart.Items) >= limits.podsToRestartLimit {
+			if len(podsToRestart.Items) >= limits.PodsToRestartLimit {
 				break
 			}
 		}
 		podsToRestart.Continue = podsWithSidecar.Continue
-		while = len(podsToRestart.Items) < limits.podsToRestartLimit && podsToRestart.Continue != ""
+		while = len(podsToRestart.Items) < limits.PodsToRestartLimit && podsToRestart.Continue != ""
 	}
 
 	if len(podsToRestart.Items) > 0 {

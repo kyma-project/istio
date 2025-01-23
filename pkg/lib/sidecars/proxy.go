@@ -21,16 +21,16 @@ const (
 
 type ProxyRestarter interface {
 	RestartProxies(ctx context.Context, expectedImage predicates.SidecarImage, expectedResources v1.ResourceRequirements, istioCR *v1alpha2.Istio) ([]restart.RestartWarning, bool, error)
-	RestartWithPredicates(ctx context.Context, preds []predicates.SidecarProxyPredicate, limits *pods.PodsRestartLimits) ([]restart.RestartWarning, bool, error)
+	RestartWithPredicates(ctx context.Context, preds []predicates.SidecarProxyPredicate, limits *pods.PodsRestartLimits, failOnError bool) ([]restart.RestartWarning, bool, error)
 }
 
 type ProxyRestart struct {
 	k8sClient  client.Client
-	podsLister *pods.Pods
+	podsLister pods.PodsGetter
 	logger     *logr.Logger
 }
 
-func NewProxyRestarter(c client.Client, podsLister *pods.Pods, logger *logr.Logger) *ProxyRestart {
+func NewProxyRestarter(c client.Client, podsLister pods.PodsGetter, logger *logr.Logger) *ProxyRestart {
 	return &ProxyRestart{
 		k8sClient:  c,
 		podsLister: podsLister,
@@ -63,14 +63,14 @@ func (p *ProxyRestart) RestartProxies(ctx context.Context, expectedImage predica
 	return warnings, hasMorePodsToRestart, nil
 }
 
-func (p *ProxyRestart) RestartWithPredicates(ctx context.Context, preds []predicates.SidecarProxyPredicate, limits *pods.PodsRestartLimits) ([]restart.RestartWarning, bool, error) {
+func (p *ProxyRestart) RestartWithPredicates(ctx context.Context, preds []predicates.SidecarProxyPredicate, limits *pods.PodsRestartLimits, failOnError bool) ([]restart.RestartWarning, bool, error) {
 	podsToRestart, err := p.podsLister.GetPodsToRestart(ctx, preds, limits)
 	if err != nil {
 		p.logger.Error(err, "Getting Kyma pods to restart failed")
 		return nil, false, err
 	}
 
-	warnings, err := restart.Restart(ctx, p.k8sClient, podsToRestart, p.logger, true)
+	warnings, err := restart.Restart(ctx, p.k8sClient, podsToRestart, p.logger, failOnError)
 	if err != nil {
 		p.logger.Error(err, "Restarting Kyma pods failed")
 		return nil, false, err
@@ -81,10 +81,10 @@ func (p *ProxyRestart) RestartWithPredicates(ctx context.Context, preds []predic
 }
 
 func (p *ProxyRestart) restartKymaProxies(ctx context.Context, preds []predicates.SidecarProxyPredicate) error {
-	preds = append(preds, predicates.KymaWorkloadRestartPredicate{})
+	preds = append(preds, predicates.NewKymaWorkloadRestartPredicate())
 	limits := pods.NewPodsRestartLimits(math.MaxInt, math.MaxInt)
 
-	_, _, err := p.RestartWithPredicates(ctx, preds, limits)
+	_, _, err := p.RestartWithPredicates(ctx, preds, limits, true)
 	if err != nil {
 		p.logger.Error(err, "Failed to restart Kyma proxies")
 		return err
@@ -95,10 +95,10 @@ func (p *ProxyRestart) restartKymaProxies(ctx context.Context, preds []predicate
 }
 
 func (p *ProxyRestart) restartCustomerProxies(ctx context.Context, preds []predicates.SidecarProxyPredicate) ([]restart.RestartWarning, bool, error) {
-	preds = append(preds, predicates.CustomerWorkloadRestartPredicate{})
+	preds = append(preds, predicates.NewCustomerWorkloadRestartPredicate())
 	limits := pods.NewPodsRestartLimits(podsToRestartLimit, podsToListLimit)
 
-	warnings, hasMorePodsToRestart, err := p.RestartWithPredicates(ctx, preds, limits)
+	warnings, hasMorePodsToRestart, err := p.RestartWithPredicates(ctx, preds, limits, false)
 	if err != nil {
 		p.logger.Error(err, "Failed to restart Customer proxies")
 		return nil, false, err

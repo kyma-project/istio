@@ -314,6 +314,6 @@ func (p *proxyRestarterMock) RestartProxies(_ context.Context, _ predicates.Side
 	return p.restartWarnings, p.hasMorePods, p.err
 }
 
-func (p *proxyRestarterMock) RestartWithPredicates(_ context.Context, preds []predicates.SidecarProxyPredicate, limits *pods.PodsRestartLimits) ([]restart.RestartWarning, bool, error) {
+func (p *proxyRestarterMock) RestartWithPredicates(_ context.Context, preds []predicates.SidecarProxyPredicate, _ *pods.PodsRestartLimits, _ bool) ([]restart.RestartWarning, bool, error) {
 	return p.restartWarnings, p.hasMorePods, p.err
 }

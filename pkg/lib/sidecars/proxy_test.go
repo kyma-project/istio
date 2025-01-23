@@ -3,13 +3,10 @@ package sidecars_test
 import (
 	"context"
 	"errors"
-	"fmt"
 	"math"
-	"strings"
 	"testing"
 
 	"github.com/go-logr/logr"
-	"github.com/go-logr/logr/funcr"
 	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
 	"github.com/kyma-project/istio/operator/internal/tests"
 	"github.com/kyma-project/istio/operator/pkg/labels"
@@ -29,71 +26,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
-func NewStdoutLogger() logr.Logger {
-	l := &stdoutlogger{
-		Formatter: funcr.NewFormatter(funcr.Options{}),
-	}
-	return logr.New(l)
-}
-
-type stdoutlogger struct {
-	funcr.Formatter
-	logMsgType bool
-}
-
-func (l stdoutlogger) WithName(name string) logr.LogSink {
-	l.Formatter.AddName(name)
-	return &l
-}
-
-func (l stdoutlogger) WithValues(kvList ...interface{}) logr.LogSink {
-	l.Formatter.AddValues(kvList)
-	return &l
-}
-
-func (l stdoutlogger) WithCallDepth(depth int) logr.LogSink {
-	l.Formatter.AddCallDepth(depth)
-	return &l
-}
-
-func (l stdoutlogger) Info(level int, msg string, kvList ...interface{}) {
-	prefix, args := l.FormatInfo(level, msg, kvList)
-	l.write("INFO", prefix, args)
-}
-
-func (l stdoutlogger) Error(err error, msg string, kvList ...interface{}) {
-	prefix, args := l.FormatError(err, msg, kvList)
-	l.write("ERROR", prefix, args)
-}
-
-func (l stdoutlogger) write(msgType, prefix, args string) {
-	var parts []string
-	if l.logMsgType {
-		parts = append(parts, msgType)
-	}
-	if prefix != "" {
-		parts = append(parts, prefix)
-	}
-	parts = append(parts, args)
-	fmt.Println(strings.Join(parts, ": "))
-}
-
-// WithLogMsgType returns a copy of the logger with new settings for
-// logging the message type. It returns the original logger if the
-// underlying LogSink is not a stdoutlogger.
-func WithLogMsgType(log logr.Logger, logMsgType bool) logr.Logger {
-	if l, ok := log.GetSink().(*stdoutlogger); ok {
-		clone := *l
-		clone.logMsgType = logMsgType
-		log = log.WithSink(&clone)
-	}
-	return log
-}
-
-// Assert conformance to the interfaces.
-var _ logr.LogSink = &stdoutlogger{}
-var _ logr.CallDepthLogSink = &stdoutlogger{}
-
 func TestRestartProxies(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Proxy Restart Suite")
@@ -105,8 +37,7 @@ var _ = ReportAfterSuite("custom reporter", func(report ginkgotypes.Report) {
 
 var _ = Describe("RestartProxies", func() {
 	ctx := context.Background()
-	//logger := logr.Discard()
-	logger := NewStdoutLogger()
+	logger := logr.Discard()
 
 	It("should succeed without errors or warnings", func() {
 		// given
@@ -245,7 +176,7 @@ func fakeClient(objects ...client.Object) client.Client {
 
 var _ = Describe("RestartWithPredicates", func() {
 	ctx := context.Background()
-	logger := NewStdoutLogger()
+	logger := logr.Discard()
 
 	It("should succeed without errors or warnings", func() {
 		// given

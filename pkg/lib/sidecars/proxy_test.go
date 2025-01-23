@@ -15,6 +15,7 @@ import (
 	"github.com/kyma-project/istio/operator/pkg/labels"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
+	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/restart"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/test/helpers"
 	. "github.com/onsi/ginkgo/v2"
 	ginkgotypes "github.com/onsi/ginkgo/v2/types"
@@ -345,6 +346,31 @@ var _ = Describe("RestartWithPredicates", func() {
 		Expect(hasMorePods).To(BeFalse())
 
 		Expect(err.Error()).To(Equal("running pod restart action failed: intentionally failing client on client.Patch"))
+	})
+
+	It("should not return error if restarting pods fails but failOnError is false", func() {
+		// given
+		pod := getPod("test-pod", "test-namespace", "podOwner", "ReplicaSet")
+		rsOwner := getReplicaSet("podOwner", "test-namespace", "rsOwner", "ReplicaSet")
+		rsOwnerRS := getReplicaSet("rsOwner", "test-namespace", "base", "ReplicaSet")
+		c := fakeClient(pod, rsOwner, rsOwnerRS)
+
+		preds := []predicates.SidecarProxyPredicate{
+			predicates.NewImageResourcesPredicate(predicates.SidecarImage{Repository: "istio", Tag: "1.1.0"}, helpers.DefaultSidecarResources),
+		}
+		limits := pods.NewPodsRestartLimits(2, 2)
+
+		// when
+		failClient := &shouldFailClient{c, false, true}
+
+		podsLister := pods.NewPods(failClient, &logger)
+		proxyRestarter := sidecars.NewProxyRestarter(failClient, podsLister, &logger)
+		warnings, hasMorePods, err := proxyRestarter.RestartWithPredicates(ctx, preds, limits, false)
+
+		// then
+		Expect(err).ToNot(HaveOccurred())
+		Expect(warnings).To(Equal([]restart.RestartWarning{}))
+		Expect(hasMorePods).To(BeFalse())
 	})
 })
 

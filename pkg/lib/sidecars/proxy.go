@@ -66,13 +66,13 @@ func (p *ProxyRestart) RestartProxies(ctx context.Context, expectedImage predica
 func (p *ProxyRestart) RestartWithPredicates(ctx context.Context, preds []predicates.SidecarProxyPredicate, limits *pods.PodsRestartLimits, failOnError bool) ([]restart.RestartWarning, bool, error) {
 	podsToRestart, err := p.podsLister.GetPodsToRestart(ctx, preds, limits)
 	if err != nil {
-		p.logger.Error(err, "Getting Kyma pods to restart failed")
+		p.logger.Error(err, "Getting pods to restart failed")
 		return nil, false, err
 	}
 
 	warnings, err := restart.Restart(ctx, p.k8sClient, podsToRestart, p.logger, failOnError)
 	if err != nil {
-		p.logger.Error(err, "Restarting Kyma pods failed")
+		p.logger.Error(err, "Restarting pods failed")
 		return nil, false, err
 	}
 

@@ -27,6 +27,84 @@ func NewPodsRestartLimits(restartLimit, listLimit int) *PodsRestartLimits {
 	}
 }
 
+type PodsGetter interface {
+	GetPodsToRestart(ctx context.Context, preds []predicates.SidecarProxyPredicate, limits *PodsRestartLimits) (*v1.PodList, error)
+	GetAllInjectedPods(context context.Context) (outputPodList *v1.PodList, err error)
+}
+
+type Pods struct {
+	k8sClient client.Client
+	logger    *logr.Logger
+}
+
+func NewPods(k8sClient client.Client, logger *logr.Logger) *Pods {
+	return &Pods{
+		k8sClient: k8sClient,
+		logger:    logger,
+	}
+}
+
+func (p *Pods) GetPodsToRestart(ctx context.Context, preds []predicates.SidecarProxyPredicate, limits *PodsRestartLimits) (*v1.PodList, error) {
+	podsToRestart := &v1.PodList{}
+	for while := true; while; {
+		podsWithSidecar, err := getSidecarPods(ctx, p.k8sClient, p.logger, limits.podsToListLimit, podsToRestart.Continue)
+		if err != nil {
+			return nil, err
+		}
+		for _, pod := range podsWithSidecar.Items {
+			matchFound := false
+			allRequiredMatched := true
+			for _, predicate := range preds { // any predicate match will trigger a restart
+				matched := predicate.Matches(pod)
+				if !matchFound && matched {
+					matchFound = true
+				}
+				if predicate.MustMatch() && !matched {
+					allRequiredMatched = false
+					break
+				}
+			}
+			if matchFound && allRequiredMatched {
+				podsToRestart.Items = append(podsToRestart.Items, pod)
+			}
+			if len(podsToRestart.Items) >= limits.podsToRestartLimit {
+				break
+			}
+		}
+		podsToRestart.Continue = podsWithSidecar.Continue
+		while = len(podsToRestart.Items) < limits.podsToRestartLimit && podsToRestart.Continue != ""
+	}
+
+	if len(podsToRestart.Items) > 0 {
+		p.logger.Info("Pods to restart", "number of pods", len(podsToRestart.Items), "has more pods", podsToRestart.Continue != "")
+	} else {
+		p.logger.Info("No pods to restart with matching predicates")
+	}
+
+	return podsToRestart, nil
+}
+
+func (p *Pods) GetAllInjectedPods(ctx context.Context) (outputPodList *v1.PodList, err error) {
+	podList := &v1.PodList{}
+	outputPodList = &v1.PodList{}
+	outputPodList.Items = make([]v1.Pod, len(podList.Items))
+
+	err = retry.RetryOnError(retry.DefaultRetry, func() error {
+		return p.k8sClient.List(ctx, podList, &client.ListOptions{})
+	})
+	if err != nil {
+		return podList, err
+	}
+
+	for _, pod := range podList.Items {
+		if containsSidecar(pod) {
+			outputPodList.Items = append(outputPodList.Items, pod)
+		}
+	}
+
+	return outputPodList, nil
+}
+
 func listRunningPods(ctx context.Context, c client.Client, listLimit int, continueToken string) (*v1.PodList, error) {
 	podList := &v1.PodList{}
 
@@ -65,46 +143,6 @@ func getSidecarPods(ctx context.Context, c client.Client, logger *logr.Logger, l
 	return podsWithSidecar, nil
 }
 
-func GetPodsToRestart(ctx context.Context, c client.Client, preds []predicates.SidecarProxyPredicate, limits *PodsRestartLimits, logger *logr.Logger) (*v1.PodList, error) {
-	podsToRestart := &v1.PodList{}
-	for while := true; while; {
-		podsWithSidecar, err := getSidecarPods(ctx, c, logger, limits.podsToListLimit, podsToRestart.Continue)
-		if err != nil {
-			return nil, err
-		}
-		for _, pod := range podsWithSidecar.Items {
-			matchFound := false
-			allRequiredMatched := true
-			for _, predicate := range preds { // any predicate match will trigger a restart
-				matched := predicate.Matches(pod)
-				if !matchFound && matched {
-					matchFound = true
-				}
-				if predicate.MustMatch() && !matched {
-					allRequiredMatched = false
-					break
-				}
-			}
-			if matchFound && allRequiredMatched {
-				podsToRestart.Items = append(podsToRestart.Items, pod)
-			}
-			if len(podsToRestart.Items) >= limits.podsToRestartLimit {
-				break
-			}
-		}
-		podsToRestart.Continue = podsWithSidecar.Continue
-		while = len(podsToRestart.Items) < limits.podsToRestartLimit && podsToRestart.Continue != ""
-	}
-
-	if len(podsToRestart.Items) > 0 {
-		logger.Info("Pods to restart", "number of pods", len(podsToRestart.Items), "has more pods", podsToRestart.Continue != "")
-	} else {
-		logger.Info("No pods to restart with matching predicates")
-	}
-
-	return podsToRestart, nil
-}
-
 func containsSidecar(pod v1.Pod) bool {
 	// If the pod has one container it is not injected
 	// This skips IngressGateway and EgressGateway pods, as those only have istio-proxy
@@ -117,25 +155,4 @@ func containsSidecar(pod v1.Pod) bool {
 		}
 	}
 	return false
-}
-
-func GetAllInjectedPods(ctx context.Context, k8sclient client.Client) (outputPodList *v1.PodList, err error) {
-	podList := &v1.PodList{}
-	outputPodList = &v1.PodList{}
-	outputPodList.Items = make([]v1.Pod, len(podList.Items))
-
-	err = retry.RetryOnError(retry.DefaultRetry, func() error {
-		return k8sclient.List(ctx, podList, &client.ListOptions{})
-	})
-	if err != nil {
-		return podList, err
-	}
-
-	for _, pod := range podList.Items {
-		if containsSidecar(pod) {
-			outputPodList.Items = append(outputPodList.Items, pod)
-		}
-	}
-
-	return outputPodList, nil
 }

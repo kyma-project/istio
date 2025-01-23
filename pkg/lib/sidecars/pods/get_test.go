@@ -261,7 +261,8 @@ var _ = Describe("GetPodsToRestart", func() {
 		for _, tt := range tests {
 			It(tt.name, func() {
 				tt.predicates = append(tt.predicates, predicates.NewImageResourcesPredicate(expectedImage, helpers.DefaultSidecarResources))
-				podList, err := pods.GetPodsToRestart(ctx, tt.c, tt.predicates, tt.limits, &logger)
+				podsLister := pods.NewPods(tt.c, &logger)
+				podList, err := podsLister.GetPodsToRestart(ctx, tt.predicates, tt.limits)
 				Expect(err).NotTo(HaveOccurred())
 				tt.assertFunc(podList)
 			})
@@ -339,7 +340,8 @@ var _ = Describe("GetPodsToRestart", func() {
 		for _, tt := range tests {
 			It(tt.name, func() {
 				expectedImage := predicates.NewSidecarImage("istio", "1.10.0")
-				podList, err := pods.GetPodsToRestart(ctx, tt.c, []predicates.SidecarProxyPredicate{predicates.NewImageResourcesPredicate(expectedImage, helpers.DefaultSidecarResources)}, pods.NewPodsRestartLimits(5, 5), &logger)
+				podsLister := pods.NewPods(tt.c, &logger)
+				podList, err := podsLister.GetPodsToRestart(ctx, []predicates.SidecarProxyPredicate{predicates.NewImageResourcesPredicate(expectedImage, helpers.DefaultSidecarResources)}, pods.NewPodsRestartLimits(5, 5))
 				Expect(err).NotTo(HaveOccurred())
 				tt.assertFunc(podList)
 			})
@@ -349,6 +351,7 @@ var _ = Describe("GetPodsToRestart", func() {
 
 var _ = Describe("GetAllInjectedPods", func() {
 	ctx := context.Background()
+	logger := logr.Discard()
 
 	tests := []struct {
 		name       string
@@ -377,7 +380,8 @@ var _ = Describe("GetAllInjectedPods", func() {
 	}
 	for _, tt := range tests {
 		It(tt.name, func() {
-			podList, err := pods.GetAllInjectedPods(ctx, tt.c)
+			podsLister := pods.NewPods(tt.c, &logger)
+			podList, err := podsLister.GetAllInjectedPods(ctx)
 			Expect(err).NotTo(HaveOccurred())
 			tt.assertFunc(podList)
 		})

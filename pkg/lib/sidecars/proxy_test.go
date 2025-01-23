@@ -114,10 +114,11 @@ var _ = Describe("RestartProxies", func() {
 		c := fakeClient(pod, rsOwner, rsOwnerRS)
 
 		// when
-		proxyRestarter := sidecars.NewProxyRestarter()
+		podsLister := pods.NewPods(c, &logger)
+		proxyRestarter := sidecars.NewProxyRestarter(c, podsLister, &logger)
 		expectedImage := predicates.NewSidecarImage("istio", "1.1.0")
 		istioCR := helpers.GetIstioCR(expectedImage.Tag)
-		warnings, hasMorePods, err := proxyRestarter.RestartProxies(ctx, c, expectedImage, helpers.DefaultSidecarResources, &istioCR, &logger)
+		warnings, hasMorePods, err := proxyRestarter.RestartProxies(ctx, expectedImage, helpers.DefaultSidecarResources, &istioCR)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -162,8 +163,9 @@ var _ = Describe("RestartWithPredicates", func() {
 		limits := pods.NewPodsRestartLimits(10, 10)
 
 		// when
-		proxyRestarter := sidecars.NewProxyRestarter()
-		warnings, hasMorePods, err := proxyRestarter.RestartWithPredicates(ctx, c, preds, limits, &logger)
+		podsLister := pods.NewPods(c, &logger)
+		proxyRestarter := sidecars.NewProxyRestarter(c, podsLister, &logger)
+		warnings, hasMorePods, err := proxyRestarter.RestartWithPredicates(ctx, preds, limits)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -186,8 +188,9 @@ var _ = Describe("RestartWithPredicates", func() {
 		limits := pods.NewPodsRestartLimits(2, 2)
 
 		// when
-		proxyRestarter := sidecars.NewProxyRestarter()
-		warnings, hasMorePods, err := proxyRestarter.RestartWithPredicates(ctx, c, preds, limits, &logger)
+		podsLister := pods.NewPods(c, &logger)
+		proxyRestarter := sidecars.NewProxyRestarter(c, podsLister, &logger)
+		warnings, hasMorePods, err := proxyRestarter.RestartWithPredicates(ctx, preds, limits)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -209,8 +212,9 @@ var _ = Describe("RestartWithPredicates", func() {
 		c := fakeClient()
 		failClient := &shouldFailClient{c, true, false}
 
-		proxyRestarter := sidecars.NewProxyRestarter()
-		warnings, hasMorePods, err := proxyRestarter.RestartWithPredicates(ctx, failClient, preds, limits, &logger)
+		podsLister := pods.NewPods(failClient, &logger)
+		proxyRestarter := sidecars.NewProxyRestarter(failClient, podsLister, &logger)
+		warnings, hasMorePods, err := proxyRestarter.RestartWithPredicates(ctx, preds, limits)
 
 		// then
 		Expect(err).To(HaveOccurred())
@@ -235,8 +239,9 @@ var _ = Describe("RestartWithPredicates", func() {
 		// when
 		failClient := &shouldFailClient{c, false, true}
 
-		proxyRestarter := sidecars.NewProxyRestarter()
-		warnings, hasMorePods, err := proxyRestarter.RestartWithPredicates(ctx, failClient, preds, limits, &logger)
+		podsLister := pods.NewPods(failClient, &logger)
+		proxyRestarter := sidecars.NewProxyRestarter(failClient, podsLister, &logger)
+		warnings, hasMorePods, err := proxyRestarter.RestartWithPredicates(ctx, preds, limits)
 
 		// then
 		Expect(err).To(HaveOccurred())

@@ -31,6 +31,7 @@ import (
 )
 
 var _ = Describe("SidecarsRestarter reconciliation", func() {
+	logger := logr.Discard()
 	It("should fail proxy reset if Istio pods do not match target version", func() {
 		// given
 		numTrustedProxies := 1
@@ -48,8 +49,10 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.0")
 		fakeClient := createFakeClient(&istioCr, istiod)
 		statusHandler := status.NewStatusHandler(fakeClient)
+		podsLister := pods.NewPods(fakeClient, &logger)
+		proxyRestarter := sidecars.NewProxyRestarter(fakeClient, podsLister, &logger)
 		sidecarsRestarter := restarter.NewSidecarsRestarter(logr.Discard(), createFakeClient(&istioCr, istiod),
-			&MergerMock{"1.16.1-distroless"}, sidecars.NewProxyRestarter(), statusHandler)
+			&MergerMock{"1.16.1-distroless"}, proxyRestarter, statusHandler)
 
 		// when
 		err, requeue := sidecarsRestarter.Restart(context.Background(), &istioCr)
@@ -307,10 +310,10 @@ type proxyRestarterMock struct {
 	err             error
 }
 
-func (p *proxyRestarterMock) RestartProxies(_ context.Context, _ client.Client, _ predicates.SidecarImage, _ v1.ResourceRequirements, _ *v1alpha2.Istio, _ *logr.Logger) ([]restart.RestartWarning, bool, error) {
+func (p *proxyRestarterMock) RestartProxies(_ context.Context, _ predicates.SidecarImage, _ v1.ResourceRequirements, _ *v1alpha2.Istio) ([]restart.RestartWarning, bool, error) {
 	return p.restartWarnings, p.hasMorePods, p.err
 }
 
-func (p *proxyRestarterMock) RestartWithPredicates(ctx context.Context, c client.Client, preds []predicates.SidecarProxyPredicate, limits *pods.PodsRestartLimits, logger *logr.Logger) ([]restart.RestartWarning, bool, error) {
+func (p *proxyRestarterMock) RestartWithPredicates(_ context.Context, preds []predicates.SidecarProxyPredicate, limits *pods.PodsRestartLimits) ([]restart.RestartWarning, bool, error) {
 	return p.restartWarnings, p.hasMorePods, p.err
 }

@@ -87,7 +87,7 @@ func (s *SidecarRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio)
 		return described_errors.NewDescribedError(err, errorDescription), false
 	}
 
-	warnings, hasMorePods, err := s.ProxyRestarter.RestartProxies(ctx, s.Client, expectedImage, expectedResources, istioCR, &s.Log)
+	warnings, hasMorePods, err := s.ProxyRestarter.RestartProxies(ctx, expectedImage, expectedResources, istioCR)
 	if err != nil {
 		s.Log.Error(err, "Failed to reset proxy")
 		s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarRestartFailed))

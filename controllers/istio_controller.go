@@ -26,6 +26,7 @@ import (
 	"github.com/kyma-project/istio/operator/internal/validation"
 
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars"
+	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
 
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/configuration"
@@ -57,9 +58,11 @@ func NewController(mgr manager.Manager, reconciliationInterval time.Duration) *I
 	merger := istiooperator.NewDefaultIstioMerger()
 
 	statusHandler := status.NewStatusHandler(mgr.GetClient())
+	logger := mgr.GetLogger()
+	podsLister := pods.NewPods(mgr.GetClient(), &logger)
 	restarters := []restarter.Restarter{
 		restarter.NewIngressGatewayRestarter(mgr.GetClient(), []predicates.IngressGatewayPredicate{}, statusHandler),
-		restarter.NewSidecarsRestarter(mgr.GetLogger(), mgr.GetClient(), &merger, sidecars.NewProxyRestarter(), statusHandler),
+		restarter.NewSidecarsRestarter(mgr.GetLogger(), mgr.GetClient(), &merger, sidecars.NewProxyRestarter(mgr.GetClient(), podsLister, &logger), statusHandler),
 	}
 
 	return &IstioReconciler{

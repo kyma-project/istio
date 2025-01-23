@@ -10,7 +10,8 @@ import (
 )
 
 func RemoveSidecars(ctx context.Context, k8sclient client.Client, logger *logr.Logger) ([]restart.RestartWarning, error) {
-	toRestart, err := pods.GetAllInjectedPods(ctx, k8sclient)
+	podsLister := pods.NewPods(k8sclient, logger)
+	toRestart, err := podsLister.GetAllInjectedPods(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -42,7 +42,7 @@ func (p *ProxyRestart) RestartProxies(ctx context.Context, expectedImage predica
 	compatibiltyPredicate, err := predicates.NewCompatibilityRestartPredicate(istioCR)
 	if err != nil {
 		p.logger.Error(err, "Failed to create restart compatibility predicate")
-		return nil, false, err
+		return []restart.RestartWarning{}, false, err
 	}
 
 	predicates := []predicates.SidecarProxyPredicate{compatibiltyPredicate,
@@ -52,7 +52,7 @@ func (p *ProxyRestart) RestartProxies(ctx context.Context, expectedImage predica
 	err = p.restartKymaProxies(ctx, predicates)
 	if err != nil {
 		p.logger.Error(err, "Failed to restart Kyma proxies")
-		return nil, false, err
+		return []restart.RestartWarning{}, false, err
 	}
 
 	warnings, hasMorePodsToRestart, err := p.restartCustomerProxies(ctx, predicates)
@@ -67,13 +67,13 @@ func (p *ProxyRestart) RestartWithPredicates(ctx context.Context, preds []predic
 	podsToRestart, err := p.podsLister.GetPodsToRestart(ctx, preds, limits)
 	if err != nil {
 		p.logger.Error(err, "Getting pods to restart failed")
-		return nil, false, err
+		return []restart.RestartWarning{}, false, err
 	}
 
 	warnings, err := restart.Restart(ctx, p.k8sClient, podsToRestart, p.logger, failOnError)
 	if err != nil {
 		p.logger.Error(err, "Restarting pods failed")
-		return nil, false, err
+		return []restart.RestartWarning{}, false, err
 	}
 
 	// if there are more pods to restart there should be a continue token in the pod list
@@ -101,7 +101,7 @@ func (p *ProxyRestart) restartCustomerProxies(ctx context.Context, preds []predi
 	warnings, hasMorePodsToRestart, err := p.RestartWithPredicates(ctx, preds, limits, false)
 	if err != nil {
 		p.logger.Error(err, "Failed to restart Customer proxies")
-		return nil, false, err
+		return []restart.RestartWarning{}, false, err
 	}
 
 	if !hasMorePodsToRestart {

@@ -184,7 +184,7 @@ var _ = Describe("RestartProxies", func() {
 
 		// then
 		Expect(err).To(HaveOccurred())
-		Expect(warnings).To(BeNil())
+		Expect(warnings).To(BeEmpty())
 		Expect(hasMorePods).To(BeFalse())
 		Expect(err.Error()).To(ContainSubstring("invalid character"))
 	})
@@ -203,7 +203,7 @@ var _ = Describe("RestartProxies", func() {
 
 		// then
 		Expect(err).To(HaveOccurred())
-		Expect(warnings).To(BeNil())
+		Expect(warnings).To(BeEmpty())
 		Expect(hasMorePods).To(BeFalse())
 		Expect(err.Error()).To(ContainSubstring("intentionally failed on Kyma workload predicate"))
 	})
@@ -223,7 +223,7 @@ var _ = Describe("RestartProxies", func() {
 
 		// then
 		Expect(err).ToNot(HaveOccurred())
-		Expect(warnings).To(BeNil())
+		Expect(warnings).To(BeEmpty())
 		Expect(hasMorePods).To(BeFalse())
 	})
 })
@@ -315,7 +315,7 @@ var _ = Describe("RestartWithPredicates", func() {
 
 		// then
 		Expect(err).To(HaveOccurred())
-		Expect(warnings).To(BeNil())
+		Expect(warnings).To(BeEmpty())
 		Expect(hasMorePods).To(BeFalse())
 
 		Expect(err.Error()).To(Equal("intentionally failing client on client.List"))
@@ -342,7 +342,7 @@ var _ = Describe("RestartWithPredicates", func() {
 
 		// then
 		Expect(err).To(HaveOccurred())
-		Expect(warnings).To(BeNil())
+		Expect(warnings).To(BeEmpty())
 		Expect(hasMorePods).To(BeFalse())
 
 		Expect(err.Error()).To(Equal("running pod restart action failed: intentionally failing client on client.Patch"))

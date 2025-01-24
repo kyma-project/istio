@@ -154,6 +154,34 @@ var _ = Describe("RestartProxies", func() {
 
 		// then
 		Expect(err).ToNot(HaveOccurred())
+		Expect(warnings).To(ContainElement(restart.RestartWarning{
+			Name:      "n/a",
+			Namespace: "n/a",
+			Kind:      "n/a",
+			Message:   "failed to restart Customer proxies",
+		}))
+		Expect(hasMorePods).To(BeFalse())
+	})
+
+	It("should not return error but a warning when it fails on restart customer proxies", func() {
+		// given
+		pod := getPod("test-pods", "test-namespace", "podOwner", "ReplicaSet")
+		rsOwner := getReplicaSet("podOwner", "test-namespace", "rsOwner", "ReplicaSet")
+		rsOwnerRS := getReplicaSet("rsOwner", "test-namespace", "base", "ReplicaSet")
+
+		c := fakeClient(pod, rsOwner, rsOwnerRS)
+
+		// when
+		failClient := &shouldFailClient{c, false, true}
+
+		podsLister := pods.NewPods(c, &logger)
+		expectedImage := predicates.NewSidecarImage("istio", "1.1.0")
+		istioCR := helpers.GetIstioCR(expectedImage.Tag)
+		proxyRestarter := sidecars.NewProxyRestarter(failClient, podsLister, &logger)
+		warnings, hasMorePods, err := proxyRestarter.RestartProxies(ctx, expectedImage, helpers.DefaultSidecarResources, &istioCR)
+
+		// then
+		Expect(err).ToNot(HaveOccurred())
 		Expect(warnings).To(BeEmpty())
 		Expect(hasMorePods).To(BeFalse())
 	})
@@ -279,7 +307,7 @@ var _ = Describe("RestartWithPredicates", func() {
 		Expect(err.Error()).To(Equal("running pod restart action failed: intentionally failing client on client.Patch"))
 	})
 
-	It("should not return error if restarting pods fails but failOnError is false", func() {
+	It("should not return error and warnings if restarting pods fails with failOnError is false", func() {
 		// given
 		pod := getPod("test-pod", "test-namespace", "podOwner", "ReplicaSet")
 		rsOwner := getReplicaSet("podOwner", "test-namespace", "rsOwner", "ReplicaSet")

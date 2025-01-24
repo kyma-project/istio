@@ -37,7 +37,7 @@ func Restart(ctx context.Context, c client.Client, podList *v1.PodList, logger *
 		if err != nil {
 			logger.Error(err, "pod", action.object.getKey(), "Creating pod restart action failed")
 			if failOnError {
-				return []RestartWarning{}, fmt.Errorf("creating pod restart action failed: %w", err)
+				return warnings, fmt.Errorf("creating pod restart action failed: %w", err)
 			}
 			continue
 		}
@@ -48,7 +48,7 @@ func Restart(ctx context.Context, c client.Client, podList *v1.PodList, logger *
 			if err != nil {
 				logger.Error(err, "pod", action.object.getKey(), "Running pod restart action failed")
 				if failOnError {
-					return []RestartWarning{}, fmt.Errorf("running pod restart action failed: %w", err)
+					return warnings, fmt.Errorf("running pod restart action failed: %w", err)
 				}
 			}
 			warnings = append(warnings, currentWarnings...)

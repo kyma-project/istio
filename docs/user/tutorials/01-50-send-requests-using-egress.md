@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-* You have the Istio module added.
+* Istio module with egress enabled.
 * To use CLI instruction, you must install [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl)
   and [curl](https://curl.se/).
 
@@ -20,7 +20,24 @@
     kubectl label namespace $NAMESPACE istio-injection=enabled --overwrite
     ```
 
-3. Enable additional sidecar logs to see egressGateway being used in requests:
+3. Make sure there is an Istio CR with egress enabled:
+   ```bash
+   kubectl apply -f - <<EOF
+   apiVersion: operator.kyma-project.io/v1alpha2
+   kind: Istio
+   metadata:
+     name: default
+     namespace: kyma-system
+     labels:
+       app.kubernetes.io/name: default
+   spec:
+     components:
+       egressGateway:
+         enabled: true
+   EOF
+   ```
+
+4. Enable additional sidecar logs to see egressGateway being used in requests:
     ```bash
     kubectl apply -f - <<EOF
     apiVersion: telemetry.istio.io/v1
@@ -35,7 +52,7 @@
     EOF
     ```
 
-4. Apply `curl` deployment to send the requests:
+5. Apply `curl` deployment to send the requests:
     ```bash
     kubectl apply -f - <<EOF
     apiVersion: v1
@@ -97,7 +114,7 @@
    export SOURCE_POD=$(kubectl get pod -n "$NAMESPACE" -l app=curl -o jsonpath={.items..metadata.name})
     ```
 
-5. Define a `ServiceEntry`:
+6. Define a `ServiceEntry` to allow outbound traffic to the `kyma-project` domain and perform DNS resolution:
    
    ```bash
    kubectl apply -f - <<EOF
@@ -116,13 +133,8 @@
      resolution: DNS
    EOF
    ```
-   
-   Verify that the `ServiceEntry` was created successfully:
-   ```bash
-   kubectl exec -n "$NAMESPACE" "$SOURCE_POD" -c curl -- curl -sSL -o /dev/null -D - https://kyma-project.io
-   ```
 
-6. Create an egress `Gateway`, `DestinationRule` and `VirtualService` to direct traffic:
+7. Create an egress `Gateway`, `DestinationRule` and `VirtualService` to direct traffic:
    
    ```bash
    kubectl apply -f - <<EOF
@@ -193,12 +205,25 @@
    EOF
    ```
    
-   Once again, send an HTTPS request:
+8. Send an HTTPS request to the Kyma project website:
    ```bash
    kubectl exec -n "$NAMESPACE" "$SOURCE_POD" -c curl -- curl -sSL -o /dev/null -D - https://kyma-project.io
    ```
    
-   You should see the request to `kyma-project.io` in egress gateway log:
+   The response from the website should be similar to this one:
+   ```
+   HTTP/2 200
+   accept-ranges: bytes
+   age: 203
+   ...
+   ```
+   
+   Check Istio egress gateway log:
    ```bash
    kubectl logs -l istio=egressgateway -n istio-system
+   ```
+
+   You should see the request made by egress gateway in the logs:
+   ```
+   {"requested_server_name":"kyma-project.io","upstream_cluster":"outbound|443||kyma-project.io",[...]}
    ```

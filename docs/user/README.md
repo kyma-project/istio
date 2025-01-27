@@ -5,13 +5,7 @@ Use the Istio module to manage and configure the Istio service mesh.
 
 Istio is an open-source service mesh that provides a uniform way to manage, connect, and secure microservices. It helps to manage traffic, enhance security capabilities, and provide telemetry data for understanding service behavior. See the [open-source Istio documentation](https://istio.io/latest/docs/).
 
-The Istio module installs and manages Istio in your Kyma cluster. By default, the Istio module is added when you create a Kyma runtime instance.
-
-The latest release includes the following versions of Istio and Envoy:  
-
-**Istio version:** 1.24.2
-
-**Envoy version:** 1.32.3
+The Istio module installs and manages Istio in your Kyma cluster. By default, the Istio module is automatically added when you create a Kyma runtime instance.
 
 ## Features
 

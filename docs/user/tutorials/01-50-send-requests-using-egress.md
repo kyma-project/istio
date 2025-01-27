@@ -1,26 +1,27 @@
-# Send requests using Istio Egress
+# Send Requests Using Istio Egress Gateway
+Learn how to configure and use the Istio egress Gateway to allow outbound traffic from your Kyma runtime cluster to specific external destinations. Test your configuration by sending an HTTPS request to an external website using a sample Deployment.
 
 ## Prerequisites
 
-* Istio module with egress enabled.
+* You have the Istio module added.
 * To use CLI instruction, you must install [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl)
   and [curl](https://curl.se/).
 
-### Configuration
+## Steps
 
-1. Export the following values as environment variables:
+1. Export the following value as an environment variable:
 
     ```bash
     export NAMESPACE={service-namespace}
     ```
 
-2. Create a new namespace for the sample application.
+2. Create a new namespace for the sample application:
     ```bash
     kubectl create ns $NAMESPACE
     kubectl label namespace $NAMESPACE istio-injection=enabled --overwrite
     ```
 
-3. Make sure there is an Istio CR with egress enabled:
+3. Enable the egress Gateway in the Istio custom resource:
    ```bash
    kubectl apply -f - <<EOF
    apiVersion: operator.kyma-project.io/v1alpha2
@@ -37,7 +38,7 @@
    EOF
    ```
 
-4. Enable additional sidecar logs to see egressGateway being used in requests:
+4. Enable additional sidecar logs to see the egress Gateway being used in requests:
     ```bash
     kubectl apply -f - <<EOF
     apiVersion: telemetry.istio.io/v1
@@ -52,7 +53,7 @@
     EOF
     ```
 
-5. Apply `curl` deployment to send the requests:
+5. Apply the `curl` Deployment to send the requests:
     ```bash
     kubectl apply -f - <<EOF
     apiVersion: v1
@@ -109,12 +110,12 @@
     EOF
     ```
 
-   Get the `curl` pod:
+   Export the name of the `curl` Pod:
     ```bash
    export SOURCE_POD=$(kubectl get pod -n "$NAMESPACE" -l app=curl -o jsonpath={.items..metadata.name})
     ```
 
-6. Define a `ServiceEntry` to allow outbound traffic to the `kyma-project` domain and perform DNS resolution:
+6. Define a ServiceEntry to allow outbound traffic to the `kyma-project` domain and perform DNS resolution:
    
    ```bash
    kubectl apply -f - <<EOF
@@ -134,7 +135,7 @@
    EOF
    ```
 
-7. Create an egress `Gateway`, `DestinationRule` and `VirtualService` to direct traffic:
+7. Create an egress Gateway, DestinationRule, and VirtualService to direct traffic:
    
    ```bash
    kubectl apply -f - <<EOF
@@ -210,7 +211,7 @@
    kubectl exec -n "$NAMESPACE" "$SOURCE_POD" -c curl -- curl -sSL -o /dev/null -D - https://kyma-project.io
    ```
    
-   The response from the website should be similar to this one:
+   If successful, you get a response from the website similar to this one:
    ```
    HTTP/2 200
    accept-ranges: bytes
@@ -218,12 +219,12 @@
    ...
    ```
    
-   Check Istio egress gateway log:
+   Check the logs of the Istio egress Gateway:
    ```bash
    kubectl logs -l istio=egressgateway -n istio-system
    ```
 
-   You should see the request made by egress gateway in the logs:
+   You should see the request made by the egress Gateway in the logs:
    ```
    {"requested_server_name":"kyma-project.io","upstream_cluster":"outbound|443||kyma-project.io",[...]}
    ```

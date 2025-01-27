@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -160,7 +161,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, err
 	} else if requeue {
 		r.statusHandler.SetCondition(&istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileRequeued))
-		return r.requeueReconciliationWithoutError(ctx, &istioCR)
+		return r.requeueReconciliationRestartNotFinished(ctx, &istioCR)
 	}
 
 	return r.finishReconcile(ctx, &istioCR, istioImageVersion.Tag())
@@ -179,13 +180,13 @@ func (r *IstioReconciler) requeueReconciliation(ctx context.Context, istioCR *op
 	return ctrl.Result{}, err
 }
 
-func (r *IstioReconciler) requeueReconciliationWithoutError(ctx context.Context, istioCR *operatorv1alpha2.Istio) (ctrl.Result, error) {
+func (r *IstioReconciler) requeueReconciliationRestartNotFinished(ctx context.Context, istioCR *operatorv1alpha2.Istio) (ctrl.Result, error) {
 	statusUpdateErr := r.statusHandler.UpdateToProcessing(ctx, istioCR)
 	if statusUpdateErr != nil {
-		r.log.Error(statusUpdateErr, "Error during updating status to error")
+		r.log.Error(statusUpdateErr, "Error during updating status to processing")
 	}
 	r.log.Info("Reconcile requeued")
-	return ctrl.Result{Requeue: true, RequeueAfter: time.Minute * 1}, nil
+	return ctrl.Result{RequeueAfter: time.Minute * 1}, errors.New("restarters not finished") // return error to use the exponential backoff
 }
 
 // terminateReconciliation stops the reconciliation and does not requeue the request.

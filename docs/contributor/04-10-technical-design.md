@@ -112,11 +112,17 @@ The predicate initiates a restart of the sidecar and Ingress Gateway if the targ
 ### SidecarsRestarter
 
 The SidecarsRestarter is responsible for keeping the proxy sidecars in the desired state. It restarts Pods that are in the `Running` state, are part of the service mesh, and have the annotation `sidecar.istio.io/status`.
-The Istio CR and the [Istio version](#istio-version) represent the desired state. Pods are restarted in chunks with limits on the number that can be restarted in one reconciliation and the number that can be listed when requesting from the Kubernetes API Server. If the number of Pods that must be restarted exceeds the limits, it happens in the next reconciliation. In such a case, the reconciliation request is requeued with a 1-minute delay to allow time for the Kubernetes scheduler to restart the Deployments.
+The Istio CR and the [Istio version](#istio-version) represent the desired state. Pods are restarted in chunks with limits on the number that can be restarted in one reconciliation and the number that can be listed when requesting from the Kubernetes API Server. If the number of Pods that must be restarted exceeds the limits, it happens in the next reconciliation. In such a case, the reconciliation request is requeued with a 1-minute delay to allow time for the Kubernetes scheduler to restart the Deployments. Reconciliation request will also result in internal error to take advantage of the exponential backoff rate limiter that we use.
 
-During the proxy sidecars restarting phase, the Istio CR remains in the `Processing` state having the following status conditions:
+Restarting sidecars is devided in two phases:
+- In the first phase only Kyma workloads are restarted. Determining Kyma workloads is done by checking if workload is running in `kyma-system` namespace or is having the `kyma-project.io/module` annotation. All Kyma workloads are restarted without pagination and if there is a problem with the restart Istio CR will result in `Error` state.
+- In the second phase only Customer workloads are restarted. Determining Customer workloads is done by checking if workload is not running in `kyma-system` namespace and is not having the `kyma-project.io/module` annotation. All Customer workloads are restarted with pagination and if there is a problem with the restart Istio CR will result in `Warning` state.
+
+During the Customer sidecars restarting phase, the Istio CR remains in the `Processing` state having the following status conditions:
 - The `Ready` condition is set to `false` with the reason `ReconcileRequeued`.
 - The `ProxySidecarRestartSucceeded` condition is set to `false` with the reason `ProxySidecarPartiallySucceeded`.
+
+After completing Customer sidecars restart Istio CR's `Ready` condition is set to `true` and `ProxySidecarRestartSucceeded` is set to `true` with the reason `ProxySidecarRestartSucceeded`.
 
 This component covers the following restart triggers:
 
@@ -128,4 +134,3 @@ This component covers the following restart triggers:
 ### IngressGatewayRestarter
 
 IngressGateway Restarter is responsible for restarting Istio Ingress Gateway. The component consumes a list of [Restart Predicates](#restart-predicates) that determine when the restart should occur. Restarter triggers the restart if there's a change in the `numTrustedProxies` configuration.
-

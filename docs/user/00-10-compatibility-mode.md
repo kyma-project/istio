@@ -1,7 +1,7 @@
 # Istio Version
 To track the changes introduced in open-source Istio, learn which version of the Istio module installs which version of Istio.
 
-The version of Istio depends on the version of the Istio module that you use. If a new version of the Istio module introduces a new version of Istio, an upgrade of the module causes an automatic upgrade of Istio. To learn which version of the Istio module installs which version of Istio, follow [Releases](https://github.com/kyma-project/istio/releases).
+The version of Istio depends on the version of the Istio module that you use. When a new version of the Istio module introduces a new version of Istio, an upgrade of the module causes an automatic upgrade of Istio. To learn which version of the Istio module installs which version of Istio, follow [Releases](https://github.com/kyma-project/istio/releases).
 
 ## Compatibility Mode
 To revert certain changes in Istio's behavior when you encounter compatibility issues with its new version, consider enabling compatibility mode.

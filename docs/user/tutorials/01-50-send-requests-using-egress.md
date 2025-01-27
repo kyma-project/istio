@@ -115,7 +115,7 @@ Learn how to configure and use the Istio egress Gateway to allow outbound traffi
    export SOURCE_POD=$(kubectl get pod -n "$NAMESPACE" -l app=curl -o jsonpath={.items..metadata.name})
     ```
 
-6. Define a ServiceEntry to allow outbound traffic to the `kyma-project` domain and perform DNS resolution:
+6. Define a ServiceEntry which adds the `kyma-project.io` hostname to the mesh:
    
    ```bash
    kubectl apply -f - <<EOF

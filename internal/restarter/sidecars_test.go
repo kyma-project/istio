@@ -40,7 +40,8 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		fakeClient := createFakeClient(istioCr, istiod)
 		statusHandler := status.NewStatusHandler(fakeClient)
 		podsLister := pods.NewPods(fakeClient, &logger)
-		proxyRestarter := sidecars.NewProxyRestarter(fakeClient, podsLister, &logger)
+		actionRestarter := restart.NewActionRestarter(fakeClient, &logger)
+		proxyRestarter := sidecars.NewProxyRestarter(fakeClient, podsLister, actionRestarter, &logger)
 		sidecarsRestarter := restarter.NewSidecarsRestarter(logr.Discard(), createFakeClient(istioCr, istiod),
 			&MergerMock{"1.16.1-distroless"}, proxyRestarter, statusHandler)
 

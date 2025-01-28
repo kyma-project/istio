@@ -2,8 +2,6 @@ package restarter
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
@@ -94,21 +92,8 @@ func (s *SidecarRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio)
 		return described_errors.NewDescribedError(err, errorDescription), false
 	}
 
-	warningsCount := len(warnings)
-	if warningsCount > 0 {
-		podsLimit := 5
-		pods := []string{}
-		for _, w := range warnings {
-			if podsLimit--; podsLimit >= 0 {
-				pods = append(pods, fmt.Sprintf("%s/%s", w.Namespace, w.Name))
-			}
-			s.Log.Info("Proxy reset warning:", "name", w.Name, "namespace", w.Namespace, "kind", w.Kind, "message", w.Message)
-		}
-		warningMessage := fmt.Sprintf("The sidecars of the following workloads could not be restarted: %s",
-			strings.Join(pods, ", "))
-		if warningsCount-len(pods) > 0 {
-			warningMessage += fmt.Sprintf(" and %d additional workload(s)", warningsCount-len(pods))
-		}
+	warningMessage := sidecars.BuildWarningMessage(warnings, &s.Log)
+	if warningMessage != "" {
 		warningErr := described_errors.NewDescribedError(errors.New("Istio controller could not restart one or more istio-injected pods."), "Not all pods with Istio injection could be restarted. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning").SetWarning()
 		s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarManualRestartRequired, warningMessage))
 		s.Log.Info(warningMessage)

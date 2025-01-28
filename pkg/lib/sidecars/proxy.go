@@ -2,7 +2,10 @@ package sidecars
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"math"
+	"strings"
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
@@ -25,16 +28,18 @@ type ProxyRestarter interface {
 }
 
 type ProxyRestart struct {
-	k8sClient  client.Client
-	podsLister pods.PodsGetter
-	logger     *logr.Logger
+	k8sClient       client.Client
+	podsLister      pods.PodsGetter
+	actionRestarter restart.ActionRestarter
+	logger          *logr.Logger
 }
 
-func NewProxyRestarter(c client.Client, podsLister pods.PodsGetter, logger *logr.Logger) *ProxyRestart {
+func NewProxyRestarter(c client.Client, podsLister pods.PodsGetter, actionRestarter restart.ActionRestarter, logger *logr.Logger) *ProxyRestart {
 	return &ProxyRestart{
-		k8sClient:  c,
-		podsLister: podsLister,
-		logger:     logger,
+		k8sClient:       c,
+		podsLister:      podsLister,
+		actionRestarter: actionRestarter,
+		logger:          logger,
 	}
 }
 
@@ -76,7 +81,7 @@ func (p *ProxyRestart) RestartWithPredicates(ctx context.Context, preds []predic
 		return []restart.RestartWarning{}, false, err
 	}
 
-	warnings, err := restart.Restart(ctx, p.k8sClient, podsToRestart, p.logger, failOnError)
+	warnings, err := p.actionRestarter.RestartAction(ctx, podsToRestart, failOnError)
 	if err != nil {
 		p.logger.Error(err, "Restarting pods failed")
 		return warnings, false, err
@@ -90,14 +95,41 @@ func (p *ProxyRestart) restartKymaProxies(ctx context.Context, preds []predicate
 	preds = append(preds, predicates.NewKymaWorkloadRestartPredicate())
 	limits := pods.NewPodsRestartLimits(math.MaxInt, math.MaxInt)
 
-	_, _, err := p.RestartWithPredicates(ctx, preds, limits, true)
+	warnings, _, err := p.RestartWithPredicates(ctx, preds, limits, true)
 	if err != nil {
+		p.logger.Error(err, "Failed to restart Kyma proxies")
+		return err
+	}
+	warningMessage := BuildWarningMessage(warnings, p.logger)
+	if warningMessage != "" {
+		err := errors.New(warningMessage)
 		p.logger.Error(err, "Failed to restart Kyma proxies")
 		return err
 	}
 
 	p.logger.Info("Kyma proxy restart completed")
 	return nil
+}
+
+func BuildWarningMessage(warnings []restart.RestartWarning, logger *logr.Logger) string {
+	warningMessage := ""
+	warningsCount := len(warnings)
+	if warningsCount > 0 {
+		podsLimit := 5
+		pods := []string{}
+		for _, w := range warnings {
+			if podsLimit--; podsLimit >= 0 {
+				pods = append(pods, fmt.Sprintf("%s/%s", w.Namespace, w.Name))
+			}
+			logger.Info("Proxy reset failed:", "name", w.Name, "namespace", w.Namespace, "kind", w.Kind, "message", w.Message)
+		}
+		warningMessage = fmt.Sprintf("The sidecars of the following workloads could not be restarted: %s",
+			strings.Join(pods, ", "))
+		if warningsCount-len(pods) > 0 {
+			warningMessage += fmt.Sprintf(" and %d additional workload(s)", warningsCount-len(pods))
+		}
+	}
+	return warningMessage
 }
 
 func (p *ProxyRestart) restartCustomerProxies(ctx context.Context, preds []predicates.SidecarProxyPredicate) ([]restart.RestartWarning, bool, error) {

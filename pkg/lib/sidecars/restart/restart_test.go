@@ -48,7 +48,8 @@ var _ = Describe("Restart Pods", func() {
 		}
 
 		// when
-		warnings, err := restart.Restart(ctx, c, &podList, &logger, false)
+		actionRestarter := restart.NewActionRestarter(c, &logger)
+		warnings, err := actionRestarter.RestartAction(ctx, &podList, false)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -69,7 +70,8 @@ var _ = Describe("Restart Pods", func() {
 		}
 
 		// when
-		warnings, err := restart.Restart(ctx, c, &podList, &logger, false)
+		actionRestarter := restart.NewActionRestarter(c, &logger)
+		warnings, err := actionRestarter.RestartAction(ctx, &podList, false)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -90,7 +92,8 @@ var _ = Describe("Restart Pods", func() {
 		}
 
 		// when
-		warnings, err := restart.Restart(ctx, c, &podList, &logger, false)
+		actionRestarter := restart.NewActionRestarter(c, &logger)
+		warnings, err := actionRestarter.RestartAction(ctx, &podList, false)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -115,7 +118,8 @@ var _ = Describe("Restart Pods", func() {
 		}
 
 		// when
-		warnings, err := restart.Restart(ctx, c, &podList, &logger, false)
+		actionRestarter := restart.NewActionRestarter(c, &logger)
+		warnings, err := actionRestarter.RestartAction(ctx, &podList, false)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -139,7 +143,8 @@ var _ = Describe("Restart Pods", func() {
 		}
 
 		// when
-		warnings, err := restart.Restart(ctx, c, &podList, &logger, false)
+		actionRestarter := restart.NewActionRestarter(c, &logger)
+		warnings, err := actionRestarter.RestartAction(ctx, &podList, false)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -162,7 +167,8 @@ var _ = Describe("Restart Pods", func() {
 		}
 
 		// when
-		warnings, err := restart.Restart(ctx, c, &podList, &logger, false)
+		actionRestarter := restart.NewActionRestarter(c, &logger)
+		warnings, err := actionRestarter.RestartAction(ctx, &podList, false)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -185,7 +191,8 @@ var _ = Describe("Restart Pods", func() {
 		}
 
 		// when
-		warnings, err := restart.Restart(ctx, c, &podList, &logger, false)
+		actionRestarter := restart.NewActionRestarter(c, &logger)
+		warnings, err := actionRestarter.RestartAction(ctx, &podList, false)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -211,7 +218,8 @@ var _ = Describe("Restart Pods", func() {
 		}
 
 		// when
-		warnings, err := restart.Restart(ctx, c, &podList, &logger, false)
+		actionRestarter := restart.NewActionRestarter(c, &logger)
+		warnings, err := actionRestarter.RestartAction(ctx, &podList, false)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -237,7 +245,8 @@ var _ = Describe("Restart Pods", func() {
 		c := fakeClient(&pod)
 
 		// when
-		warnings, err := restart.Restart(ctx, c, &podList, &logger, false)
+		actionRestarter := restart.NewActionRestarter(c, &logger)
+		warnings, err := actionRestarter.RestartAction(ctx, &podList, false)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -272,7 +281,8 @@ var _ = Describe("Restart Pods", func() {
 		}})
 
 		// when
-		warnings, err := restart.Restart(ctx, c, &podList, &logger, false)
+		actionRestarter := restart.NewActionRestarter(c, &logger)
+		warnings, err := actionRestarter.RestartAction(ctx, &podList, false)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -297,7 +307,8 @@ var _ = Describe("Restart Pods", func() {
 		}
 
 		// when
-		warnings, err := restart.Restart(ctx, c, &podList, &logger, false)
+		actionRestarter := restart.NewActionRestarter(c, &logger)
+		warnings, err := actionRestarter.RestartAction(ctx, &podList, false)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -332,7 +343,8 @@ var _ = Describe("Restart Pods", func() {
 		}})
 
 		// when
-		warnings, err := restart.Restart(ctx, c, &podList, &logger, false)
+		actionRestarter := restart.NewActionRestarter(c, &logger)
+		warnings, err := actionRestarter.RestartAction(ctx, &podList, false)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -359,7 +371,8 @@ var _ = Describe("Restart Pods", func() {
 		failClient := &shouldFailClient{c, true, false}
 
 		// when
-		warnings, err := restart.Restart(ctx, failClient, &podList, &logger, true)
+		actionRestarter := restart.NewActionRestarter(failClient, &logger)
+		warnings, err := actionRestarter.RestartAction(ctx, &podList, true)
 
 		// then
 		Expect(err).To(HaveOccurred())
@@ -397,7 +410,8 @@ var _ = Describe("Restart Pods", func() {
 		failClient := &shouldFailClient{c, false, true}
 
 		// when
-		warnings, err := restart.Restart(ctx, failClient, &podList, &logger, true)
+		actionRestarter := restart.NewActionRestarter(failClient, &logger)
+		warnings, err := actionRestarter.RestartAction(ctx, &podList, true)
 
 		// then
 		Expect(err).To(HaveOccurred())

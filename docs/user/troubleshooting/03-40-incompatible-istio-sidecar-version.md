@@ -1,6 +1,5 @@
 <!-- open-source-only -->
-# Incompatible Istio Sidecar Version After Istio Operator's Upgrade
-
+# Incompatible Istio Sidecar Version After the Istio Module's Update
 ## Symptom
 
 After the Istio module's update, the Istio custom resource (CR) is in the `Warning` sate and mesh connectivity is broken. When you click on the Warning in Kyma dashboard, or run `kubectl get istio default -n kyma-system -o jsonpath='{.status.description}'`, you get the message: 

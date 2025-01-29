@@ -942,7 +942,8 @@ var _ = Describe("Istio Controller", func() {
 
 				// then
 				Expect(err).ToNot(HaveOccurred())
-				Expect(result.Requeue).To(BeTrue())
+				Expect(result.Requeue).To(BeFalse())
+				Expect(result.RequeueAfter).To(Equal(time.Minute * 1))
 
 				updatedIstioCR := operatorv1alpha2.Istio{}
 				err = fakeClient.Get(context.Background(), client.ObjectKeyFromObject(istioCR), &updatedIstioCR)

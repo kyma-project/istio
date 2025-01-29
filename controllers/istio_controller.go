@@ -161,7 +161,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		}
 		if err.Level() == described_errors.Warning {
 			r.log.Info("Reconcile requeued")
-			return ctrl.Result{Requeue: true}, nil // do not return error in case of warning and avoid poluting logs
+			return ctrl.Result{RequeueAfter: time.Minute * 1}, nil
 		}
 		r.log.Info("Reconcile failed")
 		return ctrl.Result{}, err

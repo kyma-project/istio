@@ -37,10 +37,10 @@ You must manually restart such workloads to ensure proper functionality with the
 2. To learn if any Pods or workloads require a manual restart, see the message in the **status.conditions** section of the Istio CR, for example:
    ```yaml
    - lastTransitionTime: "2025-01-23T10:02:08Z"
-       message: 'The sidecars of the following workloads could not be restarted: test/httpbin'
-       reason: ProxySidecarManualRestartRequired
-       status: "False"
-       type: ProxySidecarRestartSucceeded
+     message: 'The sidecars of the following workloads could not be restarted: test/httpbin'
+     reason: ProxySidecarManualRestartRequired
+     status: "False"
+     type: ProxySidecarRestartSucceeded
    ```
 3. Restart the listed workloads so that new Istio sidecars are injected into the Pods.
 <!-- tabs:end -->

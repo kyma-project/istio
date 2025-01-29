@@ -119,7 +119,7 @@ func (s *SidecarsRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio
 		if warningsCount-len(pods) > 0 {
 			warningMessage += fmt.Sprintf(" and %d additional workload(s)", warningsCount-len(pods))
 		}
-		warningErr := described_errors.NewDescribedError(errors.New("Istio Controller could not restart one or more Istio-injected Pods."), "Some Pods with Istio sidecar injection failed to restart. To learn more about the warning, see kyma-system/istio-controller-manager logs.").SetWarning()
+		warningErr := described_errors.NewDescribedError(errors.New("Istio Controller could not restart one or more Istio-injected Pods."), "Some Pods with Istio sidecar injection failed to restart. To learn more about the warning, see kyma-system/istio-controller-manager logs").SetWarning()
 		s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarManualRestartRequired, warningMessage))
 		s.Log.Info(warningMessage)
 		return warningErr, false

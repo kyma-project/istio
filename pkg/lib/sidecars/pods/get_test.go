@@ -197,6 +197,20 @@ var _ = Describe("GetPodsToRestart", func() {
 				},
 			},
 			{
+				name: "Should ignore the pod when there are must match predicate that matches pod but other predicate do not",
+				c: createClientSet(
+					helpers.NewSidecarPodBuilder().Build(),
+				),
+				limits: pods.NewPodsRestartLimits(5, 5),
+				predicates: []predicates.SidecarProxyPredicate{
+					predicates.NewImageResourcesPredicate(expectedImage, helpers.DefaultSidecarResources),
+					predicates.CustomerWorkloadRestartPredicate{},
+				},
+				assertFunc: func(podList *v1.PodList) {
+					Expect(podList.Items).To(BeEmpty())
+				},
+			},
+			{
 				name: "Should respect limit set when getting pods to restart if all pods listed",
 				c: NewFakeClientWithLimit(
 					createClientSet(

@@ -52,19 +52,20 @@ func (p *Pods) GetPodsToRestart(ctx context.Context, preds []predicates.SidecarP
 			return nil, err
 		}
 		for _, pod := range podsWithSidecar.Items {
-			matchFound := false
-			allRequiredMatched := true
-			for _, predicate := range preds { // any predicate match will trigger a restart
+			optionalMatched := false
+			requiredMatched := true
+			for _, predicate := range preds {
 				matched := predicate.Matches(pod)
-				if !matchFound && matched {
-					matchFound = true
-				}
-				if predicate.MustMatch() && !matched {
-					allRequiredMatched = false
-					break
+				if predicate.MustMatch() { // if predicate must match, all must match
+					if !matched {
+						requiredMatched = false
+						break
+					}
+				} else if !optionalMatched && matched { // if predicate is optional, at least one must match
+					optionalMatched = true
 				}
 			}
-			if matchFound && allRequiredMatched {
+			if requiredMatched && optionalMatched {
 				podsToRestart.Items = append(podsToRestart.Items, pod)
 			}
 			if len(podsToRestart.Items) >= limits.PodsToRestartLimit {

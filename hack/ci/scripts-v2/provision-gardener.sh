@@ -94,7 +94,7 @@ done
 echo "Shoot template applied"
 
 echo "Waiting for cluster to be ready..."
-kubectl wait  --kubeconfig "${GARDENER_KUBECONFIG}" --for=condition=EveryNodeReady shoot/${CLUSTER_NAME} --timeout=25m
+kubectl wait  --kubeconfig "${GARDENER_KUBECONFIG}" --for=condition=EveryNodeReady shoot/${CLUSTER_NAME} --timeout=30m
 # create kubeconfig request, that creates a kubeconfig which is valid for one day
 
 echo "Storing kubeconfig in ${CLUSTER_KUBECONFIG}"

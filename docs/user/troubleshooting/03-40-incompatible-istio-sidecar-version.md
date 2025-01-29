@@ -17,7 +17,6 @@ You must manually restart such workloads to ensure proper functionality with the
 
 ## Solution
 
-1. 
 <!-- tabs:start -->
 #### **Kyma dashboard**
 1. Choose **Modify Modules**.

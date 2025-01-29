@@ -21,7 +21,7 @@ var _ = Describe("Matches", func() {
 		Expect(shouldRestart).To(BeFalse())
 	})
 
-	It("should should return true when pod does not have custom image annotation", func() {
+	It("should return true when pod does not have custom image annotation", func() {
 		// given
 		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", map[string]string{})
 		predicate := predicates.NewImageResourcesPredicate(predicates.NewSidecarImage("istio", "1.22.0"), v1.ResourceRequirements{})

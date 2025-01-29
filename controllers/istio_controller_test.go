@@ -941,8 +941,8 @@ var _ = Describe("Istio Controller", func() {
 				result, err := sut.Reconcile(context.Background(), reconcile.Request{NamespacedName: types.NamespacedName{Namespace: testNamespace, Name: istioCrName}})
 
 				// then
-				Expect(err).To(HaveOccurred())
-				Expect(result.Requeue).To(BeFalse())
+				Expect(err).ToNot(HaveOccurred())
+				Expect(result.Requeue).To(BeTrue())
 
 				updatedIstioCR := operatorv1alpha2.Istio{}
 				err = fakeClient.Get(context.Background(), client.ObjectKeyFromObject(istioCR), &updatedIstioCR)
@@ -984,8 +984,8 @@ var _ = Describe("Istio Controller", func() {
 				reconcileResult, err := sut.Reconcile(context.Background(), reconcile.Request{NamespacedName: types.NamespacedName{Namespace: testNamespace, Name: istioCrName}})
 
 				//then
-				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(Equal("restarters not finished"))
+				Expect(err).ToNot(HaveOccurred())
+				Expect(reconcileResult.Requeue).To(BeFalse())
 				Expect(reconcileResult.RequeueAfter).To(Equal(time.Minute * 1))
 
 				Expect(ingressGatewayRestarter.RestartCalled()).To(BeTrue())

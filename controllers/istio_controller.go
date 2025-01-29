@@ -18,7 +18,6 @@ package controllers
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -160,6 +159,9 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		if statusUpdateErr != nil {
 			r.log.Error(statusUpdateErr, "Error during updating status to error")
 		}
+		if err.Level() == described_errors.Warning {
+			return ctrl.Result{Requeue: true}, nil // do not return error in case of warning and avoid poluting logs
+		}
 		return ctrl.Result{}, err
 	} else if requeue {
 		r.statusHandler.SetCondition(&istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileRequeued))
@@ -188,7 +190,7 @@ func (r *IstioReconciler) requeueReconciliationRestartNotFinished(ctx context.Co
 		r.log.Error(statusUpdateErr, "Error during updating status to processing")
 	}
 	r.log.Info("Reconcile requeued")
-	return ctrl.Result{RequeueAfter: time.Minute * 1}, errors.New("restarters not finished") // return error to use the exponential backoff
+	return ctrl.Result{RequeueAfter: time.Minute * 1}, nil
 }
 
 // terminateReconciliation stops the reconciliation and does not requeue the request.

@@ -2,7 +2,7 @@
 # Incompatible Istio Sidecar Version After the Istio Module's Update
 ## Symptom
 
-After the Istio module's update, the Istio custom resource (CR) is in the `Warning` sate, and mesh connectivity is disrupted. When you click on the warning in Kyma dashboard or run `kubectl get istio default -n kyma-system -o jsonpath='{.status.description}'`, you get the message: 
+After the Istio module's update, the Istio custom resource (CR) is in the `Warning` state, and mesh connectivity is disrupted. When you click on the warning in Kyma dashboard or run `kubectl get istio default -n kyma-system -o jsonpath='{.status.description}'`, you get the following message: 
 
 ```
 Some Pods with Istio sidecar injection failed to restart. To learn more about the warning, see kyma-system/istio-controller-manager logs: Istio Controller could not restart one or more Istio-injected Pods.`

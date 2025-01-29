@@ -16,16 +16,16 @@ const (
 )
 
 type ActionRestarter interface {
-	RestartAction(ctx context.Context, podList *v1.PodList, failOnError bool) ([]RestartWarning, error)
+	Restart(ctx context.Context, podList *v1.PodList, failOnError bool) ([]RestartWarning, error)
 }
 
-type ActionRestart struct {
+type actionRestarter struct {
 	k8sClient client.Client
 	logger    *logr.Logger
 }
 
-func NewActionRestarter(c client.Client, logger *logr.Logger) *ActionRestart {
-	return &ActionRestart{
+func NewActionRestarter(c client.Client, logger *logr.Logger) ActionRestarter {
+	return &actionRestarter{
 		k8sClient: c,
 		logger:    logger,
 	}
@@ -44,7 +44,8 @@ func newRestartWarning(o actionObject, message string) RestartWarning {
 	}
 }
 
-func (s *ActionRestart) RestartAction(ctx context.Context, podList *v1.PodList, failOnError bool) ([]RestartWarning, error) {
+// Restarts pods in the given list through their respective owners by adding an annotation. If failOnError is set to true, the function will return an error if any of the restart actions fail.
+func (s *actionRestarter) Restart(ctx context.Context, podList *v1.PodList, failOnError bool) ([]RestartWarning, error) {
 	warnings := make([]RestartWarning, 0)
 	processedActionObjects := make(map[string]bool)
 

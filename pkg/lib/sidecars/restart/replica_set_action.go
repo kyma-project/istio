@@ -14,8 +14,8 @@ import (
 
 func getReplicaSetAction(ctx context.Context, c client.Client, pod v1.Pod, replicaSetRef *metav1.OwnerReference) (restartAction, error) {
 	replicaSetKey := client.ObjectKey{
-		Namespace: pod.Namespace,
 		Name:      replicaSetRef.Name,
+		Namespace: pod.Namespace,
 	}
 
 	var replicaSet = &appsv1.ReplicaSet{}
@@ -26,7 +26,11 @@ func getReplicaSetAction(ctx context.Context, c client.Client, pod v1.Pod, repli
 		if k8serrors.IsNotFound(err) {
 			return newOwnerNotFoundAction(pod), nil
 		}
-		return restartAction{}, err
+		return restartAction{object: actionObject{
+			Name:      replicaSetRef.Name,
+			Namespace: pod.Namespace,
+			Kind:      "ReplicaSet",
+		}}, err
 	}
 
 	if rsOwnedBy, exists := getReplicaSetOwner(replicaSet); !exists {

@@ -63,12 +63,14 @@ func (p *ProxyRestart) RestartProxies(ctx context.Context, expectedImage predica
 	warnings, hasMorePodsToRestart, err := p.restartCustomerProxies(ctx, predicates)
 	if err != nil {
 		p.logger.Error(err, "failed to restart Customer proxies")
-		warnings = append(warnings, restart.RestartWarning{
-			Name:      "n/a",
-			Namespace: "n/a",
-			Kind:      "n/a",
-			Message:   "failed to restart Customer proxies",
-		})
+		warnings = []restart.RestartWarning{ // errors on Customer proxies are considered as a warning
+			{
+				Name:      "n/a",
+				Namespace: "n/a",
+				Kind:      "n/a",
+				Message:   "failed to restart Customer proxies",
+			},
+		}
 	}
 
 	return warnings, hasMorePodsToRestart, nil
@@ -81,7 +83,7 @@ func (p *ProxyRestart) RestartWithPredicates(ctx context.Context, preds []predic
 		return []restart.RestartWarning{}, false, err
 	}
 
-	warnings, err := p.actionRestarter.RestartAction(ctx, podsToRestart, failOnError)
+	warnings, err := p.actionRestarter.Restart(ctx, podsToRestart, failOnError)
 	if err != nil {
 		p.logger.Error(err, "Restarting pods failed")
 		return warnings, false, err

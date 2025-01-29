@@ -36,7 +36,7 @@ type ImageResourcesPredicate struct {
 	expectedResources v1.ResourceRequirements
 }
 
-// NewRestartProxyPredicate creates a new RestartProxyPredicate that checks if a pod needs a restart based on the expected image and resources.
+// NewImageResourcesPredicate creates a new ImageResourcesPredicate that checks if a pod needs a restart based on the expected image and resources.
 func NewImageResourcesPredicate(expectedImage SidecarImage, expectedResources v1.ResourceRequirements) *ImageResourcesPredicate {
 	return &ImageResourcesPredicate{expectedImage: expectedImage, expectedResources: expectedResources}
 }

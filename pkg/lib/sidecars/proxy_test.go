@@ -566,6 +566,6 @@ func NewActionRestartMock(warnings []restart.RestartWarning, err error) *ActionR
 	}
 }
 
-func (p *ActionRestartMock) RestartAction(ctx context.Context, podList *v1.PodList, failOnError bool) ([]restart.RestartWarning, error) {
+func (p *ActionRestartMock) Restart(ctx context.Context, podList *v1.PodList, failOnError bool) ([]restart.RestartWarning, error) {
 	return p.warnings, p.err
 }

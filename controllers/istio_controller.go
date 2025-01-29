@@ -160,8 +160,10 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			r.log.Error(statusUpdateErr, "Error during updating status to error")
 		}
 		if err.Level() == described_errors.Warning {
+			r.log.Info("Reconcile requeued")
 			return ctrl.Result{Requeue: true}, nil // do not return error in case of warning and avoid poluting logs
 		}
+		r.log.Error(err, "Reconcile failed, but won't requeue")
 		return ctrl.Result{}, err
 	} else if requeue {
 		r.statusHandler.SetCondition(&istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileRequeued))

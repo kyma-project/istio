@@ -2,18 +2,32 @@ package configuration_test
 
 import (
 	"fmt"
+	"testing"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/configuration"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+
+	"github.com/kyma-project/istio/operator/internal/tests"
+	"github.com/onsi/ginkgo/v2/types"
 )
 
 const (
 	mockIstioTag             string = "1.16.1-distroless"
 	lastAppliedConfiguration string = "operator.kyma-project.io/lastAppliedConfiguration"
 )
+
+func TestRestarter(t *testing.T) {
+	RegisterFailHandler(Fail)
+
+	RunSpecs(t, "Istio Configuration Suite")
+}
+
+var _ = ReportAfterSuite("custom reporter", func(report types.Report) {
+	tests.GenerateGinkgoJunitReport("istio-configuration-suite", report)
+})
 
 var _ = Describe("Istio Configuration", func() {
 	Context("LastAppliedConfiguration", func() {

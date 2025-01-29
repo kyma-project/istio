@@ -17,6 +17,7 @@ You must manually restart such workloads to ensure proper functionality with the
 
 ## Solution
 
+1. 
 <!-- tabs:start -->
 #### **Kyma dashboard**
 1. Choose **Modify Modules**.
@@ -26,6 +27,7 @@ You must manually restart such workloads to ensure proper functionality with the
    The sidecars of the following workloads could not be restarted: test/httpbin
    ```
 3. Restart the listed workloads so that new Istio sidecars are injected into the Pods.
+   To restart the Pods, you can use the `kubectl rollout restart` command.
 
 #### **kubectl**
 
@@ -43,4 +45,5 @@ You must manually restart such workloads to ensure proper functionality with the
      type: ProxySidecarRestartSucceeded
    ```
 3. Restart the listed workloads so that new Istio sidecars are injected into the Pods.
+   To restart the Pods, you can use the `kubectl rollout restart` command.
 <!-- tabs:end -->

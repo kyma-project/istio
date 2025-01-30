@@ -5,47 +5,45 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kyma-project/istio/operator/internal/compatibility"
 	"github.com/kyma-project/istio/operator/internal/prometheusmerge"
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
+	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
 	"github.com/pkg/errors"
 
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
-	"github.com/kyma-project/istio/operator/internal/filter"
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars"
-	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const errorDescription = "Error occurred during reconciliation of Istio Sidecars"
 
-type SidecarsRestarter struct {
-	Log           logr.Logger
-	Client        client.Client
-	Merger        istiooperator.Merger
-	ProxyResetter sidecars.ProxyResetter
-	StatusHandler status.Status
+type SidecarRestarter struct {
+	Log            logr.Logger
+	Client         client.Client
+	Merger         istiooperator.Merger
+	ProxyRestarter sidecars.ProxyRestarter
+	StatusHandler  status.Status
 }
 
-func NewSidecarsRestarter(logger logr.Logger, client client.Client, merger istiooperator.Merger, resetter sidecars.ProxyResetter, statusHandler status.Status) *SidecarsRestarter {
-	return &SidecarsRestarter{
-		Log:           logger,
-		Client:        client,
-		Merger:        merger,
-		ProxyResetter: resetter,
-		StatusHandler: statusHandler,
+func NewSidecarsRestarter(logger logr.Logger, client client.Client, merger istiooperator.Merger, proxyRestarter sidecars.ProxyRestarter, statusHandler status.Status) *SidecarRestarter {
+	return &SidecarRestarter{
+		Log:            logger,
+		Client:         client,
+		Merger:         merger,
+		ProxyRestarter: proxyRestarter,
+		StatusHandler:  statusHandler,
 	}
 }
 
 // Restart runs Proxy Reset action, which checks if any of sidecars need a restart and proceed with rollout.
-func (s *SidecarsRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio) (described_errors.DescribedError, bool) {
+func (s *SidecarRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio) (described_errors.DescribedError, bool) {
 	clusterSize, err := clusterconfig.EvaluateClusterSize(ctx, s.Client)
 	if err != nil {
 		s.Log.Error(err, "Error occurred during evaluation of cluster size")
@@ -75,7 +73,7 @@ func (s *SidecarsRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio
 		return described_errors.NewDescribedError(err, "Could not get Istio tag from istio operator file"), false
 	}
 
-	expectedImage := pods.NewSidecarImage(iop.Spec.Hub, tag)
+	expectedImage := predicates.NewSidecarImage(iop.Spec.Hub, tag)
 	s.Log.Info("Running proxy sidecar reset", "expected image", expectedImage)
 
 	err = gatherer.VerifyIstioPodsVersion(ctx, s.Client, istioImageVersion.Version())
@@ -91,9 +89,9 @@ func (s *SidecarsRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio
 		return described_errors.NewDescribedError(err, errorDescription), false
 	}
 
-	compatibiltyPredicate, err := compatibility.NewRestartPredicate(istioCR)
+	warnings, hasMorePods, err := s.ProxyRestarter.RestartProxies(ctx, expectedImage, expectedResources, istioCR)
 	if err != nil {
-		s.Log.Error(err, "Failed to create restart compatibility predicate")
+		s.Log.Error(err, "Failed to reset proxy")
 		s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarRestartFailed))
 		return described_errors.NewDescribedError(err, errorDescription), false
 	}
@@ -106,28 +104,11 @@ func (s *SidecarsRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio
 	}
 
 	warnings, hasMorePods, err := s.ProxyResetter.ProxyReset(ctx, s.Client, expectedImage, expectedResources, []filter.SidecarProxyPredicate{compatibiltyPredicate, prometheusMergePredicate}, &s.Log)
-	if err != nil {
-		s.Log.Error(err, "Failed to reset proxy")
-		s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarRestartFailed))
-		return described_errors.NewDescribedError(err, errorDescription), false
-	}
 
-	warningsCount := len(warnings)
-	if warningsCount > 0 {
-		podsLimit := 5
-		pods := []string{}
-		for _, w := range warnings {
-			if podsLimit--; podsLimit >= 0 {
-				pods = append(pods, fmt.Sprintf("%s/%s", w.Namespace, w.Name))
-			}
-			s.Log.Info("Proxy reset warning:", "name", w.Name, "namespace", w.Namespace, "kind", w.Kind, "message", w.Message)
-		}
-		warningMessage := fmt.Sprintf("The sidecars of the following workloads could not be restarted: %s",
-			strings.Join(pods, ", "))
-		if warningsCount-len(pods) > 0 {
-			warningMessage += fmt.Sprintf(" and %d additional workload(s)", warningsCount-len(pods))
-		}
-		warningErr := described_errors.NewDescribedError(errors.New("Istio controller could not restart one or more istio-injected pods."), "Not all pods with Istio injection could be restarted. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning").SetWarning()
+
+	warningMessage := sidecars.BuildWarningMessage(warnings, &s.Log)
+	if warningMessage != "" {
+		warningErr := described_errors.NewDescribedError(errors.New("Istio Controller could not restart one or more Istio-injected Pods."), "Some Pods with Istio sidecar injection failed to restart. To learn more about the warning, see kyma-system/istio-controller-manager logs").SetWarning()
 		s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarManualRestartRequired, warningMessage))
 		s.Log.Info(warningMessage)
 		return warningErr, false

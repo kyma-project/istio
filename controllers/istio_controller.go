@@ -22,12 +22,15 @@ import (
 	"time"
 
 	"github.com/kyma-project/istio/operator/internal/restarter"
+	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
 	"github.com/kyma-project/istio/operator/internal/validation"
 
-	"github.com/kyma-project/istio/operator/internal/filter"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars"
+	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
+	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/restart"
 
 	"github.com/kyma-project/istio/operator/internal/described_errors"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/configuration"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio_resources"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"k8s.io/client-go/util/retry"
@@ -56,9 +59,12 @@ func NewController(mgr manager.Manager, reconciliationInterval time.Duration) *I
 	merger := istiooperator.NewDefaultIstioMerger()
 
 	statusHandler := status.NewStatusHandler(mgr.GetClient())
+	logger := mgr.GetLogger()
+	podsLister := pods.NewPods(mgr.GetClient(), &logger)
+	actionRestarter := restart.NewActionRestarter(mgr.GetClient(), &logger)
 	restarters := []restarter.Restarter{
-		restarter.NewIngressGatewayRestarter(mgr.GetClient(), []filter.IngressGatewayPredicate{}, statusHandler),
-		restarter.NewSidecarsRestarter(mgr.GetLogger(), mgr.GetClient(), &merger, sidecars.NewProxyResetter(), statusHandler),
+		restarter.NewIngressGatewayRestarter(mgr.GetClient(), []predicates.IngressGatewayPredicate{}, statusHandler),
+		restarter.NewSidecarsRestarter(mgr.GetLogger(), mgr.GetClient(), &merger, sidecars.NewProxyRestarter(mgr.GetClient(), podsLister, actionRestarter, &logger), statusHandler),
 	}
 
 	return &IstioReconciler{
@@ -153,10 +159,15 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		if statusUpdateErr != nil {
 			r.log.Error(statusUpdateErr, "Error during updating status to error")
 		}
+		if err.Level() == described_errors.Warning {
+			r.log.Info("Reconcile requeued")
+			return ctrl.Result{RequeueAfter: time.Minute * 1}, nil
+		}
+		r.log.Info("Reconcile failed")
 		return ctrl.Result{}, err
 	} else if requeue {
 		r.statusHandler.SetCondition(&istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileRequeued))
-		return r.requeueReconciliationWithoutError(ctx, &istioCR)
+		return r.requeueReconciliationRestartNotFinished(ctx, &istioCR)
 	}
 
 	return r.finishReconcile(ctx, &istioCR, istioImageVersion.Tag())
@@ -171,17 +182,17 @@ func (r *IstioReconciler) requeueReconciliation(ctx context.Context, istioCR *op
 	if statusUpdateErr != nil {
 		r.log.Error(statusUpdateErr, "Error during updating status to error")
 	}
-	r.log.Error(err, "Reconcile failed")
+	r.log.Info("Reconcile failed")
 	return ctrl.Result{}, err
 }
 
-func (r *IstioReconciler) requeueReconciliationWithoutError(ctx context.Context, istioCR *operatorv1alpha2.Istio) (ctrl.Result, error) {
+func (r *IstioReconciler) requeueReconciliationRestartNotFinished(ctx context.Context, istioCR *operatorv1alpha2.Istio) (ctrl.Result, error) {
 	statusUpdateErr := r.statusHandler.UpdateToProcessing(ctx, istioCR)
 	if statusUpdateErr != nil {
-		r.log.Error(statusUpdateErr, "Error during updating status to error")
+		r.log.Error(statusUpdateErr, "Error during updating status to processing")
 	}
 	r.log.Info("Reconcile requeued")
-	return ctrl.Result{Requeue: true, RequeueAfter: time.Minute * 1}, nil
+	return ctrl.Result{RequeueAfter: time.Minute * 1}, nil
 }
 
 // terminateReconciliation stops the reconciliation and does not requeue the request.
@@ -276,7 +287,7 @@ func (r *IstioReconciler) updateLastAppliedConfiguration(ctx context.Context, ob
 		if err := r.Client.Get(ctx, objectKey, &lacIstioCR); err != nil {
 			return err
 		}
-		lastAppliedErr := istio.UpdateLastAppliedConfiguration(&lacIstioCR, istioTag)
+		lastAppliedErr := configuration.UpdateLastAppliedConfiguration(&lacIstioCR, istioTag)
 		if lastAppliedErr != nil {
 			return lastAppliedErr
 		}

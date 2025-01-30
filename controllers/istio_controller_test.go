@@ -941,8 +941,9 @@ var _ = Describe("Istio Controller", func() {
 				result, err := sut.Reconcile(context.Background(), reconcile.Request{NamespacedName: types.NamespacedName{Namespace: testNamespace, Name: istioCrName}})
 
 				// then
-				Expect(err).To(HaveOccurred())
+				Expect(err).ToNot(HaveOccurred())
 				Expect(result.Requeue).To(BeFalse())
+				Expect(result.RequeueAfter).To(Equal(time.Minute * 1))
 
 				updatedIstioCR := operatorv1alpha2.Istio{}
 				err = fakeClient.Get(context.Background(), client.ObjectKeyFromObject(istioCR), &updatedIstioCR)
@@ -985,7 +986,7 @@ var _ = Describe("Istio Controller", func() {
 
 				//then
 				Expect(err).ToNot(HaveOccurred())
-				Expect(reconcileResult.Requeue).To(BeTrue())
+				Expect(reconcileResult.Requeue).To(BeFalse())
 				Expect(reconcileResult.RequeueAfter).To(Equal(time.Minute * 1))
 
 				Expect(ingressGatewayRestarter.RestartCalled()).To(BeTrue())
@@ -1043,7 +1044,7 @@ type shouldFailClient struct {
 
 func (p *shouldFailClient) List(ctx context.Context, list client.ObjectList, _ ...client.ListOption) error {
 	if p.FailOnList {
-		return errors.New("intentionally failing client on list")
+		return errors.New("intentionally failing client on client.List")
 	}
 	return p.Client.List(ctx, list)
 }

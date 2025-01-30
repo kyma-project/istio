@@ -21,7 +21,7 @@ func newRolloutAction(object actionObject) restartAction {
 }
 
 func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObject, logger *logr.Logger) ([]RestartWarning, error) {
-	logger.Info("Roll out pod due to proxy restart", "name", object.Name, "namespace", object.Namespace)
+	logger.Info("Rollout pod due to proxy restart", "name", object.Name, "namespace", object.Namespace, "kind", object.Kind)
 
 	var obj client.Object
 	var err error
@@ -37,7 +37,6 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 			ds := obj.(*appsv1.DaemonSet)
 			patch := client.StrategicMergeFrom(ds.DeepCopy())
 			ds.Spec.Template.Annotations = annotations.AddRestartAnnotation(ds.Spec.Template.Annotations)
-
 			return k8sclient.Patch(ctx, ds, patch)
 		})
 	case "Deployment":
@@ -50,7 +49,6 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 			dep := obj.(*appsv1.Deployment)
 			patch := client.StrategicMergeFrom(dep.DeepCopy())
 			dep.Spec.Template.Annotations = annotations.AddRestartAnnotation(dep.Spec.Template.Annotations)
-
 			return k8sclient.Patch(ctx, dep, patch)
 		})
 	case "ReplicaSet":
@@ -63,7 +61,6 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 			rs := obj.(*appsv1.ReplicaSet)
 			patch := client.StrategicMergeFrom(rs.DeepCopy())
 			rs.Spec.Template.Annotations = annotations.AddRestartAnnotation(rs.Spec.Template.Annotations)
-
 			return k8sclient.Patch(ctx, rs, patch)
 		})
 	case "StatefulSet":
@@ -76,7 +73,6 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 			ss := obj.(*appsv1.StatefulSet)
 			patch := client.StrategicMergeFrom(ss.DeepCopy())
 			ss.Spec.Template.Annotations = annotations.AddRestartAnnotation(ss.Spec.Template.Annotations)
-
 			return k8sclient.Patch(ctx, ss, patch)
 		})
 	default:

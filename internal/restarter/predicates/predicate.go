@@ -1,4 +1,4 @@
-package filter
+package predicates
 
 import (
 	"context"
@@ -7,7 +7,8 @@ import (
 )
 
 type SidecarProxyPredicate interface {
-	RequiresProxyRestart(v1.Pod) bool
+	Matches(v1.Pod) bool
+	MustMatch() bool
 }
 
 type IngressGatewayPredicate interface {

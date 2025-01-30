@@ -1,8 +1,9 @@
-package istio
+package configuration
 
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/pkg/labels"
 
@@ -51,7 +52,7 @@ func GetLastAppliedConfiguration(istioCR *v1alpha2.Istio) (AppliedConfig, error)
 	return lastAppliedConfig, nil
 }
 
-func checkIstioVersionUpdate(currentIstioVersionString, targetIstioVersionString string) error {
+func CheckIstioVersionUpdate(currentIstioVersionString, targetIstioVersionString string) error {
 	currentIstioVersion, err := semver.NewVersion(currentIstioVersionString)
 	if err != nil {
 		return err

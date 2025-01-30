@@ -42,7 +42,7 @@ var _ = Describe("Istio Configuration", func() {
 			// then
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(istioCR.Annotations).To(Not(BeEmpty()))
-			Expect(istioCR.Annotations[lastAppliedConfiguration]).To(Equal(fmt.Sprintf(`{"config":{"numTrustedProxies":1},"IstioTag":"%s"}`, mockIstioTag)))
+			Expect(istioCR.Annotations[lastAppliedConfiguration]).To(Equal(fmt.Sprintf(`{"config":{"numTrustedProxies":1,"telemetry":{"metrics":{}}},"IstioTag":"%s"}`, mockIstioTag)))
 
 			appliedConfig, err := configuration.GetLastAppliedConfiguration(&istioCR)
 

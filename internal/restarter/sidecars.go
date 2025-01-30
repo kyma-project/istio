@@ -2,10 +2,6 @@ package restarter
 
 import (
 	"context"
-	"fmt"
-	"strings"
-
-	"github.com/kyma-project/istio/operator/internal/prometheusmerge"
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
@@ -95,16 +91,6 @@ func (s *SidecarRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio)
 		s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarRestartFailed))
 		return described_errors.NewDescribedError(err, errorDescription), false
 	}
-
-	prometheusMergePredicate, err := prometheusmerge.NewRestartPredicate(istioCR)
-	if err != nil {
-		s.Log.Error(err, "Failed to create restart prometheus merge predicate")
-		s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarRestartFailed))
-		return described_errors.NewDescribedError(err, errorDescription), false
-	}
-
-	warnings, hasMorePods, err := s.ProxyResetter.ProxyReset(ctx, s.Client, expectedImage, expectedResources, []filter.SidecarProxyPredicate{compatibiltyPredicate, prometheusMergePredicate}, &s.Log)
-
 
 	warningMessage := sidecars.BuildWarningMessage(warnings, &s.Log)
 	if warningMessage != "" {

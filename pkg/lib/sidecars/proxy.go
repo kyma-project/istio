@@ -45,12 +45,15 @@ func NewProxyRestarter(c client.Client, podsLister pods.PodsGetter, actionRestar
 
 func (p *ProxyRestart) RestartProxies(ctx context.Context, expectedImage predicates.SidecarImage, expectedResources v1.ResourceRequirements, istioCR *v1alpha2.Istio) ([]restart.RestartWarning, bool, error) {
 	compatibiltyPredicate, err := predicates.NewCompatibilityRestartPredicate(istioCR)
+	prometheusMergePredicate, err := predicates.NewPrometheusMergeRestartPredicate(istioCR)
 	if err != nil {
 		p.logger.Error(err, "Failed to create restart compatibility predicate")
 		return []restart.RestartWarning{}, false, err
 	}
 
-	predicates := []predicates.SidecarProxyPredicate{compatibiltyPredicate,
+	predicates := []predicates.SidecarProxyPredicate{
+		compatibiltyPredicate,
+		prometheusMergePredicate,
 		predicates.NewImageResourcesPredicate(expectedImage, expectedResources),
 	}
 

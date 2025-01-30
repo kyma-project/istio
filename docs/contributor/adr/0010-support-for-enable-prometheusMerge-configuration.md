@@ -1,7 +1,7 @@
 # Support for Enable PrometheusMerge Configuration
 
 ## Status
-Proposed
+Approved
 
 ## Context
 There is a need to support the configuration of enabling `prometheusMerge` to be available in the Istio CR. The background behind this need is explained in [this issue](https://github.com/kyma-project/telemetry-manager/issues/1468) and the impact of this feature being enabled was discussed in an [ADR](https://github.com/kyma-project/telemetry-manager/blob/main/docs/contributor/arch/015-impact-of-istio-prometheus-merge-on-metric-pipelines.md) created in the Telemetry Manager repository.

@@ -1,4 +1,4 @@
-package compatibility
+package predicates
 
 import (
 	"github.com/kyma-project/istio/operator/pkg/labels"
@@ -10,50 +10,50 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Proxy Restarter", func() {
-	Context("RequiresProxyRestart", func() {
+var _ = Describe("Compatibility Predicate", func() {
+	Context("Matches", func() {
 		It("should evaluate to true when proxy metadata values exist and new and old compatibility mode is different", func() {
-			predicate := ProxyRestartPredicate{
+			predicate := CompatibilityRestartPredicate{
 				oldCompatibilityMode: true,
 				newCompatibilityMode: false,
 				config: config{
 					proxyMetadata: map[string]string{"key": "value"},
 				},
 			}
-			Expect(predicate.RequiresProxyRestart(v1.Pod{})).To(BeTrue())
+			Expect(predicate.Matches(v1.Pod{})).To(BeTrue())
 		})
 
 		It("should evaluate to false when proxy metadata values exist and new and old compatibility mode is equal", func() {
-			predicate := ProxyRestartPredicate{
+			predicate := CompatibilityRestartPredicate{
 				oldCompatibilityMode: true,
 				newCompatibilityMode: true,
 				config: config{
 					proxyMetadata: map[string]string{"key": "value"},
 				},
 			}
-			Expect(predicate.RequiresProxyRestart(v1.Pod{})).To(BeFalse())
+			Expect(predicate.Matches(v1.Pod{})).To(BeFalse())
 		})
 
 		It("should evaluate to false when no proxy metadata values exist and new and old compatibility mode is different", func() {
-			predicate := ProxyRestartPredicate{
+			predicate := CompatibilityRestartPredicate{
 				oldCompatibilityMode: true,
 				newCompatibilityMode: false,
 			}
-			Expect(predicate.RequiresProxyRestart(v1.Pod{})).To(BeFalse())
+			Expect(predicate.Matches(v1.Pod{})).To(BeFalse())
 		})
 
 		It("should evaluate to false when no proxy metadata values exist and new and old compatibility mode is equal", func() {
-			predicate := ProxyRestartPredicate{
+			predicate := CompatibilityRestartPredicate{
 				oldCompatibilityMode: true,
 				newCompatibilityMode: true,
 			}
-			Expect(predicate.RequiresProxyRestart(v1.Pod{})).To(BeFalse())
+			Expect(predicate.Matches(v1.Pod{})).To(BeFalse())
 		})
 	})
 
-	Context("NewRestartPredicate", func() {
+	Context("NewCompatibilityRestartPredicate", func() {
 		It("should return an error if getLastAppliedConfiguration fails", func() {
-			_, err := NewRestartPredicate(&operatorv1alpha2.Istio{
+			_, err := NewCompatibilityRestartPredicate(&operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
 						labels.LastAppliedConfiguration: `{"compatibilityMode":abc}`,
@@ -64,7 +64,7 @@ var _ = Describe("Proxy Restarter", func() {
 		})
 
 		It("should return false for old compatibility mode if lastAppliedConfiguration is empty", func() {
-			predicate, err := NewRestartPredicate(&operatorv1alpha2.Istio{
+			predicate, err := NewCompatibilityRestartPredicate(&operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{},
 				},
@@ -75,7 +75,7 @@ var _ = Describe("Proxy Restarter", func() {
 		})
 
 		It("should return value for old compatibility mode from lastAppliedConfiguration", func() {
-			predicate, err := NewRestartPredicate(&operatorv1alpha2.Istio{
+			predicate, err := NewCompatibilityRestartPredicate(&operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
 						labels.LastAppliedConfiguration: `{"compatibilityMode":true}`,
@@ -88,7 +88,7 @@ var _ = Describe("Proxy Restarter", func() {
 		})
 
 		It("should return value for new compatibility mode from istio CR", func() {
-			predicate, err := NewRestartPredicate(&operatorv1alpha2.Istio{
+			predicate, err := NewCompatibilityRestartPredicate(&operatorv1alpha2.Istio{
 				Spec: operatorv1alpha2.IstioSpec{
 					CompatibilityMode: true,
 				},

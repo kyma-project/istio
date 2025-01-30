@@ -5,8 +5,8 @@ import (
 	"time"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/internal/filter"
 	"github.com/kyma-project/istio/operator/internal/restarter"
+	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/pkg/lib/annotations"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
@@ -36,7 +36,7 @@ var _ = Describe("Istio Ingress Gateway restart", func() {
 		igPod := createIgPodWithCreationTimestamp("istio-ingressgateway", gatherer.IstioNamespace, "discovery", "1.16.1", time.Now().Add(-time.Hour))
 		fakeClient := createFakeClient(istioCR, istiod, igPod, igDep)
 		statusHandler := status.NewStatusHandler(fakeClient)
-		igRestarter := restarter.NewIngressGatewayRestarter(fakeClient, []filter.IngressGatewayPredicate{mockIgPredicate{shouldRestart: true}}, statusHandler)
+		igRestarter := restarter.NewIngressGatewayRestarter(fakeClient, []predicates.IngressGatewayPredicate{mockIgPredicate{shouldRestart: true}}, statusHandler)
 
 		//when
 		err, requeue := igRestarter.Restart(context.Background(), istioCR)
@@ -70,7 +70,7 @@ var _ = Describe("Istio Ingress Gateway restart", func() {
 		igPod := createIgPodWithCreationTimestamp("istio-ingressgateway", gatherer.IstioNamespace, "discovery", "1.16.1", time.Now())
 		fakeClient := createFakeClient(istioCR, istiod, igDep, igPod)
 		statusHandler := status.NewStatusHandler(fakeClient)
-		igRestarter := restarter.NewIngressGatewayRestarter(fakeClient, []filter.IngressGatewayPredicate{mockIgPredicate{shouldRestart: false}}, statusHandler)
+		igRestarter := restarter.NewIngressGatewayRestarter(fakeClient, []predicates.IngressGatewayPredicate{mockIgPredicate{shouldRestart: false}}, statusHandler)
 
 		//when
 		err, requeue := igRestarter.Restart(context.Background(), istioCR)
@@ -102,7 +102,7 @@ var _ = Describe("Istio Ingress Gateway restart", func() {
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.1")
 		fakeClient := createFakeClient(istioCR, istiod)
 		statusHandler := status.NewStatusHandler(fakeClient)
-		igRestarter := restarter.NewIngressGatewayRestarter(fakeClient, []filter.IngressGatewayPredicate{mockIgPredicate{shouldRestart: true}}, statusHandler)
+		igRestarter := restarter.NewIngressGatewayRestarter(fakeClient, []predicates.IngressGatewayPredicate{mockIgPredicate{shouldRestart: true}}, statusHandler)
 
 		//when
 		err, requeue := igRestarter.Restart(context.Background(), istioCR)
@@ -153,7 +153,7 @@ func (m mockIgPredicate) RequiresIngressGatewayRestart() bool {
 	return m.shouldRestart
 }
 
-func (m mockIgPredicate) NewIngressGatewayEvaluator(_ context.Context) (filter.IngressGatewayRestartEvaluator, error) {
+func (m mockIgPredicate) NewIngressGatewayEvaluator(_ context.Context) (predicates.IngressGatewayRestartEvaluator, error) {
 	return m, nil
 }
 

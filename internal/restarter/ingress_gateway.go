@@ -5,10 +5,9 @@ import (
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
-	"github.com/kyma-project/istio/operator/internal/filter"
+	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/pkg/lib/annotations"
-	"github.com/kyma-project/istio/operator/pkg/lib/ingressgateway"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -25,11 +24,11 @@ const (
 
 type IngressGatewayRestarter struct {
 	client        client.Client
-	predicates    []filter.IngressGatewayPredicate
+	predicates    []predicates.IngressGatewayPredicate
 	statusHandler status.Status
 }
 
-func NewIngressGatewayRestarter(client client.Client, predicates []filter.IngressGatewayPredicate, statusHandler status.Status) *IngressGatewayRestarter {
+func NewIngressGatewayRestarter(client client.Client, predicates []predicates.IngressGatewayPredicate, statusHandler status.Status) *IngressGatewayRestarter {
 	return &IngressGatewayRestarter{
 		client:        client,
 		predicates:    predicates,
@@ -40,7 +39,7 @@ func NewIngressGatewayRestarter(client client.Client, predicates []filter.Ingres
 func (r *IngressGatewayRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio) (described_errors.DescribedError, bool) {
 	ctrl.Log.Info("Restarting Istio Ingress Gateway")
 
-	r.predicates = append(r.predicates, ingressgateway.NewRestartPredicate(istioCR))
+	r.predicates = append(r.predicates, predicates.NewIngressGatewayRestartPredicate(istioCR))
 	for _, predicate := range r.predicates {
 		evaluator, err := predicate.NewIngressGatewayEvaluator(ctx)
 		if err != nil {

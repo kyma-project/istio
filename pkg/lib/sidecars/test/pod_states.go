@@ -14,7 +14,7 @@ import (
 func (s *scenario) createObjectInAllNamespaces(toCreate client.Object, deleteIn NamespaceSelector, restartIn NamespaceSelector) error {
 	toCreateDefault := helpers.Clone(toCreate).(client.Object)
 	toCreateDefault.SetNamespace(noAnnotationNamespace)
-	err := s.Client.Create(context.TODO(), toCreateDefault)
+	err := s.Client.Create(context.Background(), toCreateDefault)
 	if err != nil {
 		return err
 	}
@@ -33,7 +33,7 @@ func (s *scenario) createObjectInAllNamespaces(toCreate client.Object, deleteIn 
 
 	toCreateDisabled := helpers.Clone(toCreate).(client.Object)
 	toCreateDisabled.SetNamespace(sidecarDisabledNamespace)
-	err = s.Client.Create(context.TODO(), toCreateDisabled)
+	err = s.Client.Create(context.Background(), toCreateDisabled)
 	if err != nil {
 		return err
 	}
@@ -52,7 +52,7 @@ func (s *scenario) createObjectInAllNamespaces(toCreate client.Object, deleteIn 
 
 	toCreateEnabled := helpers.Clone(toCreate).(client.Object)
 	toCreateEnabled.SetNamespace(sidecarEnabledNamespace)
-	err = s.Client.Create(context.TODO(), toCreateEnabled)
+	err = s.Client.Create(context.Background(), toCreateEnabled)
 	if err != nil {
 		return err
 	}

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kyma-project/istio/operator/internal/filter"
+	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
 	"github.com/kyma-project/istio/operator/internal/tests"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -15,12 +15,12 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
+	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/test/helpers"
 )
 
@@ -37,12 +37,12 @@ var _ = Describe("GetPodsToRestart", func() {
 	ctx := context.Background()
 	logger := logr.Discard()
 
-	When("Istio image changed", func() {
-		expectedImage := pods.NewSidecarImage("istio", "1.10.0")
+	When("Image changed", func() {
+		expectedImage := predicates.NewSidecarImage("istio", "1.10.0")
 		tests := []struct {
 			name       string
 			c          client.Client
-			predicates []filter.SidecarProxyPredicate
+			predicates []predicates.SidecarProxyPredicate
 			limits     *pods.PodsRestartLimits
 			assertFunc func(podList *v1.PodList)
 		}{
@@ -147,17 +147,67 @@ var _ = Describe("GetPodsToRestart", func() {
 				},
 			},
 			{
-				name: "Should contain only one pod when there are multiple predicates that would restart the pod",
+				name: "Should contain only one pod when there are multiple predicates that match the pod",
 				c: createClientSet(
 					helpers.NewSidecarPodBuilder().
 						SetName("changedSidecarPod").
 						SetSidecarImageRepository("istio/different-proxy").
 						Build(),
 				),
-				limits:     pods.NewPodsRestartLimits(5, 5),
-				predicates: []filter.SidecarProxyPredicate{pods.NewRestartProxyPredicate(expectedImage, helpers.DefaultSidecarResources)},
+				limits: pods.NewPodsRestartLimits(5, 5),
+				predicates: []predicates.SidecarProxyPredicate{
+					predicates.NewImageResourcesPredicate(expectedImage, helpers.DifferentSidecarResources),
+				},
 				assertFunc: func(podList *v1.PodList) {
 					Expect(podList.Items).To(HaveLen(1))
+				},
+			},
+			{
+				name: "Should contain only one pod when there are must match predicates that do match the pod",
+				c: createClientSet(
+					helpers.NewSidecarPodBuilder().
+						SetName("changedSidecarPod").
+						SetSidecarImageRepository("istio/different-proxy").
+						Build(),
+				),
+				limits: pods.NewPodsRestartLimits(5, 5),
+				predicates: []predicates.SidecarProxyPredicate{
+					predicates.NewImageResourcesPredicate(expectedImage, helpers.DifferentSidecarResources),
+					predicates.CustomerWorkloadRestartPredicate{},
+				},
+				assertFunc: func(podList *v1.PodList) {
+					Expect(podList.Items).To(HaveLen(1))
+				},
+			},
+			{
+				name: "Should ignore the pod when there are must match predicates that do not match the pod",
+				c: createClientSet(
+					helpers.NewSidecarPodBuilder().
+						SetName("changedSidecarPod").
+						SetSidecarImageRepository("istio/different-proxy").
+						Build(),
+				),
+				limits: pods.NewPodsRestartLimits(5, 5),
+				predicates: []predicates.SidecarProxyPredicate{
+					predicates.NewImageResourcesPredicate(expectedImage, helpers.DifferentSidecarResources),
+					predicates.KymaWorkloadRestartPredicate{},
+				},
+				assertFunc: func(podList *v1.PodList) {
+					Expect(podList.Items).To(BeEmpty())
+				},
+			},
+			{
+				name: "Should ignore the pod when there are must match predicate that matches pod but other predicate do not",
+				c: createClientSet(
+					helpers.NewSidecarPodBuilder().Build(),
+				),
+				limits: pods.NewPodsRestartLimits(5, 5),
+				predicates: []predicates.SidecarProxyPredicate{
+					predicates.NewImageResourcesPredicate(expectedImage, helpers.DefaultSidecarResources),
+					predicates.CustomerWorkloadRestartPredicate{},
+				},
+				assertFunc: func(podList *v1.PodList) {
+					Expect(podList.Items).To(BeEmpty())
 				},
 			},
 			{
@@ -224,14 +274,16 @@ var _ = Describe("GetPodsToRestart", func() {
 		}
 		for _, tt := range tests {
 			It(tt.name, func() {
-				podList, err := pods.GetPodsToRestart(ctx, tt.c, expectedImage, helpers.DefaultSidecarResources, tt.predicates, tt.limits, &logger)
+				tt.predicates = append(tt.predicates, predicates.NewImageResourcesPredicate(expectedImage, helpers.DefaultSidecarResources))
+				podsLister := pods.NewPods(tt.c, &logger)
+				podList, err := podsLister.GetPodsToRestart(ctx, tt.predicates, tt.limits)
 				Expect(err).NotTo(HaveOccurred())
 				tt.assertFunc(podList)
 			})
 		}
 	})
 
-	When("Sidecar Resources changed", func() {
+	When("Resources changed", func() {
 		tests := []struct {
 			name       string
 			c          client.Client
@@ -301,8 +353,9 @@ var _ = Describe("GetPodsToRestart", func() {
 		}
 		for _, tt := range tests {
 			It(tt.name, func() {
-				expectedImage := pods.NewSidecarImage("istio", "1.10.0")
-				podList, err := pods.GetPodsToRestart(ctx, tt.c, expectedImage, helpers.DefaultSidecarResources, []filter.SidecarProxyPredicate{}, pods.NewPodsRestartLimits(5, 5), &logger)
+				expectedImage := predicates.NewSidecarImage("istio", "1.10.0")
+				podsLister := pods.NewPods(tt.c, &logger)
+				podList, err := podsLister.GetPodsToRestart(ctx, []predicates.SidecarProxyPredicate{predicates.NewImageResourcesPredicate(expectedImage, helpers.DefaultSidecarResources)}, pods.NewPodsRestartLimits(5, 5))
 				Expect(err).NotTo(HaveOccurred())
 				tt.assertFunc(podList)
 			})
@@ -312,6 +365,7 @@ var _ = Describe("GetPodsToRestart", func() {
 
 var _ = Describe("GetAllInjectedPods", func() {
 	ctx := context.Background()
+	logger := logr.Discard()
 
 	tests := []struct {
 		name       string
@@ -340,7 +394,8 @@ var _ = Describe("GetAllInjectedPods", func() {
 	}
 	for _, tt := range tests {
 		It(tt.name, func() {
-			podList, err := pods.GetAllInjectedPods(ctx, tt.c)
+			podsLister := pods.NewPods(tt.c, &logger)
+			podList, err := podsLister.GetAllInjectedPods(ctx)
 			Expect(err).NotTo(HaveOccurred())
 			tt.assertFunc(podList)
 		})

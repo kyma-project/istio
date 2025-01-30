@@ -9,7 +9,7 @@ import (
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/kyma-project/istio/operator/internal/resources"
 	"github.com/kyma-project/istio/operator/internal/status"
-	sidecarRemover "github.com/kyma-project/istio/operator/pkg/lib/sidecars/remove"
+	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/remove"
 	"github.com/thoas/go-funk"
 
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -58,7 +58,7 @@ func uninstallIstio(ctx context.Context, args uninstallArgs) (istiooperator.Isti
 		return istioImageVersion, described_errors.NewDescribedError(err, "Could not uninstall istio")
 	}
 
-	warnings, err := sidecarRemover.RemoveSidecars(ctx, k8sClient, &ctrl.Log)
+	warnings, err := remove.RemoveSidecars(ctx, k8sClient, &ctrl.Log)
 	if err != nil {
 		return istioImageVersion, described_errors.NewDescribedError(err, "Could not remove istio sidecars")
 	}

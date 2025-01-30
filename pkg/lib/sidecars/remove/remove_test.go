@@ -33,7 +33,7 @@ var _ = ReportAfterSuite("custom reporter", func(report ginkgotypes.Report) {
 })
 
 var _ = Describe("Remove Sidecar", func() {
-	ctx := context.TODO()
+	ctx := context.Background()
 	logger := logr.Discard()
 
 	It("should rollout restart Deployment if the pod has sidecar", func() {
@@ -54,7 +54,7 @@ var _ = Describe("Remove Sidecar", func() {
 		Expect(warnings).To(BeEmpty())
 
 		obj := appsv1.Deployment{}
-		err = c.Get(context.TODO(), types.NamespacedName{Namespace: "test-ns", Name: "owner"}, &obj)
+		err = c.Get(context.Background(), types.NamespacedName{Namespace: "test-ns", Name: "owner"}, &obj)
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(obj.Spec.Template.Annotations[restartAnnotationName]).NotTo(BeEmpty())
@@ -78,7 +78,7 @@ var _ = Describe("Remove Sidecar", func() {
 		Expect(warnings).To(BeEmpty())
 
 		obj := appsv1.Deployment{}
-		err = c.Get(context.TODO(), types.NamespacedName{Namespace: "test-ns", Name: "owner"}, &obj)
+		err = c.Get(context.Background(), types.NamespacedName{Namespace: "test-ns", Name: "owner"}, &obj)
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(obj.Spec.Template.Annotations[restartAnnotationName]).To(BeEmpty())

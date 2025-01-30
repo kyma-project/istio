@@ -118,7 +118,7 @@ Restarting sidecars is divided into two phases:
 - In the first phase, only Kyma workloads are restarted. A workload is considered a Kyma workload if it runs in the `kyma-system` namespace or has the `kyma-project.io/module` annotation. All Kyma workloads are restarted without pagination. If there is a problem with the restart, Istio CR is set to the `Error`, and the reconciliation is requeued.
 - In the second phase, only customer workloads are restarted. A workload is considered a customer workload if it does not run in the `kyma-system` namespace and does not have the `kyma-project.io/module` annotation. All customer workloads are restarted with pagination. If there is a problem with the restart, Istio CR  is set to the `Warning` state, and the reconciliation is requeued with a 1-minute delay.
 
-During the Customer sidecars restarting phase, the Istio CR remains in the `Processing` state having the following status conditions:
+During the customer sidecars restarting phase, the Istio CR remains in the `Processing` state, having the following status conditions:
 - The `Ready` condition is set to `false` with the reason `ReconcileRequeued`.
 - The `ProxySidecarRestartSucceeded` condition is set to `false` with the reason `ProxySidecarPartiallySucceeded`.
 

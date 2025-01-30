@@ -122,7 +122,7 @@ During the customer sidecars restarting phase, the Istio CR remains in the `Proc
 - The `Ready` condition is set to `false` with the reason `ReconcileRequeued`.
 - The `ProxySidecarRestartSucceeded` condition is set to `false` with the reason `ProxySidecarPartiallySucceeded`.
 
-After completing Customer sidecars restart Istio CR's `Ready` condition is set to `true` and `ProxySidecarRestartSucceeded` is set to `true` with the reason `ProxySidecarRestartSucceeded`.
+After completing the customer sidecars restart, Istio CR's `Ready` condition is set to `true`, and `ProxySidecarRestartSucceeded` is set to `true` with the reason `ProxySidecarRestartSucceeded`.
 
 This component covers the following restart triggers:
 

@@ -18,7 +18,7 @@ require (
 	github.com/onsi/gomega v1.36.2
 	github.com/pkg/errors v0.9.1
 	github.com/thoas/go-funk v0.9.3
-	github.com/vrischmann/envconfig v1.3.0
+	github.com/vrischmann/envconfig v1.4.1
 	gitlab.com/rodrigoodhin/gocure v0.0.0-20220718065339-f14dfe79276a
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 	golang.org/x/time v0.9.0

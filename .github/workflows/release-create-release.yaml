@@ -44,6 +44,7 @@ jobs:
         shell: bash
         run: |
           if [[ $( ./yq eval ".protecode[0]" sec-scanners-config.yaml ) == "europe-docker.pkg.dev/kyma-project/prod/istio/releases/istio-manager:${{ github.event.inputs.version }}" ]]; then
+            echo "Image tag in sec-scanners-config matches release ${{ github.event.inputs.version }}"
             exit 0
           else
             echo "Error: istio-manager image tag in sec-scanners-config doesn't match release ${{ github.event.inputs.version }}"

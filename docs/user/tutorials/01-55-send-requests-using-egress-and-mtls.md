@@ -5,7 +5,7 @@ Learn how to configure and use the Istio egress Gateway to allow outbound traffi
 
 * You need two clusters:
     1. With Istio and ApiGateway to expose nginx workload.
-    2. With the Istio module added.
+    2. With the Istio module and egress enabled to perform requests.
 * To use CLI instruction, you must install [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl), [openssl](https://www.openssl.org) and [curl](https://curl.se/).
 
 ## Steps

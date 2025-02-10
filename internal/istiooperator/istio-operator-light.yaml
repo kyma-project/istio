@@ -113,9 +113,9 @@ spec:
         - name: PILOT_HTTP10
           value: "1"
         - name: METRIC_ROTATION_INTERVAL
-          value: "5m0s"
+          value: "6h"
         - name: METRIC_GRACEFUL_DELETION_INTERVAL
-          value: "5m0s"
+          value: "6h"
         hpaSpec:
           scaleTargetRef:
             apiVersion: apps/v1

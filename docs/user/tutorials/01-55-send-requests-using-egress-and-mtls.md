@@ -347,7 +347,7 @@ Learn how to configure and use the Istio egress Gateway to allow outbound traffi
 10. Send an HTTPS request to the Kyma project website:
 
     ```bash
-    kubectl exec -n $NAMESPACE "$SOURCE_POD" -c curl -- curl -ik -X GET https://$DOMAIN/headers
+    kubectl exec -n $NAMESPACE "$SOURCE_POD" -c curl -- curl -ik -X GET http://$DOMAIN/headers
     ```
 
     You should see the `200` response code from the workload containing headers, one of them should be `"X-Forwarded-Client-Cert": ["xxx"]`.

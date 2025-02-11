@@ -12,11 +12,13 @@ Learn how to configure and use the Istio egress Gateway to allow outbound traffi
 
 ### Generate mTLS certificates
 
+Use kubeconfig for the cluster that will contain the target workload.
+
 1. Export the following values as an environment variables (they will be needed throughout the whole tutorial):
 
     ```bash
-    export DOMAIN={your-workload-url}
-    export CLIENT={client-cluster-domain}
+    export DOMAIN={your-workload-host}{e.g. nginx.example.com}
+    export CLIENT={client-cluster-domain}{e.g. client.example.com}
     export NAMESPACE={your-namespace}
     ```
 

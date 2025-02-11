@@ -1,0 +1,32 @@
+name: PR Build and Push Manager Image
+
+on:
+  pull_request_target:
+    types: [ synchronize, opened, reopened, ready_for_review ]
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+      - "tests/performance/**"
+      - "OWNERS"
+      - "CODEOWNERS"
+      - ".github/**" #Ignoring since build job isn't triggered on the workflow directory changes
+      - "external-images.yaml"
+    branches:
+      - 'main'
+
+jobs:
+  build-image:
+    name: Build and push manager image
+    environment: ${{ github.event.pull_request.author_association != 'COLLABORATOR' && github.event.pull_request.author_association != 'OWNER' && 'restricted' || 'internal' }}
+    runs-on: ubuntu-latest
+    if: ${{ github.event.pull_request.draft == false }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - uses: ./.github/actions/build-manager-image
+        with:
+          operator-image-name: "europe-central2-docker.pkg.dev/sap-se-cx-kyma-goat/istio/istio-manager:PR-${{github.event.number}}"
+          push-image: 'true'
+          push-sa-key: ${{ secrets.GCP_SA_KEY }}

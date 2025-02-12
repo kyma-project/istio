@@ -35,7 +35,8 @@ Learn how to configure and use the Istio egress Gateway to allow mTLS-secured ou
     openssl req -out "$DOMAIN".csr -newkey rsa:2048 -nodes -keyout "$DOMAIN".key -subj "/CN="$DOMAIN"/O=some organization"
     openssl x509 -req -sha256 -days 365 -CA egress.crt -CAkey egress.key -set_serial 0 -in "$DOMAIN".csr -out "$DOMAIN".crt
     ```
-4. Generate the client certificate:
+
+5. Generate the client certificate:
     ```bash
     openssl req -out "$CLIENT".csr -newkey rsa:2048 -nodes -keyout "$CLIENT".key -subj "/CN="$CLIENT"/O=client organization"
     openssl x509 -req -sha256 -days 365 -CA egress.crt -CAkey egress.key -set_serial 1 -in "$CLIENT".csr -out "$CLIENT".crt

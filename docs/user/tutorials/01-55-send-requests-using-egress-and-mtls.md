@@ -1,20 +1,23 @@
 # Send mTLS Requests Using Istio Egress Gateway
-Learn how to configure and use the Istio egress Gateway to allow outbound traffic from your Kyma runtime cluster to a workload in another cluster using mTLS.
+Learn how to configure and use the Istio egress Gateway to allow mTLS-secured outbound traffic from your Kyma runtime cluster to a workload in another cluster.
 
 ## Prerequisites
 
 * You need two clusters:
-    1. With Istio and ApiGateway to expose nginx workload.
-    2. With the Istio module and egress enabled to perform requests.
-* To use CLI instruction, you must install [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl), [openssl](https://www.openssl.org) and [curl](https://curl.se/).
+    1. One with Istio and API Gateway modules added. You will use it to expose the target workload.
+    2. One with the Istio module added. You will use it to send requests.
+* You must install [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl), [openssl](https://www.openssl.org), and [curl](https://curl.se/).
 
 ## Steps
 
-### Generate mTLS certificates
+### Generate mTLS Certificates
 
-Use kubeconfig for the cluster that will contain the target workload.
+1. Export the `kubeconfig` file of the cluster that will contain the target workload.
+    ```bash
+    export KUBECONFIG={target-workload-cluster-config}
+    ```
 
-1. Export the following values as an environment variables (they will be needed throughout the whole tutorial):
+2. Export the following values as environment variables. You will use them throughout the whole tutorial.
 
     ```bash
     export DOMAIN={your-workload-host}{e.g. nginx.example.com}
@@ -22,22 +25,27 @@ Use kubeconfig for the cluster that will contain the target workload.
     export NAMESPACE={your-namespace}
     ```
 
-2. Generate certificates
+3. Generate the root certificate:
 
     ```bash
-    # root certificate
     openssl req -x509 -sha256 -nodes -days 365 -newkey rsa:2048 -subj "/O=example Inc./CN=$DOMAIN" -keyout egress.key -out egress.crt
-    # host certificate
+    
+4. Generate the host certificate:
+    ```bash
     openssl req -out "$DOMAIN".csr -newkey rsa:2048 -nodes -keyout "$DOMAIN".key -subj "/CN="$DOMAIN"/O=some organization"
     openssl x509 -req -sha256 -days 365 -CA egress.crt -CAkey egress.key -set_serial 0 -in "$DOMAIN".csr -out "$DOMAIN".crt
-    # client certificate
+    ```
+4. Generate the client certificate:
+    ```bash
     openssl req -out "$CLIENT".csr -newkey rsa:2048 -nodes -keyout "$CLIENT".key -subj "/CN="$CLIENT"/O=client organization"
     openssl x509 -req -sha256 -days 365 -CA egress.crt -CAkey egress.key -set_serial 1 -in "$CLIENT".csr -out "$CLIENT".crt
     ```
 
-### Prepare cluster with a workload
+### Prepare a Cluster with a Workload
 
-1. On a cluster with ApiGateway and Istio enabled, create httpbin deployment:
+Use the same `kubeconfig` file you've already exported.
+
+1. Create an HTTPBin Deployment:
 
     ```bash
     kubectl create ns $NAMESPACE
@@ -45,13 +53,13 @@ Use kubeconfig for the cluster that will contain the target workload.
     kubectl -n $NAMESPACE create -f https://raw.githubusercontent.com/istio/istio/master/samples/httpbin/httpbin.yaml
     ```
 
-2. Create a secret containing your generated certificates and key:
+2. Create a Secret containing your generated certificates and key:
 
     ```bash
     kubectl create secret generic -n istio-system kyma-mtls-certs --from-file=cacert=egress.crt --from-file=key=$DOMAIN.key --from-file=cert=$DOMAIN.crt
     ```
 
-3. Create a gateway with mTLS configuration:
+3. Create a Gateway with mTLS configuration:
 
     ```bash
     cat <<EOF | kubectl apply -f -
@@ -101,7 +109,7 @@ Use kubeconfig for the cluster that will contain the target workload.
     EOF
     ```
 
-5. Send a request to your workload without certificate and key:
+5. Send a request to your workload without a certificate and key:
 
     ```bash
     curl -ik -X GET https://$DOMAIN/headers
@@ -110,7 +118,7 @@ Use kubeconfig for the cluster that will contain the target workload.
     You should see an SSL error similar to this:
     `curl: (56) LibreSSL SSL_read: LibreSSL/3.3.6: error:1404C45C:SSL routines:ST_OK:reason(1116), errno 0`
 
-    Send a request with certificate and key:
+6. Send a request with the certificate and key:
 
     ```bash
     curl --cert $CLIENT.crt --key $CLIENT.key --cacert egress.crt -ik -X GET https://$DOMAIN/headers
@@ -118,9 +126,9 @@ Use kubeconfig for the cluster that will contain the target workload.
 
     You should see the `200` response code from the workload containing headers, one of them should be `"X-Forwarded-Client-Cert": ["xxx"]`
 
-### Prepare cluster with an egress Gateway
+### Prepare a Cluster with an Egress Gateway
 
-1. Switch your kubeconfig to another cluster:
+1. Export the `kubeconfig` file of another cluster:
 
     ```bash
     export KUBECONFIG={egress-cluster-config}
@@ -133,7 +141,7 @@ Use kubeconfig for the cluster that will contain the target workload.
     kubectl label namespace $NAMESPACE istio-injection=enabled --overwrite
     ```
 
-3. Create a secret with client certificate and key:
+3. Create a Secret with the client certificate and key:
 
     ```bash
     kubectl create secret -n istio-system generic client-credential --from-file=tls.key=$CLIENT.key \
@@ -352,7 +360,7 @@ Use kubeconfig for the cluster that will contain the target workload.
     kubectl exec -n $NAMESPACE "$SOURCE_POD" -c curl -- curl -ik -X GET http://$DOMAIN/headers
     ```
 
-    You should see the `200` response code from the workload containing headers, one of them should be `"X-Forwarded-Client-Cert": ["xxx"]`.
+    You get the `200` response code from the workload containing headers. One of these headers should be `"X-Forwarded-Client-Cert": ["xxx"]`.
 
     Check the logs of the Istio egress Gateway:
     ```bash

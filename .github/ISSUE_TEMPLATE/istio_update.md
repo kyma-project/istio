@@ -2,7 +2,7 @@
 name: Istio Update
 about: Create an Istio update issue
 title: "Istio {version} update"
-labels: kind/feature
+type: Feature
 assignees: ''
 
 ---
@@ -24,14 +24,6 @@ ACs:
 - [ ] Istio and Envoy Version updated in the [`README.md`](https://github.com/kyma-project/istio) and [`/docs/user/README.md`](https://github.com/kyma-project/istio) files. You can use the scripts `scripts/get_module_istio_version.sh` and `scripts/get_module_envoy_version.sh` to extract the versions.
 - [ ] Check **compatibilityVersion** of the previous minor version. You can find it in the [`helm-profiles`](https://github.com/istio/istio/tree/master/manifests/helm-profiles) directory. Evaluate content, and adjust compatibility mode implementation in `api/v1alpha2/compatibility_mode.go`. Check the release notes for any compatibility flags that might be not covered by the compatibilityVersion. Update `docs/user/04-00-istio-custom-resource.md` if needed. Document updated compatibility environment variables in the release notes.
 - [ ] Update `k8s.io/*` and `sigs.k8s.io/*` dependencies in `go.mod` to the version used in the new Istio release.
-
-**DoD:**
-- [ ] Provide documentation.
-- [ ] Test on a production-like environment.
-- [ ] Verify if the solution works for both open-source Kyma and SAP BTP, Kyma runtime.
-- [ ] Check the outcome of all related pipelines.
-- [ ] As a PR reviewer, verify code coverage and evaluate if it is acceptable.
-- [ ] Add release notes.
 
 **Attachments**
 {Link to the Istio release announcement from [Istio Release Announcements](https://istio.io/latest/news/releases/)}

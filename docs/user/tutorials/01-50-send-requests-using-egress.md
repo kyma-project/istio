@@ -116,7 +116,7 @@ Learn how to configure and use the Istio egress Gateway to allow outbound traffi
     ```
 
 6. Define a ServiceEntry which adds the `kyma-project.io` hostname to the mesh:
-   
+
    ```bash
    kubectl apply -f - <<EOF
    apiVersion: networking.istio.io/v1
@@ -136,7 +136,7 @@ Learn how to configure and use the Istio egress Gateway to allow outbound traffi
    ```
 
 7. Create an egress Gateway, DestinationRule, and VirtualService to direct traffic:
-   
+
    ```bash
    kubectl apply -f - <<EOF
    apiVersion: networking.istio.io/v1
@@ -205,12 +205,12 @@ Learn how to configure and use the Istio egress Gateway to allow outbound traffi
          weight: 100
    EOF
    ```
-   
+
 8. Send an HTTPS request to the Kyma project website:
    ```bash
    kubectl exec -n "$NAMESPACE" "$SOURCE_POD" -c curl -- curl -sSL -o /dev/null -D - https://kyma-project.io
    ```
-   
+
    If successful, you get a response from the website similar to this one:
    ```
    HTTP/2 200
@@ -218,7 +218,7 @@ Learn how to configure and use the Istio egress Gateway to allow outbound traffi
    age: 203
    ...
    ```
-   
+
    Check the logs of the Istio egress Gateway:
    ```bash
    kubectl logs -l istio=egressgateway -n istio-system

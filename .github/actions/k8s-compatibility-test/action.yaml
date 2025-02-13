@@ -16,7 +16,7 @@ runs:
     - name: Create Cluster
       uses: ./.github/actions/provision-k3d-cluster
       with:
-        k3s-version: "1.31.2"
+        k3s-version: "1.31.4"
     - name: Run integration tests
       run: |
         if [ "${{ github.event_name }}" == "pull_request" ]; then

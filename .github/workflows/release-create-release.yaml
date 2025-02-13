@@ -21,35 +21,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Install yq
-        shell: bash
-        env:
-          VERSION: "v4.45.1"
-          BINARY: "yq_linux_amd64"
-          EXPECTED_CHECKSUM: "654d2943ca1d3be2024089eb4f270f4070f491a0610481d128509b2834870049"
-        run: |
-          wget https://github.com/mikefarah/yq/releases/download/${VERSION}/${BINARY} -O ./yq && chmod +x ./yq
-          
-          echo "Generating downloaded yq binary sha256 checksum..."
-          generated_checksum=$(shasum -a256 ./yq | awk '{ print $1 }')
-          
-          if [ "$generated_checksum" == "$EXPECTED_CHECKSUM" ]; then
-            echo "Checksums match."
-          else
-            echo "Checksums do not match."
-            exit 1
-          fi
       - name: Check security-scanner config
         shell: bash
         run: |
-          if [[ $( ./yq eval ".protecode[0]" sec-scanners-config.yaml ) == "europe-docker.pkg.dev/kyma-project/prod/istio/releases/istio-manager:${{ github.event.inputs.version }}" ]]; then
-            echo "Image tag in sec-scanners-config matches release ${{ github.event.inputs.version }}"
-            exit 0
-          else
-            echo "Error: istio-manager image tag in sec-scanners-config doesn't match release ${{ github.event.inputs.version }}"
-            exit 1
-          fi
+          cat sec-scanners-config.yaml | grep -q "europe-docker.pkg.dev/kyma-project/prod/istio/releases/istio-manager:${{ github.event.inputs.version }}"
 
   build-image:
     uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main

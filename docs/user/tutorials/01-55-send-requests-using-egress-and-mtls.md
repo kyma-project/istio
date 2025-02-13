@@ -355,7 +355,7 @@ Use the same `kubeconfig` file you've already exported.
     EOF
     ```
 
-10. Send an HTTPS request to the Kyma project website:
+10. Send an HTTP request to the Kyma project website:
 
     ```bash
     kubectl exec -n $NAMESPACE "$SOURCE_POD" -c curl -- curl -ik -X GET http://$DOMAIN/headers
@@ -370,5 +370,5 @@ Use the same `kubeconfig` file you've already exported.
 
     You should see the request made by the egress Gateway in the logs:
     ```
-    {"requested_server_name":"{YOUR_DOMAIN}":"outbound|443||{YOUR_DOMAIN}",[...]}
+    {"authority":"{YOUR_DOMAIN}":"outbound|443||{YOUR_DOMAIN}",[...]}
     ```

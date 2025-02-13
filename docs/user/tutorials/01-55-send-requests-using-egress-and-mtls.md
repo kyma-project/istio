@@ -355,7 +355,7 @@ Use the same `kubeconfig` file you've already exported.
     EOF
     ```
 
-10. Send an HTTP request to the Kyma project website:
+10. Send an HTTP request to the Kyma project website (egress will make an HTTPS request):
 
     ```bash
     kubectl exec -n $NAMESPACE "$SOURCE_POD" -c curl -- curl -ik -X GET http://$DOMAIN/headers

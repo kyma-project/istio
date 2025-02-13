@@ -355,7 +355,8 @@ Use the same `kubeconfig` file you've already exported.
     EOF
     ```
 
-10. Send an HTTP request to the Kyma project website (egress will make an HTTPS request):
+10. Send an HTTP request to the Kyma project website:
+    When you send an HTTP request, Istio uses egress to redirect the HTTPS to the website.
 
     ```bash
     kubectl exec -n $NAMESPACE "$SOURCE_POD" -c curl -- curl -ik -X GET http://$DOMAIN/headers

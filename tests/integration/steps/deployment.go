@@ -341,7 +341,7 @@ func getPodList(ctx context.Context, k8sClient client.Client, podList *corev1.Po
 func getVersionFromImageName(image string) (string, error) {
 	noVersion := ""
 	matches := reference.ReferenceRegexp.FindStringSubmatch(image)
-	if matches == nil || len(matches) < 3 {
+	if len(matches) < 3 {
 		return noVersion, fmt.Errorf("unable to parse container image reference: %s", image)
 	}
 	version, err := semver.NewVersion(matches[2])

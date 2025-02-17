@@ -11,19 +11,12 @@ import (
 
 var _ = Describe("Prometheus Merge Predicate", func() {
 	Context("Matches", func() {
-		It("should evaluate to true when new and old prometheusMerge value is different", func() {
-			predicate := PrometheusMergeRestartPredicate{
-				oldPrometheusMerge: true,
-				newPrometheusMerge: false,
-			}
-			Expect(predicate.Matches(v1.Pod{})).To(BeTrue())
-		})
 		It("should evaluate to false when new an old prometheusMerge value is same", func() {
 			predicate := PrometheusMergeRestartPredicate{
 				oldPrometheusMerge: true,
-				newPrometheusMerge: false,
+				newPrometheusMerge: true,
 			}
-			Expect(predicate.Matches(v1.Pod{})).To(BeTrue())
+			Expect(predicate.Matches(v1.Pod{})).To(BeFalse())
 		})
 	})
 	Context("NewPrometheusMergeRestartPredicate", func() {
@@ -74,6 +67,121 @@ var _ = Describe("Prometheus Merge Predicate", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(predicate).NotTo(BeNil())
 			Expect(predicate.newPrometheusMerge).To(BeTrue())
+		})
+		It("should return true if the new prometheusMerge is true but annotations are not updated", func() {
+			pod := v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						"prometheus.io/port": "8080",
+					},
+				},
+			}
+			predicate, err := NewPrometheusMergeRestartPredicate(&operatorv1alpha2.Istio{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						labels.LastAppliedConfiguration: `{"config":{"telemetry":{"metrics":{"prometheusMerge":false}}}}`,
+					},
+				},
+				Spec: operatorv1alpha2.IstioSpec{
+					Config: operatorv1alpha2.Config{
+						Telemetry: operatorv1alpha2.Telemetry{
+							Metrics: operatorv1alpha2.Metrics{
+								PrometheusMerge: true,
+							},
+						},
+					},
+				},
+			})
+			Expect(err).ToNot(HaveOccurred())
+			Expect(predicate).NotTo(BeNil())
+			Expect(predicate.Matches(pod)).To(BeTrue())
+
+		})
+		It("should return true if the new prometheusMerge is false but annotations are not updated", func() {
+			pod := v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						"prometheus.io/path": "/stats/prometheus",
+						"prometheus.io/port": "15020",
+					},
+				},
+			}
+			predicate, err := NewPrometheusMergeRestartPredicate(&operatorv1alpha2.Istio{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						labels.LastAppliedConfiguration: `{"config":{"telemetry":{"metrics":{"prometheusMerge":true}}}}`,
+					},
+				},
+				Spec: operatorv1alpha2.IstioSpec{
+					Config: operatorv1alpha2.Config{
+						Telemetry: operatorv1alpha2.Telemetry{
+							Metrics: operatorv1alpha2.Metrics{
+								PrometheusMerge: false,
+							},
+						},
+					},
+				},
+			})
+			Expect(err).ToNot(HaveOccurred())
+			Expect(predicate).NotTo(BeNil())
+			Expect(predicate.Matches(pod)).To(BeTrue())
+		})
+		It("should return false if the new prometheusMerge is true and annotations are correctly updated", func() {
+			pod := v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						"prometheus.io/path": "/stats/prometheus",
+						"prometheus.io/port": "15020",
+					},
+				},
+			}
+			predicate, err := NewPrometheusMergeRestartPredicate(&operatorv1alpha2.Istio{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						labels.LastAppliedConfiguration: `{"config":{"telemetry":{"metrics":{"prometheusMerge":false}}}}`,
+					},
+				},
+				Spec: operatorv1alpha2.IstioSpec{
+					Config: operatorv1alpha2.Config{
+						Telemetry: operatorv1alpha2.Telemetry{
+							Metrics: operatorv1alpha2.Metrics{
+								PrometheusMerge: true,
+							},
+						},
+					},
+				},
+			})
+			Expect(err).ToNot(HaveOccurred())
+			Expect(predicate).NotTo(BeNil())
+			Expect(predicate.Matches(pod)).To(BeFalse())
+		})
+		It("should return false if the new prometheusMerge is false and annotations are correctly updated", func() {
+			pod := v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						"prometheus.io/port": "8080",
+					},
+				},
+			}
+			predicate, err := NewPrometheusMergeRestartPredicate(&operatorv1alpha2.Istio{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						labels.LastAppliedConfiguration: `{"config":{"telemetry":{"metrics":{"prometheusMerge":true}}}}`,
+					},
+				},
+				Spec: operatorv1alpha2.IstioSpec{
+					Config: operatorv1alpha2.Config{
+						Telemetry: operatorv1alpha2.Telemetry{
+							Metrics: operatorv1alpha2.Metrics{
+								PrometheusMerge: false,
+							},
+						},
+					},
+				},
+			})
+			Expect(err).ToNot(HaveOccurred())
+			Expect(predicate).NotTo(BeNil())
+			Expect(predicate.Matches(pod)).To(BeFalse())
 		})
 	})
 })

@@ -3,6 +3,7 @@ package steps
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/istio/operator/tests/testcontext"
 
 	"github.com/avast/retry-go"

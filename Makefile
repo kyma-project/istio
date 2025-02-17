@@ -191,7 +191,7 @@ $(ENVTEST): $(LOCALBIN)
 
 .PHONY: test-e2e
 test-e2e: gotestsum
-	$(LOCALBIN)/gotestsum --format "testname" -- -run '^TestE2E.*' ./tests/e2e/...
+	$(LOCALBIN)/gotestsum --rerun-fails --packages="./tests/e2e/..." --format "testname" -- -run '^TestE2E.*' ./tests/e2e/...
 ##@ Module
 
 .PHONY: module-image

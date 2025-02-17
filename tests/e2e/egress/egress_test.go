@@ -26,9 +26,9 @@ import (
 
 var (
 	defaultWaitBackoff = wait.Backoff{
-		Cap:      3 * time.Minute,
+		Cap:      10 * time.Minute,
 		Duration: time.Second,
-		Steps:    10,
+		Steps:    30,
 		Factor:   1.5,
 	}
 )

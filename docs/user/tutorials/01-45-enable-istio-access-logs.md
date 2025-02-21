@@ -35,6 +35,7 @@ Use the Telemetry API to selectively enable Istio access logs. See:
 - [Configure Istio Access Logs for a Selective Workload](#configure-istio-access-logs-for-a-selective-workload)
 - [Configure Istio Access Logs for a Specific Gateway](#configure-istio-access-logs-for-a-selective-gateway)
 - [Configure Istio Access Logs for the Entire Mesh](#configure-istio-access-logs-for-the-entire-mesh)
+- [Filter Access logs](#filter-access-logs)
 
 ### Configure Istio Access Logs for a Namespace
 
@@ -226,3 +227,22 @@ Enable access logs for all individual proxies of the workloads and Istio Ingress
     kubectl -n istio-system get telemetries.telemetry.istio.io
     ```
 <!-- tabs:end -->
+
+### Filter Access Logs
+
+Often access logs emmited by Envoy does not contain data relevant for your observations, especially when the traffic is not based on a HTTP based protocol. In such situation you can directly configure the Envoys of Istio to filter out logs using a filter expression. For that you can leverage the same [Istio Telemetry API](https://istio.io/latest/docs/reference/config/telemetry/#AccessLogging) as you used to enable the access logs to also filter them. Here, you can define a filter expression leveraging the typical [Envoy attributes](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/advanced/attributes) to formulate which logs to **keep**.
+
+For example, to filter out all logs having no protocol defined (which is the case if they are not HTTP based), then you can filter these logs using a configuration like this:
+```yaml
+apiVersion: telemetry.istio.io/v1
+kind: Telemetry
+metadata:
+ name: access-config
+ namespace: istio-system
+spec:
+ accessLogging:
+ - filter:
+     expression: 'has(request.protocol)'
+   providers:
+   - name: stdout-json
+```

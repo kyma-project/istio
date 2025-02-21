@@ -1,0 +1,14 @@
+name: 'Get latest Istio Manager SHA'
+description: 'Get latest SHA of main build executed for Istio manager'
+outputs:
+  sha:
+    description: 'SHA of the latest Istio Manager main build'
+    value: ${{ steps.get-sha.outputs.sha }}
+runs:
+  using: "composite"
+  steps:
+    - name: Get SHA from latest run of main integration triggered by push
+      id: get-sha
+      shell: bash
+      run: |
+        echo "sha=5992da7730781a7c97aaffe75125af4b5599a213" >> "$GITHUB_OUTPUT"

@@ -1,0 +1,72 @@
+name: 'Kubernetes version compatibility check'
+description: 'Runs Kubernetes version compatibility check'
+inputs:
+  manager_image:
+    description: "Manager image used for test"
+    required: true
+  gardener_secret:
+    description: "Kubeconfig secret for Gardener"
+    required: true
+  gardener_provider:
+    description: "Gardener provider to use"
+    required: true
+  gardener_project_name:
+    required: true
+    description: "Name of the gardener project"
+  test_make_target:
+    description: "Make target for integration tests to run"
+    default: 'test-integration'
+runs:
+  using: "composite"
+  steps:
+    - name: Generate cluster name
+      shell: bash
+      run: echo CLUSTER_NAME=gha-$(echo $RANDOM | md5sum | head -c 6) >> $GITHUB_ENV
+    - uses: actions/setup-go@v5
+      with:
+        go-version-file: "go.mod"
+    - name: Prepare gardener kubeconfig
+      shell: bash
+      env:
+        GARDENER_TOKEN: ${{ inputs.gardener_secret }}
+      run: "${{ github.workspace }}/hack/ci/scripts-v2/gardener_kubeconfig.sh"
+    - name: Provision cluster
+      shell: bash
+      env:
+        GARDENER_KUBECONFIG: "${{ github.workspace }}/gardener_kubeconfig.yaml"
+        CLUSTER_KUBECONFIG: "${{ github.workspace }}/${{ env.CLUSTER_NAME }}_kubeconfig.yaml"
+        GARDENER_PROVIDER: ${{ inputs.gardener_provider }}
+        GARDENER_PROJECT_NAME: ${{ inputs.gardener_project_name }}
+        PIPELINE_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}
+      run: "${{ github.workspace }}/hack/ci/scripts-v2/provision-gardener.sh"
+    - name: Run integration tests
+      shell: bash
+      env:
+        IMG: ${{ inputs.manager_image }}
+        CLUSTER_KUBECONFIG: "${{ github.workspace }}/${{ env.CLUSTER_NAME }}_kubeconfig.yaml"
+      run: EXPORT_RESULT=true "${{ github.workspace }}/hack/ci/scripts-v2/integration-test-gardener.sh" ${{ inputs.test_make_target }}
+    - name: Check deprecations
+      run: |
+        set -eou pipefail
+        export KUBECONFIG="${{ github.workspace }}/${{ env.CLUSTER_NAME }}_kubeconfig.yaml"
+        GO111MODULE=on go install github.com/prometheus/prom2json/cmd/prom2json@v1.3.3
+        kubectl get --raw /metrics | prom2json | jq '.[] | select(.name=="apiserver_requested_deprecated_apis").metrics[].labels' > deprecations.txt
+      shell: bash
+    - uses: actions/upload-artifact@v4
+      with:
+        name: html-reports_${{ github.job }}_${{ github.action }}_${{ inputs.test_make_target }}
+        path: tests/integration/reports/
+    - name: Check that deprecations are empty
+      run: if [[ $(wc -l deprecations.txt | awk '{print $1}' ) != '0' ]]; then exit 1; fi
+      shell: bash
+    - uses: actions/upload-artifact@v4
+      with:
+        name: deprecation-report-${{ github.job }}-${{ inputs.test_make_target }}
+        path: deprecations.txt
+    - name: Deprovision cluster
+      if: always()
+      shell: bash
+      env:
+        GARDENER_KUBECONFIG: "${{ github.workspace }}/gardener_kubeconfig.yaml"
+        GARDENER_PROJECT_NAME: ${{ inputs.gardener_project_name }}
+      run: "${{ github.workspace }}/hack/ci/scripts-v2/deprovision-gardener.sh"

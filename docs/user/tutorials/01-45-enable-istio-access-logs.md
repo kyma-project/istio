@@ -1,4 +1,5 @@
 # Configure Istio Access Logs
+Use the Telemetry API to selectively enable the Istio access logs and filter them if needed.
 
 ## Prerequisites
 * You have the Istio module added.

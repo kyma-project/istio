@@ -1405,6 +1405,20 @@ spec:
                     maximum: 4294967295
                     minimum: 0
                     type: integer
+                  telemetry:
+                    description: Defines the telemetry configuration of Istio.
+                    properties:
+                      metrics:
+                        description: Istio telemetry configuration related to metrics
+                        properties:
+                          prometheusMerge:
+                            description: |-
+                              Defines whether the prometheusMerge feature is enabled. If yes, appropriate prometheus.io annotations will be added to all data plane pods to set up scraping.
+                              If these annotations already exist, they will be overwritten. With this option, the Envoy sidecar will merge Istio’s metrics with the application metrics.
+                              The merged metrics will be scraped from :15020/stats/prometheus.
+                            type: boolean
+                        type: object
+                    type: object
                 type: object
               experimental:
                 properties:

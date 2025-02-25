@@ -36,7 +36,8 @@ Use the Telemetry API to selectively enable Istio access logs. See:
 - [Configure Istio Access Logs for a Selective Workload](#configure-istio-access-logs-for-a-selective-workload)
 - [Configure Istio Access Logs for a Specific Gateway](#configure-istio-access-logs-for-a-selective-gateway)
 - [Configure Istio Access Logs for the Entire Mesh](#configure-istio-access-logs-for-the-entire-mesh)
-- [Filter Access logs](#filter-access-logs)
+
+To filter the enabled access logs, you can edit the Telemetry API by adding a filter expression. See [Filter Access logs](#filter-access-logs).
 
 ### Configure Istio Access Logs for a Namespace
 
@@ -231,9 +232,9 @@ Enable access logs for all individual proxies of the workloads and Istio Ingress
 
 ### Filter Access Logs
 
-Often access logs emmited by Envoy does not contain data relevant for your observations, especially when the traffic is not based on a HTTP based protocol. In such situation you can directly configure the Envoys of Istio to filter out logs using a filter expression. For that you can leverage the same [Istio Telemetry API](https://istio.io/latest/docs/reference/config/telemetry/#AccessLogging) as you used to enable the access logs to also filter them. Here, you can define a filter expression leveraging the typical [Envoy attributes](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/advanced/attributes) to formulate which logs to **keep**.
+Often, access logs emitted by Envoy do not contain data relevant to your observations, especially when the traffic is not based on an HTTP-based protocol. In such a situation, you can directly configure the Istio Envoys to filter out logs using a filter expression. To filter access logs, you can leverage the same [Istio Telemetry API](https://istio.io/latest/docs/reference/config/telemetry/#AccessLogging) that you used to enable them. To formulate which logs to **keep**, define a filter expression leveraging the typical [Envoy attributes](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/advanced/attributes).
 
-For example, to filter out all logs having no protocol defined (which is the case if they are not HTTP based), then you can filter these logs using a configuration like this:
+For example, to filter out all logs having no protocol defined (which is the case if they are not HTTP-based), you can use a configuration similar to this example:
 ```yaml
 apiVersion: telemetry.istio.io/v1
 kind: Telemetry

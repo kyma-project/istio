@@ -13,14 +13,10 @@ import (
 
 type ElbConfigMapEventHandler struct{}
 
-func (e ElbConfigMapEventHandler) Create(_ context.Context, _ event.TypedCreateEvent[client.Object], w workqueue.TypedRateLimitingInterface[controllerruntime.Request]) {
-	w = nil
-	return
+func (e ElbConfigMapEventHandler) Create(_ context.Context, _ event.TypedCreateEvent[client.Object], _ workqueue.TypedRateLimitingInterface[controllerruntime.Request]) {
 }
 
-func (e ElbConfigMapEventHandler) Update(_ context.Context, _ event.TypedUpdateEvent[client.Object], w workqueue.TypedRateLimitingInterface[controllerruntime.Request]) {
-	w = nil
-	return
+func (e ElbConfigMapEventHandler) Update(_ context.Context, _ event.TypedUpdateEvent[client.Object], _ workqueue.TypedRateLimitingInterface[controllerruntime.Request]) {
 }
 
 func (e ElbConfigMapEventHandler) Delete(_ context.Context, ev event.TypedDeleteEvent[client.Object], w workqueue.TypedRateLimitingInterface[controllerruntime.Request]) {
@@ -30,7 +26,5 @@ func (e ElbConfigMapEventHandler) Delete(_ context.Context, ev event.TypedDelete
 	return
 }
 
-func (e ElbConfigMapEventHandler) Generic(_ context.Context, _ event.TypedGenericEvent[client.Object], w workqueue.TypedRateLimitingInterface[controllerruntime.Request]) {
-	w = nil
-	return
+func (e ElbConfigMapEventHandler) Generic(_ context.Context, _ event.TypedGenericEvent[client.Object], _ workqueue.TypedRateLimitingInterface[controllerruntime.Request]) {
 }

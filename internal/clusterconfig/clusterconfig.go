@@ -129,7 +129,7 @@ func awsConfig(ctx context.Context, k8sClient client.Client) (ClusterConfigurati
 		return AWSNLBConfig, nil
 	} else {
 		var ingressGatewaySvc corev1.Service
-		err := k8sClient.Get(ctx, client.ObjectKey{Namespace: elbCmNamespace, Name: elbCmName}, &ingressGatewaySvc)
+		err := k8sClient.Get(ctx, client.ObjectKey{Namespace: "istio-system", Name: "istio-ingressgateway"}, &ingressGatewaySvc)
 		if err != nil {
 			if errors.IsNotFound(err) {
 				return ClusterConfiguration{}, nil

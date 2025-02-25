@@ -2,7 +2,6 @@ package clusterconfig_test
 
 import (
 	"context"
-
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
@@ -37,7 +36,7 @@ var _ = Describe("GetClusterProvider", func() {
 			},
 		}
 		client := createFakeClient(&node)
-		p, err := clusterconfig.GetClusterProvider(context.TODO(), client)
+		p, err := clusterconfig.GetClusterProvider(context.Background(), client)
 		Expect(err).To(BeNil())
 		Expect(p).To(Equal("other"))
 	})
@@ -50,14 +49,14 @@ var _ = Describe("GetClusterProvider", func() {
 			Spec: corev1.NodeSpec{ProviderID: "aws://asdadsads"},
 		}
 		client := createFakeClient(&node)
-		p, err := clusterconfig.GetClusterProvider(context.TODO(), client)
+		p, err := clusterconfig.GetClusterProvider(context.Background(), client)
 		Expect(err).To(BeNil())
 		Expect(p).To(Equal("aws"))
 	})
 	It("should return 'other' for clusters without nodes", func() {
 		//given
 		client := createFakeClient()
-		p, err := clusterconfig.GetClusterProvider(context.TODO(), client)
+		p, err := clusterconfig.GetClusterProvider(context.Background(), client)
 		Expect(err).To(BeNil())
 		Expect(p).To(Equal("other"))
 	})
@@ -81,7 +80,7 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			client := createFakeClient(&k3dNode)
 
 			//when
-			config, err := clusterconfig.EvaluateClusterConfiguration(context.TODO(), client)
+			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))
@@ -95,6 +94,97 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 					},
 				},
 			})))
+		})
+	})
+
+	Context("AWS", func() {
+		It("should use NLB when there is no elb-deprecated ConfigMap present", func() {
+			//given
+			awsNode := corev1.Node{
+				ObjectMeta: v1.ObjectMeta{
+					Name: "aws-123",
+				},
+
+				Spec: corev1.NodeSpec{
+					ProviderID: "aws://asdasdads",
+				},
+			}
+
+			client := createFakeClient(&awsNode)
+
+			//when
+			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client)
+
+			//then
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(config).To(Equal(clusterconfig.AWSNLBConfig))
+		})
+
+		It("should use NLB load balancer on AWS if the elb-deprecated ConfigMap is present,"+
+			" but the load balancer type was already switched", func() {
+			//given
+			awsNode := corev1.Node{
+				ObjectMeta: v1.ObjectMeta{
+					Name: "aws-123",
+				},
+				Spec: corev1.NodeSpec{
+					ProviderID: "aws://asdasdads",
+				},
+			}
+
+			elbDeprecatedConfigMap := corev1.ConfigMap{
+				ObjectMeta: v1.ObjectMeta{
+					Name:      "elb-deprecated",
+					Namespace: "istio-system",
+				},
+			}
+
+			ingressGatewayService := corev1.Service{
+				ObjectMeta: v1.ObjectMeta{
+					Name:      "istio-ingressgateway",
+					Namespace: "istio-system",
+					Annotations: map[string]string{
+						"service.beta.kubernetes.io/aws-load-balancer-type": "nlb",
+					},
+				},
+			}
+
+			client := createFakeClient(&awsNode, &elbDeprecatedConfigMap, &ingressGatewayService)
+
+			//when
+			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client)
+
+			//then
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(config).To(Equal(clusterconfig.AWSNLBConfig))
+		})
+
+		It("should use ELB load balancer on AWS if elb-deprecated ConfigMap is present", func() {
+			//given
+			awsNode := corev1.Node{
+				ObjectMeta: v1.ObjectMeta{
+					Name: "aws-123",
+				},
+				Spec: corev1.NodeSpec{
+					ProviderID: "aws://asdasdads",
+				},
+			}
+
+			elbDeprecatedConfigMap := corev1.ConfigMap{
+				ObjectMeta: v1.ObjectMeta{
+					Name:      "elb-deprecated",
+					Namespace: "istio-system",
+				},
+			}
+
+			client := createFakeClient(&awsNode, &elbDeprecatedConfigMap)
+
+			//when
+			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client)
+
+			//then
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(config).To(Equal(clusterconfig.ClusterConfiguration{}))
 		})
 	})
 
@@ -115,7 +205,7 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			client := createFakeClient(&gkeNode)
 
 			//when
-			config, err := clusterconfig.EvaluateClusterConfiguration(context.TODO(), client)
+			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))
@@ -146,7 +236,7 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			client := createFakeClient(&unkownNode)
 
 			//when
-			config, err := clusterconfig.EvaluateClusterConfiguration(context.TODO(), client)
+			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))
@@ -173,7 +263,7 @@ var _ = Describe("EvaluateClusterSize", func() {
 		client := createFakeClient(&k3dNode)
 
 		//when
-		size, err := clusterconfig.EvaluateClusterSize(context.TODO(), client)
+		size, err := clusterconfig.EvaluateClusterSize(context.Background(), client)
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))
@@ -197,7 +287,7 @@ var _ = Describe("EvaluateClusterSize", func() {
 		client := createFakeClient(&k3dNode)
 
 		//when
-		size, err := clusterconfig.EvaluateClusterSize(context.TODO(), client)
+		size, err := clusterconfig.EvaluateClusterSize(context.Background(), client)
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))
@@ -233,7 +323,7 @@ var _ = Describe("EvaluateClusterSize", func() {
 		client := createFakeClient(&k3dNode, &k3dNode2)
 
 		//when
-		size, err := clusterconfig.EvaluateClusterSize(context.TODO(), client)
+		size, err := clusterconfig.EvaluateClusterSize(context.Background(), client)
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))

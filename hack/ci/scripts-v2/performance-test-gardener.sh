@@ -9,11 +9,6 @@
 
 set -eo pipefail
 
-if [ $# -lt 1 ]; then
-    >&2 echo "Make target is required as parameter"
-    exit 1
-fi
-
 function check_required_vars() {
   local requiredVarMissing=false
   for var in "$@"; do

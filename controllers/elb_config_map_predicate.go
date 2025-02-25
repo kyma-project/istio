@@ -23,7 +23,6 @@ func (e ElbConfigMapEventHandler) Delete(_ context.Context, ev event.TypedDelete
 	if ev.Object.GetNamespace() == "istio-system" && ev.Object.GetName() == "elb-deprecated" {
 		w.Add(controllerruntime.Request{NamespacedName: types.NamespacedName{Namespace: namespace, Name: "default"}})
 	}
-	return
 }
 
 func (e ElbConfigMapEventHandler) Generic(_ context.Context, _ event.TypedGenericEvent[client.Object], _ workqueue.TypedRateLimitingInterface[controllerruntime.Request]) {

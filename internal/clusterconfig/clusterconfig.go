@@ -125,23 +125,26 @@ const (
 func awsConfig(ctx context.Context, k8sClient client.Client) (ClusterConfiguration, error) {
 	var elbDeprecated corev1.ConfigMap
 	err := k8sClient.Get(ctx, client.ObjectKey{Namespace: elbCmNamespace, Name: elbCmName}, &elbDeprecated)
-	if err != nil && errors.IsNotFound(err) {
-		return AWSNLBConfig, nil
-	} else {
-		var ingressGatewaySvc corev1.Service
-		err := k8sClient.Get(ctx, client.ObjectKey{Namespace: "istio-system", Name: "istio-ingressgateway"}, &ingressGatewaySvc)
-		if err != nil {
-			if errors.IsNotFound(err) {
-				return ClusterConfiguration{}, nil
-			}
-			return ClusterConfiguration{}, err
-		}
-
-		if value, ok := ingressGatewaySvc.Annotations[loadBalancerTypeAnnotation]; ok && value == nlbLoadBalancerType {
+	if err != nil {
+		if errors.IsNotFound(err) {
 			return AWSNLBConfig, nil
 		}
 		return ClusterConfiguration{}, err
 	}
+
+	var ingressGatewaySvc corev1.Service
+	err = k8sClient.Get(ctx, client.ObjectKey{Namespace: "istio-system", Name: "istio-ingressgateway"}, &ingressGatewaySvc)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return ClusterConfiguration{}, nil
+		}
+		return ClusterConfiguration{}, err
+	}
+
+	if value, ok := ingressGatewaySvc.Annotations[loadBalancerTypeAnnotation]; ok && value == nlbLoadBalancerType {
+		return AWSNLBConfig, nil
+	}
+	return ClusterConfiguration{}, err
 }
 
 func EvaluateClusterConfiguration(ctx context.Context, k8sClient client.Client) (ClusterConfiguration, error) {

@@ -4,7 +4,7 @@ name: Schedule Daily
 
 on:
   schedule:
-    - cron: '0 10 * * *' # Run every day at 04:00 AM
+    - cron: '0 13 * * *' # Run every day at 04:00 AM
 
 jobs:
   get-sha:
@@ -36,7 +36,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          manager_image: "europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager:${{ steps.get-sha.outputs.sha }}"
+          manager_image: "europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager:${{ needs.get-sha.outputs.sha }}"
           gardener_secret: ${{ secrets.GARDENER_TOKEN }}
           gardener_project_name: ${{ vars.GARDENER_PROJECT_NAME }}
           gardener_provider: aws

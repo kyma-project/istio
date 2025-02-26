@@ -318,7 +318,7 @@ var _ = Describe("Istio Controller", func() {
 			Expect(err).To(Not(HaveOccurred()))
 
 			Expect(updatedIstioCR.Status.State).Should(Equal(operatorv1alpha2.Ready))
-			Expect(updatedIstioCR.Annotations["operator.kyma-project.io/lastAppliedConfiguration"]).To(ContainSubstring("{\"config\":{\"numTrustedProxies\":2},"))
+			Expect(updatedIstioCR.Annotations["operator.kyma-project.io/lastAppliedConfiguration"]).To(ContainSubstring("{\"config\":{\"numTrustedProxies\":2,\"telemetry\":{\"metrics\":{}}},"))
 
 			Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
 			Expect(*updatedIstioCR.Status.Conditions).To(HaveLen(1))

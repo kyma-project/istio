@@ -9,20 +9,22 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
 var _ = Describe("Prometheus Merge Predicate", func() {
 
-	client := fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(&v1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: "istio-system",
-			Name:      "istio",
-		},
-		Data: map[string]string{
-			"mesh": "|-\n    defaultConfig:\n      statusPort: 15020\n",
-		},
-	}).Build()
+	client := makeClientWithObjects(
+		&v1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "istio-system",
+				Name:      "istio",
+			},
+			Data: map[string]string{
+				"mesh": "|-\n    defaultConfig:\n      statusPort: 15020\n",
+			},
+		})
 
 	Context("Matches", func() {
 		It("should evaluate to false when new an old prometheusMerge value is same", func() {
@@ -198,5 +200,42 @@ var _ = Describe("Prometheus Merge Predicate", func() {
 			Expect(predicate).NotTo(BeNil())
 			Expect(predicate.Matches(pod)).To(BeFalse())
 		})
+		It("should use the status port configured in the istio default config", func() {
+			client := makeClientWithObjects(&v1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "istio-system",
+					Name:      "istio",
+				},
+				Data: map[string]string{
+					"mesh": "|-\n    defaultConfig:\n      statusPort: 15080\n",
+				},
+			})
+
+			predicate, err := NewPrometheusMergeRestartPredicate(context.Background(), client, &operatorv1alpha2.Istio{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						labels.LastAppliedConfiguration: `{"config":{"telemetry":{"metrics":{"prometheusMerge":true}}}}`,
+					},
+				},
+				Spec: operatorv1alpha2.IstioSpec{
+					Config: operatorv1alpha2.Config{
+						Telemetry: operatorv1alpha2.Telemetry{
+							Metrics: operatorv1alpha2.Metrics{
+								PrometheusMerge: false,
+							},
+						},
+					},
+				},
+			})
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(predicate.statusPort).To(Equal("15080"))
+
+		})
 	})
 })
+
+func makeClientWithObjects(objects ...client.Object) client.Client {
+
+	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build()
+}

@@ -1,25 +1,42 @@
 package predicates
 
 import (
+	"context"
+	"fmt"
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/configuration"
+	"istio.io/istio/pkg/config/mesh"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"strconv"
+	"strings"
 )
+
+const defaultPort int32 = 15020
 
 type PrometheusMergeRestartPredicate struct {
 	oldPrometheusMerge bool
 	newPrometheusMerge bool
+	statusPort         string
 }
 
-func NewPrometheusMergeRestartPredicate(istioCR *v1alpha2.Istio) (*PrometheusMergeRestartPredicate, error) {
+func NewPrometheusMergeRestartPredicate(ctx context.Context, client client.Client, istioCR *v1alpha2.Istio) (*PrometheusMergeRestartPredicate, error) {
 	lastAppliedConfig, err := configuration.GetLastAppliedConfiguration(istioCR)
 	if err != nil {
 		return nil, err
 	}
 
+	statusPort, err := getStatusPort(ctx, client)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get status port: %v", err)
+	}
+
 	return &PrometheusMergeRestartPredicate{
 		oldPrometheusMerge: lastAppliedConfig.IstioSpec.Config.Telemetry.Metrics.PrometheusMerge,
 		newPrometheusMerge: istioCR.Spec.Config.Telemetry.Metrics.PrometheusMerge,
+		statusPort:         strconv.FormatInt(int64(statusPort), 10),
 	}, nil
 }
 
@@ -30,9 +47,9 @@ func (p PrometheusMergeRestartPredicate) Matches(pod v1.Pod) bool {
 	}
 
 	annotations := pod.GetAnnotations()
-	const (
+	var (
 		prometheusMergePath = "/stats/prometheus"
-		prometheusMergePort = "15020"
+		prometheusMergePort = p.statusPort
 	)
 
 	hasPrometheusMergePath := annotations["prometheus.io/path"] == prometheusMergePath
@@ -49,4 +66,37 @@ func (p PrometheusMergeRestartPredicate) Matches(pod v1.Pod) bool {
 
 func (p PrometheusMergeRestartPredicate) MustMatch() bool {
 	return false
+}
+
+// Gets statusPort directly from already merged IstioOperator CR, for now it is 15020 by default and not configurable,
+// but once it is configurable, it will fetch the configured statusPort from the CR directly
+func getStatusPort(ctx context.Context, client client.Client) (int32, error) {
+	istioConfigMap := &v1.ConfigMap{}
+
+	var err = client.Get(ctx, types.NamespacedName{Namespace: "istio-system", Name: "istio"}, istioConfigMap)
+	if err != nil {
+		return defaultPort, fmt.Errorf("could not get istio configmap: %w", err)
+	}
+
+	meshConfigYAML, hasMesh := istioConfigMap.Data["mesh"]
+	if !hasMesh {
+		return defaultPort, fmt.Errorf("configmap doesn't contain mesh config")
+	}
+
+	// Clean up the YAML string - remove any leading indicators like "|-"
+	meshConfigYAML = strings.TrimPrefix(meshConfigYAML, "|-")
+	meshConfigYAML = strings.TrimSpace(meshConfigYAML)
+
+	meshConfig, err := mesh.ApplyMeshConfigDefaults(meshConfigYAML)
+
+	if err != nil {
+		return defaultPort, fmt.Errorf("failed to parse mesh configuration YAML: %v", err)
+	}
+
+	if meshConfig.DefaultConfig.StatusPort == 0 {
+		return defaultPort, nil
+
+	}
+
+	return meshConfig.DefaultConfig.StatusPort, nil
 }

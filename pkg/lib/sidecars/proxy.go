@@ -49,7 +49,7 @@ func (p *ProxyRestart) RestartProxies(ctx context.Context, expectedImage predica
 		p.logger.Error(err, "Failed to create restart compatibility predicate")
 		return []restart.RestartWarning{}, false, err
 	}
-	prometheusMergePredicate, err := predicates.NewPrometheusMergeRestartPredicate(istioCR)
+	prometheusMergePredicate, err := predicates.NewPrometheusMergeRestartPredicate(ctx, p.k8sClient, istioCR)
 	if err != nil {
 		p.logger.Error(err, "Failed to create restart prometheusMerge predicate")
 		return []restart.RestartWarning{}, false, err

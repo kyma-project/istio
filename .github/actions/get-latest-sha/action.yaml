@@ -1,0 +1,32 @@
+name: 'Get latest Istio Manager SHA'
+description: 'Get latest SHA of main build executed for Istio manager'
+outputs:
+  sha:
+    description: 'SHA of the latest Istio Manager main build'
+    value: ${{ steps.get-sha.outputs.sha }}
+runs:
+  using: "composite"
+  steps:
+    - name: Get SHA from latest run of main workflow triggered by push
+      id: get-sha
+      uses: actions/github-script@v7
+      with:
+        script: |
+          if (context.eventName !== 'schedule') {
+            core.setOutput('sha', context.sha);
+            return;
+          }
+
+          const { data } = await github.rest.actions.listWorkflowRuns({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            workflow_id: 'post-main-workflow.yaml',
+            branch: 'main',
+            per_page: 40 
+          });
+          const pushRuns = data.workflow_runs.filter(run => run.event === 'push');
+          if (pushRuns.length === 0) {
+            throw new Error('No successful push runs found');
+          }
+          const latestRun = pushRuns[0];
+          core.setOutput('sha', latestRun.head_sha);

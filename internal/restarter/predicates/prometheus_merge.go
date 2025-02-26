@@ -2,7 +2,6 @@ package predicates
 
 import (
 	"context"
-	"fmt"
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/configuration"
 	"istio.io/istio/pkg/config/mesh"
@@ -13,7 +12,7 @@ import (
 	"strings"
 )
 
-const defaultPort int32 = 15020
+const defaultStatusPort int32 = 15020
 
 type PrometheusMergeRestartPredicate struct {
 	oldPrometheusMerge bool
@@ -27,11 +26,7 @@ func NewPrometheusMergeRestartPredicate(ctx context.Context, client client.Clien
 		return nil, err
 	}
 
-	statusPort, err := getStatusPort(ctx, client)
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to get status port: %v", err)
-	}
+	statusPort := getStatusPort(ctx, client)
 
 	return &PrometheusMergeRestartPredicate{
 		oldPrometheusMerge: lastAppliedConfig.IstioSpec.Config.Telemetry.Metrics.PrometheusMerge,
@@ -70,17 +65,17 @@ func (p PrometheusMergeRestartPredicate) MustMatch() bool {
 
 // Gets statusPort directly from already merged IstioOperator CR, for now it is 15020 by default and not configurable,
 // but once it is configurable, it will fetch the configured statusPort from the CR directly
-func getStatusPort(ctx context.Context, client client.Client) (int32, error) {
+func getStatusPort(ctx context.Context, client client.Client) int32 {
 	istioConfigMap := &v1.ConfigMap{}
 
 	var err = client.Get(ctx, types.NamespacedName{Namespace: "istio-system", Name: "istio"}, istioConfigMap)
 	if err != nil {
-		return defaultPort, fmt.Errorf("could not get istio configmap: %w", err)
+		return defaultStatusPort
 	}
 
 	meshConfigYAML, hasMesh := istioConfigMap.Data["mesh"]
 	if !hasMesh {
-		return defaultPort, fmt.Errorf("configmap doesn't contain mesh config")
+		return defaultStatusPort
 	}
 
 	// Clean up the YAML string - remove any leading indicators like "|-"
@@ -90,13 +85,13 @@ func getStatusPort(ctx context.Context, client client.Client) (int32, error) {
 	meshConfig, err := mesh.ApplyMeshConfigDefaults(meshConfigYAML)
 
 	if err != nil {
-		return defaultPort, fmt.Errorf("failed to parse mesh configuration YAML: %v", err)
+		return defaultStatusPort
 	}
 
 	if meshConfig.DefaultConfig.StatusPort == 0 {
-		return defaultPort, nil
+		return defaultStatusPort
 
 	}
 
-	return meshConfig.DefaultConfig.StatusPort, nil
+	return meshConfig.DefaultConfig.StatusPort
 }

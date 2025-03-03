@@ -38,32 +38,30 @@ The `telemetry` and `metrics` field will show up in the CR when retrieved from t
 
 ### Sample Configuration
 
-1.
-```
-apiVersion: istio.operator.kyma-project.io/v1alpha2
-kind: Istio
-metadata:
-  name: default
+- The following example uses the default value of `false` for the `prometheusMerge` option:
+  ```
+  apiVersion: istio.operator.kyma-project.io/v1alpha2
+  kind: Istio
+  metadata:
+    name: default
+  
+  ```
 
-```
-This will use the default value of `false` for the `prometheusMerge` option.
-
-2.
-```
-apiVersion: istio.operator.kyma-project.io/v1alpha2
-kind: Istio
-metadata:
-  name: default
-spec:
-  config:
-    telemetry:
-      metrics:
-        prometheusMerge: true
-```
+- The following example sets the value of `prometheusMerge` to `true`:
+  ```
+  apiVersion: istio.operator.kyma-project.io/v1alpha2
+  kind: Istio
+  metadata:
+    name: default
+  spec:
+    config:
+      telemetry:
+        metrics:
+          prometheusMerge: true
+  ```
 
 Restarts to user workloads happen when the `prometheusMerge` field in the `lastAppliedConfiguration` of Kyma Istio CR module differs from the current `prometheusMerge` in the CR. Additionally, we check and only restart Pods that have incorrect annotations.
 
-When `prometheusMerge` is set to `true`, user workloads will only be restarted when they are missing the `prometheus.io/path:
-The port value may change depending on the default [statusPort](https://istio.io/latest/docs/reference/config/istio.mesh.v1alpha1/#ProxyConfig-status_port) configuration.
+When `prometheusMerge` is set to `true`, user workloads will only be restarted when they are missing the `prometheus.io/path:/stats/prometheus` and `prometheus.io/port: 15020` annotations. The port value may change depending on the default [statusPort](https://istio.io/latest/docs/reference/config/istio.mesh.v1alpha1/#ProxyConfig-status_port) configuration.
 
 If `prometheusMerge` is set to `false`, user workloads are restarted only when they have the `prometheus.io/path: /stats/prometheus` and `prometheus.io/port: 15020` annotations.

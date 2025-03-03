@@ -98,7 +98,9 @@ var AWSNLBConfig = ClusterConfiguration{
 			"gateways": map[string]interface{}{
 				"istio-ingressgateway": map[string]interface{}{
 					"serviceAnnotations": map[string]string{
-						"service.beta.kubernetes.io/aws-load-balancer-type": "nlb",
+						loadBalancerTypeAnnotation:          loadBalancerType,
+						loadBalancerSchemeAnnotation:        loadBalancerScheme,
+						loadBalancerNlbTargetTypeAnnotation: loadBalancerNlbTargetType,
 					},
 				},
 			},
@@ -110,9 +112,39 @@ const (
 	elbCmName      = "elb-deprecated"
 	elbCmNamespace = "istio-system"
 
-	loadBalancerTypeAnnotation = "service.beta.kubernetes.io/aws-load-balancer-type"
-	nlbLoadBalancerType        = "nlb"
+	loadBalancerSchemeAnnotation        = "service.beta.kubernetes.io/aws-load-balancer-scheme"
+	loadBalancerScheme                  = "internet-facing"
+	loadBalancerNlbTargetTypeAnnotation = "service.beta.kubernetes.io/aws-load-balancer-nlb-target-type"
+	loadBalancerNlbTargetType           = "instance"
+	loadBalancerTypeAnnotation          = "service.beta.kubernetes.io/aws-load-balancer-type"
+	loadBalancerType                    = "external"
 )
+
+func ShouldUseNLB(ctx context.Context, k8sClient client.Client) (bool, error) {
+	var elbDeprecated corev1.ConfigMap
+	err := k8sClient.Get(ctx, client.ObjectKey{Namespace: elbCmNamespace, Name: elbCmName}, &elbDeprecated)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return true, nil
+		}
+		return false, err
+	}
+
+	var ingressGatewaySvc corev1.Service
+	err = k8sClient.Get(ctx, client.ObjectKey{Namespace: "istio-system", Name: "istio-ingressgateway"}, &ingressGatewaySvc)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	if value, ok := ingressGatewaySvc.Annotations[loadBalancerTypeAnnotation]; ok && value == loadBalancerType {
+		return true, nil
+	}
+
+	return false, nil
+}
 
 // awsConfig returns config specific to AWS cluster.
 // The function evaluates whether to use NLB or ELB load balancer, based on:
@@ -123,27 +155,15 @@ const (
 // to check if it was not already set to "nlb".
 // This safeguards against switching back to ELB.
 func awsConfig(ctx context.Context, k8sClient client.Client) (ClusterConfiguration, error) {
-	var elbDeprecated corev1.ConfigMap
-	err := k8sClient.Get(ctx, client.ObjectKey{Namespace: elbCmNamespace, Name: elbCmName}, &elbDeprecated)
+	useNLB, err := ShouldUseNLB(ctx, k8sClient)
 	if err != nil {
-		if errors.IsNotFound(err) {
-			return AWSNLBConfig, nil
-		}
 		return ClusterConfiguration{}, err
 	}
 
-	var ingressGatewaySvc corev1.Service
-	err = k8sClient.Get(ctx, client.ObjectKey{Namespace: "istio-system", Name: "istio-ingressgateway"}, &ingressGatewaySvc)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			return ClusterConfiguration{}, nil
-		}
-		return ClusterConfiguration{}, err
-	}
-
-	if value, ok := ingressGatewaySvc.Annotations[loadBalancerTypeAnnotation]; ok && value == nlbLoadBalancerType {
+	if useNLB {
 		return AWSNLBConfig, nil
 	}
+
 	return ClusterConfiguration{}, err
 }
 

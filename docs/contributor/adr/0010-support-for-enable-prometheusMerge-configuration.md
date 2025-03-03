@@ -29,6 +29,8 @@ spec:
 
 The `telemetry` and `metrics` fields are introduced here to account for future plans to introduce more feature from the Istio Telemetry API into the CR.
 
+User workloads need to be restarted whenever `prometheusMerge` changes, since the prometheus metrics annotations have to be updated with this configuration change.
+
 ## Consequences
 Istio CustomResourceDefinition will be extended with an additional configuration field of `telemetry.metrics.prometheusMerge` that will allow for configuration of the `prometheusMerge` setting in Istio Mesh Config. The field will be an optional configuration with the default value of `false`.
 
@@ -60,4 +62,9 @@ spec:
 ```
 This will set the value of `prometheusMerge` to `true`.
 
+Restarts to user workloads happen when the `prometheusMerge` field in the `lastAppliedConfiguration` of Kyma Istio CR module differs from the current `prometheusMerge` in the CR. Additionally, we check and only restart Pods with incorrect annotations set.
 
+When `prometheusMerge` is set to `true`, user workloads will only be restarted when they are missing the `prometheus.io/path:
+/stats/prometheus` and `prometheus.io/port: 15020` annotations. Note that the port value may change depending on the default [statusPort](https://istio.io/latest/docs/reference/config/istio.mesh.v1alpha1/#ProxyConfig-status_port) configuration.
+
+When `prometheusMerge` is set to `false`, user workloads will only be restarted when they have the `prometheus.io/path: /stats/prometheus` and `prometheus.io/port: 15020` annotations.

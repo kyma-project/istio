@@ -62,6 +62,6 @@ The `telemetry` and `metrics` field will show up in the CR when retrieved from t
 
 Restarts to user workloads happen when the `prometheusMerge` field in the `lastAppliedConfiguration` of Kyma Istio CR module differs from the current `prometheusMerge` in the CR. Additionally, we check and only restart Pods that have incorrect annotations.
 
-When `prometheusMerge` is set to `true`, user workloads will only be restarted when they are missing the `prometheus.io/path:/stats/prometheus` and `prometheus.io/port: 15020` annotations. The port value may change depending on the default [statusPort](https://istio.io/latest/docs/reference/config/istio.mesh.v1alpha1/#ProxyConfig-status_port) configuration.
+If `prometheusMerge` is set to `true`, user workloads are restarted only when they are missing the `prometheus.io/path:/stats/prometheus` and `prometheus.io/port: 15020` annotations. The port value may change depending on the default [statusPort](https://istio.io/latest/docs/reference/config/istio.mesh.v1alpha1/#ProxyConfig-status_port) configuration.
 
 If `prometheusMerge` is set to `false`, user workloads are restarted only when they have the `prometheus.io/path: /stats/prometheus` and `prometheus.io/port: 15020` annotations.

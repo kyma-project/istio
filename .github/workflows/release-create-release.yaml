@@ -1,7 +1,8 @@
 name: "Create Release"
 
 permissions:
-  id-token: write # This is required for requesting the JWT token
+  id-token: write # This is required by image-builder
+  contents: write # Read is required by image-builder, write is required to push artifactg
 
 on:
   workflow_dispatch:

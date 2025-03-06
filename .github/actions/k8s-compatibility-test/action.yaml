@@ -1,7 +1,7 @@
 name: 'Kubernetes version compatibility check'
 description: 'Runs Kubernetes version compatibility check'
 inputs:
-  operator-image-name:
+  operator_image_name:
     description: 'Operator image used for test'
     required: true
   test_make_target:
@@ -20,11 +20,11 @@ runs:
     - name: Run integration tests
       run: |
         if [ "${{ github.event_name }}" == "pull_request" ]; then
-          k3d image import ${{ inputs.operator-image-name }}
+          k3d image import ${{ inputs.operator_image_name }}
         fi
 
         kubectl config use-context k3d-k3s-default
-        EXPORT_RESULT=true IMG=${{ inputs.operator-image-name }} make ${{ inputs.test_make_target }}
+        EXPORT_RESULT=true IMG=${{ inputs.operator_image_name}} make ${{ inputs.test_make_target }}
       shell: bash
     - name: Check deprecations
       run: |

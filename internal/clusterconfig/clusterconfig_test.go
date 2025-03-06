@@ -146,7 +146,7 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 					Annotations: map[string]string{
 						"service.beta.kubernetes.io/aws-load-balancer-scheme":          "internet-facing",
 						"service.beta.kubernetes.io/aws-load-balancer-nlb-target-type": "instance",
-						"service.beta.kubernetes.io/aws-load-balancer-type":            "external",
+						"service.beta.kubernetes.io/aws-load-balancer-type":            "nlb",
 					},
 				},
 			}

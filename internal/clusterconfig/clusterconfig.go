@@ -117,7 +117,7 @@ const (
 	loadBalancerNlbTargetTypeAnnotation = "service.beta.kubernetes.io/aws-load-balancer-nlb-target-type"
 	loadBalancerNlbTargetType           = "instance"
 	loadBalancerTypeAnnotation          = "service.beta.kubernetes.io/aws-load-balancer-type"
-	loadBalancerType                    = "external"
+	loadBalancerType                    = "nlb"
 )
 
 func ShouldUseNLB(ctx context.Context, k8sClient client.Client) (bool, error) {

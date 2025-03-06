@@ -3,7 +3,6 @@ package predicates
 import (
 	"context"
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/configuration"
 	"istio.io/istio/pkg/config/mesh"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -15,31 +14,20 @@ import (
 const defaultStatusPort int32 = 15020
 
 type PrometheusMergeRestartPredicate struct {
-	oldPrometheusMerge bool
-	newPrometheusMerge bool
-	statusPort         string
+	prometheusMerge bool
+	statusPort      string
 }
 
 func NewPrometheusMergeRestartPredicate(ctx context.Context, client client.Client, istioCR *v1alpha2.Istio) (*PrometheusMergeRestartPredicate, error) {
-	lastAppliedConfig, err := configuration.GetLastAppliedConfiguration(istioCR)
-	if err != nil {
-		return nil, err
-	}
-
 	statusPort := getStatusPort(ctx, client)
 
 	return &PrometheusMergeRestartPredicate{
-		oldPrometheusMerge: lastAppliedConfig.IstioSpec.Config.Telemetry.Metrics.PrometheusMerge,
-		newPrometheusMerge: istioCR.Spec.Config.Telemetry.Metrics.PrometheusMerge,
-		statusPort:         strconv.FormatInt(int64(statusPort), 10),
+		prometheusMerge: istioCR.Spec.Config.Telemetry.Metrics.PrometheusMerge,
+		statusPort:      strconv.FormatInt(int64(statusPort), 10),
 	}, nil
 }
 
 func (p PrometheusMergeRestartPredicate) Matches(pod v1.Pod) bool {
-	// No change in configuration, no restart needed
-	if p.oldPrometheusMerge == p.newPrometheusMerge {
-		return false
-	}
 
 	annotations := pod.GetAnnotations()
 	var (
@@ -51,7 +39,7 @@ func (p PrometheusMergeRestartPredicate) Matches(pod v1.Pod) bool {
 	hasPrometheusMergePort := annotations["prometheus.io/port"] == prometheusMergePort
 
 	// When enabling PrometheusMerge, restart if prometheusMerge annotations are missing or incorrect
-	if p.newPrometheusMerge {
+	if p.prometheusMerge {
 		return !hasPrometheusMergePath || !hasPrometheusMergePort
 	}
 

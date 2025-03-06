@@ -1,8 +1,8 @@
 name: Post Main Workflow
 
 permissions:
-  id-token: write # This is required for requesting the JWT token
-  contents: read # This is required for actions/checkouts
+  id-token: write # This is required by image-builder
+  contents: read # This is required by image-builder
 
 on:
   push:

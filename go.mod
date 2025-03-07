@@ -1,6 +1,7 @@
 module github.com/kyma-project/istio/operator
 
 go 1.22.5
+toolchain go1.23.7
 
 // Client-go does not handle different versions of mergo due to some breaking changes - use the matching version
 replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.5
@@ -21,7 +22,7 @@ require (
 	github.com/vrischmann/envconfig v1.4.1
 	gitlab.com/rodrigoodhin/gocure v0.0.0-20220718065339-f14dfe79276a
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
-	golang.org/x/time v0.10.0
+	golang.org/x/time v0.11.0
 	google.golang.org/protobuf v1.36.5
 	gopkg.in/yaml.v3 v3.0.1
 	istio.io/api v1.24.2-0.20241206152109-43afb8563706

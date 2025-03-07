@@ -235,6 +235,7 @@ func (r *IstioReconciler) finishReconcile(ctx context.Context, istioCR *operator
 // +kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=namespaces,verbs=get;create;update;patch
 // +kubebuilder:rbac:groups="",resources=nodes,verbs=get;list
+// +kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch
 func (r *IstioReconciler) SetupWithManager(mgr ctrl.Manager, rateLimiter RateLimiter) error {
 	r.Config = mgr.GetConfig()
 
@@ -247,6 +248,7 @@ func (r *IstioReconciler) SetupWithManager(mgr ctrl.Manager, rateLimiter RateLim
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&operatorv1alpha2.Istio{}).
+		Watches(&corev1.ConfigMap{}, ElbConfigMapEventHandler{}).
 		WithEventFilter(predicate.Or[client.Object](predicate.GenerationChangedPredicate{}, predicate.AnnotationChangedPredicate{})).
 		WithOptions(controller.Options{
 			RateLimiter: workqueue.NewTypedMaxOfRateLimiter[ctrl.Request](

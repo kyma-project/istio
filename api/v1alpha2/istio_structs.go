@@ -21,6 +21,10 @@ type Config struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum=Local;Cluster
 	GatewayExternalTrafficPolicy *string `json:"gatewayExternalTrafficPolicy,omitempty"`
+
+	// Defines the telemetry configuration of Istio.
+	// +kubebuilder:validation:Optional
+	Telemetry Telemetry `json:"telemetry,omitempty"`
 }
 
 type Components struct {

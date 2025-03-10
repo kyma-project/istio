@@ -28,7 +28,6 @@ runs:
       env:
         GARDENER_TOKEN: ${{ inputs.gardener_secret }}
       run: "${{ github.workspace }}/hack/ci/scripts-v2/gardener_kubeconfig.sh"
-#   todo: czy tutaj brakuje       - uses: actions/setup-go@v5 ?
     - name: Provision cluster
       shell: bash
       env:
@@ -71,7 +70,7 @@ runs:
         GARDENER_KUBECONFIG: "${{ github.workspace }}/gardener_kubeconfig.yaml"
         GARDENER_PROJECT_NAME: ${{ inputs.gardener_project_name }}
       run: "${{ github.workspace }}/hack/ci/scripts-v2/deprovision-gardener.sh"
-    - name: Check failure
+    - name: Checks for failure
       if: failure()
       shell: bash
       run: exit 1

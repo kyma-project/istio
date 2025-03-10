@@ -1,12 +1,19 @@
 module-name: istio
-protecode:
-  - europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager:e39c427025ea65fe38f5251cb5bfa0781897f592
+kind: kyma
+bdba:
+  - europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager:c1c1e67be8e70dd805c8dad187e388c6dfa88bd2
   - europe-docker.pkg.dev/kyma-project/prod/external/istio/install-cni:1.24.2-distroless
   - europe-docker.pkg.dev/kyma-project/prod/external/istio/proxyv2:1.24.2-distroless
   - europe-docker.pkg.dev/kyma-project/prod/external/istio/pilot:1.24.2-distroless
-whitesource:
+mend:
   language: golang-mod
   subprojects: false
+  exclude:
+    - "**/tests/**"
+    - "**/test/**"
+    - "**/*_test.go"
+checkmarx-one:
+  preset: go-default
   exclude:
     - "**/tests/**"
     - "**/test/**"

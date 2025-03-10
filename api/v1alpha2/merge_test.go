@@ -2,9 +2,12 @@ package v1alpha2
 
 import (
 	"encoding/json"
+	"testing"
+
 	"github.com/kyma-project/istio/operator/internal/tests"
 	"github.com/onsi/ginkgo/v2/types"
 	"google.golang.org/protobuf/types/known/structpb"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 	meshv1alpha1 "istio.io/api/mesh/v1alpha1"
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
 	"istio.io/istio/operator/pkg/values"
@@ -14,7 +17,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
-	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -371,6 +373,41 @@ var _ = Describe("Merge", func() {
 		numTrustedProxies, exists := meshConfig.GetPath("defaultConfig.gatewayTopology.numTrustedProxies")
 		Expect(exists).To(BeTrue())
 		Expect(numTrustedProxies).To(Equal(float64(5)))
+	})
+
+	It("should set prometheusMerge on IstioOperator Telemetry Metrics to true when meshConfig has a enablePrometheusMerge with true", func() {
+		// given
+		m := &meshv1alpha1.MeshConfig{
+			EnablePrometheusMerge: wrapperspb.Bool(false),
+		}
+		meshConfigRaw := convert(m)
+
+		iop := iopv1alpha1.IstioOperator{
+			Spec: iopv1alpha1.IstioOperatorSpec{
+				MeshConfig: meshConfigRaw,
+			},
+		}
+		istioCR := Istio{Spec: IstioSpec{Config: Config{
+			Telemetry: Telemetry{
+				Metrics: Metrics{
+					PrometheusMerge: true,
+				},
+			},
+		}}}
+
+		// when
+		out, err := istioCR.MergeInto(iop)
+
+		// then
+		Expect(err).ShouldNot(HaveOccurred())
+
+		meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		enabledPrometheusMerge, exists := meshConfig.GetPath("enablePrometheusMerge")
+		Expect(exists).To(BeTrue())
+		Expect(enabledPrometheusMerge).To(BeTrue())
+
 	})
 
 	It("should create IngressGateway overlay with externalTrafficPolicy set to Local", func() {

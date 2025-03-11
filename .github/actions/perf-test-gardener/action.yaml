@@ -58,11 +58,31 @@ runs:
     - name: Check threshold breaches on test without sidecar
       if: always()
       shell: bash
-      run: if [[ $(cat tests/performance/summary-no-sidecar.html | grep "<h4>Breached Thresholds</h4>" -A1 | grep -oe ">\d<" | sed 's/[<>]//g') -ne 0 ]]; then echo $(cat tests/performance/summary-sidecar.html | grep "<h4>Breached Thresholds</h4>" -A1 | grep -oe ">\d<" | sed 's/[<>]//g') ; fi
+      run: |
+        echo "Reading summary-no-sidecar.html..."
+        cat tests/performance/summary-no-sidecar.html
+        echo "Checking for breached thresholds without sidecar..."
+        thresholds_no_sidecar=$(cat tests/performance/summary-no-sidecar.html | grep "<h4>Breached Thresholds</h4>" -A1 | grep -oe ">\d<" | sed 's/[<>]//g')
+        echo "Threshold count without sidecar: $thresholds_no_sidecar"
+        if [[ $thresholds_no_sidecar -ne 0 ]]; then
+        echo "Breaches found."
+        else
+        echo "No breaches found without sidecar."
+        fi
     - name: Check threshold breaches on test with sidecar
       if: always()
       shell: bash
-      run: if [[ $(cat tests/performance/summary-sidecar.html | grep "<h4>Breached Thresholds</h4>" -A1 | grep -oe ">\d<" | sed 's/[<>]//g') -ne 0 ]]; then echo echo $(cat tests/performance/summary-sidecar.html | grep "<h4>Breached Thresholds</h4>" -A1 | grep -oe ">\d<" | sed 's/[<>]//g') ; fi
+      run: |
+        echo "Reading summary-sidecar.html..."
+        cat tests/performance/summary-sidecar.html
+        echo "Checking for breached thresholds with sidecar..."
+        thresholds_sidecar=$(cat tests/performance/summary-sidecar.html | grep "<h4>Breached Thresholds</h4>" -A1 | grep -oe ">\d<" | sed 's/[<>]//g')
+        echo "Threshold count with sidecar: $thresholds_sidecar"
+        if [[ $thresholds_sidecar -ne 0 ]]; then
+        echo "Breaches found."
+        else
+        echo "No breaches found with sidecar."
+        fi
     - name: Deprovision cluster
       if: always()
       shell: bash

@@ -58,28 +58,7 @@ runs:
     - name: Check threshold breaches on test without sidecar
       if: always()
       shell: bash
-      run: |
-        echo "Reading summary-no-sidecar.html..."
-        file_content=$(cat tests/performance/summary-no-sidecar.html)
-        echo "Zawartość pliku:"
-        echo "$file_content"
-        grep_result=$(echo "$file_content" | grep "<h4>Breached Thresholds</h4>" -A1)
-        echo "Wynik grep dla '<h4>Breached Thresholds</h4>' -A1:"
-        echo "$grep_result"
-        grep_o_result=$(echo "$grep_result" | grep -o ">[0-9]<")
-        echo "Wynik grep -o dla '>[0-9]<'"
-        echo "$grep_o_result"
-        final_result=$(echo "$grep_o_result" | sed 's/[<>]//g')
-        echo "Wynik sed 's/[<>]//g':"
-        echo "$final_result"
-        echo "Threshold count without sidecar: "
-        cat tests/performance/summary-no-sidecar.html | grep "<h4>Breached Thresholds</h4>" -A1 | grep -o ">[0-9]<" | sed 's/[<>]//g'
-        if [[ $(cat tests/performance/summary-no-sidecar.html | grep "<h4>Breached Thresholds</h4>" -A1 | grep -o ">[0-9]<" | sed 's/[<>]//g') -ne 0 ]]; then
-        echo "Breaches found."
-        exit 1
-        else
-        echo "No breaches found without sidecar."
-        fi
+      run: if [[ $(cat tests/performance/summary-no-sidecar.html | grep "<h4>Breached Thresholds</h4>" -A1 | grep -o ">[0-9]<" | sed 's/[<>]//g') -ne 0 ]]; then exit 1; fi
     - name: Check threshold breaches on test with sidecar
       if: always()
       shell: bash
@@ -112,7 +91,3 @@ runs:
         GARDENER_KUBECONFIG: "${{ github.workspace }}/gardener_kubeconfig.yaml"
         GARDENER_PROJECT_NAME: ${{ inputs.gardener_project_name }}
       run: "${{ github.workspace }}/hack/ci/scripts-v2/deprovision-gardener.sh"
-    - name: Checks for failure
-      if: failure()
-      shell: bash
-      run: exit 1

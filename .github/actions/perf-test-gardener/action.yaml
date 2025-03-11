@@ -60,6 +60,18 @@ runs:
       shell: bash
       run: |
         echo "Reading summary-no-sidecar.html..."
+        file_content=$(cat tests/performance/summary-no-sidecar.html)
+        echo "Zawartość pliku:"
+        echo "$file_content"
+        grep_result=$(echo "$file_content" | grep "<h4>Breached Thresholds</h4>" -A1)
+        echo "Wynik grep dla '<h4>Breached Thresholds</h4>' -A1:"
+        echo "$grep_result"
+        grep_o_result=$(echo "$grep_result" | grep -oe ">\d<")
+        echo "Wynik grep -o dla '>\d<'"
+        echo "$grep_o_result"
+        final_result=$(echo "$grep_o_result" | sed 's/[<>]//g')
+        echo "Wynik sed 's/[<>]//g':"
+        echo "$final_result"
         echo "Threshold count without sidecar: "
         cat tests/performance/summary-no-sidecar.html | grep "<h4>Breached Thresholds</h4>" -A1 | grep -oe ">\d<" | sed 's/[<>]//g'
         if [[ $(cat tests/performance/summary-no-sidecar.html | grep "<h4>Breached Thresholds</h4>" -A1 | grep -oe ">\d<" | sed 's/[<>]//g') -ne 0 ]]; then
@@ -73,6 +85,18 @@ runs:
       shell: bash
       run: |
         echo "Reading summary-sidecar.html..."
+        file_content=$(cat tests/performance/summary-sidecar.html)
+        echo "Zawartość pliku:"
+        echo "$file_content"
+        grep_result=$(echo "$file_content" | grep "<h4>Breached Thresholds</h4>" -A1)
+        echo "Wynik grep dla '<h4>Breached Thresholds</h4>' -A1:"
+        echo "$grep_result"
+        grep_o_result=$(echo "$grep_result" | grep -oe ">\d<")
+        echo "Wynik grep -o dla '>\d<'"
+        echo "$grep_o_result"
+        final_result=$(echo "$grep_o_result" | sed 's/[<>]//g')
+        echo "Wynik sed 's/[<>]//g':"
+        echo "$final_result"
         echo "Threshold count with sidecar: "
         cat tests/performance/summary-sidecar.html | grep "<h4>Breached Thresholds</h4>" -A1 | grep -oe ">\d<" | sed 's/[<>]//g'
         if [[ $(cat tests/performance/summary-sidecar.html | grep "<h4>Breached Thresholds</h4>" -A1 | grep -oe ">\d<" | sed 's/[<>]//g') -ne 0 ]]; then

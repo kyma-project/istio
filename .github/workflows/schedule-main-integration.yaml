@@ -4,7 +4,7 @@ name: Schedule Daily
 
 on:
   schedule:
-    - cron: '20 9 * * *' # Run every day at 10:20 CET (8:25 UTC)
+    - cron: '0 10 * * *' # Run every day at 10:20 CET (8:25 UTC)
 
 jobs:
   get-sha:

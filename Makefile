@@ -264,10 +264,6 @@ istio-upgrade-integration-test: deploy-latest-release generate-integration-test-
 gardener-istio-integration-test:
 	./hack/ci/gardener-integration.sh
 
-.PHONY: gardener-perf-test
-gardener-perf-test:
-	./hack/ci/gardener-perf-test.sh
-
 .PHONY: gardener-aws-integration-test
 gardener-aws-integration-test:
 	./hack/ci/gardener-integration-aws-specific.sh

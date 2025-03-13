@@ -39,6 +39,25 @@ func Apply(ctx context.Context, k8sClient client.Client, manifest []byte, owner 
 	return result, nil
 }
 
+func DeleteIfPresent(ctx context.Context, k8sClient client.Client, manifest []byte) (controllerutil.OperationResult, error) {
+	resource, err := unmarshalManifest(manifest)
+	if err != nil {
+		return controllerutil.OperationResultNone, err
+	}
+
+	err = k8sClient.Get(ctx, client.ObjectKeyFromObject(&resource), &resource)
+	if err != nil {
+		return controllerutil.OperationResultNone, nil
+	}
+
+	err = k8sClient.Delete(ctx, &resource)
+	if err != nil {
+		return controllerutil.OperationResultNone, err
+	}
+
+	return controllerutil.OperationResultUpdated, nil
+}
+
 func ApplyVersionedLabels(resource *unstructured.Unstructured) {
 	versionedLabels := resource.GetLabels()
 	if versionedLabels == nil {

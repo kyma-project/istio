@@ -32,4 +32,11 @@ Application resiliency is an important topic within traffic management. Traditio
 
 ## Restart of Workloads with Enabled Istio Sidecar Injection
 
-When the Istio version is updated or the configuration of Istio sidecar proxies changes, the Pods that have Istio sidecar proxy injection enabled are automatically restarted. This is possible for all resources that allow for a rolling restart. If Istio is uninstalled, the workloads are restarted again to remove the Istio sidecar proxies. However, if a resource is a Job, a ReplicaSet that is not managed by any Deployment, or a Pod that is not managed by any other resource, the restart cannot be performed automatically. In such cases, a warning is logged, and you must manually restart the resources. The Istio module does not restart an Istio sidecar proxy if it has a custom image set. See [Resource Annotations](https://istio.io/latest/docs/reference/config/annotations/#SidecarProxyImage).
+The Pods that have Istio sidecar proxy injection enabled are automatically restarted when:
+- A new version of the Istio module introduces an update of the Istio version.
+- The configuration of Istio sidecar proxies changes.
+- You update certain fields in Istio CR. To see which upates initiate the restart, see [Istio Custom Resource](./04-00-istio-custom-resource.md).
+
+Restarting the Istio sidecar proxies is possible for all resources that allow for a rolling restart. If Istio is uninstalled, the workloads are restarted again to remove the Istio sidecar proxies. However, the restart cannot be  a resource is a Job, a ReplicaSet that is not managed by any Deployment, or a Pod that is not managed by any other resource, the restart cannot be performed automatically. In such cases, a warning is logged, and you must manually restart the resources. See [Incompatible Istio Sidecar Version After the Istio Module's Update](./troubleshooting/03-40-incompatible-istio-sidecar-version.md)
+
+The Istio module does not restart an Istio sidecar proxy if it has a custom image set. See [Resource Annotations](https://istio.io/latest/docs/reference/config/annotations/#SidecarProxyImage).

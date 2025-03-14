@@ -33,7 +33,7 @@ Application resiliency is an important topic within traffic management. Traditio
 ## Restart of Workloads with Enabled Istio Sidecar Injection
 
 The Pods that have Istio sidecar proxy injection enabled are automatically restarted in the following scenarios:
-- During the Istio update.
+- During an Istio update.
 - When you update the configuration of Istio sidecar proxies, for example, by changing the default values with `sidecar.istio.io/proxyCPU` or `sidecar.istio.io/proxyCPULimit` annotations.
 - When you update the following fields in Istio CR: **spec.config.NumTrustedProxies** or **spec.config.telemetry.metrics.prometheusMerge**. 
 - When you enable the compatibility mode (**spec.compatibilityMode**), and the compatibility version introduces new flags to the Istio proxy component.

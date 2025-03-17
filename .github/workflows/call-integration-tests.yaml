@@ -163,37 +163,23 @@ jobs:
           SCALER_MAX: 20
           SCALER_MIN: 3
 
-  istio-integration-aws:
-    name: Istio integration test AWS
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        test_make_target: [ "test-e2e", "configuration-integration-test", "mesh-communication-integration-test", "installation-integration-test", "observability-integration-test" ]
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - run: ./tests/integration/scripts/gardener-kubeconfig.sh
-        shell: bash
-        env:
-          GARDENER_TOKEN: ${{ secrets.GARDENER_TOKEN }}
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: "go.mod"
-      - run: make IMG="${{ inputs.image }}" gardener-istio-integration-test
-        shell: bash
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"
-          GARDENER_PROJECT_NAME: "goats"
-          GARDENER_PROVIDER_SECRET_NAME: "aws-gardener-access"
-          GARDENER_PROVIDER: "aws"
-          GARDENER_CLUSTER_VERSION: "1.30.6"
-          GARDENER_REGION: "eu-west-1"
-          MACHINE_TYPE: "m5.xlarge"
-          DISK_SIZE: 50
-          DISK_TYPE: "gp2"
-          SCALER_MAX: 3
-          SCALER_MIN: 1
-          MAKE_TEST_TARGET: ${{ matrix.test_make_target }}
+istio-e2e-aws:
+  name: Istio E2E test AWS
+  runs-on: ubuntu-latest
+  strategy:
+    fail-fast: false
+    matrix:
+      test_make_target: [ "test-e2e", "configuration-integration-test", "mesh-communication-integration-test", "installation-integration-test", "observability-integration-test" ]
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - uses: ./.github/actions/e2e-test-gardener
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        manager_image: ${{ inputs.image }}
+        gardener_secret: ${{ secrets.GARDENER_TOKEN }}
+        gardener_project_name: ${{ vars.GARDENER_PROJECT_NAME }}
+        gardener_provider: aws
+        test_make_target: ${{ matrix.test_make_target }}

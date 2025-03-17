@@ -12,21 +12,4 @@ runs:
       uses: actions/github-script@v7
       with:
         script: |
-          if (context.eventName !== 'schedule') {
-            core.setOutput('sha', context.sha);
-            return;
-          }
-
-          const { data } = await github.rest.actions.listWorkflowRuns({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            workflow_id: 'post-main-workflow.yaml',
-            branch: 'main',
-            per_page: 40 
-          });
-          const pushRuns = data.workflow_runs.filter(run => run.event === 'push');
-          if (pushRuns.length === 0) {
-            throw new Error('No successful push runs found');
-          }
-          const latestRun = pushRuns[0];
-          core.setOutput('sha', latestRun.head_sha);
+          echo "sha=5992da7730781a7c97aaffe75125af4b5599a213" >> "$GITHUB_OUTPUT"

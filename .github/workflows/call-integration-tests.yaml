@@ -163,23 +163,23 @@ jobs:
           SCALER_MAX: 20
           SCALER_MIN: 3
 
-istio-e2e-aws:
-  name: Istio E2E test AWS
-  runs-on: ubuntu-latest
-  strategy:
-    fail-fast: false
-    matrix:
-      test_make_target: [ "test-e2e", "configuration-integration-test", "mesh-communication-integration-test", "installation-integration-test", "observability-integration-test" ]
-  steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    - uses: ./.github/actions/e2e-test-gardener
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        manager_image: ${{ inputs.image }}
-        gardener_secret: ${{ secrets.GARDENER_TOKEN }}
-        gardener_project_name: ${{ vars.GARDENER_PROJECT_NAME }}
-        gardener_provider: aws
-        test_make_target: ${{ matrix.test_make_target }}
+  istio-e2e-aws:
+    name: Istio E2E test AWS
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        test_make_target: [ "test-e2e", "configuration-integration-test", "mesh-communication-integration-test", "installation-integration-test", "observability-integration-test" ]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/e2e-test-gardener
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          manager_image: ${{ inputs.image }}
+          gardener_secret: ${{ secrets.GARDENER_TOKEN }}
+          gardener_project_name: ${{ vars.GARDENER_PROJECT_NAME }}
+          gardener_provider: aws
+          test_make_target: ${{ matrix.test_make_target }}

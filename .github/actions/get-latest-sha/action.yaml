@@ -16,7 +16,6 @@ runs:
             core.setOutput('sha', context.sha);
             return;
           }
-
           const { data } = await github.rest.actions.listWorkflowRuns({
             owner: context.repo.owner,
             repo: context.repo.repo,

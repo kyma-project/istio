@@ -8,7 +8,8 @@ load-testing/charts/plutono:
 
 deploy-helm:
 	helm dependency update load-testing
-	helm upgrade --install load-testing load-testing --set IngressGatewayIP=$(shell { ip=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}'); [ -n "$ip" ] && echo "$ip" || kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'; } ) --set Domain=${KYMA_DOMAIN} --create-namespace --wait
+
+	helm upgrade --install load-testing load-testing --set IngressGatewayIP=$(shell ip=$$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}'); hostname=$$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'); if [ -n "$$ip" ]; then echo "$$ip"; else echo "$$hostname"; fi) --set Domain=${KYMA_DOMAIN} --create-namespace --wait
 
 test-deploy:
 	kubectl rollout status deployment/load-testing

@@ -241,12 +241,12 @@ Use the same `kubeconfig` file you've already exported.
     EOF
     ```
 
-    Export the name of the `curl` Pod:
+7. Export the name of the `curl` Pod:
     ```bash
     export SOURCE_POD=$(kubectl get pod -n "$NAMESPACE" -l app=curl -o jsonpath={.items..metadata.name})
     ```
 
-7. Define a ServiceEntry which adds the `kyma-project.io` hostname to the mesh:
+8. Define a ServiceEntry which adds the `kyma-project.io` hostname to the mesh:
 
     ```bash
     kubectl apply -f - <<EOF
@@ -269,7 +269,7 @@ Use the same `kubeconfig` file you've already exported.
     EOF
     ```
 
-8. Create an egress Gateway, DestinationRule, and VirtualService to direct traffic:
+9. Create an egress Gateway, DestinationRule, and VirtualService to direct traffic:
 
     ```bash
     kubectl apply -f - <<EOF
@@ -334,7 +334,7 @@ Use the same `kubeconfig` file you've already exported.
     EOF
     ```
 
-9. Create a DestinationRule to use mTLS credential:
+10. Create a DestinationRule to use mTLS credential:
 
     ```bash
     kubectl apply -n istio-system -f - <<EOF
@@ -355,21 +355,23 @@ Use the same `kubeconfig` file you've already exported.
     EOF
     ```
 
-10. Send an HTTP request to the Kyma project website:
+### Send HTTP Requests
+
+1. Send an HTTP request to the Kyma project website:
     When you send an HTTP request, Istio uses egress to redirect the HTTPS to the website.
 
     ```bash
     kubectl exec -n $NAMESPACE "$SOURCE_POD" -c curl -- curl -ik -X GET http://$DOMAIN/headers
     ```
 
-    You get the `200` response code from the workload containing headers. One of these headers should be `"X-Forwarded-Client-Cert": ["xxx"]`.
+    If successful, you get the `200` response code from the workload containing headers. One of these headers should be `"X-Forwarded-Client-Cert": ["xxx"]`.
 
-    Check the logs of the Istio egress Gateway:
+2. Check the logs of the Istio egress Gateway:
     ```bash
     kubectl logs -l istio=egressgateway -n istio-system
     ```
 
-    You should see the request made by the egress Gateway in the logs:
+    If successful, the logs contain the request made by the egress Gateway:
     ```
     {"authority":"{YOUR_DOMAIN}":"outbound|443||{YOUR_DOMAIN}",[...]}
     ```

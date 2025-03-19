@@ -219,12 +219,12 @@ Learn how to configure and use the Istio egress Gateway to allow outbound traffi
    ...
    ```
 
-   Check the logs of the Istio egress Gateway:
+9. Check the logs of the Istio egress Gateway:
    ```bash
    kubectl logs -l istio=egressgateway -n istio-system
    ```
 
-   You should see the request made by the egress Gateway in the logs:
+   If successful, the logs contain the request made by the egress Gateway:
    ```
    {"requested_server_name":"kyma-project.io","upstream_cluster":"outbound|443||kyma-project.io",[...]}
    ```

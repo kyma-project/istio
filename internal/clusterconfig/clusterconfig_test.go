@@ -41,6 +41,19 @@ var _ = Describe("GetClusterProvider", func() {
 		Expect(err).To(BeNil())
 		Expect(p).To(Equal("other"))
 	})
+	It("should return 'openstack' for clusters provisioned on OpenStack nodes", func() {
+		//given
+		node := corev1.Node{
+			ObjectMeta: v1.ObjectMeta{
+				Name: "node-1",
+			},
+			Spec: corev1.NodeSpec{ProviderID: "openstack://example"},
+		}
+		client := createFakeClient(&node)
+		p, err := clusterconfig.GetClusterProvider(context.TODO(), client)
+		Expect(err).To(BeNil())
+		Expect(p).To(Equal("openstack"))
+	})
 	It("should return 'aws' for clusters provisioned on AWS nodes", func() {
 		//given
 		node := corev1.Node{

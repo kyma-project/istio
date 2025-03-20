@@ -73,7 +73,7 @@ func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha2.Is
 func getResources(k8sClient client.Client, provider string) ([]Resource, error) {
 	istioResources := []Resource{NewPeerAuthenticationMtls(k8sClient)}
 
-	if provider == "aws" {
+	if provider == "aws" || provider == "openstack" {
 		istioResources = append(istioResources, NewProxyProtocolEnvoyFilter(k8sClient))
 	}
 

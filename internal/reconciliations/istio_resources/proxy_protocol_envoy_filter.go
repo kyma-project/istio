@@ -14,14 +14,18 @@ import (
 var proxyProtocolEnvoyFilter []byte
 
 type ProxyProtocolEnvoyFilter struct {
-	k8sClient client.Client
+	k8sClient    client.Client
+	shouldDelete bool
 }
 
-func NewProxyProtocolEnvoyFilter(k8sClient client.Client) ProxyProtocolEnvoyFilter {
-	return ProxyProtocolEnvoyFilter{k8sClient: k8sClient}
+func NewProxyProtocolEnvoyFilter(k8sClient client.Client, shouldDelete bool) ProxyProtocolEnvoyFilter {
+	return ProxyProtocolEnvoyFilter{k8sClient: k8sClient, shouldDelete: shouldDelete}
 }
 
-func (ProxyProtocolEnvoyFilter) reconcile(ctx context.Context, k8sClient client.Client, _ metav1.OwnerReference, _ map[string]string) (controllerutil.OperationResult, error) {
+func (pp ProxyProtocolEnvoyFilter) reconcile(ctx context.Context, k8sClient client.Client, _ metav1.OwnerReference, _ map[string]string) (controllerutil.OperationResult, error) {
+	if pp.shouldDelete {
+		return resources.DeleteIfPresent(ctx, k8sClient, proxyProtocolEnvoyFilter)
+	}
 	return resources.Apply(ctx, k8sClient, proxyProtocolEnvoyFilter, nil)
 }
 

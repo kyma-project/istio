@@ -110,12 +110,12 @@ Learn how to configure and use the Istio egress Gateway to allow outbound traffi
     EOF
     ```
 
-   Export the name of the `curl` Pod:
+6. Export the name of the `curl` Pod:
     ```bash
    export SOURCE_POD=$(kubectl get pod -n "$NAMESPACE" -l app=curl -o jsonpath={.items..metadata.name})
     ```
 
-6. Define a ServiceEntry which adds the `kyma-project.io` hostname to the mesh:
+7. Define a ServiceEntry which adds the `kyma-project.io` hostname to the mesh:
 
    ```bash
    kubectl apply -f - <<EOF
@@ -135,7 +135,7 @@ Learn how to configure and use the Istio egress Gateway to allow outbound traffi
    EOF
    ```
 
-7. Create an egress Gateway, DestinationRule, and VirtualService to direct traffic:
+8. Create an egress Gateway, DestinationRule, and VirtualService to direct traffic:
 
    ```bash
    kubectl apply -f - <<EOF
@@ -206,7 +206,7 @@ Learn how to configure and use the Istio egress Gateway to allow outbound traffi
    EOF
    ```
 
-8. Send an HTTPS request to the Kyma project website:
+9. Send an HTTPS request to the Kyma project website:
    ```bash
    kubectl exec -n "$NAMESPACE" "$SOURCE_POD" -c curl -- curl -sSL -o /dev/null -D - https://kyma-project.io
    ```
@@ -219,12 +219,12 @@ Learn how to configure and use the Istio egress Gateway to allow outbound traffi
    ...
    ```
 
-   Check the logs of the Istio egress Gateway:
+10. Check the logs of the Istio egress Gateway:
    ```bash
    kubectl logs -l istio=egressgateway -n istio-system
    ```
 
-   You should see the request made by the egress Gateway in the logs:
+   If successful, the logs contain the request made by the egress Gateway:
    ```
    {"requested_server_name":"kyma-project.io","upstream_cluster":"outbound|443||kyma-project.io",[...]}
    ```

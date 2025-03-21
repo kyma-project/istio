@@ -101,7 +101,23 @@ var _ = Describe("Reconciliation", func() {
 			Expect(client.Get(context.Background(), ctrlclient.ObjectKey{Name: "proxy-protocol", Namespace: "istio-system"}, &e)).Should(Succeed())
 		})
 
-		It("should not be created when hyperscaler is not AWS", func() {
+		It("should be created when hyperscaler is OpenStack", func() {
+			//given
+			n := corev1.Node{Spec: corev1.NodeSpec{ProviderID: "openstack://example"}}
+			client := createFakeClient(&n)
+			reconciler := NewReconciler(client)
+
+			//when
+			err := reconciler.Reconcile(context.Background(), istioCR)
+
+			//then
+			Expect(err).To(Not(HaveOccurred()))
+
+			var e networkingv1alpha3.EnvoyFilter
+			Expect(client.Get(context.Background(), ctrlclient.ObjectKey{Name: "proxy-protocol", Namespace: "istio-system"}, &e)).Should(Succeed())
+		})
+
+		It("should not be created when hyperscaler is not AWS or OpenStack", func() {
 			//given
 			client := createFakeClient()
 			reconciler := NewReconciler(client)

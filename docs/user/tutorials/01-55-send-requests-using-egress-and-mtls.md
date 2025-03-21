@@ -29,6 +29,7 @@ Learn how to configure and use the Istio egress Gateway to allow mTLS-secured ou
 
     ```bash
     openssl req -x509 -sha256 -nodes -days 365 -newkey rsa:2048 -subj "/O=example Inc./CN=$DOMAIN" -keyout egress.key -out egress.crt
+    ```
     
 4. Generate the host certificate:
     ```bash

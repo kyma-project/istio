@@ -10,6 +10,8 @@ Use [Gateway API](https://gateway-api.sigs.k8s.io/) to expose a workload.
 * You have the Istio module added.
 
 ## Install Gateway API CustomResourceDefinitions
+A Gateway API bundle is a collection of Custom Resource Definitions (CRDs) tied to a specific version of Kubernetes Gateway API. Each release of Gateway API provides two channels, standard and regular, which offer different stability levels. The standard release channel includes all resources that have reached General Availability (GA) or beta status, such as GatewayClass, Gateway, HTTPRoute, and ReferenceGrant. These channels are unrelated to Kyma's fast and regular channels. The Istio module provided by SAP BTP, Kyma runtime supports the Gateway API CRDs installed from the standard channel.
+
 To install Gateway API CustomResourceDefinitions (CRDs) from the standard channel, run the following command:
 
 ```bash

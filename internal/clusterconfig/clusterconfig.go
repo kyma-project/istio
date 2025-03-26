@@ -118,9 +118,12 @@ func GetClusterProvider(ctx context.Context, k8sclient client.Client) (string, e
 	// get 1st node since all nodes usually are backed by the same provider
 	n := nodes.Items[0]
 	provider := n.Spec.ProviderID
+	provider = strings.ToLower(provider)
 	switch {
 	case strings.HasPrefix(provider, "aws://"):
 		return "aws", nil
+	case strings.HasPrefix(provider, "openstack://"):
+		return "openstack", nil
 	default:
 		return "other", nil
 	}

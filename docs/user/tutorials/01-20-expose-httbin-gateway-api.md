@@ -25,7 +25,7 @@ kubectl get crd gateways.gateway.networking.k8s.io &> /dev/null || \
 ## Create a Workload
 1. Export the name of the namespace in which you want to deploy a sample HTTPBin Service:
     ```bash
-    export NAMESAPCE={service-namespace}
+    export NAMESPACE={service-namespace}
     ```
 2. Create a namespace with Istio injection enabled and deploy the HTTPBin Service:
     ```bash
@@ -91,14 +91,14 @@ To access your exposed workload, follow the steps:
 1. Discover Istio Ingress Gateway’s IP and port.
     
     ```bash
-    export INGRESS_HOST=$(kubectl get gtw gateway -n $NAMESPACE -o jsonpath='{.status.addresses[0].value}')
-    export INGRESS_PORT=$(kubectl get gtw gateway -n $NAMESPACE -o jsonpath='{.spec.listeners[?(@.name=="http")].port}')
+    export INGRESS_HOST=$(kubectl get gtw httpbin-gateway -n $NAMESPACE -o jsonpath='{.status.addresses[0].value}')
+    export INGRESS_PORT=$(kubectl get gtw httpbin-gateway -n $NAMESPACE -o jsonpath='{.spec.listeners[?(@.name=="http")].port}')
     ```
 
 2. Call the service.
     
     ```bash
-    curl -s -I -HHost:your-domain.kyma.example.com "http://$INGRESS_HOST:$INGRESS_PORT/headers"
+    curl -s -I -HHost:httpbin.kyma.example.com "http://$INGRESS_HOST:$INGRESS_PORT/headers"
     ```
     If successful, you get the code `200 OK` in response.
 

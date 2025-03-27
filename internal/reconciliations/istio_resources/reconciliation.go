@@ -74,7 +74,12 @@ func getResources(k8sClient client.Client, provider string) ([]Resource, error) 
 	istioResources := []Resource{NewPeerAuthenticationMtls(k8sClient)}
 
 	if provider == "aws" {
-		istioResources = append(istioResources, NewProxyProtocolEnvoyFilter(k8sClient))
+		shouldUseNLB, err := clusterconfig.ShouldUseNLB(context.Background(), k8sClient)
+		if err != nil {
+			return nil, err
+		}
+
+		istioResources = append(istioResources, NewProxyProtocolEnvoyFilter(k8sClient, shouldUseNLB))
 	}
 
 	return istioResources, nil

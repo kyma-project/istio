@@ -20,6 +20,7 @@ import (
 const (
 	k3sMockKubeletVersion string = "v1.26.6+k3s1"
 	gkeMockKubeletVersion string = "v1.30.6-gke.1125000"
+	gardenerMockOSImage   string = "Garden Linux 12.04"
 )
 
 var _ = Describe("GetClusterProvider", func() {
@@ -92,9 +93,10 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			}
 
 			client := createFakeClient(&k3dNode)
+			provider, err := clusterconfig.GetClusterProvider(context.TODO(), client)
 
 			//when
-			config, err := clusterconfig.EvaluateClusterConfiguration(context.TODO(), client)
+			config, err := clusterconfig.EvaluateClusterConfiguration(context.TODO(), client, provider)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))
@@ -126,9 +128,10 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			}
 
 			client := createFakeClient(&gkeNode)
+			provider, err := clusterconfig.GetClusterProvider(context.TODO(), client)
 
 			//when
-			config, err := clusterconfig.EvaluateClusterConfiguration(context.TODO(), client)
+			config, err := clusterconfig.EvaluateClusterConfiguration(context.TODO(), client, provider)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))
@@ -147,6 +150,72 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 		})
 	})
 
+	Context("Gardener OpenStack", func() {
+		It("should set istio-ingressgateway LoadBalancer service annotation value to Gardener OpenStack configuration", func() {
+			//given
+			gardenerNode := corev1.Node{
+				ObjectMeta: v1.ObjectMeta{
+					Name: "Garden Linux 1.23",
+				},
+				Spec: corev1.NodeSpec{ProviderID: "openstack://example"},
+				Status: corev1.NodeStatus{
+					NodeInfo: corev1.NodeSystemInfo{
+						OSImage: gardenerMockOSImage,
+					},
+				},
+			}
+
+			client := createFakeClient(&gardenerNode)
+			provider, err := clusterconfig.GetClusterProvider(context.TODO(), client)
+
+			//when
+			config, err := clusterconfig.EvaluateClusterConfiguration(context.TODO(), client, provider)
+
+			//then
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(config).To(Equal(clusterconfig.ClusterConfiguration(map[string]interface{}{
+				"spec": map[string]interface{}{
+					"values": map[string]interface{}{
+						"gateways": map[string]interface{}{
+							"istio-ingressgateway": map[string]interface{}{
+								"serviceAnnotations": map[string]string{
+									"loadbalancer.openstack.org/proxy-protocol": "v1",
+								},
+							},
+						},
+					},
+				},
+			})))
+		})
+	})
+
+	Context("Gardener - unknown", func() {
+		It("should return no overrides", func() {
+			//given
+			gardenerNode := corev1.Node{
+				ObjectMeta: v1.ObjectMeta{
+					Name: "Garden Linux 1.23",
+				},
+				Spec: corev1.NodeSpec{ProviderID: "aws://example"},
+				Status: corev1.NodeStatus{
+					NodeInfo: corev1.NodeSystemInfo{
+						OSImage: gardenerMockOSImage,
+					},
+				},
+			}
+
+			client := createFakeClient(&gardenerNode)
+			provider, err := clusterconfig.GetClusterProvider(context.TODO(), client)
+
+			//when
+			config, err := clusterconfig.EvaluateClusterConfiguration(context.TODO(), client, provider)
+
+			//then
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(config).To(Equal(clusterconfig.ClusterConfiguration{}))
+		})
+	})
+
 	Context("Unknown cluster", func() {
 		It("should return no overrides", func() {
 			//given
@@ -157,9 +226,10 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			}
 
 			client := createFakeClient(&unkownNode)
+			provider, err := clusterconfig.GetClusterProvider(context.TODO(), client)
 
 			//when
-			config, err := clusterconfig.EvaluateClusterConfiguration(context.TODO(), client)
+			config, err := clusterconfig.EvaluateClusterConfiguration(context.TODO(), client, provider)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))

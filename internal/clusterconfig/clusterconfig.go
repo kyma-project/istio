@@ -88,12 +88,13 @@ func (c ClusterFlavour) String() string {
 
 type ClusterConfiguration map[string]interface{}
 
-func EvaluateClusterConfiguration(ctx context.Context, k8sClient client.Client) (ClusterConfiguration, error) {
+func EvaluateClusterConfiguration(ctx context.Context, k8sClient client.Client, clusterProvider string) (ClusterConfiguration, error) {
 	flavour, err := DiscoverClusterFlavour(ctx, k8sClient)
 	if err != nil {
 		return ClusterConfiguration{}, err
 	}
-	return flavour.clusterConfiguration()
+
+	return flavour.clusterConfiguration(clusterProvider)
 }
 
 // GetClusterProvider is a small hack that tries to determine the
@@ -161,7 +162,7 @@ func DiscoverClusterFlavour(ctx context.Context, k8sClient client.Client) (Clust
 	return Unknown, nil
 }
 
-func (c ClusterFlavour) clusterConfiguration() (ClusterConfiguration, error) {
+func (c ClusterFlavour) clusterConfiguration(clusterProvider string) (ClusterConfiguration, error) {
 	switch c {
 	case k3d:
 		config := map[string]interface{}{
@@ -190,8 +191,31 @@ func (c ClusterFlavour) clusterConfiguration() (ClusterConfiguration, error) {
 		}
 		return config, nil
 	case Gardener:
-		return ClusterConfiguration{}, nil
+		return generateIstioIngressGatewayAnnotations(clusterProvider)
 	}
+	return ClusterConfiguration{}, nil
+}
+
+// generateIstioIngressGatewayAnnotations adds an annotation to a service LoadBalancer istio-ingressgateway
+// only if cluster provider is openstack to pass an XFF header to the request.
+func generateIstioIngressGatewayAnnotations(clusterProvider string) (ClusterConfiguration, error) {
+	if clusterProvider == "openstack" {
+		config := map[string]interface{}{
+			"spec": map[string]interface{}{
+				"values": map[string]interface{}{
+					"gateways": map[string]interface{}{
+						"istio-ingressgateway": map[string]interface{}{
+							"serviceAnnotations": map[string]string{
+								"loadbalancer.openstack.org/proxy-protocol": "v1",
+							},
+						},
+					},
+				},
+			},
+		}
+		return config, nil
+	}
+
 	return ClusterConfiguration{}, nil
 }
 

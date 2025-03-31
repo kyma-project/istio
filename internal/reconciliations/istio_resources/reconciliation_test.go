@@ -84,8 +84,27 @@ var _ = Describe("Reconciliation", func() {
 	})
 
 	Context("proxy-protocol EnvoyFilter", func() {
+		It("should be created when hyperscaler is AWS, and ELB is to be used", func() {
+			//given
+			n := corev1.Node{Spec: corev1.NodeSpec{ProviderID: "aws://asdasdads"}}
+			elbDeprecatedConfigMap := corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "elb-deprecated",
+					Namespace: "istio-system",
+				},
+			}
+			client := createFakeClient(&n, &elbDeprecatedConfigMap)
+			reconciler := NewReconciler(client)
 
-		It("should be created when hyperscaler is AWS", func() {
+			//when
+			err := reconciler.Reconcile(context.Background(), istioCR)
+
+			//then
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(client.Get(context.Background(), ctrlclient.ObjectKey{Name: "proxy-protocol", Namespace: "istio-system"}, &networkingv1alpha3.EnvoyFilter{})).Should(Succeed())
+		})
+
+		It("should not be created when hyperscaler is AWS", func() {
 			//given
 			n := corev1.Node{Spec: corev1.NodeSpec{ProviderID: "aws://asdasdads"}}
 			client := createFakeClient(&n)
@@ -98,7 +117,7 @@ var _ = Describe("Reconciliation", func() {
 			Expect(err).To(Not(HaveOccurred()))
 
 			var e networkingv1alpha3.EnvoyFilter
-			Expect(client.Get(context.Background(), ctrlclient.ObjectKey{Name: "proxy-protocol", Namespace: "istio-system"}, &e)).Should(Succeed())
+			Expect(client.Get(context.Background(), ctrlclient.ObjectKey{Name: "proxy-protocol", Namespace: "istio-system"}, &e)).Should(Not(Succeed()))
 		})
 
 		It("should be created when hyperscaler is OpenStack", func() {

@@ -27,6 +27,6 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/build-manager-image
         with:
-          operator-image-name: "europe-central2-docker.pkg.dev/sap-se-cx-kyma-goat/istio/istio-manager:PR-${{github.event.number}}"
+          operator_image_name: "europe-central2-docker.pkg.dev/sap-se-cx-kyma-goat/istio/istio-manager:PR-${{github.event.number}}"
           push-image: 'true'
           push-sa-key: ${{ secrets.GCP_SA_KEY }}

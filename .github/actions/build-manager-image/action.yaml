@@ -1,7 +1,7 @@
 name: 'Build Istio Manager Image'
 description: 'Builds Istio manager image'
 inputs:
-  operator-image-name:
+  operator_image_name:
     description: 'Operator image name used for creation of Istio manager image'
     required: true
   push-image:
@@ -31,7 +31,7 @@ runs:
         context: .
         platforms: 'linux/amd64'
         push: true
-        tags: ${{ inputs.operator-image-name }}
+        tags: ${{ inputs.operator_image_name }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
     - name: Build and Load
@@ -42,7 +42,7 @@ runs:
         platforms: 'linux/amd64'
         push: false
         load: true
-        tags: ${{ inputs.operator-image-name }}
+        tags: ${{ inputs.operator_image_name }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
         outputs: type=docker,dest=/tmp/manager-image.tar

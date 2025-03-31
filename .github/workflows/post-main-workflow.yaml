@@ -60,7 +60,7 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/upgrade-integration-test
         with:
-          operator-image-name: "europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager:${{github.sha}}"
+          operator_image_name: "europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager:${{github.sha}}"
           target_branch: ${{ github.ref_name }}
 
   istio-upgrade-test-aws:
@@ -99,7 +99,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           test_make_target: ${{ matrix.test_make_target }}
-          operator-image-name: "europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager:${{github.sha}}"
+          operator_image_name: "europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager:${{github.sha}}"
           servers-memory: "16"
           agents: 2
 

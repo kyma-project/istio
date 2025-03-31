@@ -64,7 +64,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           test_make_target: ${{ matrix.test_make_target }}
-          operator-image-name: "${{ inputs.image }}"
+          operator_image_name: "${{ inputs.image }}"
           servers-memory: "16"
           agents: 2
 

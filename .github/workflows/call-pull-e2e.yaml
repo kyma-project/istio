@@ -21,7 +21,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           test_make_target: ${{ matrix.test_make_target }}
-          operator-image-name: "istio-manager:PR-${{github.event.number}}"
+          operator_image_name: "istio-manager:PR-${{github.event.number}}"
           servers-memory: "16"
           agents: 2
 
@@ -38,6 +38,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           test_make_target: "evaluation-integration-test"
-          operator-image-name: "istio-manager:PR-${{github.event.number}}"
+          operator_image_name: "istio-manager:PR-${{github.event.number}}"
           servers-memory: "4"
           agents: 0

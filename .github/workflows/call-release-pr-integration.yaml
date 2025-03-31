@@ -21,7 +21,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           test_make_target: ${{ matrix.test_make_target }}
-          operator-image-name: "europe-docker.pkg.dev/kyma-project/dev/istio/pr/istio-manager:PR-${{github.event.number}}"
+          operator_image_name: "europe-docker.pkg.dev/kyma-project/dev/istio/pr/istio-manager:PR-${{github.event.number}}"
 
   istio-upgrade-integration-test:
     name: Istio upgrade integration test
@@ -35,7 +35,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          operator-image-name: "europe-docker.pkg.dev/kyma-project/dev/istio/pr/istio-manager:PR-${{github.event.number}}"
+          operator_image_name: "europe-docker.pkg.dev/kyma-project/dev/istio/pr/istio-manager:PR-${{github.event.number}}"
           target_branch: ${{ github.base_ref }}
 
   istio-integration-test:
@@ -55,7 +55,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           test_make_target: ${{ matrix.test_make_target }}
-          operator-image-name: "europe-docker.pkg.dev/kyma-project/dev/istio/pr/istio-manager:PR-${{github.event.number}}"
+          operator_image_name: "europe-docker.pkg.dev/kyma-project/dev/istio/pr/istio-manager:PR-${{github.event.number}}"
           servers-memory: "16"
           agents: 2
 
@@ -72,6 +72,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           test_make_target: "evaluation-integration-test"
-          operator-image-name: "europe-docker.pkg.dev/kyma-project/dev/istio/pr/istio-manager:PR-${{github.event.number}}"
+          operator_image_name: "europe-docker.pkg.dev/kyma-project/dev/istio/pr/istio-manager:PR-${{github.event.number}}"
           servers-memory: "4"
           agents: 0

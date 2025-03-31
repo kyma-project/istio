@@ -1,7 +1,7 @@
 name: 'Istio E2E test'
 description: 'Runs Istio E2E tests'
 inputs:
-  operator-image-name:
+  operator_image_name:
     description: 'Operator image used for test'
     required: true
   test_make_target:
@@ -29,14 +29,14 @@ runs:
       shell: bash
       run: |    
         if [ "${{ github.event_name }}" == "pull_request" ]; then
-          k3d image import ${{ inputs.operator-image-name }}
+          k3d image import ${{ inputs.operator_image_name }}
         fi
         
         kubectl config use-context k3d-k3s-default
         if [ "${{ inputs.evaluation }}" == "true" ]; then
-          TEST_EVALUATION=TRUE EXPORT_RESULT=true IMG=${{ inputs.operator-image-name }} make ${{ inputs.test_make_target }}
+          TEST_EVALUATION=TRUE EXPORT_RESULT=true IMG=${{ inputs.operator_image_name }} make ${{ inputs.test_make_target }}
         else
-          EXPORT_RESULT=true IMG=${{ inputs.operator-image-name }} make ${{ inputs.test_make_target }}
+          EXPORT_RESULT=true IMG=${{ inputs.operator_image_name }} make ${{ inputs.test_make_target }}
         fi
     - shell: bash
       name: gather logs

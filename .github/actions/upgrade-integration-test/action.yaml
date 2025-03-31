@@ -1,7 +1,7 @@
 name: 'Upgrade integration test'
 description: 'Runs upgrade suite of integration tests'
 inputs:
-  operator-image-name:
+  operator_image_name:
     description: 'Operator image used for test'
     required: true
   target_branch:
@@ -20,9 +20,9 @@ runs:
     - name: Run upgrade integration test
       run: |
         if [ "${{ github.event_name }}" == "pull_request" ]; then
-          k3d image import ${{ inputs.operator-image-name }}
+          k3d image import ${{ inputs.operator_image_name }}
         fi
         
         kubectl config use-context k3d-k3s-default
-        EXPORT_RESULT=true IMG=${{ inputs.operator-image-name }} TARGET_BRANCH=${{inputs.target_branch}} make istio-upgrade-integration-test
+        EXPORT_RESULT=true IMG=${{ inputs.operator_image_name }} TARGET_BRANCH=${{inputs.target_branch}} make istio-upgrade-integration-test
       shell: bash

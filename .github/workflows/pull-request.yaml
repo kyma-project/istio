@@ -30,7 +30,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/build-manager-image
         with:
-          operator-image-name: "istio-manager:PR-${{github.event.number}}"
+          operator_image_name: "istio-manager:PR-${{github.event.number}}"
 
   unit-tests:
     name: Dispatch unit test

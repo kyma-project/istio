@@ -11,6 +11,7 @@ var pilotCompatibilityEnvVars = map[string]string{
 	"PREFER_DESTINATIONRULE_TLS_FOR_EXTERNAL_SERVICES": "false",
 	"ENABLE_ENHANCED_DESTINATIONRULE_MERGE":            "false",
 	"PILOT_UNIFIED_SIDECAR_SCOPE":                      "false",
+	"PILOT_ENABLE_IP_AUTOALLOCATE":                     "false",
 }
 
 func setCompatibilityMode(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {

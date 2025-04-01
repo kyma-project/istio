@@ -197,7 +197,7 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			}
 
 			client := createFakeClient(&awsNode, &elbDeprecatedConfigMap)
-			provider, err := clusterconfig.GetClusterProvider(context.Background(), client)
+			provider, _ := clusterconfig.GetClusterProvider(context.Background(), client)
 
 			//when
 			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client, provider)
@@ -223,7 +223,7 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			}
 
 			client := createFakeClient(&gkeNode)
-			provider, err := clusterconfig.GetClusterProvider(context.Background(), client)
+			provider, _ := clusterconfig.GetClusterProvider(context.Background(), client)
 
 			//when
 			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client, provider)
@@ -261,7 +261,7 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			}
 
 			client := createFakeClient(&gardenerNode)
-			provider, err := clusterconfig.GetClusterProvider(context.Background(), client)
+			provider, _ := clusterconfig.GetClusterProvider(context.Background(), client)
 
 			//when
 			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client, provider)
@@ -288,7 +288,7 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			}
 
 			client := createFakeClient(&gardenerNode)
-			provider, err := clusterconfig.GetClusterProvider(context.Background(), client)
+			provider, _ := clusterconfig.GetClusterProvider(context.Background(), client)
 
 			//when
 			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client, provider)
@@ -309,7 +309,7 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			}
 
 			client := createFakeClient(&unkownNode)
-			provider, err := clusterconfig.GetClusterProvider(context.Background(), client)
+			provider, _ := clusterconfig.GetClusterProvider(context.Background(), client)
 
 			//when
 			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client, provider)

@@ -12,6 +12,7 @@
   * [Configure Istio Access Logs](/istio/user/tutorials/01-45-enable-istio-access-logs.md)
   * [Send Requests Using Istio Egress Gateway](/istio/user/tutorials/01-50-send-requests-using-egress.md)
   * [Send mTLS Requests Using Istio Egress Gateway](/istio/user/tutorials/01-55-send-requests-using-egress-and-mtls.md)
+  * [Migrate From ELB to NLB](/istio/user/tutorials/01-60-enable-nlb-load-balancer.md)
 * [Technical Reference](/istio/user/technical-reference/README.md)
   * [Istio Controller Parameters](/istio/user/technical-reference/05-00-istio-controller-parameters.md)
   * [Istio Controller RBAC Configuration](/istio/user/technical-reference/05-10-istio-controller-rbac.md)

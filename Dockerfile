@@ -1,5 +1,5 @@
 # Build the manager binary
-FROM golang:1.24.1-alpine AS builder
+FROM golang:1.24.2-alpine AS builder
 ARG TARGETOS
 ARG TARGETARCH
 ARG GO_BUILD_TAGS

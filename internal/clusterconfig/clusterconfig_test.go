@@ -39,7 +39,7 @@ var _ = Describe("GetClusterProvider", func() {
 		client := createFakeClient(&node)
 		p, err := clusterconfig.GetClusterProvider(context.Background(), client)
 		Expect(err).To(BeNil())
-		Expect(p).To(Equal("other"))
+		Expect(p).To(Equal(clusterconfig.Other))
 	})
 	It("should return 'openstack' for clusters provisioned on OpenStack nodes", func() {
 		//given
@@ -92,7 +92,7 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			}
 
 			client := createFakeClient(&k3dNode)
-			provider, err := clusterconfig.GetClusterProvider(context.Background(), client)
+			provider, _ := clusterconfig.GetClusterProvider(context.Background(), client)
 
 			//when
 			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client, provider)
@@ -126,7 +126,7 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			}
 
 			client := createFakeClient(&awsNode)
-			provider, err := clusterconfig.GetClusterProvider(context.Background(), client)
+			provider, _ := clusterconfig.GetClusterProvider(context.Background(), client)
 
 			//when
 			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client, provider)
@@ -168,7 +168,7 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			}
 
 			client := createFakeClient(&awsNode, &elbDeprecatedConfigMap, &ingressGatewayService)
-			provider, err := clusterconfig.GetClusterProvider(context.Background(), client)
+			provider, _ := clusterconfig.GetClusterProvider(context.Background(), client)
 
 			//when
 			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client, provider)

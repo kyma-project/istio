@@ -330,7 +330,7 @@ func (c ClusterFlavour) clusterConfiguration(clusterProvider string) (ClusterCon
 // generateIstioIngressGatewayAnnotations adds an annotation to a service LoadBalancer istio-ingressgateway
 // only if cluster provider is openstack to pass an XFF header to the request.
 func generateIstioIngressGatewayAnnotations(clusterProvider string) (ClusterConfiguration, error) {
-	if clusterProvider == "openstack" {
+	if clusterProvider == Openstack {
 		return OpenStackLBProxyProtocolConfig, nil
 	}
 

@@ -31,14 +31,19 @@ var getFailedTestIstioCRStatus = func(ctx context.Context, sc *godog.Scenario, t
 	return ctx, nil
 }
 
-var testObjectsTearDown = func(ctx context.Context, sc *godog.Scenario, _ error) (context.Context, error) {
+var testObjectsTearDown = func(ctx context.Context, sc *godog.Scenario, testError error) (context.Context, error) {
+	t, err := testcontext.GetTestingFromContext(ctx)
+	if err != nil {
+		return ctx, err
+	}
+	if testError != nil {
+		t.Logf("Test failed, skipping objects teardown")
+		return ctx, nil
+	}
+
 	if objects, ok := testcontext.GetCreatedTestObjectsFromContext(ctx); ok {
 		for _, o := range objects {
 
-			t, err := testcontext.GetTestingFromContext(ctx)
-			if err != nil {
-				return ctx, err
-			}
 			t.Logf("Teardown %s", o.GetName())
 
 			err = retry.Do(func() error {
@@ -56,11 +61,15 @@ var testObjectsTearDown = func(ctx context.Context, sc *godog.Scenario, _ error)
 	return ctx, nil
 }
 
-var istioCrTearDown = func(ctx context.Context, sc *godog.Scenario, _ error) (context.Context, error) {
+var istioCrTearDown = func(ctx context.Context, sc *godog.Scenario, testError error) (context.Context, error) {
 
 	t, err := testcontext.GetTestingFromContext(ctx)
 	if err != nil {
 		return ctx, err
+	}
+	if testError != nil {
+		t.Logf("Test failed, skipping Istio CR teardown")
+		return ctx, nil
 	}
 
 	if istios, ok := testcontext.GetIstioCRsFromContext(ctx); ok {

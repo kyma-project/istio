@@ -73,13 +73,16 @@ func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha2.Is
 func getResources(k8sClient client.Client, provider string) ([]Resource, error) {
 	istioResources := []Resource{NewPeerAuthenticationMtls(k8sClient)}
 
-	if provider == "aws" {
+	if provider == clusterconfig.Aws {
 		shouldUseNLB, err := clusterconfig.ShouldUseNLB(context.Background(), k8sClient)
 		if err != nil {
 			return nil, err
 		}
 
 		istioResources = append(istioResources, NewProxyProtocolEnvoyFilter(k8sClient, shouldUseNLB))
+	} else if provider == clusterconfig.Openstack {
+		// NLB is a default only for AWS clusters so for OpenStack we need to set the usage of NLB to false
+		istioResources = append(istioResources, NewProxyProtocolEnvoyFilter(k8sClient, false))
 	}
 
 	return istioResources, nil

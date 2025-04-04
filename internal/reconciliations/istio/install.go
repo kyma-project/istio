@@ -57,7 +57,13 @@ func installIstio(ctx context.Context, args installArgs) (istiooperator.IstioIma
 		}
 	}
 
-	clusterConfiguration, err := clusterconfig.EvaluateClusterConfiguration(ctx, k8sClient)
+	// Check the cluster provider for the cluster configuration annotation purposes
+	clusterProvider, err := clusterconfig.GetClusterProvider(ctx, k8sClient)
+	if err != nil {
+		return istioImageVersion, described_errors.NewDescribedError(err, "Could not determine cluster provider")
+	}
+
+	clusterConfiguration, err := clusterconfig.EvaluateClusterConfiguration(ctx, k8sClient, clusterProvider)
 	if err != nil {
 		return istioImageVersion, described_errors.NewDescribedError(err, "Could not evaluate cluster flavour")
 	}

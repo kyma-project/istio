@@ -64,7 +64,7 @@ runs:
       shell: bash
       run: if [[ $(cat tests/performance/summary-sidecar.html | grep "<h4>Breached Thresholds</h4>" -A1 | grep -o ">[0-9]<" | sed 's/[<>]//g') -ne 0 ]]; then exit 1; fi
     - name: Deprovision cluster
-      if: always()
+      if: success()
       shell: bash
       env:
         GARDENER_KUBECONFIG: "${{ github.workspace }}/gardener_kubeconfig.yaml"

@@ -3,7 +3,6 @@ package ip
 import (
 	"fmt"
 	v1 "k8s.io/api/core/v1"
-	"log"
 	"net"
 )
 
@@ -14,7 +13,6 @@ func GetLoadBalancerIp(loadBalancerIngress v1.LoadBalancerIngress) (net.IP, erro
 	if err == nil {
 		return loadBalancerIP, nil
 	} else {
-		log.Printf("Falling back to reading DNS based load balancer IP, because of: %s\n", err)
 		return getDnsBasedLoadBalancerIp(loadBalancerIngress)
 	}
 }

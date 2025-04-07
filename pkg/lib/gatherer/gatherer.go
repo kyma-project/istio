@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
 	"github.com/distribution/reference"
+	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/masterminds/semver"
 	"golang.org/x/exp/slices"
@@ -66,7 +66,12 @@ func ListIstioCR(ctx context.Context, kubeClient client.Client, namespace ...str
 // ListIstioCPPods lists all Istio control plane pods
 func ListIstioCPPods(ctx context.Context, kubeClient client.Client) (podsList *v1.PodList, err error) {
 	list := v1.PodList{}
-	err = kubeClient.List(ctx, &list, &client.ListOptions{Namespace: IstioNamespace})
+	err = kubeClient.List(ctx, &list, &client.ListOptions{
+		Namespace: IstioNamespace,
+		LabelSelector: labels.SelectorFromSet(map[string]string{
+			"kyma-project.io/module": "istio",
+		}),
+	})
 	if err != nil {
 		return nil, err
 	}

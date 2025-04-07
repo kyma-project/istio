@@ -3,6 +3,7 @@ package restarter_test
 import (
 	"context"
 	"os"
+	"strings"
 
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
@@ -36,7 +37,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 	It("should fail proxy reset if Istio pods do not match target version", func() {
 		// given
 		istioCr := createIstioCR()
-		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.0")
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.0", "kyma-project.io/module=istio")
 		fakeClient := createFakeClient(istioCr, istiod)
 		statusHandler := status.NewStatusHandler(fakeClient)
 		podsLister := pods.NewPods(fakeClient, &logger)
@@ -62,7 +63,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 	It("should succeed proxy reset even if more than 5 proxies could not be reset and will return a warning", func() {
 		// given
 		istioCr := createIstioCR()
-		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.1")
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.1", "kyma-project.io/module=istio")
 		proxyRestarter := &proxyRestarterMock{
 			restartWarnings: []restart.RestartWarning{
 				{
@@ -113,7 +114,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 	It("should succeed proxy reset even if less than 5 proxies could not be reset and will return a warning", func() {
 		// given
 		istioCr := createIstioCR()
-		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.1")
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.1", "kyma-project.io/module=istio")
 		proxyRestarter := &proxyRestarterMock{
 			restartWarnings: []restart.RestartWarning{
 				{
@@ -148,7 +149,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 	It("should succeed proxy reset when there is no warning or errors", func() {
 		// given
 		istioCr := createIstioCR()
-		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.1")
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.1", "kyma-project.io/module=istio")
 		proxyRestarter := &proxyRestarterMock{}
 		fakeClient := createFakeClient(istioCr, istiod)
 		statusHandler := status.NewStatusHandler(fakeClient)
@@ -170,7 +171,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 	It("should return error when proxy reset fails", func() {
 		// given
 		istioCr := createIstioCR()
-		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.1")
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.1", "kyma-project.io/module=istio")
 		proxyRestarter := &proxyRestarterMock{err: errors.New("intentional error")}
 		fakeClient := createFakeClient(istioCr, istiod)
 		statusHandler := status.NewStatusHandler(fakeClient)
@@ -194,7 +195,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 	It("should succeed proxy reset even if not all proxies are reset and requeue is required", func() {
 		// given
 		istioCr := createIstioCR()
-		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.1")
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.1", "kyma-project.io/module=istio")
 		proxyRestarter := &proxyRestarterMock{
 			hasMorePods: true,
 		}
@@ -227,11 +228,18 @@ func createFakeClient(objects ...client.Object) client.Client {
 	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build()
 }
 
-func createPod(name, namespace, containerName, imageVersion string) *corev1.Pod {
+func createPod(name, namespace, containerName, imageVersion string, labels ...string) *corev1.Pod {
 	return &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
+			Labels: func() map[string]string {
+				m := map[string]string{}
+				for _, label := range labels {
+					m[strings.Split(label, "=")[0]] = strings.Split(label, "=")[1]
+				}
+				return m
+			}(),
 		},
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Pod",

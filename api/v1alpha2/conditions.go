@@ -26,6 +26,7 @@ var conditionReasons = map[ConditionReason]conditionMeta{
 	ConditionReasonReconcileRequeued:  {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonReconcileRequeuedMessage},
 	ConditionReasonValidationFailed:   {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonValidationFailedMessage},
 	ConditionReasonOlderCRExists:      {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonOlderCRExistsMessage},
+	ConditionReasonOldestCRNotFound:   {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonOldestCRNotFoundMessage},
 
 	ConditionReasonIstioInstallNotNeeded:        {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonIstioInstallNotNeededMessage},
 	ConditionReasonIstioInstallSucceeded:        {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonIstioInstallSucceededMessage},

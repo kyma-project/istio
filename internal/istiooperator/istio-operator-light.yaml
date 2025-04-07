@@ -34,6 +34,13 @@ spec:
           requests:
             cpu: 10m
             memory: 128Mi
+        overlays:
+        - apiVersion: apps/v1
+          kind: DaemonSet
+          name: istio-cni-node
+          patches:
+          - path: spec.template.metadata.labels.kyma-project\.io/module
+            value: istio
     egressGateways:
     - enabled: false
       k8s:
@@ -51,6 +58,13 @@ spec:
           requests:
             cpu: 10m
             memory: 32Mi
+        overlays:
+        - apiVersion: apps/v1
+          kind: Deployment
+          name: istio-egressgateway
+          patches:
+          - path: spec.template.metadata.labels.kyma-project\.io/module
+            value: istio
       name: istio-egressgateway
     ingressGateways:
     - enabled: true
@@ -91,6 +105,13 @@ spec:
           rollingUpdate:
             maxSurge: 100%
             maxUnavailable: 0
+        overlays:
+        - apiVersion: apps/v1
+          kind: Deployment
+          name: istio-ingressgateway
+          patches:
+          - path: spec.template.metadata.labels.kyma-project\.io/module
+            value: istio
       name: istio-ingressgateway
     istiodRemote:
       enabled: false
@@ -146,6 +167,13 @@ spec:
           istios.operator.kyma-project.io/managed-by-disclaimer: |
             DO NOT EDIT - This resource is managed by Kyma.
             Any modifications are discarded and the resource is reverted to the original state.
+        overlays:
+        - apiVersion: apps/v1
+          kind: Deployment
+          name: istiod
+          patches:
+          - path: spec.template.metadata.labels.kyma-project\.io/module
+            value: istio
   meshConfig:
     defaultConfig:
       holdApplicationUntilProxyStarts: true

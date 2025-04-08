@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/kyma-project/istio/operator/pkg/labels"
 	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
+	"strings"
 	"time"
 
 	"github.com/kyma-project/istio/operator/internal/described_errors"
@@ -59,7 +60,7 @@ var _ = Describe("Installation reconciliation", func() {
 				},
 			},
 		}
-		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion, "kyma-project.io/module=istio")
 		istioNamespace := createNamespace("istio-system")
 		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway"}}
 		c := createFakeClient(&istioCR, istiod, istioNamespace, igwDeployment)
@@ -104,7 +105,7 @@ var _ = Describe("Installation reconciliation", func() {
 			},
 		}
 
-		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion, "kyma-project.io/module=istio")
 		istioNamespace := createNamespace("istio-system")
 		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway"}}
 		c := createFakeClient(&istioCR, istiod, istioNamespace, igwDeployment)
@@ -146,7 +147,7 @@ var _ = Describe("Installation reconciliation", func() {
 				},
 			},
 		}
-		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion, "kyma-project.io/module=istio")
 		istioNamespace := createNamespace("istio-system")
 		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway"}}
 		c := createFakeClient(&istioCR, istiod, istioNamespace, igwDeployment)
@@ -194,7 +195,7 @@ var _ = Describe("Installation reconciliation", func() {
 			},
 		}
 
-		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.0")
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.0", "kyma-project.io/module=istio")
 		istioNamespace := createNamespace("istio-system")
 		mockClient := mockLibraryClient{}
 		c := createFakeClient(&istioCR, istiod, istioNamespace)
@@ -233,7 +234,7 @@ var _ = Describe("Installation reconciliation", func() {
 			},
 		}
 
-		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion, "kyma-project.io/module=istio")
 		istioNamespace := createNamespace("istio-system")
 		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway"}}
 		mockClient := mockLibraryClient{}
@@ -275,7 +276,7 @@ var _ = Describe("Installation reconciliation", func() {
 				State: operatorv1alpha2.Processing,
 			},
 		}
-		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.17.0")
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.17.0", "kyma-project.io/module=istio")
 		istioNamespace := createNamespace("istio-system")
 		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway"}}
 		c := createFakeClient(&istioCR, istiod, istioNamespace, igwDeployment)
@@ -317,7 +318,7 @@ var _ = Describe("Installation reconciliation", func() {
 				State: operatorv1alpha2.Processing,
 			},
 		}
-		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion+"-debug")
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion+"-debug", "kyma-project.io/module=istio")
 		istioNamespace := createNamespace("istio-system")
 		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway"}}
 		c := createFakeClient(&istioCR, istiod, istioNamespace, igwDeployment)
@@ -357,7 +358,7 @@ var _ = Describe("Installation reconciliation", func() {
 				},
 			}
 
-			istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
+			istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion, "kyma-project.io/module=istio")
 			mockClient := mockLibraryClient{}
 			c := createFakeClient(&istioCR, istiod)
 			installation := istio.Installation{
@@ -407,7 +408,7 @@ var _ = Describe("Installation reconciliation", func() {
 				},
 			},
 		}
-		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.17.0")
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.17.0", "kyma-project.io/module=istio")
 		istioNamespace := createNamespace("istio-system")
 		c := createFakeClient(&istioCR, istiod, istioNamespace)
 		mockClient := mockLibraryClient{}
@@ -446,7 +447,7 @@ var _ = Describe("Installation reconciliation", func() {
 				},
 			},
 		}
-		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "fake")
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "fake", "kyma-project.io/module=istio")
 		istioNamespace := createNamespace("istio-system")
 		c := createFakeClient(&istioCR, istiod, istioNamespace)
 		mockClient := mockLibraryClient{}
@@ -494,7 +495,7 @@ var _ = Describe("Installation reconciliation", func() {
 				},
 			},
 		}
-		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.17.0")
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.17.0", "kyma-project.io/module=istio")
 		istioNamespace := createNamespace("istio-system")
 		c := createFakeClient(&istioCR, istiod, istioNamespace)
 		mockClient := mockLibraryClient{
@@ -539,7 +540,7 @@ var _ = Describe("Installation reconciliation", func() {
 				},
 			},
 		}
-		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion, "kyma-project.io/module=istio")
 		istioNamespace := createNamespace("istio-system")
 		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway"}}
 		c := createFakeClient(&istioCR, istiod, istioNamespace, igwDeployment)
@@ -584,7 +585,7 @@ var _ = Describe("Installation reconciliation", func() {
 				},
 			},
 		}
-		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion, "kyma-project.io/module=istio")
 		istioNamespace := createNamespace("istio-system")
 		c := createFakeClient(&istioCR, istiod, istioNamespace)
 		mockClient := mockLibraryClient{}
@@ -669,7 +670,7 @@ var _ = Describe("Installation reconciliation", func() {
 				},
 			},
 		}
-		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion, "kyma-project.io/module=istio")
 		istioNamespace := createNamespace("istio-system")
 		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway"}}
 		c := createFakeClient(&istioCR, istiod, istioNamespace, igwDeployment)
@@ -709,7 +710,7 @@ var _ = Describe("Installation reconciliation", func() {
 				},
 			},
 		}
-		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion, "kyma-project.io/module=istio")
 		istioNamespace := createNamespace("istio-system")
 		c := createFakeClient(istiod, istioNamespace)
 		mockClient := mockLibraryClient{}
@@ -754,7 +755,7 @@ var _ = Describe("Installation reconciliation", func() {
 				},
 			},
 		}
-		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion, "kyma-project.io/module=istio")
 		istioNamespace := createNamespace("istio-system")
 		c := createFakeClient(&istioCR, istiod, istioNamespace, &networkingv1alpha3.EnvoyFilter{
 			ObjectMeta: metav1.ObjectMeta{
@@ -851,7 +852,7 @@ var _ = Describe("Installation reconciliation", func() {
 				},
 			},
 		}
-		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion)
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion, "kyma-project.io/module=istio")
 		istioNamespace := createNamespace("istio-system")
 		igwDeployment := &appsv1.Deployment{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway", Labels: map[string]string{"operator.istio.io/component": "IngressGateways"}}}
 		istioDaemonSet := &appsv1.DaemonSet{ObjectMeta: v1.ObjectMeta{Namespace: "istio-system", Name: "istio-cni-node", Labels: map[string]string{"operator.istio.io/component": "Cni"}}}
@@ -923,11 +924,18 @@ func createFakeClient(objects ...client.Object) client.Client {
 	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).WithStatusSubresource(objects...).Build()
 }
 
-func createPod(name, namespace, containerName, imageVersion string) *corev1.Pod {
+func createPod(name, namespace, containerName, imageVersion string, labels ...string) *corev1.Pod {
 	return &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
+			Labels: func() map[string]string {
+				m := map[string]string{}
+				for _, label := range labels {
+					m[strings.Split(label, "=")[0]] = strings.Split(label, "=")[1]
+				}
+				return m
+			}(),
 		},
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Pod",

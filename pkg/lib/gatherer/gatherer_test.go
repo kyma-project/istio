@@ -3,6 +3,7 @@ package gatherer_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/kyma-project/istio/operator/internal/tests"
@@ -117,8 +118,9 @@ var _ = Describe("Gatherer", func() {
 	})
 
 	Context("ListIstioCPPods", func() {
-		istiodPod := createPodWith("istiod", gatherer.IstioNamespace, "discovery", "istio/pilot", ImageVersion, false)
-		istiogwPod := createPodWith("istio-ingressgateway", gatherer.IstioNamespace, "istio-proxy", "istio/proxyv2", ImageVersion, false)
+		istiodPod := createPodWith("istiod", gatherer.IstioNamespace, "discovery", "istio/pilot", ImageVersion, false, "kyma-project.io/module=istio")
+		istiogwPod := createPodWith("istio-ingressgateway", gatherer.IstioNamespace, "istio-proxy", "istio/proxyv2", ImageVersion, false, "kyma-project.io/module=istio")
+		notManagedPodIstioSystem := createPodWith("not-managed", gatherer.IstioNamespace, "istio-proxy", "istio/proxyv2", ImageVersion, false, "kyma-project.io/module=not-istio")
 		appPod := createPodWith("application", "app-namespace", "istio-proxy", "istio/proxyv2", ImageVersion, false)
 
 		It("should not get any pods in istio-system namespace if there are none", func() {
@@ -147,6 +149,23 @@ var _ = Describe("Gatherer", func() {
 
 			istioNamespace, err := gatherer.ListIstioCPPods(context.TODO(), client)
 
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(istioNamespace.Items).To(HaveLen(2))
+		})
+
+		It("should not get pods not marked with 'kyma-project.io/module: istio'", func() {
+			//given
+			istioSystem := corev1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: gatherer.IstioNamespace,
+				},
+			}
+			client := createClientSet(&istioSystem, istiodPod, istiogwPod, notManagedPodIstioSystem, appPod)
+
+			//when
+			istioNamespace, err := gatherer.ListIstioCPPods(context.TODO(), client)
+
+			//then
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(istioNamespace.Items).To(HaveLen(2))
 		})
@@ -204,10 +223,10 @@ var _ = Describe("Gatherer", func() {
 	})
 
 	Context("GetIstioPodsVersion", func() {
-		istiodPod := createPodWith("istiod", gatherer.IstioNamespace, "discovery", "istio/pilot", ImageVersion, false)
-		istiogwPod := createPodWith("istio-ingressgateway", gatherer.IstioNamespace, "istio-proxy", "istio/proxyv2", ImageVersion, false)
-		istiogwPodTerm := createPodWith("istio-ingressgateway-old", gatherer.IstioNamespace, "istio-proxy", "istio/proxyv2", ImageVersionOld, true)
-		istiocniPod := createPodWith("istio-cni-node", gatherer.IstioNamespace, "install-cni", "istio/install-cni", ImageVersion, false)
+		istiodPod := createPodWith("istiod", gatherer.IstioNamespace, "discovery", "istio/pilot", ImageVersion, false, "kyma-project.io/module=istio")
+		istiogwPod := createPodWith("istio-ingressgateway", gatherer.IstioNamespace, "istio-proxy", "istio/proxyv2", ImageVersion, false, "kyma-project.io/module=istio")
+		istiogwPodTerm := createPodWith("istio-ingressgateway-old", gatherer.IstioNamespace, "istio-proxy", "istio/proxyv2", ImageVersionOld, true, "kyma-project.io/module=istio")
+		istiocniPod := createPodWith("istio-cni-node", gatherer.IstioNamespace, "install-cni", "istio/install-cni", ImageVersion, false, "kyma-project.io/module=istio")
 		appPod := createPodWith("application", "app-namespace", "istio-proxy", "istio/proxyv2", ImageVersion, false)
 
 		It("should get Istio installed version based on pods in istio-system namespace", func() {
@@ -246,7 +265,7 @@ var _ = Describe("Gatherer", func() {
 					Name: gatherer.IstioNamespace,
 				},
 			}
-			istiocniPodDistroless := createPodWith("istio-cni-node", "istio-system", "install-cni", "istio/install-cni", ImageVersion+"-distroless", false)
+			istiocniPodDistroless := createPodWith("istio-cni-node", "istio-system", "install-cni", "istio/install-cni", ImageVersion+"-distroless", false, "kyma-project.io/module=istio")
 
 			client := createClientSet(&istioSystem, istiodPod, istiogwPod, istiocniPodDistroless, appPod)
 
@@ -278,7 +297,7 @@ var _ = Describe("Gatherer", func() {
 					Name: gatherer.IstioNamespace,
 				},
 			}
-			istiocniPodOld := createPodWith("istio-cni-node", "istio-system", "install-cni", "istio/install-cni", "1.0.0", false)
+			istiocniPodOld := createPodWith("istio-cni-node", "istio-system", "install-cni", "istio/install-cni", "1.0.0", false, "kyma-project.io/module=istio")
 			client := createClientSet(&istioSystem, istiodPod, istiogwPod, istiocniPodOld, appPod)
 
 			version, err := gatherer.GetIstioPodsVersion(context.TODO(), client)
@@ -294,7 +313,7 @@ var _ = Describe("Gatherer", func() {
 					Name: gatherer.IstioNamespace,
 				},
 			}
-			istiocniPodWrong := createPodWith("istio-cni-node", "istio-system", "install-cni", "istio/install-cni", "wrong", false)
+			istiocniPodWrong := createPodWith("istio-cni-node", "istio-system", "install-cni", "istio/install-cni", "wrong", false, "kyma-project.io/module=istio")
 			client := createClientSet(&istioSystem, istiodPod, istiogwPod, istiocniPodWrong, appPod)
 
 			version, err := gatherer.GetIstioPodsVersion(context.TODO(), client)
@@ -310,7 +329,7 @@ var _ = Describe("Gatherer", func() {
 					Name: gatherer.IstioNamespace,
 				},
 			}
-			istiocniPodLatest := createPodWith("istio-cni-node", "istio-system", "install-cni", "istio/install-cni", "latest", false)
+			istiocniPodLatest := createPodWith("istio-cni-node", "istio-system", "install-cni", "istio/install-cni", "latest", false, "kyma-project.io/module=istio")
 			client := createClientSet(&istioSystem, istiodPod, istiogwPod, istiocniPodLatest, appPod)
 
 			version, err := gatherer.GetIstioPodsVersion(context.TODO(), client)
@@ -333,7 +352,7 @@ func createClientSet(objects ...client.Object) client.Client {
 	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build()
 }
 
-func createPodWith(name, namespace, containerName, image, imageVersion string, terminating bool) *corev1.Pod {
+func createPodWith(name, namespace, containerName, image, imageVersion string, terminating bool, labels ...string) *corev1.Pod {
 	pod := corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -341,6 +360,13 @@ func createPodWith(name, namespace, containerName, image, imageVersion string, t
 			OwnerReferences: []metav1.OwnerReference{
 				{Kind: "ReplicaSet"},
 			},
+			Labels: func() map[string]string {
+				l := make(map[string]string)
+				for _, label := range labels {
+					l[strings.Split(label, "=")[0]] = strings.Split(label, "=")[1]
+				}
+				return l
+			}(),
 			Annotations: map[string]string{"sidecar.istio.io/status": fmt.Sprintf(`{"containers":["%s"]}`, name+"-container")},
 		},
 		TypeMeta: metav1.TypeMeta{

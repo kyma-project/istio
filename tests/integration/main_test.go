@@ -68,6 +68,7 @@ func runTestSuite(t *testing.T, scenarioInit func(ctx *godog.ScenarioContext), f
 		DefaultContext: createDefaultContext(t),
 		Strict:         true,
 		TestingT:       t,
+		StopOnFailure:  true,
 	}
 	if shouldExportResults() {
 		goDogOpts.Format = "pretty,cucumber:cucumber-report.json"

@@ -24,7 +24,7 @@ var _ = Describe("Apply", func() {
 
 	It("should return created if no resource was present", func() {
 		client := createFakeClient()
-		sample := NewProxyProtocolEnvoyFilter(client)
+		sample := NewProxyProtocolEnvoyFilter(client, false)
 
 		//when
 		changed, err := sample.reconcile(context.TODO(), client, owner, templateValues)
@@ -59,7 +59,7 @@ var _ = Describe("Apply", func() {
 
 		client := createFakeClient(&p)
 
-		sample := NewProxyProtocolEnvoyFilter(client)
+		sample := NewProxyProtocolEnvoyFilter(client, false)
 
 		//when
 		changed, err := sample.reconcile(context.TODO(), client, owner, templateValues)
@@ -86,7 +86,7 @@ var _ = Describe("Apply", func() {
 		p.Spec.Priority = 123
 		client := createFakeClient(&p)
 
-		sample := NewProxyProtocolEnvoyFilter(client)
+		sample := NewProxyProtocolEnvoyFilter(client, false)
 
 		//when
 		changed, err := sample.reconcile(context.TODO(), client, owner, templateValues)

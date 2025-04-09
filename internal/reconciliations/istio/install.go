@@ -2,6 +2,7 @@ package istio
 
 import (
 	"context"
+	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
@@ -11,7 +12,6 @@ import (
 	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/internal/webhooks"
 	"github.com/kyma-project/istio/operator/pkg/labels"
-	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -57,7 +57,13 @@ func installIstio(ctx context.Context, args installArgs) (istiooperator.IstioIma
 		}
 	}
 
-	clusterConfiguration, err := clusterconfig.EvaluateClusterConfiguration(ctx, k8sClient)
+	// Check the cluster provider for the cluster configuration annotation purposes
+	clusterProvider, err := clusterconfig.GetClusterProvider(ctx, k8sClient)
+	if err != nil {
+		return istioImageVersion, described_errors.NewDescribedError(err, "Could not determine cluster provider")
+	}
+
+	clusterConfiguration, err := clusterconfig.EvaluateClusterConfiguration(ctx, k8sClient, clusterProvider)
 	if err != nil {
 		return istioImageVersion, described_errors.NewDescribedError(err, "Could not evaluate cluster flavour")
 	}
@@ -92,6 +98,10 @@ func installIstio(ctx context.Context, args installArgs) (istiooperator.IstioIma
 		return istioImageVersion, described_errors.NewDescribedError(err, "Could not add warden validation label")
 	}
 
+	if err := patchModuleResourcesWithModuleLabel(ctx, k8sClient); err != nil {
+		return istioImageVersion, described_errors.NewDescribedError(err, "could not update managed metadata")
+	}
+
 	err = gatherer.VerifyIstioPodsVersion(ctx, k8sClient, istioImageVersion.Version())
 	if err != nil {
 		return istioImageVersion, described_errors.NewDescribedError(err, "Verifying Pod versions in istio-system namespace failed")
@@ -99,10 +109,6 @@ func installIstio(ctx context.Context, args installArgs) (istiooperator.IstioIma
 
 	ctrl.Log.Info("Istio installation succeeded")
 	statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIstioInstallSucceeded))
-
-	if err := updateResourcesMetadataForSelector(ctx, k8sClient); err != nil {
-		return istioImageVersion, described_errors.NewDescribedError(err, "could not update managed metadata")
-	}
 
 	return istioImageVersion, nil
 }

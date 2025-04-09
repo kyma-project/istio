@@ -5,16 +5,15 @@ import (
 	"fmt"
 	"github.com/kyma-project/istio/operator/tests/testcontext"
 	"github.com/pkg/errors"
-	appsv1 "k8s.io/api/apps/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
-
 	apinetworkingv1 "istio.io/api/networking/v1"
 	apisecurityv1 "istio.io/api/security/v1"
 	apiv1beta1 "istio.io/api/type/v1beta1"
 	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
 	securityv1 "istio.io/client-go/pkg/apis/security/v1"
+	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"strings"
 
 	"github.com/avast/retry-go"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
@@ -160,6 +159,11 @@ func CreateIstioGateway(ctx context.Context, name, namespace string) (context.Co
 		return ctx, err
 	}
 
+	ctx, err = CreateDummySecretWithCert(ctx, "dummy-cert", "istio-system")
+	if err != nil {
+		return ctx, err
+	}
+
 	gateway := &networkingv1.Gateway{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -179,6 +183,20 @@ func CreateIstioGateway(ctx context.Context, name, namespace string) (context.Co
 					},
 					Hosts: []string{
 						"*",
+					},
+				},
+				{
+					Port: &apinetworkingv1.Port{
+						Number:   443,
+						Protocol: "HTTPS",
+						Name:     "https",
+					},
+					Hosts: []string{
+						"*",
+					},
+					Tls: &apinetworkingv1.ServerTLSSettings{
+						Mode:           apinetworkingv1.ServerTLSSettings_SIMPLE,
+						CredentialName: "dummy-cert",
 					},
 				},
 			},

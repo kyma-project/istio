@@ -108,6 +108,20 @@ var AWSNLBConfig = ClusterConfiguration{
 	},
 }
 
+var OpenStackLBProxyProtocolConfig = ClusterConfiguration{
+	"spec": map[string]interface{}{
+		"values": map[string]interface{}{
+			"gateways": map[string]interface{}{
+				"istio-ingressgateway": map[string]interface{}{
+					"serviceAnnotations": map[string]string{
+						loadBalancerProxyProtocolOpenStackAnnotation: loadBalancerProxyProtocolOpenStack,
+					},
+				},
+			},
+		},
+	},
+}
+
 const (
 	elbCmName      = "elb-deprecated"
 	elbCmNamespace = "istio-system"
@@ -118,6 +132,9 @@ const (
 	loadBalancerNlbTargetType           = "instance"
 	loadBalancerTypeAnnotation          = "service.beta.kubernetes.io/aws-load-balancer-type"
 	loadBalancerType                    = "nlb"
+
+	loadBalancerProxyProtocolOpenStackAnnotation = "loadbalancer.openstack.org/proxy-protocol"
+	loadBalancerProxyProtocolOpenStack           = "v1"
 )
 
 func ShouldUseNLB(ctx context.Context, k8sClient client.Client) (bool, error) {
@@ -167,7 +184,7 @@ func awsConfig(ctx context.Context, k8sClient client.Client) (ClusterConfigurati
 	return ClusterConfiguration{}, err
 }
 
-func EvaluateClusterConfiguration(ctx context.Context, k8sClient client.Client) (ClusterConfiguration, error) {
+func EvaluateClusterConfiguration(ctx context.Context, k8sClient client.Client, clusterProvider string) (ClusterConfiguration, error) {
 	flavour, err := DiscoverClusterFlavour(ctx, k8sClient)
 	if err != nil {
 		return ClusterConfiguration{}, err
@@ -177,8 +194,15 @@ func EvaluateClusterConfiguration(ctx context.Context, k8sClient client.Client) 
 		return awsConfig(ctx, k8sClient)
 	}
 
-	return flavour.clusterConfiguration()
+	return flavour.clusterConfiguration(clusterProvider)
 }
+
+// Used to return determined hyperscaler provider
+const (
+	Aws       = "aws"
+	Openstack = "openstack"
+	Other     = "other"
+)
 
 // GetClusterProvider is a small hack that tries to determine the
 // hyperscaler based on the first provider node.
@@ -196,17 +220,22 @@ func GetClusterProvider(ctx context.Context, k8sclient client.Client) (string, e
 	// client-go also doesn't return any error
 	if len(nodes.Items) == 0 {
 		ctrl.Log.Info("unable to determine cloud provider due to empty node list, using 'other' as provider")
-		return "other", nil
+		return Other, nil
 	}
 
 	// get 1st node since all nodes usually are backed by the same provider
 	n := nodes.Items[0]
 	provider := n.Spec.ProviderID
+	provider = strings.ToLower(provider)
 	switch {
 	case strings.HasPrefix(provider, "aws://"):
-		return "aws", nil
+
+		return Aws, nil
+	case strings.HasPrefix(provider, "openstack://"):
+
+		return Openstack, nil
 	default:
-		return "other", nil
+		return Other, nil
 	}
 }
 
@@ -249,7 +278,7 @@ func DiscoverClusterFlavour(ctx context.Context, k8sClient client.Client) (Clust
 	return Unknown, nil
 }
 
-func (c ClusterFlavour) clusterConfiguration() (ClusterConfiguration, error) {
+func (c ClusterFlavour) clusterConfiguration(clusterProvider string) (ClusterConfiguration, error) {
 	switch c {
 	case k3d:
 		config := map[string]interface{}{
@@ -293,8 +322,18 @@ func (c ClusterFlavour) clusterConfiguration() (ClusterConfiguration, error) {
 		}
 		return config, nil
 	case Gardener:
-		return ClusterConfiguration{}, nil
+		return generateIstioIngressGatewayAnnotations(clusterProvider)
 	}
+	return ClusterConfiguration{}, nil
+}
+
+// generateIstioIngressGatewayAnnotations adds an annotation to a service LoadBalancer istio-ingressgateway
+// only if cluster provider is openstack to pass an XFF header to the request.
+func generateIstioIngressGatewayAnnotations(clusterProvider string) (ClusterConfiguration, error) {
+	if clusterProvider == Openstack {
+		return OpenStackLBProxyProtocolConfig, nil
+	}
+
 	return ClusterConfiguration{}, nil
 }
 

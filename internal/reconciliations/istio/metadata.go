@@ -13,7 +13,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func updateResourcesMetadataForSelector(ctx context.Context, c client.Client) error {
+func patchModuleResourcesWithModuleLabel(ctx context.Context, c client.Client) error {
 	// we can't statically modify istio metadata easily without directly reconciling istio resources
 	// this function goes through all resources created and labeled by istio installer to set additional label with module name
 	// oh boy...

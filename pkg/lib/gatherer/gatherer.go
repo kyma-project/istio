@@ -122,7 +122,7 @@ func GetIstioPodsVersion(ctx context.Context, kubeClient client.Client) (string,
 	currentVersion := &NoVersion
 	containersToCheck := []string{"discovery", "istio-proxy", "install-cni"}
 	for _, pod := range pods.Items {
-		if pod.ObjectMeta.DeletionTimestamp != nil {
+		if pod.DeletionTimestamp != nil {
 			continue
 		}
 		for _, container := range pod.Spec.Containers {
@@ -137,12 +137,12 @@ func GetIstioPodsVersion(ctx context.Context, kubeClient client.Client) (string,
 				currentVersion = version
 				continue
 			} else if currentVersion.Compare(version) != 0 {
-				return "", fmt.Errorf("Image version of Pod %s %s do not match other Pods version %s", pod.Name, version.String(), currentVersion.String())
+				return "", fmt.Errorf("image version of Pod %s %s do not match other Pods version %s", pod.Name, version.String(), currentVersion.String())
 			}
 		}
 	}
 	if currentVersion.Compare(&NoVersion) == 0 {
-		return "", errors.New("Unable to obtain installed Istio image version")
+		return "", errors.New("unable to obtain installed Istio image version")
 	}
 	return currentVersion.String(), nil
 }

@@ -64,7 +64,7 @@ func HasIstioSidecarStatusAnnotation(pod v1.Pod) bool {
 }
 
 func IsPodReady(pod v1.Pod) bool {
-	isMarkedForDeletion := pod.ObjectMeta.DeletionTimestamp != nil
+	isMarkedForDeletion := pod.DeletionTimestamp != nil
 	return !isMarkedForDeletion && isPodRunning(pod) && hasTrueStatusConditions(pod)
 }
 

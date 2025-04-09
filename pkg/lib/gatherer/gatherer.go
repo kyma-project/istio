@@ -161,7 +161,7 @@ func VerifyIstioPodsVersion(ctx context.Context, kubeClient client.Client, istio
 func getImageVersion(image string) (*semver.Version, error) {
 	matches := reference.ReferenceRegexp.FindStringSubmatch(image)
 	if len(matches) < 3 {
-		return &NoVersion, fmt.Errorf("Unable to parse container image reference: %s", image)
+		return &NoVersion, fmt.Errorf("unable to parse container image reference: %s", image)
 	}
 	version, err := semver.NewVersion(matches[2])
 	if err != nil {

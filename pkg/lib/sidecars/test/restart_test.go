@@ -150,13 +150,24 @@ func copyReport(src, dst string) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	defer source.Close()
+	defer func() {
+		e := source.Close()
+		if e != nil {
+			log.Printf("error closing source file: %s", e.Error())
+		}
+	}()
 
 	destination, err := os.Create(dst)
 	if err != nil {
 		return 0, err
 	}
-	defer destination.Close()
+	defer func() {
+		e := destination.Close()
+		if e != nil {
+			log.Printf("error closing destination file: %s", e.Error())
+		}
+	}()
+
 	nBytes, err := io.Copy(destination, source)
 	return nBytes, err
 }

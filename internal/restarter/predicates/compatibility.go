@@ -19,7 +19,7 @@ func NewCompatibilityRestartPredicate(istioCR *v1alpha2.Istio) (*CompatibilityRe
 	}
 
 	return &CompatibilityRestartPredicate{
-		oldCompatibilityMode: lastAppliedConfig.IstioSpec.CompatibilityMode,
+		oldCompatibilityMode: lastAppliedConfig.CompatibilityMode,
 		newCompatibilityMode: istioCR.Spec.CompatibilityMode,
 		config:               config{proxyMetadata: v1alpha2.ProxyMetaDataCompatibility},
 	}, nil

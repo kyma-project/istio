@@ -57,7 +57,7 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/upgrade-integration-test
         with:
-          operator-image-name: "europe-docker.pkg.dev/kyma-project/prod/istio/releases/istio-manager:${{ github.event.inputs.version }}"
+          operator-image-name: ${{ inputs.image }}
           target_branch: ${{ github.ref_name }}
 
   istio-integration-test:

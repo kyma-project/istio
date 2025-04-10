@@ -16,8 +16,8 @@ on:
         type: string
 
 jobs:
-  istio-upgrade-integration-test:
-    name: Istio upgrade integration test
+  istio-upgrade-integration-test-aws:
+    name: Istio upgrade integration test AWS
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -38,15 +38,27 @@ jobs:
           TARGET_BRANCH: ${{github.ref_name}}
           GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"
           GARDENER_PROJECT_NAME: "goats"
-          GARDENER_PROVIDER_SECRET_NAME: "goat"
-          GARDENER_PROVIDER: "gcp"
-          GARDENER_REGION: "europe-west3"
+          GARDENER_PROVIDER_SECRET_NAME: "aws-gardener-access"
+          GARDENER_PROVIDER: "aws"
           GARDENER_CLUSTER_VERSION: "1.31.6"
-          MACHINE_TYPE: "n2-standard-4"
+          GARDENER_REGION: "eu-west-1"
+          MACHINE_TYPE: "m5.xlarge"
           DISK_SIZE: 50
-          DISK_TYPE: "pd-standard"
+          DISK_TYPE: "gp2"
           SCALER_MAX: 20
           SCALER_MIN: 3
+
+  upgrade-test-k3d:
+    name: Istio upgrade integration test K3D
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/upgrade-integration-test
+        with:
+          operator-image-name: ${{ inputs.image }}
+          target_branch: ${{ github.ref_name }}
 
   istio-integration-test:
     name: Istio integration test

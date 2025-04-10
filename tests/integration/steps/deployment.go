@@ -83,7 +83,7 @@ func CreateApplicationDeployment(ctx context.Context, appName, image, namespace 
 			ProbeHandler: corev1.ProbeHandler{
 				HTTPGet: &corev1.HTTPGetAction{
 					Path: "/headers",
-					Port: intstr.FromInt32(8000),
+					Port: intstr.IntOrString{IntVal: 8000},
 				},
 			},
 			InitialDelaySeconds: 15,

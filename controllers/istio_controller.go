@@ -113,6 +113,11 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 	if len(existingIstioCRs.Items) > 1 {
 		oldestCr := r.getOldestCR(existingIstioCRs)
+		if oldestCr == nil {
+			errOldestCRNotFound := fmt.Errorf("no oldest Istio CR found")
+			return r.terminateReconciliation(ctx, &istioCR, described_errors.NewDescribedError(errOldestCRNotFound, "Stopped Istio CR reconciliation").SetWarning(), operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonOldestCRNotFound))
+		}
+
 		if istioCR.GetUID() != oldestCr.GetUID() {
 			errNotOldestCR := fmt.Errorf("only Istio CR %s in %s reconciles the module", oldestCr.GetName(), oldestCr.GetNamespace())
 			return r.terminateReconciliation(ctx, &istioCR, described_errors.NewDescribedError(errNotOldestCR, "Stopped Istio CR reconciliation").SetWarning(),
@@ -273,6 +278,10 @@ func TemplateRateLimiter(failureBaseDelay time.Duration, failureMaxDelay time.Du
 }
 
 func (r *IstioReconciler) getOldestCR(istioCRs *operatorv1alpha2.IstioList) *operatorv1alpha2.Istio {
+	if len(istioCRs.Items) == 0 {
+		return nil
+	}
+
 	oldest := istioCRs.Items[0]
 	for _, item := range istioCRs.Items {
 		timestamp := &item.CreationTimestamp

@@ -48,6 +48,8 @@ const (
 	ConditionReasonValidationFailedMessage                   = "Reconciliation did not happen as Istio Custom Resource failed to validate"
 	ConditionReasonOlderCRExists             ConditionReason = "OlderCRExists"
 	ConditionReasonOlderCRExistsMessage                      = "This Istio custom resource is not the oldest one and does not represent the module state"
+	ConditionReasonOldestCRNotFound          ConditionReason = "OldestCRNotFound"
+	ConditionReasonOldestCRNotFoundMessage                   = "Oldest Istio custom resource could not be found"
 
 	// install / uninstall
 	ConditionReasonIstioInstallNotNeeded               ConditionReason = "IstioInstallNotNeeded"

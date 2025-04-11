@@ -32,10 +32,8 @@ func IstioCRDsBePresentOnCluster(ctx context.Context, should string) error {
 		return err
 	}
 
-	shouldHave := true
-	if should != "should" {
-		shouldHave = false
-	}
+	shouldHave := should == "should"
+
 	lister, err := crds.NewCRDListerFromFile(k8sClient, "steps/istio_crd_list.yaml")
 	if err != nil {
 		return err

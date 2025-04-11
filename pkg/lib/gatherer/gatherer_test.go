@@ -67,7 +67,7 @@ var _ = Describe("Gatherer", func() {
 		istioCr, err := gatherer.GetIstioCR(context.TODO(), client, IstioResourceName, IstioCRNamespace)
 
 		Expect(err).ShouldNot(HaveOccurred())
-		Expect(istioCr.ObjectMeta.Labels[TestLabelKey]).To(Equal(istioKymaSystem.ObjectMeta.Labels[TestLabelKey]))
+		Expect(istioCr.Labels[TestLabelKey]).To(Equal(istioKymaSystem.Labels[TestLabelKey]))
 
 		noObjectClient := createClientSet(&kymaSystem)
 		istioCrNoObject, err := gatherer.GetIstioCR(context.TODO(), noObjectClient, IstioResourceName, IstioCRNamespace)
@@ -287,7 +287,7 @@ var _ = Describe("Gatherer", func() {
 			version, err := gatherer.GetIstioPodsVersion(context.TODO(), client)
 
 			Expect(err).Should(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("Unable to obtain installed Istio image version"))
+			Expect(err.Error()).To(ContainSubstring("unable to obtain installed Istio image version"))
 			Expect(version).To(Equal(""))
 		})
 
@@ -303,7 +303,7 @@ var _ = Describe("Gatherer", func() {
 			version, err := gatherer.GetIstioPodsVersion(context.TODO(), client)
 
 			Expect(err).Should(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("Image version of Pod istio-ingressgateway 1.10.0 do not match other Pods version 1.0.0"))
+			Expect(err.Error()).To(ContainSubstring("image version of Pod istio-ingressgateway 1.10.0 do not match other Pods version 1.0.0"))
 			Expect(version).To(Equal(""))
 		})
 
@@ -387,7 +387,7 @@ func createPodWith(name, namespace, containerName, image, imageVersion string, t
 	}
 	if terminating {
 		timestamp := metav1.Now()
-		pod.ObjectMeta.DeletionTimestamp = &timestamp
+		pod.DeletionTimestamp = &timestamp
 		pod.Finalizers = []string{"istios.operator.kyma-project.io/test-mock"}
 	}
 	return &pod

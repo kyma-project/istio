@@ -76,7 +76,7 @@ var _ = Describe("Istio Controller", func() {
 			Expect(err).To(Not(HaveOccurred()))
 
 			Expect(updatedIstioCR.Status.State).To(Equal(operatorv1alpha2.Error))
-			Expect(updatedIstioCR.Status.Description).To(Equal("Stopped Istio CR reconciliation: Istio CR is not in kyma-system namespace"))
+			Expect(updatedIstioCR.Status.Description).To(Equal("Stopped Istio CR reconciliation: istio CR is not in kyma-system namespace"))
 
 			Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
 			Expect(*updatedIstioCR.Status.Conditions).To(HaveLen(1))

@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/go-logr/logr"
-	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
@@ -24,7 +23,6 @@ import (
 	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/kubectl/pkg/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -304,7 +302,7 @@ type proxyRestarterMock struct {
 	err             error
 }
 
-func (p *proxyRestarterMock) RestartProxies(_ context.Context, _ predicates.SidecarImage, _ v1.ResourceRequirements, _ *v1alpha2.Istio) ([]restart.RestartWarning, bool, error) {
+func (p *proxyRestarterMock) RestartProxies(_ context.Context, _ predicates.SidecarImage, _ corev1.ResourceRequirements, _ *operatorv1alpha2.Istio) ([]restart.RestartWarning, bool, error) {
 	return p.restartWarnings, p.hasMorePods, p.err
 }
 

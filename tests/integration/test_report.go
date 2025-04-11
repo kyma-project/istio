@@ -103,13 +103,22 @@ func copyReport(src, dst string) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	defer source.Close()
+	defer func() {
+		if tempErr := source.Close(); tempErr != nil {
+			err = tempErr
+		}
+	}()
 
 	destination, err := os.Create(dst)
 	if err != nil {
 		return 0, err
 	}
-	defer destination.Close()
+	defer func() {
+		if tempErr := destination.Close(); tempErr != nil {
+			err = tempErr
+		}
+	}()
+
 	nBytes, err := io.Copy(destination, source)
 	return nBytes, err
 }

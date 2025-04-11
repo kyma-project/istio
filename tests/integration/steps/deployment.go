@@ -79,6 +79,16 @@ func CreateApplicationDeployment(ctx context.Context, appName, image, namespace 
 	c := corev1.Container{
 		Name:  appName,
 		Image: image,
+		ReadinessProbe: &corev1.Probe{
+			ProbeHandler: corev1.ProbeHandler{
+				HTTPGet: &corev1.HTTPGetAction{
+					Path: "/headers",
+					Port: intstr.IntOrString{IntVal: 80},
+				},
+			},
+			InitialDelaySeconds: 15,
+			PeriodSeconds:       10,
+		},
 	}
 
 	return CreateDeployment(ctx, appName, namespace, c)

@@ -83,7 +83,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	r.log.Info("Was called to reconcile Kyma Istio Service Mesh")
 
 	istioCR := operatorv1alpha2.Istio{}
-	if err := r.Client.Get(ctx, req.NamespacedName, &istioCR); err != nil {
+	if err := r.Get(ctx, req.NamespacedName, &istioCR); err != nil {
 		if apierrors.IsNotFound(err) {
 			r.log.Info("Skipped reconciliation, because Istio CR was not found", "request object", req.NamespacedName)
 			return ctrl.Result{}, nil
@@ -100,7 +100,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 
 	if istioCR.GetNamespace() != namespace {
-		errWrongNS := fmt.Errorf("Istio CR is not in %s namespace", namespace)
+		errWrongNS := fmt.Errorf("istio CR is not in %s namespace", namespace)
 		return r.terminateReconciliation(ctx, &istioCR, described_errors.NewDescribedError(errWrongNS, "Stopped Istio CR reconciliation"),
 			operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileFailed))
 	}
@@ -295,14 +295,14 @@ func (r *IstioReconciler) getOldestCR(istioCRs *operatorv1alpha2.IstioList) *ope
 func (r *IstioReconciler) updateLastAppliedConfiguration(ctx context.Context, objectKey types.NamespacedName, istioTag string) error {
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		lacIstioCR := operatorv1alpha2.Istio{}
-		if err := r.Client.Get(ctx, objectKey, &lacIstioCR); err != nil {
+		if err := r.Get(ctx, objectKey, &lacIstioCR); err != nil {
 			return err
 		}
 		lastAppliedErr := configuration.UpdateLastAppliedConfiguration(&lacIstioCR, istioTag)
 		if lastAppliedErr != nil {
 			return lastAppliedErr
 		}
-		return r.Client.Update(ctx, &lacIstioCR)
+		return r.Update(ctx, &lacIstioCR)
 	})
 }
 

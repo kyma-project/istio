@@ -23,7 +23,7 @@ runs:
     - name: Create Cluster
       uses: ./.github/actions/provision-k3d-cluster
       with:
-        k3s-version: "1.31.6"
+        k3s-version: "1.31.7"
         agents: ${{ inputs.agents }}
         servers-memory: ${{ inputs.servers-memory }}
     - name: Run integration tests

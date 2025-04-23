@@ -103,7 +103,7 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 				"spec": map[string]interface{}{
 					"values": map[string]interface{}{
 						"cni": map[string]string{
-							"cniBinDir":  "/bin",
+							"cniBinDir":  "/var/lib/rancher/k3s/data/cni",
 							"cniConfDir": "/var/lib/rancher/k3s/agent/etc/cni/net.d",
 						},
 					},

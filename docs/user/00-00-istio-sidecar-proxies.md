@@ -42,6 +42,6 @@ Restarting the Istio sidecar proxies is possible for all resources that allow fo
 
 The Istio module does not restart an Istio sidecar proxy if it has a custom image set. See [Resource Annotations](https://istio.io/latest/docs/reference/config/annotations/#SidecarProxyImage).
 
-> [!CAUTION]
+> [!WARNING]
 > Istio-injected Pods with `restartPolicy: Never` may end up in a permanently broken state due to a known issue in Istio. See [issue #49210](https://github.com/istio/istio/issues/49210). 
 > If you need to use this setting, you must be aware of the risk until the issue is fixed. If you don't have a specific need for setting **restartPolicy** to `Never`, consider using a different option.

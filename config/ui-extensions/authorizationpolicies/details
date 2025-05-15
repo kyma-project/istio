@@ -5,9 +5,10 @@ header:
     widget: Labels
     name: spec.provider
 resourceGraph:
+  depth: 2
   colorVariant: 3
   dataSources:
-    - source: podSelector
+    - source: relatedAPIRules
 body:
   - widget: Table
     name: spec.rules

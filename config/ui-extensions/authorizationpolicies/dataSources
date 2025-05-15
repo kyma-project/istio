@@ -8,3 +8,5 @@ relatedAPIRules:
       kind: APIRule
       group: gateway.kyma-project.io
       version: v2
+  filter: >-
+      $filter($root.metadata.labels."apirule.gateway.kyma-project.io/v1beta1", function($r) { $substringBefore($r, '.') = $item.metadata.name})

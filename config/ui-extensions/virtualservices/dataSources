@@ -10,12 +10,3 @@ relatedGateways:
     '/') = $item.metadata.name) : ($substringBefore($g, '.') =
     $item.metadata.name and $substringBefore($substringAfter($g, '.'), '.') =
     $item.metadata.namespace) })
-relatedServices:
-  resource:
-    kind: Service
-    version: v1
-    namespace: null
-  filter: >-
-    $filter($root.spec.http.route, function($r) { $filter($r.destination.host,
-    function($h){($substringBefore($h, '.') = $item.metadata.name) and
-    ($split($substringAfter($h, '.'),'.')[0] = $item.metadata.namespace)} ) })

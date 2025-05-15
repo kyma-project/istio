@@ -50,6 +50,6 @@ body:
         name: spec.selector.matchLabels
         visibility: $exists($value) and $boolean($value)
 resourceGraph:
-  depth: 1
+  depth: 2
   dataSources:
     - source: relatedAPIRules

@@ -228,3 +228,68 @@ Learn how to configure and use the Istio egress Gateway to allow outbound traffi
    ```
    {"requested_server_name":"kyma-project.io","upstream_cluster":"outbound|443||kyma-project.io",[...]}
    ```
+
+## Additional security by implementing Network Policies
+
+Istio by default cannot securely enforce that egress traffic goes through the egress gateway. It only enables the flow
+through sidecar proxies.
+Kubernetes Network Policies can be used to restrict namespace traffic, so it only goes through the istio egress gateway.
+Network policies are the Kubernetes way to enforce traffic rules in the namespace.
+
+> [!NOTE] Support for network policies depends on the kubernetes CNI plugin used in the cluster.
+> Make sure to check the documentation of the CNI plugin you are using.
+
+> [!WARN] In Gardener-based clusters the Network Policy restricting DNS traffic may notwork as expected.
+> It is due to local DNS service used in discovery working outside the CNI. You may need to define the `ipBlocks` with
+> the IP CIDR of the `kube-dns` service to the NetworkPolicy to allow proper DNS resolution.
+
+1. In the `$NAMESPACE` namespace, create a NetworkPolicy that allows only egress traffic to the istio egress gateway,
+   blocking all other egress traffic:
+   ```bash
+   kubectl apply -f - <<EOF
+   apiVersion: networking.k8s.io/v1
+   kind: NetworkPolicy
+   metadata:
+      name: network-policy-allow-egress-traffic
+      namespace: ${NAMESPACE}
+   spec:
+      egress:
+      - ports:
+        - port: 53
+          protocol: UDP
+        to:
+        - namespaceSelector:
+             matchLabels:
+                kubernetes.io/metadata.name: kube-system
+      - to:
+        - namespaceSelector:
+             matchLabels:
+                kubernetes.io/metadata.name: istio-system
+      podSelector: {}
+      policyTypes:
+      - Egress
+   EOF
+   ```
+2. Send an HTTPS request to the Kyma project website:
+   ```bash
+   kubectl exec -n "$NAMESPACE" "$SOURCE_POD" -c curl -- curl -sSL -o /dev/null -D - https://kyma-project.io
+   ```
+   If successful, you get a response from the website similar to this one:
+   ```
+   HTTP/2 200
+   accept-ranges: bytes
+   age: 203
+   ...
+   ```
+3. Send an HTTPS request to an external website:
+   ```bash
+   kubectl exec -n "$NAMESPACE" "$SOURCE_POD" -c curl -- curl -sSL -o /dev/null -D - https://www.google.com
+   ```
+   The request should fail with an error message similar to this one:
+   ```
+   curl: (35) Recv failure: Connection reset by peer
+   command terminated with exit code 35
+   ```
+
+You have successfully secured the egress traffic in the `$NAMESPACE` namespace by using Istio egress gateway and
+Kubernetes Network Policies.

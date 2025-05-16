@@ -1,5 +1,4 @@
 resourceGraph:
-  depth: 2
   dataSources:
     - source: relatedGateways
 body:

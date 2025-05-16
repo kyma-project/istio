@@ -5,7 +5,6 @@ header:
     widget: Labels
     name: spec.provider
 resourceGraph:
-  depth: 2
   colorVariant: 3
   dataSources:
     - source: relatedAPIRules

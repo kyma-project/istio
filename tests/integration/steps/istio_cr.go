@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"os"
 	"path"
+	"strings"
 	"text/template"
 	"time"
 
@@ -80,6 +81,25 @@ func IstioCRInNamespaceHasStatusCondition(ctx context.Context, name, namespace, 
 			}
 		}
 		return fmt.Errorf("status condition reason %s of type %s and status %s not found", reason, conditionType, status)
+	}, testcontext.GetRetryOpts()...)
+}
+
+func IstioCRInNamespaceContainsDescription(ctx context.Context, name, namespace, desc string) error {
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	var cr istioCR.Istio
+	return retry.Do(func() error {
+		err := k8sClient.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, &cr)
+		if err != nil {
+			return err
+		}
+		if strings.Contains(cr.Status.Description, desc) {
+			return fmt.Errorf("description %s of Istio CR does not contain %s", cr.Status.Description, desc)
+		}
+		return nil
 	}, testcontext.GetRetryOpts()...)
 }
 

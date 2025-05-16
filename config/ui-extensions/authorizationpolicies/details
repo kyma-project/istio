@@ -7,7 +7,7 @@ header:
 resourceGraph:
   colorVariant: 3
   dataSources:
-    - source: podSelector
+    - source: relatedAPIRules
 body:
   - widget: Table
     name: spec.rules

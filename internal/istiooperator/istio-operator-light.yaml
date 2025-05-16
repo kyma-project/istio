@@ -193,12 +193,14 @@ spec:
       opentelemetry:
           service: "telemetry-otlp-traces.kyma-system.svc.cluster.local"
           port: 4317
-    - envoyFileAccessLog:
+    - name: envoy
+      envoyFileAccessLog:
+        path: /dev/stdout
         logFormat:
           labels: {}
+    - name: stdout-json
+      envoyFileAccessLog:
         path: /dev/stdout
-      name: envoy
-    - envoyFileAccessLog:
         logFormat:
           labels:
             start_time: "%START_TIME%"
@@ -227,8 +229,32 @@ spec:
             route_name: "%ROUTE_NAME%"
             traceparent: "%REQ(TRACEPARENT)%"
             tracestate: "%REQ(TRACESTATE)%"
-        path: /dev/stdout
-      name: stdout-json
+    - name: kyma-logs
+      envoyOtelAls:
+        service: telemetry-otlp-logs.kyma-system.svc.cluster.local
+        port: 4317
+        logName: kyma-logs
+        logFormat:
+          text: '%DOWNSTREAM_REMOTE_ADDRESS_WITHOUT_PORT% - - [%START_TIME%] "%REQ(:METHOD)% %REQ(X-ENVOY-ORIGINAL-PATH?:PATH)% %PROTOCOL%" %RESPONSE_CODE% %BYTES_SENT%'
+          labels:
+            http.request.size: '%CEL(request.total_size)%'
+            http.request.method: '%CEL(request.method)%'
+            http.request.duration: '%CEL(request.duration.getMilliseconds())%'
+            http.response.size: '%CEL(response.total_size)%'
+            http.response.status_code: '%CEL(response.code)%'
+            http.request.header.x-forwarded-for: '%CEL(request.headers[X-FORWARDED-FOR])%'
+            http.request.header.x-request-id: '%CEL(request.id)%'
+            http.request.header.referer: '%CEL(request.referer)%'
+            url.scheme: '%CEL(request.scheme)%'
+            url.path: '%CEL(request.url_path)%'
+            url.query: '%CEL(request.query)%'
+            user_agent.original: '%CEL(request.useragent)%'
+            server.address: '%CEL(request.host)%'
+            server.port: '%CEL(xds.listener_direction==1?destination.port:upstream.port)%'
+            client.address: '%CEL(xds.listener_direction==1?source.address:upstream.local_address)%'
+            client.port: '%CEL(xds.listener_direction==1?source.port:nil)%'
+            http.direction: '%CEL(xds.listener_direction==1?"inbound":(xds.listener_direction==2?"outbound":nil))%'
+            kyma.module: istio
     trustDomain: cluster.local
   profile: default
   values:

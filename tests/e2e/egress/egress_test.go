@@ -280,6 +280,23 @@ func applyNetworPolicy(ctx context.Context, c client.Client, t *testing.T, names
 				{
 					To: []networkingv1.NetworkPolicyPeer{
 						{
+							IPBlock: &networkingv1.IPBlock{
+								CIDR: "169.254.20.10/32",
+							},
+						},
+						{
+							IPBlock: &networkingv1.IPBlock{
+								// this can cause the test to fail if the Service IP range changes in different clusters.
+								// Proceed with caution.
+								CIDR: "100.104.0.0/13",
+							},
+						},
+						{
+							IPBlock: &networkingv1.IPBlock{
+								CIDR: "fd30:1319:f1e:230b::1/128",
+							},
+						},
+						{
 							NamespaceSelector: &metav1.LabelSelector{MatchLabels: map[string]string{
 								"kubernetes.io/metadata.name": "kube-system",
 							}},

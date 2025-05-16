@@ -64,7 +64,8 @@ Feature: Installing and uninstalling Istio module
     Given Istio CR "istio-sample" from "istio_cr_template" is applied in namespace "default"
     Then Istio CR "istio-sample" in namespace "default" has status "Error"
     And Istio CR "istio-sample" in namespace "default" has condition with reason "ReconcileFailed" of type "Ready" and status "False"
-    And Istio CR "istio-sample" in namespace "default" has description "Stopped Istio CR reconciliation: istio CR is not in kyma-system namespace"
+    And Istio CR "istio-sample" in namespace "default" contains description "Stopped Istio CR reconciliation: istio CR is not in kyma-system namespace"
+    And Istio CR "istio-sample" in namespace "default" contains description "Will not reconcile automatically"
 
   Scenario: Installation of Istio module with a second Istio CR in kyma-system namespace
     Given Istio CR "istio-sample" from "istio_cr_template" is applied in namespace "kyma-system"
@@ -72,7 +73,8 @@ Feature: Installing and uninstalling Istio module
     When Istio CR "istio-sample-new" from "istio_cr_template" is applied in namespace "kyma-system"
     Then Istio CR "istio-sample-new" in namespace "kyma-system" has status "Warning"
     And Istio CR "istio-sample-new" in namespace "kyma-system" has condition with reason "OlderCRExists" of type "Ready" and status "False"
-    And Istio CR "istio-sample-new" in namespace "kyma-system" has description "Stopped Istio CR reconciliation: only Istio CR istio-sample in kyma-system reconciles the module"
+    And Istio CR "istio-sample-new" in namespace "kyma-system" contains description "Stopped Istio CR reconciliation: only Istio CR istio-sample in kyma-system reconciles the module"
+    And Istio CR "istio-sample-new" in namespace "kyma-system" contains description "Will not reconcile automatically"
 
   Scenario: Istio module resources are reconciled, when they are deleted manually
     Given Istio CR "istio-sample" from "istio_cr_template" is applied in namespace "kyma-system"

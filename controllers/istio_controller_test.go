@@ -943,7 +943,7 @@ var _ = Describe("Istio Controller", func() {
 				// then
 				Expect(err).ToNot(HaveOccurred())
 				Expect(result.Requeue).To(BeFalse())
-				Expect(result.RequeueAfter).To(Equal(testReconciliationInterval))
+				Expect(result.RequeueAfter).To(Equal(1 * time.Hour))
 
 				updatedIstioCR := operatorv1alpha2.Istio{}
 				err = fakeClient.Get(context.Background(), client.ObjectKeyFromObject(istioCR), &updatedIstioCR)

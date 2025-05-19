@@ -76,7 +76,7 @@ var _ = Describe("Istio Controller", func() {
 			Expect(err).To(Not(HaveOccurred()))
 
 			Expect(updatedIstioCR.Status.State).To(Equal(operatorv1alpha2.Error))
-			Expect(updatedIstioCR.Status.Description).To(Equal("Stopped Istio CR reconciliation: istio CR is not in kyma-system namespace"))
+			Expect(updatedIstioCR.Status.Description).To(ContainSubstring("Stopped Istio CR reconciliation: istio CR is not in kyma-system namespace"))
 
 			Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
 			Expect(*updatedIstioCR.Status.Conditions).To(HaveLen(1))
@@ -943,7 +943,7 @@ var _ = Describe("Istio Controller", func() {
 				// then
 				Expect(err).ToNot(HaveOccurred())
 				Expect(result.Requeue).To(BeFalse())
-				Expect(result.RequeueAfter).To(Equal(time.Minute * 1))
+				Expect(result.RequeueAfter).To(Equal(testReconciliationInterval))
 
 				updatedIstioCR := operatorv1alpha2.Istio{}
 				err = fakeClient.Get(context.Background(), client.ObjectKeyFromObject(istioCR), &updatedIstioCR)
@@ -1095,7 +1095,7 @@ func (s *StatusMock) UpdateToReady(_ context.Context, _ *operatorv1alpha2.Istio)
 	return s.readyError
 }
 
-func (s *StatusMock) UpdateToError(_ context.Context, _ *operatorv1alpha2.Istio, _ described_errors.DescribedError) error {
+func (s *StatusMock) UpdateToError(_ context.Context, _ *operatorv1alpha2.Istio, _ described_errors.DescribedError, _ ...time.Duration) error {
 	s.updatedToErrorCalled = true
 	return s.errorError
 }

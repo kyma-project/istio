@@ -97,7 +97,7 @@ func IstioCRInNamespaceContainsDescription(ctx context.Context, name, namespace,
 			return err
 		}
 		if !strings.Contains(cr.Status.Description, desc) {
-			return fmt.Errorf("description \"%s\" of Istio CR does not contain \"%s\"", strings.Replace(cr.Status.Description, "\n", "\\n", -1), desc)
+			return fmt.Errorf("description \"%s\" of Istio CR does not contain \"%s\"", strings.ReplaceAll(cr.Status.Description, "\n", "\\n"), desc)
 		}
 		return nil
 	}, testcontext.GetRetryOpts()...)

@@ -52,8 +52,9 @@ import (
 )
 
 const (
-	namespace                      = "kyma-system"
-	reconciliationRequeueTimeError = 1 * time.Minute
+	namespace                        = "kyma-system"
+	reconciliationRequeueTimeError   = 1 * time.Minute
+	reconciliationRequeueTimeWarning = 1 * time.Hour
 )
 
 func NewController(mgr manager.Manager, reconciliationInterval time.Duration) *IstioReconciler {
@@ -166,7 +167,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	reconciliationRequeueTime := reconciliationRequeueTimeError
 	if err != nil {
 		if err.Level() == described_errors.Warning {
-			reconciliationRequeueTime = r.reconciliationInterval
+			reconciliationRequeueTime = reconciliationRequeueTimeWarning
 		}
 		// We don't want to use the requeueReconciliation function here, since there is condition handling in this function, and we
 		// need to clean this up, before we can use it here as conditions are already handled in the restarters.

@@ -377,21 +377,24 @@ Use the same `kubeconfig` file you've already exported.
     {"authority":"{YOUR_DOMAIN}":"outbound|443||{YOUR_DOMAIN}",[...]}
     ```
 
-## Additional security by implementing Network Policies
+## Enhance Security by Implementing NetworkPolicies
 
-Istio by default cannot securely enforce that egress traffic goes through the egress gateway. It only enables the flow
+By default, Istio cannot securely enforce that egress traffic is routed through the Istio egress gateway. It only enables the flow
 through sidecar proxies.
-Kubernetes Network Policies can be used to restrict namespace traffic, so it only goes through the istio egress gateway.
-Network policies are the Kubernetes way to enforce traffic rules in the namespace.
+However, you can use Kubernetes NetworkPolicies to restrict namespace traffic, so it only passes through the Istio egress gateway.
+NetworkPolicies are the Kubernetes method for enforcing traffic rules within a namespace.
 
-> [!NOTE] Support for network policies depends on the kubernetes CNI plugin used in the cluster.
-> Make sure to check the documentation of the CNI plugin you are using.
+> [!NOTE]
+> Support for NetworkPolicies depends on the Kubernetes CNI plugin used in the cluster. Check the documentation of the CNI plugin you are using.
 
-> [!WARN] In Gardener-based clusters the Network Policy restricting DNS traffic may notwork as expected.
-> It is due to local DNS service used in discovery working outside the CNI. You may need to define the `ipBlocks` with
+> [!WARN] 
+> In Gardener-based clusters, the NetworkPolicy restricting DNS traffic may not work as expected.
+> This is due to the local DNS service used in discovery working outside the CNI. You may need to define the `ipBlocks` with
 > the IP CIDR of the `kube-dns` service to the NetworkPolicy to allow proper DNS resolution.
 
-1. In the `$NAMESPACE` namespace, create a NetworkPolicy that allows only egress traffic to the istio egress gateway,
+Use the `kubeconfig` of the cluster in which you've created the Istio egress gateway.
+
+1. In the `$NAMESPACE` namespace, create a NetworkPolicy that allows only egress traffic to the Istio egress gateway,
    blocking all other egress traffic:
    ```bash
    kubectl apply -f - <<EOF
@@ -439,5 +442,5 @@ Network policies are the Kubernetes way to enforce traffic rules in the namespac
    command terminated with exit code 35
    ```
 
-You have successfully secured the egress traffic in the `$NAMESPACE` namespace by using Istio egress gateway and
-Kubernetes Network Policies.
+You have successfully secured the egress traffic in your namespace by using the Istio egress gateway and
+Kubernetes NetworkPolicies.

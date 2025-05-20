@@ -229,7 +229,7 @@ Learn how to configure and use the Istio egress Gateway to allow outbound traffi
    {"requested_server_name":"kyma-project.io","upstream_cluster":"outbound|443||kyma-project.io",[...]}
    ```
 
-## Additional security by implementing Network Policies
+## Enhance Security by Implementing NetworkPolicies
 
 Istio by default cannot securely enforce that egress traffic goes through the egress gateway. It only enables the flow
 through sidecar proxies.
@@ -244,7 +244,11 @@ Network policies are the Kubernetes way to enforce traffic rules in the namespac
 > the IP CIDR of the `kube-dns` service to the NetworkPolicy to allow proper DNS resolution.
 
 1. In the `$NAMESPACE` namespace, create a NetworkPolicy that allows only egress traffic to the istio egress gateway,
-   blocking all other egress traffic:
+   blocking all other egress traffic. Fetch the IP address of the `kube-dns` service:
+   ```bash
+    export KUBE_DNS_ADDRESS=$(kubectl get svc -n kube-system kube-dns -o jsonpath='{.spec.clusterIP}')
+   ```
+   Create the NetworkPolicy with fetched IP address in the `ipBlocks` section:
    ```bash
    kubectl apply -f - <<EOF
    apiVersion: networking.k8s.io/v1
@@ -261,6 +265,8 @@ Network policies are the Kubernetes way to enforce traffic rules in the namespac
         - namespaceSelector:
              matchLabels:
                 kubernetes.io/metadata.name: kube-system
+        - ipBlocks:
+            - cidr: ${KUBE_DNS_ADDRESS}/32
       - to:
         - namespaceSelector:
              matchLabels:

@@ -395,7 +395,11 @@ NetworkPolicies are the Kubernetes method for enforcing traffic rules within a n
 Use the `kubeconfig` of the cluster in which you've created the Istio egress gateway.
 
 1. In the `$NAMESPACE` namespace, create a NetworkPolicy that allows only egress traffic to the Istio egress gateway,
-   blocking all other egress traffic:
+   blocking all other egress traffic. Fetch the IP address of the `kube-dns` service:
+   ```bash
+    export KUBE_DNS_ADDRESS=$(kubectl get svc -n kube-system kube-dns -o jsonpath='{.spec.clusterIP}')
+   ```
+   Create the NetworkPolicy with fetched IP address in the `ipBlocks` section:
    ```bash
    kubectl apply -f - <<EOF
    apiVersion: networking.k8s.io/v1
@@ -412,6 +416,8 @@ Use the `kubeconfig` of the cluster in which you've created the Istio egress gat
         - namespaceSelector:
              matchLabels:
                 kubernetes.io/metadata.name: kube-system
+        - ipBlocks:
+            - cidr: ${KUBE_DNS_ADDRESS}/32
       - to:
         - namespaceSelector:
              matchLabels:

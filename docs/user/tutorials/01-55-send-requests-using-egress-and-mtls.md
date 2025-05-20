@@ -393,12 +393,13 @@ Network policies are the Kubernetes way to enforce traffic rules in the namespac
 > with
 > the IP CIDR of the `kube-dns` service in the NetworkPolicy to allow proper DNS resolution.
 
-1. In the `$NAMESPACE` namespace, create a NetworkPolicy that allows only egress traffic to the istio egress gateway,
+1. Fetch the IP address of the `kube-dns` service:
    blocking all other egress traffic. Fetch the IP address of the `kube-dns` service:
    ```bash
     export KUBE_DNS_ADDRESS=$(kubectl get svc -n kube-system kube-dns -o jsonpath='{.spec.clusterIP}')
    ```
-2. Create the NetworkPolicy with fetched IP address in the `ipBlocks` section:
+2. Create a NetworkPolicy with the fetched IP address in the **ipBlocks** section. The NetworkPolicy allows only egress
+   traffic to the Istio egress gateway, blocking all other egress traffic.
    ```bash
    kubectl apply -f - <<EOF
    apiVersion: networking.k8s.io/v1

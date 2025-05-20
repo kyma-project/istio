@@ -239,9 +239,9 @@ Network policies are the Kubernetes way to enforce traffic rules in the namespac
 > [!NOTE] Support for network policies depends on the kubernetes CNI plugin used in the cluster.
 > Make sure to check the documentation of the CNI plugin you are using.
 
-> [!WARN] In Gardener-based clusters the Network Policy restricting DNS traffic may notwork as expected.
-> It is due to local DNS service used in discovery working outside the CNI. You may need to define the `ipBlocks` with
-> the IP CIDR of the `kube-dns` service to the NetworkPolicy to allow proper DNS resolution.
+> [!WARN] In Gardener-based clusters, such as SAP BTP, Kyma runtime, the Network Policy restricting DNS traffic may not work as expected.
+> It is due to the local DNS service used in discovery working outside the CNI. In such cases, define the **ipBlocks** with
+> the IP CIDR of the `kube-dns` service in the NetworkPolicy to allow proper DNS resolution.
 
 1. In the `$NAMESPACE` namespace, create a NetworkPolicy that allows only egress traffic to the istio egress gateway,
    blocking all other egress traffic. Fetch the IP address of the `kube-dns` service:

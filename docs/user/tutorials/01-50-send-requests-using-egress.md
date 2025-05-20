@@ -248,7 +248,7 @@ Network policies are the Kubernetes way to enforce traffic rules in the namespac
    ```bash
     export KUBE_DNS_ADDRESS=$(kubectl get svc -n kube-system kube-dns -o jsonpath='{.spec.clusterIP}')
    ```
-   Create the NetworkPolicy with fetched IP address in the `ipBlocks` section:
+2. Create the NetworkPolicy with fetched IP address in the `ipBlocks` section:
    ```bash
    kubectl apply -f - <<EOF
    apiVersion: networking.k8s.io/v1
@@ -276,7 +276,7 @@ Network policies are the Kubernetes way to enforce traffic rules in the namespac
       - Egress
    EOF
    ```
-2. Send an HTTPS request to the Kyma project website:
+3. Send an HTTPS request to the Kyma project website:
    ```bash
    kubectl exec -n "$NAMESPACE" "$SOURCE_POD" -c curl -- curl -sSL -o /dev/null -D - https://kyma-project.io
    ```
@@ -287,7 +287,7 @@ Network policies are the Kubernetes way to enforce traffic rules in the namespac
    age: 203
    ...
    ```
-3. Send an HTTPS request to an external website:
+4. Send an HTTPS request to an external website:
    ```bash
    kubectl exec -n "$NAMESPACE" "$SOURCE_POD" -c curl -- curl -sSL -o /dev/null -D - https://www.google.com
    ```

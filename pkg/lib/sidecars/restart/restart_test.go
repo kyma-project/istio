@@ -377,7 +377,7 @@ var _ = Describe("Restart Pods", func() {
 				Name:      "rsOwner",
 				Namespace: "test-ns",
 				Kind:      "Deployment",
-				Message:   "was not restarted because there exists another newer, not ready ReplicaSet for the same object",
+				Message:   "was not restarted because there exists another not ready ReplicaSet for the same object",
 			}),
 		)
 

@@ -62,6 +62,6 @@ func actionObjectFromPod(pod v1.Pod) actionObject {
 	return actionObject{
 		Name:      pod.Name,
 		Namespace: pod.Namespace,
-		Kind:      pod.Kind,
+		Kind:      "Pod",
 	}
 }

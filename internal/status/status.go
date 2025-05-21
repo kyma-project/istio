@@ -3,6 +3,8 @@ package status
 import (
 	"context"
 	"errors"
+	"fmt"
+	"time"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
@@ -17,7 +19,8 @@ type Status interface {
 	UpdateToProcessing(ctx context.Context, istioCR *operatorv1alpha2.Istio) error
 	UpdateToDeleting(ctx context.Context, istioCR *operatorv1alpha2.Istio) error
 	UpdateToReady(ctx context.Context, istioCR *operatorv1alpha2.Istio) error
-	UpdateToError(ctx context.Context, istioCR *operatorv1alpha2.Istio, err described_errors.DescribedError) error
+	UpdateToError(ctx context.Context, istioCR *operatorv1alpha2.Istio, err described_errors.DescribedError,
+		requeueAfter ...time.Duration) error
 	SetCondition(istioCR *operatorv1alpha2.Istio, reason operatorv1alpha2.ReasonWithMessage)
 }
 
@@ -63,13 +66,20 @@ func (d StatusHandler) UpdateToReady(ctx context.Context, istioCR *operatorv1alp
 	return d.update(ctx, istioCR)
 }
 
-func (d StatusHandler) UpdateToError(ctx context.Context, istioCR *operatorv1alpha2.Istio, err described_errors.DescribedError) error {
+func (d StatusHandler) UpdateToError(ctx context.Context, istioCR *operatorv1alpha2.Istio,
+	err described_errors.DescribedError, requeueAfter ...time.Duration) error {
 	if err.Level() == described_errors.Warning {
 		istioCR.Status.State = operatorv1alpha2.Warning
 	} else {
 		istioCR.Status.State = operatorv1alpha2.Error
 	}
 	istioCR.Status.Description = err.Description()
+	if len(requeueAfter) > 0 {
+		istioCR.Status.Description += fmt.Sprintf("\nWill reconcile next at %s", time.Now().
+			Add(requeueAfter[0]).Format(time.RFC1123))
+	} else {
+		istioCR.Status.Description += "\nWill not reconcile automatically"
+	}
 	return d.update(ctx, istioCR)
 }
 

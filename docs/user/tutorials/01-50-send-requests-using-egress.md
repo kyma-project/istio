@@ -244,7 +244,6 @@ Network policies are the Kubernetes way to enforce traffic rules in the namespac
 > the IP CIDR of the `kube-dns` service in the NetworkPolicy to allow proper DNS resolution.
 
 1. Fetch the IP address of the `kube-dns` service:
-   blocking all other egress traffic. Fetch the IP address of the `kube-dns` service:
    ```bash
     export KUBE_DNS_ADDRESS=$(kubectl get svc -n kube-system kube-dns -o jsonpath='{.spec.clusterIP}')
    ```

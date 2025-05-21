@@ -53,7 +53,7 @@ func isTargetingIstioIngress(ef *networkingv1alpha3.EnvoyFilter) bool {
 	if ef.Spec.WorkloadSelector == nil {
 		return false
 	}
-	if ef.Namespace == "istio-system" && ef.Spec.WorkloadSelector.Labels["istio"] == "ingressgateway" || ef.Spec.WorkloadSelector.Labels["app"] == "istio-ingressgateway" {
+	if ef.Namespace == "istio-system" && (ef.Spec.WorkloadSelector.Labels["istio"] == "ingressgateway" || ef.Spec.WorkloadSelector.Labels["app"] == "istio-ingressgateway") {
 		return true
 	}
 	return false

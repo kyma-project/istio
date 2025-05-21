@@ -39,7 +39,7 @@ var _ = Describe("IstioResourceFinder - UserCreated EnvoyFilters", func() {
 		Expect(err).To(Not(HaveOccurred()))
 	})
 
-	It("Should return described error if there are present user-created EnvoyFilters in the cluster", func() {
+	It("Should return described error if there are present user-created EnvoyFilters targeting istio-ingressgateway in istio-system in the cluster", func() {
 		const efName = "ef-targeting-ingressgateway"
 		const efNamespace = "istio-system"
 		k8sClient := fake.NewClientBuilder().WithScheme(sc).WithObjects(
@@ -58,5 +58,23 @@ var _ = Describe("IstioResourceFinder - UserCreated EnvoyFilters", func() {
 		Expect(err.Level()).To(Equal(described_errors.Warning))
 		Expect(err.Error()).To(Equal(fmt.Sprintf("user-created EnvoyFilter %s/%s targeting Ingress Gateway found", efNamespace, efName)))
 		Expect(err.Description()).To(Equal(fmt.Sprintf("misconfigured EnvoyFilter can potentially break Istio Ingress Gateway: user-created EnvoyFilter %s/%s targeting Ingress Gateway found", efNamespace, efName)))
+	})
+
+	It("Should not return described error if there are present user-created EnvoyFilters targeting istio-ingressgateway outside of istio-system in the cluster", func() {
+		const efName = "ef-targeting-ingressgateway"
+		const efNamespace = "default"
+		k8sClient := fake.NewClientBuilder().WithScheme(sc).WithObjects(
+			&networkingv1alpha3.EnvoyFilter{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: efNamespace,
+					Name:      efName,
+				},
+				Spec: v1alpha3.EnvoyFilter{WorkloadSelector: &v1alpha3.WorkloadSelector{Labels: map[string]string{"app": "istio-ingressgateway"}}},
+			}).Build()
+
+		urf := NewUserResources(k8sClient)
+
+		err := urf.DetectUserCreatedEfOnIngress(context.Background())
+		Expect(err).To(Not(HaveOccurred()))
 	})
 })

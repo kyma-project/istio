@@ -234,6 +234,7 @@ func (r *IstioReconciler) finishReconcile(ctx context.Context, istioCR *operator
 	}
 
 	r.statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileSucceeded))
+	r.statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIngressTargetingUserResourceNotFound))
 	if err := r.validate(istioCR); err != nil {
 		return ctrl.Result{}, r.statusHandler.UpdateToError(ctx, istioCR, err)
 	}

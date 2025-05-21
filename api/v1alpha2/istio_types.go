@@ -99,6 +99,8 @@ const (
 	// user resource
 	ConditionReasonIngressTargetingUserResourceFound                  ConditionReason = "IngressTargetingUserResourceFound"
 	ConditionReasonIngressTargetingUserResourceFoundMessage                           = "Resource targeting Istio Ingress Gateway found"
+	ConditionReasonIngressTargetingUserResourceNotFound               ConditionReason = "IngressTargetingUserResourceNotFound"
+	ConditionReasonIngressTargetingUserResourceNotFoundMessage                        = "Resources targeting Istio Ingress Gateway not found"
 	ConditionReasonIngressTargetingUserResourceDetectionFailed        ConditionReason = "IngressTargetingUserResourceDetectionFailed"
 	ConditionReasonIngressTargetingUserResourceDetectionFailedMessage                 = "Resource targeting Istio Ingress Gateway detection failed"
 )

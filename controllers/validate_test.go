@@ -43,6 +43,7 @@ var _ = Describe("Istio Controller", func() {
 			Scheme:                 getTestScheme(),
 			istioInstallation:      &istioInstallationReconciliationMock{},
 			istioResources:         &istioResourcesReconciliationMock{},
+			userResources:          &UserResourcesMock{},
 			log:                    logr.Discard(),
 			statusHandler:          status.NewStatusHandler(fakeClient),
 			reconciliationInterval: testReconciliationInterval,

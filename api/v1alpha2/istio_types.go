@@ -32,8 +32,9 @@ const (
 	Deleting   State = "Deleting"
 	Warning    State = "Warning"
 
-	ConditionTypeReady                        ConditionType = "Ready"
-	ConditionTypeProxySidecarRestartSucceeded ConditionType = "ProxySidecarRestartSucceeded"
+	ConditionTypeReady                             ConditionType = "Ready"
+	ConditionTypeProxySidecarRestartSucceeded      ConditionType = "ProxySidecarRestartSucceeded"
+	ConditionTypeIngressTargetingUserResourceFound ConditionType = "IngressTargetingUserResourceFound"
 
 	// general
 	ConditionReasonReconcileSucceeded        ConditionReason = "ReconcileSucceeded"
@@ -94,6 +95,12 @@ const (
 	ConditionReasonEgressGatewayRestartSucceededMessage                 = "Istio Egress Gateway restart succeeded"
 	ConditionReasonEgressGatewayRestartFailed           ConditionReason = "EgressGatewayRestartFailed"
 	ConditionReasonEgressGatewayRestartFailedMessage                    = "Istio Egress Gateway restart failed"
+
+	// user resource
+	ConditionReasonIngressTargetingUserResourceFound                  ConditionReason = "IngressTargetingUserResourceFound"
+	ConditionReasonIngressTargetingUserResourceFoundMessage                           = "Resource targeting Istio Ingress Gateway found"
+	ConditionReasonIngressTargetingUserResourceDetectionFailed        ConditionReason = "IngressTargetingUserResourceDetectionFailed"
+	ConditionReasonIngressTargetingUserResourceDetectionFailedMessage                 = "Resource targeting Istio Ingress Gateway detection failed"
 )
 
 type ReasonWithMessage struct {

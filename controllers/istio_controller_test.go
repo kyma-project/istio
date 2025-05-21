@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"istio.io/api/networking/v1alpha3"
 	"time"
 
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
@@ -16,6 +17,7 @@ import (
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/pkg/errors"
+	_ "istio.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -23,6 +25,8 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+
+	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 )
 
 const (
@@ -54,6 +58,7 @@ var _ = Describe("Istio Controller", func() {
 				istioInstallation:      &istioInstallationReconciliationMock{},
 				restarters:             []restarter.Restarter{&restarterMock{}},
 				istioResources:         &istioResourcesReconciliationMock{},
+				userResources:          &UserResourcesMock{},
 				log:                    logr.Discard(),
 				statusHandler:          status.NewStatusHandler(client),
 				reconciliationInterval: 10 * time.Hour,
@@ -94,6 +99,7 @@ var _ = Describe("Istio Controller", func() {
 				Scheme:                 getTestScheme(),
 				istioInstallation:      &istioInstallationReconciliationMock{},
 				istioResources:         &istioResourcesReconciliationMock{},
+				userResources:          &UserResourcesMock{},
 				restarters:             []restarter.Restarter{&restarterMock{}},
 				log:                    logr.Discard(),
 				statusHandler:          NewStatusMock(),
@@ -126,6 +132,7 @@ var _ = Describe("Istio Controller", func() {
 				istioInstallation:      &istioInstallationReconciliationMock{},
 				restarters:             []restarter.Restarter{&restarterMock{}},
 				istioResources:         &istioResourcesReconciliationMock{},
+				userResources:          &UserResourcesMock{},
 				log:                    logr.Discard(),
 				statusHandler:          statusMock,
 				reconciliationInterval: testReconciliationInterval,
@@ -160,6 +167,7 @@ var _ = Describe("Istio Controller", func() {
 				istioInstallation:      &istioInstallationReconciliationMock{},
 				restarters:             []restarter.Restarter{&restarterMock{}},
 				istioResources:         &istioResourcesReconciliationMock{},
+				userResources:          &UserResourcesMock{},
 				log:                    logr.Discard(),
 				statusHandler:          &statusMock,
 				reconciliationInterval: testReconciliationInterval,
@@ -195,6 +203,7 @@ var _ = Describe("Istio Controller", func() {
 				istioInstallation:      &istioInstallationReconciliationMock{},
 				restarters:             []restarter.Restarter{&restarterMock{}},
 				istioResources:         &istioResourcesReconciliationMock{},
+				userResources:          &UserResourcesMock{},
 				log:                    logr.Discard(),
 				statusHandler:          statusMock,
 				reconciliationInterval: testReconciliationInterval,
@@ -232,6 +241,7 @@ var _ = Describe("Istio Controller", func() {
 				istioInstallation:      &istioInstallationReconciliationMock{},
 				restarters:             []restarter.Restarter{&restarterMock{}},
 				istioResources:         &istioResourcesReconciliationMock{},
+				userResources:          &UserResourcesMock{},
 				log:                    logr.Discard(),
 				statusHandler:          &statusMock,
 				reconciliationInterval: testReconciliationInterval,
@@ -263,6 +273,7 @@ var _ = Describe("Istio Controller", func() {
 				istioInstallation:      &istioInstallationReconciliationMock{},
 				restarters:             []restarter.Restarter{&restarterMock{}},
 				istioResources:         &istioResourcesReconciliationMock{},
+				userResources:          &UserResourcesMock{},
 				log:                    logr.Discard(),
 				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
@@ -301,6 +312,7 @@ var _ = Describe("Istio Controller", func() {
 				istioInstallation:      &istioInstallationReconciliationMock{},
 				restarters:             []restarter.Restarter{&restarterMock{}},
 				istioResources:         &istioResourcesReconciliationMock{},
+				userResources:          &UserResourcesMock{},
 				log:                    logr.Discard(),
 				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
@@ -349,6 +361,7 @@ var _ = Describe("Istio Controller", func() {
 				istioInstallation:      &istioInstallationReconciliationMock{},
 				restarters:             []restarter.Restarter{&restarterMock{}},
 				istioResources:         &istioResourcesReconciliationMock{},
+				userResources:          &UserResourcesMock{},
 				log:                    logr.Discard(),
 				statusHandler:          &statusMock,
 				reconciliationInterval: testReconciliationInterval,
@@ -390,6 +403,7 @@ var _ = Describe("Istio Controller", func() {
 				},
 				restarters:             []restarter.Restarter{&restarterMock{}},
 				istioResources:         &istioResourcesReconciliationMock{},
+				userResources:          &UserResourcesMock{},
 				log:                    logr.Discard(),
 				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
@@ -441,6 +455,7 @@ var _ = Describe("Istio Controller", func() {
 				istioInstallation:      &istioInstallationReconciliationMock{},
 				restarters:             []restarter.Restarter{sidecarsRestarter, &restarterMock{}},
 				istioResources:         &istioResourcesReconciliationMock{},
+				userResources:          &UserResourcesMock{},
 				log:                    logr.Discard(),
 				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
@@ -496,6 +511,7 @@ var _ = Describe("Istio Controller", func() {
 				Scheme:                 getTestScheme(),
 				istioInstallation:      &istioInstallationReconciliationMock{},
 				istioResources:         &istioResourcesReconciliationMock{},
+				userResources:          &UserResourcesMock{},
 				restarters:             []restarter.Restarter{&restarterMock{}},
 				log:                    logr.Discard(),
 				statusHandler:          status.NewStatusHandler(fakeClient),
@@ -550,6 +566,7 @@ var _ = Describe("Istio Controller", func() {
 				istioInstallation:      &istioInstallationReconciliationMock{},
 				restarters:             []restarter.Restarter{&restarterMock{}},
 				istioResources:         &istioResourcesReconciliationMock{},
+				userResources:          &UserResourcesMock{},
 				log:                    logr.Discard(),
 				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
@@ -593,6 +610,7 @@ var _ = Describe("Istio Controller", func() {
 				istioInstallation:      &istioInstallationReconciliationMock{},
 				restarters:             []restarter.Restarter{&restarterMock{}},
 				istioResources:         &istioResourcesReconciliationMock{},
+				userResources:          &UserResourcesMock{},
 				log:                    logr.Discard(),
 				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
@@ -654,6 +672,7 @@ var _ = Describe("Istio Controller", func() {
 				istioInstallation:      &istioInstallationReconciliationMock{},
 				restarters:             []restarter.Restarter{&restarterMock{}},
 				istioResources:         &istioResourcesReconciliationMock{},
+				userResources:          &UserResourcesMock{},
 				log:                    logr.Discard(),
 				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
@@ -667,7 +686,7 @@ var _ = Describe("Istio Controller", func() {
 			Expect(result.Requeue).To(BeFalse())
 
 			updatedIstioCR := operatorv1alpha2.Istio{}
-			err = fakeClient.Get(context.TODO(), client.ObjectKeyFromObject(istioCR), &updatedIstioCR)
+			err = fakeClient.Get(context.Background(), client.ObjectKeyFromObject(istioCR), &updatedIstioCR)
 			Expect(err).To(Not(HaveOccurred()))
 
 			Expect(updatedIstioCR.Status.State).Should(Equal(operatorv1alpha2.Warning))
@@ -678,6 +697,63 @@ var _ = Describe("Istio Controller", func() {
 			Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
 			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonValidationFailed)))
 			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
+		})
+
+		It("should set a warning on IstioCR if in the cluster there is an EnvoyFilter that is not created by the Kyma module, and targets Istio Ingress Gateway", func() {
+			// given
+			istioCR := &operatorv1alpha2.Istio{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:              istioCrName,
+					Namespace:         testNamespace,
+					UID:               "1",
+					CreationTimestamp: metav1.Unix(1494505756, 0),
+					Finalizers: []string{
+						"istios.operator.kyma-project.io/istio-installation",
+					},
+				},
+				Spec: operatorv1alpha2.IstioSpec{Config: operatorv1alpha2.Config{}},
+			}
+			ef := &networkingv1alpha3.EnvoyFilter{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "test-ns",
+					Name:      "test-ef",
+				},
+				Spec: v1alpha3.EnvoyFilter{
+					WorkloadSelector: &v1alpha3.WorkloadSelector{Labels: map[string]string{"istio": "ingressgateway"}},
+				},
+			}
+
+			fakeClient := createFakeClient(istioCR, ef)
+
+			sut := &IstioReconciler{
+				Client:                 fakeClient,
+				Scheme:                 getTestScheme(),
+				istioInstallation:      &istioInstallationReconciliationMock{},
+				restarters:             []restarter.Restarter{&restarterMock{}},
+				istioResources:         &istioResourcesReconciliationMock{},
+				userResources:          &UserResourcesMock{err: described_errors.NewDescribedError(errors.New("error"), "user-created ef targeting IG found").SetWarning()},
+				log:                    logr.Discard(),
+				statusHandler:          status.NewStatusHandler(fakeClient),
+				reconciliationInterval: testReconciliationInterval,
+			}
+
+			// when
+			_, err := sut.Reconcile(context.Background(), reconcile.Request{NamespacedName: types.NamespacedName{Namespace: testNamespace, Name: istioCrName}})
+
+			// then
+			Expect(err).To(HaveOccurred())
+
+			updatedIstioCR := operatorv1alpha2.Istio{}
+			err = fakeClient.Get(context.Background(), client.ObjectKeyFromObject(istioCR), &updatedIstioCR)
+			Expect(err).To(Not(HaveOccurred()))
+
+			Expect(updatedIstioCR.Status.State).Should(Equal(operatorv1alpha2.Warning))
+			Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
+			Expect(*updatedIstioCR.Status.Conditions).To(HaveLen(2))
+			Expect((*updatedIstioCR.Status.Conditions)[1].Type).To(Equal(string(operatorv1alpha2.ConditionTypeIngressTargetingUserResourceFound)))
+			Expect((*updatedIstioCR.Status.Conditions)[1].Status).To(Equal(metav1.ConditionTrue))
+			Expect((*updatedIstioCR.Status.Conditions)[1].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonIngressTargetingUserResourceFound)))
+
 		})
 
 		It("should update lastTransitionTime of Ready condition when reason changed", func() {
@@ -703,6 +779,7 @@ var _ = Describe("Istio Controller", func() {
 				},
 				restarters:             []restarter.Restarter{&restarterMock{}},
 				istioResources:         &istioResourcesReconciliationMock{},
+				userResources:          &UserResourcesMock{},
 				log:                    logr.Discard(),
 				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
@@ -733,6 +810,7 @@ var _ = Describe("Istio Controller", func() {
 				istioResources: &istioResourcesReconciliationMock{
 					err: described_errors.NewDescribedError(errors.New("test error"), "test error description"),
 				},
+				userResources:          &UserResourcesMock{},
 				log:                    logr.Discard(),
 				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
@@ -780,6 +858,7 @@ var _ = Describe("Istio Controller", func() {
 					Scheme:                 getTestScheme(),
 					istioInstallation:      &istioInstallationReconciliationMock{},
 					istioResources:         &istioResourcesReconciliationMock{},
+					userResources:          &UserResourcesMock{},
 					restarters:             []restarter.Restarter{proxySidecarsRestarter, ingressGatewayRestarter},
 					log:                    logr.Discard(),
 					statusHandler:          status.NewStatusHandler(fakeClient),
@@ -818,6 +897,7 @@ var _ = Describe("Istio Controller", func() {
 						err: described_errors.NewDescribedError(errors.New("istio test error"), "test error description"),
 					},
 					istioResources:         &istioResourcesReconciliationMock{},
+					userResources:          &UserResourcesMock{},
 					log:                    logr.Discard(),
 					statusHandler:          status.NewStatusHandler(fakeClient),
 					reconciliationInterval: testReconciliationInterval,
@@ -856,6 +936,7 @@ var _ = Describe("Istio Controller", func() {
 					Scheme:                 getTestScheme(),
 					istioInstallation:      &istioInstallationReconciliationMock{},
 					istioResources:         &istioResourcesReconciliationMock{},
+					userResources:          &UserResourcesMock{},
 					restarters:             []restarter.Restarter{proxySidecarsRestarter, ingressGatewayRestarter},
 					log:                    logr.Discard(),
 					statusHandler:          status.NewStatusHandler(fakeClient),
@@ -892,6 +973,7 @@ var _ = Describe("Istio Controller", func() {
 					Scheme:                 getTestScheme(),
 					istioInstallation:      &istioInstallationReconciliationMock{},
 					istioResources:         &istioResourcesReconciliationMock{},
+					userResources:          &UserResourcesMock{},
 					restarters:             []restarter.Restarter{ingressGatewayRestarter, proxySidecarsRestarter},
 					log:                    logr.Discard(),
 					statusHandler:          status.NewStatusHandler(fakeClient),
@@ -931,6 +1013,7 @@ var _ = Describe("Istio Controller", func() {
 					Scheme:                 getTestScheme(),
 					istioInstallation:      &istioInstallationReconciliationMock{},
 					istioResources:         &istioResourcesReconciliationMock{},
+					userResources:          &UserResourcesMock{},
 					restarters:             []restarter.Restarter{sidecarsRestarter},
 					log:                    logr.Discard(),
 					statusHandler:          status.NewStatusHandler(fakeClient),
@@ -975,6 +1058,7 @@ var _ = Describe("Istio Controller", func() {
 					Scheme:                 getTestScheme(),
 					istioInstallation:      &istioInstallationReconciliationMock{},
 					istioResources:         &istioResourcesReconciliationMock{},
+					userResources:          &UserResourcesMock{},
 					restarters:             []restarter.Restarter{ingressGatewayRestarter, proxySidecarsRestarter},
 					log:                    logr.Discard(),
 					statusHandler:          status.NewStatusHandler(fakeClient),
@@ -1107,4 +1191,12 @@ func (s *StatusMock) SetCondition(_ *operatorv1alpha2.Istio, reason operatorv1al
 
 func (s *StatusMock) GetConditions() []operatorv1alpha2.ReasonWithMessage {
 	return s.reasons
+}
+
+type UserResourcesMock struct {
+	err described_errors.DescribedError
+}
+
+func (urm UserResourcesMock) DetectUserCreatedEfOnIngress(ctx context.Context) described_errors.DescribedError {
+	return urm.err
 }

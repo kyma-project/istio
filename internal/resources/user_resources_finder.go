@@ -41,7 +41,7 @@ func (urm UserResources) DetectUserCreatedEfOnIngress(ctx context.Context) descr
 }
 
 func isEfOwnedByRateLimit(ef *networkingv1alpha3.EnvoyFilter) bool {
-	for _, owner := range ef.ObjectMeta.OwnerReferences {
+	for _, owner := range ef.OwnerReferences {
 		if owner.Kind == "RateLimit" {
 			return true
 		}

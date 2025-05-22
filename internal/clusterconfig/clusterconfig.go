@@ -2,7 +2,6 @@ package clusterconfig
 
 import (
 	"context"
-	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"regexp"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -27,10 +26,6 @@ const (
 	Evaluation
 	Production
 )
-
-type ConfigChecker interface {
-	DetectUserEnvoyFilterOnIg(ctx context.Context, k8sClient client.Client) described_errors.DescribedError
-}
 
 func (s ClusterSize) String() string {
 	switch s {

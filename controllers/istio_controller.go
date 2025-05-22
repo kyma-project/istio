@@ -192,9 +192,9 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	userResErr := r.userResources.DetectUserCreatedEfOnIngress(ctx)
 	if userResErr != nil {
 		if userResErr.Level() != described_errors.Warning {
-			return r.requeueReconciliation(ctx, &istioCR, userResErr, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIngressTargetingUserResourceDetectionFailed))
+			return r.requeueReconciliation(ctx, &istioCR, userResErr, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIngressTargetingUserResourceDetectionFailed), reconciliationRequeueTimeError)
 		}
-		return r.requeueReconciliation(ctx, &istioCR, userResErr, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIngressTargetingUserResourceFound))
+		return r.requeueReconciliation(ctx, &istioCR, userResErr, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIngressTargetingUserResourceFound), reconciliationRequeueTimeWarning)
 	}
 
 	return r.finishReconcile(ctx, &istioCR, istioImageVersion.Tag())

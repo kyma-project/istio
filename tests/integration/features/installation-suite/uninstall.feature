@@ -30,7 +30,7 @@ Feature: Uninstall Istio module
     When "Istio CR" "istio-sample" in namespace "kyma-system" is deleted
     Then Istio CR "istio-sample" in namespace "kyma-system" has status "Warning"
     And Istio CR "istio-sample" in namespace "kyma-system" has condition with reason "IstioCustomResourcesDangling" of type "Ready" and status "False"
-    And Istio CR "istio-sample" in namespace "kyma-system" has description "There are Istio resources that block deletion. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning"
+    And Istio CR "istio-sample" in namespace "kyma-system" contains description "There are Istio resources that block deletion. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning"
     And Istio CRDs "should" be present on cluster
     And Namespace "istio-system" is "present"
     When "DestinationRule" "customer-destination-rule" in namespace "default" is deleted

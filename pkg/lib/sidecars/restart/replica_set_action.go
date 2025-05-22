@@ -38,12 +38,47 @@ func getReplicaSetAction(ctx context.Context, c client.Client, pod v1.Pod, repli
 	if !exists {
 		// If the ReplicaSet is not managed by a parent resource(e.g. deployment), we need to delete the pods in the ReplicaSet to force a restart.
 		return newDeleteAction(actionObjectFromPod(pod)), nil
+	} else {
+		// If another ReplicaSet exists that is not ready for the same parent resource with
+		// the same number of desired replicas,
+		// we should not trigger another rollout to ensure that the rollout is not triggered multiple times.
+		namespaceReplicaSets := &appsv1.ReplicaSetList{}
+		err = c.List(ctx, namespaceReplicaSets, &client.ListOptions{
+			Namespace: pod.Namespace,
+		})
+		if err != nil {
+			return restartAction{}, err
+		}
+
+		relatedReplicaSets := &appsv1.ReplicaSetList{}
+		for _, replicaSetFromNs := range namespaceReplicaSets.Items {
+			if len(replicaSetFromNs.OwnerReferences) > 0 && replicaSetFromNs.OwnerReferences[0].UID == rsOwnedBy.UID {
+				relatedReplicaSets.Items = append(relatedReplicaSets.Items, replicaSetFromNs)
+			}
+		}
+
+		for _, rs := range relatedReplicaSets.Items {
+			if rs.Name != replicaSet.Name &&
+				rs.Status.Replicas != 0 &&
+				rs.Status.ReadyReplicas != rs.Status.Replicas {
+
+				return restartAction{
+					object: actionObject{
+						Name:      rsOwnedBy.Name,
+						Namespace: replicaSet.Namespace,
+						Kind:      rsOwnedBy.Kind,
+					},
+					run: warningAction{message: notReadyReplicaSetExistsMessage}.run,
+				}, nil
+			}
+		}
+
+		return newRolloutAction(actionObject{
+			Name:      rsOwnedBy.Name,
+			Namespace: replicaSet.Namespace,
+			Kind:      rsOwnedBy.Kind,
+		}), nil
 	}
-	return newRolloutAction(actionObject{
-		Name:      rsOwnedBy.Name,
-		Namespace: replicaSet.Namespace,
-		Kind:      rsOwnedBy.Kind,
-	}), nil
 }
 
 // getOwnerReferences returns the owner reference of the pod and a boolean to verify if the owner reference exists or not.

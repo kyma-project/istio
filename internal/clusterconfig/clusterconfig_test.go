@@ -5,18 +5,17 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/resource"
 
+	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/kyma-project/istio/operator/internal/clusterconfig"
-
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
+	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-
-	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 )
 
 const (
@@ -415,6 +414,7 @@ func createFakeClient(objects ...client.Object) client.Client {
 	Expect(err).ShouldNot(HaveOccurred())
 	err = corev1.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
-
+	err = networkingv1alpha3.AddToScheme(scheme.Scheme)
+	Expect(err).ShouldNot(HaveOccurred())
 	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build()
 }

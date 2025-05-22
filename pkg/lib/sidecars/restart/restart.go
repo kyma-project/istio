@@ -11,8 +11,10 @@ import (
 )
 
 const (
-	ownerReferenceNotFoundMessage = "pod sidecar could not be updated because OwnerReferences was not found."
-	ownedByJobMessage             = "pod sidecar could not be updated because it is owned by a Job."
+	ownerReferenceNotFoundMessage   = "pod sidecar could not be updated because OwnerReferences was not found."
+	ownedByJobMessage               = "pod sidecar could not be updated because it is owned by a Job."
+	notReadyReplicaSetExistsMessage = "was not restarted because there exists another " +
+		"not ready ReplicaSet for the same object"
 )
 
 type ActionRestarter interface {

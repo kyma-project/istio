@@ -112,7 +112,6 @@ func (i *IstioResourcesFinder) FindUserCreatedIstioResources() ([]Resource, erro
 	}
 	return userResources, nil
 }
-
 func contains(s []ResourceMeta, e ResourceMeta) (bool, error) {
 	for _, r := range s {
 		matchName, err := regexp.MatchString(r.Name, e.Name)

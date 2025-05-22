@@ -156,7 +156,7 @@ var _ = Describe("status", func() {
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(cr.Status.State).To(Equal(operatorv1alpha2.Error))
-			Expect(cr.Status.Description).To(Equal("Something: error happened"))
+			Expect(cr.Status.Description).To(ContainSubstring("Something: error happened"))
 			Expect(cr.Status.Conditions).To(BeNil())
 		})
 
@@ -180,7 +180,7 @@ var _ = Describe("status", func() {
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(cr.Status.State).To(Equal(operatorv1alpha2.Warning))
-			Expect(cr.Status.Description).To(Equal("Something: error happened"))
+			Expect(cr.Status.Description).To(ContainSubstring("Something: error happened"))
 			Expect(cr.Status.Conditions).To(BeNil())
 		})
 
@@ -204,7 +204,7 @@ var _ = Describe("status", func() {
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(cr.Status.State).To(Equal(operatorv1alpha2.Error))
-			Expect(cr.Status.Description).To(Equal("Something: error happened"))
+			Expect(cr.Status.Description).To(ContainSubstring("Something: error happened"))
 			Expect(cr.Status.Conditions).To(BeNil())
 		})
 
@@ -228,7 +228,7 @@ var _ = Describe("status", func() {
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(cr.Status.State).To(Equal(operatorv1alpha2.Warning))
-			Expect(cr.Status.Description).To(Equal("Something: error happened"))
+			Expect(cr.Status.Description).To(ContainSubstring("Something: error happened"))
 			Expect(cr.Status.Conditions).To(BeNil())
 		})
 
@@ -252,7 +252,7 @@ var _ = Describe("status", func() {
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(cr.Status.State).To(Equal(operatorv1alpha2.Warning))
-			Expect(cr.Status.Description).To(Equal("Something: error happened"))
+			Expect(cr.Status.Description).To(ContainSubstring("Something: error happened"))
 			Expect(cr.Status.Conditions).To(BeNil())
 		})
 	})

@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/kyma-project/istio/operator/internal/resources"
 	"github.com/kyma-project/istio/operator/internal/restarter"
 
 	"github.com/go-logr/logr"
@@ -28,6 +29,7 @@ type IstioReconciler struct {
 	Scheme                 *runtime.Scheme
 	istioInstallation      istio.InstallationReconciliation
 	istioResources         istioresources.ResourcesReconciliation
+	userResources          resources.UserResourcesFinder
 	restarters             []restarter.Restarter
 	log                    logr.Logger
 	statusHandler          status.Status

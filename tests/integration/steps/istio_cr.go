@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strings"
 	"text/template"
 	"time"
 
@@ -56,7 +57,7 @@ func IstioCRInNamespaceHasStatus(ctx context.Context, name, namespace, status st
 			return err
 		}
 		if string(cr.Status.State) != status {
-			return fmt.Errorf("status %s of Istio CR is not equal to %s\n Description: %s", cr.Status.State, status, cr.Status.Description)
+			return fmt.Errorf("status \"%s\" of Istio CR is not equal to \"%s\"\n Description: \"%s\"", cr.Status.State, status, cr.Status.Description)
 		}
 		return nil
 	}, testcontext.GetRetryOpts()...)
@@ -86,6 +87,25 @@ func IstioCRInNamespaceHasStatusCondition(ctx context.Context, name, namespace, 
 	}, testcontext.GetRetryOpts()...)
 }
 
+func IstioCRInNamespaceContainsDescription(ctx context.Context, name, namespace, desc string) error {
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	var cr istioCR.Istio
+	return retry.Do(func() error {
+		err := k8sClient.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: namespace}, &cr)
+		if err != nil {
+			return err
+		}
+		if !strings.Contains(cr.Status.Description, desc) {
+			return fmt.Errorf("description \"%s\" of Istio CR does not contain \"%s\"", strings.ReplaceAll(cr.Status.Description, "\n", "\\n"), desc)
+		}
+		return nil
+	}, testcontext.GetRetryOpts()...)
+}
+
 func IstioCRInNamespaceHasDescription(ctx context.Context, name, namespace, desc string) error {
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
@@ -99,7 +119,7 @@ func IstioCRInNamespaceHasDescription(ctx context.Context, name, namespace, desc
 			return err
 		}
 		if cr.Status.Description != desc {
-			return fmt.Errorf("description %s of Istio CR is not equal to %s", cr.Status.Description, desc)
+			return fmt.Errorf("description \"%s\" of Istio CR is not equal to \"%s\"", cr.Status.Description, desc)
 		}
 		return nil
 	}, testcontext.GetRetryOpts()...)

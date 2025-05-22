@@ -6,9 +6,10 @@ import (
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/test/helpers"
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/test/helpers"
 )
 
 func (s *scenario) createObjectInAllNamespaces(toCreate client.Object, deleteIn NamespaceSelector, restartIn NamespaceSelector) error {

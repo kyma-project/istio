@@ -2,13 +2,15 @@ package predicates
 
 import (
 	"context"
-	"github.com/kyma-project/istio/operator/api/v1alpha2"
+	"strconv"
+	"strings"
+
 	"istio.io/istio/pkg/config/mesh"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strconv"
-	"strings"
+
+	"github.com/kyma-project/istio/operator/api/v1alpha2"
 )
 
 const defaultStatusPort int32 = 15020
@@ -28,7 +30,6 @@ func NewPrometheusMergeRestartPredicate(ctx context.Context, client client.Clien
 }
 
 func (p PrometheusMergeRestartPredicate) Matches(pod v1.Pod) bool {
-
 	annotations := pod.GetAnnotations()
 	var (
 		prometheusMergePath = "/stats/prometheus"
@@ -52,7 +53,7 @@ func (p PrometheusMergeRestartPredicate) MustMatch() bool {
 }
 
 // Gets statusPort directly from already merged IstioOperator CR, for now it is 15020 by default and not configurable,
-// but once it is configurable, it will fetch the configured statusPort from the CR directly
+// but once it is configurable, it will fetch the configured statusPort from the CR directly.
 func getStatusPort(ctx context.Context, client client.Client) int32 {
 	istioConfigMap := &v1.ConfigMap{}
 
@@ -76,10 +77,9 @@ func getStatusPort(ctx context.Context, client client.Client) int32 {
 		return defaultStatusPort
 	}
 
-	if meshConfig.DefaultConfig.StatusPort == 0 {
+	if meshConfig.GetDefaultConfig().GetStatusPort() == 0 {
 		return defaultStatusPort
-
 	}
 
-	return meshConfig.DefaultConfig.StatusPort
+	return meshConfig.GetDefaultConfig().GetStatusPort()
 }

@@ -2,11 +2,12 @@ package ip
 
 import (
 	"fmt"
-	v1 "k8s.io/api/core/v1"
 	"net"
+
+	v1 "k8s.io/api/core/v1"
 )
 
-// GetLoadBalancerIp returns the IP of the load balancer from the load balancer ingress object
+// GetLoadBalancerIp returns the IP of the load balancer from the load balancer ingress object.
 func GetLoadBalancerIp(loadBalancerIngress v1.LoadBalancerIngress) (net.IP, error) {
 	loadBalancerIP, err := getIpBasedLoadBalancerIp(loadBalancerIngress)
 
@@ -29,7 +30,7 @@ func getIpBasedLoadBalancerIp(lbIngress v1.LoadBalancerIngress) (net.IP, error) 
 func getDnsBasedLoadBalancerIp(lbIngress v1.LoadBalancerIngress) (net.IP, error) {
 	ips, err := net.LookupIP(lbIngress.Hostname)
 	if err != nil || len(ips) < 1 {
-		return nil, fmt.Errorf("could not get IPs by load balancer hostname: %v", err)
+		return nil, fmt.Errorf("could not get IPs by load balancer hostname: %w", err)
 	}
 
 	return ips[0], nil

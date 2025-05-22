@@ -3,15 +3,18 @@ package steps
 import (
 	"context"
 	_ "embed"
+	"errors"
 	"fmt"
+	"os"
+
 	"github.com/avast/retry-go"
-	"github.com/kyma-project/istio/operator/tests/testcontext"
 	"istio.io/istio/pkg/test/util/tmpl"
 	batchv1 "k8s.io/api/batch/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/uuid"
-	"os"
 	"sigs.k8s.io/yaml"
+
+	"github.com/kyma-project/istio/operator/tests/testcontext"
 )
 
 const loadTestingNamespace = "load-testing"
@@ -72,7 +75,7 @@ func (t *TemplatedPerformanceJob) ExecutePerformanceTest(ctx context.Context) er
 		if host != "" {
 			t.templatedValues["Address"] = host
 		} else {
-			return fmt.Errorf("host template value is not set, cannot run the tests against external host")
+			return errors.New("host template value is not set, cannot run the tests against external host")
 		}
 	} else {
 		authority := getRequestAuthority()

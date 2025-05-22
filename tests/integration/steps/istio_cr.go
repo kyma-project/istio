@@ -4,21 +4,24 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/kyma-project/istio/operator/tests/testcontext"
-	"github.com/pkg/errors"
 	"os"
 	"path"
 	"text/template"
 	"time"
 
+	"github.com/pkg/errors"
+
+	"github.com/kyma-project/istio/operator/tests/testcontext"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/avast/retry-go"
-	istioCR "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/yaml"
+
+	istioCR "github.com/kyma-project/istio/operator/api/v1alpha2"
 )
 
 func IstioCRDIsInstalled(ctx context.Context) error {
@@ -129,7 +132,7 @@ func (t *TemplatedIstioCr) IstioCRIsAppliedInNamespace(ctx context.Context, name
 		if err != nil {
 			return err
 		}
-		ctx = testcontext.AddIstioCRIntoContext(ctx, &istio)
+		testcontext.AddIstioCRIntoContext(ctx, &istio)
 		return nil
 	}, testcontext.GetRetryOpts()...)
 
@@ -200,7 +203,6 @@ func IstioCrStatusUpdateHappened(ctx context.Context, name, namespace string) er
 		}
 
 		for _, field := range cr.ManagedFields {
-
 			// We only consider an update of the status owned by the manager as relevant, since we want to verify the manager is reconciling the CR.
 			if field.Subresource == "status" && field.Manager == "manager" && field.Operation == metav1.ManagedFieldsOperationUpdate {
 				timestamp, err := time.Parse(time.RFC3339, field.Time.UTC().Format(time.RFC3339))

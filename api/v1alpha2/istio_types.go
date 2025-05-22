@@ -35,7 +35,7 @@ const (
 	ConditionTypeReady                        ConditionType = "Ready"
 	ConditionTypeProxySidecarRestartSucceeded ConditionType = "ProxySidecarRestartSucceeded"
 
-	// general
+	// general.
 	ConditionReasonReconcileSucceeded        ConditionReason = "ReconcileSucceeded"
 	ConditionReasonReconcileSucceededMessage                 = "Reconciliation succeeded"
 	ConditionReasonReconcileUnknown          ConditionReason = "ReconcileUnknown"
@@ -51,7 +51,7 @@ const (
 	ConditionReasonOldestCRNotFound          ConditionReason = "OldestCRNotFound"
 	ConditionReasonOldestCRNotFoundMessage                   = "Oldest Istio custom resource could not be found"
 
-	// install / uninstall
+	// install / uninstall.
 	ConditionReasonIstioInstallNotNeeded               ConditionReason = "IstioInstallNotNeeded"
 	ConditionReasonIstioInstallNotNeededMessage                        = "Istio installation is not needed"
 	ConditionReasonIstioInstallSucceeded               ConditionReason = "IstioInstallSucceeded"
@@ -67,13 +67,13 @@ const (
 	ConditionReasonIstioVersionUpdateNotAllowed        ConditionReason = "IstioVersionUpdateNotAllowed"
 	ConditionReasonIstioVersionUpdateNotAllowedMessage                 = "Update to the new Istio version is not allowed"
 
-	// Istio CRs
+	// Istio CRs.
 	ConditionReasonCRsReconcileSucceeded        ConditionReason = "CustomResourcesReconcileSucceeded"
 	ConditionReasonCRsReconcileSucceededMessage                 = "Custom resources reconciliation succeeded"
 	ConditionReasonCRsReconcileFailed           ConditionReason = "CustomResourcesReconcileFailed"
 	ConditionReasonCRsReconcileFailedMessage                    = "Custom resources reconciliation failed"
 
-	// proxy reset
+	// proxy reset.
 	ConditionReasonProxySidecarRestartSucceeded                 ConditionReason = "ProxySidecarRestartSucceeded"
 	ConditionReasonProxySidecarRestartSucceededMessage                          = "Proxy sidecar restart succeeded"
 	ConditionReasonProxySidecarRestartFailed                    ConditionReason = "ProxySidecarRestartFailed"
@@ -83,13 +83,13 @@ const (
 	ConditionReasonProxySidecarManualRestartRequired            ConditionReason = "ProxySidecarManualRestartRequired"
 	ConditionReasonProxySidecarManualRestartRequiredMessage                     = "Proxy sidecar manual restart is required for some workloads"
 
-	// ingress gateway
+	// ingress gateway.
 	ConditionReasonIngressGatewayRestartSucceeded        ConditionReason = "IngressGatewayRestartSucceeded"
 	ConditionReasonIngressGatewayRestartSucceededMessage                 = "Istio Ingress Gateway restart succeeded"
 	ConditionReasonIngressGatewayRestartFailed           ConditionReason = "IngressGatewayRestartFailed"
 	ConditionReasonIngressGatewayRestartFailedMessage                    = "Istio Ingress Gateway restart failed"
 
-	// egress gateway
+	// egress gateway.
 	ConditionReasonEgressGatewayRestartSucceeded        ConditionReason = "EgressGatewayRestartSucceeded"
 	ConditionReasonEgressGatewayRestartSucceededMessage                 = "Istio Egress Gateway restart succeeded"
 	ConditionReasonEgressGatewayRestartFailed           ConditionReason = "EgressGatewayRestartFailed"
@@ -119,7 +119,7 @@ type IstioSpec struct {
 //+kubebuilder:printcolumn:JSONPath=".status.state",name="State",type="string"
 //+kubebuilder:storageversion
 
-// Contains Istio CR specification and current status.
+// Istio contains Istio CR specification and current status.
 type Istio struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -130,10 +130,10 @@ type Istio struct {
 
 //+kubebuilder:object:root=true
 
-// Contains a list of Istio's.
+// IstioList contains a list of Istio's.
 type IstioList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
+	metav1.TypeMeta `        json:",inline"`
+	metav1.ListMeta `        json:"metadata,omitempty"`
 	Items           []Istio `json:"items"`
 }
 
@@ -150,6 +150,6 @@ type IstioStatus struct {
 	Description string `json:"description,omitempty"`
 }
 
-func init() {
+func init() { //nolint:gochecknoinits // this was scaffolded from kubebuilder. TODO: remove this init function
 	SchemeBuilder.Register(&Istio{}, &IstioList{})
 }

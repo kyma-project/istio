@@ -58,14 +58,14 @@ func NewIstioResourcesFinder(ctx context.Context, client client.Client, logger l
 
 	for _, resource := range finderConfiguration.Resources {
 		for _, meta := range resource.ControlledList {
-			_, err := regexp.Compile(meta.Name)
+			_, err = regexp.Compile(meta.Name)
 			if err != nil {
-				return nil, fmt.Errorf("configuration yaml regex check failed for \"%s\": %s", meta.Name, err)
+				return nil, fmt.Errorf("configuration yaml regex check failed for \"%s\":w%s", meta.Name, err)
 			}
 
 			_, err = regexp.Compile(meta.Namespace)
 			if err != nil {
-				return nil, fmt.Errorf("configuration yaml regex check failed for \"%s\": %s", meta.Namespace, err)
+				return nil, fmt.Errorf("configuration yaml regex check failed for \"%s\":w%s", meta.Namespace, err)
 			}
 		}
 	}
@@ -101,9 +101,9 @@ func (i *IstioResourcesFinder) FindUserCreatedIstioResources() ([]Resource, erro
 					Namespace: item.GetNamespace(),
 				},
 			}
-			managed, err := contains(resource.ControlledList, res.ResourceMeta)
-			if err != nil {
-				return nil, err
+			managed, containsErr := contains(resource.ControlledList, res.ResourceMeta)
+			if containsErr != nil {
+				return nil, containsErr
 			}
 			if !managed {
 				userResources = append(userResources, res)

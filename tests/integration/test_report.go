@@ -2,15 +2,16 @@ package integration
 
 import (
 	"fmt"
-	"gitlab.com/rodrigoodhin/gocure/models"
-	"gitlab.com/rodrigoodhin/gocure/pkg/gocure"
-	"gitlab.com/rodrigoodhin/gocure/report/html"
 	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
 	"runtime"
+
+	"gitlab.com/rodrigoodhin/gocure/models"
+	"gitlab.com/rodrigoodhin/gocure/pkg/gocure"
+	"gitlab.com/rodrigoodhin/gocure/report/html"
 )
 
 func generateReport(suiteName string) error {
@@ -46,7 +47,7 @@ func generateReport(suiteName string) error {
 			return err
 		}
 
-		//Format all patterns like "&lt" to not be replaced later
+		// Format all patterns like "&lt" to not be replaced later
 		find := regexp.MustCompile(`&\w\w`)
 		formatted := find.ReplaceAllFunc(data, func(b []byte) []byte {
 			return []byte{b[0], ' ', b[1], b[2]}

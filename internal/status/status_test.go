@@ -4,9 +4,6 @@ import (
 	"context"
 	"testing"
 
-	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/internal/described_errors"
-	"github.com/kyma-project/istio/operator/internal/tests"
 	. "github.com/onsi/ginkgo/v2"
 	"github.com/onsi/ginkgo/v2/types"
 	. "github.com/onsi/gomega"
@@ -19,6 +16,10 @@ import (
 	types2 "k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/internal/describederrors"
+	"github.com/kyma-project/istio/operator/internal/tests"
 )
 
 func TestManifest(t *testing.T) {
@@ -143,7 +144,7 @@ var _ = Describe("status", func() {
 			k8sClient := createFakeClient(&cr)
 			handler := NewStatusHandler(k8sClient)
 
-			describedError := described_errors.NewDescribedError(errors.New("error happened"), "Something")
+			describedError := describederrors.NewDescribedError(errors.New("error happened"), "Something")
 
 			// when
 			err := handler.UpdateToError(context.TODO(), &cr, describedError)
@@ -167,7 +168,7 @@ var _ = Describe("status", func() {
 			k8sClient := createFakeClient(&cr)
 			handler := NewStatusHandler(k8sClient)
 
-			describedError := described_errors.NewDescribedError(errors.New("error happened"), "Something").SetWarning()
+			describedError := describederrors.NewDescribedError(errors.New("error happened"), "Something").SetWarning()
 
 			// when
 			err := handler.UpdateToError(context.TODO(), &cr, describedError)
@@ -191,7 +192,7 @@ var _ = Describe("status", func() {
 			k8sClient := createFakeClient(&cr)
 			handler := NewStatusHandler(k8sClient)
 
-			describedError := described_errors.NewDescribedError(errors.New("error happened"), "Something")
+			describedError := describederrors.NewDescribedError(errors.New("error happened"), "Something")
 
 			// when
 			err := handler.UpdateToError(context.TODO(), &cr, describedError)
@@ -215,7 +216,7 @@ var _ = Describe("status", func() {
 			k8sClient := createFakeClient(&cr)
 			handler := NewStatusHandler(k8sClient)
 
-			describedError := described_errors.NewDescribedError(errors.New("error happened"), "Something").SetWarning()
+			describedError := describederrors.NewDescribedError(errors.New("error happened"), "Something").SetWarning()
 
 			// when
 			err := handler.UpdateToError(context.TODO(), &cr, describedError)
@@ -239,7 +240,7 @@ var _ = Describe("status", func() {
 			k8sClient := createFakeClient(&cr)
 			handler := NewStatusHandler(k8sClient)
 
-			describedError := described_errors.NewDescribedError(errors.New("error happened"), "Something").SetWarning()
+			describedError := describederrors.NewDescribedError(errors.New("error happened"), "Something").SetWarning()
 
 			// when
 			err := handler.UpdateToError(context.TODO(), &cr, describedError)

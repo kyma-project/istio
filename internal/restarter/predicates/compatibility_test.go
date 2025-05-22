@@ -1,13 +1,15 @@
 package predicates
 
 import (
-	"github.com/kyma-project/istio/operator/pkg/labels"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/pkg/labels"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 )
 
 var _ = Describe("Compatibility Predicate", func() {

@@ -4,15 +4,17 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/avast/retry-go"
-	"github.com/kyma-project/istio/operator/tests/testcontext"
 	"io"
+	"log"
+	"strings"
+
+	"github.com/avast/retry-go"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
-	"log"
-	"strings"
+
+	"github.com/kyma-project/istio/operator/tests/testcontext"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
@@ -24,7 +26,6 @@ func ContainerLogContainsString(ctx context.Context, containerName, depName, dep
 		return ctx, err
 	}
 	err = retry.Do(func() error {
-
 		var dep v1.Deployment
 		err = k8sClient.Get(ctx, types.NamespacedName{
 			Namespace: depNamespace,

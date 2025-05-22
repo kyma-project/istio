@@ -1,11 +1,13 @@
 package ingressgateway_test
 
 import (
-	"github.com/kyma-project/istio/operator/internal/tests"
+	"testing"
+
 	. "github.com/onsi/ginkgo/v2"
 	"github.com/onsi/ginkgo/v2/types"
 	. "github.com/onsi/gomega"
-	"testing"
+
+	"github.com/kyma-project/istio/operator/internal/tests"
 )
 
 func TestRestarter(t *testing.T) {

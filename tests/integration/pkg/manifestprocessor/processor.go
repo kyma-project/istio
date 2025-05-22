@@ -2,6 +2,7 @@ package manifestprocessor
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -18,11 +19,11 @@ func ParseYamlFromFile(fileName string) ([]unstructured.Unstructured, error) {
 	}
 
 	var manifests []unstructured.Unstructured
-	decoder := yaml3.NewDecoder(bytes.NewBufferString(string(rawData)))
+	decoder := yaml3.NewDecoder(bytes.NewBuffer(rawData))
 	for {
 		var d map[string]interface{}
 		if err := decoder.Decode(&d); err != nil {
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				break
 			}
 			return nil, fmt.Errorf("document decode failed: %w", err)

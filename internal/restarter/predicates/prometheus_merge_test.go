@@ -2,7 +2,7 @@ package predicates
 
 import (
 	"context"
-	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
@@ -10,6 +10,8 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 )
 
 var _ = Describe("Prometheus Merge Predicate", func() {
@@ -166,6 +168,5 @@ var _ = Describe("Prometheus Merge Predicate", func() {
 })
 
 func makeClientWithObjects(objects ...client.Object) client.Client {
-
 	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build()
 }

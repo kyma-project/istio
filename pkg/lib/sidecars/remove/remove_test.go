@@ -5,13 +5,12 @@ import (
 	"testing"
 
 	"github.com/go-logr/logr"
-	"github.com/kyma-project/istio/operator/internal/tests"
 	. "github.com/onsi/ginkgo/v2"
 	ginkgotypes "github.com/onsi/ginkgo/v2/types"
 	. "github.com/onsi/gomega"
 
-	sidecarRemover "github.com/kyma-project/istio/operator/pkg/lib/sidecars/remove"
-	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/test/helpers"
+	"github.com/kyma-project/istio/operator/internal/tests"
+
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -19,6 +18,9 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+
+	sidecarRemover "github.com/kyma-project/istio/operator/pkg/lib/sidecars/remove"
+	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/test/helpers"
 )
 
 const restartAnnotationName = "istio-operator.kyma-project.io/restartedAt"
@@ -47,7 +49,7 @@ var _ = Describe("Remove Sidecar", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		// when
-		warnings, err := sidecarRemover.RemoveSidecars(ctx, c, &logger)
+		warnings, err := sidecarRemover.Sidecars(ctx, c, &logger)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -71,7 +73,7 @@ var _ = Describe("Remove Sidecar", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		// when
-		warnings, err := sidecarRemover.RemoveSidecars(ctx, c, &logger)
+		warnings, err := sidecarRemover.Sidecars(ctx, c, &logger)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())

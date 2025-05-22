@@ -4,18 +4,19 @@ import (
 	"context"
 	"time"
 
-	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/internal/restarter"
-	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
-	"github.com/kyma-project/istio/operator/internal/status"
-	"github.com/kyma-project/istio/operator/pkg/lib/annotations"
-	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/internal/restarter"
+	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
+	"github.com/kyma-project/istio/operator/internal/status"
+	"github.com/kyma-project/istio/operator/pkg/lib/annotations"
+	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 )
 
 var _ = Describe("Istio Ingress Gateway restart", func() {
@@ -38,10 +39,10 @@ var _ = Describe("Istio Ingress Gateway restart", func() {
 		statusHandler := status.NewStatusHandler(fakeClient)
 		igRestarter := restarter.NewIngressGatewayRestarter(fakeClient, []predicates.IngressGatewayPredicate{mockIgPredicate{shouldRestart: true}}, statusHandler)
 
-		//when
+		// when
 		err, requeue := igRestarter.Restart(context.Background(), istioCR)
 
-		//then
+		// then
 		Expect(err).Should(Not(HaveOccurred()))
 		Expect(requeue).To(BeFalse())
 
@@ -72,10 +73,10 @@ var _ = Describe("Istio Ingress Gateway restart", func() {
 		statusHandler := status.NewStatusHandler(fakeClient)
 		igRestarter := restarter.NewIngressGatewayRestarter(fakeClient, []predicates.IngressGatewayPredicate{mockIgPredicate{shouldRestart: false}}, statusHandler)
 
-		//when
+		// when
 		err, requeue := igRestarter.Restart(context.Background(), istioCR)
 
-		//then
+		// then
 		Expect(err).Should(Not(HaveOccurred()))
 		Expect(requeue).To(BeFalse())
 
@@ -104,10 +105,10 @@ var _ = Describe("Istio Ingress Gateway restart", func() {
 		statusHandler := status.NewStatusHandler(fakeClient)
 		igRestarter := restarter.NewIngressGatewayRestarter(fakeClient, []predicates.IngressGatewayPredicate{mockIgPredicate{shouldRestart: true}}, statusHandler)
 
-		//when
+		// when
 		err, requeue := igRestarter.Restart(context.Background(), istioCR)
 
-		//then
+		// then
 		Expect(err).Should(Not(HaveOccurred()))
 		Expect(requeue).To(BeFalse())
 		Expect((*istioCR.Status.Conditions)[0].Reason).Should(Equal(string(operatorv1alpha2.ConditionReasonIngressGatewayRestartSucceeded)))

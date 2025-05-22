@@ -7,6 +7,10 @@ import (
 	"testing"
 
 	"github.com/go-logr/logr"
+	. "github.com/onsi/ginkgo/v2"
+	ginkgotypes "github.com/onsi/ginkgo/v2/types"
+	. "github.com/onsi/gomega"
+
 	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
 	"github.com/kyma-project/istio/operator/internal/tests"
 	"github.com/kyma-project/istio/operator/pkg/labels"
@@ -14,9 +18,6 @@ import (
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/restart"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/test/helpers"
-	. "github.com/onsi/ginkgo/v2"
-	ginkgotypes "github.com/onsi/ginkgo/v2/types"
-	. "github.com/onsi/gomega"
 
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -161,7 +162,7 @@ var _ = Describe("RestartProxies", func() {
 
 		// then
 		Expect(err).ToNot(HaveOccurred())
-		Expect(warnings).To(ContainElement(restart.RestartWarning{
+		Expect(warnings).To(ContainElement(restart.Warning{
 			Name:      "n/a",
 			Namespace: "n/a",
 			Kind:      "n/a",
@@ -181,7 +182,7 @@ var _ = Describe("RestartProxies", func() {
 		podsLister := pods.NewPods(c, &logger)
 		expectedImage := predicates.NewSidecarImage("istio", "1.1.0")
 		istioCR := helpers.GetIstioCR(expectedImage.Tag)
-		actionRestarter := NewActionRestartMock([]restart.RestartWarning{{Name: "test-pod", Namespace: "kyma-system", Kind: "Pod", Message: "failed to restart"}}, nil)
+		actionRestarter := NewActionRestartMock([]restart.Warning{{Name: "test-pod", Namespace: "kyma-system", Kind: "Pod", Message: "failed to restart"}}, nil)
 		proxyRestarter := sidecars.NewProxyRestarter(c, podsLister, actionRestarter, &logger)
 		warnings, hasMorePods, err := proxyRestarter.RestartProxies(ctx, expectedImage, helpers.DefaultSidecarResources, &istioCR)
 
@@ -349,7 +350,7 @@ var _ = Describe("RestartWithPredicates", func() {
 
 		// then
 		Expect(err).ToNot(HaveOccurred())
-		Expect(warnings).To(Equal([]restart.RestartWarning{}))
+		Expect(warnings).To(Equal([]restart.Warning{}))
 		Expect(hasMorePods).To(BeFalse())
 	})
 })
@@ -359,7 +360,7 @@ var _ = Describe("BuildWarningMessage", func() {
 
 	It("should return an empty string when there are no warnings", func() {
 		// given
-		warnings := []restart.RestartWarning{}
+		warnings := []restart.Warning{}
 
 		// when
 		warningMessage := sidecars.BuildWarningMessage(warnings, &logger)
@@ -370,7 +371,7 @@ var _ = Describe("BuildWarningMessage", func() {
 
 	It("should return a warning message with pod details when there are warnings", func() {
 		// given
-		warnings := []restart.RestartWarning{
+		warnings := []restart.Warning{
 			{
 				Name:      "pod1",
 				Namespace: "namespace1",
@@ -394,7 +395,7 @@ var _ = Describe("BuildWarningMessage", func() {
 
 	It("should limit the number of pods in the warning message to 5", func() {
 		// given
-		warnings := []restart.RestartWarning{
+		warnings := []restart.Warning{
 			{Name: "pod1", Namespace: "namespace1", Kind: "Pod", Message: "failed to restart"},
 			{Name: "pod2", Namespace: "namespace2", Kind: "Pod", Message: "failed to restart"},
 			{Name: "pod3", Namespace: "namespace3", Kind: "Pod", Message: "failed to restart"},
@@ -407,12 +408,14 @@ var _ = Describe("BuildWarningMessage", func() {
 		warningMessage := sidecars.BuildWarningMessage(warnings, &logger)
 
 		// then
-		Expect(warningMessage).To(ContainSubstring("The sidecars of the following workloads could not be restarted: namespace1/pod1, namespace2/pod2, namespace3/pod3, namespace4/pod4, namespace5/pod5 and 1 additional workload(s)"))
+		Expect(
+			warningMessage,
+		).To(ContainSubstring("The sidecars of the following workloads could not be restarted: namespace1/pod1, namespace2/pod2, namespace3/pod3, namespace4/pod4, namespace5/pod5 and 1 additional workload(s)"))
 	})
 
 	It("should log each warning message", func() {
 		// given
-		warnings := []restart.RestartWarning{
+		warnings := []restart.Warning{
 			{Name: "pod1", Namespace: "namespace1", Kind: "Pod", Message: "failed to restart"},
 		}
 
@@ -518,7 +521,7 @@ func (p *shouldFailClient) Patch(ctx context.Context, obj client.Object, patch c
 type PodsMock struct {
 	Called                 int
 	Predicates             map[int][]predicates.SidecarProxyPredicate
-	Limits                 map[int]*pods.PodsRestartLimits
+	Limits                 map[int]*pods.RestartLimits
 	FailOnKymaWorkload     bool
 	FailOnCustomerWorkload bool
 }
@@ -527,13 +530,13 @@ func NewPodsMock() *PodsMock {
 	return &PodsMock{
 		Called:                 0,
 		Predicates:             map[int][]predicates.SidecarProxyPredicate{},
-		Limits:                 map[int]*pods.PodsRestartLimits{},
+		Limits:                 map[int]*pods.RestartLimits{},
 		FailOnKymaWorkload:     false,
 		FailOnCustomerWorkload: false,
 	}
 }
 
-func (p *PodsMock) GetPodsToRestart(_ context.Context, preds []predicates.SidecarProxyPredicate, limits *pods.PodsRestartLimits) (*v1.PodList, error) {
+func (p *PodsMock) GetPodsToRestart(_ context.Context, preds []predicates.SidecarProxyPredicate, limits *pods.RestartLimits) (*v1.PodList, error) {
 	if p.FailOnKymaWorkload {
 		_, ok := preds[len(preds)-1].(*predicates.KymaWorkloadRestartPredicate)
 		if ok {
@@ -557,17 +560,17 @@ func (p *PodsMock) GetAllInjectedPods(_ context.Context) (*v1.PodList, error) {
 }
 
 type ActionRestartMock struct {
-	warnings []restart.RestartWarning
+	warnings []restart.Warning
 	err      error
 }
 
-func NewActionRestartMock(warnings []restart.RestartWarning, err error) *ActionRestartMock {
+func NewActionRestartMock(warnings []restart.Warning, err error) *ActionRestartMock {
 	return &ActionRestartMock{
 		warnings: warnings,
 		err:      err,
 	}
 }
 
-func (p *ActionRestartMock) Restart(ctx context.Context, podList *v1.PodList, failOnError bool) ([]restart.RestartWarning, error) {
+func (p *ActionRestartMock) Restart(ctx context.Context, podList *v1.PodList, failOnError bool) ([]restart.Warning, error) {
 	return p.warnings, p.err
 }

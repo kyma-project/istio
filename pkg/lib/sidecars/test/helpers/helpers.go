@@ -5,9 +5,10 @@ import (
 	"reflect"
 	"time"
 
+	"k8s.io/apimachinery/pkg/api/resource"
+
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/pkg/labels"
-	"k8s.io/apimachinery/pkg/api/resource"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

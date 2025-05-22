@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/kyma-project/istio/operator/internal/restarter"
 	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
 	"github.com/kyma-project/istio/operator/internal/validation"
@@ -29,16 +31,15 @@ import (
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/restart"
 
-	"github.com/kyma-project/istio/operator/internal/described_errors"
-	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/configuration"
-	"github.com/kyma-project/istio/operator/internal/reconciliations/istio_resources"
-	"github.com/kyma-project/istio/operator/internal/status"
 	"k8s.io/client-go/util/retry"
+
+	"github.com/kyma-project/istio/operator/internal/describederrors"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/configuration"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istioresources"
+	"github.com/kyma-project/istio/operator/internal/status"
 
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
 
-	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	"golang.org/x/time/rate"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -49,6 +50,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
+
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 )
 
 const (
@@ -71,7 +75,7 @@ func NewController(mgr manager.Manager, reconciliationInterval time.Duration) *I
 		Client:                 mgr.GetClient(),
 		Scheme:                 mgr.GetScheme(),
 		istioInstallation:      &istio.Installation{Client: mgr.GetClient(), IstioClient: istio.NewIstioClient(), Merger: &merger},
-		istioResources:         istio_resources.NewReconciler(mgr.GetClient()),
+		istioResources:         istioresources.NewReconciler(mgr.GetClient()),
 		restarters:             restarters,
 		log:                    mgr.GetLogger(),
 		statusHandler:          statusHandler,
@@ -79,6 +83,7 @@ func NewController(mgr manager.Manager, reconciliationInterval time.Duration) *I
 	}
 }
 
+//nolint:gocognit // cognitive complexity 25 of func `(*IstioReconciler).Reconcile` is high (> 20) TODO refactor this function
 func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	r.log.Info("Was called to reconcile Kyma Istio Service Mesh")
 
@@ -101,26 +106,31 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 	if istioCR.GetNamespace() != namespace {
 		errWrongNS := fmt.Errorf("istio CR is not in %s namespace", namespace)
-		return r.terminateReconciliation(ctx, &istioCR, described_errors.NewDescribedError(errWrongNS, "Stopped Istio CR reconciliation"),
+		return r.terminateReconciliation(ctx, &istioCR, describederrors.NewDescribedError(errWrongNS, "Stopped Istio CR reconciliation"),
 			operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileFailed))
 	}
 
 	existingIstioCRs := &operatorv1alpha2.IstioList{}
 	if err := r.List(ctx, existingIstioCRs, client.InNamespace(namespace)); err != nil {
-		return r.requeueReconciliation(ctx, &istioCR, described_errors.NewDescribedError(err, "Unable to list Istio CRs"),
+		return r.requeueReconciliation(ctx, &istioCR, describederrors.NewDescribedError(err, "Unable to list Istio CRs"),
 			operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileFailed))
 	}
 
 	if len(existingIstioCRs.Items) > 1 {
 		oldestCr := r.getOldestCR(existingIstioCRs)
 		if oldestCr == nil {
-			errOldestCRNotFound := fmt.Errorf("no oldest Istio CR found")
-			return r.terminateReconciliation(ctx, &istioCR, described_errors.NewDescribedError(errOldestCRNotFound, "Stopped Istio CR reconciliation").SetWarning(), operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonOldestCRNotFound))
+			errOldestCRNotFound := errors.New("no oldest Istio CR found")
+			return r.terminateReconciliation(
+				ctx,
+				&istioCR,
+				describederrors.NewDescribedError(errOldestCRNotFound, "Stopped Istio CR reconciliation").SetWarning(),
+				operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonOldestCRNotFound),
+			)
 		}
 
 		if istioCR.GetUID() != oldestCr.GetUID() {
 			errNotOldestCR := fmt.Errorf("only Istio CR %s in %s reconciles the module", oldestCr.GetName(), oldestCr.GetNamespace())
-			return r.terminateReconciliation(ctx, &istioCR, described_errors.NewDescribedError(errNotOldestCR, "Stopped Istio CR reconciliation").SetWarning(),
+			return r.terminateReconciliation(ctx, &istioCR, describederrors.NewDescribedError(errNotOldestCR, "Stopped Istio CR reconciliation").SetWarning(),
 				operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonOlderCRExists))
 		}
 	}
@@ -164,7 +174,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		if statusUpdateErr != nil {
 			r.log.Error(statusUpdateErr, "Error during updating status to error")
 		}
-		if err.Level() == described_errors.Warning {
+		if err.Level() == describederrors.Warning {
 			r.log.Info("Reconcile requeued")
 			return ctrl.Result{RequeueAfter: time.Minute * 1}, nil
 		}
@@ -179,7 +189,12 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 }
 
 // requeueReconciliation cancels the reconciliation and requeues the request.
-func (r *IstioReconciler) requeueReconciliation(ctx context.Context, istioCR *operatorv1alpha2.Istio, err described_errors.DescribedError, reason operatorv1alpha2.ReasonWithMessage) (ctrl.Result, error) {
+func (r *IstioReconciler) requeueReconciliation(
+	ctx context.Context,
+	istioCR *operatorv1alpha2.Istio,
+	err describederrors.DescribedError,
+	reason operatorv1alpha2.ReasonWithMessage,
+) (ctrl.Result, error) {
 	if err.ShouldSetCondition() {
 		r.setConditionForError(istioCR, reason)
 	}
@@ -201,7 +216,12 @@ func (r *IstioReconciler) requeueReconciliationRestartNotFinished(ctx context.Co
 }
 
 // terminateReconciliation stops the reconciliation and does not requeue the request.
-func (r *IstioReconciler) terminateReconciliation(ctx context.Context, istioCR *operatorv1alpha2.Istio, err described_errors.DescribedError, reason operatorv1alpha2.ReasonWithMessage) (ctrl.Result, error) {
+func (r *IstioReconciler) terminateReconciliation(
+	ctx context.Context,
+	istioCR *operatorv1alpha2.Istio,
+	err describederrors.DescribedError,
+	reason operatorv1alpha2.ReasonWithMessage,
+) (ctrl.Result, error) {
 	if err.ShouldSetCondition() {
 		r.setConditionForError(istioCR, reason)
 	}
@@ -218,7 +238,7 @@ func (r *IstioReconciler) terminateReconciliation(ctx context.Context, istioCR *
 
 func (r *IstioReconciler) finishReconcile(ctx context.Context, istioCR *operatorv1alpha2.Istio, istioTag string) (ctrl.Result, error) {
 	if err := r.updateLastAppliedConfiguration(ctx, client.ObjectKeyFromObject(istioCR), istioTag); err != nil {
-		describedErr := described_errors.NewDescribedError(err, "Error updating LastAppliedConfiguration")
+		describedErr := describederrors.NewDescribedError(err, "Error updating LastAppliedConfiguration")
 		return r.requeueReconciliation(ctx, istioCR, describedErr, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileFailed))
 	}
 
@@ -241,11 +261,12 @@ func (r *IstioReconciler) finishReconcile(ctx context.Context, istioCR *operator
 // +kubebuilder:rbac:groups="",resources=namespaces,verbs=get;create;update;patch
 // +kubebuilder:rbac:groups="",resources=nodes,verbs=get;list
 // +kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch
+
 func (r *IstioReconciler) SetupWithManager(mgr ctrl.Manager, rateLimiter RateLimiter) error {
 	r.Config = mgr.GetConfig()
 
 	if err := mgr.GetFieldIndexer().IndexField(context.TODO(), &corev1.Pod{}, "status.phase", func(rawObj client.Object) []string {
-		pod := rawObj.(*corev1.Pod)
+		pod, _ := rawObj.(*corev1.Pod)
 		return []string{string(pod.Status.Phase)}
 	}); err != nil {
 		return err

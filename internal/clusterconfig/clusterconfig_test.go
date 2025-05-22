@@ -2,18 +2,21 @@ package clusterconfig_test
 
 import (
 	"context"
+
 	"k8s.io/apimachinery/pkg/api/resource"
 
-	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig"
+
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 )
 
 const (
@@ -24,7 +27,7 @@ const (
 
 var _ = Describe("GetClusterProvider", func() {
 	It("should return other when cluster provider is unknown", func() {
-		//given
+		// given
 		node := corev1.Node{
 			ObjectMeta: v1.ObjectMeta{
 				Name: "node-1",
@@ -42,7 +45,7 @@ var _ = Describe("GetClusterProvider", func() {
 		Expect(p).To(Equal(clusterconfig.Other))
 	})
 	It("should return 'openstack' for clusters provisioned on OpenStack nodes", func() {
-		//given
+		// given
 		node := corev1.Node{
 			ObjectMeta: v1.ObjectMeta{
 				Name: "node-1",
@@ -55,7 +58,7 @@ var _ = Describe("GetClusterProvider", func() {
 		Expect(p).To(Equal(clusterconfig.Openstack))
 	})
 	It("should return 'aws' for clusters provisioned on AWS nodes", func() {
-		//given
+		// given
 		node := corev1.Node{
 			ObjectMeta: v1.ObjectMeta{
 				Name: "node-1",
@@ -68,7 +71,7 @@ var _ = Describe("GetClusterProvider", func() {
 		Expect(p).To(Equal(clusterconfig.Aws))
 	})
 	It("should return 'other' for clusters without nodes", func() {
-		//given
+		// given
 		client := createFakeClient()
 		p, err := clusterconfig.GetClusterProvider(context.Background(), client)
 		Expect(err).To(BeNil())
@@ -79,7 +82,7 @@ var _ = Describe("GetClusterProvider", func() {
 var _ = Describe("EvaluateClusterConfiguration", func() {
 	Context("k3d", func() {
 		It("should set cni values and serviceAnnotations to k3d configuration", func() {
-			//given
+			// given
 			k3dNode := corev1.Node{
 				ObjectMeta: v1.ObjectMeta{
 					Name: "k3d-node-1",
@@ -94,10 +97,10 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			client := createFakeClient(&k3dNode)
 			provider, _ := clusterconfig.GetClusterProvider(context.Background(), client)
 
-			//when
+			// when
 			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client, provider)
 
-			//then
+			// then
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(config).To(Equal(clusterconfig.ClusterConfiguration(map[string]interface{}{
 				"spec": map[string]interface{}{
@@ -114,7 +117,7 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 
 	Context("AWS", func() {
 		It("should use NLB when there is no elb-deprecated ConfigMap present", func() {
-			//given
+			// given
 			awsNode := corev1.Node{
 				ObjectMeta: v1.ObjectMeta{
 					Name: "aws-123",
@@ -128,17 +131,17 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			client := createFakeClient(&awsNode)
 			provider, _ := clusterconfig.GetClusterProvider(context.Background(), client)
 
-			//when
+			// when
 			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client, provider)
 
-			//then
+			// then
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(config).To(Equal(clusterconfig.AWSNLBConfig))
 		})
 
 		It("should use NLB load balancer on AWS if the elb-deprecated ConfigMap is present,"+
 			" but the load balancer type was already switched", func() {
-			//given
+			// given
 			awsNode := corev1.Node{
 				ObjectMeta: v1.ObjectMeta{
 					Name: "aws-123",
@@ -170,16 +173,16 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			client := createFakeClient(&awsNode, &elbDeprecatedConfigMap, &ingressGatewayService)
 			provider, _ := clusterconfig.GetClusterProvider(context.Background(), client)
 
-			//when
+			// when
 			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client, provider)
 
-			//then
+			// then
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(config).To(Equal(clusterconfig.AWSNLBConfig))
 		})
 
 		It("should use ELB load balancer on AWS if elb-deprecated ConfigMap is present", func() {
-			//given
+			// given
 			awsNode := corev1.Node{
 				ObjectMeta: v1.ObjectMeta{
 					Name: "aws-123",
@@ -199,10 +202,10 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			client := createFakeClient(&awsNode, &elbDeprecatedConfigMap)
 			provider, _ := clusterconfig.GetClusterProvider(context.Background(), client)
 
-			//when
+			// when
 			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client, provider)
 
-			//then
+			// then
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(config).To(Equal(clusterconfig.ClusterConfiguration{}))
 		})
@@ -210,7 +213,7 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 
 	Context("GKE", func() {
 		It("should set cni values to GKE configuration", func() {
-			//given
+			// given
 			gkeNode := corev1.Node{
 				ObjectMeta: v1.ObjectMeta{
 					Name: "gke-123",
@@ -225,10 +228,10 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			client := createFakeClient(&gkeNode)
 			provider, _ := clusterconfig.GetClusterProvider(context.Background(), client)
 
-			//when
+			// when
 			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client, provider)
 
-			//then
+			// then
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(config).To(Equal(clusterconfig.ClusterConfiguration(map[string]interface{}{
 				"spec": map[string]interface{}{
@@ -247,7 +250,7 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 
 	Context("Gardener OpenStack", func() {
 		It("should set istio-ingressgateway LoadBalancer service annotation value to Gardener OpenStack configuration", func() {
-			//given
+			// given
 			gardenerNode := corev1.Node{
 				ObjectMeta: v1.ObjectMeta{
 					Name: "Garden Linux 1.23",
@@ -263,10 +266,10 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			client := createFakeClient(&gardenerNode)
 			provider, _ := clusterconfig.GetClusterProvider(context.Background(), client)
 
-			//when
+			// when
 			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client, provider)
 
-			//then
+			// then
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(config).To(Equal(clusterconfig.OpenStackLBProxyProtocolConfig))
 		})
@@ -274,7 +277,7 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 
 	Context("Gardener - unknown", func() {
 		It("should use NLB load balancer on AWS", func() {
-			//given
+			// given
 			gardenerNode := corev1.Node{
 				ObjectMeta: v1.ObjectMeta{
 					Name: "Garden Linux 1.23",
@@ -290,10 +293,10 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			client := createFakeClient(&gardenerNode)
 			provider, _ := clusterconfig.GetClusterProvider(context.Background(), client)
 
-			//when
+			// when
 			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client, provider)
 
-			//then
+			// then
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(config).To(Equal(clusterconfig.AWSNLBConfig))
 		})
@@ -301,7 +304,7 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 
 	Context("Unknown cluster", func() {
 		It("should return no overrides", func() {
-			//given
+			// given
 			unkownNode := corev1.Node{
 				ObjectMeta: v1.ObjectMeta{
 					Name: "unknown-123",
@@ -311,10 +314,10 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			client := createFakeClient(&unkownNode)
 			provider, _ := clusterconfig.GetClusterProvider(context.Background(), client)
 
-			//when
+			// when
 			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client, provider)
 
-			//then
+			// then
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(config).To(Equal(clusterconfig.ClusterConfiguration{}))
 		})
@@ -322,15 +325,15 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 })
 
 var _ = Describe("EvaluateClusterSize", func() {
-	It("should return Evaluation when cpu capacity is less than ProductionClusterCpuThreshold", func() {
-		//given
+	It("should return Evaluation when cpu capacity is less than ProductionClusterCPUThreshold", func() {
+		// given
 		k3dNode := corev1.Node{
 			ObjectMeta: v1.ObjectMeta{
 				Name: "k3d-node-1",
 			},
 			Status: corev1.NodeStatus{
 				Capacity: map[corev1.ResourceName]resource.Quantity{
-					"cpu":    *resource.NewQuantity(clusterconfig.ProductionClusterCpuThreshold-1, resource.DecimalSI),
+					"cpu":    *resource.NewQuantity(clusterconfig.ProductionClusterCPUThreshold-1, resource.DecimalSI),
 					"memory": *resource.NewScaledQuantity(int64(32), resource.Giga),
 				},
 			},
@@ -338,16 +341,16 @@ var _ = Describe("EvaluateClusterSize", func() {
 
 		client := createFakeClient(&k3dNode)
 
-		//when
+		// when
 		size, err := clusterconfig.EvaluateClusterSize(context.Background(), client)
 
-		//then
+		// then
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(size).To(Equal(clusterconfig.Evaluation))
 	})
 
 	It("should return Evaluation when memory capacity is less than ProductionClusterMemoryThresholdGi", func() {
-		//given
+		// given
 		k3dNode := corev1.Node{
 			ObjectMeta: v1.ObjectMeta{
 				Name: "k3d-node-1",
@@ -362,23 +365,23 @@ var _ = Describe("EvaluateClusterSize", func() {
 
 		client := createFakeClient(&k3dNode)
 
-		//when
+		// when
 		size, err := clusterconfig.EvaluateClusterSize(context.Background(), client)
 
-		//then
+		// then
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(size).To(Equal(clusterconfig.Evaluation))
 	})
 
-	It("should return Production when memory capacity is bigger than ProductionClusterMemoryThresholdGi and CPU capacity is bigger than ProductionClusterCpuThreshold", func() {
-		//given
+	It("should return Production when memory capacity is bigger than ProductionClusterMemoryThresholdGi and CPU capacity is bigger than ProductionClusterCPUThreshold", func() {
+		// given
 		k3dNode := corev1.Node{
 			ObjectMeta: v1.ObjectMeta{
 				Name: "k3d-node-1",
 			},
 			Status: corev1.NodeStatus{
 				Capacity: map[corev1.ResourceName]resource.Quantity{
-					"cpu":    *resource.NewQuantity(clusterconfig.ProductionClusterCpuThreshold, resource.DecimalSI),
+					"cpu":    *resource.NewQuantity(clusterconfig.ProductionClusterCPUThreshold, resource.DecimalSI),
 					"memory": *resource.NewScaledQuantity(clusterconfig.ProductionClusterMemoryThresholdGi, resource.Giga),
 				},
 			},
@@ -390,7 +393,7 @@ var _ = Describe("EvaluateClusterSize", func() {
 			},
 			Status: corev1.NodeStatus{
 				Capacity: map[corev1.ResourceName]resource.Quantity{
-					"cpu":    *resource.NewQuantity(clusterconfig.ProductionClusterCpuThreshold, resource.DecimalSI),
+					"cpu":    *resource.NewQuantity(clusterconfig.ProductionClusterCPUThreshold, resource.DecimalSI),
 					"memory": *resource.NewScaledQuantity(clusterconfig.ProductionClusterMemoryThresholdGi, resource.Giga),
 				},
 			},
@@ -398,10 +401,10 @@ var _ = Describe("EvaluateClusterSize", func() {
 
 		client := createFakeClient(&k3dNode, &k3dNode2)
 
-		//when
+		// when
 		size, err := clusterconfig.EvaluateClusterSize(context.Background(), client)
 
-		//then
+		// then
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(size).To(Equal(clusterconfig.Production))
 	})

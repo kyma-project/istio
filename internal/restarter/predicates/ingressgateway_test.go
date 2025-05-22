@@ -4,14 +4,16 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kyma-project/istio/operator/pkg/labels"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	predicates "github.com/kyma-project/istio/operator/internal/restarter/predicates"
+	"github.com/kyma-project/istio/operator/pkg/labels"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/utils/ptr"
+
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
+	predicates "github.com/kyma-project/istio/operator/internal/restarter/predicates"
 )
 
 var _ = Describe("Ingress Gateway Predicate", func() {

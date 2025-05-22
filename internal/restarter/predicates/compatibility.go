@@ -1,9 +1,10 @@
 package predicates
 
 import (
+	v1 "k8s.io/api/core/v1"
+
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/configuration"
-	v1 "k8s.io/api/core/v1"
 )
 
 type CompatibilityRestartPredicate struct {

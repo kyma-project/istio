@@ -2,11 +2,13 @@ package steps
 
 import (
 	"context"
+
 	"github.com/avast/retry-go"
-	"github.com/kyma-project/istio/operator/tests/testcontext"
 	apinetworkingv1 "istio.io/api/networking/v1"
 	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/kyma-project/istio/operator/tests/testcontext"
 )
 
 func CreateDestinationRule(ctx context.Context, name, namespace, host string) (context.Context, error) {
@@ -34,7 +36,7 @@ func CreateDestinationRule(ctx context.Context, name, namespace, host string) (c
 		if err != nil {
 			return err
 		}
-		ctx = testcontext.AddCreatedTestObjectInContext(ctx, &d)
+		testcontext.AddCreatedTestObjectInContext(ctx, &d)
 		return nil
 	}, testcontext.GetRetryOpts()...)
 

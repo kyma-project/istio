@@ -2,12 +2,14 @@ package istio
 
 import (
 	"context"
+
 	"k8s.io/client-go/util/retry"
 
-	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 )
 
 const (

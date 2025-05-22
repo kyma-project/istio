@@ -6,18 +6,20 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kyma-project/istio/operator/internal/tests"
 	"github.com/onsi/ginkgo/v2/types"
+
+	"github.com/kyma-project/istio/operator/internal/tests"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 	"github.com/masterminds/semver"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/scheme"
 
@@ -154,7 +156,7 @@ var _ = Describe("Gatherer", func() {
 		})
 
 		It("should not get pods not marked with 'kyma-project.io/module: istio'", func() {
-			//given
+			// given
 			istioSystem := corev1.Namespace{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: gatherer.IstioNamespace,
@@ -162,10 +164,10 @@ var _ = Describe("Gatherer", func() {
 			}
 			client := createClientSet(&istioSystem, istiodPod, istiogwPod, notManagedPodIstioSystem, appPod)
 
-			//when
+			// when
 			istioNamespace, err := gatherer.ListIstioCPPods(context.TODO(), client)
 
-			//then
+			// then
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(istioNamespace.Items).To(HaveLen(2))
 		})
@@ -265,7 +267,15 @@ var _ = Describe("Gatherer", func() {
 					Name: gatherer.IstioNamespace,
 				},
 			}
-			istiocniPodDistroless := createPodWith("istio-cni-node", "istio-system", "install-cni", "istio/install-cni", ImageVersion+"-distroless", false, "kyma-project.io/module=istio")
+			istiocniPodDistroless := createPodWith(
+				"istio-cni-node",
+				"istio-system",
+				"install-cni",
+				"istio/install-cni",
+				ImageVersion+"-distroless",
+				false,
+				"kyma-project.io/module=istio",
+			)
 
 			client := createClientSet(&istioSystem, istiodPod, istiogwPod, istiocniPodDistroless, appPod)
 

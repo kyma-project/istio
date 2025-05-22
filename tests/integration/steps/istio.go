@@ -3,7 +3,8 @@ package steps
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/istio/operator/tests/testcontext"
+	"strings"
+
 	"github.com/pkg/errors"
 	apinetworkingv1 "istio.io/api/networking/v1"
 	apisecurityv1 "istio.io/api/security/v1"
@@ -13,13 +14,15 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
+
+	"github.com/kyma-project/istio/operator/tests/testcontext"
 
 	"github.com/avast/retry-go"
-	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
-	crds "github.com/kyma-project/istio/operator/tests/integration/pkg/crds"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
+
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
+	crds "github.com/kyma-project/istio/operator/tests/integration/pkg/crds"
 )
 
 const (
@@ -46,9 +49,8 @@ func IstioCRDsBePresentOnCluster(ctx context.Context, should string) error {
 		if len(wrongs) > 0 {
 			if shouldHave {
 				return fmt.Errorf("CRDs %s where not present", strings.Join(wrongs, ";"))
-			} else {
-				return fmt.Errorf("CRDs %s where present", strings.Join(wrongs, ";"))
 			}
+			return fmt.Errorf("CRDs %s where present", strings.Join(wrongs, ";"))
 		}
 		return nil
 	}, testcontext.GetRetryOpts()...)
@@ -71,7 +73,7 @@ func SetIstioInjection(ctx context.Context, enabled, namespace string) error {
 	}, testcontext.GetRetryOpts()...)
 }
 
-func IstioComponentHasResourcesSetToCpuAndMemory(ctx context.Context, component, resourceType, cpu, memory string) (context.Context, error) {
+func IstioComponentHasResourcesSetToCPUAndMemory(ctx context.Context, component, resourceType, cpu, memory string) (context.Context, error) {
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return ctx, err
@@ -106,10 +108,10 @@ func getResourcesForIstioComponent(k8sClient client.Client, component, resourceT
 
 		if resourceType == "limits" {
 			res.Memory = *igDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Memory()
-			res.Cpu = *igDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu()
+			res.CPU = *igDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu()
 		} else {
 			res.Memory = *igDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory()
-			res.Cpu = *igDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu()
+			res.CPU = *igDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu()
 		}
 		return &res, nil
 
@@ -122,10 +124,10 @@ func getResourcesForIstioComponent(k8sClient client.Client, component, resourceT
 
 		if resourceType == "limits" {
 			res.Memory = *egDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Memory()
-			res.Cpu = *egDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu()
+			res.CPU = *egDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu()
 		} else {
 			res.Memory = *egDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory()
-			res.Cpu = *egDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu()
+			res.CPU = *egDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu()
 		}
 		return &res, nil
 
@@ -138,10 +140,10 @@ func getResourcesForIstioComponent(k8sClient client.Client, component, resourceT
 
 		if resourceType == "limits" {
 			res.Memory = *idDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Memory()
-			res.Cpu = *idDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu()
+			res.CPU = *idDeployment.Spec.Template.Spec.Containers[0].Resources.Limits.Cpu()
 		} else {
 			res.Memory = *idDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Memory()
-			res.Cpu = *idDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu()
+			res.CPU = *idDeployment.Spec.Template.Spec.Containers[0].Resources.Requests.Cpu()
 		}
 		return &res, nil
 
@@ -150,7 +152,7 @@ func getResourcesForIstioComponent(k8sClient client.Client, component, resourceT
 	}
 }
 
-// CreateIstioGateway creates an Istio Gateway with http port 80 configured and any host
+// CreateIstioGateway creates an Istio Gateway with http port 80 configured and any host.
 func CreateIstioGateway(ctx context.Context, name, namespace string) (context.Context, error) {
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
@@ -206,21 +208,20 @@ func CreateIstioGateway(ctx context.Context, name, namespace string) (context.Co
 		if err != nil {
 			return err
 		}
-		ctx = testcontext.AddCreatedTestObjectInContext(ctx, gateway)
+		testcontext.AddCreatedTestObjectInContext(ctx, gateway)
 		return nil
 	}, testcontext.GetRetryOpts()...)
 
 	return ctx, err
 }
 
-// CreateVirtualService creates a VirtualService that exposes the given service on any host
+// CreateVirtualService creates a VirtualService that exposes the given service on any host.
 func CreateVirtualService(ctx context.Context, name, exposedService, gateway, namespace string) (context.Context, error) {
 	return CreateVirtualServiceWithPort(ctx, name, exposedService, 8000, gateway, namespace)
 }
 
-// CreateVirtualServiceWithPort creates a VirtualService that exposes the given service and port on any host
+// CreateVirtualServiceWithPort creates a VirtualService that exposes the given service and port on any host.
 func CreateVirtualServiceWithPort(ctx context.Context, name, exposedService string, exposedPort int, gateway, namespace string) (context.Context, error) {
-
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return ctx, err
@@ -269,7 +270,7 @@ func CreateVirtualServiceWithPort(ctx context.Context, name, exposedService stri
 		if err != nil {
 			return err
 		}
-		ctx = testcontext.AddCreatedTestObjectInContext(ctx, vs)
+		testcontext.AddCreatedTestObjectInContext(ctx, vs)
 		return nil
 	}, testcontext.GetRetryOpts()...)
 
@@ -316,7 +317,7 @@ func CreateAuthorizationPolicyExtAuthz(ctx context.Context, name, namespace, sel
 		if err != nil {
 			return err
 		}
-		ctx = testcontext.AddCreatedTestObjectInContext(ctx, ap)
+		testcontext.AddCreatedTestObjectInContext(ctx, ap)
 		return nil
 	}, testcontext.GetRetryOpts()...)
 

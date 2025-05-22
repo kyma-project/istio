@@ -2,6 +2,7 @@ package istio
 
 import (
 	"context"
+
 	"github.com/kyma-project/istio/operator/internal/resources"
 
 	v1 "k8s.io/api/core/v1"
@@ -15,7 +16,7 @@ const (
 	wardenLabelValue = "enabled"
 )
 
-// addWardenValidationAndDisclaimer updates the Istio namespace
+// addWardenValidationAndDisclaimer updates the Istio namespace.
 func addWardenValidationAndDisclaimer(ctx context.Context, kubeClient client.Client) error {
 	ns := &v1.Namespace{}
 

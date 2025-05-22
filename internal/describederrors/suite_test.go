@@ -1,4 +1,4 @@
-package described_errors_test
+package describederrors_test
 
 import (
 	"testing"

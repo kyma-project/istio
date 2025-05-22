@@ -4,23 +4,24 @@ import (
 	"bytes"
 	"context"
 	_ "embed"
+	"text/template"
+
 	"github.com/avast/retry-go"
-	"github.com/kyma-project/istio/operator/tests/testcontext"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/yaml"
-	"text/template"
+
+	"github.com/kyma-project/istio/operator/tests/testcontext"
 )
 
 //go:embed nginx_config_template.yaml
 var configMapTemplateYaml []byte
 
-// CreateNginxApplication creates a deployment, service  and config map for a nginx application
+// CreateNginxApplication creates a deployment, service  and config map for a nginx application.
 func CreateNginxApplication(ctx context.Context, appName, namespace, forwardTo string) (context.Context, error) {
-
 	configMapName := "nginx-conf"
 	ctx, err := createConfigurationCm(ctx, configMapName, namespace, forwardTo)
 	if err != nil {
@@ -74,7 +75,7 @@ func createService(ctx context.Context, appName string, namespace string) (conte
 		if err != nil {
 			return err
 		}
-		ctx = testcontext.AddCreatedTestObjectInContext(ctx, &svc)
+		testcontext.AddCreatedTestObjectInContext(ctx, &svc)
 		return nil
 	}, testcontext.GetRetryOpts()...)
 	return ctx, err
@@ -140,7 +141,7 @@ func createDeployment(ctx context.Context, name, namespace, configMapName string
 		if err != nil {
 			return err
 		}
-		ctx = testcontext.AddCreatedTestObjectInContext(ctx, &dep)
+		testcontext.AddCreatedTestObjectInContext(ctx, &dep)
 		return nil
 	}, testcontext.GetRetryOpts()...)
 
@@ -166,7 +167,7 @@ func createConfigurationCm(ctx context.Context, name string, namespace, forwardT
 		if err != nil {
 			return err
 		}
-		ctx = testcontext.AddCreatedTestObjectInContext(ctx, &cm)
+		testcontext.AddCreatedTestObjectInContext(ctx, &cm)
 		return nil
 	}, testcontext.GetRetryOpts()...)
 
@@ -174,7 +175,6 @@ func createConfigurationCm(ctx context.Context, name string, namespace, forwardT
 }
 
 func createNginxConfigMapFromTemplate(name string, namespace string, templateValues map[string]string) (corev1.ConfigMap, error) {
-
 	cmTemplate, err := template.New("tmpl").Option("missingkey=zero").Parse(string(configMapTemplateYaml))
 	if err != nil {
 		return corev1.ConfigMap{}, err

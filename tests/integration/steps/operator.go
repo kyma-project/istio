@@ -2,17 +2,18 @@ package steps
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
 	"github.com/kyma-project/istio/operator/tests/testcontext"
 
 	"github.com/avast/retry-go"
-	"github.com/kyma-project/istio/operator/tests/integration/pkg/manifestprocessor"
 	v1 "k8s.io/api/apps/v1"
 	v1c "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/kyma-project/istio/operator/tests/integration/pkg/manifestprocessor"
 )
 
 func DeployIstioOperator(ctx context.Context) error {
@@ -38,7 +39,7 @@ func DeployIstioOperator(ctx context.Context) error {
 			}, &existingResource)
 
 			if err != nil {
-				if errors.IsNotFound(err) {
+				if apierrors.IsNotFound(err) {
 					err := k8sClient.Create(ctx, &resource)
 					if err != nil {
 						return err
@@ -75,7 +76,7 @@ func DeployIstioOperator(ctx context.Context) error {
 		for _, pod := range pods.Items {
 			for _, c := range pod.Spec.Containers {
 				if c.Image != newImage {
-					return fmt.Errorf("controller is not updated")
+					return errors.New("controller is not updated")
 				}
 			}
 		}

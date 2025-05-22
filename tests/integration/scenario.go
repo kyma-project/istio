@@ -2,6 +2,7 @@ package integration
 
 import (
 	"github.com/cucumber/godog"
+
 	"github.com/kyma-project/istio/operator/tests/integration/steps"
 )
 
@@ -15,13 +16,19 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" is deleted$`, steps.ResourceInNamespaceIsDeleted)
 	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" is ready$`, steps.ResourceIsReady)
 	ctx.Step(`^"([^"]*)" "([^"]*)" is deleted$`, steps.ClusterResourceIsDeleted)
-	ctx.Step(`^"([^"]*)" has "([^"]*)" set to cpu - "([^"]*)" and memory - "([^"]*)"$`, steps.IstioComponentHasResourcesSetToCpuAndMemory)
+	ctx.Step(`^"([^"]*)" has "([^"]*)" set to cpu - "([^"]*)" and memory - "([^"]*)"$`, steps.IstioComponentHasResourcesSetToCPUAndMemory)
 	ctx.Step(`^"([^"]*)" is not present on cluster$`, steps.ResourceNotPresent)
 	ctx.Step(`^Access logging is enabled for the mesh using "([^"]*)" provider$`, steps.EnableAccessLogging)
-	ctx.Step(`^Application "([^"]*)" in namespace "([^"]*)" has proxy with "([^"]*)" set to cpu - "([^"]*)" and memory - "([^"]*)"$`, steps.ApplicationHasProxyResourcesSetToCpuAndMemory)
+	ctx.Step(
+		`^Application "([^"]*)" in namespace "([^"]*)" has proxy with "([^"]*)" set to cpu - "([^"]*)" and memory - "([^"]*)"$`,
+		steps.ApplicationHasProxyResourcesSetToCpuAndMemory,
+	)
 	ctx.Step(`^Application "([^"]*)" in namespace "([^"]*)" has required version of proxy$`, steps.ApplicationPodShouldHaveIstioProxyInRequiredVersion)
 	ctx.Step(`^Application pod "([^"]*)" in namespace "([^"]*)" has Istio proxy "([^"]*)"$`, steps.ApplicationPodShouldHaveIstioProxy)
-	ctx.Step(`^Authorization policy "([^"]*)" in namespace "([^"]*)" with app selector "([^"]*)" is using extension provider "([^"]*)" for operation "([^"]*)"$`, steps.CreateAuthorizationPolicyExtAuthz)
+	ctx.Step(
+		`^Authorization policy "([^"]*)" in namespace "([^"]*)" with app selector "([^"]*)" is using extension provider "([^"]*)" for operation "([^"]*)"$`,
+		steps.CreateAuthorizationPolicyExtAuthz,
+	)
 	ctx.Step(`^Container "([^"]*)" of "([^"]*)" "([^"]*)" in namespace "([^"]*)" has required version$`, steps.IstioResourceContainerHasRequiredVersion)
 	ctx.Step(`^Destination rule "([^"]*)" in namespace "([^"]*)" with host "([^"]*)" exists$`, steps.CreateDestinationRule)
 	ctx.Step(`^Evaluated cluster size is "([^"]*)"$`, steps.EvaluatedClusterSizeIs)
@@ -46,7 +53,10 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^Namespace "([^"]*)" is created$`, steps.NamespaceIsCreated)
 	ctx.Step(`^Nginx application "([^"]*)" deployment is created in namespace "([^"]*)" with forward to "([^"]*)" and service port 80$`, steps.CreateNginxApplication)
 	ctx.Step(`^OTEL Collector mock "([^"]*)" deployment is created in namespace "([^"]*)"$`, steps.CreateTelemetryCollectorMock)
-	ctx.Step(`^Pod of deployment "([^"]*)" in namespace "([^"]*)" has container "([^"]*)" with resource "([^"]*)" set to cpu - "([^"]*)" and memory - "([^"]*)"$`, steps.DeploymentHasPodWithContainerResourcesSetToCpuAndMemory)
+	ctx.Step(
+		`^Pod of deployment "([^"]*)" in namespace "([^"]*)" has container "([^"]*)" with resource "([^"]*)" set to cpu - "([^"]*)" and memory - "([^"]*)"$`,
+		steps.DeploymentHasPodWithContainerResourcesSetToCPUAndMemory,
+	)
 	ctx.Step(`^Request sent to exposed httpbin, should contain public client IP in "([^"]*)" header$`, steps.ValidatePublicClientIpInHeader)
 	ctx.Step(`^Request to path "([^"]*)" should have response code "([^"]*)"$`, steps.ValidateResponseStatusCode)
 	ctx.Step(`^Request to path "([^"]*)" should return "([^"]*)" with value "([^"]*)" in body$`, steps.ValidateHeaderInBody)
@@ -56,5 +66,8 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^Template value "([^"]*)" is set to "([^"]*)"$`, t.SetTemplateValue)
 	ctx.Step(`^Tracing is enabled for the mesh using provider "([^"]*)"$`, steps.EnableTracing)
 	ctx.Step(`^Virtual service "([^"]*)" exposing service "([^"]*)" by gateway "([^"]*)" is configured in namespace "([^"]*)"$`, steps.CreateVirtualService)
-	ctx.Step(`^Virtual service "([^"]*)" exposing service "([^"]*)" with port "([^"]*)" by gateway "([^"]*)" is configured in namespace "([^"]*)"$`, steps.CreateVirtualServiceWithPort)
+	ctx.Step(
+		`^Virtual service "([^"]*)" exposing service "([^"]*)" with port "([^"]*)" by gateway "([^"]*)" is configured in namespace "([^"]*)"$`,
+		steps.CreateVirtualServiceWithPort,
+	)
 }

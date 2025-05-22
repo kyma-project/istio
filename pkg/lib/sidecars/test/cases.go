@@ -4,18 +4,20 @@ import (
 	"context"
 	"fmt"
 
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+
 	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/restart"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/test/helpers"
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/cucumber/godog"
-	"github.com/kyma-project/istio/operator/pkg/lib/sidecars"
 	appsv1 "k8s.io/api/apps/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
+
+	"github.com/kyma-project/istio/operator/pkg/lib/sidecars"
 )
 
 const restartAnnotationName = "istio-operator.kyma-project.io/restartedAt"
@@ -87,31 +89,54 @@ func (s *scenario) allRequiredResourcesAreRestarted() error {
 		case "DaemonSet":
 			ds := obj.(*appsv1.DaemonSet)
 			if _, ok := ds.Spec.Template.Annotations[restartAnnotationName]; !ok {
-				return fmt.Errorf("the annotation %s wasn't applied for %s %s/%s", restartAnnotationName, ds.GetObjectKind().GroupVersionKind().Kind, ds.GetNamespace(), ds.GetName())
+				return fmt.Errorf(
+					"the annotation %s wasn't applied for %s %s/%s",
+					restartAnnotationName,
+					ds.GetObjectKind().GroupVersionKind().Kind,
+					ds.GetNamespace(),
+					ds.GetName(),
+				)
 			}
 
 		case "Deployment":
 			dep := obj.(*appsv1.Deployment)
 			if _, ok := dep.Spec.Template.Annotations[restartAnnotationName]; !ok {
-				return fmt.Errorf("the annotation %s wasn't applied for %s %s/%s", restartAnnotationName, dep.GetObjectKind().GroupVersionKind().Kind, dep.GetNamespace(), dep.GetName())
+				return fmt.Errorf(
+					"the annotation %s wasn't applied for %s %s/%s",
+					restartAnnotationName,
+					dep.GetObjectKind().GroupVersionKind().Kind,
+					dep.GetNamespace(),
+					dep.GetName(),
+				)
 			}
 
 		case "ReplicaSet":
 			rs := obj.(*appsv1.ReplicaSet)
 			if _, ok := rs.Spec.Template.Annotations[restartAnnotationName]; !ok {
-				return fmt.Errorf("the annotation %s wasn't applied for %s %s/%s", restartAnnotationName, rs.GetObjectKind().GroupVersionKind().Kind, rs.GetNamespace(), rs.GetName())
+				return fmt.Errorf(
+					"the annotation %s wasn't applied for %s %s/%s",
+					restartAnnotationName,
+					rs.GetObjectKind().GroupVersionKind().Kind,
+					rs.GetNamespace(),
+					rs.GetName(),
+				)
 			}
 
 		case "StatefulSet":
 			ss := obj.(*appsv1.StatefulSet)
 			if _, ok := ss.Spec.Template.Annotations[restartAnnotationName]; !ok {
-				return fmt.Errorf("the annotation %s wasn't applied for %s %s/%s", restartAnnotationName, ss.GetObjectKind().GroupVersionKind().Kind, ss.GetNamespace(), ss.GetName())
+				return fmt.Errorf(
+					"the annotation %s wasn't applied for %s %s/%s",
+					restartAnnotationName,
+					ss.GetObjectKind().GroupVersionKind().Kind,
+					ss.GetNamespace(),
+					ss.GetName(),
+				)
 			}
 
 		default:
 			return fmt.Errorf("kind %s is not supported for rollout", obj.GetObjectKind().GroupVersionKind().Kind)
 		}
-
 	}
 	return nil
 }
@@ -136,7 +161,13 @@ func (s *scenario) onlyRequiredresourcesAreRestarted() error {
 		}
 
 		if _, ok := obj.GetAnnotations()[restartAnnotationName]; ok {
-			return fmt.Errorf("the annotation %s was applied for %s %s/%s but shouldn't", restartAnnotationName, obj.GetObjectKind().GroupVersionKind().Kind, obj.GetNamespace(), obj.GetName())
+			return fmt.Errorf(
+				"the annotation %s was applied for %s %s/%s but shouldn't",
+				restartAnnotationName,
+				obj.GetObjectKind().GroupVersionKind().Kind,
+				obj.GetNamespace(),
+				obj.GetName(),
+			)
 		}
 	}
 	return nil

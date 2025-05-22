@@ -3,20 +3,21 @@ package testsupport
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/avast/retry-go"
-	"github.com/kyma-project/istio/operator/tests/testcontext"
-	"github.com/pkg/errors"
 	"net/http"
 	"time"
+
+	"github.com/avast/retry-go"
+	"github.com/pkg/errors"
+
+	"github.com/kyma-project/istio/operator/tests/testcontext"
 )
 
-type RetryableHttpClient struct {
+type RetryableHTTPClient struct {
 	client *http.Client
 	opts   []retry.Option
 }
 
-func NewHttpClientWithRetry() *RetryableHttpClient {
-
+func NewHTTPClientWithRetry() *RetryableHTTPClient {
 	c := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -24,27 +25,27 @@ func NewHttpClientWithRetry() *RetryableHttpClient {
 		Timeout: time.Second * 10,
 	}
 
-	return &RetryableHttpClient{
+	return &RetryableHTTPClient{
 		client: c,
 		opts:   testcontext.GetRetryOpts(),
 	}
 }
 
-// Get returns returns error if the validator returns false
-func (h *RetryableHttpClient) Get(url string, validator HttpResponseAsserter) error {
+// Get returns returns error if the validator returns false.
+func (h *RetryableHTTPClient) Get(url string, validator HTTPResponseAsserter) error {
 	err := h.withRetries(func() (*http.Response, error) {
 		return h.client.Get(url)
 	}, validator)
 
 	if err != nil {
-		return fmt.Errorf("error calling endpoint %s err=%s", url, err)
+		return fmt.Errorf("error calling endpoint %s err=%w", url, err)
 	}
 
 	return nil
 }
 
-// GetWithHeaders returns error if the validator returns false
-func (h *RetryableHttpClient) GetWithHeaders(url string, requestHeaders map[string]string, asserter HttpResponseAsserter) error {
+// GetWithHeaders returns error if the validator returns false.
+func (h *RetryableHTTPClient) GetWithHeaders(url string, requestHeaders map[string]string, asserter HTTPResponseAsserter) error {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return err
@@ -59,21 +60,19 @@ func (h *RetryableHttpClient) GetWithHeaders(url string, requestHeaders map[stri
 	}, asserter)
 
 	if err != nil {
-		return fmt.Errorf("error calling endpoint %s err=%s", url, err)
+		return fmt.Errorf("error calling endpoint %s err=%w", url, err)
 	}
 
 	return nil
 }
 
-func (h *RetryableHttpClient) withRetries(httpCall func() (*http.Response, error), asserter HttpResponseAsserter) error {
-
+func (h *RetryableHTTPClient) withRetries(httpCall func() (*http.Response, error), asserter HTTPResponseAsserter) error {
 	if err := retry.Do(func() error {
-
 		response, callErr := httpCall()
 		if callErr != nil {
 			return callErr
 		}
-
+		defer response.Body.Close()
 		if isValid, failureMsg := asserter.Assert(*response); !isValid {
 			return errors.New(failureMsg)
 		}

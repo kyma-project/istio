@@ -4,7 +4,6 @@ import (
 	"context"
 	_ "embed"
 
-	"github.com/kyma-project/istio/operator/internal/resources"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	apisecurityv1 "istio.io/api/security/v1"
@@ -16,6 +15,8 @@ import (
 	ctrlClient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/yaml"
+
+	"github.com/kyma-project/istio/operator/internal/resources"
 )
 
 //go:embed test_files/resource_with_spec.yaml
@@ -88,7 +89,7 @@ var _ = Describe("Apply", func() {
 		Expect(res).To(Equal(controllerutil.OperationResultUpdated))
 
 		Expect(k8sClient.Get(context.Background(), ctrlClient.ObjectKeyFromObject(&pa), &pa)).Should(Succeed())
-		Expect(pa.Spec.Mtls.Mode).To(Equal(apisecurityv1.PeerAuthentication_MutualTLS_PERMISSIVE))
+		Expect(pa.Spec.GetMtls().GetMode()).To(Equal(apisecurityv1.PeerAuthentication_MutualTLS_PERMISSIVE))
 		um, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&pa)
 		unstr := unstructured.Unstructured{Object: um}
 		Expect(err).ToNot(HaveOccurred())

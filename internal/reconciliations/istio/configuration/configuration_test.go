@@ -10,8 +10,9 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/kyma-project/istio/operator/internal/tests"
 	"github.com/onsi/ginkgo/v2/types"
+
+	"github.com/kyma-project/istio/operator/internal/tests"
 )
 
 const (
@@ -42,7 +43,9 @@ var _ = Describe("Istio Configuration", func() {
 			// then
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(istioCR.Annotations).To(Not(BeEmpty()))
-			Expect(istioCR.Annotations[lastAppliedConfiguration]).To(Equal(fmt.Sprintf(`{"config":{"numTrustedProxies":1,"telemetry":{"metrics":{}}},"IstioTag":"%s"}`, mockIstioTag)))
+			Expect(
+				istioCR.Annotations[lastAppliedConfiguration],
+			).To(Equal(fmt.Sprintf(`{"config":{"numTrustedProxies":1,"telemetry":{"metrics":{}}},"IstioTag":"%s"}`, mockIstioTag)))
 
 			appliedConfig, err := configuration.GetLastAppliedConfiguration(&istioCR)
 

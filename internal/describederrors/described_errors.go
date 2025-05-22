@@ -1,4 +1,4 @@
-package described_errors
+package describederrors
 
 import (
 	"github.com/pkg/errors"

@@ -1,11 +1,12 @@
 package predicates_test
 
 import (
-	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
 )
 
 var _ = Describe("Matches", func() {

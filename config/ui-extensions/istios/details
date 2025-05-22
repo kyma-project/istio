@@ -1,15 +1,19 @@
-header:
-- name: Ready
-  source: status.state
-  widget: Badge
-  description: status.description
-  highlights:
-    positive:
-      - 'Ready'
-    negative:
-      - 'Error'
-    critical:
-      - 'Warning'
+status:
+  header:
+    - name: Ready
+      source: status.state
+      widget: Badge
+      description: status.description
+      highlights:
+        positive:
+          - 'Ready'
+        negative:
+          - 'Error'
+        critical:
+          - 'Warning'
+  body:
+    - name: Control plane version installed
+      source: $eval(metadata.annotations."operator.kyma-project.io/lastAppliedConfiguration").IstioTag
 body:
 - widget: Panel
   name: Configuration

@@ -321,6 +321,73 @@ var _ = Describe("Restart Pods", func() {
 		Expect(dep.ResourceVersion).To(Equal("1000"))
 	})
 
+	It("should not rollout restart ReplicaSet owner if there are multiple ReplicaSets, with one not ready", func() {
+		// given
+		pod := podFixture("p1", "test-ns", "ReplicaSet", "podOwner")
+
+		podList := v1.PodList{
+			Items: []v1.Pod{
+				pod,
+			},
+		}
+
+		c := fakeClient(&pod,
+			&appsv1.ReplicaSet{
+				ObjectMeta: metav1.ObjectMeta{
+					OwnerReferences: []metav1.OwnerReference{
+						{Name: "rsOwner", Kind: "Deployment", UID: "1234"},
+					},
+					Name:      "podOwner",
+					Namespace: "test-ns",
+				},
+				Status: appsv1.ReplicaSetStatus{
+					Replicas:      1,
+					ReadyReplicas: 1,
+				},
+			},
+
+			&appsv1.ReplicaSet{
+				ObjectMeta: metav1.ObjectMeta{
+					OwnerReferences: []metav1.OwnerReference{
+						{Name: "rsOwner", Kind: "Deployment", UID: "1234"},
+					},
+					Name:      "podOwner2",
+					Namespace: "test-ns",
+				},
+				Status: appsv1.ReplicaSetStatus{
+					Replicas:      1,
+					ReadyReplicas: 0,
+				},
+			},
+
+			&appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{
+				Name:      "rsOwner",
+				Namespace: "test-ns",
+				UID:       "1234",
+			}})
+
+		// when
+		actionRestarter := restart.NewActionRestarter(c, &logger)
+		warnings, err := actionRestarter.Restart(ctx, &podList, false)
+
+		// then
+		Expect(err).NotTo(HaveOccurred())
+		Expect(warnings).To(ContainElement(
+			restart.RestartWarning{
+				Name:      "rsOwner",
+				Namespace: "test-ns",
+				Kind:      "Deployment",
+				Message:   "was not restarted because there exists another not ready ReplicaSet for the same object",
+			}),
+		)
+
+		deployment := appsv1.Deployment{}
+		err = c.Get(context.Background(), types.NamespacedName{Name: "rsOwner", Namespace: "test-ns"}, &deployment)
+
+		Expect(err).NotTo(HaveOccurred())
+		Expect(deployment.Spec.Template.Annotations[restartAnnotationName]).To(BeEmpty())
+	})
+
 	It("should rollout restart ReplicaSet owner if the pod is owned by one that is found and has an owner", func() {
 		// given
 		pod := podFixture("p1", "test-ns", "ReplicaSet", "podOwner")

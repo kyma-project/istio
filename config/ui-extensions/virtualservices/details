@@ -1,7 +1,6 @@
 resourceGraph:
   dataSources:
     - source: relatedGateways
-    - source: relatedServices
 body:
   - widget: Table
     source: spec.gateways[]

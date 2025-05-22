@@ -49,3 +49,6 @@ body:
         widget: Labels
         name: spec.selector.matchLabels
         visibility: $exists($value) and $boolean($value)
+resourceGraph:
+  dataSources:
+    - source: relatedAPIRules

@@ -27,7 +27,7 @@ func NewUserResources(c client.Client) UserResources {
 func (urm UserResources) DetectUserCreatedEfOnIngress(ctx context.Context) described_errors.DescribedError {
 	envoyFilterList := networkingv1alpha3.EnvoyFilterList{}
 
-	err := urm.c.List(ctx, &envoyFilterList)
+	err := urm.c.List(ctx, &envoyFilterList, client.InNamespace("istio-system"))
 	if err != nil {
 		return described_errors.NewDescribedError(err, "could not list EnvoyFilters")
 	}

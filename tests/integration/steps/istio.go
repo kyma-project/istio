@@ -22,7 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
-	crds "github.com/kyma-project/istio/operator/tests/integration/pkg/crds"
+	"github.com/kyma-project/istio/operator/tests/integration/pkg/crds"
 )
 
 const (

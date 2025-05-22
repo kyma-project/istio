@@ -375,7 +375,7 @@ var _ = Describe("Restart Pods", func() {
 		// then
 		Expect(err).NotTo(HaveOccurred())
 		Expect(warnings).To(ContainElement(
-			restart.RestartWarning{
+			restart.Warning{
 				Name:      "rsOwner",
 				Namespace: "test-ns",
 				Kind:      "Deployment",

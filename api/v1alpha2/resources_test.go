@@ -60,8 +60,8 @@ var _ = Describe("GetProxyResources", func() {
 			Proxy: &v1alpha2.ProxyComponent{K8S: &v1alpha2.ProxyK8sConfig{
 				Resources: &v1alpha2.Resources{
 					Requests: &v1alpha2.ResourceClaims{
-						CPU:    ptr.To(string("500m")),
-						Memory: ptr.To(string("500Mi")),
+						CPU:    ptr.To("500m"),
+						Memory: ptr.To("500Mi"),
 					},
 				},
 			}},

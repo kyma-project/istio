@@ -91,6 +91,7 @@ func (m *IstioMerger) GetIstioOperator(clusterSize clusterconfig.ClusterSize) (i
 	case clusterconfig.Evaluation:
 		istioOperator = EvaluationOperator
 	case clusterconfig.UnknownSize:
+		return iopv1alpha1.IstioOperator{}, errors.New("unsupported cluster size")
 	default:
 		return iopv1alpha1.IstioOperator{}, errors.New("unsupported cluster size")
 	}

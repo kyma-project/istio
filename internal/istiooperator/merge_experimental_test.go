@@ -3,6 +3,8 @@
 package istiooperator_test
 
 import (
+	"reflect"
+
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
@@ -11,7 +13,6 @@ import (
 	istiov1alpha1 "istio.io/istio/operator/pkg/apis"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"reflect"
 )
 
 var _ = Describe("Merge", func() {

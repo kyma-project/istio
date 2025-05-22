@@ -272,7 +272,7 @@ var _ = Describe("status", func() {
 
 			// then
 			Expect(cr.Status.Conditions).ToNot(BeNil())
-			Expect((*cr.Status.Conditions)).To(HaveLen(2))
+			Expect(*cr.Status.Conditions).To(HaveLen(2))
 			Expect((*cr.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
 			Expect((*cr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonReconcileSucceeded)))
 			Expect((*cr.Status.Conditions)[0].Status).To(Equal(metav1.ConditionTrue))

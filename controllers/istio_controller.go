@@ -19,8 +19,9 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/istio/operator/internal/resources"
 	"time"
+
+	"github.com/kyma-project/istio/operator/internal/resources"
 
 	"github.com/pkg/errors"
 
@@ -88,7 +89,7 @@ func NewController(mgr manager.Manager, reconciliationInterval time.Duration) *I
 	}
 }
 
-//nolint:gocognit // cognitive complexity 25 of func `(*IstioReconciler).Reconcile` is high (> 20) TODO refactor this function
+//nolint:gocognit,funlen // cognitive complexity 25 of func `(*IstioReconciler).Reconcile` is high (> 20), Function 'Reconcile' has too many statements (58 > 50) TODO refactor this function
 func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	r.log.Info("Was called to reconcile Kyma Istio Service Mesh")
 
@@ -202,9 +203,21 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	userResErr := r.userResources.DetectUserCreatedEfOnIngress(ctx)
 	if userResErr != nil {
 		if userResErr.Level() != describederrors.Warning {
-			return r.requeueReconciliation(ctx, &istioCR, userResErr, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIngressTargetingUserResourceDetectionFailed), reconciliationRequeueTimeError)
+			return r.requeueReconciliation(
+				ctx,
+				&istioCR,
+				userResErr,
+				operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIngressTargetingUserResourceDetectionFailed),
+				reconciliationRequeueTimeError,
+			)
 		}
-		return r.requeueReconciliation(ctx, &istioCR, userResErr, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIngressTargetingUserResourceFound), reconciliationRequeueTimeWarning)
+		return r.requeueReconciliation(
+			ctx,
+			&istioCR,
+			userResErr,
+			operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIngressTargetingUserResourceFound),
+			reconciliationRequeueTimeWarning,
+		)
 	}
 
 	return r.finishReconcile(ctx, &istioCR, istioImageVersion.Tag())
@@ -231,7 +244,7 @@ func (r *IstioReconciler) requeueReconciliationRestartNotFinished(ctx context.Co
 		r.log.Error(statusUpdateErr, "Error during updating status to processing")
 	}
 	r.log.Info("Reconcile requeued")
-	return ctrl.Result{RequeueAfter: reconciliationRequeueTimeError}, nil
+	return ctrl.Result{RequeueAfter: requeueAfter}, nil
 }
 
 // terminateReconciliation stops the reconciliation and does not requeue the request.
@@ -279,7 +292,8 @@ func (r *IstioReconciler) finishReconcile(ctx context.Context, istioCR *operator
 // +kubebuilder:rbac:groups="",resources=namespaces,verbs=get;create;update;patch
 // +kubebuilder:rbac:groups="",resources=nodes,verbs=get;list
 // +kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch
-
+//
+//nolint:staticcheck,revive // automatic generation of rbacs is broken. Do not touch unless you fix it.
 func (r *IstioReconciler) SetupWithManager(mgr ctrl.Manager, rateLimiter RateLimiter) error {
 	r.Config = mgr.GetConfig()
 
@@ -304,16 +318,6 @@ func (r *IstioReconciler) SetupWithManager(mgr ctrl.Manager, rateLimiter RateLim
 			),
 		}).
 		Complete(r)
-}
-
-// TemplateRateLimiter implements a rate limiter for a client-go.workqueue.  It has
-// both an overall (token bucket) and per-item (exponential) rate limiting.
-func TemplateRateLimiter(failureBaseDelay time.Duration, failureMaxDelay time.Duration,
-	frequency int, burst int,
-) workqueue.TypedRateLimiter[client.Object] {
-	return workqueue.NewTypedMaxOfRateLimiter[client.Object](
-		workqueue.NewTypedItemExponentialFailureRateLimiter[client.Object](failureBaseDelay, failureMaxDelay),
-		&workqueue.TypedBucketRateLimiter[client.Object]{Limiter: rate.NewLimiter(rate.Limit(frequency), burst)})
 }
 
 func (r *IstioReconciler) getOldestCR(istioCRs *operatorv1alpha2.IstioList) *operatorv1alpha2.Istio {

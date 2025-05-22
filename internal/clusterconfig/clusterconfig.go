@@ -18,6 +18,15 @@ import (
 const (
 	ProductionClusterCPUThreshold      int64 = 5
 	ProductionClusterMemoryThresholdGi int64 = 10
+
+	TypeEvaluation = "Evaluation"
+	TypeProduction = "Production"
+	TypeUnknown    = "Unknown"
+
+	TypeK3D      = "k3d"
+	TypeGKE      = "GKE"
+	TypeGardener = "Gardener"
+	TypeAWS      = "AWS"
 )
 
 type ClusterSize int
@@ -31,14 +40,13 @@ const (
 func (s ClusterSize) String() string {
 	switch s {
 	case Evaluation:
-		return "Evaluation"
+		return TypeEvaluation
 	case Production:
-		return "Production"
+		return TypeProduction
 	case UnknownSize:
-		fallthrough
-	default:
-		return "Unknown"
+		return TypeUnknown
 	}
+	return TypeUnknown
 }
 
 // EvaluateClusterSize counts the entire capacity of cpu and memory in the cluster and returns Evaluation
@@ -82,18 +90,17 @@ const (
 func (c ClusterFlavour) String() string {
 	switch c {
 	case k3d:
-		return "k3d"
+		return TypeK3D
 	case GKE:
-		return "GKE"
+		return TypeGKE
 	case Gardener:
-		return "Gardener"
+		return TypeGardener
 	case AWS:
-		return "AWS"
+		return TypeAWS
 	case Unknown:
-		fallthrough
-	default:
-		return "Unknown"
+		return TypeUnknown
 	}
+	return TypeUnknown
 }
 
 type ClusterConfiguration map[string]interface{}
@@ -334,10 +341,9 @@ func (c ClusterFlavour) clusterConfiguration(clusterProvider string) (ClusterCon
 	case Gardener:
 		return generateIstioIngressGatewayAnnotations(clusterProvider)
 	case Unknown:
-		fallthrough
-	default:
 		return ClusterConfiguration{}, nil
 	}
+	return ClusterConfiguration{}, nil
 }
 
 // generateIstioIngressGatewayAnnotations adds an annotation to a service LoadBalancer istio-ingressgateway

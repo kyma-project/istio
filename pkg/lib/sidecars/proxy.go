@@ -65,19 +65,19 @@ func (p *ProxyRestart) RestartProxies(
 		p.logger.Error(err, "Failed to create restart prometheusMerge predicate")
 		return []restart.Warning{}, false, err
 	}
-	predicates := []predicates.SidecarProxyPredicate{
+	proxyPredicates := []predicates.SidecarProxyPredicate{
 		compatibiltyPredicate,
 		prometheusMergePredicate,
 		predicates.NewImageResourcesPredicate(expectedImage, expectedResources),
 	}
 
-	err = p.restartKymaProxies(ctx, predicates)
+	err = p.restartKymaProxies(ctx, proxyPredicates)
 	if err != nil {
 		p.logger.Error(err, "Failed to restart Kyma proxies")
 		return []restart.Warning{}, false, err
 	}
 
-	warnings, hasMorePodsToRestart, err := p.restartCustomerProxies(ctx, predicates)
+	warnings, hasMorePodsToRestart, err := p.restartCustomerProxies(ctx, proxyPredicates)
 	if err != nil {
 		p.logger.Error(err, "failed to restart Customer proxies")
 		warnings = []restart.Warning{ // errors on Customer proxies are considered as a warning
@@ -140,17 +140,17 @@ func BuildWarningMessage(warnings []restart.Warning, logger *logr.Logger) string
 	warningsCount := len(warnings)
 	if warningsCount > 0 {
 		podsLimit := 5
-		pods := []string{}
+		var po []string
 		for _, w := range warnings {
 			if podsLimit--; podsLimit >= 0 {
-				pods = append(pods, fmt.Sprintf("%s/%s", w.Namespace, w.Name))
+				po = append(po, fmt.Sprintf("%s/%s", w.Namespace, w.Name))
 			}
 			logger.Info("Proxy reset failed:", "name", w.Name, "namespace", w.Namespace, "kind", w.Kind, "message", w.Message)
 		}
 		warningMessage = fmt.Sprintf("The sidecars of the following workloads could not be restarted: %s",
-			strings.Join(pods, ", "))
-		if warningsCount-len(pods) > 0 {
-			warningMessage += fmt.Sprintf(" and %d additional workload(s)", warningsCount-len(pods))
+			strings.Join(po, ", "))
+		if warningsCount-len(po) > 0 {
+			warningMessage += fmt.Sprintf(" and %d additional workload(s)", warningsCount-len(po))
 		}
 	}
 	return warningMessage

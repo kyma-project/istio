@@ -13,7 +13,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	predicates "github.com/kyma-project/istio/operator/internal/restarter/predicates"
+	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
 )
 
 var _ = Describe("Ingress Gateway Predicate", func() {

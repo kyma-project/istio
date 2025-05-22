@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kyma-project/istio/operator/internal/describederrors"
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/kyma-project/istio/operator/internal/describederrors"
 )
 
 // UserResourcesFinder is an interface that defines methods for detecting user-created resources in a Kubernetes cluster.
@@ -35,7 +36,13 @@ func (urm UserResources) DetectUserCreatedEfOnIngress(ctx context.Context) descr
 	for _, ef := range envoyFilterList.Items {
 		if !isEfOwnedByRateLimit(ef) && isTargetingIstioIngress(ef) {
 			return describederrors.NewDescribedError(
-				fmt.Errorf("user-created EnvoyFilter %s/%s targeting Ingress Gateway found", ef.Namespace, ef.Name), "misconfigured EnvoyFilter can potentially break Istio Ingress Gateway").SetWarning()
+				fmt.Errorf(
+					"user-created EnvoyFilter %s/%s targeting Ingress Gateway found",
+					ef.Namespace,
+					ef.Name,
+				),
+				"misconfigured EnvoyFilter can potentially break Istio Ingress Gateway",
+			).SetWarning()
 		}
 	}
 	return nil
@@ -51,10 +58,11 @@ func isEfOwnedByRateLimit(ef *networkingv1alpha3.EnvoyFilter) bool {
 }
 
 func isTargetingIstioIngress(ef *networkingv1alpha3.EnvoyFilter) bool {
-	if ef.Spec.WorkloadSelector == nil {
+	if ef.Spec.GetWorkloadSelector() == nil {
 		return false
 	}
-	if ef.Namespace == "istio-system" && (ef.Spec.WorkloadSelector.Labels["istio"] == "ingressgateway" || ef.Spec.WorkloadSelector.Labels["app"] == "istio-ingressgateway") {
+	if ef.Namespace == "istio-system" &&
+		(ef.Spec.GetWorkloadSelector().GetLabels()["istio"] == "ingressgateway" || ef.Spec.GetWorkloadSelector().GetLabels()["app"] == "istio-ingressgateway") {
 		return true
 	}
 	return false

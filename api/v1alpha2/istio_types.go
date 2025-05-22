@@ -96,7 +96,7 @@ const (
 	ConditionReasonEgressGatewayRestartFailed           ConditionReason = "EgressGatewayRestartFailed"
 	ConditionReasonEgressGatewayRestartFailedMessage                    = "Istio Egress Gateway restart failed"
 
-	// user resource
+	// user resource.
 	ConditionReasonIngressTargetingUserResourceFound                  ConditionReason = "IngressTargetingUserResourceFound"
 	ConditionReasonIngressTargetingUserResourceFoundMessage                           = "Resource targeting Istio Ingress Gateway found"
 	ConditionReasonIngressTargetingUserResourceNotFound               ConditionReason = "IngressTargetingUserResourceNotFound"

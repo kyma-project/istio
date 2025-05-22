@@ -3,8 +3,9 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"istio.io/api/networking/v1alpha3"
 	"time"
+
+	"istio.io/api/networking/v1alpha3"
 
 	"k8s.io/utils/ptr"
 

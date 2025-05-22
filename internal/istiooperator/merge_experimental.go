@@ -3,14 +3,15 @@
 package istiooperator
 
 import (
+	"os"
+	"path"
+
 	"github.com/imdario/mergo"
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/errors"
-	"os"
-	"path"
 )
 
 func (m *IstioMerger) Merge(clusterSize clusterconfig.ClusterSize, istioCR *operatorv1alpha2.Istio, overrides clusterconfig.ClusterConfiguration) (string, error) {

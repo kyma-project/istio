@@ -1,16 +1,18 @@
-package istio_resources
+package istioresources
 
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 
-	"github.com/kyma-project/istio/operator/internal/clusterconfig"
-	"github.com/kyma-project/istio/operator/internal/described_errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+
+	"github.com/kyma-project/istio/operator/internal/clusterconfig"
+	"github.com/kyma-project/istio/operator/internal/described_errors"
 )
 
 type ResourcesReconciliation interface {

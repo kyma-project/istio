@@ -4,7 +4,6 @@ import (
 	"context"
 	"strings"
 
-	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
@@ -15,6 +14,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 )
 
 var _ = Describe("Reconciliation", func() {
@@ -34,14 +35,14 @@ var _ = Describe("Reconciliation", func() {
 	}
 
 	It("should succeed creating peer authentication mtls", func() {
-		//given
+		// given
 		client := createFakeClient()
 		reconciler := NewReconciler(client)
 
-		//when
+		// when
 		err := reconciler.Reconcile(context.Background(), istioCR)
 
-		//then
+		// then
 		Expect(err).To(Not(HaveOccurred()))
 
 		var s securityv1.PeerAuthenticationList
@@ -51,14 +52,14 @@ var _ = Describe("Reconciliation", func() {
 	})
 
 	It("should succeed creating config maps for dashboards", func() {
-		//given
+		// given
 		client := createFakeClient()
 		reconciler := NewReconciler(client)
 
-		//when
+		// when
 		err := reconciler.Reconcile(context.Background(), istioCR)
 
-		//then
+		// then
 		Expect(err).To(Not(HaveOccurred()))
 
 		var s corev1.ConfigMapList
@@ -85,7 +86,7 @@ var _ = Describe("Reconciliation", func() {
 
 	Context("proxy-protocol EnvoyFilter", func() {
 		It("should be created when hyperscaler is AWS, and ELB is to be used", func() {
-			//given
+			// given
 			n := corev1.Node{Spec: corev1.NodeSpec{ProviderID: "aws://asdasdads"}}
 			elbDeprecatedConfigMap := corev1.ConfigMap{
 				ObjectMeta: metav1.ObjectMeta{
@@ -96,24 +97,24 @@ var _ = Describe("Reconciliation", func() {
 			client := createFakeClient(&n, &elbDeprecatedConfigMap)
 			reconciler := NewReconciler(client)
 
-			//when
+			// when
 			err := reconciler.Reconcile(context.Background(), istioCR)
 
-			//then
+			// then
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(client.Get(context.Background(), ctrlclient.ObjectKey{Name: "proxy-protocol", Namespace: "istio-system"}, &networkingv1alpha3.EnvoyFilter{})).Should(Succeed())
 		})
 
 		It("should not be created when hyperscaler is AWS", func() {
-			//given
+			// given
 			n := corev1.Node{Spec: corev1.NodeSpec{ProviderID: "aws://asdasdads"}}
 			client := createFakeClient(&n)
 			reconciler := NewReconciler(client)
 
-			//when
+			// when
 			err := reconciler.Reconcile(context.Background(), istioCR)
 
-			//then
+			// then
 			Expect(err).To(Not(HaveOccurred()))
 
 			var e networkingv1alpha3.EnvoyFilter
@@ -121,15 +122,15 @@ var _ = Describe("Reconciliation", func() {
 		})
 
 		It("should be created when hyperscaler is OpenStack", func() {
-			//given
+			// given
 			n := corev1.Node{Spec: corev1.NodeSpec{ProviderID: "openstack://example"}}
 			client := createFakeClient(&n)
 			reconciler := NewReconciler(client)
 
-			//when
+			// when
 			err := reconciler.Reconcile(context.Background(), istioCR)
 
-			//then
+			// then
 			Expect(err).To(Not(HaveOccurred()))
 
 			var e networkingv1alpha3.EnvoyFilter
@@ -137,15 +138,15 @@ var _ = Describe("Reconciliation", func() {
 		})
 
 		It("should not be created when hyperscaler is Azure", func() {
-			//given
+			// given
 			n := corev1.Node{Spec: corev1.NodeSpec{ProviderID: "azure://example"}}
 			client := createFakeClient(&n)
 			reconciler := NewReconciler(client)
 
-			//when
+			// when
 			err := reconciler.Reconcile(context.Background(), istioCR)
 
-			//then
+			// then
 			Expect(err).To(Not(HaveOccurred()))
 
 			var e networkingv1alpha3.EnvoyFilter
@@ -155,15 +156,15 @@ var _ = Describe("Reconciliation", func() {
 		})
 
 		It("should not be created when hyperscaler is GCP", func() {
-			//given
+			// given
 			n := corev1.Node{Spec: corev1.NodeSpec{ProviderID: "gce://example"}}
 			client := createFakeClient(&n)
 			reconciler := NewReconciler(client)
 
-			//when
+			// when
 			err := reconciler.Reconcile(context.Background(), istioCR)
 
-			//then
+			// then
 			Expect(err).To(Not(HaveOccurred()))
 
 			var e networkingv1alpha3.EnvoyFilter

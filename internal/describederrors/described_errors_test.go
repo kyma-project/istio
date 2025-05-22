@@ -1,10 +1,11 @@
 package described_errors_test
 
 import (
-	"github.com/kyma-project/istio/operator/internal/described_errors"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
+
+	"github.com/kyma-project/istio/operator/internal/described_errors"
 )
 
 var _ = Describe("GetMostSevereErr", func() {

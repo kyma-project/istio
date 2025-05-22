@@ -26,10 +26,10 @@ var _ = Describe("Apply", func() {
 		client := createFakeClient()
 		sample := NewPeerAuthenticationMtls(client)
 
-		//when
+		// when
 		changed, err := sample.reconcile(context.TODO(), client, owner, templateValues)
 
-		//then
+		// then
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(changed).To(Equal(controllerutil.OperationResultCreated))
 
@@ -52,7 +52,7 @@ var _ = Describe("Apply", func() {
 	})
 
 	It("should return not changed if no change was applied", func() {
-		//given
+		// given
 		var p securityv1.PeerAuthentication
 		err := yaml.Unmarshal(paMtls, &p)
 		Expect(err).To(Not(HaveOccurred()))
@@ -61,10 +61,10 @@ var _ = Describe("Apply", func() {
 
 		sample := NewPeerAuthenticationMtls(client)
 
-		//when
+		// when
 		changed, err := sample.reconcile(context.TODO(), client, owner, templateValues)
 
-		//then
+		// then
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(changed).To(Equal(controllerutil.OperationResultNone))
 
@@ -78,7 +78,7 @@ var _ = Describe("Apply", func() {
 	})
 
 	It("should return updated if change was applied", func() {
-		//given
+		// given
 		var p securityv1.PeerAuthentication
 		err := yaml.Unmarshal(paMtls, &p)
 		Expect(err).To(Not(HaveOccurred()))
@@ -88,10 +88,10 @@ var _ = Describe("Apply", func() {
 
 		sample := NewPeerAuthenticationMtls(client)
 
-		//when
+		// when
 		changed, err := sample.reconcile(context.TODO(), client, owner, templateValues)
 
-		//then
+		// then
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(changed).To(Equal(controllerutil.OperationResultUpdated))
 

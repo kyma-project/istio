@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"github.com/kyma-project/istio/operator/internal/resources"
 	"github.com/kyma-project/istio/operator/internal/restarter"
 	"time"
 
@@ -26,6 +27,7 @@ type IstioReconciler struct {
 	Scheme                 *runtime.Scheme
 	istioInstallation      istio.InstallationReconciliation
 	istioResources         istio_resources.ResourcesReconciliation
+	userResources          resources.UserResourcesFinder
 	restarters             []restarter.Restarter
 	log                    logr.Logger
 	statusHandler          status.Status

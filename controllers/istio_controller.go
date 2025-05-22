@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/istio/operator/internal/resources"
 	"time"
 
 	"github.com/kyma-project/istio/operator/internal/restarter"
@@ -68,12 +69,14 @@ func NewController(mgr manager.Manager, reconciliationInterval time.Duration) *I
 		restarter.NewIngressGatewayRestarter(mgr.GetClient(), []predicates.IngressGatewayPredicate{}, statusHandler),
 		restarter.NewSidecarsRestarter(mgr.GetLogger(), mgr.GetClient(), &merger, sidecars.NewProxyRestarter(mgr.GetClient(), podsLister, actionRestarter, &logger), statusHandler),
 	}
+	userResources := resources.NewUserResources(mgr.GetClient())
 
 	return &IstioReconciler{
 		Client:                 mgr.GetClient(),
 		Scheme:                 mgr.GetScheme(),
 		istioInstallation:      &istio.Installation{Client: mgr.GetClient(), IstioClient: istio.NewIstioClient(), Merger: &merger},
 		istioResources:         istio_resources.NewReconciler(mgr.GetClient()),
+		userResources:          userResources,
 		restarters:             restarters,
 		log:                    mgr.GetLogger(),
 		statusHandler:          statusHandler,
@@ -186,6 +189,14 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return r.requeueReconciliationRestartNotFinished(ctx, &istioCR, reconciliationRequeueTime)
 	}
 
+	userResErr := r.userResources.DetectUserCreatedEfOnIngress(ctx)
+	if userResErr != nil {
+		if userResErr.Level() != described_errors.Warning {
+			return r.requeueReconciliation(ctx, &istioCR, userResErr, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIngressTargetingUserResourceDetectionFailed), reconciliationRequeueTimeError)
+		}
+		return r.requeueReconciliation(ctx, &istioCR, userResErr, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIngressTargetingUserResourceFound), reconciliationRequeueTimeWarning)
+	}
+
 	return r.finishReconcile(ctx, &istioCR, istioImageVersion.Tag())
 }
 
@@ -239,6 +250,7 @@ func (r *IstioReconciler) finishReconcile(ctx context.Context, istioCR *operator
 	}
 
 	r.statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileSucceeded))
+	r.statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIngressTargetingUserResourceNotFound))
 	if err := r.validate(istioCR); err != nil {
 		return ctrl.Result{}, r.statusHandler.UpdateToError(ctx, istioCR, err)
 	}

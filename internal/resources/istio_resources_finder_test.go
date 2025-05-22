@@ -32,7 +32,7 @@ var _ = Describe("Resources", func() {
 		Expect(err != nil).To(Equal(wantErr))
 		Expect(got).To(BeEquivalentTo(want))
 	},
-		Entry("should get nothing if there are only default istio resources present", context.TODO(),
+		Entry("should get nothing if there are only default istio resources present", context.Background(),
 			logr.Discard(),
 			fake.NewClientBuilder().WithScheme(sc).WithObjects(&networkingv1alpha3.EnvoyFilter{
 				ObjectMeta: metav1.ObjectMeta{
@@ -58,7 +58,7 @@ var _ = Describe("Resources", func() {
 			},
 			nil,
 			false,
-		), Entry("should get resource if there is a customer resource present", context.TODO(),
+		), Entry("should get resource if there is a customer resource present", context.Background(),
 			logr.Discard(),
 			fake.NewClientBuilder().WithScheme(sc).WithObjects(&networkingv1alpha3.EnvoyFilter{
 				ObjectMeta: metav1.ObjectMeta{
@@ -105,7 +105,7 @@ var _ = Describe("Resources", func() {
 
 var _ = Describe("IstioResourcesFinder", func() {
 	It("should succeed when reading controlled resources list configuration", func() {
-		_, err := NewIstioResourcesFinder(context.TODO(), nil, logr.Logger{})
+		_, err := NewIstioResourcesFinder(context.Background(), nil, logr.Logger{})
 		Expect(err).ToNot(HaveOccurred())
 	})
 })

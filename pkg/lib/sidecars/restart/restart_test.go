@@ -35,8 +35,8 @@ var _ = ReportAfterSuite("custom reporter", func(report ginkgotypes.Report) {
 })
 
 type mockLogSink struct {
-	infos chan string
-	errs  chan error
+	infos chan<- string
+	errs  chan<- error
 }
 
 func (m mockLogSink) Init(_ logr.RuntimeInfo) {}
@@ -49,7 +49,9 @@ func (m mockLogSink) Info(_ int, msg string, keysAndValues ...any) {
 	m.infos <- fmt.Sprintf("%s %v", msg, keysAndValues)
 }
 
-func (m mockLogSink) Error(_ error, _ string, _ ...any) {}
+func (m mockLogSink) Error(err error, msg string, keysAndValues ...any) {
+	m.errs <- fmt.Errorf("%w %s %v", err, msg, keysAndValues)
+}
 
 func (m mockLogSink) WithValues(_ ...any) logr.LogSink {
 	return m
@@ -392,27 +394,31 @@ var _ = Describe("Restart Pods", func() {
 				UID:       "1234",
 			}})
 
+		infosChannel := make(chan string)
 		sink := mockLogSink{
-			infos: make(chan string, 1),
-			errs:  make(chan error, 1),
+			infos: infosChannel,
+			errs:  make(chan error),
 		}
 
 		l := logr.New(sink)
 
 		// when
-		actionRestarter := restart.NewActionRestarter(c, &l)
-		warnings, err := actionRestarter.Restart(ctx, &podList, false)
+		go func() {
+			actionRestarter := restart.NewActionRestarter(c, &l)
+			warnings, err := actionRestarter.Restart(ctx, &podList, false)
 
-		// then
-		Expect(err).NotTo(HaveOccurred())
-		Expect(warnings).To(BeEmpty())
+			// then
+			Expect(err).NotTo(HaveOccurred())
+			Expect(warnings).To(BeEmpty())
+			close(sink.infos)
+		}()
 
-		Expect(sink.infos).To(Not(BeEmpty()))
-		Eventually(sink.infos).Should(Receive(Equal("was not restarted because there exists another not ready " +
+		Eventually(infosChannel).Should(Receive(Equal("was not restarted because there exists another not ready " +
 			"ReplicaSet for the same object [kind Deployment name rsOwner namespace test-ns]")))
+		Eventually(infosChannel).Should(BeClosed())
 
 		deployment := appsv1.Deployment{}
-		err = c.Get(context.Background(), types.NamespacedName{Name: "rsOwner", Namespace: "test-ns"}, &deployment)
+		err := c.Get(context.Background(), types.NamespacedName{Name: "rsOwner", Namespace: "test-ns"}, &deployment)
 
 		Expect(err).NotTo(HaveOccurred())
 		Expect(deployment.Spec.Template.Annotations[restartAnnotationName]).To(BeEmpty())

@@ -236,10 +236,9 @@ through sidecar proxies.
 Kubernetes Network Policies can be used to restrict namespace traffic, so it only goes through the istio egress gateway.
 Network policies are the Kubernetes way to enforce traffic rules in the namespace.
 
-> [!NOTE] Support for network policies depends on the kubernetes CNI plugin used in the cluster.
-> Make sure to check the documentation of the CNI plugin you are using.
+> [!NOTE] Support for NetworkPolicies depends on the Kubernetes CNI plugin used in the cluster. By default, SAP BTP, Kyma runtime uses the CNI configuration provided and managed by Gardener, which supports NetworkPolicies. However, if you’ve made any changes, make sure to check the relevant documentation.
 
-> [!WARN] In Gardener-based clusters, such as SAP BTP, Kyma runtime, the Network Policy restricting DNS traffic may not work as expected.
+> [!NOTE] In Gardener-based clusters, such as SAP BTP, Kyma runtime, the Network Policy restricting DNS traffic may not work as expected.
 > It is due to the local DNS service used in discovery working outside the CNI. In such cases, define the **ipBlocks** with
 > the IP CIDR of the `kube-dns` service in the NetworkPolicy to allow proper DNS resolution.
 
@@ -264,8 +263,8 @@ Network policies are the Kubernetes way to enforce traffic rules in the namespac
         - namespaceSelector:
              matchLabels:
                 kubernetes.io/metadata.name: kube-system
-        - ipBlocks:
-            - cidr: ${KUBE_DNS_ADDRESS}/32
+        - ipBlock:
+             cidr: ${KUBE_DNS_ADDRESS}/32
       - to:
         - namespaceSelector:
              matchLabels:

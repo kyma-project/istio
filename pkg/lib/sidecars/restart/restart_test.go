@@ -3,6 +3,7 @@ package restart_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/go-logr/logr"
@@ -32,6 +33,33 @@ func TestRestartPods(t *testing.T) {
 var _ = ReportAfterSuite("custom reporter", func(report ginkgotypes.Report) {
 	tests.GenerateGinkgoJunitReport("pods-restart-suite", report)
 })
+
+type mockLogSink struct {
+	infos chan<- string
+	errs  chan<- error
+}
+
+func (m mockLogSink) Init(_ logr.RuntimeInfo) {}
+
+func (m mockLogSink) Enabled(_ int) bool {
+	return true
+}
+
+func (m mockLogSink) Info(_ int, msg string, keysAndValues ...any) {
+	m.infos <- fmt.Sprintf("%s %v", msg, keysAndValues)
+}
+
+func (m mockLogSink) Error(err error, msg string, keysAndValues ...any) {
+	m.errs <- fmt.Errorf("%w %s %v", err, msg, keysAndValues)
+}
+
+func (m mockLogSink) WithValues(_ ...any) logr.LogSink {
+	return m
+}
+
+func (m mockLogSink) WithName(_ string) logr.LogSink {
+	return m
+}
 
 var _ = Describe("Restart Pods", func() {
 	ctx := context.Background()
@@ -366,23 +394,31 @@ var _ = Describe("Restart Pods", func() {
 				UID:       "1234",
 			}})
 
-		// when
-		actionRestarter := restart.NewActionRestarter(c, &logger)
-		warnings, err := actionRestarter.Restart(ctx, &podList, false)
+		infosChannel := make(chan string)
+		sink := mockLogSink{
+			infos: infosChannel,
+			errs:  make(chan error),
+		}
 
-		// then
-		Expect(err).NotTo(HaveOccurred())
-		Expect(warnings).To(ContainElement(
-			restart.RestartWarning{
-				Name:      "rsOwner",
-				Namespace: "test-ns",
-				Kind:      "Deployment",
-				Message:   "was not restarted because there exists another not ready ReplicaSet for the same object",
-			}),
-		)
+		l := logr.New(sink)
+
+		// when
+		go func() {
+			actionRestarter := restart.NewActionRestarter(c, &l)
+			warnings, err := actionRestarter.Restart(ctx, &podList, false)
+
+			// then
+			Expect(err).NotTo(HaveOccurred())
+			Expect(warnings).To(BeEmpty())
+			close(sink.infos)
+		}()
+
+		Eventually(infosChannel).Should(Receive(Equal("was not restarted because there exists another not ready " +
+			"ReplicaSet for the same object [kind Deployment name rsOwner namespace test-ns]")))
+		Eventually(infosChannel).Should(BeClosed())
 
 		deployment := appsv1.Deployment{}
-		err = c.Get(context.Background(), types.NamespacedName{Name: "rsOwner", Namespace: "test-ns"}, &deployment)
+		err := c.Get(context.Background(), types.NamespacedName{Name: "rsOwner", Namespace: "test-ns"}, &deployment)
 
 		Expect(err).NotTo(HaveOccurred())
 		Expect(deployment.Spec.Template.Annotations[restartAnnotationName]).To(BeEmpty())

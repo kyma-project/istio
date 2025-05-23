@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"istio.io/api/networking/v1alpha3"
 	"istio.io/api/telemetry/v1alpha1"
 	istionetworkingv1 "istio.io/client-go/pkg/apis/networking/v1"
@@ -22,6 +21,8 @@ import (
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
+
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 )
 
 var (
@@ -37,7 +38,7 @@ var (
 // This test expects that istio-module is installed and access to cluster is set up via KUBECONFIG env.
 func TestE2EEgressConnectivity(t *testing.T) {
 	// initialization
-	ctx := context.Background()
+	ctx := t.Context()
 	cfg := config.GetConfigOrDie()
 	c, err := initK8sClient(cfg)
 	if err != nil {

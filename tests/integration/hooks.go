@@ -3,14 +3,16 @@ package integration
 import (
 	"context"
 	"fmt"
+
 	"github.com/avast/retry-go"
 	"github.com/cucumber/godog"
-	"github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/tests/testcontext"
 	"github.com/pkg/errors"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/tests/testcontext"
 )
 
 var getFailedTestIstioCRStatus = func(ctx context.Context, sc *godog.Scenario, testError error) (context.Context, error) {

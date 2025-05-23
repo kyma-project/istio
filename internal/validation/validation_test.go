@@ -1,12 +1,14 @@
 package validation_test
 
 import (
+	"testing"
+
+	"github.com/onsi/ginkgo/v2/types"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	istioCR "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/tests"
 	"github.com/kyma-project/istio/operator/internal/validation"
-	"github.com/onsi/ginkgo/v2/types"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -24,7 +26,7 @@ var _ = ReportAfterSuite("custom reporter", func(report types.Report) {
 
 var _ = Describe("Validation", func() {
 	It("should successfully validate authorizers if no issue is present", func() {
-		//given
+		// given
 		istioCr := istioCR.Istio{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "test",
@@ -46,15 +48,15 @@ var _ = Describe("Validation", func() {
 				},
 			},
 		}
-		//when
+		// when
 		err := validation.ValidateAuthorizers(istioCr)
 
-		//then
+		// then
 		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("should fail to validate if some authorizers have the same name", func() {
-		//given
+		// given
 		istioCr := istioCR.Istio{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "test",
@@ -76,10 +78,10 @@ var _ = Describe("Validation", func() {
 				},
 			},
 		}
-		//when
+		// when
 		err := validation.ValidateAuthorizers(istioCr)
 
-		//then
+		// then
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(Equal("test-authorizer is duplicated"))
 	})

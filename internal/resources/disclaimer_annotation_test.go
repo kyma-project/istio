@@ -2,9 +2,11 @@ package resources_test
 
 import (
 	"context"
-	"github.com/kyma-project/istio/operator/internal/resources"
+
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+
+	"github.com/kyma-project/istio/operator/internal/resources"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

@@ -2,16 +2,18 @@ package steps
 
 import (
 	"context"
-	"google.golang.org/protobuf/types/known/wrapperspb"
 	"strconv"
 
+	"google.golang.org/protobuf/types/known/wrapperspb"
+
 	"github.com/avast/retry-go"
-	"github.com/kyma-project/istio/operator/tests/testcontext"
 	apitelemetryv1 "istio.io/api/telemetry/v1"
 	telemetryv1 "istio.io/client-go/pkg/apis/telemetry/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+
+	"github.com/kyma-project/istio/operator/tests/testcontext"
 )
 
 func EnableAccessLogging(ctx context.Context, provider string) (context.Context, error) {
@@ -40,7 +42,7 @@ func EnableAccessLogging(ctx context.Context, provider string) (context.Context,
 		if err != nil {
 			return err
 		}
-		ctx = testcontext.AddCreatedTestObjectInContext(ctx, tm)
+		testcontext.AddCreatedTestObjectInContext(ctx, tm)
 		return nil
 	}, testcontext.GetRetryOpts()...)
 	return ctx, err
@@ -73,7 +75,7 @@ func EnableTracing(ctx context.Context, tracingProvider string) (context.Context
 		if err != nil {
 			return err
 		}
-		ctx = testcontext.AddCreatedTestObjectInContext(ctx, tm)
+		testcontext.AddCreatedTestObjectInContext(ctx, tm)
 		return nil
 	}, testcontext.GetRetryOpts()...)
 	return ctx, err
@@ -126,7 +128,7 @@ func CreateOpenTelemetryService(ctx context.Context, collectorDepName, namespace
 		if err != nil {
 			return err
 		}
-		ctx = testcontext.AddCreatedTestObjectInContext(ctx, svc)
+		testcontext.AddCreatedTestObjectInContext(ctx, svc)
 		return nil
 	}, testcontext.GetRetryOpts()...)
 	return ctx, err

@@ -4,11 +4,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kyma-project/istio/operator/internal/tests"
-	"github.com/kyma-project/istio/operator/pkg/lib/annotations"
 	. "github.com/onsi/ginkgo/v2"
 	"github.com/onsi/ginkgo/v2/types"
 	. "github.com/onsi/gomega"
+
+	"github.com/kyma-project/istio/operator/internal/tests"
+	"github.com/kyma-project/istio/operator/pkg/lib/annotations"
 )
 
 func TestAPIs(t *testing.T) {

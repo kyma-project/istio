@@ -2,19 +2,21 @@ package integration
 
 import (
 	"context"
-	"github.com/kyma-project/istio/operator/tests/testcontext"
 	"os"
 	"testing"
 	"time"
 
+	"github.com/kyma-project/istio/operator/tests/testcontext"
+
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
-	istiov1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
 	securityv1 "istio.io/client-go/pkg/apis/security/v1"
 	telemetryv1 "istio.io/client-go/pkg/apis/telemetry/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
+
+	istiov1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
@@ -97,7 +99,7 @@ func shouldExportResults() bool {
 }
 
 func createDefaultContext(t *testing.T) context.Context {
-	ctx := testcontext.SetK8sClientInContext(context.Background(), createK8sClient())
+	ctx := testcontext.SetK8sClientInContext(t.Context(), createK8sClient())
 	return testcontext.SetTestingInContext(ctx, t)
 }
 

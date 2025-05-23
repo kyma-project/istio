@@ -6,11 +6,14 @@ import (
 
 	"github.com/go-logr/logr"
 
-	"github.com/kyma-project/istio/operator/pkg/lib/annotations"
-	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	utilretry "k8s.io/client-go/util/retry"
+
+	"github.com/kyma-project/istio/operator/pkg/lib/annotations"
+	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
 )
 
 func newRolloutAction(object actionObject) restartAction {
@@ -20,7 +23,7 @@ func newRolloutAction(object actionObject) restartAction {
 	}
 }
 
-func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObject, logger *logr.Logger) ([]RestartWarning, error) {
+func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObject, logger *logr.Logger) ([]Warning, error) {
 	logger.Info("Rollout pod due to proxy restart", "name", object.Name, "namespace", object.Namespace, "kind", object.Kind)
 
 	var obj client.Object
@@ -29,48 +32,48 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 	switch object.Kind {
 	case "DaemonSet":
 		obj = &appsv1.DaemonSet{}
-		err = retry.RetryOnError(retry.DefaultBackoff, func() error {
-			err := k8sclient.Get(ctx, types.NamespacedName{Name: object.Name, Namespace: object.Namespace}, obj)
-			if err != nil {
-				return err
+		err = retry.OnError(utilretry.DefaultBackoff, func() error {
+			getErr := k8sclient.Get(ctx, types.NamespacedName{Name: object.Name, Namespace: object.Namespace}, obj)
+			if getErr != nil {
+				return getErr
 			}
-			ds := obj.(*appsv1.DaemonSet)
+			ds, _ := obj.(*appsv1.DaemonSet)
 			patch := client.StrategicMergeFrom(ds.DeepCopy())
 			ds.Spec.Template.Annotations = annotations.AddRestartAnnotation(ds.Spec.Template.Annotations)
 			return k8sclient.Patch(ctx, ds, patch)
 		})
 	case "Deployment":
 		obj = &appsv1.Deployment{}
-		err = retry.RetryOnError(retry.DefaultBackoff, func() error {
-			err := k8sclient.Get(ctx, types.NamespacedName{Name: object.Name, Namespace: object.Namespace}, obj)
-			if err != nil {
-				return err
+		err = retry.OnError(utilretry.DefaultBackoff, func() error {
+			getErr := k8sclient.Get(ctx, types.NamespacedName{Name: object.Name, Namespace: object.Namespace}, obj)
+			if getErr != nil {
+				return getErr
 			}
-			dep := obj.(*appsv1.Deployment)
+			dep, _ := obj.(*appsv1.Deployment)
 			patch := client.StrategicMergeFrom(dep.DeepCopy())
 			dep.Spec.Template.Annotations = annotations.AddRestartAnnotation(dep.Spec.Template.Annotations)
 			return k8sclient.Patch(ctx, dep, patch)
 		})
 	case "ReplicaSet":
 		obj = &appsv1.ReplicaSet{}
-		err = retry.RetryOnError(retry.DefaultBackoff, func() error {
-			err := k8sclient.Get(ctx, types.NamespacedName{Name: object.Name, Namespace: object.Namespace}, obj)
-			if err != nil {
-				return err
+		err = retry.OnError(utilretry.DefaultBackoff, func() error {
+			getErr := k8sclient.Get(ctx, types.NamespacedName{Name: object.Name, Namespace: object.Namespace}, obj)
+			if getErr != nil {
+				return getErr
 			}
-			rs := obj.(*appsv1.ReplicaSet)
+			rs, _ := obj.(*appsv1.ReplicaSet)
 			patch := client.StrategicMergeFrom(rs.DeepCopy())
 			rs.Spec.Template.Annotations = annotations.AddRestartAnnotation(rs.Spec.Template.Annotations)
 			return k8sclient.Patch(ctx, rs, patch)
 		})
 	case "StatefulSet":
 		obj = &appsv1.StatefulSet{}
-		err = retry.RetryOnError(retry.DefaultBackoff, func() error {
-			err := k8sclient.Get(ctx, types.NamespacedName{Name: object.Name, Namespace: object.Namespace}, obj)
-			if err != nil {
-				return err
+		err = retry.OnError(utilretry.DefaultBackoff, func() error {
+			getErr := k8sclient.Get(ctx, types.NamespacedName{Name: object.Name, Namespace: object.Namespace}, obj)
+			if getErr != nil {
+				return getErr
 			}
-			ss := obj.(*appsv1.StatefulSet)
+			ss, _ := obj.(*appsv1.StatefulSet)
 			patch := client.StrategicMergeFrom(ss.DeepCopy())
 			ss.Spec.Template.Annotations = annotations.AddRestartAnnotation(ss.Spec.Template.Annotations)
 			return k8sclient.Patch(ctx, ss, patch)

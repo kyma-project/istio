@@ -7,17 +7,17 @@ import (
 	"strings"
 )
 
-type HttpResponseAsserter interface {
+type HTTPResponseAsserter interface {
 	// Assert asserts that the response is valid and returns true if it is. It also returns a message with details about the failure.
 	Assert(response http.Response) (bool, string)
 }
 
-// BodyContainsAsserter is a struct representing desired HTTP response body containing expected strings
+// BodyContainsAsserter is a struct representing desired HTTP response body containing expected strings.
 type BodyContainsAsserter struct {
 	Expected []string
 }
 
-// Assert asserts that the response body contains the expected string
+// Assert asserts that the response body contains the expected string.
 func (s BodyContainsAsserter) Assert(response http.Response) (bool, string) {
 	bodyBytes, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -35,10 +35,8 @@ func (s BodyContainsAsserter) Assert(response http.Response) (bool, string) {
 
 	if len(notContained) == 0 {
 		return true, ""
-	} else {
-		return false, fmt.Sprintf("Body didn't contain '%s'", strings.Join(notContained, "', '"))
 	}
-
+	return false, fmt.Sprintf("Body didn't contain '%s'", strings.Join(notContained, "', '"))
 }
 
 type ResponseStatusCodeAsserter struct {
@@ -48,7 +46,6 @@ type ResponseStatusCodeAsserter struct {
 func (s ResponseStatusCodeAsserter) Assert(response http.Response) (bool, string) {
 	if response.StatusCode != s.Code {
 		return false, fmt.Sprintf("Status code %d does not match expected code %d", response.StatusCode, s.Code)
-
 	}
 
 	return true, ""

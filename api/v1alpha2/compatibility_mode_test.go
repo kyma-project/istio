@@ -10,9 +10,13 @@ import (
 )
 
 var _ = Describe("Compatibility Mode", func() {
+	pilotCompatibilityEnvVars := map[string]string{
+		PilotEnableIPAutoallocate: "false",
+	}
+
 	Context("Istio Pilot", func() {
 		It("should set compatibility variables on Istio Pilot when compatibility mode is on", func() {
-			//given
+			// given
 			iop := operatorv1alpha1.IstioOperator{
 				Spec: operatorv1alpha1.IstioOperatorSpec{},
 			}
@@ -28,7 +32,7 @@ var _ = Describe("Compatibility Mode", func() {
 			// when
 			out, err := istioCR.MergeInto(iop)
 
-			//then
+			// then
 			Expect(err).ShouldNot(HaveOccurred())
 
 			existingEnvs := map[string]string{}
@@ -43,7 +47,7 @@ var _ = Describe("Compatibility Mode", func() {
 		})
 
 		It("should not set compatibility variables on Istio Pilot when compatibility mode is off", func() {
-			//given
+			// given
 			iop := operatorv1alpha1.IstioOperator{
 				Spec: operatorv1alpha1.IstioOperatorSpec{},
 			}
@@ -60,7 +64,7 @@ var _ = Describe("Compatibility Mode", func() {
 			// when
 			out, err := istioCR.MergeInto(iop)
 
-			//then
+			// then
 			Expect(err).ShouldNot(HaveOccurred())
 
 			variableCounter := 0
@@ -74,7 +78,7 @@ var _ = Describe("Compatibility Mode", func() {
 		})
 
 		It("should not set compatibility variables on Istio Pilot when compatibility mode is is not configured in IstioCR", func() {
-			//given
+			// given
 			iop := operatorv1alpha1.IstioOperator{
 				Spec: operatorv1alpha1.IstioOperatorSpec{},
 			}
@@ -90,7 +94,7 @@ var _ = Describe("Compatibility Mode", func() {
 			// when
 			out, err := istioCR.MergeInto(iop)
 
-			//then
+			// then
 			Expect(err).ShouldNot(HaveOccurred())
 
 			variableCounter := 0
@@ -105,7 +109,7 @@ var _ = Describe("Compatibility Mode", func() {
 	})
 	Context("MeshConfig ProxyMetadata", func() {
 		It("should set compatibility variables in proxyMetadata when no meshConfig is defined", func() {
-			//given
+			// given
 			iop := operatorv1alpha1.IstioOperator{
 				Spec: operatorv1alpha1.IstioOperatorSpec{},
 			}
@@ -121,7 +125,7 @@ var _ = Describe("Compatibility Mode", func() {
 			// when
 			out, err := istioCR.MergeInto(iop)
 
-			//then
+			// then
 			Expect(err).ShouldNot(HaveOccurred())
 
 			for fieldName, value := range ProxyMetaDataCompatibility {
@@ -132,7 +136,7 @@ var _ = Describe("Compatibility Mode", func() {
 		})
 
 		It("should set compatibility variables in proxyMetadata without overwriting existing variables", func() {
-			//given
+			// given
 			m := mesh.DefaultMeshConfig()
 			m.DefaultConfig.ProxyMetadata = map[string]string{
 				"BOOTSTRAP_XDS_AGENT": "true",
@@ -158,7 +162,7 @@ var _ = Describe("Compatibility Mode", func() {
 			// when
 			out, err := istioCR.MergeInto(iop)
 
-			//then
+			// then
 			Expect(err).ShouldNot(HaveOccurred())
 
 			for fieldName, value := range ProxyMetaDataCompatibility {
@@ -169,7 +173,7 @@ var _ = Describe("Compatibility Mode", func() {
 		})
 
 		It("should not set compatibility variables when compatibility mode is off", func() {
-			//given
+			// given
 			m := mesh.DefaultMeshConfig()
 			m.DefaultConfig.ProxyMetadata = map[string]string{
 				"BOOTSTRAP_XDS_AGENT": "true",
@@ -195,7 +199,7 @@ var _ = Describe("Compatibility Mode", func() {
 			// when
 			out, err := istioCR.MergeInto(iop)
 
-			//then
+			// then
 			Expect(err).ShouldNot(HaveOccurred())
 
 			for fieldName := range ProxyMetaDataCompatibility {

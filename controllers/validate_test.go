@@ -4,15 +4,17 @@ package controllers
 
 import (
 	"context"
+
 	"github.com/go-logr/logr"
-	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/internal/status"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/internal/status"
 )
 
 var _ = Describe("Istio Controller", func() {

@@ -2,14 +2,16 @@ package performance_grpc
 
 import (
 	"context"
-	"github.com/cucumber/godog"
-	"github.com/cucumber/godog/colors"
-	"github.com/kyma-project/istio/operator/tests/testcontext"
 	"os"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"testing"
 	"time"
+
+	"github.com/cucumber/godog"
+	"github.com/cucumber/godog/colors"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
+
+	"github.com/kyma-project/istio/operator/tests/testcontext"
 )
 
 const (
@@ -24,7 +26,7 @@ func TestPerformanceGRPC(t *testing.T) {
 }
 
 func createDefaultContext(t *testing.T) context.Context {
-	ctx := testcontext.SetK8sClientInContext(context.Background(), createK8sClient())
+	ctx := testcontext.SetK8sClientInContext(t.Context(), createK8sClient())
 	return testcontext.SetTestingInContext(ctx, t)
 }
 

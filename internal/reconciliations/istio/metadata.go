@@ -2,8 +2,7 @@ package istio
 
 import (
 	"context"
-	"github.com/kyma-project/istio/operator/pkg/labels"
-	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
+
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -11,6 +10,11 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	utilretry "k8s.io/client-go/util/retry"
+
+	"github.com/kyma-project/istio/operator/pkg/labels"
+	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
 )
 
 func patchModuleResourcesWithModuleLabel(ctx context.Context, c client.Client) error {
@@ -51,7 +55,7 @@ func patchModuleResourcesWithModuleLabel(ctx context.Context, c client.Client) e
 	for _, gvk := range kinds {
 		list := unstructured.UnstructuredList{}
 		list.SetGroupVersionKind(gvk)
-		err := c.List(ctx, &list, &client.ListOptions{LabelSelector: s})
+		err = c.List(ctx, &list, &client.ListOptions{LabelSelector: s})
 		if client.IgnoreNotFound(err) != nil {
 			return err
 		}
@@ -67,7 +71,7 @@ func patchModuleResourcesWithModuleLabel(ctx context.Context, c client.Client) e
 			switch u.GetKind() {
 			case "Deployment":
 				d := appsv1.Deployment{}
-				if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &d); err != nil {
+				if err = runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &d); err != nil {
 					return err
 				}
 				patch = client.StrategicMergeFrom(d.DeepCopy())
@@ -76,7 +80,7 @@ func patchModuleResourcesWithModuleLabel(ctx context.Context, c client.Client) e
 				obj = &d
 			case "DaemonSet":
 				ds := appsv1.DaemonSet{}
-				if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &ds); err != nil {
+				if err = runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &ds); err != nil {
 					return err
 				}
 				patch = client.StrategicMergeFrom(ds.DeepCopy())
@@ -93,9 +97,10 @@ func patchModuleResourcesWithModuleLabel(ctx context.Context, c client.Client) e
 				obj = u
 			}
 
-			if err := retry.RetryOnError(retry.DefaultRetry, func() error {
+			err = retry.OnError(utilretry.DefaultRetry, func() error {
 				return c.Patch(ctx, obj, patch)
-			}); err != nil {
+			})
+			if err != nil {
 				return err
 			}
 		}

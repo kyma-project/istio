@@ -2,6 +2,7 @@ package performance_grpc
 
 import (
 	"github.com/cucumber/godog"
+
 	"github.com/kyma-project/istio/operator/tests/performance-grpc/steps"
 )
 

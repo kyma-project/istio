@@ -6,11 +6,6 @@ import (
 	"k8s.io/client-go/util/retry"
 )
 
-var (
-	DefaultBackoff = retry.DefaultBackoff
-	DefaultRetry   = retry.DefaultRetry
-)
-
 func IsRetriable(err error) bool {
 	if errors.IsTooManyRequests(err) ||
 		errors.IsServerTimeout(err) ||
@@ -22,6 +17,6 @@ func IsRetriable(err error) bool {
 	return false
 }
 
-func RetryOnError(backoff wait.Backoff, fn func() error) error {
+func OnError(backoff wait.Backoff, fn func() error) error {
 	return retry.OnError(backoff, IsRetriable, fn)
 }

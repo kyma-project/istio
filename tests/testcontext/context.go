@@ -2,8 +2,9 @@ package testcontext
 
 import (
 	"context"
-	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"testing"
+
+	"github.com/kyma-project/istio/operator/api/v1alpha2"
 
 	"github.com/pkg/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -67,7 +68,6 @@ func GetTestingFromContext(ctx context.Context) (*testing.T, error) {
 		return v, errors.New("testing.T not found in context")
 	}
 	return v, nil
-
 }
 
 func SetTestingInContext(ctx context.Context, testing *testing.T) context.Context {

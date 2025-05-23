@@ -3,25 +3,26 @@ package steps
 import (
 	"context"
 	"fmt"
+
 	"github.com/kyma-project/istio/operator/tests/testcontext"
 
 	"github.com/avast/retry-go"
-	"github.com/kyma-project/istio/operator/tests/integration/pkg/ip"
-	"github.com/kyma-project/istio/operator/tests/integration/testsupport"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
+
+	"github.com/kyma-project/istio/operator/tests/integration/pkg/ip"
+	"github.com/kyma-project/istio/operator/tests/integration/testsupport"
 )
 
 // ValidateHeader validates that the header givenHeaderName with value givenHeaderValue is forwarded to the application as header expectedHeaderName with the value expectedHeaderValue.
 func ValidateHeader(ctx context.Context, givenHeaderName, givenHeaderValue, expectedHeaderName, expectedHeaderValue string) (context.Context, error) {
-
 	ingressAddress, err := fetchIstioIngressGatewayAddress(ctx)
 	if err != nil {
 		return ctx, err
 	}
 
-	c := testsupport.NewHttpClientWithRetry()
+	c := testsupport.NewHTTPClientWithRetry()
 	headers := map[string]string{
 		givenHeaderName: givenHeaderValue,
 	}
@@ -37,13 +38,12 @@ func ValidateHeader(ctx context.Context, givenHeaderName, givenHeaderValue, expe
 
 // ValidateHeaderInBody validates that the header givenHeaderName with value givenHeaderValue is contained in the body of the response.
 func ValidateHeaderInBody(ctx context.Context, path string, expectedHeaderName, expectedHeaderValue string) (context.Context, error) {
-
 	ingressAddress, err := fetchIstioIngressGatewayAddress(ctx)
 	if err != nil {
 		return ctx, err
 	}
 
-	c := testsupport.NewHttpClientWithRetry()
+	c := testsupport.NewHTTPClientWithRetry()
 	url := fmt.Sprintf("http://%s%s", ingressAddress, path)
 	asserter := testsupport.BodyContainsAsserter{
 		Expected: []string{
@@ -56,13 +56,12 @@ func ValidateHeaderInBody(ctx context.Context, path string, expectedHeaderName, 
 
 // ValidateResponseStatusCode validates that the response status code is the expected one.
 func ValidateResponseStatusCode(ctx context.Context, path string, expectedCode int) (context.Context, error) {
-
 	ingressAddress, err := fetchIstioIngressGatewayAddress(ctx)
 	if err != nil {
 		return ctx, err
 	}
 
-	c := testsupport.NewHttpClientWithRetry()
+	c := testsupport.NewHTTPClientWithRetry()
 	url := fmt.Sprintf("http://%s%s", ingressAddress, path)
 	asserter := testsupport.ResponseStatusCodeAsserter{
 		Code: expectedCode,
@@ -72,13 +71,12 @@ func ValidateResponseStatusCode(ctx context.Context, path string, expectedCode i
 }
 
 func ValidateResponseCodeForRequestWithHeader(ctx context.Context, givenHeaderName, givenHeaderValue, path string, expectedCode int) (context.Context, error) {
-
 	ingressAddress, err := fetchIstioIngressGatewayAddress(ctx)
 	if err != nil {
 		return ctx, err
 	}
 
-	c := testsupport.NewHttpClientWithRetry()
+	c := testsupport.NewHTTPClientWithRetry()
 	headers := map[string]string{
 		givenHeaderName: givenHeaderValue,
 	}
@@ -91,7 +89,6 @@ func ValidateResponseCodeForRequestWithHeader(ctx context.Context, givenHeaderNa
 }
 
 func fetchIstioIngressGatewayAddress(ctx context.Context) (string, error) {
-
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return "", err
@@ -102,11 +99,10 @@ func fetchIstioIngressGatewayAddress(ctx context.Context) (string, error) {
 		Namespace: "istio-system",
 	}
 
-	var ingressIp string
+	var ingressIP string
 	var ingressPort int32
 
 	err = retry.Do(func() error {
-
 		runsOnGardener, err := testsupport.RunsOnGardener(ctx, k8sClient)
 		if err != nil {
 			return err
@@ -120,26 +116,24 @@ func fetchIstioIngressGatewayAddress(ctx context.Context) (string, error) {
 
 			if len(svc.Status.LoadBalancer.Ingress) == 0 {
 				return errors.New("no ingress ip found")
-			} else {
-				lbIp, err := ip.GetLoadBalancerIp(svc.Status.LoadBalancer.Ingress[0])
-				if err != nil {
-					return err
-				}
-
-				ingressIp = lbIp.String()
-
-				for _, port := range svc.Spec.Ports {
-					if port.Name == "http2" {
-						ingressPort = port.Port
-					}
-				}
-				return nil
 			}
-		} else {
-			// In case we are not running on Gardener we assume that it's a k3d cluster that has 127.0.0.1 as default address
-			ingressIp = "localhost"
-			ingressPort = 80
+			lbIP, err := ip.GetLoadBalancerIp(svc.Status.LoadBalancer.Ingress[0])
+			if err != nil {
+				return err
+			}
+
+			ingressIP = lbIP.String()
+
+			for _, port := range svc.Spec.Ports {
+				if port.Name == "http2" {
+					ingressPort = port.Port
+				}
+			}
+			return nil
 		}
+		// In case we are not running on Gardener we assume that it's a k3d cluster that has 127.0.0.1 as default address
+		ingressIP = "localhost"
+		ingressPort = 80
 
 		return nil
 	}, testcontext.GetRetryOpts()...)
@@ -148,5 +142,5 @@ func fetchIstioIngressGatewayAddress(ctx context.Context) (string, error) {
 		return "", err
 	}
 
-	return fmt.Sprintf("%s:%d", ingressIp, ingressPort), nil
+	return fmt.Sprintf("%s:%d", ingressIP, ingressPort), nil
 }

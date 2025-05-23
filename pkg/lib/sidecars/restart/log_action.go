@@ -12,7 +12,7 @@ type logAction struct {
 	message string
 }
 
-func (r logAction) run(_ context.Context, _ client.Client, object actionObject, l *logr.Logger) ([]RestartWarning, error) {
+func (r logAction) run(_ context.Context, _ client.Client, object actionObject, l *logr.Logger) ([]Warning, error) {
 	l.Info(r.message, "kind", object.Kind, "name", object.Name, "namespace", object.Namespace)
-	return []RestartWarning{}, nil
+	return []Warning{}, nil
 }

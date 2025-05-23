@@ -28,9 +28,9 @@ func (i *Istio) MergeInto(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperat
 	}
 
 	if i.Spec.CompatibilityMode {
-		compatibleIop, err := setCompatibilityMode(mergedResourcesOp)
-		if err != nil {
-			return op, err
+		compatibleIop, compErr := setCompatibilityMode(mergedResourcesOp)
+		if compErr != nil {
+			return op, compErr
 		}
 		return compatibleIop, nil
 	}
@@ -89,8 +89,10 @@ func (m *meshConfigBuilder) Build() json.RawMessage {
 	return json.RawMessage(m.c.JSON())
 }
 
+//nolint:gocognit // cognitive complexity 58 of func `(*meshConfigBuilder).BuildExternalAuthorizerConfiguration` is high (> 20) TODO refactor
 func (m *meshConfigBuilder) BuildExternalAuthorizerConfiguration(authorizers []*Authorizer) *meshConfigBuilder {
 	for _, authorizer := range authorizers {
+		//nolint:nestif // `if authorizer != nil` has complex nested blocks (complexity: 25) TODO refactor
 		if authorizer != nil {
 			var authorizationProvider meshv1alpha1.MeshConfig_ExtensionProvider
 			authorizationProvider.Name = authorizer.Name
@@ -161,7 +163,6 @@ func (m *meshConfigBuilder) BuildExternalAuthorizerConfiguration(authorizers []*
 }
 
 func (i *Istio) mergeConfig(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {
-
 	mcb, err := newMeshConfigBuilder(op)
 	if err != nil {
 		return op, err
@@ -212,11 +213,12 @@ func applyGatewayExternalTrafficPolicy(op iopv1alpha1.IstioOperator, i *Istio) i
 	return op
 }
 
+//nolint:gocognit,cyclop,gocyclo,funlen // this function has too many lint errors... TODO needs refactor
 func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {
 	if i.Spec.Components == nil {
 		return op, nil
 	}
-
+	//nolint:nestif // `if i.Spec.Components.IngressGateway != nil` has complex nested blocks (complexity: 6) TODO refactor
 	if i.Spec.Components.IngressGateway != nil {
 		if op.Spec.Components == nil {
 			op.Spec.Components = &iopv1alpha1.IstioComponentSpec{}
@@ -234,7 +236,7 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 			}
 		}
 	}
-
+	//nolint:nestif // `if i.Spec.Components.EgressGateway != nil` has complex nested blocks (complexity: 18) TODO refactor
 	if i.Spec.Components.EgressGateway != nil {
 		if op.Spec.Components == nil {
 			op.Spec.Components = &iopv1alpha1.IstioComponentSpec{}
@@ -257,7 +259,7 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 			}
 			boolValue := iopv1alpha1.BoolValue{}
 			// This terrible if statement is necessary, because Istio decided to use a custom type for booleans,
-			//that stores bool as a private field, and does not have a constructor/setter, only an unmarshal method.
+			// that stores bool as a private field, and does not have a constructor/setter, only an unmarshal method.
 			if *i.Spec.Components.EgressGateway.Enabled {
 				err := boolValue.UnmarshalJSON([]byte("true"))
 				if err != nil {
@@ -273,7 +275,7 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 			}
 		}
 	}
-
+	//nolint:nestif // `if i.Spec.Components.Pilot != nil` has complex nested blocks (complexity: 6) TODO refactor
 	if i.Spec.Components.Pilot != nil {
 		if op.Spec.Components == nil {
 			op.Spec.Components = &iopv1alpha1.IstioComponentSpec{}
@@ -300,11 +302,11 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 	if valuesMap == nil {
 		valuesMap = make(values.Map)
 	}
-
+	//nolint:nestif // `if i.Spec.Components.Proxy != nil && i.Spec.Components.Proxy.K8S != nil && i.Spec.Components.Proxy.K8S.Resources != nil` has complex nested blocks (complexity: 29) TODO refactor
 	if i.Spec.Components.Proxy != nil && i.Spec.Components.Proxy.K8S != nil && i.Spec.Components.Proxy.K8S.Resources != nil {
 		if i.Spec.Components.Proxy.K8S.Resources.Limits != nil {
-			if i.Spec.Components.Proxy.K8S.Resources.Limits.Cpu != nil {
-				err = valuesMap.SetPath("global.proxy.resources.limits.cpu", *i.Spec.Components.Proxy.K8S.Resources.Limits.Cpu)
+			if i.Spec.Components.Proxy.K8S.Resources.Limits.CPU != nil {
+				err = valuesMap.SetPath("global.proxy.resources.limits.cpu", *i.Spec.Components.Proxy.K8S.Resources.Limits.CPU)
 				if err != nil {
 					return iopv1alpha1.IstioOperator{}, err
 				}
@@ -319,8 +321,8 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 
 		if i.Spec.Components.Proxy.K8S.Resources.Requests != nil {
 			if i.Spec.Components.Proxy.K8S.Resources.Requests != nil {
-				if i.Spec.Components.Proxy.K8S.Resources.Requests.Cpu != nil {
-					err = valuesMap.SetPath("global.proxy.resources.requests.cpu", *i.Spec.Components.Proxy.K8S.Resources.Requests.Cpu)
+				if i.Spec.Components.Proxy.K8S.Resources.Requests.CPU != nil {
+					err = valuesMap.SetPath("global.proxy.resources.requests.cpu", *i.Spec.Components.Proxy.K8S.Resources.Requests.CPU)
 					if err != nil {
 						return iopv1alpha1.IstioOperator{}, err
 					}
@@ -340,6 +342,7 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 		}
 	}
 
+	//nolint:nestif // `if i.Spec.Components.Cni != nil` has complex nested blocks (complexity: 63) TODO refactor
 	if i.Spec.Components.Cni != nil {
 		if op.Spec.Components == nil {
 			op.Spec.Components = &iopv1alpha1.IstioComponentSpec{}
@@ -390,44 +393,44 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 			if op.Spec.Components.Cni.Kubernetes.Resources == nil {
 				op.Spec.Components.Cni.Kubernetes.Resources = &corev1.ResourceRequirements{}
 			}
-
+			//nolint:dupl // handling requests and limits seems the same, it could be improved. TODO: to refactor
 			if i.Spec.Components.Cni.K8S.Resources.Limits != nil {
 				if op.Spec.Components.Cni.Kubernetes.Resources.Limits == nil {
 					op.Spec.Components.Cni.Kubernetes.Resources.Limits = make(corev1.ResourceList)
 				}
 
-				if i.Spec.Components.Cni.K8S.Resources.Limits.Cpu != nil {
-					quantity, err := resource.ParseQuantity(*i.Spec.Components.Cni.K8S.Resources.Limits.Cpu)
-					if err != nil {
-						return op, err
+				if i.Spec.Components.Cni.K8S.Resources.Limits.CPU != nil {
+					quantity, parseErr := resource.ParseQuantity(*i.Spec.Components.Cni.K8S.Resources.Limits.CPU)
+					if parseErr != nil {
+						return op, parseErr
 					}
 					op.Spec.Components.Cni.Kubernetes.Resources.Limits[corev1.ResourceCPU] = quantity
 				}
 				if i.Spec.Components.Cni.K8S.Resources.Limits.Memory != nil {
-					quantity, err := resource.ParseQuantity(*i.Spec.Components.Cni.K8S.Resources.Limits.Memory)
-					if err != nil {
-						return op, err
+					quantity, parseErr := resource.ParseQuantity(*i.Spec.Components.Cni.K8S.Resources.Limits.Memory)
+					if parseErr != nil {
+						return op, parseErr
 					}
 					op.Spec.Components.Cni.Kubernetes.Resources.Limits[corev1.ResourceMemory] = quantity
 				}
 			}
-
+			//nolint:dupl // handling requests and limits seems the same, it could be improved. TODO: to refactor
 			if i.Spec.Components.Cni.K8S.Resources.Requests != nil {
 				if op.Spec.Components.Cni.Kubernetes.Resources.Requests == nil {
 					op.Spec.Components.Cni.Kubernetes.Resources.Requests = make(corev1.ResourceList)
 				}
 
-				if i.Spec.Components.Cni.K8S.Resources.Requests.Cpu != nil {
-					quantity, err := resource.ParseQuantity(*i.Spec.Components.Cni.K8S.Resources.Requests.Cpu)
-					if err != nil {
-						return op, err
+				if i.Spec.Components.Cni.K8S.Resources.Requests.CPU != nil {
+					quantity, parseErr := resource.ParseQuantity(*i.Spec.Components.Cni.K8S.Resources.Requests.CPU)
+					if parseErr != nil {
+						return op, parseErr
 					}
 					op.Spec.Components.Cni.Kubernetes.Resources.Requests[corev1.ResourceCPU] = quantity
 				}
 				if i.Spec.Components.Cni.K8S.Resources.Requests.Memory != nil {
-					quantity, err := resource.ParseQuantity(*i.Spec.Components.Cni.K8S.Resources.Requests.Memory)
-					if err != nil {
-						return op, err
+					quantity, parseErr := resource.ParseQuantity(*i.Spec.Components.Cni.K8S.Resources.Requests.Memory)
+					if parseErr != nil {
+						return op, parseErr
 					}
 					op.Spec.Components.Cni.Kubernetes.Resources.Requests[corev1.ResourceMemory] = quantity
 				}
@@ -438,7 +441,9 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 	return op, nil
 }
 
+//nolint:gocognit,funlen // cognitive complexity 61 of func `mergeK8sConfig` is high (> 20), Function 'mergeK8sConfig' has too many statements (52 > 50) TODO to refactor
 func mergeK8sConfig(base *iopv1alpha1.KubernetesResources, newConfig KubernetesResourcesConfig) error {
+	//nolint:nestif // `if newConfig.Resources != nil` has complex nested blocks (complexity: 27) TODO refactor
 	if newConfig.Resources != nil {
 		if base.Resources == nil {
 			base.Resources = &corev1.ResourceRequirements{}
@@ -449,8 +454,8 @@ func mergeK8sConfig(base *iopv1alpha1.KubernetesResources, newConfig KubernetesR
 				base.Resources.Limits = make(corev1.ResourceList)
 			}
 
-			if newConfig.Resources.Limits.Cpu != nil {
-				quantity, err := resource.ParseQuantity(*newConfig.Resources.Limits.Cpu)
+			if newConfig.Resources.Limits.CPU != nil {
+				quantity, err := resource.ParseQuantity(*newConfig.Resources.Limits.CPU)
 				if err != nil {
 					return err
 				}
@@ -470,8 +475,8 @@ func mergeK8sConfig(base *iopv1alpha1.KubernetesResources, newConfig KubernetesR
 				base.Resources.Requests = make(corev1.ResourceList)
 			}
 
-			if newConfig.Resources.Requests.Cpu != nil {
-				quantity, err := resource.ParseQuantity(*newConfig.Resources.Requests.Cpu)
+			if newConfig.Resources.Requests.CPU != nil {
+				quantity, err := resource.ParseQuantity(*newConfig.Resources.Requests.CPU)
 				if err != nil {
 					return err
 				}

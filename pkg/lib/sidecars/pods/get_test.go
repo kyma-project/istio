@@ -14,11 +14,12 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/go-logr/logr"
-	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+
+	"github.com/kyma-project/istio/operator/api/v1alpha2"
 
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/test/helpers"
@@ -43,7 +44,7 @@ var _ = Describe("GetPodsToRestart", func() {
 			name       string
 			c          client.Client
 			predicates []predicates.SidecarProxyPredicate
-			limits     *pods.PodsRestartLimits
+			limits     *pods.RestartLimits
 			assertFunc func(podList *v1.PodList)
 		}{
 			{
@@ -355,7 +356,11 @@ var _ = Describe("GetPodsToRestart", func() {
 			It(tt.name, func() {
 				expectedImage := predicates.NewSidecarImage("istio", "1.10.0")
 				podsLister := pods.NewPods(tt.c, &logger)
-				podList, err := podsLister.GetPodsToRestart(ctx, []predicates.SidecarProxyPredicate{predicates.NewImageResourcesPredicate(expectedImage, helpers.DefaultSidecarResources)}, pods.NewPodsRestartLimits(5, 5))
+				podList, err := podsLister.GetPodsToRestart(
+					ctx,
+					[]predicates.SidecarProxyPredicate{predicates.NewImageResourcesPredicate(expectedImage, helpers.DefaultSidecarResources)},
+					pods.NewPodsRestartLimits(5, 5),
+				)
 				Expect(err).NotTo(HaveOccurred())
 				tt.assertFunc(podList)
 			})
@@ -424,7 +429,7 @@ type fakeClientWithLimit struct {
 	expectContinueNext bool
 }
 
-func NewFakeClientWithLimit(c client.Client, limit int64) *fakeClientWithLimit {
+func NewFakeClientWithLimit(c client.Client, limit int64) client.Client {
 	return &fakeClientWithLimit{
 		Client:             c,
 		listLimit:          limit,

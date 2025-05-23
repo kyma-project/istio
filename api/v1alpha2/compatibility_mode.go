@@ -5,9 +5,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-var pilotCompatibilityEnvVars = map[string]string{
-	"PILOT_ENABLE_IP_AUTOALLOCATE": "false",
-}
+const PilotEnableIPAutoallocate = "PILOT_ENABLE_IP_AUTOALLOCATE"
 
 func setCompatibilityMode(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {
 	pilotIop := setCompatibilityPilot(op)
@@ -15,6 +13,10 @@ func setCompatibilityMode(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperat
 }
 
 func setCompatibilityPilot(op iopv1alpha1.IstioOperator) iopv1alpha1.IstioOperator {
+	pilotCompatibilityEnvVars := map[string]string{
+		PilotEnableIPAutoallocate: "false",
+	}
+
 	if op.Spec.Components == nil {
 		op.Spec.Components = &iopv1alpha1.IstioComponentSpec{}
 	}
@@ -35,6 +37,7 @@ func setCompatibilityPilot(op iopv1alpha1.IstioOperator) iopv1alpha1.IstioOperat
 	return op
 }
 
+//nolint:gochecknoglobals // map should contain metadata compatibility. TODO is this always an empty map?
 var ProxyMetaDataCompatibility = map[string]string{}
 
 func setCompatibilityProxyMetadata(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {

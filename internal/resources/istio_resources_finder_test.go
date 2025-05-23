@@ -100,7 +100,8 @@ var _ = Describe("Resources", func() {
 				},
 			},
 			false,
-		))
+		),
+	)
 })
 
 var _ = Describe("IstioResourcesFinder", func() {

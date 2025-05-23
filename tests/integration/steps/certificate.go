@@ -8,12 +8,14 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"errors"
-	"github.com/avast/retry-go"
-	"github.com/kyma-project/istio/operator/tests/testcontext"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"math/big"
 	"time"
+
+	"github.com/avast/retry-go"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/kyma-project/istio/operator/tests/testcontext"
 )
 
 const (
@@ -53,7 +55,7 @@ func CreateDummySecretWithCert(ctx context.Context, name string, namespace strin
 		if err != nil {
 			return err
 		}
-		ctx = testcontext.AddCreatedTestObjectInContext(ctx, secret)
+		testcontext.AddCreatedTestObjectInContext(ctx, secret)
 		return nil
 	}, testcontext.GetRetryOpts()...)
 

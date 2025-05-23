@@ -1,25 +1,28 @@
 package istiooperator_test
 
 import (
-	meshv1alpha1 "istio.io/api/mesh/v1alpha1"
-	"istio.io/istio/operator/pkg/values"
-	"istio.io/istio/pkg/util/protomarshal"
 	"os"
 	"path"
 	"testing"
 
+	meshv1alpha1 "istio.io/api/mesh/v1alpha1"
+	"istio.io/istio/operator/pkg/values"
+	"istio.io/istio/pkg/util/protomarshal"
+
+	"github.com/onsi/ginkgo/v2/types"
+
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/kyma-project/istio/operator/internal/tests"
-	"github.com/onsi/ginkgo/v2/types"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
+
+	"github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 )
 
 func TestManifest(t *testing.T) {
@@ -68,7 +71,7 @@ var _ = Describe("Merge", func() {
 			err = protomarshal.Unmarshal(iop.Spec.MeshConfig, &meshConfigTyped)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			numTrustedProxies := meshConfigTyped.DefaultConfig.GetGatewayTopology().GetNumTrustedProxies()
+			numTrustedProxies := meshConfigTyped.GetDefaultConfig().GetGatewayTopology().GetNumTrustedProxies()
 			Expect(numTrustedProxies).To(Equal(numTrustedProxies))
 
 			Expect(*iop.Spec.Components.IngressGateways[0].Kubernetes.HpaSpec.MinReplicas).To(Equal(int32(igwMinReplicas)))
@@ -117,7 +120,7 @@ var _ = Describe("Merge", func() {
 		err = protomarshal.Unmarshal(iop.Spec.MeshConfig, &typedMeshConfig)
 		Expect(err).ShouldNot(HaveOccurred())
 
-		numTrustedProxies := typedMeshConfig.DefaultConfig.GetGatewayTopology().GetNumTrustedProxies()
+		numTrustedProxies := typedMeshConfig.GetDefaultConfig().GetGatewayTopology().GetNumTrustedProxies()
 
 		Expect(numTrustedProxies).To(Equal(uint32(4)))
 

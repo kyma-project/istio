@@ -2,8 +2,8 @@ package webhooks
 
 import (
 	"context"
-	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/internal/tests"
+	"testing"
+
 	. "github.com/onsi/ginkgo/v2"
 	gingkoTypes "github.com/onsi/ginkgo/v2/types"
 	. "github.com/onsi/gomega"
@@ -17,7 +17,9 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	"testing"
+
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/internal/tests"
 )
 
 const (
@@ -45,7 +47,9 @@ var validSelector = &metav1.LabelSelector{
 }
 
 var deactivatedSelector = &metav1.LabelSelector{
-	MatchLabels: deactivatedLabel,
+	MatchLabels: map[string]string{
+		IstioDeactivatedLabel: "never-match",
+	},
 }
 
 func createFakeClient(objects ...client.Object) client.Client {
@@ -85,7 +89,11 @@ var _ = Describe("DeleteConflictedDefaultTag", func() {
 	It("should not delete tagged webhook when old webhook is deactivated", func() {
 		// given
 		defaultMwcObj := createMutatingWebhookWithSelector(defaultWhName, map[string]string{revLabelKey: tag.DefaultRevisionName}, deactivatedSelector)
-		taggedMwcObj := createMutatingWebhookWithSelector(taggedWhName, map[string]string{tagLabelKey: tag.DefaultRevisionName, revLabelKey: tag.DefaultRevisionName}, validSelector)
+		taggedMwcObj := createMutatingWebhookWithSelector(
+			taggedWhName,
+			map[string]string{tagLabelKey: tag.DefaultRevisionName, revLabelKey: tag.DefaultRevisionName},
+			validSelector,
+		)
 		kubeclient := createFakeClient(defaultMwcObj, taggedMwcObj)
 		// when
 		err := DeleteConflictedDefaultTag(ctx, kubeclient)
@@ -106,7 +114,11 @@ var _ = Describe("DeleteConflictedDefaultTag", func() {
 	It("should delete conflicted tagged webhook if old one is not deactivated", func() {
 		// given
 		defaultMwcObj := createMutatingWebhookWithSelector(defaultWhName, map[string]string{revLabelKey: tag.DefaultRevisionName}, validSelector)
-		taggedMwcObj := createMutatingWebhookWithSelector(taggedWhName, map[string]string{tagLabelKey: tag.DefaultRevisionName, revLabelKey: tag.DefaultRevisionName}, validSelector)
+		taggedMwcObj := createMutatingWebhookWithSelector(
+			taggedWhName,
+			map[string]string{tagLabelKey: tag.DefaultRevisionName, revLabelKey: tag.DefaultRevisionName},
+			validSelector,
+		)
 		kubeclient := createFakeClient(defaultMwcObj, taggedMwcObj)
 		// when
 		err := DeleteConflictedDefaultTag(ctx, kubeclient)
@@ -125,7 +137,11 @@ var _ = Describe("DeleteConflictedDefaultTag", func() {
 	})
 	It("should not delete tagged webhook if there is no old default webhook", func() {
 		// given
-		taggedMwcObj := createMutatingWebhookWithSelector(taggedWhName, map[string]string{tagLabelKey: tag.DefaultRevisionName, revLabelKey: tag.DefaultRevisionName}, validSelector)
+		taggedMwcObj := createMutatingWebhookWithSelector(
+			taggedWhName,
+			map[string]string{tagLabelKey: tag.DefaultRevisionName, revLabelKey: tag.DefaultRevisionName},
+			validSelector,
+		)
 		kubeclient := createFakeClient(taggedMwcObj)
 
 		// when

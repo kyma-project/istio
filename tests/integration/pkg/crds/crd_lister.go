@@ -2,11 +2,12 @@ package crds
 
 import (
 	"context"
+	"os"
+
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
-	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 )
@@ -33,7 +34,7 @@ func NewCRDListerFromFile(k8sClient client.Client, path string) (*CRDLister, err
 }
 
 // CheckForCRDs checks whether lister CRDs are present on cluster, returns list of CRDs that don't are present / are not present
-// in context of shouldHave parameter
+// in context of shouldHave parameter.
 func (lister *CRDLister) CheckForCRDs(ctx context.Context, shouldHave bool) ([]string, error) {
 	var wrong []string
 	for _, kind := range lister.CRDList {

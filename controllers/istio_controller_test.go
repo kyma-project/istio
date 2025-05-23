@@ -3,25 +3,28 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"istio.io/api/networking/v1alpha3"
 	"time"
+
+	"istio.io/api/networking/v1alpha3"
+
+	"k8s.io/utils/ptr"
 
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/kyma-project/istio/operator/internal/restarter"
-	"k8s.io/utils/ptr"
 
-	"github.com/kyma-project/istio/operator/internal/reconciliations/istio_resources"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istioresources"
 	"github.com/kyma-project/istio/operator/internal/status"
 
 	"github.com/go-logr/logr"
-	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/pkg/errors"
 	_ "istio.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/internal/describederrors"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -38,7 +41,7 @@ const (
 var _ = Describe("Istio Controller", func() {
 	Context("Reconcile", func() {
 		It("should fail to reconcile Istio CR in different than kyma-system namespace and set error state", func() {
-			//given
+			// given
 			numTrustedProxies := 1
 			istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
 				Name:            "default",
@@ -69,10 +72,10 @@ var _ = Describe("Istio Controller", func() {
 				},
 			}
 
-			//when
+			// when
 			result, err := istioController.Reconcile(context.Background(), req)
 
-			//then
+			// then
 			Expect(err).ToNot(HaveOccurred())
 			Expect(result.Requeue).To(BeFalse())
 
@@ -330,7 +333,9 @@ var _ = Describe("Istio Controller", func() {
 			Expect(err).To(Not(HaveOccurred()))
 
 			Expect(updatedIstioCR.Status.State).Should(Equal(operatorv1alpha2.Ready))
-			Expect(updatedIstioCR.Annotations["operator.kyma-project.io/lastAppliedConfiguration"]).To(ContainSubstring("{\"config\":{\"numTrustedProxies\":2,\"telemetry\":{\"metrics\":{}}},"))
+			Expect(
+				updatedIstioCR.Annotations["operator.kyma-project.io/lastAppliedConfiguration"],
+			).To(ContainSubstring("{\"config\":{\"numTrustedProxies\":2,\"telemetry\":{\"metrics\":{}}},"))
 
 			Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
 			Expect(*updatedIstioCR.Status.Conditions).To(HaveLen(2))
@@ -403,7 +408,7 @@ var _ = Describe("Istio Controller", func() {
 				Client: fakeClient,
 				Scheme: getTestScheme(),
 				istioInstallation: &istioInstallationReconciliationMock{
-					err: described_errors.NewDescribedError(errors.New("istio test error"), "test error description"),
+					err: describederrors.NewDescribedError(errors.New("istio test error"), "test error description"),
 				},
 				restarters:             []restarter.Restarter{&restarterMock{}},
 				istioResources:         &istioResourcesReconciliationMock{},
@@ -450,7 +455,7 @@ var _ = Describe("Istio Controller", func() {
 			fakeClient := createFakeClient(istioCR)
 
 			sidecarsRestarter := &restarterMock{
-				err: described_errors.NewDescribedError(errors.New("sidecar test error"), "Error occurred during reconciliation of Istio Sidecars"),
+				err: describederrors.NewDescribedError(errors.New("sidecar test error"), "Error occurred during reconciliation of Istio Sidecars"),
 			}
 
 			sut := &IstioReconciler{
@@ -735,7 +740,7 @@ var _ = Describe("Istio Controller", func() {
 				istioInstallation:      &istioInstallationReconciliationMock{},
 				restarters:             []restarter.Restarter{&restarterMock{}},
 				istioResources:         &istioResourcesReconciliationMock{},
-				userResources:          &UserResourcesMock{err: described_errors.NewDescribedError(errors.New("error"), "user-created ef targeting IG found").SetWarning()},
+				userResources:          &UserResourcesMock{err: describederrors.NewDescribedError(errors.New("error"), "user-created ef targeting IG found").SetWarning()},
 				log:                    logr.Discard(),
 				statusHandler:          status.NewStatusHandler(fakeClient),
 				reconciliationInterval: testReconciliationInterval,
@@ -779,7 +784,7 @@ var _ = Describe("Istio Controller", func() {
 				Client: fakeClient,
 				Scheme: getTestScheme(),
 				istioInstallation: &istioInstallationReconciliationMock{
-					err: described_errors.NewDescribedError(errors.New("test error"), "test error description"),
+					err: describederrors.NewDescribedError(errors.New("test error"), "test error description"),
 				},
 				restarters:             []restarter.Restarter{&restarterMock{}},
 				istioResources:         &istioResourcesReconciliationMock{},
@@ -789,7 +794,10 @@ var _ = Describe("Istio Controller", func() {
 				reconciliationInterval: testReconciliationInterval,
 			}
 
-			_, err := reconcilerFailingOnIstioInstall.Reconcile(context.Background(), reconcile.Request{NamespacedName: types.NamespacedName{Namespace: testNamespace, Name: istioCrName}})
+			_, err := reconcilerFailingOnIstioInstall.Reconcile(
+				context.Background(),
+				reconcile.Request{NamespacedName: types.NamespacedName{Namespace: testNamespace, Name: istioCrName}},
+			)
 
 			Expect(err).To(HaveOccurred())
 
@@ -812,7 +820,7 @@ var _ = Describe("Istio Controller", func() {
 				istioInstallation: &istioInstallationReconciliationMock{},
 				restarters:        []restarter.Restarter{&restarterMock{}},
 				istioResources: &istioResourcesReconciliationMock{
-					err: described_errors.NewDescribedError(errors.New("test error"), "test error description"),
+					err: describederrors.NewDescribedError(errors.New("test error"), "test error description"),
 				},
 				userResources:          &UserResourcesMock{},
 				log:                    logr.Discard(),
@@ -821,7 +829,10 @@ var _ = Describe("Istio Controller", func() {
 			}
 
 			// when
-			_, err = reconcilerFailingOnIstioResources.Reconcile(context.Background(), reconcile.Request{NamespacedName: types.NamespacedName{Namespace: testNamespace, Name: istioCrName}})
+			_, err = reconcilerFailingOnIstioResources.Reconcile(
+				context.Background(),
+				reconcile.Request{NamespacedName: types.NamespacedName{Namespace: testNamespace, Name: istioCrName}},
+			)
 
 			// then
 			Expect(err).To(HaveOccurred())
@@ -841,7 +852,7 @@ var _ = Describe("Istio Controller", func() {
 
 		Context("Restarters", func() {
 			It("should restart if reconciliations are successful", func() {
-				//given
+				// given
 				istioCR := &operatorv1alpha2.Istio{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:              istioCrName,
@@ -869,16 +880,16 @@ var _ = Describe("Istio Controller", func() {
 					reconciliationInterval: testReconciliationInterval,
 				}
 
-				//when
+				// when
 				_, _ = sut.Reconcile(context.Background(), reconcile.Request{NamespacedName: types.NamespacedName{Namespace: testNamespace, Name: istioCrName}})
 
-				//then
+				// then
 				Expect(ingressGatewayRestarter.RestartCalled()).To(BeTrue())
 				Expect(proxySidecarsRestarter.RestartCalled()).To(BeTrue())
 			})
 
 			It("should not restart when istio installation reconciliations failed", func() {
-				//given
+				// given
 				istioCR := &operatorv1alpha2.Istio{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:              istioCrName,
@@ -898,7 +909,7 @@ var _ = Describe("Istio Controller", func() {
 					Client: fakeClient,
 					Scheme: getTestScheme(),
 					istioInstallation: &istioInstallationReconciliationMock{
-						err: described_errors.NewDescribedError(errors.New("istio test error"), "test error description"),
+						err: describederrors.NewDescribedError(errors.New("istio test error"), "test error description"),
 					},
 					istioResources:         &istioResourcesReconciliationMock{},
 					userResources:          &UserResourcesMock{},
@@ -907,16 +918,16 @@ var _ = Describe("Istio Controller", func() {
 					reconciliationInterval: testReconciliationInterval,
 				}
 
-				//when
+				// when
 				_, _ = sut.Reconcile(context.Background(), reconcile.Request{NamespacedName: types.NamespacedName{Namespace: testNamespace, Name: istioCrName}})
 
-				//then
+				// then
 				Expect(ingressGatewayRestarter.RestartCalled()).To(BeFalse())
 				Expect(sidecarsRestarter.RestartCalled()).To(BeFalse())
 			})
 
 			It("should always invoke all of the restarters even if one failed", func() {
-				//given
+				// given
 				istioCR := &operatorv1alpha2.Istio{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:              istioCrName,
@@ -931,10 +942,10 @@ var _ = Describe("Istio Controller", func() {
 
 				fakeClient := createFakeClient(istioCR)
 				proxySidecarsRestarter := &restarterMock{restarted: false,
-					err: described_errors.NewDescribedError(errors.New("error during restart"), "error during restart"),
+					err: describederrors.NewDescribedError(errors.New("error during restart"), "error during restart"),
 				}
 				ingressGatewayRestarter := &restarterMock{restarted: false,
-					err: described_errors.NewDescribedError(errors.New("also error during restart"), "also error during restart")}
+					err: describederrors.NewDescribedError(errors.New("also error during restart"), "also error during restart")}
 				sut := &IstioReconciler{
 					Client:                 fakeClient,
 					Scheme:                 getTestScheme(),
@@ -947,16 +958,16 @@ var _ = Describe("Istio Controller", func() {
 					reconciliationInterval: testReconciliationInterval,
 				}
 
-				//when
+				// when
 				_, _ = sut.Reconcile(context.Background(), reconcile.Request{NamespacedName: types.NamespacedName{Namespace: testNamespace, Name: istioCrName}})
 
-				//then
+				// then
 				Expect(ingressGatewayRestarter.RestartCalled()).To(BeTrue())
 				Expect(proxySidecarsRestarter.RestartCalled()).To(BeTrue())
 			})
 
 			It("should return error when one of restarters return error and other warning", func() {
-				//given
+				// given
 				istioCR := &operatorv1alpha2.Istio{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:              istioCrName,
@@ -970,8 +981,11 @@ var _ = Describe("Istio Controller", func() {
 				}
 
 				fakeClient := createFakeClient(istioCR)
-				ingressGatewayRestarter := &restarterMock{restarted: false, err: described_errors.NewDescribedError(errors.New("test described error"), "test error description")}
-				proxySidecarsRestarter := &restarterMock{restarted: false, err: described_errors.NewDescribedError(errors.New("test described error"), "test error description").SetWarning()}
+				ingressGatewayRestarter := &restarterMock{restarted: false, err: describederrors.NewDescribedError(errors.New("test described error"), "test error description")}
+				proxySidecarsRestarter := &restarterMock{
+					restarted: false,
+					err:       describederrors.NewDescribedError(errors.New("test described error"), "test error description").SetWarning(),
+				}
 				sut := &IstioReconciler{
 					Client:                 fakeClient,
 					Scheme:                 getTestScheme(),
@@ -984,10 +998,10 @@ var _ = Describe("Istio Controller", func() {
 					reconciliationInterval: testReconciliationInterval,
 				}
 
-				//when
+				// when
 				_, _ = sut.Reconcile(context.Background(), reconcile.Request{NamespacedName: types.NamespacedName{Namespace: testNamespace, Name: istioCrName}})
 
-				//then
+				// then
 				updatedIstioCR := operatorv1alpha2.Istio{}
 				Expect(fakeClient.Get(context.Background(), client.ObjectKeyFromObject(istioCR), &updatedIstioCR)).Should(Succeed())
 
@@ -1009,7 +1023,7 @@ var _ = Describe("Istio Controller", func() {
 				}
 
 				sidecarsRestarter := &restarterMock{
-					err: described_errors.NewDescribedError(errors.New("Restart error"), "Restart Warning description").SetWarning(),
+					err: describederrors.NewDescribedError(errors.New("Restart error"), "Restart Warning description").SetWarning(),
 				}
 				fakeClient := createFakeClient(istioCR)
 				sut := &IstioReconciler{
@@ -1041,7 +1055,7 @@ var _ = Describe("Istio Controller", func() {
 			})
 
 			It("should requeue reconcile request when a restarter needs to finish work on the next reconcile", func() {
-				//given
+				// given
 				istioCR := &operatorv1alpha2.Istio{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:              istioCrName,
@@ -1069,10 +1083,10 @@ var _ = Describe("Istio Controller", func() {
 					reconciliationInterval: testReconciliationInterval,
 				}
 
-				//when
+				// when
 				reconcileResult, err := sut.Reconcile(context.Background(), reconcile.Request{NamespacedName: types.NamespacedName{Namespace: testNamespace, Name: istioCrName}})
 
-				//then
+				// then
 				Expect(err).ToNot(HaveOccurred())
 				Expect(reconcileResult.Requeue).To(BeFalse())
 				Expect(reconcileResult.RequeueAfter).To(Equal(time.Minute * 1))
@@ -1099,7 +1113,7 @@ var _ = Describe("Istio Controller", func() {
 })
 
 type restarterMock struct {
-	err       described_errors.DescribedError
+	err       describederrors.DescribedError
 	requeue   bool
 	restarted bool
 }
@@ -1108,20 +1122,20 @@ func (i *restarterMock) RestartCalled() bool {
 	return i.restarted
 }
 
-func (i *restarterMock) Restart(_ context.Context, _ *operatorv1alpha2.Istio) (described_errors.DescribedError, bool) {
+func (i *restarterMock) Restart(_ context.Context, _ *operatorv1alpha2.Istio) (describederrors.DescribedError, bool) {
 	i.restarted = true
 	return i.err, i.requeue
 }
 
 type istioResourcesReconciliationMock struct {
-	err described_errors.DescribedError
+	err describederrors.DescribedError
 }
 
-func (i *istioResourcesReconciliationMock) AddReconcileResource(_ istio_resources.Resource) istio_resources.ResourcesReconciliation {
+func (i *istioResourcesReconciliationMock) AddReconcileResource(_ istioresources.Resource) istioresources.ResourcesReconciliation {
 	return i
 }
 
-func (i *istioResourcesReconciliationMock) Reconcile(_ context.Context, _ operatorv1alpha2.Istio) described_errors.DescribedError {
+func (i *istioResourcesReconciliationMock) Reconcile(_ context.Context, _ operatorv1alpha2.Istio) describederrors.DescribedError {
 	return i.err
 }
 
@@ -1138,13 +1152,17 @@ func (p *shouldFailClient) List(ctx context.Context, list client.ObjectList, _ .
 }
 
 type istioInstallationReconciliationMock struct {
-	err described_errors.DescribedError
+	err describederrors.DescribedError
 }
 
-func (i *istioInstallationReconciliationMock) Reconcile(_ context.Context, _ *operatorv1alpha2.Istio, _ status.Status) (istiooperator.IstioImageVersion, described_errors.DescribedError) {
+func (i *istioInstallationReconciliationMock) Reconcile(
+	_ context.Context,
+	_ *operatorv1alpha2.Istio,
+	_ status.Status,
+) (istiooperator.IstioImageVersion, describederrors.DescribedError) {
 	version, err := istiooperator.NewIstioImageVersionFromTag("1.16.0-distroless")
 	if err != nil {
-		i.err = described_errors.NewDescribedError(err, "error creating IstioImageVersion")
+		i.err = describederrors.NewDescribedError(err, "error creating IstioImageVersion")
 	}
 	return version, i.err
 }
@@ -1183,7 +1201,7 @@ func (s *StatusMock) UpdateToReady(_ context.Context, _ *operatorv1alpha2.Istio)
 	return s.readyError
 }
 
-func (s *StatusMock) UpdateToError(_ context.Context, _ *operatorv1alpha2.Istio, _ described_errors.DescribedError, _ ...time.Duration) error {
+func (s *StatusMock) UpdateToError(_ context.Context, _ *operatorv1alpha2.Istio, _ describederrors.DescribedError, _ ...time.Duration) error {
 	s.updatedToErrorCalled = true
 	return s.errorError
 }
@@ -1198,9 +1216,9 @@ func (s *StatusMock) GetConditions() []operatorv1alpha2.ReasonWithMessage {
 }
 
 type UserResourcesMock struct {
-	err described_errors.DescribedError
+	err describederrors.DescribedError
 }
 
-func (urm UserResourcesMock) DetectUserCreatedEfOnIngress(ctx context.Context) described_errors.DescribedError {
+func (urm UserResourcesMock) DetectUserCreatedEfOnIngress(ctx context.Context) describederrors.DescribedError {
 	return urm.err
 }

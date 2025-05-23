@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/kyma-project/istio/operator/internal/tests"
 	"github.com/onsi/ginkgo/v2/types"
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -17,6 +16,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
+
+	"github.com/kyma-project/istio/operator/internal/tests"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -458,7 +459,7 @@ var _ = Describe("Merge", func() {
 	Context("Pilot", func() {
 		Context("When Istio CR has 500m configured for CPU limits", func() {
 			It("should set CPU limits to 500m in IOP", func() {
-				//given
+				// given
 				iop := iopv1alpha1.IstioOperator{
 					Spec: iopv1alpha1.IstioOperatorSpec{},
 				}
@@ -468,7 +469,7 @@ var _ = Describe("Merge", func() {
 					Pilot: &IstioComponent{K8s: &KubernetesResourcesConfig{
 						Resources: &Resources{
 							Limits: &ResourceClaims{
-								Cpu: &cpuLimit,
+								CPU: &cpuLimit,
 							},
 						},
 					}},
@@ -487,7 +488,7 @@ var _ = Describe("Merge", func() {
 
 		Context("When Istio CR has 500m configured for CPU requests", func() {
 			It("should set CPU requests to 500m in IOP", func() {
-				//given
+				// given
 				iop := iopv1alpha1.IstioOperator{
 					Spec: iopv1alpha1.IstioOperatorSpec{},
 				}
@@ -497,7 +498,7 @@ var _ = Describe("Merge", func() {
 					Pilot: &IstioComponent{K8s: &KubernetesResourcesConfig{
 						Resources: &Resources{
 							Requests: &ResourceClaims{
-								Cpu: &cpuLimit,
+								CPU: &cpuLimit,
 							},
 						},
 					}},
@@ -518,7 +519,7 @@ var _ = Describe("Merge", func() {
 	Context("IngressGateway", func() {
 		Context("When Istio CR has 500m configured for CPU and 500Mi for memory limits", func() {
 			It("should set CPU limits to 500m and 500Mi for memory in IOP", func() {
-				//given
+				// given
 				iop := iopv1alpha1.IstioOperator{
 					Spec: iopv1alpha1.IstioOperatorSpec{},
 				}
@@ -530,7 +531,7 @@ var _ = Describe("Merge", func() {
 						K8s: &KubernetesResourcesConfig{
 							Resources: &Resources{
 								Limits: &ResourceClaims{
-									Cpu:    &cpuLimit,
+									CPU:    &cpuLimit,
 									Memory: &memoryLimit,
 								},
 							},
@@ -553,7 +554,7 @@ var _ = Describe("Merge", func() {
 
 		Context("When Istio CR has 500m configured for CPU and 500Mi for memory requests", func() {
 			It("should set CPU requests to 500m and 500Mi for memory in IOP", func() {
-				//given
+				// given
 				iop := iopv1alpha1.IstioOperator{
 					Spec: iopv1alpha1.IstioOperatorSpec{},
 				}
@@ -564,7 +565,7 @@ var _ = Describe("Merge", func() {
 					IngressGateway: &IstioComponent{K8s: &KubernetesResourcesConfig{
 						Resources: &Resources{
 							Requests: &ResourceClaims{
-								Cpu:    &cpuRequests,
+								CPU:    &cpuRequests,
 								Memory: &memoryRequests,
 							},
 						},
@@ -589,7 +590,7 @@ var _ = Describe("Merge", func() {
 	Context("EgressGateway", func() {
 		Context("When Istio CR has 500m configured for CPU and 500Mi for memory limits", func() {
 			It("should set CPU limits to 500m and 500Mi for memory in IOP", func() {
-				//given
+				// given
 				iop := iopv1alpha1.IstioOperator{
 					Spec: iopv1alpha1.IstioOperatorSpec{},
 				}
@@ -603,7 +604,7 @@ var _ = Describe("Merge", func() {
 						K8s: &KubernetesResourcesConfig{
 							Resources: &Resources{
 								Limits: &ResourceClaims{
-									Cpu:    &cpuLimit,
+									CPU:    &cpuLimit,
 									Memory: &memoryLimit,
 								},
 							},
@@ -629,7 +630,7 @@ var _ = Describe("Merge", func() {
 
 		Context("When Istio CR has 500m configured for CPU and 500Mi for memory requests", func() {
 			It("should set CPU requests to 500m and 500Mi for memory in IOP", func() {
-				//given
+				// given
 				iop := iopv1alpha1.IstioOperator{
 					Spec: iopv1alpha1.IstioOperatorSpec{},
 				}
@@ -643,7 +644,7 @@ var _ = Describe("Merge", func() {
 						K8s: &KubernetesResourcesConfig{
 							Resources: &Resources{
 								Requests: &ResourceClaims{
-									Cpu:    &cpuRequests,
+									CPU:    &cpuRequests,
 									Memory: &memoryRequests,
 								},
 							},
@@ -670,7 +671,7 @@ var _ = Describe("Merge", func() {
 
 	Context("Strategy", func() {
 		It("should update RollingUpdate when it is present in Istio CR", func() {
-			//given
+			// given
 			iop := iopv1alpha1.IstioOperator{
 				Spec: iopv1alpha1.IstioOperatorSpec{},
 			}
@@ -712,7 +713,7 @@ var _ = Describe("Merge", func() {
 
 	Context("HPASpec", func() {
 		It("should update HPASpec when it is present in Istio CR", func() {
-			//given
+			// given
 			iop := iopv1alpha1.IstioOperator{
 				Spec: iopv1alpha1.IstioOperatorSpec{},
 			}
@@ -746,7 +747,7 @@ var _ = Describe("Merge", func() {
 		Context("Affinity", func() {
 			Context("PodAffinity", func() {
 				It("should update CNI affinity when it is present in Istio CR", func() {
-					//given
+					// given
 					iop := iopv1alpha1.IstioOperator{
 						Spec: iopv1alpha1.IstioOperatorSpec{},
 					}
@@ -781,16 +782,24 @@ var _ = Describe("Merge", func() {
 
 					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution).To(HaveLen(1))
 					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions).To(HaveLen(1))
-					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Key).To(Equal("app-new"))
-					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Operator).To(BeEquivalentTo("In"))
-					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Values).To(HaveLen(1))
-					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Values[0]).To(BeEquivalentTo("istio-cni-node1"))
+					Expect(
+						out.Spec.Components.Cni.Kubernetes.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Key,
+					).To(Equal("app-new"))
+					Expect(
+						out.Spec.Components.Cni.Kubernetes.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Operator,
+					).To(BeEquivalentTo("In"))
+					Expect(
+						out.Spec.Components.Cni.Kubernetes.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Values,
+					).To(HaveLen(1))
+					Expect(
+						out.Spec.Components.Cni.Kubernetes.Affinity.PodAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Values[0],
+					).To(BeEquivalentTo("istio-cni-node1"))
 				})
 			})
 
 			Context("PodAntiAffinity", func() {
 				It("should update CNI PodAntiAffinity when it is present in Istio CR", func() {
-					//given
+					// given
 					iop := iopv1alpha1.IstioOperator{
 						Spec: iopv1alpha1.IstioOperatorSpec{},
 					}
@@ -824,17 +833,27 @@ var _ = Describe("Merge", func() {
 					Expect(err).ShouldNot(HaveOccurred())
 
 					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution).To(HaveLen(1))
-					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions).To(HaveLen(1))
-					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Key).To(Equal("app-new"))
-					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Operator).To(BeEquivalentTo("In"))
-					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Values).To(HaveLen(1))
-					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Values[0]).To(BeEquivalentTo("istio-cni-node1"))
+					Expect(
+						out.Spec.Components.Cni.Kubernetes.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions,
+					).To(HaveLen(1))
+					Expect(
+						out.Spec.Components.Cni.Kubernetes.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Key,
+					).To(Equal("app-new"))
+					Expect(
+						out.Spec.Components.Cni.Kubernetes.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Operator,
+					).To(BeEquivalentTo("In"))
+					Expect(
+						out.Spec.Components.Cni.Kubernetes.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Values,
+					).To(HaveLen(1))
+					Expect(
+						out.Spec.Components.Cni.Kubernetes.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Values[0],
+					).To(BeEquivalentTo("istio-cni-node1"))
 				})
 			})
 
 			Context("NodeAffinity", func() {
 				It("should update CNI NodeAffinity when it is present in Istio CR", func() {
-					//given
+					// given
 					iop := iopv1alpha1.IstioOperator{
 						Spec: iopv1alpha1.IstioOperatorSpec{},
 					}
@@ -868,18 +887,28 @@ var _ = Describe("Merge", func() {
 					Expect(err).ShouldNot(HaveOccurred())
 
 					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms).To(HaveLen(1))
-					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions).To(HaveLen(1))
-					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions[0].Key).To(Equal("app-new"))
-					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions[0].Operator).To(BeEquivalentTo("In"))
-					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions[0].Values).To(HaveLen(1))
-					Expect(out.Spec.Components.Cni.Kubernetes.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions[0].Values[0]).To(BeEquivalentTo("istio-cni-node1"))
+					Expect(
+						out.Spec.Components.Cni.Kubernetes.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions,
+					).To(HaveLen(1))
+					Expect(
+						out.Spec.Components.Cni.Kubernetes.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions[0].Key,
+					).To(Equal("app-new"))
+					Expect(
+						out.Spec.Components.Cni.Kubernetes.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions[0].Operator,
+					).To(BeEquivalentTo("In"))
+					Expect(
+						out.Spec.Components.Cni.Kubernetes.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions[0].Values,
+					).To(HaveLen(1))
+					Expect(
+						out.Spec.Components.Cni.Kubernetes.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchExpressions[0].Values[0],
+					).To(BeEquivalentTo("istio-cni-node1"))
 				})
 			})
 		})
 
 		Context("Resources", func() {
 			It("should update CNI resources when those are present in Istio CR", func() {
-				//given
+				// given
 				iop := iopv1alpha1.IstioOperator{
 					Spec: iopv1alpha1.IstioOperatorSpec{},
 				}
@@ -890,7 +919,7 @@ var _ = Describe("Merge", func() {
 					Cni: &CniComponent{K8S: &CniK8sConfig{
 						Resources: &Resources{
 							Requests: &ResourceClaims{
-								Cpu:    &cpuRequests,
+								CPU:    &cpuRequests,
 								Memory: &memoryRequests,
 							},
 						},
@@ -914,7 +943,7 @@ var _ = Describe("Merge", func() {
 
 	Context("Proxy", func() {
 		It("should update Proxy resources configuration if they are present in Istio CR", func() {
-			//given
+			// given
 			iop := iopv1alpha1.IstioOperator{
 				Spec: iopv1alpha1.IstioOperatorSpec{},
 			}
@@ -928,11 +957,11 @@ var _ = Describe("Merge", func() {
 				Proxy: &ProxyComponent{K8S: &ProxyK8sConfig{
 					Resources: &Resources{
 						Requests: &ResourceClaims{
-							Cpu:    &cpuRequests,
+							CPU:    &cpuRequests,
 							Memory: &memoryRequests,
 						},
 						Limits: &ResourceClaims{
-							Cpu:    &cpuLimits,
+							CPU:    &cpuLimits,
 							Memory: &memoryLimits,
 						},
 					},

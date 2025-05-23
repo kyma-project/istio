@@ -2,13 +2,13 @@ package steps
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/kyma-project/istio/operator/tests/testcontext"
 
 	"github.com/avast/retry-go"
 	"github.com/distribution/reference"
-	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/masterminds/semver"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -17,6 +17,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/kyma-project/istio/operator/internal/istiooperator"
 )
 
 const (
@@ -68,7 +70,7 @@ func CreateDeployment(ctx context.Context, appName, namespace string, container 
 		if err != nil {
 			return err
 		}
-		ctx = testcontext.AddCreatedTestObjectInContext(ctx, &dep)
+		testcontext.AddCreatedTestObjectInContext(ctx, &dep)
 		return nil
 	}, testcontext.GetRetryOpts()...)
 
@@ -132,7 +134,6 @@ func ApplicationHasProxyResourcesSetToCpuAndMemory(ctx context.Context, appName,
 						container.Resources.Requests.Memory().String() == memory
 				default:
 					return fmt.Errorf("resource type %s is not supported", resourceType)
-
 				}
 			}
 		}
@@ -197,7 +198,6 @@ func ApplicationPodShouldHaveIstioProxy(ctx context.Context, appName, namespace,
 
 		return fmt.Errorf("checking the istio-proxy for app %s in namespace %s failed", appName, namespace)
 	}, testcontext.GetRetryOpts()...)
-
 }
 
 func ApplicationPodShouldHaveIstioProxyInRequiredVersion(ctx context.Context, appName, namespace string) error {
@@ -248,20 +248,19 @@ func ApplicationPodShouldHaveIstioProxyInRequiredVersion(ctx context.Context, ap
 		}
 
 		if !hasProxyInVersion {
-			return fmt.Errorf("after upgrade proxy does not match required version")
+			return errors.New("after upgrade proxy does not match required version")
 		}
 
 		return nil
 	}, testcontext.GetRetryOpts()...)
-
 }
 
-// CreateHttpbinApplication creates a deployment and a service for the httpbin application
+// CreateHttpbinApplication creates a deployment and a service for the httpbin application.
 func CreateHttpbinApplication(ctx context.Context, appName, namespace string) (context.Context, error) {
 	return CreateHttpbinApplicationWithServicePort(ctx, appName, namespace, 8000)
 }
 
-// CreateHttpbinApplication creates a deployment and a service with the given http port for the httpbin application
+// CreateHttpbinApplicationWithServicePort creates a deployment and a service with the given http port for the httpbin application.
 func CreateHttpbinApplicationWithServicePort(ctx context.Context, appName, namespace string, port int) (context.Context, error) {
 	ctx, err := CreateApplicationDeployment(ctx, appName, httpbinImage, namespace)
 	if err != nil {
@@ -333,7 +332,7 @@ func CreateServiceWithPort(ctx context.Context, appName, namespace string, port,
 		if err != nil {
 			return err
 		}
-		ctx = testcontext.AddCreatedTestObjectInContext(ctx, &svc)
+		testcontext.AddCreatedTestObjectInContext(ctx, &svc)
 		return nil
 	}, testcontext.GetRetryOpts()...)
 
@@ -346,7 +345,6 @@ func getPodList(ctx context.Context, k8sClient client.Client, podList *corev1.Po
 		return err
 	}
 	return nil
-
 }
 
 func getVersionFromImageName(image string) (string, error) {

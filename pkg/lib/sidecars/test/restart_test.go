@@ -93,7 +93,7 @@ func generateReport() {
 			return err
 		}
 
-		//Format all patterns like "&lt" to not be replaced later
+		// Format all patterns like "&lt" to not be replaced later
 		find := regexp.MustCompile(`&\w\w`)
 		formatted := find.ReplaceAllFunc(data, func(b []byte) []byte {
 			return []byte{b[0], ' ', b[1], b[2]}
@@ -133,7 +133,6 @@ func generateReport() {
 			log.Fatal(err.Error())
 		}
 	}
-
 }
 
 func copyReport(src, dst string) (int64, error) {

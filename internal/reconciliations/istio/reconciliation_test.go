@@ -3,24 +3,28 @@ package istio_test
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/istio/operator/pkg/labels"
-	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
 	"strings"
 	"time"
 
-	"github.com/kyma-project/istio/operator/internal/described_errors"
+	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
+
+	"github.com/kyma-project/istio/operator/pkg/labels"
+
+	"google.golang.org/protobuf/types/known/structpb"
+
+	"github.com/kyma-project/istio/operator/internal/describederrors"
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/kyma-project/istio/operator/internal/resources"
 	"github.com/kyma-project/istio/operator/internal/status"
-	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/pkg/errors"
+
+	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
-	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -339,7 +343,8 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(istioCR.Status.State).To(Equal(operatorv1alpha2.Processing))
 	})
 
-	DescribeTable("updating Istio version",
+	DescribeTable(
+		"updating Istio version",
 		func(mergerIstioVersionTag string, expectedErrorMessage string) {
 			// given
 			numTrustedProxies := 1
@@ -376,7 +381,7 @@ var _ = Describe("Installation reconciliation", func() {
 			Expect(err.Description()).To(ContainSubstring("Istio version update is not allowed"))
 			Expect(err.Description()).To(ContainSubstring(expectedErrorMessage))
 			Expect(err.ShouldSetCondition()).To(BeFalse())
-			Expect(err.Level()).To(Equal(described_errors.Warning))
+			Expect(err.Level()).To(Equal(describederrors.Warning))
 			Expect(mockClient.installCalled).To(BeFalse())
 			Expect(mockClient.uninstallCalled).To(BeFalse())
 
@@ -386,9 +391,21 @@ var _ = Describe("Installation reconciliation", func() {
 			Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonIstioVersionUpdateNotAllowed)))
 			Expect((*istioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 		},
-		Entry("should return warning and not execute install when new Istio version is lower", "1.16.0-distroless", "target Istio version (1.16.0-distroless) is lower than current version (1.16.1-distroless) - downgrade not supported"),
-		Entry("should return warning and not execute install when new Istio version is more than one minor version higher", "1.18.0-distroless", "target Istio version (1.18.0-distroless) is higher than current Istio version (1.16.1-distroless) - the difference between versions exceed one minor version"),
-		Entry("should return warning and not execute install when new Istio version has a higher major version", "2.0.0-distroless", "target Istio version (2.0.0-distroless) is different than current Istio version (1.16.1-distroless) - major version upgrade is not supported"),
+		Entry(
+			"should return warning and not execute install when new Istio version is lower",
+			"1.16.0-distroless",
+			"target Istio version (1.16.0-distroless) is lower than current version (1.16.1-distroless) - downgrade not supported",
+		),
+		Entry(
+			"should return warning and not execute install when new Istio version is more than one minor version higher",
+			"1.18.0-distroless",
+			"target Istio version (1.18.0-distroless) is higher than current Istio version (1.16.1-distroless) - the difference between versions exceed one minor version",
+		),
+		Entry(
+			"should return warning and not execute install when new Istio version has a higher major version",
+			"2.0.0-distroless",
+			"target Istio version (2.0.0-distroless) is different than current Istio version (1.16.1-distroless) - major version upgrade is not supported",
+		),
 	)
 
 	It("should fail when istio version is invalid", func() {
@@ -825,8 +842,10 @@ var _ = Describe("Installation reconciliation", func() {
 		// then
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Error()).To(Equal("could not delete Istio module instance since there are 1 customer resources present"))
-		Expect(err.Description()).To(Equal("There are Istio resources that block deletion. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning"))
-		Expect(err.Level()).To(Equal(described_errors.Warning))
+		Expect(
+			err.Description(),
+		).To(Equal("There are Istio resources that block deletion. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning"))
+		Expect(err.Level()).To(Equal(describederrors.Warning))
 		Expect(err.ShouldSetCondition()).To(BeFalse())
 		Expect(mockClient.installCalled).To(BeFalse())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
@@ -853,9 +872,15 @@ var _ = Describe("Installation reconciliation", func() {
 		}
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion, "kyma-project.io/module=istio")
 		istioNamespace := createNamespace("istio-system")
-		igwDeployment := &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway", Labels: map[string]string{"operator.istio.io/component": "IngressGateways"}}}
-		istioDaemonSet := &appsv1.DaemonSet{ObjectMeta: metav1.ObjectMeta{Namespace: "istio-system", Name: "istio-cni-node", Labels: map[string]string{"operator.istio.io/component": "Cni"}}}
-		istioConfigMap := &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: "istio", Namespace: "istio-system", Labels: map[string]string{"operator.istio.io/component": "Pilot"}}}
+		igwDeployment := &appsv1.Deployment{
+			ObjectMeta: metav1.ObjectMeta{Namespace: "istio-system", Name: "istio-ingressgateway", Labels: map[string]string{"operator.istio.io/component": "IngressGateways"}},
+		}
+		istioDaemonSet := &appsv1.DaemonSet{
+			ObjectMeta: metav1.ObjectMeta{Namespace: "istio-system", Name: "istio-cni-node", Labels: map[string]string{"operator.istio.io/component": "Cni"}},
+		}
+		istioConfigMap := &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{Name: "istio", Namespace: "istio-system", Labels: map[string]string{"operator.istio.io/component": "Pilot"}},
+		}
 		c := createFakeClient(&istioCR, istiod, istioNamespace, igwDeployment, istioDaemonSet, istioConfigMap)
 		mockClient := mockLibraryClient{}
 		installation := istio.Installation{
@@ -893,7 +918,7 @@ var _ = Describe("Installation reconciliation", func() {
 type mockLibraryClient struct {
 	installCalled   bool
 	uninstallCalled bool
-	*istio.IstioClient
+	*istio.Client
 	installError   error
 	uninstallError error
 }

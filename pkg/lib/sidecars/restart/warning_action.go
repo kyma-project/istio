@@ -13,8 +13,8 @@ type warningAction struct {
 	message string
 }
 
-func (r warningAction) run(_ context.Context, _ client.Client, object actionObject, _ *logr.Logger) ([]RestartWarning, error) {
-	return []RestartWarning{newRestartWarning(object, r.message)}, nil
+func (r warningAction) run(_ context.Context, _ client.Client, object actionObject, _ *logr.Logger) ([]Warning, error) {
+	return []Warning{newRestartWarning(object, r.message)}, nil
 }
 
 func newOwnerNotFoundAction(pod v1.Pod) restartAction {

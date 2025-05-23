@@ -67,7 +67,7 @@ func getReplicaSetAction(ctx context.Context, c client.Client, pod v1.Pod, repli
 					Namespace: replicaSet.Namespace,
 					Kind:      rsOwnedBy.Kind,
 				},
-				run: warningAction{message: notReadyReplicaSetExistsMessage}.run,
+				run: logAction{message: notReadyReplicaSetExistsMessage}.run,
 			}, nil
 		}
 	}

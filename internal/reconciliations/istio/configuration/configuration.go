@@ -11,8 +11,8 @@ import (
 )
 
 type AppliedConfig struct {
-	v1alpha2.IstioSpec
-	IstioTag string
+	v1alpha2.IstioSpec `json:",inline"`
+	IstioTag           string `json:"IstioTag"`
 }
 
 // UpdateLastAppliedConfiguration annotates the passed CR with LastAppliedConfiguration, which holds information about last applied

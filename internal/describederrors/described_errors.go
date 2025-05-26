@@ -1,4 +1,4 @@
-package described_errors
+package describederrors
 
 import (
 	"github.com/pkg/errors"
@@ -56,9 +56,8 @@ func (d DefaultDescribedError) SetCondition(setCondition bool) DefaultDescribedE
 func (d DefaultDescribedError) Description() string {
 	if d.wrapError {
 		return errors.Wrap(d.err, d.description).Error()
-	} else {
-		return d.description
 	}
+	return d.description
 }
 
 func (d DefaultDescribedError) Error() string {

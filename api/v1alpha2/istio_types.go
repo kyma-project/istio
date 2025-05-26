@@ -128,7 +128,7 @@ type IstioSpec struct {
 //+kubebuilder:printcolumn:JSONPath=".status.state",name="State",type="string"
 //+kubebuilder:storageversion
 
-// Contains Istio CR specification and current status.
+// Istio contains Istio CR specification and current status.
 type Istio struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -139,7 +139,7 @@ type Istio struct {
 
 //+kubebuilder:object:root=true
 
-// Contains a list of Istio's.
+// IstioList contains a list of Istio's.
 type IstioList struct {
 	metav1.TypeMeta `        json:",inline"`
 	metav1.ListMeta `        json:"metadata,omitempty"`

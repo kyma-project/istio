@@ -8,7 +8,7 @@ import (
 	"github.com/go-logr/logr"
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
-	"github.com/kyma-project/istio/operator/internal/described_errors"
+	"github.com/kyma-project/istio/operator/internal/describederrors"
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/kyma-project/istio/operator/internal/restarter"
 	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
@@ -49,7 +49,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 
 		// then
 		Expect(err).Should(HaveOccurred())
-		Expect(err.Level()).To(Equal(described_errors.Error))
+		Expect(err.Level()).To(Equal(describederrors.Error))
 		Expect(err.Error()).To(ContainSubstring("istio-system Pods version 1.16.0 do not match istio operator version 1.16.1"))
 		Expect(requeue).To(BeFalse())
 		Expect((*istioCr.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeProxySidecarRestartSucceeded)))
@@ -101,7 +101,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 
 		// then
 		Expect(err).Should(HaveOccurred())
-		Expect(err.Level()).To(Equal(described_errors.Warning))
+		Expect(err.Level()).To(Equal(describederrors.Warning))
 		Expect(requeue).To(BeFalse())
 		Expect((*istioCr.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeProxySidecarRestartSucceeded)))
 		Expect((*istioCr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonProxySidecarManualRestartRequired)))
@@ -136,7 +136,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 
 		// then
 		Expect(err).Should(HaveOccurred())
-		Expect(err.Level()).To(Equal(described_errors.Warning))
+		Expect(err.Level()).To(Equal(describederrors.Warning))
 		Expect(requeue).To(BeFalse())
 		Expect((*istioCr.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeProxySidecarRestartSucceeded)))
 		Expect((*istioCr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonProxySidecarManualRestartRequired)))
@@ -181,7 +181,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 
 		// then
 		Expect(err).Should(HaveOccurred())
-		Expect(err.Level()).To(Equal(described_errors.Error))
+		Expect(err.Level()).To(Equal(describederrors.Error))
 		Expect(err.Description()).To(Equal("Error occurred during reconciliation of Istio Sidecars: intentional error"))
 		Expect(requeue).To(BeFalse())
 		Expect((*istioCr.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeProxySidecarRestartSucceeded)))
@@ -306,6 +306,6 @@ func (p *proxyRestarterMock) RestartProxies(_ context.Context, _ predicates.Side
 	return p.restartWarnings, p.hasMorePods, p.err
 }
 
-func (p *proxyRestarterMock) RestartWithPredicates(_ context.Context, preds []predicates.SidecarProxyPredicate, _ *pods.PodsRestartLimits, _ bool) ([]restart.Warning, bool, error) {
+func (p *proxyRestarterMock) RestartWithPredicates(_ context.Context, preds []predicates.SidecarProxyPredicate, _ *pods.RestartLimits, _ bool) ([]restart.Warning, bool, error) {
 	return p.restartWarnings, p.hasMorePods, p.err
 }

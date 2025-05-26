@@ -47,7 +47,7 @@ var _ = Describe("Remove Sidecar", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		// when
-		warnings, err := sidecarRemover.RemoveSidecars(ctx, c, &logger)
+		warnings, err := sidecarRemover.Sidecars(ctx, c, &logger)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -71,7 +71,7 @@ var _ = Describe("Remove Sidecar", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		// when
-		warnings, err := sidecarRemover.RemoveSidecars(ctx, c, &logger)
+		warnings, err := sidecarRemover.Sidecars(ctx, c, &logger)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())

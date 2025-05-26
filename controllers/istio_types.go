@@ -12,14 +12,14 @@ import (
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/kyma-project/istio/operator/internal/described_errors"
+	"github.com/kyma-project/istio/operator/internal/describederrors"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
-	"github.com/kyma-project/istio/operator/internal/reconciliations/istio_resources"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istioresources"
 	"github.com/kyma-project/istio/operator/internal/status"
 )
 
 type Reconciliation interface {
-	Reconcile(ctx context.Context) described_errors.DescribedError
+	Reconcile(ctx context.Context) describederrors.DescribedError
 }
 
 // IstioReconciler reconciles a Istio object.
@@ -28,7 +28,7 @@ type IstioReconciler struct {
 	client.Client
 	Scheme                 *runtime.Scheme
 	istioInstallation      istio.InstallationReconciliation
-	istioResources         istio_resources.ResourcesReconciliation
+	istioResources         istioresources.ResourcesReconciliation
 	userResources          resources.UserResourcesFinder
 	restarters             []restarter.Restarter
 	log                    logr.Logger

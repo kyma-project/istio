@@ -1,10 +1,11 @@
-// +kubebuilder:validation:Optional
 package v1alpha2
 
 import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
+
+// +kubebuilder:validation:Optional
 
 // Config is the configuration for the Istio installation.
 type Config struct {
@@ -113,7 +114,7 @@ type Resources struct {
 
 type ResourceClaims struct {
 	// +kubebuilder:validation:Pattern=`^([0-9]+m?|[0-9]\.[0-9]{1,3})$`
-	Cpu *string `json:"cpu,omitempty"`
+	CPU *string `json:"cpu,omitempty"`
 
 	// +kubebuilder:validation:Pattern=`^[0-9]+(((\.[0-9]+)?(E|P|T|G|M|k|Ei|Pi|Ti|Gi|Mi|Ki|m)?)|(e[0-9]+))$`
 	Memory *string `json:"memory,omitempty"`

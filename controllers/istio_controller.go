@@ -35,9 +35,9 @@ import (
 
 	"k8s.io/client-go/util/retry"
 
-	"github.com/kyma-project/istio/operator/internal/described_errors"
+	"github.com/kyma-project/istio/operator/internal/describederrors"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/configuration"
-	"github.com/kyma-project/istio/operator/internal/reconciliations/istio_resources"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istioresources"
 	"github.com/kyma-project/istio/operator/internal/status"
 
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
@@ -80,7 +80,7 @@ func NewController(mgr manager.Manager, reconciliationInterval time.Duration) *I
 		Client:                 mgr.GetClient(),
 		Scheme:                 mgr.GetScheme(),
 		istioInstallation:      &istio.Installation{Client: mgr.GetClient(), IstioClient: istio.NewIstioClient(), Merger: &merger},
-		istioResources:         istio_resources.NewReconciler(mgr.GetClient()),
+		istioResources:         istioresources.NewReconciler(mgr.GetClient()),
 		userResources:          userResources,
 		restarters:             restarters,
 		log:                    mgr.GetLogger(),
@@ -111,13 +111,13 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 	if istioCR.GetNamespace() != namespace {
 		errWrongNS := fmt.Errorf("istio CR is not in %s namespace", namespace)
-		return r.terminateReconciliation(ctx, &istioCR, described_errors.NewDescribedError(errWrongNS, "Stopped Istio CR reconciliation"),
+		return r.terminateReconciliation(ctx, &istioCR, describederrors.NewDescribedError(errWrongNS, "Stopped Istio CR reconciliation"),
 			operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileFailed))
 	}
 
 	existingIstioCRs := &operatorv1alpha2.IstioList{}
 	if err := r.List(ctx, existingIstioCRs, client.InNamespace(namespace)); err != nil {
-		return r.requeueReconciliation(ctx, &istioCR, described_errors.NewDescribedError(err, "Unable to list Istio CRs"),
+		return r.requeueReconciliation(ctx, &istioCR, describederrors.NewDescribedError(err, "Unable to list Istio CRs"),
 			operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileFailed),
 			reconciliationRequeueTimeError)
 	}
@@ -129,14 +129,14 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			return r.terminateReconciliation(
 				ctx,
 				&istioCR,
-				described_errors.NewDescribedError(errOldestCRNotFound, "Stopped Istio CR reconciliation").SetWarning(),
+				describederrors.NewDescribedError(errOldestCRNotFound, "Stopped Istio CR reconciliation").SetWarning(),
 				operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonOldestCRNotFound),
 			)
 		}
 
 		if istioCR.GetUID() != oldestCr.GetUID() {
 			errNotOldestCR := fmt.Errorf("only Istio CR %s in %s reconciles the module", oldestCr.GetName(), oldestCr.GetNamespace())
-			return r.terminateReconciliation(ctx, &istioCR, described_errors.NewDescribedError(errNotOldestCR, "Stopped Istio CR reconciliation").SetWarning(),
+			return r.terminateReconciliation(ctx, &istioCR, describederrors.NewDescribedError(errNotOldestCR, "Stopped Istio CR reconciliation").SetWarning(),
 				operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonOlderCRExists))
 		}
 	}
@@ -179,7 +179,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	err, requeue := restarter.Restart(ctx, &istioCR, r.restarters)
 	reconciliationRequeueTime := reconciliationRequeueTimeError
 	if err != nil {
-		if err.Level() == described_errors.Warning {
+		if err.Level() == describederrors.Warning {
 			reconciliationRequeueTime = reconciliationRequeueTimeWarning
 		}
 		// We don't want to use the requeueReconciliation function here, since there is condition handling in this function, and we
@@ -188,7 +188,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		if statusUpdateErr != nil {
 			r.log.Error(statusUpdateErr, "Error during updating status to error")
 		}
-		if err.Level() == described_errors.Warning {
+		if err.Level() == describederrors.Warning {
 			r.log.Info("Reconcile requeued")
 			return ctrl.Result{RequeueAfter: reconciliationRequeueTime}, nil
 		}
@@ -201,7 +201,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 	userResErr := r.userResources.DetectUserCreatedEfOnIngress(ctx)
 	if userResErr != nil {
-		if userResErr.Level() != described_errors.Warning {
+		if userResErr.Level() != describederrors.Warning {
 			return r.requeueReconciliation(
 				ctx,
 				&istioCR,
@@ -224,7 +224,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 // requeueReconciliation cancels the reconciliation and requeues the request.
 func (r *IstioReconciler) requeueReconciliation(ctx context.Context,
-	istioCR *operatorv1alpha2.Istio, err described_errors.DescribedError,
+	istioCR *operatorv1alpha2.Istio, err describederrors.DescribedError,
 	reason operatorv1alpha2.ReasonWithMessage, requeueAfter time.Duration) (ctrl.Result, error) {
 	if err.ShouldSetCondition() {
 		r.setConditionForError(istioCR, reason)
@@ -243,12 +243,12 @@ func (r *IstioReconciler) requeueReconciliationRestartNotFinished(ctx context.Co
 		r.log.Error(statusUpdateErr, "Error during updating status to processing")
 	}
 	r.log.Info("Reconcile requeued")
-	return ctrl.Result{RequeueAfter: reconciliationRequeueTimeError}, nil
+	return ctrl.Result{RequeueAfter: requeueAfter}, nil
 }
 
 // terminateReconciliation stops the reconciliation and does not requeue the request.
 func (r *IstioReconciler) terminateReconciliation(ctx context.Context, istioCR *operatorv1alpha2.Istio,
-	err described_errors.DescribedError, reason operatorv1alpha2.ReasonWithMessage) (ctrl.Result, error) {
+	err describederrors.DescribedError, reason operatorv1alpha2.ReasonWithMessage) (ctrl.Result, error) {
 	if err.ShouldSetCondition() {
 		r.setConditionForError(istioCR, reason)
 	}
@@ -265,7 +265,7 @@ func (r *IstioReconciler) terminateReconciliation(ctx context.Context, istioCR *
 
 func (r *IstioReconciler) finishReconcile(ctx context.Context, istioCR *operatorv1alpha2.Istio, istioTag string) (ctrl.Result, error) {
 	if err := r.updateLastAppliedConfiguration(ctx, client.ObjectKeyFromObject(istioCR), istioTag); err != nil {
-		describedErr := described_errors.NewDescribedError(err, "Error updating LastAppliedConfiguration")
+		describedErr := describederrors.NewDescribedError(err, "Error updating LastAppliedConfiguration")
 		return r.requeueReconciliation(ctx, istioCR, describedErr,
 			operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileFailed),
 			reconciliationRequeueTimeError)

@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	ProductionClusterCpuThreshold      int64 = 5
+	ProductionClusterCPUThreshold      int64 = 5
 	ProductionClusterMemoryThresholdGi int64 = 10
 )
 
@@ -40,7 +40,7 @@ func (s ClusterSize) String() string {
 }
 
 // EvaluateClusterSize counts the entire capacity of cpu and memory in the cluster and returns Evaluation
-// if the total capacity of any of the resources is lower than ProductionClusterCpuThreshold or ProductionClusterMemoryThresholdGi.
+// if the total capacity of any of the resources is lower than ProductionClusterCPUThreshold or ProductionClusterMemoryThresholdGi.
 func EvaluateClusterSize(ctx context.Context, k8sClient client.Client) (ClusterSize, error) {
 	nodeList := corev1.NodeList{}
 	err := k8sClient.List(ctx, &nodeList)
@@ -51,16 +51,16 @@ func EvaluateClusterSize(ctx context.Context, k8sClient client.Client) (ClusterS
 	var cpuCapacity resource.Quantity
 	var memoryCapacity resource.Quantity
 	for _, node := range nodeList.Items {
-		nodeCpuCap := node.Status.Capacity.Cpu()
-		if nodeCpuCap != nil {
-			cpuCapacity.Add(*nodeCpuCap)
+		nodeCPUCap := node.Status.Capacity.Cpu()
+		if nodeCPUCap != nil {
+			cpuCapacity.Add(*nodeCPUCap)
 		}
 		nodeMemoryCap := node.Status.Capacity.Memory()
 		if nodeMemoryCap != nil {
 			memoryCapacity.Add(*nodeMemoryCap)
 		}
 	}
-	if cpuCapacity.Cmp(*resource.NewQuantity(ProductionClusterCpuThreshold, resource.DecimalSI)) == -1 ||
+	if cpuCapacity.Cmp(*resource.NewQuantity(ProductionClusterCPUThreshold, resource.DecimalSI)) == -1 ||
 		memoryCapacity.Cmp(*resource.NewScaledQuantity(ProductionClusterMemoryThresholdGi, resource.Giga)) == -1 {
 		return Evaluation, nil
 	}

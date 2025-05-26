@@ -16,20 +16,20 @@ const (
 	istioSidecarContainerName string = "istio-proxy"
 )
 
-type PodsRestartLimits struct {
+type RestartLimits struct {
 	PodsToRestartLimit int
 	PodsToListLimit    int
 }
 
-func NewPodsRestartLimits(restartLimit, listLimit int) *PodsRestartLimits {
-	return &PodsRestartLimits{
+func NewPodsRestartLimits(restartLimit, listLimit int) *RestartLimits {
+	return &RestartLimits{
 		PodsToRestartLimit: restartLimit,
 		PodsToListLimit:    listLimit,
 	}
 }
 
-type PodsGetter interface {
-	GetPodsToRestart(ctx context.Context, preds []predicates.SidecarProxyPredicate, limits *PodsRestartLimits) (*v1.PodList, error)
+type Getter interface {
+	GetPodsToRestart(ctx context.Context, preds []predicates.SidecarProxyPredicate, limits *RestartLimits) (*v1.PodList, error)
 	GetAllInjectedPods(context context.Context) (*v1.PodList, error)
 }
 
@@ -45,7 +45,7 @@ func NewPods(k8sClient client.Client, logger *logr.Logger) *Pods {
 	}
 }
 
-func (p *Pods) GetPodsToRestart(ctx context.Context, preds []predicates.SidecarProxyPredicate, limits *PodsRestartLimits) (*v1.PodList, error) {
+func (p *Pods) GetPodsToRestart(ctx context.Context, preds []predicates.SidecarProxyPredicate, limits *RestartLimits) (*v1.PodList, error) {
 	podsToRestart := &v1.PodList{}
 	for while := true; while; {
 		podsWithSidecar, err := getSidecarPods(ctx, p.k8sClient, p.logger, limits.PodsToListLimit, podsToRestart.Continue)
@@ -86,12 +86,12 @@ func (p *Pods) GetPodsToRestart(ctx context.Context, preds []predicates.SidecarP
 	return podsToRestart, nil
 }
 
-func (p *Pods) GetAllInjectedPods(ctx context.Context) (outputPodList *v1.PodList, err error) {
+func (p *Pods) GetAllInjectedPods(ctx context.Context) (*v1.PodList, error) {
 	podList := &v1.PodList{}
-	outputPodList = &v1.PodList{}
+	outputPodList := &v1.PodList{}
 	outputPodList.Items = make([]v1.Pod, len(podList.Items))
 
-	err = retry.OnError(retry.DefaultRetry, func() error {
+	err := retry.OnError(retry.DefaultRetry, func() error {
 		return p.k8sClient.List(ctx, podList, &client.ListOptions{})
 	})
 	if err != nil {

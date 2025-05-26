@@ -10,7 +10,7 @@ import (
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/restart"
 )
 
-func RemoveSidecars(ctx context.Context, k8sclient client.Client, logger *logr.Logger) ([]restart.Warning, error) {
+func Sidecars(ctx context.Context, k8sclient client.Client, logger *logr.Logger) ([]restart.Warning, error) {
 	podsLister := pods.NewPods(k8sclient, logger)
 	toRestart, err := podsLister.GetAllInjectedPods(ctx)
 	if err != nil {

@@ -9,7 +9,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/internal/described_errors"
+	"github.com/kyma-project/istio/operator/internal/describederrors"
 	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/pkg/lib/annotations"
@@ -37,21 +37,21 @@ func NewIngressGatewayRestarter(client client.Client, predicates []predicates.In
 	}
 }
 
-func (r *IngressGatewayRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio) (described_errors.DescribedError, bool) {
+func (r *IngressGatewayRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio) (describederrors.DescribedError, bool) {
 	ctrl.Log.Info("Restarting Istio Ingress Gateway")
 
 	r.predicates = append(r.predicates, predicates.NewIngressGatewayRestartPredicate(istioCR))
 	for _, predicate := range r.predicates {
 		evaluator, err := predicate.NewIngressGatewayEvaluator(ctx)
 		if err != nil {
-			return described_errors.NewDescribedError(err, "Could not create Ingress Gateway restart evaluator"), false
+			return describederrors.NewDescribedError(err, "Could not create Ingress Gateway restart evaluator"), false
 		}
 
 		if evaluator.RequiresIngressGatewayRestart() {
 			err = restartIngressGateway(ctx, r.client)
 			if err != nil {
 				r.statusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonIngressGatewayRestartFailed))
-				return described_errors.NewDescribedError(err, "Failed to restart Ingress Gateway"), false
+				return describederrors.NewDescribedError(err, "Failed to restart Ingress Gateway"), false
 			}
 		}
 	}

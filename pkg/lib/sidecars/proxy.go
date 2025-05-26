@@ -30,17 +30,17 @@ type ProxyRestarter interface {
 		expectedResources v1.ResourceRequirements,
 		istioCR *v1alpha2.Istio,
 	) ([]restart.Warning, bool, error)
-	RestartWithPredicates(ctx context.Context, preds []predicates.SidecarProxyPredicate, limits *pods.PodsRestartLimits, failOnError bool) ([]restart.Warning, bool, error)
+	RestartWithPredicates(ctx context.Context, preds []predicates.SidecarProxyPredicate, limits *pods.RestartLimits, failOnError bool) ([]restart.Warning, bool, error)
 }
 
 type ProxyRestart struct {
 	k8sClient       client.Client
-	podsLister      pods.PodsGetter
+	podsLister      pods.Getter
 	actionRestarter restart.ActionRestarter
 	logger          *logr.Logger
 }
 
-func NewProxyRestarter(c client.Client, podsLister pods.PodsGetter, actionRestarter restart.ActionRestarter, logger *logr.Logger) *ProxyRestart {
+func NewProxyRestarter(c client.Client, podsLister pods.Getter, actionRestarter restart.ActionRestarter, logger *logr.Logger) *ProxyRestart {
 	return &ProxyRestart{
 		k8sClient:       c,
 		podsLister:      podsLister,
@@ -96,7 +96,7 @@ func (p *ProxyRestart) RestartProxies(
 func (p *ProxyRestart) RestartWithPredicates(
 	ctx context.Context,
 	preds []predicates.SidecarProxyPredicate,
-	limits *pods.PodsRestartLimits,
+	limits *pods.RestartLimits,
 	failOnError bool,
 ) ([]restart.Warning, bool, error) {
 	podsToRestart, err := p.podsLister.GetPodsToRestart(ctx, preds, limits)

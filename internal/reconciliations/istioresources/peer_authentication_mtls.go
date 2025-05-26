@@ -1,4 +1,4 @@
-package istio_resources
+package istioresources
 
 import (
 	"context"

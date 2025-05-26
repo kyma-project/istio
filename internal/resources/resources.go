@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -47,6 +48,9 @@ func DeleteIfPresent(ctx context.Context, k8sClient client.Client, manifest []by
 
 	err = k8sClient.Get(ctx, client.ObjectKeyFromObject(&resource), &resource)
 	if err != nil {
+		if !errors.IsNotFound(err) {
+			return controllerutil.OperationResultNone, err
+		}
 		return controllerutil.OperationResultNone, nil
 	}
 

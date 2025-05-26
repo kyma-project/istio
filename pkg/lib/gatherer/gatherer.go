@@ -67,9 +67,9 @@ func ListIstioCR(ctx context.Context, kubeClient client.Client, namespace ...str
 }
 
 // ListIstioCPPods lists all Istio control plane pods.
-func ListIstioCPPods(ctx context.Context, kubeClient client.Client) (podsList *v1.PodList, err error) {
+func ListIstioCPPods(ctx context.Context, kubeClient client.Client) (*v1.PodList, error) {
 	list := v1.PodList{}
-	err = kubeClient.List(ctx, &list, &client.ListOptions{
+	err := kubeClient.List(ctx, &list, &client.ListOptions{
 		Namespace: IstioNamespace,
 		LabelSelector: labels.SelectorFromSet(map[string]string{
 			"kyma-project.io/module": "istio",
@@ -82,11 +82,11 @@ func ListIstioCPPods(ctx context.Context, kubeClient client.Client) (podsList *v
 	return &list, err
 }
 
-func ListInstalledIstioRevisions(ctx context.Context, kubeClient client.Client) (istioRevisionVersions map[string]*semver.Version, err error) {
-	istioRevisionVersions = make(map[string]*semver.Version)
+func ListInstalledIstioRevisions(ctx context.Context, kubeClient client.Client) (map[string]*semver.Version, error) {
+	istioRevisionVersions := make(map[string]*semver.Version)
 
 	var istiodList appsv1.DeploymentList
-	err = kubeClient.List(ctx, &istiodList, client.MatchingLabels(IstiodAppLabel))
+	err := kubeClient.List(ctx, &istiodList, client.MatchingLabels(IstiodAppLabel))
 	if err != nil {
 		return nil, err
 	}

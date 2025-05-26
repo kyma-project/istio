@@ -56,6 +56,8 @@ const (
 	failureBaseDelayDefault       = 1 * time.Second
 	failureMaxDelayDefault        = 1000 * time.Second
 	reconciliationIntervalDefault = 10 * time.Hour
+
+	WebhookServiceDefaultPort = 9443
 )
 
 var (
@@ -138,7 +140,7 @@ func main() {
 
 func createManager(flagVar *FlagVar) (manager.Manager, error) {
 	webhookServer := webhook.NewServer(webhook.Options{
-		Port: 9443,
+		Port: WebhookServiceDefaultPort,
 	})
 
 	return ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{

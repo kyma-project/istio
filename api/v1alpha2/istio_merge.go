@@ -302,8 +302,8 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 
 	if i.Spec.Components.Proxy != nil && i.Spec.Components.Proxy.K8S != nil && i.Spec.Components.Proxy.K8S.Resources != nil {
 		if i.Spec.Components.Proxy.K8S.Resources.Limits != nil {
-			if i.Spec.Components.Proxy.K8S.Resources.Limits.Cpu != nil {
-				err = valuesMap.SetPath("global.proxy.resources.limits.cpu", *i.Spec.Components.Proxy.K8S.Resources.Limits.Cpu)
+			if i.Spec.Components.Proxy.K8S.Resources.Limits.CPU != nil {
+				err = valuesMap.SetPath("global.proxy.resources.limits.cpu", *i.Spec.Components.Proxy.K8S.Resources.Limits.CPU)
 				if err != nil {
 					return iopv1alpha1.IstioOperator{}, err
 				}
@@ -318,8 +318,8 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 
 		if i.Spec.Components.Proxy.K8S.Resources.Requests != nil {
 			if i.Spec.Components.Proxy.K8S.Resources.Requests != nil {
-				if i.Spec.Components.Proxy.K8S.Resources.Requests.Cpu != nil {
-					err = valuesMap.SetPath("global.proxy.resources.requests.cpu", *i.Spec.Components.Proxy.K8S.Resources.Requests.Cpu)
+				if i.Spec.Components.Proxy.K8S.Resources.Requests.CPU != nil {
+					err = valuesMap.SetPath("global.proxy.resources.requests.cpu", *i.Spec.Components.Proxy.K8S.Resources.Requests.CPU)
 					if err != nil {
 						return iopv1alpha1.IstioOperator{}, err
 					}
@@ -395,8 +395,8 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 					op.Spec.Components.Cni.Kubernetes.Resources.Limits = make(corev1.ResourceList)
 				}
 
-				if i.Spec.Components.Cni.K8S.Resources.Limits.Cpu != nil {
-					quantity, err := resource.ParseQuantity(*i.Spec.Components.Cni.K8S.Resources.Limits.Cpu)
+				if i.Spec.Components.Cni.K8S.Resources.Limits.CPU != nil {
+					quantity, err := resource.ParseQuantity(*i.Spec.Components.Cni.K8S.Resources.Limits.CPU)
 					if err != nil {
 						return op, err
 					}
@@ -416,8 +416,8 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 					op.Spec.Components.Cni.Kubernetes.Resources.Requests = make(corev1.ResourceList)
 				}
 
-				if i.Spec.Components.Cni.K8S.Resources.Requests.Cpu != nil {
-					quantity, err := resource.ParseQuantity(*i.Spec.Components.Cni.K8S.Resources.Requests.Cpu)
+				if i.Spec.Components.Cni.K8S.Resources.Requests.CPU != nil {
+					quantity, err := resource.ParseQuantity(*i.Spec.Components.Cni.K8S.Resources.Requests.CPU)
 					if err != nil {
 						return op, err
 					}
@@ -448,8 +448,8 @@ func mergeK8sConfig(base *iopv1alpha1.KubernetesResources, newConfig KubernetesR
 				base.Resources.Limits = make(corev1.ResourceList)
 			}
 
-			if newConfig.Resources.Limits.Cpu != nil {
-				quantity, err := resource.ParseQuantity(*newConfig.Resources.Limits.Cpu)
+			if newConfig.Resources.Limits.CPU != nil {
+				quantity, err := resource.ParseQuantity(*newConfig.Resources.Limits.CPU)
 				if err != nil {
 					return err
 				}
@@ -469,8 +469,8 @@ func mergeK8sConfig(base *iopv1alpha1.KubernetesResources, newConfig KubernetesR
 				base.Resources.Requests = make(corev1.ResourceList)
 			}
 
-			if newConfig.Resources.Requests.Cpu != nil {
-				quantity, err := resource.ParseQuantity(*newConfig.Resources.Requests.Cpu)
+			if newConfig.Resources.Requests.CPU != nil {
+				quantity, err := resource.ParseQuantity(*newConfig.Resources.Requests.CPU)
 				if err != nil {
 					return err
 				}

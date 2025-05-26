@@ -468,7 +468,7 @@ var _ = Describe("Merge", func() {
 					Pilot: &IstioComponent{K8s: &KubernetesResourcesConfig{
 						Resources: &Resources{
 							Limits: &ResourceClaims{
-								Cpu: &cpuLimit,
+								CPU: &cpuLimit,
 							},
 						},
 					}},
@@ -497,7 +497,7 @@ var _ = Describe("Merge", func() {
 					Pilot: &IstioComponent{K8s: &KubernetesResourcesConfig{
 						Resources: &Resources{
 							Requests: &ResourceClaims{
-								Cpu: &cpuLimit,
+								CPU: &cpuLimit,
 							},
 						},
 					}},
@@ -530,7 +530,7 @@ var _ = Describe("Merge", func() {
 						K8s: &KubernetesResourcesConfig{
 							Resources: &Resources{
 								Limits: &ResourceClaims{
-									Cpu:    &cpuLimit,
+									CPU:    &cpuLimit,
 									Memory: &memoryLimit,
 								},
 							},
@@ -564,7 +564,7 @@ var _ = Describe("Merge", func() {
 					IngressGateway: &IstioComponent{K8s: &KubernetesResourcesConfig{
 						Resources: &Resources{
 							Requests: &ResourceClaims{
-								Cpu:    &cpuRequests,
+								CPU:    &cpuRequests,
 								Memory: &memoryRequests,
 							},
 						},
@@ -603,7 +603,7 @@ var _ = Describe("Merge", func() {
 						K8s: &KubernetesResourcesConfig{
 							Resources: &Resources{
 								Limits: &ResourceClaims{
-									Cpu:    &cpuLimit,
+									CPU:    &cpuLimit,
 									Memory: &memoryLimit,
 								},
 							},
@@ -643,7 +643,7 @@ var _ = Describe("Merge", func() {
 						K8s: &KubernetesResourcesConfig{
 							Resources: &Resources{
 								Requests: &ResourceClaims{
-									Cpu:    &cpuRequests,
+									CPU:    &cpuRequests,
 									Memory: &memoryRequests,
 								},
 							},
@@ -890,7 +890,7 @@ var _ = Describe("Merge", func() {
 					Cni: &CniComponent{K8S: &CniK8sConfig{
 						Resources: &Resources{
 							Requests: &ResourceClaims{
-								Cpu:    &cpuRequests,
+								CPU:    &cpuRequests,
 								Memory: &memoryRequests,
 							},
 						},
@@ -928,11 +928,11 @@ var _ = Describe("Merge", func() {
 				Proxy: &ProxyComponent{K8S: &ProxyK8sConfig{
 					Resources: &Resources{
 						Requests: &ResourceClaims{
-							Cpu:    &cpuRequests,
+							CPU:    &cpuRequests,
 							Memory: &memoryRequests,
 						},
 						Limits: &ResourceClaims{
-							Cpu:    &cpuLimits,
+							CPU:    &cpuLimits,
 							Memory: &memoryLimits,
 						},
 					},

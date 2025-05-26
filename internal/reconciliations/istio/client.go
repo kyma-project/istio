@@ -30,7 +30,7 @@ type libraryClient interface {
 	Uninstall(ctx context.Context) error
 }
 
-type IstioClient struct {
+type Client struct {
 	consoleLogger *clog.ConsoleLogger
 	printer       istio.Printer
 }
@@ -44,11 +44,11 @@ func CreateIstioLibraryLogger() *clog.ConsoleLogger {
 	return clog.NewConsoleLogger(os.Stdout, os.Stderr, registeredScope)
 }
 
-func NewIstioClient() *IstioClient {
+func NewIstioClient() *Client {
 	consoleLogger := CreateIstioLibraryLogger()
 	printer := istio.NewPrinterForWriter(os.Stdout)
 
-	return &IstioClient{consoleLogger: consoleLogger, printer: printer}
+	return &Client{consoleLogger: consoleLogger, printer: printer}
 }
 
 func installIstioInExternalProcess(mergedIstioOperatorPath string) error {
@@ -75,7 +75,7 @@ func installIstioInExternalProcess(mergedIstioOperatorPath string) error {
 	return nil
 }
 
-func (c *IstioClient) Install(mergedIstioOperatorPath string) error {
+func (c *Client) Install(mergedIstioOperatorPath string) error {
 	err := installIstioInExternalProcess(mergedIstioOperatorPath)
 
 	if err != nil {
@@ -85,7 +85,7 @@ func (c *IstioClient) Install(mergedIstioOperatorPath string) error {
 	return nil
 }
 
-func (c *IstioClient) Uninstall(ctx context.Context) error {
+func (c *Client) Uninstall(ctx context.Context) error {
 	rc, err := kube.DefaultRestConfig("", "", func(config *rest.Config) {
 		config.QPS = 50
 		config.Burst = 100

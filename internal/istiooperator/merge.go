@@ -24,7 +24,7 @@ func (m *IstioMerger) Merge(clusterSize clusterconfig.ClusterSize, istioCR *oper
 		return "", err
 	}
 	mergedIstioOperatorPath := path.Join(m.workingDir, MergedIstioOperatorFile)
-	err = os.WriteFile(mergedIstioOperatorPath, iopWithOverrides, 0o644)
+	err = os.WriteFile(mergedIstioOperatorPath, iopWithOverrides, 0o600)
 	if err != nil {
 		return "", err
 	}

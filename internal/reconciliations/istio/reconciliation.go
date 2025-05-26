@@ -7,13 +7,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/internal/described_errors"
+	"github.com/kyma-project/istio/operator/internal/describederrors"
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/kyma-project/istio/operator/internal/status"
 )
 
 type InstallationReconciliation interface {
-	Reconcile(ctx context.Context, istioCR *operatorv1alpha2.Istio, statusHandler status.Status) (istiooperator.IstioImageVersion, described_errors.DescribedError)
+	Reconcile(ctx context.Context, istioCR *operatorv1alpha2.Istio, statusHandler status.Status) (istiooperator.IstioImageVersion, describederrors.DescribedError)
 }
 
 type Installation struct {
@@ -27,11 +27,11 @@ func (i *Installation) Reconcile(
 	ctx context.Context,
 	istioCR *operatorv1alpha2.Istio,
 	statusHandler status.Status,
-) (istiooperator.IstioImageVersion, described_errors.DescribedError) {
+) (istiooperator.IstioImageVersion, describederrors.DescribedError) {
 	istioImageVersion, err := i.Merger.GetIstioImageVersion()
 	if err != nil {
 		ctrl.Log.Error(err, "Error getting Istio version from istio operator file")
-		return istioImageVersion, described_errors.NewDescribedError(err, "Could not get Istio version from istio operator file")
+		return istioImageVersion, describederrors.NewDescribedError(err, "Could not get Istio version from istio operator file")
 	}
 
 	if istioCR.DeletionTimestamp.IsZero() {

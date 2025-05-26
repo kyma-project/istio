@@ -518,7 +518,7 @@ func (p *shouldFailClient) Patch(ctx context.Context, obj client.Object, patch c
 type PodsMock struct {
 	Called                 int
 	Predicates             map[int][]predicates.SidecarProxyPredicate
-	Limits                 map[int]*pods.PodsRestartLimits
+	Limits                 map[int]*pods.RestartLimits
 	FailOnKymaWorkload     bool
 	FailOnCustomerWorkload bool
 }
@@ -527,13 +527,13 @@ func NewPodsMock() *PodsMock {
 	return &PodsMock{
 		Called:                 0,
 		Predicates:             map[int][]predicates.SidecarProxyPredicate{},
-		Limits:                 map[int]*pods.PodsRestartLimits{},
+		Limits:                 map[int]*pods.RestartLimits{},
 		FailOnKymaWorkload:     false,
 		FailOnCustomerWorkload: false,
 	}
 }
 
-func (p *PodsMock) GetPodsToRestart(_ context.Context, preds []predicates.SidecarProxyPredicate, limits *pods.PodsRestartLimits) (*v1.PodList, error) {
+func (p *PodsMock) GetPodsToRestart(_ context.Context, preds []predicates.SidecarProxyPredicate, limits *pods.RestartLimits) (*v1.PodList, error) {
 	if p.FailOnKymaWorkload {
 		_, ok := preds[len(preds)-1].(*predicates.KymaWorkloadRestartPredicate)
 		if ok {

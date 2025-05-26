@@ -34,13 +34,15 @@ func (s ClusterSize) String() string {
 		return "Evaluation"
 	case Production:
 		return "Production"
+	case UnknownSize:
+		fallthrough
 	default:
 		return "Unknown"
 	}
 }
 
 // EvaluateClusterSize counts the entire capacity of cpu and memory in the cluster and returns Evaluation
-// if the total capacity of any of the resources is lower than ProductionClusterCPUThreshold or ProductionClusterMemoryThresholdGi.
+// if the total capacity of the resources is lower than ProductionClusterCPUThreshold or ProductionClusterMemoryThresholdGi.
 func EvaluateClusterSize(ctx context.Context, k8sClient client.Client) (ClusterSize, error) {
 	nodeList := corev1.NodeList{}
 	err := k8sClient.List(ctx, &nodeList)
@@ -87,41 +89,46 @@ func (c ClusterFlavour) String() string {
 		return "Gardener"
 	case AWS:
 		return "AWS"
+	case Unknown:
+		fallthrough
+	default:
+		return "Unknown"
 	}
-	return "Unknown"
 }
 
 type ClusterConfiguration map[string]interface{}
 
-var AWSNLBConfig = ClusterConfiguration{
-	"spec": map[string]interface{}{
-		"values": map[string]interface{}{
-			"gateways": map[string]interface{}{
-				"istio-ingressgateway": map[string]interface{}{
-					"serviceAnnotations": map[string]string{
-						loadBalancerTypeAnnotation:          loadBalancerType,
-						loadBalancerSchemeAnnotation:        loadBalancerScheme,
-						loadBalancerNlbTargetTypeAnnotation: loadBalancerNlbTargetType,
+//nolint:gochecknoglobals // global variables are used to store cluster configurations TODO: refactor to avoid globals
+var (
+	AWSNLBConfig = ClusterConfiguration{
+		"spec": map[string]interface{}{
+			"values": map[string]interface{}{
+				"gateways": map[string]interface{}{
+					"istio-ingressgateway": map[string]interface{}{
+						"serviceAnnotations": map[string]string{
+							loadBalancerTypeAnnotation:          loadBalancerType,
+							loadBalancerSchemeAnnotation:        loadBalancerScheme,
+							loadBalancerNlbTargetTypeAnnotation: loadBalancerNlbTargetType,
+						},
 					},
 				},
 			},
 		},
-	},
-}
-
-var OpenStackLBProxyProtocolConfig = ClusterConfiguration{
-	"spec": map[string]interface{}{
-		"values": map[string]interface{}{
-			"gateways": map[string]interface{}{
-				"istio-ingressgateway": map[string]interface{}{
-					"serviceAnnotations": map[string]string{
-						loadBalancerProxyProtocolOpenStackAnnotation: loadBalancerProxyProtocolOpenStack,
+	}
+	OpenStackLBProxyProtocolConfig = ClusterConfiguration{
+		"spec": map[string]interface{}{
+			"values": map[string]interface{}{
+				"gateways": map[string]interface{}{
+					"istio-ingressgateway": map[string]interface{}{
+						"serviceAnnotations": map[string]string{
+							loadBalancerProxyProtocolOpenStackAnnotation: loadBalancerProxyProtocolOpenStack,
+						},
 					},
 				},
 			},
 		},
-	},
-}
+	}
+)
 
 const (
 	elbCmName      = "elb-deprecated"
@@ -240,6 +247,7 @@ func GetClusterProvider(ctx context.Context, k8sclient client.Client) (string, e
 	}
 }
 
+//nolint:gocritic // regexp matches should be compiled only once for constant patterns. TODO: refactor to use MustCompile
 func DiscoverClusterFlavour(ctx context.Context, k8sClient client.Client) (ClusterFlavour, error) {
 	matcherGKE, err := regexp.Compile(`^v\d+\.\d+\.\d+-gke\.\d+$`)
 	if err != nil {
@@ -265,13 +273,14 @@ func DiscoverClusterFlavour(ctx context.Context, k8sClient client.Client) (Clust
 	}
 
 	for _, node := range nodeList.Items {
-		if matcherGKE.MatchString(node.Status.NodeInfo.KubeletVersion) {
+		switch {
+		case matcherGKE.MatchString(node.Status.NodeInfo.KubeletVersion):
 			return GKE, nil
-		} else if matcherk3d.MatchString(node.Status.NodeInfo.KubeletVersion) {
+		case matcherk3d.MatchString(node.Status.NodeInfo.KubeletVersion):
 			return k3d, nil
-		} else if matcherAws.MatchString(node.Spec.ProviderID) {
+		case matcherAws.MatchString(node.Spec.ProviderID):
 			return AWS, nil
-		} else if matcherGardener.MatchString(node.Status.NodeInfo.OSImage) {
+		case matcherGardener.MatchString(node.Status.NodeInfo.OSImage):
 			return Gardener, nil
 		}
 	}
@@ -324,6 +333,8 @@ func (c ClusterFlavour) clusterConfiguration(clusterProvider string) (ClusterCon
 		return config, nil
 	case Gardener:
 		return generateIstioIngressGatewayAnnotations(clusterProvider)
+	case Unknown:
+		return ClusterConfiguration{}, nil
 	}
 	return ClusterConfiguration{}, nil
 }

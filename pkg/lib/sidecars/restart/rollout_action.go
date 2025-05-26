@@ -2,6 +2,7 @@ package restart
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/go-logr/logr"
@@ -21,6 +22,7 @@ func newRolloutAction(object actionObject) restartAction {
 	}
 }
 
+//nolint:gocognit // cognitive complexity 26 of func `rolloutRun` is high (> 20) TODO
 func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObject, logger *logr.Logger) ([]Warning, error) {
 	logger.Info("Rollout pod due to proxy restart", "name", object.Name, "namespace", object.Namespace, "kind", object.Kind)
 
@@ -35,7 +37,10 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 			if apiErr != nil {
 				return apiErr
 			}
-			ds := obj.(*appsv1.DaemonSet)
+			ds, ok := obj.(*appsv1.DaemonSet)
+			if !ok {
+				return errors.New("failed to cast object to DaemonSet")
+			}
 			patch := client.StrategicMergeFrom(ds.DeepCopy())
 			ds.Spec.Template.Annotations = annotations.AddRestartAnnotation(ds.Spec.Template.Annotations)
 			return k8sclient.Patch(ctx, ds, patch)
@@ -47,7 +52,10 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 			if apiErr != nil {
 				return apiErr
 			}
-			dep := obj.(*appsv1.Deployment)
+			dep, ok := obj.(*appsv1.Deployment)
+			if !ok {
+				return errors.New("failed to cast object to Deployment")
+			}
 			patch := client.StrategicMergeFrom(dep.DeepCopy())
 			dep.Spec.Template.Annotations = annotations.AddRestartAnnotation(dep.Spec.Template.Annotations)
 			return k8sclient.Patch(ctx, dep, patch)
@@ -59,7 +67,10 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 			if apiErr != nil {
 				return apiErr
 			}
-			rs := obj.(*appsv1.ReplicaSet)
+			rs, ok := obj.(*appsv1.ReplicaSet)
+			if !ok {
+				return errors.New("failed to cast object to ReplicaSet")
+			}
 			patch := client.StrategicMergeFrom(rs.DeepCopy())
 			rs.Spec.Template.Annotations = annotations.AddRestartAnnotation(rs.Spec.Template.Annotations)
 			return k8sclient.Patch(ctx, rs, patch)
@@ -71,7 +82,10 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 			if apiErr != nil {
 				return apiErr
 			}
-			ss := obj.(*appsv1.StatefulSet)
+			ss, ok := obj.(*appsv1.StatefulSet)
+			if !ok {
+				return errors.New("failed to cast object to StatefulSet")
+			}
 			patch := client.StrategicMergeFrom(ss.DeepCopy())
 			ss.Spec.Template.Annotations = annotations.AddRestartAnnotation(ss.Spec.Template.Annotations)
 			return k8sclient.Patch(ctx, ss, patch)

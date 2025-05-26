@@ -89,8 +89,10 @@ func (m *meshConfigBuilder) Build() json.RawMessage {
 	return json.RawMessage(m.c.JSON())
 }
 
+//nolint:gocognit // cognitive complexity 58 of func `(*meshConfigBuilder).BuildExternalAuthorizerConfiguration` is high (> 20) TODO: refactor this function
 func (m *meshConfigBuilder) BuildExternalAuthorizerConfiguration(authorizers []*Authorizer) *meshConfigBuilder {
 	for _, authorizer := range authorizers {
+		//nolint:nestif // `if authorizer != nil` has complex nested blocks (complexity: 25) TODO refactor
 		if authorizer != nil {
 			var authorizationProvider meshv1alpha1.MeshConfig_ExtensionProvider
 			authorizationProvider.Name = authorizer.Name
@@ -211,11 +213,13 @@ func applyGatewayExternalTrafficPolicy(op iopv1alpha1.IstioOperator, i *Istio) i
 	return op
 }
 
+//nolint:gocognit,gocyclo,cyclop,funlen // cognitive complexity 189 of func `(*Istio).mergeResources` is high (> 20), cyclomatic complexity 70 of func `(*Istio).mergeResources` is high (> 30), Function 'mergeResources' has too many statements (129 > 50) TODO: refactor this function
 func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {
 	if i.Spec.Components == nil {
 		return op, nil
 	}
 
+	//nolint:nestif // `if i.Spec.Components.IngressGateway != nil` has complex nested blocks (complexity: 6) TODO refactor
 	if i.Spec.Components.IngressGateway != nil {
 		if op.Spec.Components == nil {
 			op.Spec.Components = &iopv1alpha1.IstioComponentSpec{}
@@ -234,6 +238,7 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 		}
 	}
 
+	//nolint:nestif // `if i.Spec.Components.EgressGateway != nil` has complex nested blocks (complexity: 18) TODO refactor
 	if i.Spec.Components.EgressGateway != nil {
 		if op.Spec.Components == nil {
 			op.Spec.Components = &iopv1alpha1.IstioComponentSpec{}
@@ -273,6 +278,7 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 		}
 	}
 
+	//nolint:nestif // `if i.Spec.Components.Pilot != nil` has complex nested blocks (complexity: 6) TODO refactor
 	if i.Spec.Components.Pilot != nil {
 		if op.Spec.Components == nil {
 			op.Spec.Components = &iopv1alpha1.IstioComponentSpec{}
@@ -300,6 +306,7 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 		valuesMap = make(values.Map)
 	}
 
+	//nolint:nestif //`if i.Spec.Components.Proxy != nil && i.Spec.Components.Proxy.K8S != nil && i.Spec.Components.Proxy.K8S.Resources != nil` has complex nested blocks (complexity: 29) TODO refactor
 	if i.Spec.Components.Proxy != nil && i.Spec.Components.Proxy.K8S != nil && i.Spec.Components.Proxy.K8S.Resources != nil {
 		if i.Spec.Components.Proxy.K8S.Resources.Limits != nil {
 			if i.Spec.Components.Proxy.K8S.Resources.Limits.CPU != nil {
@@ -339,6 +346,7 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 		}
 	}
 
+	//nolint:nestif // `if i.Spec.Components.Cni != nil` has complex nested blocks (complexity: 63) TODO refactor
 	if i.Spec.Components.Cni != nil {
 		if op.Spec.Components == nil {
 			op.Spec.Components = &iopv1alpha1.IstioComponentSpec{}
@@ -389,7 +397,7 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 			if op.Spec.Components.Cni.Kubernetes.Resources == nil {
 				op.Spec.Components.Cni.Kubernetes.Resources = &corev1.ResourceRequirements{}
 			}
-
+			//nolint:dupl // duplicate code, but it's necessary to keep the structure of the code TODO move to a separate function that handles ResourceClaims changes
 			if i.Spec.Components.Cni.K8S.Resources.Limits != nil {
 				if op.Spec.Components.Cni.Kubernetes.Resources.Limits == nil {
 					op.Spec.Components.Cni.Kubernetes.Resources.Limits = make(corev1.ResourceList)
@@ -411,6 +419,7 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 				}
 			}
 
+			//nolint:dupl // duplicate code, but it's necessary to keep the structure of the code TODO move to a separate function that handles ResourceClaims changes
 			if i.Spec.Components.Cni.K8S.Resources.Requests != nil {
 				if op.Spec.Components.Cni.Kubernetes.Resources.Requests == nil {
 					op.Spec.Components.Cni.Kubernetes.Resources.Requests = make(corev1.ResourceList)
@@ -437,7 +446,9 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 	return op, nil
 }
 
+//nolint:gocognit,funlen // cognitive complexity 61 of func `mergeK8sConfig` is high (> 20), Function 'mergeK8sConfig' has too many statements (52 > 50) TODO: refactor this function
 func mergeK8sConfig(base *iopv1alpha1.KubernetesResources, newConfig KubernetesResourcesConfig) error {
+	//nolint:nestif // `if newConfig.Resources != nil` has complex nested blocks (complexity: 27) TODO refactor
 	if newConfig.Resources != nil {
 		if base.Resources == nil {
 			base.Resources = &corev1.ResourceRequirements{}

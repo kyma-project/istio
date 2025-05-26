@@ -27,6 +27,7 @@ type installArgs struct {
 	istioClient         libraryClient
 }
 
+//nolint:funlen // Function 'installIstio' has too many statements (51 > 50) TODO: refactor.
 func installIstio(ctx context.Context, args installArgs) (istiooperator.IstioImageVersion, describederrors.DescribedError) {
 	istioImageVersion := args.istioImageVersion
 	k8sClient := args.client

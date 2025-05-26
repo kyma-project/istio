@@ -25,10 +25,9 @@ const (
 	RevisionLabelName string = "istio.io/rev"
 	VersionLabelName  string = "operator.istio.io/version"
 	IstioNamespace    string = "istio-system"
-)
 
-var IstiodAppLabel = map[string]string{"app": "istiod"}
-var NoVersion semver.Version
+	MinNumberOfMatches = 3
+)
 
 // GetIstioCR fetches the Istio CR from the cluster using client with supplied name and namespace.
 func GetIstioCR(ctx context.Context, client client.Client, name string, namespace string) (*v1alpha2.Istio, error) {
@@ -85,8 +84,9 @@ func ListIstioCPPods(ctx context.Context, kubeClient client.Client) (*v1.PodList
 func ListInstalledIstioRevisions(ctx context.Context, kubeClient client.Client) (map[string]*semver.Version, error) {
 	istioRevisionVersions := make(map[string]*semver.Version)
 
+	istiodAppLabel := map[string]string{"app": "istiod"}
 	var istiodList appsv1.DeploymentList
-	err := kubeClient.List(ctx, &istiodList, client.MatchingLabels(IstiodAppLabel))
+	err := kubeClient.List(ctx, &istiodList, client.MatchingLabels(istiodAppLabel))
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +122,7 @@ func GetIstioPodsVersion(ctx context.Context, kubeClient client.Client) (string,
 	if err != nil {
 		return "", err
 	}
-	currentVersion := &NoVersion
+	currentVersion := &semver.Version{}
 	containersToCheck := []string{"discovery", "istio-proxy", "install-cni"}
 	for _, pod := range pods.Items {
 		if pod.DeletionTimestamp != nil {
@@ -136,7 +136,7 @@ func GetIstioPodsVersion(ctx context.Context, kubeClient client.Client) (string,
 			if versionErr != nil {
 				return "", versionErr
 			}
-			if currentVersion.Compare(&NoVersion) == 0 {
+			if currentVersion.Compare(&semver.Version{}) == 0 {
 				currentVersion = version
 				continue
 			} else if currentVersion.Compare(version) != 0 {
@@ -144,7 +144,7 @@ func GetIstioPodsVersion(ctx context.Context, kubeClient client.Client) (string,
 			}
 		}
 	}
-	if currentVersion.Compare(&NoVersion) == 0 {
+	if currentVersion.Compare(&semver.Version{}) == 0 {
 		return "", errors.New("unable to obtain installed Istio image version")
 	}
 	return currentVersion.String(), nil
@@ -163,16 +163,16 @@ func VerifyIstioPodsVersion(ctx context.Context, kubeClient client.Client, istio
 
 func getImageVersion(image string) (*semver.Version, error) {
 	matches := reference.ReferenceRegexp.FindStringSubmatch(image)
-	if len(matches) < 3 {
-		return &NoVersion, fmt.Errorf("unable to parse container image reference: %s", image)
+	if len(matches) < MinNumberOfMatches {
+		return nil, fmt.Errorf("unable to parse container image reference: %s", image)
 	}
 	version, err := semver.NewVersion(matches[2])
 	if err != nil {
-		return &NoVersion, err
+		return nil, err
 	}
 	noPreleaseVersion, err := version.SetPrerelease("")
 	if err != nil {
-		return &NoVersion, err
+		return nil, err
 	}
 	return &noPreleaseVersion, nil
 }

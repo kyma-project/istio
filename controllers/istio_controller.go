@@ -89,6 +89,7 @@ func NewController(mgr manager.Manager, reconciliationInterval time.Duration) *I
 	}
 }
 
+//nolint:gocognit,funlen // cognitive complexity 30 of func `(*IstioReconciler).Reconcile` is high (> 20), Function 'Reconcile' has too many statements (58 > 50) TODO: refactor this function
 func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	r.log.Info("Was called to reconcile Kyma Istio Service Mesh")
 
@@ -291,11 +292,13 @@ func (r *IstioReconciler) finishReconcile(ctx context.Context, istioCR *operator
 // +kubebuilder:rbac:groups="",resources=namespaces,verbs=get;create;update;patch
 // +kubebuilder:rbac:groups="",resources=nodes,verbs=get;list
 // +kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch
+//
+//nolint:revive,staticcheck // TODO no newline here breaks the ClusterRole generation. https://github.com/kyma-project/istio/issues/1449
 func (r *IstioReconciler) SetupWithManager(mgr ctrl.Manager, rateLimiter RateLimiter) error {
 	r.Config = mgr.GetConfig()
 
 	if err := mgr.GetFieldIndexer().IndexField(context.TODO(), &corev1.Pod{}, "status.phase", func(rawObj client.Object) []string {
-		pod := rawObj.(*corev1.Pod)
+		pod, _ := rawObj.(*corev1.Pod)
 		return []string{string(pod.Status.Phase)}
 	}); err != nil {
 		return err

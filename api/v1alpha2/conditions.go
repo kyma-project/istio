@@ -19,6 +19,7 @@ func ConditionFromReason(reason ReasonWithMessage) *metav1.Condition {
 	return nil
 }
 
+//nolint:gochecknoglobals // TODO: conditions should be defined as constant, not as a single map
 var conditionReasons = map[ConditionReason]conditionMeta{
 	ConditionReasonReconcileSucceeded: {Type: ConditionTypeReady, Status: metav1.ConditionTrue, Message: ConditionReasonReconcileSucceededMessage},
 	ConditionReasonReconcileFailed:    {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonReconcileFailedMessage},

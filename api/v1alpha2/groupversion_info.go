@@ -24,6 +24,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/scheme"
 )
 
+//nolint:gochecknoglobals // variables are scaffolded by controller-gen
 var (
 	// GroupVersion is group version used to register these objects.
 	GroupVersion = schema.GroupVersion{Group: "operator.kyma-project.io", Version: "v1alpha2"}

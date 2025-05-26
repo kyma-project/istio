@@ -6,6 +6,7 @@ import (
 	"k8s.io/client-go/util/retry"
 )
 
+//nolint:gochecknoglobals // these variables are copies of client-go variables TODO: refactor to avoid shadowing the upstream package
 var (
 	DefaultBackoff = retry.DefaultBackoff
 	DefaultRetry   = retry.DefaultRetry

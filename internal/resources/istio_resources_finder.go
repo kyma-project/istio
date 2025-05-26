@@ -60,12 +60,12 @@ func NewIstioResourcesFinder(ctx context.Context, client client.Client, logger l
 		for _, meta := range resource.ControlledList {
 			_, compileErr := regexp.Compile(meta.Name)
 			if compileErr != nil {
-				return nil, fmt.Errorf("configuration yaml regex check failed for \"%s\":w%s", meta.Name, compileErr)
+				return nil, fmt.Errorf("configuration yaml regex check failed for \"%s\": %w", meta.Name, compileErr)
 			}
 
 			_, compileErr = regexp.Compile(meta.Namespace)
 			if compileErr != nil {
-				return nil, fmt.Errorf("configuration yaml regex check failed for \"%s\":w%s", meta.Namespace, compileErr)
+				return nil, fmt.Errorf("configuration yaml regex check failed for \"%s\": %w", meta.Namespace, compileErr)
 			}
 		}
 	}

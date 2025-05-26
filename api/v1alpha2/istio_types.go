@@ -159,6 +159,7 @@ type IstioStatus struct {
 	Description string `json:"description,omitempty"`
 }
 
+//nolint:gochecknoinits // this is a scaffolded file. TODO: remove init function
 func init() {
 	SchemeBuilder.Register(&Istio{}, &IstioList{})
 }

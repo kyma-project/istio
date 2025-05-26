@@ -60,9 +60,9 @@ const (
 	WebhookServiceDefaultPort = 9443
 )
 
+//nolint:gochecknoglobals // it was scaffolded by controller-gen TODO: remove this global variable when possible
 var (
-	scheme   = runtime.NewScheme()
-	setupLog = ctrl.Log.WithName("setup")
+	scheme = runtime.NewScheme()
 )
 
 type FlagVar struct {
@@ -76,9 +76,8 @@ type FlagVar struct {
 	reconciliationInterval time.Duration
 }
 
-func init() { //nolint:gochecknoinits
+func init() { //nolint:gochecknoinits // it was scaffolded by controller-gen TODO: remove this init function when possible
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-
 	utilruntime.Must(networkingv1alpha3.AddToScheme(scheme))
 	utilruntime.Must(networkingv1.AddToScheme(scheme))
 	utilruntime.Must(operatorv1alpha2.AddToScheme(scheme))
@@ -87,6 +86,7 @@ func init() { //nolint:gochecknoinits
 
 func main() {
 	flagVar := defineFlagVar()
+	setupLog := ctrl.Log.WithName("setup")
 	opts := zap.Options{
 		Development: true,
 	}

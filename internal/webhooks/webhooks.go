@@ -10,7 +10,7 @@ import (
 	v1 "k8s.io/api/admissionregistration/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	retry "github.com/avast/retry-go"
+	"github.com/avast/retry-go"
 	"istio.io/istio/istioctl/pkg/tag"
 )
 
@@ -20,8 +20,10 @@ const (
 	IstioTagLabel       = "istio.io/tag"
 )
 
-var deactivatedLabel = map[string]string{
-	"istio.io/deactivated": "never-match",
+func GetDeactivatedLabel() map[string]string {
+	return map[string]string{
+		"istio.io/deactivated": "never-match",
+	}
 }
 
 // DeleteConflictedDefaultTag deletes conflicted tagged MutatingWebhookConfiguration, if it exists and if the default revision MutatingWebhookConfiguration is not deactivated by Istio installation logic.
@@ -81,7 +83,8 @@ func getWebhooksWithRevision(ctx context.Context, kubeClient client.Client, rev 
 		return nil, err
 	}
 
-	webhooks.Items = funk.Filter(webhooks.Items,
+	// this cast is tricky. TODO: we should probably use something else and avoid casting result of a function this way
+	webhooks.Items, _ = funk.Filter(webhooks.Items,
 		func(w v1.MutatingWebhookConfiguration) bool {
 			_, ok := w.Labels[IstioTagLabel]
 			return !ok
@@ -103,7 +106,7 @@ func isDefaultRevisionDeactivated(ctx context.Context, client client.Client) boo
 
 	for _, mwc := range mwcs {
 		for _, wh := range mwc.Webhooks {
-			if fmt.Sprint(wh.NamespaceSelector.MatchLabels) == fmt.Sprint(deactivatedLabel) && fmt.Sprint(wh.ObjectSelector.MatchLabels) == fmt.Sprint(deactivatedLabel) {
+			if fmt.Sprint(wh.NamespaceSelector.MatchLabels) == fmt.Sprint(GetDeactivatedLabel()) && fmt.Sprint(wh.ObjectSelector.MatchLabels) == fmt.Sprint(GetDeactivatedLabel()) {
 				return true
 			}
 		}

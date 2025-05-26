@@ -2,7 +2,11 @@ package istio
 
 import (
 	"context"
+
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
+
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
@@ -12,8 +16,6 @@ import (
 	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/internal/webhooks"
 	"github.com/kyma-project/istio/operator/pkg/labels"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type installArgs struct {
@@ -26,7 +28,6 @@ type installArgs struct {
 }
 
 func installIstio(ctx context.Context, args installArgs) (istiooperator.IstioImageVersion, described_errors.DescribedError) {
-
 	istioImageVersion := args.istioImageVersion
 	k8sClient := args.client
 	istioCR := args.istioCR

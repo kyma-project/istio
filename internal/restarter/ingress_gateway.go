@@ -3,16 +3,17 @@ package restarter
 import (
 	"context"
 
+	appsv1 "k8s.io/api/apps/v1"
+	"k8s.io/apimachinery/pkg/types"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/pkg/lib/annotations"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
-	appsv1 "k8s.io/api/apps/v1"
-	"k8s.io/apimachinery/pkg/types"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 )
@@ -77,7 +78,7 @@ func restartIngressGateway(ctx context.Context, k8sClient client.Client) error {
 	patch := client.StrategicMergeFrom((&deployment).DeepCopy())
 	deployment.Spec.Template.Annotations = annotations.AddRestartAnnotation(deployment.Spec.Template.Annotations)
 
-	err = retry.RetryOnError(retry.DefaultRetry, func() error {
+	err = retry.OnError(retry.DefaultRetry, func() error {
 		err = k8sClient.Patch(ctx, &deployment, patch)
 		if err != nil {
 			ctrl.Log.Info("Retrying ingress gateway restart")

@@ -2,8 +2,7 @@ package istio
 
 import (
 	"context"
-	"github.com/kyma-project/istio/operator/pkg/labels"
-	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
+
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -11,6 +10,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/kyma-project/istio/operator/pkg/labels"
+	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
 )
 
 func patchModuleResourcesWithModuleLabel(ctx context.Context, c client.Client) error {
@@ -93,7 +95,7 @@ func patchModuleResourcesWithModuleLabel(ctx context.Context, c client.Client) e
 				obj = u
 			}
 
-			if err := retry.RetryOnError(retry.DefaultRetry, func() error {
+			if err := retry.OnError(retry.DefaultRetry, func() error {
 				return c.Patch(ctx, obj, patch)
 			}); err != nil {
 				return err

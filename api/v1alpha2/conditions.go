@@ -39,10 +39,26 @@ var conditionReasons = map[ConditionReason]conditionMeta{
 	ConditionReasonCRsReconcileSucceeded: {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonCRsReconcileSucceededMessage},
 	ConditionReasonCRsReconcileFailed:    {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonCRsReconcileFailedMessage},
 
-	ConditionReasonProxySidecarRestartSucceeded:          {Type: ConditionTypeProxySidecarRestartSucceeded, Status: metav1.ConditionTrue, Message: ConditionReasonProxySidecarRestartSucceededMessage},
-	ConditionReasonProxySidecarRestartFailed:             {Type: ConditionTypeProxySidecarRestartSucceeded, Status: metav1.ConditionFalse, Message: ConditionReasonProxySidecarRestartFailedMessage},
-	ConditionReasonProxySidecarRestartPartiallySucceeded: {Type: ConditionTypeProxySidecarRestartSucceeded, Status: metav1.ConditionFalse, Message: ConditionReasonProxySidecarRestartPartiallySucceededMessage},
-	ConditionReasonProxySidecarManualRestartRequired:     {Type: ConditionTypeProxySidecarRestartSucceeded, Status: metav1.ConditionFalse, Message: ConditionReasonProxySidecarManualRestartRequiredMessage},
+	ConditionReasonProxySidecarRestartSucceeded: {
+		Type:    ConditionTypeProxySidecarRestartSucceeded,
+		Status:  metav1.ConditionTrue,
+		Message: ConditionReasonProxySidecarRestartSucceededMessage,
+	},
+	ConditionReasonProxySidecarRestartFailed: {
+		Type:    ConditionTypeProxySidecarRestartSucceeded,
+		Status:  metav1.ConditionFalse,
+		Message: ConditionReasonProxySidecarRestartFailedMessage,
+	},
+	ConditionReasonProxySidecarRestartPartiallySucceeded: {
+		Type:    ConditionTypeProxySidecarRestartSucceeded,
+		Status:  metav1.ConditionFalse,
+		Message: ConditionReasonProxySidecarRestartPartiallySucceededMessage,
+	},
+	ConditionReasonProxySidecarManualRestartRequired: {
+		Type:    ConditionTypeProxySidecarRestartSucceeded,
+		Status:  metav1.ConditionFalse,
+		Message: ConditionReasonProxySidecarManualRestartRequiredMessage,
+	},
 
 	ConditionReasonIngressGatewayRestartSucceeded: {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonIngressGatewayRestartSucceededMessage},
 	ConditionReasonIngressGatewayRestartFailed:    {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonIngressGatewayRestartFailedMessage},
@@ -50,9 +66,21 @@ var conditionReasons = map[ConditionReason]conditionMeta{
 	ConditionReasonEgressGatewayRestartSucceeded: {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonEgressGatewayRestartSucceededMessage},
 	ConditionReasonEgressGatewayRestartFailed:    {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonEgressGatewayRestartFailedMessage},
 
-	ConditionReasonIngressTargetingUserResourceFound:           {Type: ConditionTypeIngressTargetingUserResourceFound, Status: metav1.ConditionTrue, Message: ConditionReasonIngressTargetingUserResourceFoundMessage},
-	ConditionReasonIngressTargetingUserResourceNotFound:        {Type: ConditionTypeIngressTargetingUserResourceFound, Status: metav1.ConditionFalse, Message: ConditionReasonIngressTargetingUserResourceNotFoundMessage},
-	ConditionReasonIngressTargetingUserResourceDetectionFailed: {Type: ConditionTypeIngressTargetingUserResourceFound, Status: metav1.ConditionUnknown, Message: ConditionReasonIngressTargetingUserResourceDetectionFailedMessage},
+	ConditionReasonIngressTargetingUserResourceFound: {
+		Type:    ConditionTypeIngressTargetingUserResourceFound,
+		Status:  metav1.ConditionTrue,
+		Message: ConditionReasonIngressTargetingUserResourceFoundMessage,
+	},
+	ConditionReasonIngressTargetingUserResourceNotFound: {
+		Type:    ConditionTypeIngressTargetingUserResourceFound,
+		Status:  metav1.ConditionFalse,
+		Message: ConditionReasonIngressTargetingUserResourceNotFoundMessage,
+	},
+	ConditionReasonIngressTargetingUserResourceDetectionFailed: {
+		Type:    ConditionTypeIngressTargetingUserResourceFound,
+		Status:  metav1.ConditionUnknown,
+		Message: ConditionReasonIngressTargetingUserResourceDetectionFailedMessage,
+	},
 }
 
 type conditionMeta struct {

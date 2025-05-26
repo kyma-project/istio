@@ -3,19 +3,21 @@ package restarter
 import (
 	"context"
 
+	"github.com/pkg/errors"
+
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
-	"github.com/pkg/errors"
 
 	"github.com/go-logr/logr"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const errorDescription = "Error occurred during reconciliation of Istio Sidecars"
@@ -28,7 +30,13 @@ type SidecarRestarter struct {
 	StatusHandler  status.Status
 }
 
-func NewSidecarsRestarter(logger logr.Logger, client client.Client, merger istiooperator.Merger, proxyRestarter sidecars.ProxyRestarter, statusHandler status.Status) *SidecarRestarter {
+func NewSidecarsRestarter(
+	logger logr.Logger,
+	client client.Client,
+	merger istiooperator.Merger,
+	proxyRestarter sidecars.ProxyRestarter,
+	statusHandler status.Status,
+) *SidecarRestarter {
 	return &SidecarRestarter{
 		Log:            logger,
 		Client:         client,
@@ -94,7 +102,8 @@ func (s *SidecarRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio)
 
 	warningMessage := sidecars.BuildWarningMessage(warnings, &s.Log)
 	if warningMessage != "" {
-		warningErr := described_errors.NewDescribedError(errors.New("Istio Controller could not restart one or more Istio-injected Pods."), "Some Pods with Istio sidecar injection failed to restart. To learn more about the warning, see kyma-system/istio-controller-manager logs").SetWarning()
+		warningErr := described_errors.NewDescribedError(errors.New("Istio Controller could not restart one or more Istio-injected Pods."), "Some Pods with Istio sidecar injection failed to restart. To learn more about the warning, see kyma-system/istio-controller-manager logs").
+			SetWarning()
 		s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarManualRestartRequired, warningMessage))
 		s.Log.Info(warningMessage)
 		return warningErr, false

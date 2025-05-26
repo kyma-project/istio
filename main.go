@@ -21,12 +21,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 
 	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"

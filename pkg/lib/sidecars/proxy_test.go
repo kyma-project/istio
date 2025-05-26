@@ -161,7 +161,7 @@ var _ = Describe("RestartProxies", func() {
 
 		// then
 		Expect(err).ToNot(HaveOccurred())
-		Expect(warnings).To(ContainElement(restart.RestartWarning{
+		Expect(warnings).To(ContainElement(restart.Warning{
 			Name:      "n/a",
 			Namespace: "n/a",
 			Kind:      "n/a",
@@ -181,7 +181,7 @@ var _ = Describe("RestartProxies", func() {
 		podsLister := pods.NewPods(c, &logger)
 		expectedImage := predicates.NewSidecarImage("istio", "1.1.0")
 		istioCR := helpers.GetIstioCR(expectedImage.Tag)
-		actionRestarter := NewActionRestartMock([]restart.RestartWarning{{Name: "test-pod", Namespace: "kyma-system", Kind: "Pod", Message: "failed to restart"}}, nil)
+		actionRestarter := NewActionRestartMock([]restart.Warning{{Name: "test-pod", Namespace: "kyma-system", Kind: "Pod", Message: "failed to restart"}}, nil)
 		proxyRestarter := sidecars.NewProxyRestarter(c, podsLister, actionRestarter, &logger)
 		warnings, hasMorePods, err := proxyRestarter.RestartProxies(ctx, expectedImage, helpers.DefaultSidecarResources, &istioCR)
 
@@ -349,7 +349,7 @@ var _ = Describe("RestartWithPredicates", func() {
 
 		// then
 		Expect(err).ToNot(HaveOccurred())
-		Expect(warnings).To(Equal([]restart.RestartWarning{}))
+		Expect(warnings).To(Equal([]restart.Warning{}))
 		Expect(hasMorePods).To(BeFalse())
 	})
 })
@@ -359,7 +359,7 @@ var _ = Describe("BuildWarningMessage", func() {
 
 	It("should return an empty string when there are no warnings", func() {
 		// given
-		warnings := []restart.RestartWarning{}
+		warnings := []restart.Warning{}
 
 		// when
 		warningMessage := sidecars.BuildWarningMessage(warnings, &logger)
@@ -370,7 +370,7 @@ var _ = Describe("BuildWarningMessage", func() {
 
 	It("should return a warning message with pod details when there are warnings", func() {
 		// given
-		warnings := []restart.RestartWarning{
+		warnings := []restart.Warning{
 			{
 				Name:      "pod1",
 				Namespace: "namespace1",
@@ -394,7 +394,7 @@ var _ = Describe("BuildWarningMessage", func() {
 
 	It("should limit the number of pods in the warning message to 5", func() {
 		// given
-		warnings := []restart.RestartWarning{
+		warnings := []restart.Warning{
 			{Name: "pod1", Namespace: "namespace1", Kind: "Pod", Message: "failed to restart"},
 			{Name: "pod2", Namespace: "namespace2", Kind: "Pod", Message: "failed to restart"},
 			{Name: "pod3", Namespace: "namespace3", Kind: "Pod", Message: "failed to restart"},
@@ -412,7 +412,7 @@ var _ = Describe("BuildWarningMessage", func() {
 
 	It("should log each warning message", func() {
 		// given
-		warnings := []restart.RestartWarning{
+		warnings := []restart.Warning{
 			{Name: "pod1", Namespace: "namespace1", Kind: "Pod", Message: "failed to restart"},
 		}
 
@@ -557,17 +557,17 @@ func (p *PodsMock) GetAllInjectedPods(_ context.Context) (*v1.PodList, error) {
 }
 
 type ActionRestartMock struct {
-	warnings []restart.RestartWarning
+	warnings []restart.Warning
 	err      error
 }
 
-func NewActionRestartMock(warnings []restart.RestartWarning, err error) *ActionRestartMock {
+func NewActionRestartMock(warnings []restart.Warning, err error) *ActionRestartMock {
 	return &ActionRestartMock{
 		warnings: warnings,
 		err:      err,
 	}
 }
 
-func (p *ActionRestartMock) Restart(ctx context.Context, podList *v1.PodList, failOnError bool) ([]restart.RestartWarning, error) {
+func (p *ActionRestartMock) Restart(ctx context.Context, podList *v1.PodList, failOnError bool) ([]restart.Warning, error) {
 	return p.warnings, p.err
 }

@@ -11,7 +11,7 @@ const (
 	Warning Level = 1
 )
 
-// DescribedError wraps standard golang error with additional description to be set on Istio CR Status
+// DescribedError wraps standard golang error with additional description to be set on Istio CR Status.
 type DescribedError interface {
 	Description() string
 	Error() string
@@ -73,7 +73,7 @@ func (d DefaultDescribedError) ShouldSetCondition() bool {
 	return d.setCondition
 }
 
-// GetMostSevereErr returns the most severe error from the list of errors
+// GetMostSevereErr returns the most severe error from the list of errors.
 func GetMostSevereErr(errs []DescribedError) DescribedError {
 	var candidate DescribedError
 	for _, err := range errs {

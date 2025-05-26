@@ -19,8 +19,11 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/istio/operator/internal/resources"
 	"time"
+
+	"github.com/pkg/errors"
+
+	"github.com/kyma-project/istio/operator/internal/resources"
 
 	"github.com/kyma-project/istio/operator/internal/restarter"
 	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
@@ -30,16 +33,15 @@ import (
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/restart"
 
+	"k8s.io/client-go/util/retry"
+
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/configuration"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio_resources"
 	"github.com/kyma-project/istio/operator/internal/status"
-	"k8s.io/client-go/util/retry"
 
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
 
-	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	"golang.org/x/time/rate"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -50,6 +52,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
+
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 )
 
 const (
@@ -120,8 +125,13 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	if len(existingIstioCRs.Items) > 1 {
 		oldestCr := r.getOldestCR(existingIstioCRs)
 		if oldestCr == nil {
-			errOldestCRNotFound := fmt.Errorf("no oldest Istio CR found")
-			return r.terminateReconciliation(ctx, &istioCR, described_errors.NewDescribedError(errOldestCRNotFound, "Stopped Istio CR reconciliation").SetWarning(), operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonOldestCRNotFound))
+			errOldestCRNotFound := errors.New("no oldest Istio CR found")
+			return r.terminateReconciliation(
+				ctx,
+				&istioCR,
+				described_errors.NewDescribedError(errOldestCRNotFound, "Stopped Istio CR reconciliation").SetWarning(),
+				operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonOldestCRNotFound),
+			)
 		}
 
 		if istioCR.GetUID() != oldestCr.GetUID() {
@@ -192,9 +202,21 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	userResErr := r.userResources.DetectUserCreatedEfOnIngress(ctx)
 	if userResErr != nil {
 		if userResErr.Level() != described_errors.Warning {
-			return r.requeueReconciliation(ctx, &istioCR, userResErr, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIngressTargetingUserResourceDetectionFailed), reconciliationRequeueTimeError)
+			return r.requeueReconciliation(
+				ctx,
+				&istioCR,
+				userResErr,
+				operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIngressTargetingUserResourceDetectionFailed),
+				reconciliationRequeueTimeError,
+			)
 		}
-		return r.requeueReconciliation(ctx, &istioCR, userResErr, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIngressTargetingUserResourceFound), reconciliationRequeueTimeWarning)
+		return r.requeueReconciliation(
+			ctx,
+			&istioCR,
+			userResErr,
+			operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIngressTargetingUserResourceFound),
+			reconciliationRequeueTimeWarning,
+		)
 	}
 
 	return r.finishReconcile(ctx, &istioCR, istioImageVersion.Tag())

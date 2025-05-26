@@ -161,7 +161,6 @@ func (m *meshConfigBuilder) BuildExternalAuthorizerConfiguration(authorizers []*
 }
 
 func (i *Istio) mergeConfig(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {
-
 	mcb, err := newMeshConfigBuilder(op)
 	if err != nil {
 		return op, err
@@ -257,7 +256,7 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 			}
 			boolValue := iopv1alpha1.BoolValue{}
 			// This terrible if statement is necessary, because Istio decided to use a custom type for booleans,
-			//that stores bool as a private field, and does not have a constructor/setter, only an unmarshal method.
+			// that stores bool as a private field, and does not have a constructor/setter, only an unmarshal method.
 			if *i.Spec.Components.EgressGateway.Enabled {
 				err := boolValue.UnmarshalJSON([]byte("true"))
 				if err != nil {

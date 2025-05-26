@@ -3,6 +3,10 @@ package istio
 import (
 	"context"
 	"fmt"
+	"os"
+	"os/exec"
+	"time"
+
 	"istio.io/istio/istioctl/pkg/install/k8sversion"
 	"istio.io/istio/operator/pkg/uninstall"
 	"istio.io/istio/operator/pkg/util/progress"
@@ -12,11 +16,8 @@ import (
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
-	"os"
-	"os/exec"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"time"
 
 	"github.com/pkg/errors"
 	istio "istio.io/istio/operator/cmd/mesh"
@@ -90,21 +91,21 @@ func (c *IstioClient) Uninstall(ctx context.Context) error {
 		config.Burst = 100
 	})
 	if err != nil {
-		return fmt.Errorf("failed to create default REST config: %v", err)
+		return fmt.Errorf("failed to create default REST config: %w", err)
 	}
 
 	kubeClient, err := kube.NewCLIClient(kube.NewClientConfigForRestConfig(rc))
 	if err != nil {
-		return fmt.Errorf("failed to create Istio kube client: %v", err)
+		return fmt.Errorf("failed to create Istio kube client: %w", err)
 	}
 
 	if err := k8sversion.IsK8VersionSupported(kubeClient, c.consoleLogger); err != nil {
-		return fmt.Errorf("check failed for minimum supported Kubernetes version: %v", err)
+		return fmt.Errorf("check failed for minimum supported Kubernetes version: %w", err)
 	}
 
 	ctrlClient, err := client.New(kubeClient.RESTConfig(), client.Options{Scheme: kube.IstioScheme})
 	if err != nil {
-		return fmt.Errorf("failed to create Kubernetes ctrl client: %v", err)
+		return fmt.Errorf("failed to create Kubernetes ctrl client: %w", err)
 	}
 
 	pl := progress.NewLog()
@@ -123,7 +124,7 @@ func (c *IstioClient) Uninstall(ctx context.Context) error {
 	}
 
 	if err := uninstall.DeleteObjectsList(kubeClient, false, consoleLogger, objectsList); err != nil {
-		return fmt.Errorf("failed to delete control plane resources by revision: %v", err)
+		return fmt.Errorf("failed to delete control plane resources by revision: %w", err)
 	}
 	ctrl.Log.Info("Deletion of istio resources completed")
 

@@ -17,6 +17,6 @@ type IngressGatewayPredicate interface {
 
 type IngressGatewayRestartEvaluator interface {
 	// The RequiresIngressGatewayRestart method does not evaluate the restart per pod,
-	//as there is only one Ingress Gateway deployment under Istio module control.
+	// as there is only one Ingress Gateway deployment under Istio module control.
 	RequiresIngressGatewayRestart() bool
 }

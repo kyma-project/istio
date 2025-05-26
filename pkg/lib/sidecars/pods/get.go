@@ -4,11 +4,12 @@ import (
 	"context"
 
 	"github.com/go-logr/logr"
-	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
-	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
+	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
 )
 
 const (
@@ -90,7 +91,7 @@ func (p *Pods) GetAllInjectedPods(ctx context.Context) (outputPodList *v1.PodLis
 	outputPodList = &v1.PodList{}
 	outputPodList.Items = make([]v1.Pod, len(podList.Items))
 
-	err = retry.RetryOnError(retry.DefaultRetry, func() error {
+	err = retry.OnError(retry.DefaultRetry, func() error {
 		return p.k8sClient.List(ctx, podList, &client.ListOptions{})
 	})
 	if err != nil {
@@ -109,7 +110,7 @@ func (p *Pods) GetAllInjectedPods(ctx context.Context) (outputPodList *v1.PodLis
 func listRunningPods(ctx context.Context, c client.Client, listLimit int, continueToken string) (*v1.PodList, error) {
 	podList := &v1.PodList{}
 
-	err := retry.RetryOnError(retry.DefaultRetry, func() error {
+	err := retry.OnError(retry.DefaultRetry, func() error {
 		listOps := []client.ListOption{
 			client.MatchingFieldsSelector{Selector: fields.OneTermEqualSelector("status.phase", string(v1.PodRunning))},
 			client.Limit(listLimit),

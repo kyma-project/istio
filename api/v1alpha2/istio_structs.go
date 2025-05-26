@@ -47,7 +47,7 @@ type KubernetesResourcesConfig struct {
 	Resources *Resources `json:"resources,omitempty"`
 }
 
-// ProxyComponent defines configuration for Istio proxies
+// ProxyComponent defines configuration for Istio proxies.
 type ProxyComponent struct {
 	// +kubebuilder:validation:Required
 	K8S *ProxyK8sConfig `json:"k8s"`
@@ -58,7 +58,7 @@ type ProxyK8sConfig struct {
 	Resources *Resources `json:"resources,omitempty"`
 }
 
-// CniComponent defines configuration for CNI Istio component
+// CniComponent defines configuration for CNI Istio component.
 type CniComponent struct {
 	// +kubebuilder:validation:Required
 	K8S *CniK8sConfig `json:"k8s"`
@@ -70,7 +70,7 @@ type CniK8sConfig struct {
 	Resources *Resources       `json:"resources,omitempty"`
 }
 
-// HPASpec defines configuration for HorizontalPodAutoscaler
+// HPASpec defines configuration for HorizontalPodAutoscaler.
 type HPASpec struct {
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=2147483647
@@ -81,13 +81,13 @@ type HPASpec struct {
 	MinReplicas *int32 `json:"minReplicas,omitempty"`
 }
 
-// IstioComponent defines configuration for generic Istio component (ingress gateway, istiod)
+// IstioComponent defines configuration for generic Istio component (ingress gateway, istiod).
 type IstioComponent struct {
 	// +kubebuilder:validation:Required
 	K8s *KubernetesResourcesConfig `json:"k8s"`
 }
 
-// Strategy defines rolling update strategy
+// Strategy defines rolling update strategy.
 type Strategy struct {
 	// +kubebuilder:validation:Required
 	RollingUpdate *RollingUpdate `json:"rollingUpdate"`
@@ -98,7 +98,7 @@ type RollingUpdate struct {
 	// +kubebuilder:validation:XIntOrString
 	// +kubebuilder:validation:Pattern=`^[0-9]+%?$`
 	// +kubebuilder:validation:XValidation:rule="(type(self) == int ? self >= 0 && self <= 2147483647: self.size() >= 0)",message="must not be negative, more than 2147483647 or an empty string"
-	MaxSurge *intstr.IntOrString `json:"maxSurge" protobuf:"bytes,2,opt,name=maxSurge"`
+	MaxSurge *intstr.IntOrString `json:"maxSurge"       protobuf:"bytes,2,opt,name=maxSurge"`
 	// +kubebuilder:validation:XIntOrString
 	// +kubebuilder:validation:Pattern="^((100|[0-9]{1,2})%|[0-9]+)$"
 	// +kubebuilder:validation:XValidation:rule="(type(self) == int ? self >= 0 && self <= 2147483647: self.size() >= 0)",message="must not be negative, more than 2147483647 or an empty string"
@@ -119,7 +119,7 @@ type ResourceClaims struct {
 	Memory *string `json:"memory,omitempty"`
 }
 
-// EgressGateway defines configuration for Istio egressGateway
+// EgressGateway defines configuration for Istio egressGateway.
 type EgressGateway struct {
 	// +kubebuilder:validation:Optional
 	K8s *KubernetesResourcesConfig `json:"k8s"`

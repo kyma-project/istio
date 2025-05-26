@@ -22,6 +22,6 @@ func IsRetriable(err error) bool {
 	return false
 }
 
-func RetryOnError(backoff wait.Backoff, fn func() error) error {
+func OnError(backoff wait.Backoff, fn func() error) error {
 	return retry.OnError(backoff, IsRetriable, fn)
 }

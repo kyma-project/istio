@@ -4,9 +4,10 @@
 package main
 
 import (
-	istioclient "github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	"os"
 	"time"
+
+	istioclient "github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 
 	"istio.io/istio/istioctl/pkg/install/k8sversion"
 	istio "istio.io/istio/operator/cmd/mesh"

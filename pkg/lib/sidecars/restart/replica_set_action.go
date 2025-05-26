@@ -2,10 +2,12 @@ package restart
 
 import (
 	"context"
-	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
+
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
 
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -18,7 +20,7 @@ func getReplicaSetAction(ctx context.Context, c client.Client, pod v1.Pod, repli
 	}
 
 	var replicaSet = &appsv1.ReplicaSet{}
-	err := retry.RetryOnError(retry.DefaultRetry, func() error {
+	err := retry.OnError(retry.DefaultRetry, func() error {
 		return c.Get(ctx, replicaSetKey, replicaSet)
 	})
 	if err != nil {
@@ -58,7 +60,6 @@ func getReplicaSetAction(ctx context.Context, c client.Client, pod v1.Pod, repli
 			if rs.Name != replicaSet.Name &&
 				rs.Status.Replicas != 0 &&
 				rs.Status.ReadyReplicas != rs.Status.Replicas {
-
 				return restartAction{
 					object: actionObject{
 						Name:      rsOwnedBy.Name,
@@ -78,7 +79,7 @@ func getReplicaSetAction(ctx context.Context, c client.Client, pod v1.Pod, repli
 	}
 }
 
-// getOwnerReferences returns the owner reference of the pod and a boolean to verify if the owner reference exists or not
+// getOwnerReferences returns the owner reference of the pod and a boolean to verify if the owner reference exists or not.
 func getReplicaSetOwner(rs *appsv1.ReplicaSet) (*metav1.OwnerReference, bool) {
 	if len(rs.OwnerReferences) == 0 {
 		return &metav1.OwnerReference{}, false

@@ -4,13 +4,14 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/thoas/go-funk"
+
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/kyma-project/istio/operator/internal/resources"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/remove"
-	"github.com/thoas/go-funk"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -25,7 +26,6 @@ type uninstallArgs struct {
 }
 
 func uninstallIstio(ctx context.Context, args uninstallArgs) (istiooperator.IstioImageVersion, described_errors.DescribedError) {
-
 	istioCR := args.istioCR
 	istioImageVersion := args.istioImageVersion
 	statusHandler := args.statusHandler
@@ -50,7 +50,10 @@ func uninstallIstio(ctx context.Context, args uninstallArgs) (istiooperator.Isti
 		})
 		statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIstioCRsDangling))
 		return istioImageVersion, described_errors.NewDescribedError(fmt.Errorf("could not delete Istio module instance since there are %d customer resources present", len(clientResources)),
-			"There are Istio resources that block deletion. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning").DisableErrorWrap().SetWarning().SetCondition(false)
+			"There are Istio resources that block deletion. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning").
+			DisableErrorWrap().
+			SetWarning().
+			SetCondition(false)
 	}
 
 	err = istioClient.Uninstall(ctx)

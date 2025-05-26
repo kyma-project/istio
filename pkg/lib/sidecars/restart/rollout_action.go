@@ -6,11 +6,12 @@ import (
 
 	"github.com/go-logr/logr"
 
-	"github.com/kyma-project/istio/operator/pkg/lib/annotations"
-	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/kyma-project/istio/operator/pkg/lib/annotations"
+	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
 )
 
 func newRolloutAction(object actionObject) restartAction {
@@ -20,7 +21,7 @@ func newRolloutAction(object actionObject) restartAction {
 	}
 }
 
-func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObject, logger *logr.Logger) ([]RestartWarning, error) {
+func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObject, logger *logr.Logger) ([]Warning, error) {
 	logger.Info("Rollout pod due to proxy restart", "name", object.Name, "namespace", object.Namespace, "kind", object.Kind)
 
 	var obj client.Object
@@ -29,7 +30,7 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 	switch object.Kind {
 	case "DaemonSet":
 		obj = &appsv1.DaemonSet{}
-		err = retry.RetryOnError(retry.DefaultBackoff, func() error {
+		err = retry.OnError(retry.DefaultBackoff, func() error {
 			err := k8sclient.Get(ctx, types.NamespacedName{Name: object.Name, Namespace: object.Namespace}, obj)
 			if err != nil {
 				return err
@@ -41,7 +42,7 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 		})
 	case "Deployment":
 		obj = &appsv1.Deployment{}
-		err = retry.RetryOnError(retry.DefaultBackoff, func() error {
+		err = retry.OnError(retry.DefaultBackoff, func() error {
 			err := k8sclient.Get(ctx, types.NamespacedName{Name: object.Name, Namespace: object.Namespace}, obj)
 			if err != nil {
 				return err
@@ -53,7 +54,7 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 		})
 	case "ReplicaSet":
 		obj = &appsv1.ReplicaSet{}
-		err = retry.RetryOnError(retry.DefaultBackoff, func() error {
+		err = retry.OnError(retry.DefaultBackoff, func() error {
 			err := k8sclient.Get(ctx, types.NamespacedName{Name: object.Name, Namespace: object.Namespace}, obj)
 			if err != nil {
 				return err
@@ -65,7 +66,7 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 		})
 	case "StatefulSet":
 		obj = &appsv1.StatefulSet{}
-		err = retry.RetryOnError(retry.DefaultBackoff, func() error {
+		err = retry.OnError(retry.DefaultBackoff, func() error {
 			err := k8sclient.Get(ctx, types.NamespacedName{Name: object.Name, Namespace: object.Namespace}, obj)
 			if err != nil {
 				return err

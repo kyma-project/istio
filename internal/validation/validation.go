@@ -2,6 +2,7 @@ package validation
 
 import (
 	"fmt"
+
 	istioCR "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 )

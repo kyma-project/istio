@@ -63,7 +63,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		istioCr := createIstioCR()
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.1", "kyma-project.io/module=istio")
 		proxyRestarter := &proxyRestarterMock{
-			restartWarnings: []restart.RestartWarning{
+			restartWarnings: []restart.Warning{
 				{
 					Name:      "name1",
 					Namespace: "ns1",
@@ -114,7 +114,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		istioCr := createIstioCR()
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.1", "kyma-project.io/module=istio")
 		proxyRestarter := &proxyRestarterMock{
-			restartWarnings: []restart.RestartWarning{
+			restartWarnings: []restart.Warning{
 				{
 					Name:      "name1",
 					Namespace: "ns1",
@@ -297,15 +297,15 @@ func (m MergerMock) GetIstioImageVersion() (istiooperator.IstioImageVersion, err
 func (m MergerMock) SetIstioInstallFlavor(_ clusterconfig.ClusterSize) {}
 
 type proxyRestarterMock struct {
-	restartWarnings []restart.RestartWarning
+	restartWarnings []restart.Warning
 	hasMorePods     bool
 	err             error
 }
 
-func (p *proxyRestarterMock) RestartProxies(_ context.Context, _ predicates.SidecarImage, _ corev1.ResourceRequirements, _ *operatorv1alpha2.Istio) ([]restart.RestartWarning, bool, error) {
+func (p *proxyRestarterMock) RestartProxies(_ context.Context, _ predicates.SidecarImage, _ corev1.ResourceRequirements, _ *operatorv1alpha2.Istio) ([]restart.Warning, bool, error) {
 	return p.restartWarnings, p.hasMorePods, p.err
 }
 
-func (p *proxyRestarterMock) RestartWithPredicates(_ context.Context, preds []predicates.SidecarProxyPredicate, _ *pods.PodsRestartLimits, _ bool) ([]restart.RestartWarning, bool, error) {
+func (p *proxyRestarterMock) RestartWithPredicates(_ context.Context, preds []predicates.SidecarProxyPredicate, _ *pods.PodsRestartLimits, _ bool) ([]restart.Warning, bool, error) {
 	return p.restartWarnings, p.hasMorePods, p.err
 }

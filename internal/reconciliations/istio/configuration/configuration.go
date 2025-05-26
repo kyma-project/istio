@@ -16,7 +16,7 @@ type AppliedConfig struct {
 }
 
 // UpdateLastAppliedConfiguration annotates the passed CR with LastAppliedConfiguration, which holds information about last applied
-// IstioCR spec and IstioTag (IstioVersion-IstioImageBase)
+// IstioCR spec and IstioTag (IstioVersion-IstioImageBase).
 func UpdateLastAppliedConfiguration(istioCR *v1alpha2.Istio, istioTag string) error {
 	if len(istioCR.Annotations) == 0 {
 		istioCR.Annotations = map[string]string{}
@@ -73,10 +73,18 @@ func CheckIstioVersionUpdate(currentIstioVersionString, targetIstioVersionString
 			targetIstioVersion.String(), currentIstioVersion.String())
 	}
 	if currentIstioVersion.Major != targetIstioVersion.Major {
-		return fmt.Errorf("target Istio version (%s) is different than current Istio version (%s) - major version upgrade is not supported", targetIstioVersion.String(), currentIstioVersion.String())
+		return fmt.Errorf(
+			"target Istio version (%s) is different than current Istio version (%s) - major version upgrade is not supported",
+			targetIstioVersion.String(),
+			currentIstioVersion.String(),
+		)
 	}
 	if !amongOneMinor(*currentIstioVersion, *targetIstioVersion) {
-		return fmt.Errorf("target Istio version (%s) is higher than current Istio version (%s) - the difference between versions exceed one minor version", targetIstioVersion.String(), currentIstioVersion.String())
+		return fmt.Errorf(
+			"target Istio version (%s) is higher than current Istio version (%s) - the difference between versions exceed one minor version",
+			targetIstioVersion.String(),
+			currentIstioVersion.String(),
+		)
 	}
 
 	return nil

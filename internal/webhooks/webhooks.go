@@ -3,11 +3,12 @@ package webhooks
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/thoas/go-funk"
 	"istio.io/api/label"
 	v1 "k8s.io/api/admissionregistration/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"time"
 
 	retry "github.com/avast/retry-go"
 	"istio.io/istio/istioctl/pkg/tag"
@@ -25,7 +26,6 @@ var deactivatedLabel = map[string]string{
 
 // DeleteConflictedDefaultTag deletes conflicted tagged MutatingWebhookConfiguration, if it exists and if the default revision MutatingWebhookConfiguration is not deactivated by Istio installation logic.
 func DeleteConflictedDefaultTag(ctx context.Context, kubeClient client.Client) error {
-
 	retryOpts := []retry.Option{
 		retry.Delay(delayBetweenRetries),
 		retry.Attempts(uint(retriesCount)),
@@ -58,7 +58,7 @@ func DeleteConflictedDefaultTag(ctx context.Context, kubeClient client.Client) e
 }
 
 // getWebhooksWithTag returns webhooks tagged with istio.io/tag=<tag>.
-// This implementation is the same as in istioctl/pkg/tag/util package, but migrated to controller runtime client
+// This implementation is the same as in istioctl/pkg/tag/util package, but migrated to controller runtime client.
 func getWebhooksWithTag(ctx context.Context, kubeClient client.Client, tag string) ([]v1.MutatingWebhookConfiguration, error) {
 	var webhooks v1.MutatingWebhookConfigurationList
 	err := kubeClient.List(ctx, &webhooks, client.MatchingLabels{
@@ -71,7 +71,7 @@ func getWebhooksWithTag(ctx context.Context, kubeClient client.Client, tag strin
 }
 
 // getWebhooksWithRevision returns webhooks tagged with istio.io/rev=<rev> and NOT TAGGED with istio.io/tag.
-// This implementation is the same as in istioctl/pkg/tag/util package, but migrated to controller runtime client
+// This implementation is the same as in istioctl/pkg/tag/util package, but migrated to controller runtime client.
 func getWebhooksWithRevision(ctx context.Context, kubeClient client.Client, rev string) ([]v1.MutatingWebhookConfiguration, error) {
 	var webhooks v1.MutatingWebhookConfigurationList
 	err := kubeClient.List(ctx, &webhooks, client.MatchingLabels{

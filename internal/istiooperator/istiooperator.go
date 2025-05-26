@@ -6,10 +6,11 @@ import (
 	"fmt"
 
 	"github.com/coreos/go-semver/semver"
-	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
 	"sigs.k8s.io/yaml"
+
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 )
 
 //go:embed istio-operator.yaml

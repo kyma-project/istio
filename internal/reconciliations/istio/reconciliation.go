@@ -2,12 +2,14 @@ package istio
 
 import (
 	"context"
+
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/kyma-project/istio/operator/internal/status"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type InstallationReconciliation interface {
@@ -21,7 +23,11 @@ type Installation struct {
 }
 
 // Reconcile runs Istio reconciliation to install, upgrade or uninstall Istio and returns the updated Istio CR.
-func (i *Installation) Reconcile(ctx context.Context, istioCR *operatorv1alpha2.Istio, statusHandler status.Status) (istiooperator.IstioImageVersion, described_errors.DescribedError) {
+func (i *Installation) Reconcile(
+	ctx context.Context,
+	istioCR *operatorv1alpha2.Istio,
+	statusHandler status.Status,
+) (istiooperator.IstioImageVersion, described_errors.DescribedError) {
 	istioImageVersion, err := i.Merger.GetIstioImageVersion()
 	if err != nil {
 		ctrl.Log.Error(err, "Error getting Istio version from istio operator file")

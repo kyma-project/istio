@@ -2,10 +2,11 @@ package clusterconfig
 
 import (
 	"context"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"regexp"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"strings"
+
+	"k8s.io/apimachinery/pkg/api/errors"
+	ctrl "sigs.k8s.io/controller-runtime"
 
 	"github.com/imdario/mergo"
 	corev1 "k8s.io/api/core/v1"
@@ -39,7 +40,7 @@ func (s ClusterSize) String() string {
 }
 
 // EvaluateClusterSize counts the entire capacity of cpu and memory in the cluster and returns Evaluation
-// if the total capacity of any of the resources is lower than ProductionClusterCpuThreshold or ProductionClusterMemoryThresholdGi
+// if the total capacity of any of the resources is lower than ProductionClusterCpuThreshold or ProductionClusterMemoryThresholdGi.
 func EvaluateClusterSize(ctx context.Context, k8sClient client.Client) (ClusterSize, error) {
 	nodeList := corev1.NodeList{}
 	err := k8sClient.List(ctx, &nodeList)
@@ -197,7 +198,7 @@ func EvaluateClusterConfiguration(ctx context.Context, k8sClient client.Client, 
 	return flavour.clusterConfiguration(clusterProvider)
 }
 
-// Used to return determined hyperscaler provider
+// Used to return determined hyperscaler provider.
 const (
 	Aws       = "aws"
 	Openstack = "openstack"

@@ -78,7 +78,12 @@ func unmarshalManifest(manifest []byte) (unstructured.Unstructured, error) {
 	return resource, nil
 }
 
-func createOrUpdateResource(ctx context.Context, k8sClient client.Client, resource unstructured.Unstructured, owner *metav1.OwnerReference) (unstructured.Unstructured, controllerutil.OperationResult, error) {
+func createOrUpdateResource(
+	ctx context.Context,
+	k8sClient client.Client,
+	resource unstructured.Unstructured,
+	owner *metav1.OwnerReference,
+) (unstructured.Unstructured, controllerutil.OperationResult, error) {
 	spec, specExist := resource.Object["spec"]
 	data, dataExist := resource.Object["data"]
 	result, err := controllerutil.CreateOrUpdate(ctx, k8sClient, &resource, func() error {

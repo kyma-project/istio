@@ -31,9 +31,9 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 	case "DaemonSet":
 		obj = &appsv1.DaemonSet{}
 		err = retry.OnError(retry.DefaultBackoff, func() error {
-			err := k8sclient.Get(ctx, types.NamespacedName{Name: object.Name, Namespace: object.Namespace}, obj)
-			if err != nil {
-				return err
+			apiErr := k8sclient.Get(ctx, types.NamespacedName{Name: object.Name, Namespace: object.Namespace}, obj)
+			if apiErr != nil {
+				return apiErr
 			}
 			ds := obj.(*appsv1.DaemonSet)
 			patch := client.StrategicMergeFrom(ds.DeepCopy())
@@ -43,9 +43,9 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 	case "Deployment":
 		obj = &appsv1.Deployment{}
 		err = retry.OnError(retry.DefaultBackoff, func() error {
-			err := k8sclient.Get(ctx, types.NamespacedName{Name: object.Name, Namespace: object.Namespace}, obj)
-			if err != nil {
-				return err
+			apiErr := k8sclient.Get(ctx, types.NamespacedName{Name: object.Name, Namespace: object.Namespace}, obj)
+			if apiErr != nil {
+				return apiErr
 			}
 			dep := obj.(*appsv1.Deployment)
 			patch := client.StrategicMergeFrom(dep.DeepCopy())
@@ -55,9 +55,9 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 	case "ReplicaSet":
 		obj = &appsv1.ReplicaSet{}
 		err = retry.OnError(retry.DefaultBackoff, func() error {
-			err := k8sclient.Get(ctx, types.NamespacedName{Name: object.Name, Namespace: object.Namespace}, obj)
-			if err != nil {
-				return err
+			apiErr := k8sclient.Get(ctx, types.NamespacedName{Name: object.Name, Namespace: object.Namespace}, obj)
+			if apiErr != nil {
+				return apiErr
 			}
 			rs := obj.(*appsv1.ReplicaSet)
 			patch := client.StrategicMergeFrom(rs.DeepCopy())
@@ -67,9 +67,9 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 	case "StatefulSet":
 		obj = &appsv1.StatefulSet{}
 		err = retry.OnError(retry.DefaultBackoff, func() error {
-			err := k8sclient.Get(ctx, types.NamespacedName{Name: object.Name, Namespace: object.Namespace}, obj)
-			if err != nil {
-				return err
+			apiErr := k8sclient.Get(ctx, types.NamespacedName{Name: object.Name, Namespace: object.Namespace}, obj)
+			if apiErr != nil {
+				return apiErr
 			}
 			ss := obj.(*appsv1.StatefulSet)
 			patch := client.StrategicMergeFrom(ss.DeepCopy())

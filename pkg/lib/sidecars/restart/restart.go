@@ -63,11 +63,11 @@ func (s *actionRestarter) Restart(ctx context.Context, podList *v1.PodList, fail
 
 		// We want to avoid performing the same action multiple times for a parent if it contains multiple pods that need to be restarted.
 		if _, exists := processedActionObjects[action.object.getKey()]; !exists {
-			currentWarnings, err := action.run(ctx, s.k8sClient, action.object, s.logger)
-			if err != nil {
-				s.logger.Error(err, "pod", action.object.getKey(), "Running pod restart action failed")
+			currentWarnings, actionErr := action.run(ctx, s.k8sClient, action.object, s.logger)
+			if actionErr != nil {
+				s.logger.Error(actionErr, "pod", action.object.getKey(), "Running pod restart action failed")
 				if failOnError {
-					return warnings, fmt.Errorf("running pod restart action failed: %w", err)
+					return warnings, fmt.Errorf("running pod restart action failed: %w", actionErr)
 				}
 			}
 			warnings = append(warnings, currentWarnings...)

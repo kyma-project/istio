@@ -105,9 +105,9 @@ func ListInstalledIstioRevisions(ctx context.Context, kubeClient client.Client) 
 		// Istio version label sometimes is set to unknown for unknown reason.
 		// TODO: Make the logic more resilient by e.g. using Istiod image tag
 		if version != "unknown" {
-			semverVersion, err := semver.NewVersion(version)
-			if err != nil {
-				return nil, err
+			semverVersion, versionErr := semver.NewVersion(version)
+			if versionErr != nil {
+				return nil, versionErr
 			}
 
 			istioRevisionVersions[revision] = semverVersion
@@ -132,9 +132,9 @@ func GetIstioPodsVersion(ctx context.Context, kubeClient client.Client) (string,
 			if !slices.Contains(containersToCheck, container.Name) {
 				continue
 			}
-			version, err := getImageVersion(container.Image)
-			if err != nil {
-				return "", err
+			version, versionErr := getImageVersion(container.Image)
+			if versionErr != nil {
+				return "", versionErr
 			}
 			if currentVersion.Compare(&NoVersion) == 0 {
 				currentVersion = version

@@ -25,14 +25,14 @@ type Status interface {
 	SetCondition(istioCR *operatorv1alpha2.Istio, reason operatorv1alpha2.ReasonWithMessage)
 }
 
+type Handler struct {
+	client client.Client
+}
+
 func NewStatusHandler(client client.Client) Handler {
 	return Handler{
 		client: client,
 	}
-}
-
-type Handler struct {
-	client client.Client
 }
 
 func (d Handler) update(ctx context.Context, istioCR *operatorv1alpha2.Istio) error {

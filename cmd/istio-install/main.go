@@ -15,6 +15,10 @@ import (
 	"k8s.io/client-go/rest"
 )
 
+const (
+	DefaultReadinessTimeout = 150 * time.Second
+)
+
 func main() {
 	iopFileNames := []string{os.Args[1]}
 
@@ -42,15 +46,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := k8sversion.IsK8VersionSupported(cliClient, consoleLogger); err != nil {
+	if err = k8sversion.IsK8VersionSupported(cliClient, consoleLogger); err != nil {
 		consoleLogger.LogAndError("Check failed for minimum supported Kubernetes version: ", err)
 		os.Exit(1)
 	}
 
 	// We don't want to verify after installation, because it is unreliable
-	installArgs := &istio.InstallArgs{ReadinessTimeout: 150 * time.Second, SkipConfirmation: true, Verify: false, InFilenames: iopFileNames}
+	installArgs := &istio.InstallArgs{ReadinessTimeout: DefaultReadinessTimeout, SkipConfirmation: true, Verify: false, InFilenames: iopFileNames}
 
-	if err := istio.Install(cliClient, &istio.RootArgs{}, installArgs, os.Stdout, consoleLogger, printer); err != nil {
+	if err = istio.Install(cliClient, &istio.RootArgs{}, installArgs, os.Stdout, consoleLogger, printer); err != nil {
 		consoleLogger.LogAndError("Istio install error: ", err)
 		os.Exit(1)
 	}

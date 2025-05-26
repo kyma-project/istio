@@ -58,10 +58,10 @@ func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha2.Is
 
 	for _, resource := range resources {
 		ctrl.Log.Info("Reconciling Istio resource", "name", resource.Name())
-		result, err := resource.reconcile(ctx, r.client, owner, r.templateValues)
+		result, reconcileErr := resource.reconcile(ctx, r.client, owner, r.templateValues)
 
-		if err != nil {
-			return describederrors.NewDescribedError(err, fmt.Sprintf("Could not reconcile Istio resource %s", resource.Name()))
+		if reconcileErr != nil {
+			return describederrors.NewDescribedError(reconcileErr, fmt.Sprintf("Could not reconcile Istio resource %s", resource.Name()))
 		}
 		ctrl.Log.Info("Reconciled Istio resource", "name", resource.Name(), "result", result)
 	}

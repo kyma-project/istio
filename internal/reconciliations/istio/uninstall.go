@@ -75,7 +75,7 @@ func uninstallIstio(ctx context.Context, args uninstallArgs) (istiooperator.Isti
 	ctrl.Log.Info("Istio uninstall succeeded")
 	statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIstioUninstallSucceeded))
 
-	if err := removeInstallationFinalizer(ctx, k8sClient, istioCR); err != nil {
+	if err = removeInstallationFinalizer(ctx, k8sClient, istioCR); err != nil {
 		ctrl.Log.Error(err, "Error happened during istio installation finalizer removal")
 		return istioImageVersion, describederrors.NewDescribedError(err, "Could not remove finalizer")
 	}

@@ -44,7 +44,7 @@ func installIstio(ctx context.Context, args installArgs) (istiooperator.IstioIma
 			return istioImageVersion, describederrors.NewDescribedError(err, "Istio install check failed")
 		}
 
-		if err := configuration.CheckIstioVersionUpdate(lastAppliedConfig.IstioTag, istioImageVersion.Tag()); err != nil {
+		if err = configuration.CheckIstioVersionUpdate(lastAppliedConfig.IstioTag, istioImageVersion.Tag()); err != nil {
 			statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIstioVersionUpdateNotAllowed))
 			// We are already updating the condition, that's why we need to avoid another condition update by applying SetCondition(false)
 			return istioImageVersion, describederrors.NewDescribedError(err, "Istio version update is not allowed").SetWarning().SetCondition(false)
@@ -99,7 +99,7 @@ func installIstio(ctx context.Context, args installArgs) (istiooperator.IstioIma
 		return istioImageVersion, describederrors.NewDescribedError(err, "Could not add warden validation label")
 	}
 
-	if err := patchModuleResourcesWithModuleLabel(ctx, k8sClient); err != nil {
+	if err = patchModuleResourcesWithModuleLabel(ctx, k8sClient); err != nil {
 		return istioImageVersion, describederrors.NewDescribedError(err, "could not update managed metadata")
 	}
 

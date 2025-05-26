@@ -28,9 +28,9 @@ func (i *Istio) MergeInto(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperat
 	}
 
 	if i.Spec.CompatibilityMode {
-		compatibleIop, err := setCompatibilityMode(mergedResourcesOp)
-		if err != nil {
-			return op, err
+		compatibleIop, setErr := setCompatibilityMode(mergedResourcesOp)
+		if setErr != nil {
+			return op, setErr
 		}
 		return compatibleIop, nil
 	}
@@ -396,16 +396,16 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 				}
 
 				if i.Spec.Components.Cni.K8S.Resources.Limits.CPU != nil {
-					quantity, err := resource.ParseQuantity(*i.Spec.Components.Cni.K8S.Resources.Limits.CPU)
-					if err != nil {
-						return op, err
+					quantity, parseErr := resource.ParseQuantity(*i.Spec.Components.Cni.K8S.Resources.Limits.CPU)
+					if parseErr != nil {
+						return op, parseErr
 					}
 					op.Spec.Components.Cni.Kubernetes.Resources.Limits[corev1.ResourceCPU] = quantity
 				}
 				if i.Spec.Components.Cni.K8S.Resources.Limits.Memory != nil {
-					quantity, err := resource.ParseQuantity(*i.Spec.Components.Cni.K8S.Resources.Limits.Memory)
-					if err != nil {
-						return op, err
+					quantity, parseErr := resource.ParseQuantity(*i.Spec.Components.Cni.K8S.Resources.Limits.Memory)
+					if parseErr != nil {
+						return op, parseErr
 					}
 					op.Spec.Components.Cni.Kubernetes.Resources.Limits[corev1.ResourceMemory] = quantity
 				}
@@ -417,16 +417,16 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 				}
 
 				if i.Spec.Components.Cni.K8S.Resources.Requests.CPU != nil {
-					quantity, err := resource.ParseQuantity(*i.Spec.Components.Cni.K8S.Resources.Requests.CPU)
-					if err != nil {
-						return op, err
+					quantity, parseErr := resource.ParseQuantity(*i.Spec.Components.Cni.K8S.Resources.Requests.CPU)
+					if parseErr != nil {
+						return op, parseErr
 					}
 					op.Spec.Components.Cni.Kubernetes.Resources.Requests[corev1.ResourceCPU] = quantity
 				}
 				if i.Spec.Components.Cni.K8S.Resources.Requests.Memory != nil {
-					quantity, err := resource.ParseQuantity(*i.Spec.Components.Cni.K8S.Resources.Requests.Memory)
-					if err != nil {
-						return op, err
+					quantity, parseErr := resource.ParseQuantity(*i.Spec.Components.Cni.K8S.Resources.Requests.Memory)
+					if parseErr != nil {
+						return op, parseErr
 					}
 					op.Spec.Components.Cni.Kubernetes.Resources.Requests[corev1.ResourceMemory] = quantity
 				}

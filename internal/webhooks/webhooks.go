@@ -40,9 +40,9 @@ func DeleteConflictedDefaultTag(ctx context.Context, kubeClient client.Client) e
 		// As the default revision is not deactivated and handles the injection, we are safe to delete all other webhook configurations that were created during the failed installation.
 		if !isDefaultRevisionDeactivated(ctx, kubeClient) && len(webhooks) > 0 {
 			for _, wh := range webhooks {
-				err := kubeClient.Delete(ctx, &wh)
-				if err != nil {
-					return err
+				apiErr := kubeClient.Delete(ctx, &wh)
+				if apiErr != nil {
+					return apiErr
 				}
 			}
 		}

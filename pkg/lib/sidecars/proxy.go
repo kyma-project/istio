@@ -126,7 +126,7 @@ func (p *ProxyRestart) restartKymaProxies(ctx context.Context, preds []predicate
 	}
 	warningMessage := BuildWarningMessage(warnings, p.logger)
 	if warningMessage != "" {
-		err := errors.New(warningMessage)
+		err = errors.New(warningMessage)
 		p.logger.Error(err, "Failed to restart Kyma proxies")
 		return err
 	}

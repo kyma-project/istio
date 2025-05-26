@@ -53,9 +53,9 @@ func patchModuleResourcesWithModuleLabel(ctx context.Context, c client.Client) e
 	for _, gvk := range kinds {
 		list := unstructured.UnstructuredList{}
 		list.SetGroupVersionKind(gvk)
-		err := c.List(ctx, &list, &client.ListOptions{LabelSelector: s})
-		if client.IgnoreNotFound(err) != nil {
-			return err
+		apiErr := c.List(ctx, &list, &client.ListOptions{LabelSelector: s})
+		if client.IgnoreNotFound(apiErr) != nil {
+			return apiErr
 		}
 		var obj client.Object
 		for _, r := range list.Items {
@@ -69,8 +69,8 @@ func patchModuleResourcesWithModuleLabel(ctx context.Context, c client.Client) e
 			switch u.GetKind() {
 			case "Deployment":
 				d := appsv1.Deployment{}
-				if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &d); err != nil {
-					return err
+				if convertErr := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &d); convertErr != nil {
+					return convertErr
 				}
 				patch = client.StrategicMergeFrom(d.DeepCopy())
 				updateObjectLabels(&d.ObjectMeta)
@@ -78,8 +78,8 @@ func patchModuleResourcesWithModuleLabel(ctx context.Context, c client.Client) e
 				obj = &d
 			case "DaemonSet":
 				ds := appsv1.DaemonSet{}
-				if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &ds); err != nil {
-					return err
+				if convertErr := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &ds); convertErr != nil {
+					return convertErr
 				}
 				patch = client.StrategicMergeFrom(ds.DeepCopy())
 				updateObjectLabels(&ds.ObjectMeta)
@@ -95,10 +95,10 @@ func patchModuleResourcesWithModuleLabel(ctx context.Context, c client.Client) e
 				obj = u
 			}
 
-			if err := retry.OnError(retry.DefaultRetry, func() error {
+			if retryErr := retry.OnError(retry.DefaultRetry, func() error {
 				return c.Patch(ctx, obj, patch)
-			}); err != nil {
-				return err
+			}); retryErr != nil {
+				return retryErr
 			}
 		}
 	}

@@ -128,6 +128,6 @@ See the possible values of the **status.conditions** fields:
 | `Error`          | `Ready`                             | `False`   | `EgressGatewayReconcileFailed`                | Istio Egress Gateway reconciliation failed.                                               |
 | `Warning`        | `Ready`                             | `False`   | `IstioVersionUpdateNotAllowed`                | Update to the new Istio version is not allowed.                                           |
 | `Warning`        | `IngressTargetingUserResourceFound` | `True`    | `IngressTargetingUserResourceFound`           | Resource targeting Istio Ingress Gateway found.                                           |
-| `Warning`        | `IngressTargetingUserResourceFound` | `False`   | `IngressTargetingUserResourceFound`           | Resources targeting Istio Ingress Gateway not found. (default state)                      |
+| `Ready`          | `IngressTargetingUserResourceFound` | `False`   | `IngressTargetingUserResourceFound`           | Resources targeting Istio Ingress Gateway not found. (default state)                      |
 | `Warning`        | `IngressTargetingUserResourceFound` | `Unknown` | `IngressTargetingUserResourceDetectionFailed` | Resource targeting Istio Ingress Gateway detection failed.                                |
 

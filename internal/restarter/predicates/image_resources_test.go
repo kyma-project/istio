@@ -11,7 +11,7 @@ import (
 var _ = Describe("Matches", func() {
 	It("should should return false when pod has custom image annotation", func() {
 		// given
-		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", map[string]string{"sidecar.istio.io/proxyImage": "istio/proxyv2:1.21.0"})
+		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", map[string]string{"sidecar.istio.io/proxyImage": "istio/proxyv2:1.21.0"}, false)
 		predicate := predicates.NewImageResourcesPredicate(predicates.NewSidecarImage("istio", "1.22.0"), v1.ResourceRequirements{})
 
 		// when
@@ -23,7 +23,34 @@ var _ = Describe("Matches", func() {
 
 	It("should return true when pod does not have custom image annotation", func() {
 		// given
-		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", map[string]string{})
+		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", map[string]string{}, false)
+		predicate := predicates.NewImageResourcesPredicate(predicates.NewSidecarImage("istio", "1.22.0"), v1.ResourceRequirements{})
+
+		// when
+		shouldRestart := predicate.Matches(pod)
+
+		// then
+		Expect(shouldRestart).To(BeTrue())
+	})
+
+})
+
+var _ = Describe("handling of proxy sidecar as container or init container", func() {
+	It("should return true when sidecar is a regular container in the Pod", func() {
+		// given
+		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", map[string]string{}, false)
+		predicate := predicates.NewImageResourcesPredicate(predicates.NewSidecarImage("istio", "1.22.0"), v1.ResourceRequirements{})
+
+		// when
+		shouldRestart := predicate.Matches(pod)
+
+		// then
+		Expect(shouldRestart).To(BeTrue())
+	})
+
+	It("should return true when sidecar is an init container in the Pod", func() {
+		// given
+		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", map[string]string{}, true)
 		predicate := predicates.NewImageResourcesPredicate(predicates.NewSidecarImage("istio", "1.22.0"), v1.ResourceRequirements{})
 
 		// when
@@ -34,10 +61,68 @@ var _ = Describe("Matches", func() {
 	})
 })
 
-func createPodWithProxySidecar(name, namespace, proxyIstioVersion string, annotations map[string]string) v1.Pod {
+var _ = Describe("IsReadyWithIstioAnnotation", func() {
+	It("should return true when pod is ready and has istio sidecar status annotation", func() {
+		// given
+		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", map[string]string{"sidecar.istio.io/status": "true"}, false)
+
+		// when
+		isReady := predicates.IsReadyWithIstioAnnotation(pod)
+
+		// then
+		Expect(isReady).To(BeTrue())
+	})
+
+	It("should return false when pod is not ready", func() {
+		// given
+		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", map[string]string{"sidecar.istio.io/status": "true"}, false)
+		pod.Status.Conditions[0].Status = v1.ConditionFalse
+
+		// when
+		isReady := predicates.IsReadyWithIstioAnnotation(pod)
+
+		// then
+		Expect(isReady).To(BeFalse())
+	})
+
+	It("should return false when pod does not have istio sidecar status annotation", func() {
+		// given
+		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", nil, false)
+		delete(pod.Annotations, "sidecar.istio.io/status")
+
+		// when
+		isReady := predicates.IsReadyWithIstioAnnotation(pod)
+
+		// then
+		Expect(isReady).To(BeFalse())
+	})
+})
+
+func createPodWithProxySidecar(name, namespace, proxyIstioVersion string, annotations map[string]string, proxyInitContainer bool) v1.Pod {
 	if annotations == nil {
 		annotations = map[string]string{}
 	}
+	var spec v1.PodSpec
+	if proxyInitContainer {
+		spec = v1.PodSpec{
+			InitContainers: []v1.Container{
+				{
+					Name:  "istio-proxy",
+					Image: "istio/proxyv2:" + proxyIstioVersion,
+				},
+			},
+		}
+	} else {
+		spec = v1.PodSpec{
+			Containers: []v1.Container{
+				{
+					Name:  "istio-proxy",
+					Image: "istio/proxyv2:" + proxyIstioVersion,
+				},
+			},
+		}
+	}
+
 	annotations["sidecar.istio.io/status"] = "true"
 	return v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -54,50 +139,6 @@ func createPodWithProxySidecar(name, namespace, proxyIstioVersion string, annota
 				},
 			},
 		},
-		Spec: v1.PodSpec{
-			Containers: []v1.Container{
-				{
-					Name:  "istio-proxy",
-					Image: "istio/proxyv2:" + proxyIstioVersion,
-				},
-			},
-		},
+		Spec: spec,
 	}
 }
-
-var _ = Describe("IsReadyWithIstioAnnotation", func() {
-	It("should return true when pod is ready and has istio sidecar status annotation", func() {
-		// given
-		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", map[string]string{"sidecar.istio.io/status": "true"})
-
-		// when
-		isReady := predicates.IsReadyWithIstioAnnotation(pod)
-
-		// then
-		Expect(isReady).To(BeTrue())
-	})
-
-	It("should return false when pod is not ready", func() {
-		// given
-		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", map[string]string{"sidecar.istio.io/status": "true"})
-		pod.Status.Conditions[0].Status = v1.ConditionFalse
-
-		// when
-		isReady := predicates.IsReadyWithIstioAnnotation(pod)
-
-		// then
-		Expect(isReady).To(BeFalse())
-	})
-
-	It("should return false when pod does not have istio sidecar status annotation", func() {
-		// given
-		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", nil)
-		delete(pod.Annotations, "sidecar.istio.io/status")
-
-		// when
-		isReady := predicates.IsReadyWithIstioAnnotation(pod)
-
-		// then
-		Expect(isReady).To(BeFalse())
-	})
-})

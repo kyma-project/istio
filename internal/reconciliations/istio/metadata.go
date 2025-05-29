@@ -2,8 +2,7 @@ package istio
 
 import (
 	"context"
-	"github.com/kyma-project/istio/operator/pkg/labels"
-	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
+
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -11,6 +10,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/kyma-project/istio/operator/pkg/labels"
+	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
 )
 
 func patchModuleResourcesWithModuleLabel(ctx context.Context, c client.Client) error {
@@ -51,9 +53,9 @@ func patchModuleResourcesWithModuleLabel(ctx context.Context, c client.Client) e
 	for _, gvk := range kinds {
 		list := unstructured.UnstructuredList{}
 		list.SetGroupVersionKind(gvk)
-		err := c.List(ctx, &list, &client.ListOptions{LabelSelector: s})
-		if client.IgnoreNotFound(err) != nil {
-			return err
+		apiErr := c.List(ctx, &list, &client.ListOptions{LabelSelector: s})
+		if client.IgnoreNotFound(apiErr) != nil {
+			return apiErr
 		}
 		var obj client.Object
 		for _, r := range list.Items {
@@ -67,8 +69,8 @@ func patchModuleResourcesWithModuleLabel(ctx context.Context, c client.Client) e
 			switch u.GetKind() {
 			case "Deployment":
 				d := appsv1.Deployment{}
-				if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &d); err != nil {
-					return err
+				if convertErr := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &d); convertErr != nil {
+					return convertErr
 				}
 				patch = client.StrategicMergeFrom(d.DeepCopy())
 				updateObjectLabels(&d.ObjectMeta)
@@ -76,8 +78,8 @@ func patchModuleResourcesWithModuleLabel(ctx context.Context, c client.Client) e
 				obj = &d
 			case "DaemonSet":
 				ds := appsv1.DaemonSet{}
-				if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &ds); err != nil {
-					return err
+				if convertErr := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &ds); convertErr != nil {
+					return convertErr
 				}
 				patch = client.StrategicMergeFrom(ds.DeepCopy())
 				updateObjectLabels(&ds.ObjectMeta)
@@ -93,10 +95,10 @@ func patchModuleResourcesWithModuleLabel(ctx context.Context, c client.Client) e
 				obj = u
 			}
 
-			if err := retry.RetryOnError(retry.DefaultRetry, func() error {
+			if retryErr := retry.OnError(retry.DefaultRetry, func() error {
 				return c.Patch(ctx, obj, patch)
-			}); err != nil {
-				return err
+			}); retryErr != nil {
+				return retryErr
 			}
 		}
 	}

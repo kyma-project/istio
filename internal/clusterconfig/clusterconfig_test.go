@@ -2,6 +2,7 @@ package clusterconfig_test
 
 import (
 	"context"
+
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -322,7 +323,7 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 })
 
 var _ = Describe("EvaluateClusterSize", func() {
-	It("should return Evaluation when cpu capacity is less than ProductionClusterCpuThreshold", func() {
+	It("should return Evaluation when cpu capacity is less than ProductionClusterCPUThreshold", func() {
 		//given
 		k3dNode := corev1.Node{
 			ObjectMeta: v1.ObjectMeta{
@@ -330,7 +331,7 @@ var _ = Describe("EvaluateClusterSize", func() {
 			},
 			Status: corev1.NodeStatus{
 				Capacity: map[corev1.ResourceName]resource.Quantity{
-					"cpu":    *resource.NewQuantity(clusterconfig.ProductionClusterCpuThreshold-1, resource.DecimalSI),
+					"cpu":    *resource.NewQuantity(clusterconfig.ProductionClusterCPUThreshold-1, resource.DecimalSI),
 					"memory": *resource.NewScaledQuantity(int64(32), resource.Giga),
 				},
 			},
@@ -370,7 +371,7 @@ var _ = Describe("EvaluateClusterSize", func() {
 		Expect(size).To(Equal(clusterconfig.Evaluation))
 	})
 
-	It("should return Production when memory capacity is bigger than ProductionClusterMemoryThresholdGi and CPU capacity is bigger than ProductionClusterCpuThreshold", func() {
+	It("should return Production when memory capacity is bigger than ProductionClusterMemoryThresholdGi and CPU capacity is bigger than ProductionClusterCPUThreshold", func() {
 		//given
 		k3dNode := corev1.Node{
 			ObjectMeta: v1.ObjectMeta{
@@ -378,7 +379,7 @@ var _ = Describe("EvaluateClusterSize", func() {
 			},
 			Status: corev1.NodeStatus{
 				Capacity: map[corev1.ResourceName]resource.Quantity{
-					"cpu":    *resource.NewQuantity(clusterconfig.ProductionClusterCpuThreshold, resource.DecimalSI),
+					"cpu":    *resource.NewQuantity(clusterconfig.ProductionClusterCPUThreshold, resource.DecimalSI),
 					"memory": *resource.NewScaledQuantity(clusterconfig.ProductionClusterMemoryThresholdGi, resource.Giga),
 				},
 			},
@@ -390,7 +391,7 @@ var _ = Describe("EvaluateClusterSize", func() {
 			},
 			Status: corev1.NodeStatus{
 				Capacity: map[corev1.ResourceName]resource.Quantity{
-					"cpu":    *resource.NewQuantity(clusterconfig.ProductionClusterCpuThreshold, resource.DecimalSI),
+					"cpu":    *resource.NewQuantity(clusterconfig.ProductionClusterCPUThreshold, resource.DecimalSI),
 					"memory": *resource.NewScaledQuantity(clusterconfig.ProductionClusterMemoryThresholdGi, resource.Giga),
 				},
 			},

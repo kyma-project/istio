@@ -3,7 +3,8 @@ package resources
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/istio/operator/internal/described_errors"
+
+	"github.com/kyma-project/istio/operator/internal/describederrors"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"istio.io/api/networking/v1alpha3"
@@ -55,7 +56,7 @@ var _ = Describe("IstioResourceFinder - UserCreated EnvoyFilters", func() {
 
 		err := urf.DetectUserCreatedEfOnIngress(context.Background())
 		Expect(err).To(HaveOccurred())
-		Expect(err.Level()).To(Equal(described_errors.Warning))
+		Expect(err.Level()).To(Equal(describederrors.Warning))
 		Expect(err.Error()).To(Equal(fmt.Sprintf("user-created EnvoyFilter %s/%s targeting Ingress Gateway found", efNamespace, efName)))
 		Expect(err.Description()).To(Equal(fmt.Sprintf("misconfigured EnvoyFilter can potentially break Istio Ingress Gateway: user-created EnvoyFilter %s/%s targeting Ingress Gateway found", efNamespace, efName)))
 	})

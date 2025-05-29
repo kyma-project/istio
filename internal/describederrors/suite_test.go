@@ -1,11 +1,12 @@
-package described_errors_test
+package describederrors_test
 
 import (
+	"testing"
+
 	"github.com/kyma-project/istio/operator/internal/tests"
 	. "github.com/onsi/ginkgo/v2"
 	"github.com/onsi/ginkgo/v2/types"
 	. "github.com/onsi/gomega"
-	"testing"
 )
 
 func TestErrors(t *testing.T) {

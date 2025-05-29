@@ -1,4 +1,4 @@
-package istio_resources_test
+package istioresources_test
 
 import (
 	"testing"

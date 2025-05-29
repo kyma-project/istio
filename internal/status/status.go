@@ -6,35 +6,36 @@ import (
 	"fmt"
 	"time"
 
-	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/internal/described_errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/internal/describederrors"
 )
 
 type Status interface {
 	UpdateToProcessing(ctx context.Context, istioCR *operatorv1alpha2.Istio) error
 	UpdateToDeleting(ctx context.Context, istioCR *operatorv1alpha2.Istio) error
 	UpdateToReady(ctx context.Context, istioCR *operatorv1alpha2.Istio) error
-	UpdateToError(ctx context.Context, istioCR *operatorv1alpha2.Istio, err described_errors.DescribedError,
+	UpdateToError(ctx context.Context, istioCR *operatorv1alpha2.Istio, err describederrors.DescribedError,
 		requeueAfter ...time.Duration) error
 	SetCondition(istioCR *operatorv1alpha2.Istio, reason operatorv1alpha2.ReasonWithMessage)
 }
 
-func NewStatusHandler(client client.Client) StatusHandler {
-	return StatusHandler{
+type Handler struct {
+	client client.Client
+}
+
+func NewStatusHandler(client client.Client) Handler {
+	return Handler{
 		client: client,
 	}
 }
 
-type StatusHandler struct {
-	client client.Client
-}
-
-func (d StatusHandler) update(ctx context.Context, istioCR *operatorv1alpha2.Istio) error {
+func (d Handler) update(ctx context.Context, istioCR *operatorv1alpha2.Istio) error {
 	newStatus := istioCR.Status
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		if getErr := d.client.Get(ctx, client.ObjectKeyFromObject(istioCR), istioCR); getErr != nil {
@@ -48,27 +49,27 @@ func (d StatusHandler) update(ctx context.Context, istioCR *operatorv1alpha2.Ist
 	})
 }
 
-func (d StatusHandler) UpdateToProcessing(ctx context.Context, istioCR *operatorv1alpha2.Istio) error {
+func (d Handler) UpdateToProcessing(ctx context.Context, istioCR *operatorv1alpha2.Istio) error {
 	istioCR.Status.State = operatorv1alpha2.Processing
 	istioCR.Status.Description = "Reconciling Istio"
 	return d.update(ctx, istioCR)
 }
 
-func (d StatusHandler) UpdateToDeleting(ctx context.Context, istioCR *operatorv1alpha2.Istio) error {
+func (d Handler) UpdateToDeleting(ctx context.Context, istioCR *operatorv1alpha2.Istio) error {
 	istioCR.Status.State = operatorv1alpha2.Deleting
 	istioCR.Status.Description = "Deleting Istio"
 	return d.update(ctx, istioCR)
 }
 
-func (d StatusHandler) UpdateToReady(ctx context.Context, istioCR *operatorv1alpha2.Istio) error {
+func (d Handler) UpdateToReady(ctx context.Context, istioCR *operatorv1alpha2.Istio) error {
 	istioCR.Status.State = operatorv1alpha2.Ready
 	istioCR.Status.Description = ""
 	return d.update(ctx, istioCR)
 }
 
-func (d StatusHandler) UpdateToError(ctx context.Context, istioCR *operatorv1alpha2.Istio,
-	err described_errors.DescribedError, requeueAfter ...time.Duration) error {
-	if err.Level() == described_errors.Warning {
+func (d Handler) UpdateToError(ctx context.Context, istioCR *operatorv1alpha2.Istio,
+	err describederrors.DescribedError, requeueAfter ...time.Duration) error {
+	if err.Level() == describederrors.Warning {
 		istioCR.Status.State = operatorv1alpha2.Warning
 	} else {
 		istioCR.Status.State = operatorv1alpha2.Error
@@ -83,7 +84,7 @@ func (d StatusHandler) UpdateToError(ctx context.Context, istioCR *operatorv1alp
 	return d.update(ctx, istioCR)
 }
 
-func (d StatusHandler) SetCondition(istioCR *operatorv1alpha2.Istio, reason operatorv1alpha2.ReasonWithMessage) {
+func (d Handler) SetCondition(istioCR *operatorv1alpha2.Istio, reason operatorv1alpha2.ReasonWithMessage) {
 	if istioCR.Status.Conditions == nil {
 		istioCR.Status.Conditions = &[]metav1.Condition{}
 	}

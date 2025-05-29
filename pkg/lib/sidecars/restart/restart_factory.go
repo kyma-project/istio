@@ -33,7 +33,7 @@ func restartActionFactory(ctx context.Context, c client.Client, pod v1.Pod) (res
 	}
 }
 
-// getOwnerReferences returns the owner reference of the pod and a boolean to verify if the owner reference exists or not
+// getOwnerReferences returns the owner reference of the pod and a boolean to verify if the owner reference exists or not.
 func getOwnerReferences(pod v1.Pod) (*metav1.OwnerReference, bool) {
 	if len(pod.OwnerReferences) == 0 {
 		return &metav1.OwnerReference{}, false
@@ -43,7 +43,7 @@ func getOwnerReferences(pod v1.Pod) (*metav1.OwnerReference, bool) {
 }
 
 type restartAction struct {
-	run    func(context.Context, client.Client, actionObject, *logr.Logger) ([]RestartWarning, error)
+	run    func(context.Context, client.Client, actionObject, *logr.Logger) ([]Warning, error)
 	object actionObject
 }
 
@@ -53,7 +53,7 @@ type actionObject struct {
 	Kind      string
 }
 
-// getKey returns a key that identifies this object
+// getKey returns a key that identifies this object.
 func (r actionObject) getKey() string {
 	return r.Name + r.Namespace + r.Kind
 }

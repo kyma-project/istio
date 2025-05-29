@@ -39,7 +39,7 @@ type scenario struct {
 	logger                     logr.Logger
 	istioVersion               string
 	injectionNamespaceSelector NamespaceSelector
-	restartWarnings            []restart.RestartWarning
+	restartWarnings            []restart.Warning
 	hasMorePodsToRestart       bool
 }
 

@@ -9,7 +9,6 @@ const (
 )
 
 func SetModuleLabels(labels map[string]string) map[string]string {
-
 	if labels == nil {
 		labels = make(map[string]string)
 	}

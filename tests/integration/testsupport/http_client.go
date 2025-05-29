@@ -51,11 +51,21 @@ func (h *RetryableHttpClient) GetWithHeaders(url string, requestHeaders map[stri
 	}
 
 	for headerName, headerValue := range requestHeaders {
-		req.Header.Set(headerName, headerValue)
+		if headerName == "Host" {
+			req.Host = headerValue
+		} else {
+			req.Header.Set(headerName, headerValue)
+		}
 	}
 
 	err = h.withRetries(func() (*http.Response, error) {
-		return h.client.Do(req)
+		r, err := h.client.Do(req)
+		if err != nil {
+			println(err.Error())
+		} else {
+			println(r.StatusCode)
+		}
+		return r, err
 	}, asserter)
 
 	if err != nil {

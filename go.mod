@@ -10,7 +10,7 @@ require (
 	github.com/coreos/go-semver v0.3.1
 	github.com/cucumber/godog v0.15.0
 	github.com/distribution/reference v0.6.0
-	github.com/go-logr/logr v1.4.2
+	github.com/go-logr/logr v1.4.3
 	github.com/imdario/mergo v1.0.0
 	github.com/masterminds/semver v1.5.0
 	github.com/mitchellh/mapstructure v1.5.0 // indirect

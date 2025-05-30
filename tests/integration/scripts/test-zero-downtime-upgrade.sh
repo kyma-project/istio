@@ -19,44 +19,50 @@ trap 'kill $(jobs -p)' INT
 
 PARALLEL_REQUESTS=5
 
+VIRTUAL_SERVICES="upgrade-test-vs upgrade-test-vs-init-container"
 
+# shellcheck disable=SC2120
 run_zero_downtime_requests() {
+  local vs_name=$1
+  wait_for_virtual_service_to_exist "$vs_name"
+  echo "zero-downtime: Virtual Service $vs_name found"
 
-  wait_for_virtual_service_to_exist
-  echo "zero-downtime: Virtual Service found"
+  local host_name
+  host_name=$(kubectl get virtualservice "$vs_name" -o jsonpath='{.spec.hosts[0]}')
+  echo "zero-downtime: Virtual Service $vs_name has host $host_name"
 
   # Get the IP of the Gardener cluster if the shoot-info ConfigMap exists
   if kubectl get configmap shoot-info -n kube-system &> /dev/null; then
-    ip=$(get_load_balancer_ip)
+    local ip=$(get_load_balancer_ip)
     if [ -z "$ip" ]; then
       echo "zero-downtime: Cannot get the IP of the Gardener cluster"
       exit 1
     fi
-    host="$ip:80"
+    local url_under_test="http://$ip:80/headers"
   else
-    host="localhost:80"
+    local url_under_test="http://localhost:80/headers"
   fi
-
-  local url_under_test="http://$host/headers"
 
   # Wait until the host in the Virtual Service is available. This may take a very long time because the httpbin application
   # used in the integration tests takes a very long time to start successfully processing requests, even though it is
   # already ready.
-  wait_for_url "$url_under_test"
+  wait_for_url "$url_under_test" "$host_name"
 
-  echo "zero-downtime: Sending requests to $url_under_test"
+  echo "zero-downtime: Sending requests to $url_under_test for Virtual Service $vs_name and Host $host_name"
 
   # Run the send_requests function in parallel processes
   for (( i = 0; i < PARALLEL_REQUESTS; i++ )); do
-    send_requests "$url_under_test" &
-    request_pids[$i]=$!
+    send_requests "$i" "$url_under_test" "$host_name" &
+    pid=$!
+    request_pids[$i]=$pid
+    echo "zero-downtime: Started pid $pid for sending requests to $url_under_test for Virtual Service $vs_name and Host $host_name"
   done
 
   # Wait for all send_requests processes to finish or fail fast if one of them fails
   for pid in ${request_pids[*]}; do
     wait $pid && request_runner_exit_code=$? || request_runner_exit_code=$?
     if [ $request_runner_exit_code -ne 0 ]; then
-        echo "zero-downtime: A sending requests subprocess failed with a non-zero exit status."
+        echo "zero-downtime: A sending requests subprocess with pid $pid failed with a non-zero exit status."
         exit 1
     fi
   done
@@ -64,9 +70,11 @@ run_zero_downtime_requests() {
   exit 0
 }
 
+# shellcheck disable=SC2120
 wait_for_virtual_service_to_exist() {
+  vs_name=$1
   local attempts=1
-  echo "zero-downtime: Waiting for the Virtual Service to exist"
+  echo "zero-downtime: Waiting for the Virtual Service $vs_name to exist"
   # Wait for 5min
   while [[ $attempts -le 300 ]] ; do
 
@@ -77,16 +85,18 @@ wait_for_virtual_service_to_exist() {
       continue
     fi
 
-    vs=$(kubectl get virtualservice -A --ignore-not-found) && kubectl_exit_code=$? || kubectl_exit_code=$?
-    if [ $kubectl_exit_code -ne 0 ]; then
-        echo "zero-downtime: kubectl failed when listing Virtual Services, exit code: $kubectl_exit_code"
-        exit 2
+    kubectl get virtualservice "$vs_name" && kubectl_exit_code=$? || kubectl_exit_code=$?
+    if [ "$kubectl_exit_code" -ne 0 ]; then
+      echo "zero-downtime: kubectl failed when listing Virtual Service $vs_name, exit code: $kubectl_exit_code"
+    else
+      echo "zero-downtime: Virtual Service $vs_name exists"
+      return 0
     fi
-  	[[ -n "$vs" ]] && return 0
+
   	sleep 1
     ((attempts = attempts + 1))
   done
-  echo "zero-downtime: Virtual Service not found"
+  echo "zero-downtime: Virtual Service $vs_name not found"
   exit 1
 }
 
@@ -120,16 +130,19 @@ get_load_balancer_ip() {
 
 wait_for_url() {
   local url="$1"
+  local host_name="$2"
   local attempts=1
 
-  echo "zero-downtime: Waiting for URL '$url' to be available"
+  echo "zero-downtime: Waiting for URL '$url' and host '$host_name' to be available"
 
   # Wait for 2 min
   while [[ $attempts -le 120 ]] ; do
-    response=$(curl -sk -o /dev/null -L -w "%{http_code}" "$url")
+    response=$(curl -sk -o /dev/null -L -w "%{http_code}" -H "Host: $host_name" "$url")
   	if [ "$response" == "200" ]; then
-      echo "zero-downtime: $url is available for requests"
+      echo "zero-downtime: $url and host $host_name is available for requests"
   	  return 0
+    else
+      echo "zero-downtime: $url and host $host_name is not yet available for requests, HTTP status code: $response"
     fi
   	sleep 1
     ((attempts = attempts + 1))
@@ -141,22 +154,26 @@ wait_for_url() {
 
 # Function to send requests to a given url
 send_requests() {
-  local url="$1"
+  local thread="$1"
+  local url="$2"
+  local host_name="$3"
   local request_count=0
+  echo "zero-downtime: thread ${thread}: Sending requests to $url to host $host_name"
 
   while true; do
-    response=$(curl -sk -o /dev/null -w "%{http_code}" "$url")
+    response=$(curl -sk -o /dev/null -w "%{http_code}" -H "Host: $host_name" "$url")
     ((request_count = request_count + 1))
 
     if [ "$response" != "200" ]; then
+      sleep 5
       # If there is an error and the test-app Deployment, Gateway or Virtual Service still exists, the test is failed,
       # but if an error is received only when the one of those resources is deleted, the test is successful, because
       # without any of them the request will fail.
       if ! kubectl get deployment test-app -n default || ! kubectl get gateways test-gateway -n default || ! kubectl get virtualservices upgrade-test-vs -n default; then
-        echo "zero-downtime: Test successful after $request_count requests. Stopping requests because on of the required resources is deleted."
+        echo "zero-downtime: thread ${thread}: Test successful after $request_count requests. Stopping requests because on of the required resources is deleted."
         exit 0
       else
-        echo "zero-downtime: Test failed after $request_count requests. Canceling requests because of HTTP status code $response"
+        echo "zero-downtime: thread ${thread}: Test failed after $request_count requests. Canceling requests because of HTTP status code $response"
         exit 1
       fi
     fi
@@ -165,7 +182,8 @@ send_requests() {
 
 start() {
   # Start the requests in the background
-  run_zero_downtime_requests &
+
+  run_zero_downtime_requests "upgrade-test-vs" &
   zero_downtime_requests_pid=$!
 
   echo "zero-downtime: Starting integration test scenario"

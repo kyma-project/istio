@@ -13,7 +13,7 @@ import (
 )
 
 // ValidateHeader validates that the header givenHeaderName with value givenHeaderValue is forwarded to the application as header expectedHeaderName with the value expectedHeaderValue.
-func ValidateHeader(ctx context.Context, host, givenHeaderName, givenHeaderValue, expectedHeaderName, expectedHeaderValue string) (context.Context, error) {
+func ValidateStatusForHeader(ctx context.Context, host, givenHeaderName, givenHeaderValue, expectedHeaderName, expectedHeaderValue string) (context.Context, error) {
 
 	ingressAddress, err := fetchIstioIngressGatewayAddress(ctx)
 	if err != nil {
@@ -30,6 +30,25 @@ func ValidateHeader(ctx context.Context, host, givenHeaderName, givenHeaderValue
 		Expected: []string{
 			fmt.Sprintf(`"%s": "%s"`, expectedHeaderName, expectedHeaderValue),
 		},
+	}
+
+	return ctx, c.GetWithHeaders(url, headers, asserter)
+}
+
+func ValidateStatus(ctx context.Context, host, givenHeaderName, givenHeaderValue, path string, expectedCode int) (context.Context, error) {
+	ingressAddress, err := fetchIstioIngressGatewayAddress(ctx)
+	if err != nil {
+		return ctx, err
+	}
+
+	c := testsupport.NewHttpClientWithRetry()
+	headers := map[string]string{
+		"Host":          host,
+		givenHeaderName: givenHeaderValue,
+	}
+	url := fmt.Sprintf("http://%s%s", ingressAddress, path)
+	asserter := testsupport.ResponseStatusCodeAsserter{
+		Code: expectedCode,
 	}
 
 	return ctx, c.GetWithHeaders(url, headers, asserter)

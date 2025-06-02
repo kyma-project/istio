@@ -5,9 +5,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-var pilotCompatibilityEnvVars = map[string]string{
-	"PILOT_ENABLE_IP_AUTOALLOCATE": "false",
-}
+var pilotCompatibilityEnvVars = map[string]string{}
 
 func setCompatibilityMode(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {
 	pilotIop := setCompatibilityPilot(op)

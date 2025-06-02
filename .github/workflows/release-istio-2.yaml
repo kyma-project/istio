@@ -60,7 +60,7 @@ jobs:
 
   build-image-experimental:
     uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main
-    needs: [ check-prerequisites ]
+    needs: [check-prerequisites]
     with:
       name: istio/releases/istio-manager
       dockerfile: Dockerfile
@@ -74,8 +74,8 @@ jobs:
     uses: ./.github/workflows/call-unit-lint.yaml
 
   integration-tests:
-    needs: [check-prerequisites, build-image, build-image-experimental, unit-tests ]
-    uses: ./.github/workflows/call-integration-release.yaml
+    needs: [check-prerequisites, build-image, build-image-experimental, unit-tests]
+    uses: ./.github/workflows/call-integration-tests.yaml
     with:
       image: "europe-docker.pkg.dev/kyma-project/prod/istio/releases/istio-manager:${{ needs.check-prerequisites.outputs.current_release }}"
     secrets: inherit
@@ -187,13 +187,17 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GOAT_BOT_REPO_ACCESS }}
           CURRENT_RELEASE: ${{ needs.check-prerequisites.outputs.current_release }}
+          NAME: ${{ vars.ACTIONS_BOT_NAME }}
+          EMAIL: ${{ vars.ACTIONS_BOT_EMAIL }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "$NAME"
+          git config user.email "$EMAIL"
 
           git checkout -b dependabot-config/$CURRENT_RELEASE
           sed -i "s|release\-.*|release\-$CURRENT_RELEASE\"|g" .github/dependabot.yml
-          git reset --hard origin/$REL_BRANCH
+
+          git fetch origin
+          git reset --hard origin/main
 
           MAJOR_MINOR=$(echo $CURRENT_RELEASE | grep -Eo '^[0-9]+\.[0-9]+')
           sed -i "s|release\-.*|release\-$MAJOR_MINOR\"|g" .github/dependabot.yml
@@ -207,4 +211,3 @@ jobs:
           gh pr create --base main --head dependabot-config/$CURRENT_RELEASE --fill || true 
 
           gh api --method DELETE repos/${{ github.repository }}/git/refs/heads/sec-scanners-config/$CURRENT_RELEASE || echo "Failed to delete branch"
-

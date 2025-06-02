@@ -43,9 +43,11 @@ jobs:
           IMAGE_TAG: ${{ github.event.inputs.name }}
           REL_BRANCH: ${{ env.branch_name}}
           BRANCH_EXISTS: ${{ env.branch_exists }}
+          NAME: ${{ vars.ACTIONS_BOT_NAME }}
+          EMAIL: ${{ vars.ACTIONS_BOT_EMAIL }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "$NAME"
+          git config user.email "$EMAIL"
           
           git fetch origin
           git checkout -f sec-scanners-config/release

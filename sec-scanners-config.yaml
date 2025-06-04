@@ -1,10 +1,10 @@
 module-name: istio
 kind: kyma
 bdba:
-  - europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager:428ddc397e9c6c275bdf2c5f91b9a19400f203af
-  - europe-docker.pkg.dev/kyma-project/prod/external/istio/install-cni:1.25.3-distroless
-  - europe-docker.pkg.dev/kyma-project/prod/external/istio/proxyv2:1.25.3-distroless
-  - europe-docker.pkg.dev/kyma-project/prod/external/istio/pilot:1.25.3-distroless
+  - europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager:ae29fd418a06a23168c96c7148f3ed36b27bfaa0
+  - europe-docker.pkg.dev/kyma-project/prod/external/istio/install-cni:1.26.1-distroless
+  - europe-docker.pkg.dev/kyma-project/prod/external/istio/proxyv2:1.26.1-distroless
+  - europe-docker.pkg.dev/kyma-project/prod/external/istio/pilot:1.26.1-distroless
 mend:
   language: golang-mod
   subprojects: false

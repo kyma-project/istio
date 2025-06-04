@@ -105,10 +105,6 @@ func ValidateResponseCodeForRequestWithHeader(ctx context.Context, givenHeaderNa
 		Code: expectedCode,
 	}
 
-	for i, v := range headers {
-		println(i, v)
-	}
-
 	return ctx, c.GetWithHeaders(url, headers, asserter)
 }
 

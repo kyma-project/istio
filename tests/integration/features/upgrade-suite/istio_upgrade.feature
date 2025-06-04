@@ -16,6 +16,8 @@ Feature: Upgrade Istio
     And Virtual service "upgrade-test-vs-init-container" exposing service "test-app-init-container.default.svc.cluster.local" by gateway "default/test-gateway" is configured in namespace "default"
     And Request with header "Host" with value "test-app.default.svc.cluster.local" to path "/headers" should have response code "200"
     And Request with header "Host" with value "test-app-init-container.default.svc.cluster.local" to path "/headers" should have response code "200"
+    And There are continuous requests to host "test-app.default.svc.cluster.local" and path "/headers"
+    And There are continuous requests to host "test-app-init-container.default.svc.cluster.local" and path "/headers"
     When Istio controller has been upgraded
     Then "Deployment" "istio-controller-manager" in namespace "kyma-system" is ready
     And Istio CR "istio-sample" in namespace "kyma-system" status update happened in the last 20 seconds
@@ -28,3 +30,4 @@ Feature: Upgrade Istio
     And Container "istio-proxy" of "Deployment" "istio-ingressgateway" in namespace "istio-system" has required version
     And "DaemonSet" "istio-cni-node" in namespace "istio-system" is ready
     And Container "install-cni" of "DaemonSet" "istio-cni-node" in namespace "istio-system" has required version
+    And All continuous requests should succeed

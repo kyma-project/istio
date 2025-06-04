@@ -9,8 +9,13 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.After(getFailedTestIstioCRStatus)
 	ctx.After(testObjectsTearDown)
 	ctx.After(istioCrTearDown)
-
 	t := steps.TemplatedIstioCr{}
+
+	// This structure holds all Tester instances
+	// every test scenario should have an own instance to allow parallel execution
+	zd := steps.ZeroDowntimeTestRunner{}
+	ctx.After(zd.CleanZeroDowntimeTests)
+
 	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" is "([^"]*)"`, steps.ResourceIsPresent)
 	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" is deleted$`, steps.ResourceInNamespaceIsDeleted)
 	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" is ready$`, steps.ResourceIsReady)
@@ -62,4 +67,6 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^Httpbin application "([^"]*)" deployment with proxy as a native sidecar is created in namespace "([^"]*)"$`, steps.ApplicationWithInitSidecarCreated)
 	ctx.Step(`^Application "([^"]*)" in namespace "([^"]*)" has init container with Istio proxy present$`, steps.ApplicationHasInitContainerWithIstioProxy)
 	ctx.Step(`^Application "([^"]*)" in namespace "([^"]*)" has required version of proxy as an init container$`, steps.ApplicationHasRequiredVersionInitContainerWithIstioProxy)
+	ctx.Step(`^There are continuous requests to host "([^"]*)" and path "([^"]*)"`, zd.StartZeroDowntimeTest)
+	ctx.Step(`^All continuous requests should succeed`, zd.FinishZeroDowntimeTests)
 }

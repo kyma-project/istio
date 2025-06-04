@@ -1,8 +1,9 @@
-package istio_resources
+package istioresources
 
 import (
 	"context"
 	_ "embed"
+
 	"github.com/kyma-project/istio/operator/internal/resources"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

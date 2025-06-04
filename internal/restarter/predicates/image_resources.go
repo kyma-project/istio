@@ -105,12 +105,12 @@ func hasDifferentSidecarResources(pod v1.Pod, expectedResources v1.ResourceRequi
 }
 
 func containerHasResources(container v1.Container, expectedResources v1.ResourceRequirements) bool {
-	equalCpuRequests := container.Resources.Requests.Cpu().Equal(*expectedResources.Requests.Cpu())
+	equalCPURequests := container.Resources.Requests.Cpu().Equal(*expectedResources.Requests.Cpu())
 	equalMemoryRequests := container.Resources.Requests.Memory().Equal(*expectedResources.Requests.Memory())
-	equalCpuLimits := container.Resources.Limits.Cpu().Equal(*expectedResources.Limits.Cpu())
+	equalCPULimits := container.Resources.Limits.Cpu().Equal(*expectedResources.Limits.Cpu())
 	equalMemoryLimits := container.Resources.Limits.Memory().Equal(*expectedResources.Limits.Memory())
 
-	return equalCpuRequests && equalMemoryRequests && equalCpuLimits && equalMemoryLimits
+	return equalCPURequests && equalMemoryRequests && equalCPULimits && equalMemoryLimits
 }
 
 func isContainerIstioSidecar(container v1.Container) bool {

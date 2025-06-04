@@ -2,15 +2,17 @@ package restart
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/go-logr/logr"
 
-	"github.com/kyma-project/istio/operator/pkg/lib/annotations"
-	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/kyma-project/istio/operator/pkg/lib/annotations"
+	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
 )
 
 func newRolloutAction(object actionObject) restartAction {
@@ -20,7 +22,8 @@ func newRolloutAction(object actionObject) restartAction {
 	}
 }
 
-func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObject, logger *logr.Logger) ([]RestartWarning, error) {
+//nolint:gocognit // cognitive complexity 26 of func `rolloutRun` is high (> 20) TODO
+func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObject, logger *logr.Logger) ([]Warning, error) {
 	logger.Info("Rollout pod due to proxy restart", "name", object.Name, "namespace", object.Namespace, "kind", object.Kind)
 
 	var obj client.Object
@@ -29,48 +32,60 @@ func rolloutRun(ctx context.Context, k8sclient client.Client, object actionObjec
 	switch object.Kind {
 	case "DaemonSet":
 		obj = &appsv1.DaemonSet{}
-		err = retry.RetryOnError(retry.DefaultBackoff, func() error {
-			err := k8sclient.Get(ctx, types.NamespacedName{Name: object.Name, Namespace: object.Namespace}, obj)
-			if err != nil {
-				return err
+		err = retry.OnError(retry.DefaultBackoff, func() error {
+			apiErr := k8sclient.Get(ctx, types.NamespacedName{Name: object.Name, Namespace: object.Namespace}, obj)
+			if apiErr != nil {
+				return apiErr
 			}
-			ds := obj.(*appsv1.DaemonSet)
+			ds, ok := obj.(*appsv1.DaemonSet)
+			if !ok {
+				return errors.New("failed to cast object to DaemonSet")
+			}
 			patch := client.StrategicMergeFrom(ds.DeepCopy())
 			ds.Spec.Template.Annotations = annotations.AddRestartAnnotation(ds.Spec.Template.Annotations)
 			return k8sclient.Patch(ctx, ds, patch)
 		})
 	case "Deployment":
 		obj = &appsv1.Deployment{}
-		err = retry.RetryOnError(retry.DefaultBackoff, func() error {
-			err := k8sclient.Get(ctx, types.NamespacedName{Name: object.Name, Namespace: object.Namespace}, obj)
-			if err != nil {
-				return err
+		err = retry.OnError(retry.DefaultBackoff, func() error {
+			apiErr := k8sclient.Get(ctx, types.NamespacedName{Name: object.Name, Namespace: object.Namespace}, obj)
+			if apiErr != nil {
+				return apiErr
 			}
-			dep := obj.(*appsv1.Deployment)
+			dep, ok := obj.(*appsv1.Deployment)
+			if !ok {
+				return errors.New("failed to cast object to Deployment")
+			}
 			patch := client.StrategicMergeFrom(dep.DeepCopy())
 			dep.Spec.Template.Annotations = annotations.AddRestartAnnotation(dep.Spec.Template.Annotations)
 			return k8sclient.Patch(ctx, dep, patch)
 		})
 	case "ReplicaSet":
 		obj = &appsv1.ReplicaSet{}
-		err = retry.RetryOnError(retry.DefaultBackoff, func() error {
-			err := k8sclient.Get(ctx, types.NamespacedName{Name: object.Name, Namespace: object.Namespace}, obj)
-			if err != nil {
-				return err
+		err = retry.OnError(retry.DefaultBackoff, func() error {
+			apiErr := k8sclient.Get(ctx, types.NamespacedName{Name: object.Name, Namespace: object.Namespace}, obj)
+			if apiErr != nil {
+				return apiErr
 			}
-			rs := obj.(*appsv1.ReplicaSet)
+			rs, ok := obj.(*appsv1.ReplicaSet)
+			if !ok {
+				return errors.New("failed to cast object to ReplicaSet")
+			}
 			patch := client.StrategicMergeFrom(rs.DeepCopy())
 			rs.Spec.Template.Annotations = annotations.AddRestartAnnotation(rs.Spec.Template.Annotations)
 			return k8sclient.Patch(ctx, rs, patch)
 		})
 	case "StatefulSet":
 		obj = &appsv1.StatefulSet{}
-		err = retry.RetryOnError(retry.DefaultBackoff, func() error {
-			err := k8sclient.Get(ctx, types.NamespacedName{Name: object.Name, Namespace: object.Namespace}, obj)
-			if err != nil {
-				return err
+		err = retry.OnError(retry.DefaultBackoff, func() error {
+			apiErr := k8sclient.Get(ctx, types.NamespacedName{Name: object.Name, Namespace: object.Namespace}, obj)
+			if apiErr != nil {
+				return apiErr
 			}
-			ss := obj.(*appsv1.StatefulSet)
+			ss, ok := obj.(*appsv1.StatefulSet)
+			if !ok {
+				return errors.New("failed to cast object to StatefulSet")
+			}
 			patch := client.StrategicMergeFrom(ss.DeepCopy())
 			ss.Spec.Template.Annotations = annotations.AddRestartAnnotation(ss.Spec.Template.Annotations)
 			return k8sclient.Patch(ctx, ss, patch)

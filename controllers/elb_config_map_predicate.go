@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/workqueue"
 	controllerruntime "sigs.k8s.io/controller-runtime"
@@ -9,7 +10,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 )
 
-//ElbConfigMapEventHandler is a controller-runtime EventHandler that returns true if the deleted corev1.ConfigMap is an ELB ConfigMap
+// ElbConfigMapEventHandler is a controller-runtime EventHandler that returns true if the deleted corev1.ConfigMap is an ELB ConfigMap
 
 type ElbConfigMapEventHandler struct{}
 

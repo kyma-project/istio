@@ -2,10 +2,11 @@ package clusterconfig
 
 import (
 	"context"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"regexp"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"strings"
+
+	"k8s.io/apimachinery/pkg/api/errors"
+	ctrl "sigs.k8s.io/controller-runtime"
 
 	"github.com/imdario/mergo"
 	corev1 "k8s.io/api/core/v1"
@@ -15,7 +16,7 @@ import (
 )
 
 const (
-	ProductionClusterCpuThreshold      int64 = 5
+	ProductionClusterCPUThreshold      int64 = 5
 	ProductionClusterMemoryThresholdGi int64 = 10
 )
 
@@ -33,13 +34,15 @@ func (s ClusterSize) String() string {
 		return "Evaluation"
 	case Production:
 		return "Production"
+	case UnknownSize:
+		fallthrough
 	default:
 		return "Unknown"
 	}
 }
 
 // EvaluateClusterSize counts the entire capacity of cpu and memory in the cluster and returns Evaluation
-// if the total capacity of any of the resources is lower than ProductionClusterCpuThreshold or ProductionClusterMemoryThresholdGi
+// if the total capacity of the resources is lower than ProductionClusterCPUThreshold or ProductionClusterMemoryThresholdGi.
 func EvaluateClusterSize(ctx context.Context, k8sClient client.Client) (ClusterSize, error) {
 	nodeList := corev1.NodeList{}
 	err := k8sClient.List(ctx, &nodeList)
@@ -50,16 +53,16 @@ func EvaluateClusterSize(ctx context.Context, k8sClient client.Client) (ClusterS
 	var cpuCapacity resource.Quantity
 	var memoryCapacity resource.Quantity
 	for _, node := range nodeList.Items {
-		nodeCpuCap := node.Status.Capacity.Cpu()
-		if nodeCpuCap != nil {
-			cpuCapacity.Add(*nodeCpuCap)
+		nodeCPUCap := node.Status.Capacity.Cpu()
+		if nodeCPUCap != nil {
+			cpuCapacity.Add(*nodeCPUCap)
 		}
 		nodeMemoryCap := node.Status.Capacity.Memory()
 		if nodeMemoryCap != nil {
 			memoryCapacity.Add(*nodeMemoryCap)
 		}
 	}
-	if cpuCapacity.Cmp(*resource.NewQuantity(ProductionClusterCpuThreshold, resource.DecimalSI)) == -1 ||
+	if cpuCapacity.Cmp(*resource.NewQuantity(ProductionClusterCPUThreshold, resource.DecimalSI)) == -1 ||
 		memoryCapacity.Cmp(*resource.NewScaledQuantity(ProductionClusterMemoryThresholdGi, resource.Giga)) == -1 {
 		return Evaluation, nil
 	}
@@ -86,41 +89,46 @@ func (c ClusterFlavour) String() string {
 		return "Gardener"
 	case AWS:
 		return "AWS"
+	case Unknown:
+		fallthrough
+	default:
+		return "Unknown"
 	}
-	return "Unknown"
 }
 
 type ClusterConfiguration map[string]interface{}
 
-var AWSNLBConfig = ClusterConfiguration{
-	"spec": map[string]interface{}{
-		"values": map[string]interface{}{
-			"gateways": map[string]interface{}{
-				"istio-ingressgateway": map[string]interface{}{
-					"serviceAnnotations": map[string]string{
-						loadBalancerTypeAnnotation:          loadBalancerType,
-						loadBalancerSchemeAnnotation:        loadBalancerScheme,
-						loadBalancerNlbTargetTypeAnnotation: loadBalancerNlbTargetType,
+//nolint:gochecknoglobals // global variables are used to store cluster configurations TODO: refactor to avoid globals
+var (
+	AWSNLBConfig = ClusterConfiguration{
+		"spec": map[string]interface{}{
+			"values": map[string]interface{}{
+				"gateways": map[string]interface{}{
+					"istio-ingressgateway": map[string]interface{}{
+						"serviceAnnotations": map[string]string{
+							loadBalancerTypeAnnotation:          loadBalancerType,
+							loadBalancerSchemeAnnotation:        loadBalancerScheme,
+							loadBalancerNlbTargetTypeAnnotation: loadBalancerNlbTargetType,
+						},
 					},
 				},
 			},
 		},
-	},
-}
-
-var OpenStackLBProxyProtocolConfig = ClusterConfiguration{
-	"spec": map[string]interface{}{
-		"values": map[string]interface{}{
-			"gateways": map[string]interface{}{
-				"istio-ingressgateway": map[string]interface{}{
-					"serviceAnnotations": map[string]string{
-						loadBalancerProxyProtocolOpenStackAnnotation: loadBalancerProxyProtocolOpenStack,
+	}
+	OpenStackLBProxyProtocolConfig = ClusterConfiguration{
+		"spec": map[string]interface{}{
+			"values": map[string]interface{}{
+				"gateways": map[string]interface{}{
+					"istio-ingressgateway": map[string]interface{}{
+						"serviceAnnotations": map[string]string{
+							loadBalancerProxyProtocolOpenStackAnnotation: loadBalancerProxyProtocolOpenStack,
+						},
 					},
 				},
 			},
 		},
-	},
-}
+	}
+)
 
 const (
 	elbCmName      = "elb-deprecated"
@@ -197,7 +205,7 @@ func EvaluateClusterConfiguration(ctx context.Context, k8sClient client.Client, 
 	return flavour.clusterConfiguration(clusterProvider)
 }
 
-// Used to return determined hyperscaler provider
+// Used to return determined hyperscaler provider.
 const (
 	Aws       = "aws"
 	Openstack = "openstack"
@@ -239,6 +247,7 @@ func GetClusterProvider(ctx context.Context, k8sclient client.Client) (string, e
 	}
 }
 
+//nolint:gocritic // regexp matches should be compiled only once for constant patterns. TODO: refactor to use MustCompile
 func DiscoverClusterFlavour(ctx context.Context, k8sClient client.Client) (ClusterFlavour, error) {
 	matcherGKE, err := regexp.Compile(`^v\d+\.\d+\.\d+-gke\.\d+$`)
 	if err != nil {
@@ -264,13 +273,14 @@ func DiscoverClusterFlavour(ctx context.Context, k8sClient client.Client) (Clust
 	}
 
 	for _, node := range nodeList.Items {
-		if matcherGKE.MatchString(node.Status.NodeInfo.KubeletVersion) {
+		switch {
+		case matcherGKE.MatchString(node.Status.NodeInfo.KubeletVersion):
 			return GKE, nil
-		} else if matcherk3d.MatchString(node.Status.NodeInfo.KubeletVersion) {
+		case matcherk3d.MatchString(node.Status.NodeInfo.KubeletVersion):
 			return k3d, nil
-		} else if matcherAws.MatchString(node.Spec.ProviderID) {
+		case matcherAws.MatchString(node.Spec.ProviderID):
 			return AWS, nil
-		} else if matcherGardener.MatchString(node.Status.NodeInfo.OSImage) {
+		case matcherGardener.MatchString(node.Status.NodeInfo.OSImage):
 			return Gardener, nil
 		}
 	}
@@ -323,6 +333,8 @@ func (c ClusterFlavour) clusterConfiguration(clusterProvider string) (ClusterCon
 		return config, nil
 	case Gardener:
 		return generateIstioIngressGatewayAnnotations(clusterProvider)
+	case Unknown:
+		return ClusterConfiguration{}, nil
 	}
 	return ClusterConfiguration{}, nil
 }

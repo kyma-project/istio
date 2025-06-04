@@ -2,6 +2,8 @@ package webhooks
 
 import (
 	"context"
+	"testing"
+
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/tests"
 	. "github.com/onsi/ginkgo/v2"
@@ -17,7 +19,6 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	"testing"
 )
 
 const (
@@ -45,7 +46,7 @@ var validSelector = &metav1.LabelSelector{
 }
 
 var deactivatedSelector = &metav1.LabelSelector{
-	MatchLabels: deactivatedLabel,
+	MatchLabels: GetDeactivatedLabel(),
 }
 
 func createFakeClient(objects ...client.Object) client.Client {

@@ -5,7 +5,11 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-var pilotCompatibilityEnvVars = map[string]string{}
+//nolint:gochecknoglobals // vairables are used to set compatibility mode for IstioOperator TODO: refactor to constants
+var (
+	pilotCompatibilityEnvVars  = map[string]string{}
+	ProxyMetaDataCompatibility = map[string]string{}
+)
 
 func setCompatibilityMode(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {
 	pilotIop := setCompatibilityPilot(op)
@@ -32,8 +36,6 @@ func setCompatibilityPilot(op iopv1alpha1.IstioOperator) iopv1alpha1.IstioOperat
 
 	return op
 }
-
-var ProxyMetaDataCompatibility = map[string]string{}
 
 func setCompatibilityProxyMetadata(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {
 	mcb, err := newMeshConfigBuilder(op)

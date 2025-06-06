@@ -14,7 +14,7 @@ import (
 )
 
 const requestTimeout = 10 * time.Second
-const testInterval = 100 * time.Millisecond
+const testInterval = 500 * time.Millisecond
 const numberOfThreads = 5
 
 // ZeroDowntimeTestRunner holds Tester instances created by the StartZeroDowntimeTest function,

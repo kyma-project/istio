@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	httpbinImage  = "docker.io/mccutchen/go-httpbin:v2.15.0"
+	httpbinImage  = "europe-docker.pkg.dev/kyma-project/prod/external/kennethreitz/httpbin"
 	extAuthzImage = "gcr.io/istio-testing/ext-authz:latest"
 )
 

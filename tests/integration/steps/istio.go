@@ -233,7 +233,7 @@ func CreateVirtualServiceWithPort(ctx context.Context, name, exposedService stri
 		},
 		Spec: apinetworkingv1.VirtualService{
 			Hosts: []string{
-				"*",
+				exposedService,
 			},
 			Gateways: []string{
 				gateway,

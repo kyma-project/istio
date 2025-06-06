@@ -9,8 +9,13 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.After(getFailedTestIstioCRStatus)
 	ctx.After(testObjectsTearDown)
 	ctx.After(istioCrTearDown)
-
 	t := steps.TemplatedIstioCr{}
+
+	// This structure holds all Tester instances
+	// every test scenario should have an own instance to allow parallel execution
+	zd := steps.ZeroDowntimeTestRunner{}
+	ctx.After(zd.CleanZeroDowntimeTests)
+
 	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" is "([^"]*)"`, steps.ResourceIsPresent)
 	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" is deleted$`, steps.ResourceInNamespaceIsDeleted)
 	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" is ready$`, steps.ResourceIsReady)
@@ -50,12 +55,18 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^Pod of deployment "([^"]*)" in namespace "([^"]*)" has container "([^"]*)" with resource "([^"]*)" set to cpu - "([^"]*)" and memory - "([^"]*)"$`, steps.DeploymentHasPodWithContainerResourcesSetToCpuAndMemory)
 	ctx.Step(`^Request sent to exposed httpbin, should contain public client IP in "([^"]*)" header$`, steps.ValidatePublicClientIpInHeader)
 	ctx.Step(`^Request to path "([^"]*)" should have response code "([^"]*)"$`, steps.ValidateResponseStatusCode)
-	ctx.Step(`^Request to path "([^"]*)" should return "([^"]*)" with value "([^"]*)" in body$`, steps.ValidateHeaderInBody)
-	ctx.Step(`^Request with header "([^"]*)" with value "([^"]*)" sent to httpbin should return "([^"]*)" with value "([^"]*)"$`, steps.ValidateHeader)
+	ctx.Step(`^Request to host "([^"]*)" and path "([^"]*)" should return "([^"]*)" with value "([^"]*)" in body$`, steps.ValidateHeaderInBody)
+	ctx.Step(`^Request with Host "([^"]*)" and header "([^"]*)" with value "([^"]*)" to httpbin should return "([^"]*)" with value "([^"]*)"$`, steps.ValidateStatusForHeader)
+	ctx.Step(`^Request with Host "([^"]*)" and header "([^"]*)" with value "([^"]*)" to path "([^"]*)" should have response code "([^"]*)"$`, steps.ValidateStatus)
 	ctx.Step(`^Request with header "([^"]*)" with value "([^"]*)" to path "([^"]*)" should have response code "([^"]*)"$`, steps.ValidateResponseCodeForRequestWithHeader)
 	ctx.Step(`^Service is created for the otel collector "([^"]*)" in namespace "([^"]*)"$`, steps.CreateOpenTelemetryService)
 	ctx.Step(`^Template value "([^"]*)" is set to "([^"]*)"$`, t.SetTemplateValue)
 	ctx.Step(`^Tracing is enabled for the mesh using provider "([^"]*)"$`, steps.EnableTracing)
 	ctx.Step(`^Virtual service "([^"]*)" exposing service "([^"]*)" by gateway "([^"]*)" is configured in namespace "([^"]*)"$`, steps.CreateVirtualService)
 	ctx.Step(`^Virtual service "([^"]*)" exposing service "([^"]*)" with port "([^"]*)" by gateway "([^"]*)" is configured in namespace "([^"]*)"$`, steps.CreateVirtualServiceWithPort)
+	ctx.Step(`^Httpbin application "([^"]*)" deployment with proxy as a native sidecar is created in namespace "([^"]*)"$`, steps.ApplicationWithInitSidecarCreated)
+	ctx.Step(`^Application "([^"]*)" in namespace "([^"]*)" has init container with Istio proxy present$`, steps.ApplicationHasInitContainerWithIstioProxy)
+	ctx.Step(`^Application "([^"]*)" in namespace "([^"]*)" has required version of proxy as an init container$`, steps.ApplicationHasRequiredVersionInitContainerWithIstioProxy)
+	ctx.Step(`^There are continuous requests to host "([^"]*)" and path "([^"]*)"`, zd.StartZeroDowntimeTest)
+	ctx.Step(`^All continuous requests should succeed`, zd.FinishZeroDowntimeTests)
 }

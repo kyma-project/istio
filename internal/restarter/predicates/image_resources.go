@@ -87,7 +87,8 @@ func hasCustomImageAnnotation(pod v1.Pod) bool {
 }
 
 func hasSidecarContainerWithWithDifferentImage(pod v1.Pod, expectedImage SidecarImage) bool {
-	c := append(pod.Spec.Containers, pod.Spec.InitContainers...)
+	c := pod.Spec.Containers
+	c = append(c, pod.Spec.InitContainers...)
 	for _, container := range c {
 		if isContainerIstioSidecar(container) && !expectedImage.matchesImageIn(container) {
 			return true

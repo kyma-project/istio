@@ -4,31 +4,32 @@ import (
 	"context"
 
 	"github.com/go-logr/logr"
-	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
-	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
+	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
 )
 
 const (
 	istioSidecarContainerName string = "istio-proxy"
 )
 
-type PodsRestartLimits struct {
+type RestartLimits struct {
 	PodsToRestartLimit int
 	PodsToListLimit    int
 }
 
-func NewPodsRestartLimits(restartLimit, listLimit int) *PodsRestartLimits {
-	return &PodsRestartLimits{
+func NewPodsRestartLimits(restartLimit, listLimit int) *RestartLimits {
+	return &RestartLimits{
 		PodsToRestartLimit: restartLimit,
 		PodsToListLimit:    listLimit,
 	}
 }
 
-type PodsGetter interface {
-	GetPodsToRestart(ctx context.Context, preds []predicates.SidecarProxyPredicate, limits *PodsRestartLimits) (*v1.PodList, error)
+type Getter interface {
+	GetPodsToRestart(ctx context.Context, preds []predicates.SidecarProxyPredicate, limits *RestartLimits) (*v1.PodList, error)
 	GetAllInjectedPods(context context.Context) (*v1.PodList, error)
 }
 
@@ -44,7 +45,8 @@ func NewPods(k8sClient client.Client, logger *logr.Logger) *Pods {
 	}
 }
 
-func (p *Pods) GetPodsToRestart(ctx context.Context, preds []predicates.SidecarProxyPredicate, limits *PodsRestartLimits) (*v1.PodList, error) {
+//nolint:gocognit // cognitive complexity 29 of func `(*Pods).GetPodsToRestart` is high (> 20) TODO refactor
+func (p *Pods) GetPodsToRestart(ctx context.Context, preds []predicates.SidecarProxyPredicate, limits *RestartLimits) (*v1.PodList, error) {
 	podsToRestart := &v1.PodList{}
 	for while := true; while; {
 		podsWithSidecar, err := getSidecarPods(ctx, p.k8sClient, p.logger, limits.PodsToListLimit, podsToRestart.Continue)
@@ -85,12 +87,12 @@ func (p *Pods) GetPodsToRestart(ctx context.Context, preds []predicates.SidecarP
 	return podsToRestart, nil
 }
 
-func (p *Pods) GetAllInjectedPods(ctx context.Context) (outputPodList *v1.PodList, err error) {
+func (p *Pods) GetAllInjectedPods(ctx context.Context) (*v1.PodList, error) {
 	podList := &v1.PodList{}
-	outputPodList = &v1.PodList{}
+	outputPodList := &v1.PodList{}
 	outputPodList.Items = make([]v1.Pod, len(podList.Items))
 
-	err = retry.RetryOnError(retry.DefaultRetry, func() error {
+	err := retry.OnError(retry.DefaultRetry, func() error {
 		return p.k8sClient.List(ctx, podList, &client.ListOptions{})
 	})
 	if err != nil {
@@ -109,7 +111,7 @@ func (p *Pods) GetAllInjectedPods(ctx context.Context) (outputPodList *v1.PodLis
 func listRunningPods(ctx context.Context, c client.Client, listLimit int, continueToken string) (*v1.PodList, error) {
 	podList := &v1.PodList{}
 
-	err := retry.RetryOnError(retry.DefaultRetry, func() error {
+	err := retry.OnError(retry.DefaultRetry, func() error {
 		listOps := []client.ListOption{
 			client.MatchingFieldsSelector{Selector: fields.OneTermEqualSelector("status.phase", string(v1.PodRunning))},
 			client.Limit(listLimit),

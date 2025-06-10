@@ -3,10 +3,11 @@
 package istiooperator
 
 import (
-	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"os"
 	"path"
+
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 )
 
 func (m *IstioMerger) Merge(clusterSize clusterconfig.ClusterSize, istioCR *operatorv1alpha2.Istio, overrides clusterconfig.ClusterConfiguration) (string, error) {
@@ -23,7 +24,7 @@ func (m *IstioMerger) Merge(clusterSize clusterconfig.ClusterSize, istioCR *oper
 		return "", err
 	}
 	mergedIstioOperatorPath := path.Join(m.workingDir, MergedIstioOperatorFile)
-	err = os.WriteFile(mergedIstioOperatorPath, iopWithOverrides, 0o644)
+	err = os.WriteFile(mergedIstioOperatorPath, iopWithOverrides, 0o600)
 	if err != nil {
 		return "", err
 	}

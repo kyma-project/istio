@@ -34,6 +34,7 @@ func (i *Istio) GetProxyResources(op iopv1alpha1.IstioOperator) (v1.ResourceRequ
 	cpuLimit := resources.GetPathString("limits.cpu")
 	memoryLimit := resources.GetPathString("limits.memory")
 
+	//nolint:exhaustive // this is false-positive, we assume that if the values are not set, they are empty strings
 	return v1.ResourceRequirements{
 		Requests: v1.ResourceList{
 			v1.ResourceCPU:    resource.MustParse(cpuRequest),
@@ -64,16 +65,16 @@ func hasResources(op iopv1alpha1.IstioOperator) bool {
 	if !exists {
 		return false
 	}
-	if hasNoCpuAndMemory(requests) {
+	if hasNoCPUAndMemory(requests) {
 		return false
 	}
-	if hasNoCpuAndMemory(limits) {
+	if hasNoCPUAndMemory(limits) {
 		return false
 	}
 
 	return true
 }
 
-func hasNoCpuAndMemory(m values.Map) bool {
+func hasNoCPUAndMemory(m values.Map) bool {
 	return m.GetPathString("cpu") == "" || m.GetPathString("memory") == ""
 }

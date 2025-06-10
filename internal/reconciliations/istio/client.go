@@ -3,6 +3,10 @@ package istio
 import (
 	"context"
 	"fmt"
+	"os"
+	"os/exec"
+	"time"
+
 	"istio.io/istio/istioctl/pkg/install/k8sversion"
 	"istio.io/istio/operator/pkg/uninstall"
 	"istio.io/istio/operator/pkg/util/progress"
@@ -12,11 +16,8 @@ import (
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
-	"os"
-	"os/exec"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"time"
 
 	"github.com/pkg/errors"
 	istio "istio.io/istio/operator/cmd/mesh"
@@ -24,12 +25,14 @@ import (
 	istiolog "istio.io/istio/pkg/log"
 )
 
+const DefaultTimeout = 6 * time.Minute
+
 type libraryClient interface {
 	Install(mergedIstioOperatorPath string) error
 	Uninstall(ctx context.Context) error
 }
 
-type IstioClient struct {
+type Client struct {
 	consoleLogger *clog.ConsoleLogger
 	printer       istio.Printer
 }
@@ -43,11 +46,11 @@ func CreateIstioLibraryLogger() *clog.ConsoleLogger {
 	return clog.NewConsoleLogger(os.Stdout, os.Stderr, registeredScope)
 }
 
-func NewIstioClient() *IstioClient {
+func NewIstioClient() *Client {
 	consoleLogger := CreateIstioLibraryLogger()
 	printer := istio.NewPrinterForWriter(os.Stdout)
 
-	return &IstioClient{consoleLogger: consoleLogger, printer: printer}
+	return &Client{consoleLogger: consoleLogger, printer: printer}
 }
 
 func installIstioInExternalProcess(mergedIstioOperatorPath string) error {
@@ -56,7 +59,7 @@ func installIstioInExternalProcess(mergedIstioOperatorPath string) error {
 		istioInstallPath = "./istio_install"
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*6)
+	ctx, cancel := context.WithTimeout(context.Background(), DefaultTimeout)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, istioInstallPath, mergedIstioOperatorPath)
@@ -74,7 +77,7 @@ func installIstioInExternalProcess(mergedIstioOperatorPath string) error {
 	return nil
 }
 
-func (c *IstioClient) Install(mergedIstioOperatorPath string) error {
+func (c *Client) Install(mergedIstioOperatorPath string) error {
 	err := installIstioInExternalProcess(mergedIstioOperatorPath)
 
 	if err != nil {
@@ -84,27 +87,27 @@ func (c *IstioClient) Install(mergedIstioOperatorPath string) error {
 	return nil
 }
 
-func (c *IstioClient) Uninstall(ctx context.Context) error {
+func (c *Client) Uninstall(ctx context.Context) error {
 	rc, err := kube.DefaultRestConfig("", "", func(config *rest.Config) {
 		config.QPS = 50
 		config.Burst = 100
 	})
 	if err != nil {
-		return fmt.Errorf("failed to create default REST config: %v", err)
+		return fmt.Errorf("failed to create default REST config: %w", err)
 	}
 
 	kubeClient, err := kube.NewCLIClient(kube.NewClientConfigForRestConfig(rc))
 	if err != nil {
-		return fmt.Errorf("failed to create Istio kube client: %v", err)
+		return fmt.Errorf("failed to create Istio kube client: %w", err)
 	}
 
-	if err := k8sversion.IsK8VersionSupported(kubeClient, c.consoleLogger); err != nil {
-		return fmt.Errorf("check failed for minimum supported Kubernetes version: %v", err)
+	if err = k8sversion.IsK8VersionSupported(kubeClient, c.consoleLogger); err != nil {
+		return fmt.Errorf("check failed for minimum supported Kubernetes version: %w", err)
 	}
 
 	ctrlClient, err := client.New(kubeClient.RESTConfig(), client.Options{Scheme: kube.IstioScheme})
 	if err != nil {
-		return fmt.Errorf("failed to create Kubernetes ctrl client: %v", err)
+		return fmt.Errorf("failed to create Kubernetes ctrl client: %w", err)
 	}
 
 	pl := progress.NewLog()
@@ -117,13 +120,13 @@ func (c *IstioClient) Uninstall(ctx context.Context) error {
 	ctrl.Log.Info(istio.AllResourcesRemovedWarning)
 
 	consoleLogger := CreateIstioLibraryLogger()
-	if err := ConfigureIstioLogScopes(); err != nil {
+	if err = ConfigureIstioLogScopes(); err != nil {
 		consoleLogger.LogAndError("Failed to configure Istio log: ", err)
 		return err
 	}
 
-	if err := uninstall.DeleteObjectsList(kubeClient, false, consoleLogger, objectsList); err != nil {
-		return fmt.Errorf("failed to delete control plane resources by revision: %v", err)
+	if err = uninstall.DeleteObjectsList(kubeClient, false, consoleLogger, objectsList); err != nil {
+		return fmt.Errorf("failed to delete control plane resources by revision: %w", err)
 	}
 	ctrl.Log.Info("Deletion of istio resources completed")
 

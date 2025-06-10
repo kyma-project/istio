@@ -21,12 +21,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 
 	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
@@ -55,11 +56,13 @@ const (
 	failureBaseDelayDefault       = 1 * time.Second
 	failureMaxDelayDefault        = 1000 * time.Second
 	reconciliationIntervalDefault = 10 * time.Hour
+
+	WebhookServiceDefaultPort = 9443
 )
 
+//nolint:gochecknoglobals // it was scaffolded by controller-gen TODO: remove this global variable when possible
 var (
-	scheme   = runtime.NewScheme()
-	setupLog = ctrl.Log.WithName("setup")
+	scheme = runtime.NewScheme()
 )
 
 type FlagVar struct {
@@ -73,9 +76,8 @@ type FlagVar struct {
 	reconciliationInterval time.Duration
 }
 
-func init() { //nolint:gochecknoinits
+func init() { //nolint:gochecknoinits // it was scaffolded by controller-gen TODO: remove this init function when possible
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-
 	utilruntime.Must(networkingv1alpha3.AddToScheme(scheme))
 	utilruntime.Must(networkingv1.AddToScheme(scheme))
 	utilruntime.Must(operatorv1alpha2.AddToScheme(scheme))
@@ -84,6 +86,7 @@ func init() { //nolint:gochecknoinits
 
 func main() {
 	flagVar := defineFlagVar()
+	setupLog := ctrl.Log.WithName("setup")
 	opts := zap.Options{
 		Development: true,
 	}
@@ -119,17 +122,17 @@ func main() {
 	}
 	//+kubebuilder:scaffold:builder
 
-	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
+	if err = mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
 		setupLog.Error(err, "Unable to set up health check")
 		os.Exit(1)
 	}
-	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
+	if err = mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
 		setupLog.Error(err, "Unable to set up ready check")
 		os.Exit(1)
 	}
 
 	setupLog.Info("starting manager")
-	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
+	if err = mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "Problem running manager")
 		os.Exit(1)
 	}
@@ -137,7 +140,7 @@ func main() {
 
 func createManager(flagVar *FlagVar) (manager.Manager, error) {
 	webhookServer := webhook.NewServer(webhook.Options{
-		Port: 9443,
+		Port: WebhookServiceDefaultPort,
 	})
 
 	return ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{

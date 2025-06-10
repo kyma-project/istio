@@ -1,13 +1,14 @@
-package istio_resources
+package istioresources
 
 import (
 	"context"
 	_ "embed"
 
-	"github.com/kyma-project/istio/operator/internal/resources"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+
+	"github.com/kyma-project/istio/operator/internal/resources"
 )
 
 //go:embed proxy_protocol_envoy_filter.yaml

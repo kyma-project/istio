@@ -43,7 +43,7 @@ var _ = Describe("GetPodsToRestart", func() {
 			name       string
 			c          client.Client
 			predicates []predicates.SidecarProxyPredicate
-			limits     *pods.PodsRestartLimits
+			limits     *pods.RestartLimits
 			assertFunc func(podList *v1.PodList)
 		}{
 			{

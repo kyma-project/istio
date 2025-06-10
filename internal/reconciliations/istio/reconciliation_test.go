@@ -3,12 +3,13 @@ package istio_test
 import (
 	"context"
 	"fmt"
-	"github.com/kyma-project/istio/operator/pkg/labels"
-	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
 	"strings"
 	"time"
 
-	"github.com/kyma-project/istio/operator/internal/described_errors"
+	"github.com/kyma-project/istio/operator/pkg/labels"
+	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
+
+	"github.com/kyma-project/istio/operator/internal/describederrors"
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/kyma-project/istio/operator/internal/resources"
 	"github.com/kyma-project/istio/operator/internal/status"
@@ -376,7 +377,7 @@ var _ = Describe("Installation reconciliation", func() {
 			Expect(err.Description()).To(ContainSubstring("Istio version update is not allowed"))
 			Expect(err.Description()).To(ContainSubstring(expectedErrorMessage))
 			Expect(err.ShouldSetCondition()).To(BeFalse())
-			Expect(err.Level()).To(Equal(described_errors.Warning))
+			Expect(err.Level()).To(Equal(describederrors.Warning))
 			Expect(mockClient.installCalled).To(BeFalse())
 			Expect(mockClient.uninstallCalled).To(BeFalse())
 
@@ -826,7 +827,7 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Error()).To(Equal("could not delete Istio module instance since there are 1 customer resources present"))
 		Expect(err.Description()).To(Equal("There are Istio resources that block deletion. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning"))
-		Expect(err.Level()).To(Equal(described_errors.Warning))
+		Expect(err.Level()).To(Equal(describederrors.Warning))
 		Expect(err.ShouldSetCondition()).To(BeFalse())
 		Expect(mockClient.installCalled).To(BeFalse())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
@@ -893,7 +894,7 @@ var _ = Describe("Installation reconciliation", func() {
 type mockLibraryClient struct {
 	installCalled   bool
 	uninstallCalled bool
-	*istio.IstioClient
+	*istio.Client
 	installError   error
 	uninstallError error
 }

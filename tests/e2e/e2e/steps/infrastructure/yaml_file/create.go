@@ -1,4 +1,4 @@
-package yaml_resource
+package yaml_file
 
 import (
 	"context"
@@ -16,7 +16,7 @@ type Create struct {
 }
 
 func (c *Create) Description() string {
-	var _, current, _, _ = runtime.Caller(1)
+	var _, current, _, _ = runtime.Caller(0)
 	return fmt.Sprintf("%s: filePath=%s", current, c.FilePath)
 }
 
@@ -39,9 +39,9 @@ func (c *Create) Execute(ctx context.Context, k8sClient client.Client, debugLog 
 	return nil
 }
 
-func (p *Create) Cleanup(ctx context.Context, k8sClient client.Client) error {
+func (c *Create) Cleanup(ctx context.Context, k8sClient client.Client) error {
 	unstructuredObject := &unstructured.Unstructured{}
-	fileYaml, err := os.ReadFile(p.FilePath)
+	fileYaml, err := os.ReadFile(c.FilePath)
 	if err != nil {
 		return err
 	}

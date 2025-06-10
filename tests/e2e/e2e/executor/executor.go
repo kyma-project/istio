@@ -12,17 +12,23 @@ import (
 	"testing"
 )
 
+type Step interface {
+	Description() string
+	Execute(context.Context, client.Client, *log.Logger) error
+	Cleanup(context.Context, client.Client) error
+}
+
 type Executor struct {
+	t     *testing.T
+	steps []Step
+	isCi  bool
+
 	LogOutputs   []*log.Logger
 	TraceOutputs []*log.Logger
 	DebugOutput  *log.Logger
 
 	Ctx       context.Context
 	K8SClient client.Client
-
-	steps []Step
-
-	t *testing.T
 }
 
 const (
@@ -32,6 +38,7 @@ const (
 	defaultDebugPrefix  = "[DEBUG] "
 )
 
+// TODO: Don't user log.Logger, but use t.Log/Logf
 func DefaultExecutor(t *testing.T, logDirectory string) *Executor {
 	// Create a default log directory if it doesn't exist
 	writeDirectory := defaultLogDirectory
@@ -84,12 +91,12 @@ func NewExecutor(t *testing.T, logOutputs []*log.Logger,
 	}
 
 	return &Executor{
+		t:            t,
+		Ctx:          context.Background(),
+		DebugOutput:  debugOutput,
+		K8SClient:    k8sClient,
 		LogOutputs:   logOutputs,
 		TraceOutputs: traceOutputs,
-		t:            t,
-		K8SClient:    k8sClient,
-		DebugOutput:  debugOutput,
-		Ctx:          context.Background(),
 	}
 }
 
@@ -98,12 +105,6 @@ func (e *Executor) Error(err error, args ...interface{}) {
 		writeToOutput(logOutput, fmt.Sprintf("Error: %s", err.Error()), args...)
 	}
 	e.t.Fail()
-}
-
-func (e *Executor) Log(message string) {
-	for _, logOutput := range e.LogOutputs {
-		logOutput.Print(message)
-	}
 }
 
 func writeToOutput(output *log.Logger, message string, args ...interface{}) {
@@ -143,6 +144,10 @@ func (e *Executor) RunStep(step Step) error {
 }
 
 func (e *Executor) Cleanup() {
+	if e.isCi {
+		return
+	}
+
 	for _, step := range e.steps {
 		e.trace(fmt.Sprintf("Cleaning up step: %s", step.Description()))
 		err := step.Cleanup(e.Ctx, e.K8SClient)

@@ -6,13 +6,17 @@ import (
 	"github.com/kyma-project/istio/operator/tests/e2e/e2e/steps/http/no_auth"
 	"github.com/stretchr/testify/require"
 	"io"
+	"os"
 	"testing"
 )
 
 func TestHTTPRequest(t *testing.T) {
 	t.Parallel()
 	testExecutor := executor.DefaultExecutor(t, "http_request")
-	defer testExecutor.Cleanup()
+	if val, ok := os.LookupEnv("CI"); !ok || val != "true" {
+		defer testExecutor.Cleanup()
+	}
+
 	httpRequest := &no_auth.Request{
 		URL:    "https://example.com",
 		Method: "GET",

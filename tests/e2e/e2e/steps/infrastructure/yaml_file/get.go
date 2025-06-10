@@ -1,4 +1,4 @@
-package yaml_resource
+package yaml_file
 
 import (
 	"context"
@@ -20,7 +20,7 @@ type Get struct {
 }
 
 func (g *Get) Description() string {
-	var _, current, _, _ = runtime.Caller(1)
+	var _, current, _, _ = runtime.Caller(0)
 	return fmt.Sprintf("%s: filePath=%s", current, g.FilePath)
 }
 
@@ -35,6 +35,7 @@ func (g *Get) Execute(ctx context.Context, k8sClient client.Client, _ *log.Logge
 	}
 
 	unstructuredObject := unstructured.Unstructured{}
+	unstructuredObject.SetGroupVersionKind(unstructuredFromFile.GetObjectKind().GroupVersionKind())
 	if err := k8sClient.Get(ctx,
 		types.NamespacedName{
 			Namespace: unstructuredFromFile.GetNamespace(),
@@ -49,6 +50,6 @@ func (g *Get) Execute(ctx context.Context, k8sClient client.Client, _ *log.Logge
 	return nil
 }
 
-func (g *Get) Cleanup(ctx context.Context, k8sClient client.Client) error {
+func (g *Get) Cleanup(context.Context, client.Client) error {
 	return nil
 }

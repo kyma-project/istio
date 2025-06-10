@@ -15,7 +15,16 @@ type Get struct {
 	PodNamespace string
 	PodName      string
 
-	Output atomic.Pointer[corev1.Pod]
+	finished atomic.Bool
+	output   *corev1.Pod
+}
+
+func (p *Get) Output() *corev1.Pod {
+	if !p.finished.Load() {
+		return nil
+	}
+
+	return p.output
 }
 
 func (p *Get) Description() string {
@@ -37,7 +46,8 @@ func (p *Get) Execute(ctx context.Context, k8sClient client.Client, _ *log.Logge
 	if err != nil {
 		return err
 	}
-	p.Output.Store(pod)
+	p.output = pod
+	p.finished.Store(true)
 	return nil
 }
 

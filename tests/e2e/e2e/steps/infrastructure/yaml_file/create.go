@@ -6,7 +6,6 @@ import (
 	"github.com/kyma-project/istio/operator/tests/e2e/e2e/executor"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"os"
-	"runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 	"testing"
@@ -17,8 +16,7 @@ type Create struct {
 }
 
 func (c *Create) Description() string {
-	var _, current, _, _ = runtime.Caller(0)
-	return fmt.Sprintf("%s: filePath=%s", current, c.FilePath)
+	return fmt.Sprintf("%s: filePath=%s", "Create resource from file", c.FilePath)
 }
 
 func (c *Create) Execute(t *testing.T, ctx context.Context, k8sClient client.Client) error {

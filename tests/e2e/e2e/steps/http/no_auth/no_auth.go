@@ -18,7 +18,7 @@ type Request struct {
 }
 
 func (r *Request) Description() string {
-	return "HTTP Request: " + r.Method + " " + r.URL
+	return "Making HTTP Request: " + r.Method + " " + r.URL
 }
 
 func (r *Request) Execute(t *testing.T, _ context.Context, _ client.Client) error {

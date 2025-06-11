@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sync/atomic"
 	"testing"
@@ -29,8 +28,7 @@ func (p *Get) Output() *corev1.Pod {
 }
 
 func (p *Get) Description() string {
-	var _, current, _, _ = runtime.Caller(0)
-	return fmt.Sprintf("%s: name=%s, namespace=%s", current, p.PodName, p.PodNamespace)
+	return fmt.Sprintf("%s: name=%s, namespace=%s", "Get Pod", p.PodName, p.PodNamespace)
 }
 
 func (p *Get) Args() map[string]string {

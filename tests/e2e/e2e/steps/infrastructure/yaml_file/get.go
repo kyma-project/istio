@@ -6,7 +6,6 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 	"os"
-	"runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 	"sync/atomic"
@@ -20,8 +19,7 @@ type Get struct {
 }
 
 func (g *Get) Description() string {
-	var _, current, _, _ = runtime.Caller(0)
-	return fmt.Sprintf("%s: filePath=%s", current, g.FilePath)
+	return fmt.Sprintf("%s: filePath=%s", "Get resource based on file", g.FilePath)
 }
 
 func (g *Get) Execute(t *testing.T, ctx context.Context, k8sClient client.Client) error {

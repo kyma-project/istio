@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/kyma-project/istio/operator/tests/e2e/e2e/executor"
 	corev1 "k8s.io/api/core/v1"
-	"runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"testing"
 )
@@ -15,8 +14,7 @@ type Create struct {
 }
 
 func (p *Create) Description() string {
-	var _, current, _, _ = runtime.Caller(0)
-	return fmt.Sprintf("%s: name=%s, namespace=%s", current, p.Pod.Name, p.Pod.Namespace)
+	return fmt.Sprintf("%s: name=%s, namespace=%s", "Create Pod", p.Pod.Name, p.Pod.Namespace)
 }
 
 func (p *Create) Execute(t *testing.T, ctx context.Context, k8sClient client.Client) error {

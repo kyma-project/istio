@@ -33,7 +33,7 @@ func (p *Create) Execute(t *testing.T, ctx context.Context, k8sClient client.Cli
 	return nil
 }
 
-func (p *Create) Cleanup(ctx context.Context, k8sClient client.Client) error {
+func (p *Create) Cleanup(_ *testing.T, ctx context.Context, k8sClient client.Client) error {
 	if p.Pod == nil {
 		return fmt.Errorf("pod is nil")
 	}

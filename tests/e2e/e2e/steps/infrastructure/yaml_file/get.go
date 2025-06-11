@@ -48,6 +48,6 @@ func (g *Get) Execute(t *testing.T, ctx context.Context, k8sClient client.Client
 	return nil
 }
 
-func (g *Get) Cleanup(context.Context, client.Client) error {
+func (g *Get) Cleanup(*testing.T, context.Context, client.Client) error {
 	return nil
 }

@@ -43,6 +43,6 @@ func (r *Request) Execute(t *testing.T, _ context.Context, _ client.Client) erro
 	return nil
 }
 
-func (r *Request) Cleanup(context.Context, client.Client) error {
+func (r *Request) Cleanup(*testing.T, context.Context, client.Client) error {
 	return nil
 }

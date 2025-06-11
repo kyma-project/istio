@@ -13,7 +13,7 @@ import (
 type Step interface {
 	Description() string
 	Execute(*testing.T, context.Context, client.Client) error
-	Cleanup(context.Context, client.Client) error
+	Cleanup(*testing.T, context.Context, client.Client) error
 }
 
 type Executor struct {
@@ -83,7 +83,7 @@ func (e *Executor) Cleanup() {
 
 	for _, step := range e.steps {
 		Tracef(e.t, fmt.Sprintf("Cleaning up step: %s", step.Description()))
-		err := step.Cleanup(e.t.Context(), e.K8SClient)
+		err := step.Cleanup(e.t, e.t.Context(), e.K8SClient)
 		Untracef(e.t, fmt.Sprintf("Cleaning up step: %s", step.Description()))
 		assert.NoError(e.t, err)
 	}

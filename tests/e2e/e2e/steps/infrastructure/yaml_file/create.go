@@ -38,7 +38,7 @@ func (c *Create) Execute(t *testing.T, ctx context.Context, k8sClient client.Cli
 	return nil
 }
 
-func (c *Create) Cleanup(ctx context.Context, k8sClient client.Client) error {
+func (c *Create) Cleanup(t *testing.T, ctx context.Context, k8sClient client.Client) error {
 	unstructuredObject := &unstructured.Unstructured{}
 	fileYaml, err := os.ReadFile(c.FilePath)
 	if err != nil {

@@ -22,7 +22,7 @@ Feature: Connection in the Istio mesh
     And Application pod "nginx" in namespace "source" has Istio proxy "present"
     And Istio gateway "test-gateway" is configured in namespace "default"
     When Virtual service "test-vs" exposing service "nginx.source.svc.cluster.local" with port "80" by gateway "default/test-gateway" is configured in namespace "default"
-    Then Request to path "/" should return "Host" with value "httpbin.target.svc.cluster.local" in body
+    Then Request to host "nginx.source.svc.cluster.local" and path "/" should return "Host" with value "httpbin.target.svc.cluster.local" in body
 
   Scenario: Access between applications from injection disabled namespace to injection enabled namespace is restricted
     Given Istio CR "istio-sample" from "istio_cr_template" is applied in namespace "kyma-system"
@@ -37,7 +37,7 @@ Feature: Connection in the Istio mesh
     And Application pod "nginx" in namespace "source" has Istio proxy "not present"
     And Istio gateway "test-gateway" is configured in namespace "default"
     When Virtual service "test-vs" exposing service "nginx.source.svc.cluster.local" with port "80" by gateway "default/test-gateway" is configured in namespace "default"
-    Then Request to path "/" should have response code "502"
+    Then Request with header "Host" with value "nginx.source.svc.cluster.local" to path "/" should have response code "502"
 
   Scenario: Namespace with istio-injection=disabled label does not contain pods with istio sidecar
     Given Istio CR "istio-sample" from "istio_cr_template" is applied in namespace "kyma-system"

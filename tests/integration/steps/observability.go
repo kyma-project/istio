@@ -93,7 +93,7 @@ func CreateTelemetryCollectorMock(ctx context.Context, appName, namespace string
 		},
 	}
 
-	return CreateDeployment(ctx, appName, namespace, c)
+	return CreateDeployment(ctx, appName, namespace, c, false)
 }
 
 func CreateOpenTelemetryService(ctx context.Context, collectorDepName, namespace string) (context.Context, error) {

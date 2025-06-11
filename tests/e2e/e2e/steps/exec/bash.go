@@ -40,7 +40,7 @@ func (b *Command) Execute(t *testing.T, _ context.Context, _ client.Client) erro
 				b.ExitCode = -1
 			}
 		}
-		return err
+		return fmt.Errorf("recieved err=%w; Output=%s", err, string(output))
 	}
 	b.Output = output
 	b.ExitCode = 0

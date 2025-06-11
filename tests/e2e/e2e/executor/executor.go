@@ -56,6 +56,10 @@ const (
 	DebugPrefix   = "[DEBUG] "
 )
 
+func Errorf(t *testing.T, template string, args ...interface{}) {
+	t.Logf(ErrorPrefix+template, args...)
+}
+
 func Infof(t *testing.T, template string, args ...interface{}) {
 	t.Logf(InfoPrefix+template, args...)
 }
@@ -82,7 +86,8 @@ func (e *Executor) RunStep(step Step) error {
 	Tracef(e.t, step.Description())
 
 	if err := step.Execute(e.t, e.t.Context(), e.K8SClient); err != nil {
-		return fmt.Errorf("failed to execute step %s: %w", step.Description(), err)
+		Errorf(e.t, "Failed to execute step: %s err=%s", step.Description(), err.Error())
+		return err
 	}
 
 	Untracef(e.t, step.Description())

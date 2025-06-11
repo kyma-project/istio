@@ -95,7 +95,9 @@ func (e *Executor) Cleanup() {
 		return
 	}
 
-	for _, step := range e.steps {
+	// Perform cleanup in reverse order
+	for i := len(e.steps) - 1; i >= 0; i-- {
+		step := e.steps[i]
 		Tracef(e.t, fmt.Sprintf("Cleaning up step: %s", step.Description()))
 		err := step.Cleanup(e.t, e.t.Context(), e.K8SClient)
 		Untracef(e.t, fmt.Sprintf("Cleaning up step: %s", step.Description()))

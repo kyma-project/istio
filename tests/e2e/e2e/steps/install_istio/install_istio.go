@@ -6,6 +6,11 @@ import (
 )
 
 func Steps() []executor.Step {
+	createNamespaceStep := &exec.Command{
+		Command:    "kubectl create namespace kyma-system",
+		CleanupCmd: "kubectl delete namespace kyma-system",
+	}
+
 	createManagerStep := &exec.Command{
 		Command:    "kubectl apply -f https://github.com/kyma-project/istio/releases/latest/download/istio-manager.yaml",
 		CleanupCmd: "kubectl delete -f https://github.com/kyma-project/istio/releases/latest/download/istio-manager.yaml",
@@ -17,6 +22,7 @@ func Steps() []executor.Step {
 	}
 
 	return []executor.Step{
+		createNamespaceStep,
 		createManagerStep,
 		createIstioCRStep,
 	}

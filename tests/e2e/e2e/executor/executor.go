@@ -95,10 +95,13 @@ func (e *Executor) RunStep(step Step) error {
 }
 
 func (e *Executor) Cleanup() {
-	Tracef(e.t, "Starting cleanup of steps: isCi=%v, onlyCleanup=%v", e.isCi, e.onlyCleanup)
 	if e.isCi && !e.onlyCleanup {
+		Infof(e.t, "Skipping cleanup in CI environment")
 		return
 	}
+
+	Tracef(e.t, "Starting cleanup")
+	defer Untracef(e.t, "Finished cleanup")
 
 	// Perform cleanup in reverse order
 	for i := len(e.steps) - 1; i >= 0; i-- {

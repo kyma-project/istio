@@ -15,7 +15,7 @@ func TestPodCreation(t *testing.T) {
 	// Setup Infra
 
 	t.Run("test", func(t *testing.T) {
-		testExecutor := executor.DefaultExecutor(t, "create_pod")
+		testExecutor := executor.NewExecutor(t)
 		defer testExecutor.Cleanup()
 
 		createPod := &e2ePod.Create{

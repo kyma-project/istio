@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
-	"log"
 	"os"
 	"runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 	"sync/atomic"
+	"testing"
 )
 
 type Get struct {
@@ -24,7 +24,7 @@ func (g *Get) Description() string {
 	return fmt.Sprintf("%s: filePath=%s", current, g.FilePath)
 }
 
-func (g *Get) Execute(ctx context.Context, k8sClient client.Client, _ *log.Logger) error {
+func (g *Get) Execute(t *testing.T, ctx context.Context, k8sClient client.Client) error {
 	unstructuredFromFile := unstructured.Unstructured{}
 	yamlFile, err := os.ReadFile(g.FilePath)
 	if err != nil {

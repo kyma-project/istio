@@ -3,10 +3,11 @@ package pod
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/istio/operator/tests/e2e/e2e/executor"
 	corev1 "k8s.io/api/core/v1"
-	"log"
 	"runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"testing"
 )
 
 type Create struct {
@@ -18,12 +19,12 @@ func (p *Create) Description() string {
 	return fmt.Sprintf("%s: name=%s, namespace=%s", current, p.Pod.Name, p.Pod.Namespace)
 }
 
-func (p *Create) Execute(ctx context.Context, k8sClient client.Client, debugLogger *log.Logger) error {
+func (p *Create) Execute(t *testing.T, ctx context.Context, k8sClient client.Client) error {
 	if p.Pod == nil {
 		return fmt.Errorf("pod is nil")
 	}
 
-	debugLogger.Printf("Creating Pod: %+v", *p.Pod)
+	executor.Debugf(t, "Creating Pod: %+v", *p.Pod)
 
 	err := k8sClient.Create(ctx, p.Pod)
 	if err != nil {

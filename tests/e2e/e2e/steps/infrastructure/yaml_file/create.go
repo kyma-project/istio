@@ -3,12 +3,13 @@ package yaml_file
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/istio/operator/tests/e2e/e2e/executor"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"log"
 	"os"
 	"runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
+	"testing"
 )
 
 type Create struct {
@@ -20,7 +21,7 @@ func (c *Create) Description() string {
 	return fmt.Sprintf("%s: filePath=%s", current, c.FilePath)
 }
 
-func (c *Create) Execute(ctx context.Context, k8sClient client.Client, debugLog *log.Logger) error {
+func (c *Create) Execute(t *testing.T, ctx context.Context, k8sClient client.Client) error {
 	unstructuredObject := &unstructured.Unstructured{}
 	fileYaml, err := os.ReadFile(c.FilePath)
 	if err != nil {
@@ -31,7 +32,7 @@ func (c *Create) Execute(ctx context.Context, k8sClient client.Client, debugLog 
 		return err
 	}
 
-	debugLog.Printf("Creating object from YAML: %+v", unstructuredObject.Object)
+	executor.Debugf(t, "Creating object from YAML:\n%+v", string(fileYaml))
 	if err := k8sClient.Create(ctx, unstructuredObject); err != nil {
 		return err
 	}

@@ -10,7 +10,7 @@ import (
 
 func TestCreateResource(t *testing.T) {
 	// Create executor
-	e2eExecutor := executor.DefaultExecutor(t, "resource")
+	e2eExecutor := executor.NewExecutor(t)
 	defer e2eExecutor.Cleanup()
 
 	//given

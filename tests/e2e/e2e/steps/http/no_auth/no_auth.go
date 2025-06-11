@@ -2,10 +2,10 @@ package no_auth
 
 import (
 	"context"
-	"log"
+	"github.com/kyma-project/istio/operator/tests/e2e/e2e/executor"
 	"net/http"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sync/atomic"
+	"testing"
 )
 
 type Request struct {
@@ -14,15 +14,15 @@ type Request struct {
 	Headers map[string]string `json:"headers,omitempty"`
 	Body    string            `json:"body,omitempty"`
 
-	Response atomic.Pointer[http.Response] `json:"-"`
+	Response *http.Response `json:"-"`
 }
 
 func (r *Request) Description() string {
 	return "HTTP Request: " + r.Method + " " + r.URL
 }
 
-func (r *Request) Execute(_ context.Context, _ client.Client, debugLogger *log.Logger) error {
-	debugLogger.Printf("Executing HTTP request: %s %s", r.Method, r.URL)
+func (r *Request) Execute(t *testing.T, _ context.Context, _ client.Client) error {
+	executor.Debugf(t, "Executing HTTP request: %s %s", r.Method, r.URL)
 	req, err := http.NewRequest(r.Method, r.URL, nil)
 	if err != nil {
 		return err
@@ -38,8 +38,8 @@ func (r *Request) Execute(_ context.Context, _ client.Client, debugLogger *log.L
 		return err
 	}
 
-	debugLogger.Printf("Received response: %d %s", resp.StatusCode, http.StatusText(resp.StatusCode))
-	r.Response.Store(resp)
+	executor.Debugf(t, "Received response: %d %s", resp.StatusCode, http.StatusText(resp.StatusCode))
+	r.Response = resp
 	return nil
 }
 

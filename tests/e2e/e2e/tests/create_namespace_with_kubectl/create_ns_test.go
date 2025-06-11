@@ -22,13 +22,16 @@ func TestCreateNsWithKubectl(t *testing.T) {
 
 		err := testExecutor.RunStep(createNs)
 		require.NoError(t, err)
+		require.Equal(t, 0, createNs.ExitCode)
 
 		// Verify Namespace Creation
 		verifyNs := &bashStep.Command{
 			Command: "kubectl get namespace test-namespace --no-headers -o custom-columns=NAME:.metadata.name",
 		}
 		err = testExecutor.RunStep(verifyNs)
-		require.NoError(t, err, "Namespace should be created successfully")
+		require.NoError(t, err, "Namespace should be fetched successfully")
+		require.Equal(t, verifyNs.ExitCode, 0)
+
 		output := verifyNs.Output
 		require.Contains(t, string(output), "test-namespace", "Expected namespace 'test-namespace' to be present in the output")
 		executor.Debugf(t, "Namespace created successfully: %s", output)

@@ -19,7 +19,14 @@ type Step interface {
 type Executor struct {
 	t     *testing.T
 	steps []Step
-	isCi  bool
+
+	// isCi indicates whether the tests are running in a CI environment
+	// i.e., if the environment variable CI is set to "true"
+	// This is used to skip cleanup steps in CI environments.
+	isCi bool
+
+	// OnlyCleanup indicates whether to skip step execution and only perform cleanup
+	onlyCleanup bool
 
 	K8SClient client.Client
 }
@@ -31,11 +38,13 @@ func NewExecutor(t *testing.T) *Executor {
 	}
 
 	ciEnv := os.Getenv("CI")
+	onlyCleanup := os.Getenv("ONLY_CLEANUP")
 
 	return &Executor{
-		t:         t,
-		K8SClient: k8sClient,
-		isCi:      ciEnv == "true",
+		t:           t,
+		K8SClient:   k8sClient,
+		isCi:        ciEnv == "true",
+		onlyCleanup: onlyCleanup == "true",
 	}
 }
 
@@ -64,6 +73,12 @@ func Untracef(t *testing.T, template string, args ...interface{}) {
 }
 
 func (e *Executor) RunStep(step Step) error {
+	e.steps = append(e.steps, step)
+	if e.onlyCleanup {
+		Debugf(e.t, "Skipping step execution in cleanup mode: %s", step.Description())
+		return nil
+	}
+
 	Tracef(e.t, step.Description())
 
 	if err := step.Execute(e.t, e.t.Context(), e.K8SClient); err != nil {
@@ -71,13 +86,12 @@ func (e *Executor) RunStep(step Step) error {
 	}
 
 	Untracef(e.t, step.Description())
-
-	e.steps = append(e.steps, step)
 	return nil
 }
 
 func (e *Executor) Cleanup() {
-	if e.isCi {
+	Tracef(e.t, "Starting cleanup of steps: isCi=%v, onlyCleanup=%v", e.isCi, e.onlyCleanup)
+	if e.isCi && !e.onlyCleanup {
 		return
 	}
 

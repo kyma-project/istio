@@ -37,7 +37,7 @@ func (b *Command) Execute(t *testing.T, _ context.Context, _ client.Client) erro
 			if status, ok := exitError.Sys().(syscall.WaitStatus); ok {
 				b.ExitCode = status.ExitStatus()
 			} else {
-				b.ExitCode = -1 // Unknown exit code
+				b.ExitCode = -1
 			}
 		}
 		return err
@@ -48,8 +48,9 @@ func (b *Command) Execute(t *testing.T, _ context.Context, _ client.Client) erro
 	return nil
 }
 
-func (b *Command) Cleanup(t *testing.T, ctx context.Context, client client.Client) error {
+func (b *Command) Cleanup(t *testing.T, _ context.Context, _ client.Client) error {
 	if b.CleanupCmd == "" {
+		executor.Debugf(t, "No cleanup command specified, skipping cleanup")
 		return nil
 	}
 

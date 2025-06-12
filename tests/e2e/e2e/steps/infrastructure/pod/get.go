@@ -7,7 +7,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sync/atomic"
 	"testing"
 )
 
@@ -15,15 +14,10 @@ type Get struct {
 	PodNamespace string
 	PodName      string
 
-	finished atomic.Bool
-	output   *corev1.Pod
+	output *corev1.Pod
 }
 
 func (p *Get) Output() *corev1.Pod {
-	if !p.finished.Load() {
-		return nil
-	}
-
 	return p.output
 }
 
@@ -45,7 +39,6 @@ func (p *Get) Execute(t *testing.T, ctx context.Context, k8sClient client.Client
 	require.NoError(t, err)
 
 	p.output = pod
-	p.finished.Store(true)
 	return nil
 }
 

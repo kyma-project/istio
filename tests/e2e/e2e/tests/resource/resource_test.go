@@ -24,7 +24,7 @@ func TestCreateResource(t *testing.T) {
 	require.NoError(t, err)
 
 	//then
-	retrievedResource := getResource.Output.Load()
+	retrievedResource := getResource.Output()
 	require.NotNil(t, retrievedResource, "Expected a non-nil resource after creation")
 
 	fmt.Println(retrievedResource)

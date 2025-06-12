@@ -21,8 +21,10 @@ func TestCreateNsWithKubectl(t *testing.T) {
 		}
 
 		err := testExecutor.RunStep(createNs)
+		output, exitCode := createNs.Output()
+
 		require.NoError(t, err)
-		require.Equal(t, 0, createNs.ExitCode)
+		require.Equal(t, 0, exitCode)
 
 		// Verify Namespace Creation
 		verifyNs := &bashStep.Command{
@@ -30,9 +32,9 @@ func TestCreateNsWithKubectl(t *testing.T) {
 		}
 		err = testExecutor.RunStep(verifyNs)
 		require.NoError(t, err, "Namespace should be fetched successfully")
-		require.Equal(t, verifyNs.ExitCode, 0)
 
-		output := verifyNs.Output
+		output, exitCode = verifyNs.Output()
+		require.Equal(t, exitCode, 0)
 		require.Contains(t, string(output), "test-namespace", "Expected namespace 'test-namespace' to be present in the output")
 		executor.Debugf(t, "Namespace created successfully: %s", output)
 	})

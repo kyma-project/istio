@@ -8,14 +8,17 @@ import (
 	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
-	"sync/atomic"
 	"testing"
 )
 
 type Get struct {
 	FilePath string
 
-	Output atomic.Pointer[unstructured.Unstructured]
+	output unstructured.Unstructured
+}
+
+func (g *Get) Output() *unstructured.Unstructured {
+	return &g.output
 }
 
 func (g *Get) Description() string {
@@ -44,7 +47,7 @@ func (g *Get) Execute(t *testing.T, ctx context.Context, k8sClient client.Client
 		return err
 	}
 
-	g.Output.Store(&unstructuredObject)
+	g.output = unstructuredObject
 	return nil
 }
 

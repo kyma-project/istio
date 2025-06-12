@@ -16,4 +16,4 @@ Feature: X-Forwarded-For header
     And "Deployment" "httpbin" in namespace "default" is ready
     And Istio gateway "test-gateway" is configured in namespace "default"
     When Virtual service "test-vs" exposing service "httpbin.default.svc.cluster.local" by gateway "default/test-gateway" is configured in namespace "default"
-    Then Request sent to exposed httpbin, should contain public client IP in "X-Forwarded-For" header
+    Then Request sent to exposed httpbin with Host header "httpbin.default.svc.cluster.local", should contain public client IP in "X-Forwarded-For" header

@@ -53,7 +53,7 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^Nginx application "([^"]*)" deployment is created in namespace "([^"]*)" with forward to "([^"]*)" and service port 80$`, steps.CreateNginxApplication)
 	ctx.Step(`^OTEL Collector mock "([^"]*)" deployment is created in namespace "([^"]*)"$`, steps.CreateTelemetryCollectorMock)
 	ctx.Step(`^Pod of deployment "([^"]*)" in namespace "([^"]*)" has container "([^"]*)" with resource "([^"]*)" set to cpu - "([^"]*)" and memory - "([^"]*)"$`, steps.DeploymentHasPodWithContainerResourcesSetToCpuAndMemory)
-	ctx.Step(`^Request sent to exposed httpbin, should contain public client IP in "([^"]*)" header$`, steps.ValidatePublicClientIpInHeader)
+	ctx.Step(`^Request sent to exposed httpbin with Host header "([^"]*)", should contain public client IP in "([^"]*)" header$`, steps.ValidatePublicClientIpInHeader)
 	ctx.Step(`^Request to path "([^"]*)" should have response code "([^"]*)"$`, steps.ValidateResponseStatusCode)
 	ctx.Step(`^Request to host "([^"]*)" and path "([^"]*)" should return "([^"]*)" with value "([^"]*)" in body$`, steps.ValidateHeaderInBody)
 	ctx.Step(`^Request with Host "([^"]*)" and header "([^"]*)" with value "([^"]*)" to httpbin should return "([^"]*)" with value "([^"]*)"$`, steps.ValidateStatusForHeader)

@@ -1,19 +1,20 @@
 package executor
 
 import (
-	"context"
 	"fmt"
-	"github.com/kyma-project/istio/operator/tests/e2e/e2e/setup"
-	"github.com/stretchr/testify/assert"
 	"os"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/kyma-project/istio/operator/tests/e2e/e2e/setup"
 )
 
 type Step interface {
 	Description() string
-	Execute(*testing.T, context.Context, client.Client) error
-	Cleanup(*testing.T, context.Context, client.Client) error
+	Execute(*testing.T, client.Client) error
+	Cleanup(*testing.T, client.Client) error
 }
 
 type Executor struct {
@@ -85,7 +86,7 @@ func (e *Executor) RunStep(step Step) error {
 
 	Tracef(e.t, step.Description())
 
-	if err := step.Execute(e.t, e.t.Context(), e.K8SClient); err != nil {
+	if err := step.Execute(e.t, e.K8SClient); err != nil {
 		Errorf(e.t, "Failed to execute step: %s err=%s", step.Description(), err.Error())
 		return err
 	}
@@ -107,7 +108,7 @@ func (e *Executor) Cleanup() {
 	for i := len(e.steps) - 1; i >= 0; i-- {
 		step := e.steps[i]
 		Tracef(e.t, fmt.Sprintf("Cleaning up step: %s", step.Description()))
-		err := step.Cleanup(e.t, e.t.Context(), e.K8SClient)
+		err := step.Cleanup(e.t, e.K8SClient)
 		Untracef(e.t, fmt.Sprintf("Cleaning up step: %s", step.Description()))
 		assert.NoError(e.t, err)
 	}

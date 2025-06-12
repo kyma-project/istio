@@ -1,4 +1,4 @@
-package install_istio
+package installistio
 
 import (
 	"github.com/kyma-project/istio/operator/tests/e2e/e2e/executor"

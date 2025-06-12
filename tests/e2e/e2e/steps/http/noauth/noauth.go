@@ -1,11 +1,12 @@
-package no_auth
+package noauth
 
 import (
-	"context"
-	"github.com/kyma-project/istio/operator/tests/e2e/e2e/executor"
 	"net/http"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"testing"
+
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/kyma-project/istio/operator/tests/e2e/e2e/executor"
 )
 
 type Request struct {
@@ -14,16 +15,17 @@ type Request struct {
 	Headers map[string]string `json:"headers,omitempty"`
 	Body    string            `json:"body,omitempty"`
 
-	Response *http.Response `json:"-"`
+	Response     *http.Response `json:"-"`
+	ResponseBody []byte         `json:"response_body,omitempty"`
 }
 
 func (r *Request) Description() string {
 	return "Making HTTP Request: " + r.Method + " " + r.URL
 }
 
-func (r *Request) Execute(t *testing.T, _ context.Context, _ client.Client) error {
+func (r *Request) Execute(t *testing.T, _ client.Client) error {
 	executor.Debugf(t, "Executing HTTP request: %s %s", r.Method, r.URL)
-	req, err := http.NewRequest(r.Method, r.URL, nil)
+	req, err := http.NewRequestWithContext(t.Context(), r.Method, r.URL, nil)
 	if err != nil {
 		return err
 	}
@@ -37,12 +39,21 @@ func (r *Request) Execute(t *testing.T, _ context.Context, _ client.Client) erro
 	if err != nil {
 		return err
 	}
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			executor.Errorf(t, "Failed to close response body: %v", closeErr)
+		}
+	}()
 
 	executor.Debugf(t, "Received response: %d %s", resp.StatusCode, http.StatusText(resp.StatusCode))
 	r.Response = resp
+	_, err = resp.Body.Read(r.ResponseBody)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func (r *Request) Cleanup(*testing.T, context.Context, client.Client) error {
+func (r *Request) Cleanup(*testing.T, client.Client) error {
 	return nil
 }

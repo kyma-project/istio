@@ -1,14 +1,14 @@
-package yaml_file
+package yamlfile
 
 import (
-	"context"
 	"fmt"
+	"os"
+	"testing"
+
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
-	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
-	"testing"
 )
 
 type Get struct {
@@ -25,32 +25,32 @@ func (g *Get) Description() string {
 	return fmt.Sprintf("%s: filePath=%s", "Get resource based on file", g.FilePath)
 }
 
-func (g *Get) Execute(t *testing.T, ctx context.Context, k8sClient client.Client) error {
+func (g *Get) Execute(t *testing.T, k8sClient client.Client) error {
 	unstructuredFromFile := unstructured.Unstructured{}
 	yamlFile, err := os.ReadFile(g.FilePath)
 	if err != nil {
 		return err
 	}
-	if err := yaml.Unmarshal(yamlFile, &unstructuredFromFile); err != nil {
-		return err
+	if unmarshalErr := yaml.Unmarshal(yamlFile, &unstructuredFromFile); unmarshalErr != nil {
+		return unmarshalErr
 	}
 
 	unstructuredObject := unstructured.Unstructured{}
 	unstructuredObject.SetGroupVersionKind(unstructuredFromFile.GetObjectKind().GroupVersionKind())
-	if err := k8sClient.Get(ctx,
+	if getErr := k8sClient.Get(t.Context(),
 		types.NamespacedName{
 			Namespace: unstructuredFromFile.GetNamespace(),
 			Name:      unstructuredFromFile.GetName(),
 		},
 		&unstructuredObject,
-	); err != nil {
-		return err
+	); getErr != nil {
+		return getErr
 	}
 
 	g.output = unstructuredObject
 	return nil
 }
 
-func (g *Get) Cleanup(*testing.T, context.Context, client.Client) error {
+func (g *Get) Cleanup(*testing.T, client.Client) error {
 	return nil
 }

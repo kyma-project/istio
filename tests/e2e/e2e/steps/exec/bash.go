@@ -1,15 +1,16 @@
 package exec
 
 import (
-	"context"
 	"errors"
 	"fmt"
-	"github.com/kyma-project/istio/operator/tests/e2e/e2e/executor"
 	"os/exec"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
 	"syscall"
 	"testing"
+
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/kyma-project/istio/operator/tests/e2e/e2e/executor"
 )
 
 type Command struct {
@@ -25,13 +26,13 @@ func (c *Command) Output() ([]byte, int) {
 	return c.output, c.exitCode
 }
 
-func (b *Command) Description() string {
-	return fmt.Sprintf("Executing command: %s", b.Command)
+func (c *Command) Description() string {
+	return fmt.Sprintf("Executing command: %s", c.Command)
 }
 
-func (b *Command) Execute(t *testing.T, _ context.Context, _ client.Client) error {
-	splitCommand := strings.Split(b.Command, " ")
-	cmd := exec.Command(splitCommand[0], splitCommand[1:]...)
+func (c *Command) Execute(t *testing.T, _ client.Client) error {
+	splitCommand := strings.Split(c.Command, " ")
+	cmd := exec.Command(splitCommand[0], splitCommand[1:]...) // #nosec G204
 	executor.Debugf(t, "Executing command: %s", cmd.String())
 
 	output, err := cmd.CombinedOutput()
@@ -39,29 +40,29 @@ func (b *Command) Execute(t *testing.T, _ context.Context, _ client.Client) erro
 		var exitError *exec.ExitError
 		if errors.As(err, &exitError) {
 			if status, ok := exitError.Sys().(syscall.WaitStatus); ok {
-				b.exitCode = status.ExitStatus()
+				c.exitCode = status.ExitStatus()
 			} else {
-				b.exitCode = -1
+				c.exitCode = -1
 			}
 		}
 		return fmt.Errorf("recieved err=%w; Output=%s", err, string(output))
 	}
 
 	executor.Debugf(t, "Command output:\n%s", string(output))
-	b.output = output
-	b.exitCode = 0
+	c.output = output
+	c.exitCode = 0
 
 	return nil
 }
 
-func (b *Command) Cleanup(t *testing.T, _ context.Context, _ client.Client) error {
-	if b.CleanupCmd == "" {
+func (c *Command) Cleanup(t *testing.T, _ client.Client) error {
+	if c.CleanupCmd == "" {
 		executor.Debugf(t, "No cleanup command specified, skipping cleanup")
 		return nil
 	}
 
-	splitCommand := strings.Split(b.CleanupCmd, " ")
-	cmd := exec.Command(splitCommand[0], splitCommand[1:]...)
+	splitCommand := strings.Split(c.CleanupCmd, " ")
+	cmd := exec.Command(splitCommand[0], splitCommand[1:]...) // #nosec G204
 	executor.Debugf(t, "Executing cleanup command: %s", cmd.String())
 	output, err := cmd.CombinedOutput()
 	if err != nil {

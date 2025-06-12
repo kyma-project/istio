@@ -1,13 +1,13 @@
 package pod
 
 import (
-	"context"
 	"fmt"
+	"testing"
+
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"testing"
 )
 
 type Get struct {
@@ -32,16 +32,16 @@ func (p *Get) Args() map[string]string {
 	}
 }
 
-func (p *Get) Execute(t *testing.T, ctx context.Context, k8sClient client.Client) error {
+func (p *Get) Execute(t *testing.T, k8sClient client.Client) error {
 	pod := &corev1.Pod{}
 
-	err := k8sClient.Get(ctx, types.NamespacedName{Namespace: p.PodNamespace, Name: p.PodName}, pod)
+	err := k8sClient.Get(t.Context(), types.NamespacedName{Namespace: p.PodNamespace, Name: p.PodName}, pod)
 	require.NoError(t, err)
 
 	p.output = pod
 	return nil
 }
 
-func (p *Get) Cleanup(*testing.T, context.Context, client.Client) error {
+func (p *Get) Cleanup(*testing.T, client.Client) error {
 	return nil
 }

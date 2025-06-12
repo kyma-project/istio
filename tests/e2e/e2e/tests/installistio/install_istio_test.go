@@ -1,10 +1,12 @@
-package install_istio
+package installistio_test
 
 import (
-	"github.com/kyma-project/istio/operator/tests/e2e/e2e/executor"
-	"github.com/kyma-project/istio/operator/tests/e2e/e2e/steps/install_istio"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"github.com/kyma-project/istio/operator/tests/e2e/e2e/executor"
+	"github.com/kyma-project/istio/operator/tests/e2e/e2e/steps/installistio"
 )
 
 func TestInstallIstio(t *testing.T) {
@@ -13,7 +15,7 @@ func TestInstallIstio(t *testing.T) {
 	defer e2eExecutor.Cleanup()
 
 	// Install Istio
-	steps := install_istio.Steps()
+	steps := installistio.Steps()
 	for _, step := range steps {
 		err := e2eExecutor.RunStep(step)
 		require.NoError(t, err)

@@ -1,20 +1,23 @@
-package create_pod_test
+package createpod_test
 
 import (
-	"github.com/kyma-project/istio/operator/tests/e2e/e2e/executor"
-	e2ePod "github.com/kyma-project/istio/operator/tests/e2e/e2e/steps/infrastructure/pod"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"testing"
+
+	"github.com/kyma-project/istio/operator/tests/e2e/e2e/executor"
+	e2ePod "github.com/kyma-project/istio/operator/tests/e2e/e2e/steps/infrastructure/pod"
 )
 
 func TestPodCreation(t *testing.T) {
 	t.Parallel()
 	// Setup Infra
-	
+
 	t.Run("test", func(t *testing.T) {
+		t.Parallel()
 		testExecutor := executor.NewExecutor(t)
 		defer testExecutor.Cleanup()
 

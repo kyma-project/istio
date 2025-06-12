@@ -1,16 +1,19 @@
-package create_namespace_with_kubectl
+package createnamespacewithkubectl_test
 
 import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+
 	"github.com/kyma-project/istio/operator/tests/e2e/e2e/executor"
 	bashStep "github.com/kyma-project/istio/operator/tests/e2e/e2e/steps/exec"
-	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestCreateNsWithKubectl(t *testing.T) {
 	t.Parallel()
 
 	t.Run("Create Namespace", func(t *testing.T) {
+		t.Parallel()
 		// Setup Infra
 		testExecutor := executor.NewExecutor(t)
 		defer testExecutor.Cleanup()
@@ -25,6 +28,7 @@ func TestCreateNsWithKubectl(t *testing.T) {
 
 		require.NoError(t, err)
 		require.Equal(t, 0, exitCode)
+		require.Contains(t, string(output), "namespace/test-namespace created", "Expected namespace creation confirmation in output")
 
 		// Verify Namespace Creation
 		verifyNs := &bashStep.Command{
@@ -34,7 +38,7 @@ func TestCreateNsWithKubectl(t *testing.T) {
 		require.NoError(t, err, "Namespace should be fetched successfully")
 
 		output, exitCode = verifyNs.Output()
-		require.Equal(t, exitCode, 0)
+		require.Equal(t, 0, exitCode)
 		require.Contains(t, string(output), "test-namespace", "Expected namespace 'test-namespace' to be present in the output")
 		executor.Debugf(t, "Namespace created successfully: %s", output)
 	})

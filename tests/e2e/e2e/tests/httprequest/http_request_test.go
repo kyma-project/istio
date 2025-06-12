@@ -1,12 +1,13 @@
-package http_request
+package httprequest_test
 
 import (
-	"fmt"
-	"github.com/kyma-project/istio/operator/tests/e2e/e2e/executor"
-	"github.com/kyma-project/istio/operator/tests/e2e/e2e/steps/http/no_auth"
-	"github.com/stretchr/testify/require"
 	"io"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"github.com/kyma-project/istio/operator/tests/e2e/e2e/executor"
+	"github.com/kyma-project/istio/operator/tests/e2e/e2e/steps/http/noauth"
 )
 
 func TestHTTPRequest(t *testing.T) {
@@ -14,7 +15,7 @@ func TestHTTPRequest(t *testing.T) {
 	testExecutor := executor.NewExecutor(t)
 	defer testExecutor.Cleanup()
 
-	httpRequest := &no_auth.Request{
+	httpRequest := &noauth.Request{
 		URL:    "https://example.com",
 		Method: "GET",
 		Headers: map[string]string{
@@ -28,6 +29,6 @@ func TestHTTPRequest(t *testing.T) {
 	response := httpRequest.Response
 	bdy, err := io.ReadAll(response.Body)
 	require.NoError(t, err, "Failed to read response body")
-	fmt.Printf("Response Status: %s\n", response.Status)
-	fmt.Printf("Response Body: %s\n", bdy)
+	t.Logf("Response Status: %s\n", response.Status)
+	t.Logf("Response Body: %s\n", bdy)
 }

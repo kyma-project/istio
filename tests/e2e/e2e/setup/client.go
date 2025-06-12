@@ -2,9 +2,10 @@ package setup
 
 import (
 	"net/http"
+	"testing"
+
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
-	"testing"
 )
 
 // ClientFromKubeconfig creates a Kubernetes client based as in config.GetConfig()
@@ -23,6 +24,10 @@ func ClientFromKubeconfig(t *testing.T) (client.Client, error) {
 	})
 
 	k8sClient, err := client.New(k8sConfig, client.Options{})
+	if err != nil {
+		t.Errorf("Failed to create Kubernetes client: %s", err.Error())
+		return nil, err
+	}
 	return k8sClient, nil
 }
 

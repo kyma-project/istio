@@ -9,7 +9,7 @@ import (
 )
 
 // ValidatePublicClientIpInHeader validates that the header expectedHeaderName contains the public client IP.
-func ValidatePublicClientIpInHeader(ctx context.Context, expectedHeaderName string) (context.Context, error) {
+func ValidatePublicClientIpInHeader(ctx context.Context, host, expectedHeaderName string) (context.Context, error) {
 
 	clientIp, err := ip.FetchPublic()
 	if err != nil {
@@ -31,6 +31,5 @@ func ValidatePublicClientIpInHeader(ctx context.Context, expectedHeaderName stri
 			fmt.Sprintf(`"%s": "%s"`, expectedHeaderName, clientIp),
 		},
 	}
-
-	return ctx, c.Get(url, asserter)
+	return ctx, c.GetWithHeaders(url, map[string]string{"Host": host}, asserter)
 }

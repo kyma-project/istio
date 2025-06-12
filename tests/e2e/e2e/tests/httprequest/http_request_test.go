@@ -1,7 +1,6 @@
 package httprequest_test
 
 import (
-	"io"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -27,8 +26,7 @@ func TestHTTPRequest(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, httpRequest.Response, "Expected a non-empty response from the HTTP request")
 	response := httpRequest.Response
-	bdy, err := io.ReadAll(response.Body)
 	require.NoError(t, err, "Failed to read response body")
 	t.Logf("Response Status: %s\n", response.Status)
-	t.Logf("Response Body: %s\n", bdy)
+	t.Logf("Response Body: %s\n", string(httpRequest.ResponseBody))
 }

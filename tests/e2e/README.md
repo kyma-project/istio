@@ -9,7 +9,7 @@ E2E tests run against a cluster that is set up as active in your `KUBECONFIG` fi
 export an environment vairable `KUBECONFIG` to specific kubeconfig file. Make sure you have admin permission on a
 cluster.
 
-To run the E2E tests, use the `make test-e2e` command in the project's root directory.
+To run the E2E tests, use the `make test-e2e-egress` command in the project's root directory.
 You can also use `go test -run '^TestE2E.*' ./tests/e2e/...`directly, if you don't want to use make.
 
 ## Writing End-to-End Tests

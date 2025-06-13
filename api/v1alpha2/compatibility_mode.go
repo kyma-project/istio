@@ -7,7 +7,7 @@ import (
 
 //nolint:gochecknoglobals // vairables are used to set compatibility mode for IstioOperator TODO: refactor to constants
 var (
-	pilotCompatibilityEnvVars  = map[string]string{}
+	PilotCompatibilityEnvVars  = map[string]string{}
 	ProxyMetaDataCompatibility = map[string]string{}
 )
 
@@ -27,7 +27,7 @@ func setCompatibilityPilot(op iopv1alpha1.IstioOperator) iopv1alpha1.IstioOperat
 		op.Spec.Components.Pilot.Kubernetes = &iopv1alpha1.KubernetesResources{}
 	}
 
-	for k, v := range pilotCompatibilityEnvVars {
+	for k, v := range PilotCompatibilityEnvVars {
 		op.Spec.Components.Pilot.Kubernetes.Env = append(op.Spec.Components.Pilot.Kubernetes.Env, &v1.EnvVar{
 			Name:  k,
 			Value: v,

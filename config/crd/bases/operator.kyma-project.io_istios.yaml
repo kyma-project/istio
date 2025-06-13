@@ -24,7 +24,7 @@ spec:
     name: v1alpha2
     schema:
       openAPIV3Schema:
-        description: Contains Istio CR specification and current status.
+        description: Istio contains Istio CR specification and current status.
         properties:
           apiVersion:
             description: |-
@@ -1023,7 +1023,7 @@ spec:
                     - k8s
                     type: object
                   egressGateway:
-                    description: EgressGateway defines configuration for Istio egressGateway
+                    description: EgressGateway defines configuration for Istio egressGateway.
                     properties:
                       enabled:
                         type: boolean
@@ -1031,7 +1031,7 @@ spec:
                         description: KubernetesResourcesConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec
                         properties:
                           hpaSpec:
-                            description: HPASpec defines configuration for HorizontalPodAutoscaler
+                            description: HPASpec defines configuration for HorizontalPodAutoscaler.
                             properties:
                               maxReplicas:
                                 format: int32
@@ -1068,7 +1068,7 @@ spec:
                                 type: object
                             type: object
                           strategy:
-                            description: Strategy defines rolling update strategy
+                            description: Strategy defines rolling update strategy.
                             properties:
                               rollingUpdate:
                                 description: 'RollingUpdate defines configuration
@@ -1110,7 +1110,7 @@ spec:
                         description: KubernetesResourcesConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec
                         properties:
                           hpaSpec:
-                            description: HPASpec defines configuration for HorizontalPodAutoscaler
+                            description: HPASpec defines configuration for HorizontalPodAutoscaler.
                             properties:
                               maxReplicas:
                                 format: int32
@@ -1147,7 +1147,7 @@ spec:
                                 type: object
                             type: object
                           strategy:
-                            description: Strategy defines rolling update strategy
+                            description: Strategy defines rolling update strategy.
                             properties:
                               rollingUpdate:
                                 description: 'RollingUpdate defines configuration
@@ -1190,7 +1190,7 @@ spec:
                         description: KubernetesResourcesConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec
                         properties:
                           hpaSpec:
-                            description: HPASpec defines configuration for HorizontalPodAutoscaler
+                            description: HPASpec defines configuration for HorizontalPodAutoscaler.
                             properties:
                               maxReplicas:
                                 format: int32
@@ -1227,7 +1227,7 @@ spec:
                                 type: object
                             type: object
                           strategy:
-                            description: Strategy defines rolling update strategy
+                            description: Strategy defines rolling update strategy.
                             properties:
                               rollingUpdate:
                                 description: 'RollingUpdate defines configuration

@@ -67,4 +67,11 @@ Feature: Configuration of Istio module
     And Log of container "ext-authz" in deployment "ext-authz" in namespace "default" contains "X-Add-In-Check:[value] X-Ext-Authz:[allow]"
     And Request with Host "httpbin.default.svc.cluster.local" and header "x-ext-authz" with value "deny" to path "/headers" should have response code "403"
     And Log of container "ext-authz" in deployment "ext-authz" in namespace "default" contains "X-Add-In-Check:[value] X-Ext-Authz:[deny]"
+    When Authorization policy "ext-authz" in namespace "default" with app selector "httpbin" is using extension provider "ext-authz2" for operation "/headers"
+    Then Request with header "Host" with value "httpbin.default.svc.cluster.local" to path "/" should have response code "200"
+    And Request with Host "httpbin.default.svc.cluster.local" and header "x-ext-authz" with value "allow" to path "/headers" should have response code "200"
+    And Log of container "ext-authz" in deployment "ext-authz" in namespace "default" contains "X-Add-In-Check:[value] X-Ext-Authz:[allow]"
+    And Request with Host "httpbin.default.svc.cluster.local" and header "x-ext-authz" with value "deny" to path "/headers" should have response code "403"
+    And Log of container "ext-authz" in deployment "ext-authz" in namespace "default" contains "X-Add-In-Check:[value] X-Ext-Authz:[deny]"
+
 

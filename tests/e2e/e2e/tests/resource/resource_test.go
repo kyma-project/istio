@@ -1,6 +1,7 @@
 package resource_test
 
 import (
+	"github.com/kyma-project/istio/operator/tests/e2e/e2e/logging"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -27,6 +28,5 @@ func TestCreateResource(t *testing.T) {
 	// then
 	retrievedResource := getResource.Output()
 	require.NotNil(t, retrievedResource, "Expected a non-nil resource after creation")
-
-	t.Log(retrievedResource)
+	logging.Debugf(t, "Created resource: %s", retrievedResource)
 }

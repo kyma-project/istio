@@ -2,8 +2,10 @@ package executor
 
 import (
 	"fmt"
+	"github.com/kyma-project/istio/operator/tests/e2e/e2e/logging"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -77,66 +79,77 @@ func NewExecutor(t *testing.T, options Options) *Executor {
 	}
 }
 
-const (
-	ErrorPrefix   = "[ERROR] "
-	InfoPrefix    = "[INFO] "
-	TracePrefix   = "[TRACE] "
-	UntracePrefix = "[UNTRACE] "
-	DebugPrefix   = "[DEBUG] "
-)
-
-func Errorf(t *testing.T, template string, args ...interface{}) {
-	t.Logf(ErrorPrefix+template, args...)
+type RunStepOptions struct {
+	RetryPeriod time.Duration
+	Timeout     time.Duration
 }
 
-func Infof(t *testing.T, template string, args ...interface{}) {
-	t.Logf(InfoPrefix+template, args...)
+func runStepWithOptions(step Step, t *testing.T, k8sClient client.Client, options RunStepOptions) error {
+	if options.RetryPeriod <= 0 {
+		options.RetryPeriod = 5 * time.Second
+	}
+	if options.Timeout <= 0 {
+		options.Timeout = 30 * time.Second
+	}
+
+	deadline := time.Now().Add(options.Timeout)
+	iteration := 0
+	for {
+		err := step.Execute(t, k8sClient)
+		if err == nil {
+			return nil
+		}
+		if time.Now().After(deadline) {
+			return fmt.Errorf("step execution failed after timeout: %w", err)
+		}
+		logging.Errorf(t, "Step execution iteration %d failed, retrying in %s: %s", iteration, options.RetryPeriod, err.Error())
+		time.Sleep(options.RetryPeriod)
+		iteration++
+	}
 }
 
-func Debugf(t *testing.T, template string, args ...interface{}) {
-	t.Logf(DebugPrefix+template, args...)
-}
-
-func Tracef(t *testing.T, template string, args ...interface{}) {
-	t.Logf(TracePrefix+template, args...)
-}
-
-func Untracef(t *testing.T, template string, args ...interface{}) {
-	t.Logf(UntracePrefix+template, args...)
-}
-
-func (e *Executor) RunStep(step Step) error {
+// RunStep executes a step and adds it to the executor's cleanup stack.
+func (e *Executor) RunStep(step Step, stepOptions ...RunStepOptions) error {
 	e.steps.Push(step)
 	if e.OnlyCleanup {
-		Debugf(e.t, "Skipping step execution in cleanup mode: %s", step.Description())
+		logging.Debugf(e.t, "Skipping step execution in cleanup mode: %s", step.Description())
 		return nil
 	}
 
-	Tracef(e.t, step.Description())
+	logging.Tracef(e.t, step.Description())
 
-	if err := step.Execute(e.t, e.K8SClient); err != nil {
-		Errorf(e.t, "Failed to execute step: %s err=%s", step.Description(), err.Error())
-		return err
+	if len(stepOptions) > 0 {
+		logging.Debugf(e.t, "Executing step: %s, with options: %v", step.Description(), stepOptions[0])
+		if err := runStepWithOptions(step, e.t, e.K8SClient, stepOptions[0]); err != nil {
+			logging.Errorf(e.t, "Failed to execute step with options: %s err=%s", step.Description(), err.Error())
+			return err
+		}
+	} else {
+		logging.Debugf(e.t, "Executing step: %s", step.Description())
+		if err := step.Execute(e.t, e.K8SClient); err != nil {
+			logging.Errorf(e.t, "Failed to execute step: %s err=%s", step.Description(), err.Error())
+			return err
+		}
 	}
 
-	Untracef(e.t, step.Description())
+	logging.Untracef(e.t, step.Description())
 	return nil
 }
 
 func (e *Executor) Cleanup() {
 	if e.IsCi && !e.OnlyCleanup {
-		Infof(e.t, "Skipping cleanup in CI environment")
+		logging.Infof(e.t, "Skipping cleanup in CI environment")
 		return
 	}
 
-	Tracef(e.t, "Starting cleanup")
-	defer Untracef(e.t, "Finished cleanup")
+	logging.Tracef(e.t, "Starting cleanup")
+	defer logging.Untracef(e.t, "Finished cleanup")
 
 	// Perform cleanup in reverse order
 	for step := e.steps.Pop(); step != nil; step = e.steps.Pop() {
-		Tracef(e.t, fmt.Sprintf("Cleaning up step: %s", step.Description()))
+		logging.Tracef(e.t, fmt.Sprintf("Cleaning up step: %s", step.Description()))
 		err := step.Cleanup(e.t, e.K8SClient)
-		Untracef(e.t, fmt.Sprintf("Cleaning up step: %s", step.Description()))
+		logging.Untracef(e.t, fmt.Sprintf("Cleaning up step: %s", step.Description()))
 		assert.NoError(e.t, err)
 	}
 }

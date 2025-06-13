@@ -3,14 +3,13 @@ package exec
 import (
 	"errors"
 	"fmt"
+	"github.com/kyma-project/istio/operator/tests/e2e/e2e/logging"
 	"os/exec"
 	"strings"
 	"syscall"
 	"testing"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	"github.com/kyma-project/istio/operator/tests/e2e/e2e/executor"
 )
 
 type Command struct {
@@ -33,7 +32,7 @@ func (c *Command) Description() string {
 func (c *Command) Execute(t *testing.T, _ client.Client) error {
 	splitCommand := strings.Split(c.Command, " ")
 	cmd := exec.Command(splitCommand[0], splitCommand[1:]...) // #nosec G204
-	executor.Debugf(t, "Executing command: %s", cmd.String())
+	logging.Debugf(t, "Executing command: %s", cmd.String())
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -48,7 +47,7 @@ func (c *Command) Execute(t *testing.T, _ client.Client) error {
 		return fmt.Errorf("recieved err=%w; Output=%s", err, string(output))
 	}
 
-	executor.Debugf(t, "Command output:\n%s", string(output))
+	logging.Debugf(t, "Command output:\n%s", string(output))
 	c.output = output
 	c.exitCode = 0
 
@@ -57,17 +56,17 @@ func (c *Command) Execute(t *testing.T, _ client.Client) error {
 
 func (c *Command) Cleanup(t *testing.T, _ client.Client) error {
 	if c.CleanupCmd == "" {
-		executor.Debugf(t, "No cleanup command specified, skipping cleanup")
+		logging.Debugf(t, "No cleanup command specified, skipping cleanup")
 		return nil
 	}
 
 	splitCommand := strings.Split(c.CleanupCmd, " ")
 	cmd := exec.Command(splitCommand[0], splitCommand[1:]...) // #nosec G204
-	executor.Debugf(t, "Executing cleanup command: %s", cmd.String())
+	logging.Debugf(t, "Executing cleanup command: %s", cmd.String())
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return err
 	}
-	executor.Debugf(t, "Cleanup command output:\n%s", string(output))
+	logging.Debugf(t, "Cleanup command output:\n%s", string(output))
 	return nil
 }

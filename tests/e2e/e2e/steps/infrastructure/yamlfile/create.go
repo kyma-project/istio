@@ -2,14 +2,13 @@ package yamlfile
 
 import (
 	"fmt"
+	"github.com/kyma-project/istio/operator/tests/e2e/e2e/logging"
 	"os"
 	"testing"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
-
-	"github.com/kyma-project/istio/operator/tests/e2e/e2e/executor"
 )
 
 type Create struct {
@@ -31,7 +30,7 @@ func (c *Create) Execute(t *testing.T, k8sClient client.Client) error {
 		return yamlErr
 	}
 
-	executor.Debugf(t, "Creating object from YAML:\n%+v", string(fileYaml))
+	logging.Debugf(t, "Creating object from YAML:\n%+v", string(fileYaml))
 	if createErr := k8sClient.Create(t.Context(), unstructuredObject); createErr != nil {
 		return createErr
 	}

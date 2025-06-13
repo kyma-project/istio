@@ -1,12 +1,11 @@
 package noauth
 
 import (
+	"github.com/kyma-project/istio/operator/tests/e2e/e2e/logging"
 	"net/http"
 	"testing"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	"github.com/kyma-project/istio/operator/tests/e2e/e2e/executor"
 )
 
 type Request struct {
@@ -24,7 +23,7 @@ func (r *Request) Description() string {
 }
 
 func (r *Request) Execute(t *testing.T, _ client.Client) error {
-	executor.Debugf(t, "Executing HTTP request: %s %s", r.Method, r.URL)
+	logging.Debugf(t, "Executing HTTP request: %s %s", r.Method, r.URL)
 	req, err := http.NewRequestWithContext(t.Context(), r.Method, r.URL, nil)
 	if err != nil {
 		return err
@@ -41,11 +40,11 @@ func (r *Request) Execute(t *testing.T, _ client.Client) error {
 	}
 	defer func() {
 		if closeErr := resp.Body.Close(); closeErr != nil {
-			executor.Errorf(t, "Failed to close response body: %v", closeErr)
+			logging.Errorf(t, "Failed to close response body: %v", closeErr)
 		}
 	}()
 
-	executor.Debugf(t, "Received response: %d %s", resp.StatusCode, http.StatusText(resp.StatusCode))
+	logging.Debugf(t, "Received response: %d %s", resp.StatusCode, http.StatusText(resp.StatusCode))
 	r.Response = resp
 	_, err = resp.Body.Read(r.ResponseBody)
 	if err != nil {

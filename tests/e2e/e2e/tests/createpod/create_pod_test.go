@@ -20,6 +20,7 @@ func TestPodCreation(t *testing.T) {
 		testExecutor := executor.NewExecutorWithOptionsFromEnv(t)
 		defer testExecutor.Cleanup()
 
+		// given
 		createPod := &e2ePod.Create{
 			Pod: &corev1.Pod{
 				ObjectMeta: metav1.ObjectMeta{
@@ -43,9 +44,11 @@ func TestPodCreation(t *testing.T) {
 			},
 		}
 
+		// when
 		err := testExecutor.RunStep(createPod)
 		require.NoError(t, err)
 
+		// then
 		podGetter := &e2ePod.Get{
 			PodNamespace: "default",
 			PodName:      "test-pod",

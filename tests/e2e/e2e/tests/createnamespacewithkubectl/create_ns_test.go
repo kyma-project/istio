@@ -1,6 +1,7 @@
 package createnamespacewithkubectl_test
 
 import (
+	"github.com/kyma-project/istio/operator/tests/e2e/e2e/logging"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -40,6 +41,6 @@ func TestCreateNsWithKubectl(t *testing.T) {
 		output, exitCode = verifyNs.Output()
 		require.Equal(t, 0, exitCode)
 		require.Contains(t, string(output), "test-namespace", "Expected namespace 'test-namespace' to be present in the output")
-		executor.Debugf(t, "Namespace created successfully: %s", output)
+		logging.Debugf(t, "Namespace created successfully: %s", output)
 	})
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -25,18 +24,13 @@ func (p *Get) Description() string {
 	return fmt.Sprintf("%s: name=%s, namespace=%s", "Get Pod", p.PodName, p.PodNamespace)
 }
 
-func (p *Get) Args() map[string]string {
-	return map[string]string{
-		"Namespace":   p.PodNamespace,
-		"Description": p.PodName,
-	}
-}
-
 func (p *Get) Execute(t *testing.T, k8sClient client.Client) error {
 	pod := &corev1.Pod{}
 
 	err := k8sClient.Get(t.Context(), types.NamespacedName{Namespace: p.PodNamespace, Name: p.PodName}, pod)
-	require.NoError(t, err)
+	if err != nil {
+		return err
+	}
 
 	p.output = pod
 	return nil

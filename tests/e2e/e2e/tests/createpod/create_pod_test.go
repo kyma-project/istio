@@ -17,7 +17,7 @@ func TestPodCreation(t *testing.T) {
 
 	t.Run("test", func(t *testing.T) {
 		t.Parallel()
-		testExecutor := executor.NewExecutor(t)
+		testExecutor := executor.NewExecutorWithOptionsFromEnv(t)
 		defer testExecutor.Cleanup()
 
 		createPod := &e2ePod.Create{

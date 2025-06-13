@@ -17,35 +17,63 @@ type Step interface {
 	Cleanup(*testing.T, client.Client) error
 }
 
-type Executor struct {
-	t     *testing.T
+type StepsLIFOQueue struct {
 	steps []Step
+}
 
-	// isCi indicates whether the tests are running in a CI environment
-	// i.e., if the environment variable CI is set to "true"
-	// This is used to skip cleanup steps in CI environments.
-	isCi bool
+func NewStepLIFOQueue() *StepsLIFOQueue {
+	return &StepsLIFOQueue{
+		steps: make([]Step, 0),
+	}
+}
 
-	// OnlyCleanup indicates whether to skip step execution and only perform cleanup
-	onlyCleanup bool
+func (q *StepsLIFOQueue) Push(step Step) {
+	q.steps = append(q.steps, step)
+}
+
+func (q *StepsLIFOQueue) Pop() Step {
+	if len(q.steps) == 0 {
+		return nil
+	}
+	step := q.steps[len(q.steps)-1]
+	q.steps = q.steps[:len(q.steps)-1]
+	return step
+}
+
+type Executor struct {
+	Options
+
+	t     *testing.T
+	steps *StepsLIFOQueue
 
 	K8SClient client.Client
 }
 
-func NewExecutor(t *testing.T) *Executor {
+type Options struct {
+	IsCi        bool
+	OnlyCleanup bool
+}
+
+func NewExecutorWithOptionsFromEnv(t *testing.T) *Executor {
+	options := Options{
+		IsCi:        os.Getenv("CI") == "true",
+		OnlyCleanup: os.Getenv("ONLY_CLEANUP") == "true",
+	}
+
+	return NewExecutor(t, options)
+}
+
+func NewExecutor(t *testing.T, options Options) *Executor {
 	k8sClient, err := setup.ClientFromKubeconfig(t)
 	if err != nil {
 		t.Fatalf("Failed to create Kubernetes client: %s", err.Error())
 	}
 
-	ciEnv := os.Getenv("CI")
-	onlyCleanup := os.Getenv("ONLY_CLEANUP")
-
 	return &Executor{
-		t:           t,
-		K8SClient:   k8sClient,
-		isCi:        ciEnv == "true",
-		onlyCleanup: onlyCleanup == "true",
+		t:         t,
+		K8SClient: k8sClient,
+		Options:   options,
+		steps:     NewStepLIFOQueue(),
 	}
 }
 
@@ -78,8 +106,8 @@ func Untracef(t *testing.T, template string, args ...interface{}) {
 }
 
 func (e *Executor) RunStep(step Step) error {
-	e.steps = append(e.steps, step)
-	if e.onlyCleanup {
+	e.steps.Push(step)
+	if e.OnlyCleanup {
 		Debugf(e.t, "Skipping step execution in cleanup mode: %s", step.Description())
 		return nil
 	}
@@ -96,7 +124,7 @@ func (e *Executor) RunStep(step Step) error {
 }
 
 func (e *Executor) Cleanup() {
-	if e.isCi && !e.onlyCleanup {
+	if e.IsCi && !e.OnlyCleanup {
 		Infof(e.t, "Skipping cleanup in CI environment")
 		return
 	}
@@ -105,8 +133,7 @@ func (e *Executor) Cleanup() {
 	defer Untracef(e.t, "Finished cleanup")
 
 	// Perform cleanup in reverse order
-	for i := len(e.steps) - 1; i >= 0; i-- {
-		step := e.steps[i]
+	for step := e.steps.Pop(); step != nil; step = e.steps.Pop() {
 		Tracef(e.t, fmt.Sprintf("Cleaning up step: %s", step.Description()))
 		err := step.Cleanup(e.t, e.K8SClient)
 		Untracef(e.t, fmt.Sprintf("Cleaning up step: %s", step.Description()))

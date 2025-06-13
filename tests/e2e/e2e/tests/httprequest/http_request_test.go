@@ -11,7 +11,7 @@ import (
 
 func TestHTTPRequest(t *testing.T) {
 	t.Parallel()
-	testExecutor := executor.NewExecutor(t)
+	testExecutor := executor.NewExecutorWithOptionsFromEnv(t)
 	defer testExecutor.Cleanup()
 
 	httpRequest := &noauth.Request{

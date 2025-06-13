@@ -15,7 +15,7 @@ func TestCreateNsWithKubectl(t *testing.T) {
 	t.Run("Create Namespace", func(t *testing.T) {
 		t.Parallel()
 		// Setup Infra
-		testExecutor := executor.NewExecutor(t)
+		testExecutor := executor.NewExecutorWithOptionsFromEnv(t)
 		defer testExecutor.Cleanup()
 
 		createNs := &bashStep.Command{

@@ -195,7 +195,7 @@ test-e2e-egress: gotestsum
 
 .PHONY: e2e-test
 e2e-test:
-	make -C tests/e2e/e2e e2e-test
+	make -C tests/e2e/e2e/tests e2e-test
 ##@ Module
 
 .PHONY: module-image

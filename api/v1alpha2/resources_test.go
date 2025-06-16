@@ -3,17 +3,18 @@ package v1alpha2_test
 import (
 	"os"
 
-	"github.com/kyma-project/istio/operator/api/v1alpha2"
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
+	. "github.com/onsi/ginkgo/v2" //nolint:revive // Ginkgo tests are generally written without a direct package reference
+	. "github.com/onsi/gomega"    //nolint:revive // Gomega asserts are generally written without a direct package reference
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/yaml"
+
+	"github.com/kyma-project/istio/operator/api/v1alpha2"
 )
 
 var _ = Describe("GetProxyResources", func() {
 	It("should get resources from merged Istio CR and istio operator", func() {
-		//given
+		// given
 		iop := iopv1alpha1.IstioOperator{
 			Spec: iopv1alpha1.IstioOperatorSpec{},
 		}
@@ -50,7 +51,7 @@ var _ = Describe("GetProxyResources", func() {
 	})
 
 	It("should validate that resources can be returned", func() {
-		//given
+		// given
 		iop := iopv1alpha1.IstioOperator{
 			Spec: iopv1alpha1.IstioOperatorSpec{},
 		}
@@ -75,7 +76,7 @@ var _ = Describe("GetProxyResources", func() {
 	})
 
 	It("should be able to get resources from real istio operator template when IstioCR has no overrides", func() {
-		//given
+		// given
 		istioOperator, err := os.ReadFile("../../internal/istiooperator/istio-operator.yaml")
 		Expect(err).ShouldNot(HaveOccurred())
 

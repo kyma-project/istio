@@ -15,3 +15,11 @@ spec:
           include: ["X-Ext-Authz"]
           add:
             X-Add-In-Check: "value"
+    - name: "ext-authz2"
+      service: "ext-authz.{{.Namespace}}.svc.cluster.local"
+      port: 8000
+      headers:
+        inCheck:
+          include: ["X-Ext-Authz"]
+          add:
+            X-Add-In-Check: "value"

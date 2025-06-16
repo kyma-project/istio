@@ -68,3 +68,20 @@ Feature: Configuration of Istio module
     And Request with header "x-ext-authz" with value "deny" to path "/headers" should have response code "403"
     And Log of container "ext-authz" in deployment "ext-authz" in namespace "default" contains "X-Add-In-Check:[value] X-Ext-Authz:[deny]"
 
+  Scenario: External authorizer
+    When Template value "Namespace" is set to "default"
+    And Istio CR "istio-sample" from "istio_cr_ext_authz_template" is applied in namespace "kyma-system"
+    And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
+    And Istio injection is "enabled" in namespace "default"
+    And Httpbin application "httpbin" deployment is created in namespace "default" with service port "80"
+    And "Deployment" "httpbin" in namespace "default" is ready
+    And Ext-authz application "ext-authz" deployment is created in namespace "default"
+    And "Deployment" "ext-authz" in namespace "default" is ready
+    And Istio gateway "test-gateway" is configured in namespace "default"
+    And Virtual service "httpbin" exposing service "httpbin.default.svc.cluster.local" with port "80" by gateway "default/test-gateway" is configured in namespace "default"
+    When Authorization policy "ext-authz2" in namespace "default" with app selector "httpbin" is using extension provider "ext-authz2" for operation "/headers"
+    Then Request with header "Host" with value "httpbin.default.svc.cluster.local" to path "/" should have response code "200"
+    And Request with Host "httpbin.default.svc.cluster.local" and header "x-ext-authz" with value "allow" to path "/headers" should have response code "200"
+    And Log of container "ext-authz" in deployment "ext-authz" in namespace "default" contains "X-Add-In-Check:[value] X-Ext-Authz:[allow]"
+    And Request with Host "httpbin.default.svc.cluster.local" and header "x-ext-authz" with value "deny" to path "/headers" should have response code "403"
+    And Log of container "ext-authz" in deployment "ext-authz" in namespace "default" contains "X-Add-In-Check:[value] X-Ext-Authz:[deny]"

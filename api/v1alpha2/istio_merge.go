@@ -89,74 +89,80 @@ func (m *meshConfigBuilder) Build() json.RawMessage {
 	return json.RawMessage(m.c.JSON())
 }
 
-func (m *meshConfigBuilder) BuildExternalAuthorizerConfiguration(authorizers []*Authorizer) *meshConfigBuilder {
-	for _, authorizer := range authorizers {
-		if authorizer != nil {
-			var authorizationProvider meshv1alpha1.MeshConfig_ExtensionProvider
-			authorizationProvider.Name = authorizer.Name
-			var envoyXAuthProvider meshv1alpha1.MeshConfig_ExtensionProvider_EnvoyExtAuthzHttp
-			envoyXAuthProvider.EnvoyExtAuthzHttp = &meshv1alpha1.MeshConfig_ExtensionProvider_EnvoyExternalAuthorizationHttpProvider{
-				Service: authorizer.Service,
-				Port:    authorizer.Port,
-			}
+func setupHeaders(envoyXAuthProvider *meshv1alpha1.MeshConfig_ExtensionProvider_EnvoyExtAuthzHttp, headers *Headers) {
+	if headers == nil {
+		return
+	}
+	if headers.InCheck != nil {
+		include := headers.InCheck.Include
+		if include != nil {
+			envoyXAuthProvider.EnvoyExtAuthzHttp.IncludeRequestHeadersInCheck = append(envoyXAuthProvider.EnvoyExtAuthzHttp.IncludeRequestHeadersInCheck, include...)
+		}
 
-			headers := authorizer.Headers
-			if headers != nil {
-				if headers.InCheck != nil {
-					include := headers.InCheck.Include
-					if include != nil {
-						envoyXAuthProvider.EnvoyExtAuthzHttp.IncludeRequestHeadersInCheck = append(envoyXAuthProvider.EnvoyExtAuthzHttp.IncludeRequestHeadersInCheck, include...)
-					}
-
-					add := headers.InCheck.Add
-					if add != nil {
-						envoyXAuthProvider.EnvoyExtAuthzHttp.IncludeAdditionalHeadersInCheck = make(map[string]string)
-						for k, v := range add {
-							envoyXAuthProvider.EnvoyExtAuthzHttp.IncludeAdditionalHeadersInCheck[k] = v
-						}
-					}
-				}
-
-				if headers.ToUpstream != nil {
-					onAllow := headers.ToUpstream.OnAllow
-					if onAllow != nil {
-						envoyXAuthProvider.EnvoyExtAuthzHttp.HeadersToUpstreamOnAllow = append(envoyXAuthProvider.EnvoyExtAuthzHttp.HeadersToUpstreamOnAllow, onAllow...)
-					}
-				}
-
-				if headers.ToDownstream != nil {
-					onAllow := headers.ToDownstream.OnAllow
-					if onAllow != nil {
-						envoyXAuthProvider.EnvoyExtAuthzHttp.HeadersToDownstreamOnAllow = append(envoyXAuthProvider.EnvoyExtAuthzHttp.HeadersToDownstreamOnAllow, onAllow...)
-					}
-
-					onDeny := headers.ToDownstream.OnDeny
-					if onDeny != nil {
-						envoyXAuthProvider.EnvoyExtAuthzHttp.HeadersToDownstreamOnDeny = append(envoyXAuthProvider.EnvoyExtAuthzHttp.HeadersToDownstreamOnDeny, onDeny...)
-					}
-				}
-			}
-
-			authorizationProvider.Provider = &envoyXAuthProvider
-			extensionProviders := values.TryGetPathAs[[]interface{}](m.c, "extensionProviders")
-			marshaledProvider, err := protomarshal.Marshal(&authorizationProvider)
-			if err != nil {
-				return nil
-			}
-			var providerMap map[string]interface{}
-			err = json.Unmarshal(marshaledProvider, &providerMap)
-			if err != nil {
-				return nil
-			}
-
-			extensionProviders = append(extensionProviders, providerMap)
-			err = m.c.SetPath("extensionProviders", &extensionProviders)
-			if err != nil {
-				return nil
+		add := headers.InCheck.Add
+		if add != nil {
+			envoyXAuthProvider.EnvoyExtAuthzHttp.IncludeAdditionalHeadersInCheck = make(map[string]string)
+			for k, v := range add {
+				envoyXAuthProvider.EnvoyExtAuthzHttp.IncludeAdditionalHeadersInCheck[k] = v
 			}
 		}
 	}
 
+	if headers.ToUpstream != nil {
+		onAllow := headers.ToUpstream.OnAllow
+		if onAllow != nil {
+			envoyXAuthProvider.EnvoyExtAuthzHttp.HeadersToUpstreamOnAllow = append(envoyXAuthProvider.EnvoyExtAuthzHttp.HeadersToUpstreamOnAllow, onAllow...)
+		}
+	}
+
+	if headers.ToDownstream != nil {
+		onAllow := headers.ToDownstream.OnAllow
+		if onAllow != nil {
+			envoyXAuthProvider.EnvoyExtAuthzHttp.HeadersToDownstreamOnAllow = append(envoyXAuthProvider.EnvoyExtAuthzHttp.HeadersToDownstreamOnAllow, onAllow...)
+		}
+
+		onDeny := headers.ToDownstream.OnDeny
+		if onDeny != nil {
+			envoyXAuthProvider.EnvoyExtAuthzHttp.HeadersToDownstreamOnDeny = append(envoyXAuthProvider.EnvoyExtAuthzHttp.HeadersToDownstreamOnDeny, onDeny...)
+		}
+	}
+}
+
+func (m *meshConfigBuilder) BuildExternalAuthorizerConfiguration(authorizers []*Authorizer) *meshConfigBuilder {
+	extensionProviders := values.TryGetPathAs[[]interface{}](m.c, "extensionProviders")
+
+	for _, authorizer := range authorizers {
+		if authorizer == nil {
+			continue
+		}
+		var authorizationProvider meshv1alpha1.MeshConfig_ExtensionProvider
+		authorizationProvider.Name = authorizer.Name
+		var envoyXAuthProvider meshv1alpha1.MeshConfig_ExtensionProvider_EnvoyExtAuthzHttp
+		envoyXAuthProvider.EnvoyExtAuthzHttp = &meshv1alpha1.MeshConfig_ExtensionProvider_EnvoyExternalAuthorizationHttpProvider{
+			Service: authorizer.Service,
+			Port:    authorizer.Port,
+		}
+
+		headers := authorizer.Headers
+		setupHeaders(&envoyXAuthProvider, headers)
+
+		authorizationProvider.Provider = &envoyXAuthProvider
+		marshaledProvider, err := protomarshal.Marshal(&authorizationProvider)
+		if err != nil {
+			return nil
+		}
+		var providerMap map[string]interface{}
+		err = json.Unmarshal(marshaledProvider, &providerMap)
+		if err != nil {
+			return nil
+		}
+		extensionProviders = append(extensionProviders, providerMap)
+	}
+
+	err := m.c.SetPath("extensionProviders", &extensionProviders)
+	if err != nil {
+		return nil
+	}
 	return m
 }
 

@@ -3,11 +3,10 @@ package installistio_test
 import (
 	"github.com/kyma-project/istio/operator/tests/e2e/e2e/logging"
 	unstructuredstep "github.com/kyma-project/istio/operator/tests/e2e/e2e/steps/infrastructure/unstructured"
+	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"testing"
 	"time"
-
-	"github.com/stretchr/testify/require"
 
 	"github.com/kyma-project/istio/operator/tests/e2e/e2e/executor"
 	"github.com/kyma-project/istio/operator/tests/e2e/e2e/steps/installistio"
@@ -37,12 +36,17 @@ func TestInstallIstio(t *testing.T) {
 				Kind:    "Deployment",
 			},
 		}
-		err := e2eExecutor.RunStep(getIstiodDeployment, executor.RunStepOptions{
-			RetryPeriod: 5 * time.Second,
-			Timeout:     1 * time.Minute,
-		})
-		require.NoError(t, err)
-		retrievedDeployment := getIstiodDeployment.Output()
+
+		require.Eventually(t, func() bool {
+			err := e2eExecutor.RunStep(getIstiodDeployment)
+			if err != nil {
+				logging.Errorf(t, "Failed to get Istiod deployment: %v", err)
+				return false
+			}
+			return getIstiodDeployment.Output != nil
+		}, 30*time.Second, 5*time.Second, "Istiod deployment should be available after installation")
+
+		retrievedDeployment := getIstiodDeployment.Output
 		require.NotNil(t, retrievedDeployment, "Expected a non-nil Istiod pod after installation")
 
 		logging.Debugf(t, "Installed istio pilot: %+v", retrievedDeployment.Object)

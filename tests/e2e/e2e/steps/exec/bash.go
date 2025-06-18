@@ -15,14 +15,10 @@ import (
 type Command struct {
 	Command string
 
-	output   []byte
-	exitCode int
+	Output   []byte
+	ExitCode int
 
 	CleanupCmd string
-}
-
-func (c *Command) Output() ([]byte, int) {
-	return c.output, c.exitCode
 }
 
 func (c *Command) Description() string {
@@ -39,17 +35,17 @@ func (c *Command) Execute(t *testing.T, _ client.Client) error {
 		var exitError *exec.ExitError
 		if errors.As(err, &exitError) {
 			if status, ok := exitError.Sys().(syscall.WaitStatus); ok {
-				c.exitCode = status.ExitStatus()
+				c.ExitCode = status.ExitStatus()
 			} else {
-				c.exitCode = -1
+				c.ExitCode = -1
 			}
 		}
 		return fmt.Errorf("recieved err=%w; Output=%s", err, string(output))
 	}
 
 	logging.Debugf(t, "Command output:\n%s", string(output))
-	c.output = output
-	c.exitCode = 0
+	c.Output = output
+	c.ExitCode = 0
 
 	return nil
 }

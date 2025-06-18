@@ -52,7 +52,3 @@ func (r *Request) Execute(t *testing.T, _ client.Client) error {
 	}
 	return nil
 }
-
-func (r *Request) Cleanup(*testing.T, client.Client) error {
-	return nil
-}

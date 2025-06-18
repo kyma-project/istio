@@ -57,7 +57,7 @@ func TestPodCreation(t *testing.T) {
 		err = testExecutor.RunStep(podGetter)
 		require.NoError(t, err)
 
-		retrievedPod := podGetter.Output()
+		retrievedPod := podGetter.Output
 		assert.NotNil(t, retrievedPod)
 	})
 }

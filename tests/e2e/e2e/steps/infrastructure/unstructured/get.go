@@ -15,11 +15,7 @@ type Get struct {
 	Name      string
 	GVK       schema.GroupVersionKind
 
-	output *unstructured.Unstructured
-}
-
-func (p *Get) Output() *unstructured.Unstructured {
-	return p.output
+	Output *unstructured.Unstructured
 }
 
 func (p *Get) Description() string {
@@ -35,10 +31,6 @@ func (p *Get) Execute(t *testing.T, k8sClient client.Client) error {
 		return err
 	}
 
-	p.output = obj
-	return nil
-}
-
-func (p *Get) Cleanup(*testing.T, client.Client) error {
+	p.Output = obj
 	return nil
 }

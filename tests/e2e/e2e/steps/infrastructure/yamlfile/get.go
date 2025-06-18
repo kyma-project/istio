@@ -14,11 +14,7 @@ import (
 type Get struct {
 	FilePath string
 
-	output unstructured.Unstructured
-}
-
-func (g *Get) Output() *unstructured.Unstructured {
-	return &g.output
+	Output unstructured.Unstructured
 }
 
 func (g *Get) Description() string {
@@ -46,11 +42,7 @@ func (g *Get) Execute(t *testing.T, k8sClient client.Client) error {
 	); getErr != nil {
 		return getErr
 	}
+	g.Output = unstructuredObject
 
-	g.output = unstructuredObject
-	return nil
-}
-
-func (g *Get) Cleanup(*testing.T, client.Client) error {
 	return nil
 }

@@ -13,11 +13,7 @@ type Get struct {
 	PodNamespace string
 	PodName      string
 
-	output *corev1.Pod
-}
-
-func (p *Get) Output() *corev1.Pod {
-	return p.output
+	Output *corev1.Pod
 }
 
 func (p *Get) Description() string {
@@ -32,10 +28,6 @@ func (p *Get) Execute(t *testing.T, k8sClient client.Client) error {
 		return err
 	}
 
-	p.output = pod
-	return nil
-}
-
-func (p *Get) Cleanup(*testing.T, client.Client) error {
+	p.Output = pod
 	return nil
 }

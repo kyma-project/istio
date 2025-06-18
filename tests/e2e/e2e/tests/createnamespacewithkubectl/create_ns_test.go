@@ -25,7 +25,7 @@ func TestCreateNsWithKubectl(t *testing.T) {
 		}
 
 		err := testExecutor.RunStep(createNs)
-		output, exitCode := createNs.Output()
+		output, exitCode := createNs.Output, createNs.ExitCode
 
 		require.NoError(t, err)
 		require.Equal(t, 0, exitCode)
@@ -38,7 +38,7 @@ func TestCreateNsWithKubectl(t *testing.T) {
 		err = testExecutor.RunStep(verifyNs)
 		require.NoError(t, err, "Namespace should be fetched successfully")
 
-		output, exitCode = verifyNs.Output()
+		output, exitCode = verifyNs.Output, verifyNs.ExitCode
 		require.Equal(t, 0, exitCode)
 		require.Contains(t, string(output), "test-namespace", "Expected namespace 'test-namespace' to be present in the output")
 		logging.Debugf(t, "Namespace created successfully: %s", output)

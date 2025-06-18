@@ -2,9 +2,8 @@ package httprequest_test
 
 import (
 	"github.com/kyma-project/istio/operator/tests/e2e/e2e/logging"
-	"testing"
-
 	"github.com/stretchr/testify/require"
+	"testing"
 
 	"github.com/kyma-project/istio/operator/tests/e2e/e2e/executor"
 	"github.com/kyma-project/istio/operator/tests/e2e/e2e/steps/http/noauth"

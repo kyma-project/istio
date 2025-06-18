@@ -3,27 +3,35 @@ package executor
 import (
 	"fmt"
 	"github.com/kyma-project/istio/operator/tests/e2e/e2e/logging"
-	"os"
-	"testing"
-	"time"
-
 	"github.com/stretchr/testify/assert"
+	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"testing"
 
 	"github.com/kyma-project/istio/operator/tests/e2e/e2e/setup"
 )
 
-// TODO:
-// Split interface executor and cleanuper
+// Step defines a singular operation that can be executed as part of the test flow.
 type Step interface {
+	// Description returns a human-readable description of the step.
+	// It might include details like the action being performed, the target resource, etc.
+	// This is used for tracing of the test execution.
 	Description() string
+	// Execute runs the step, performing the necessary actions.
+	// It takes a testing.T instance for logging and a client.Client for Kubernetes operations.
 	Execute(*testing.T, client.Client) error
 }
 
+// Cleanuper is an interface that defines a cleanup operation.
+// A step should implement this interface if it requires cleanup after execution.
 type Cleanuper interface {
+	// Cleanup performs the cleanup operation for the step.
 	Cleanup(*testing.T, client.Client) error
 }
 
+// StepsStack is a structure that holds steps in a stack-like manner.
+// It allows pushing new steps onto the stack and popping them off.
+// This is useful for managing the order of cleanup.
 type StepsStack struct {
 	steps []Step
 }
@@ -34,10 +42,12 @@ func NewStepsStack() *StepsStack {
 	}
 }
 
+// Push adds a new step to the top of the stack.
 func (q *StepsStack) Push(step Step) {
 	q.steps = append(q.steps, step)
 }
 
+// Pop removes and returns the step at the top of the stack.
 func (q *StepsStack) Pop() Step {
 	if len(q.steps) == 0 {
 		return nil
@@ -84,11 +94,6 @@ func NewExecutor(t *testing.T, options Options) *Executor {
 	}
 }
 
-type RunStepOptions struct {
-	RetryPeriod time.Duration
-	Timeout     time.Duration
-}
-
 // RunStep executes a step and adds it to the executor's cleanup stack.
 func (e *Executor) RunStep(step Step) error {
 	e.steps.Push(step)
@@ -109,6 +114,10 @@ func (e *Executor) RunStep(step Step) error {
 	return nil
 }
 
+// Cleanup performs the cleanup of all already executed steps in reverse order.
+// If the executor is running in a CI environment (Options.IsCi is true), cleanup is skipped.
+// If the executor is in cleanup mode (Options.OnlyCleanup is true),
+// it will only perform cleanup without executing any steps.
 func (e *Executor) Cleanup() {
 	if e.IsCi && !e.OnlyCleanup {
 		logging.Infof(e.t, "Skipping cleanup in CI environment")

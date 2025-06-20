@@ -22,9 +22,9 @@ type Step interface {
 	Execute(*testing.T, client.Client) error
 }
 
-// Cleanuper is an interface that defines a cleanup operation.
+// Cleaner is an interface that defines a cleanup operation.
 // A step should implement this interface if it requires cleanup after execution.
-type Cleanuper interface {
+type Cleaner interface {
 	// Cleanup performs the cleanup operation for the step.
 	Cleanup(*testing.T, client.Client) error
 }
@@ -40,6 +40,11 @@ func NewStepsStack() *StepsStack {
 	return &StepsStack{
 		steps: make([]Step, 0),
 	}
+}
+
+// empty returns true if the stack is empty.
+func (q *StepsStack) empty() bool {
+	return len(q.steps) == 0
 }
 
 // Push adds a new step to the top of the stack.
@@ -128,8 +133,9 @@ func (e *Executor) Cleanup() {
 	defer logging.Untracef(e.t, "Finished cleanup")
 
 	// Perform cleanup in reverse order
-	for step := e.steps.Pop(); step != nil; step = e.steps.Pop() {
-		if cleaner, ok := step.(Cleanuper); ok {
+	for !e.steps.empty() {
+		step := e.steps.Pop()
+		if cleaner, ok := step.(Cleaner); ok {
 			logging.Tracef(e.t, fmt.Sprintf("Cleaning up step: %s", step.Description()))
 			err := cleaner.Cleanup(e.t, e.K8SClient)
 			logging.Untracef(e.t, fmt.Sprintf("Cleaning up step: %s", step.Description()))
@@ -137,7 +143,7 @@ func (e *Executor) Cleanup() {
 				assert.NoError(e.t, err)
 			}
 		} else {
-			logging.Tracef(e.t, "Skipping cleanup for step: %s (not implementing Cleanuper)", step.Description())
+			logging.Tracef(e.t, "Skipping cleanup for step: %s (not implementing Cleaner)", step.Description())
 		}
 	}
 }

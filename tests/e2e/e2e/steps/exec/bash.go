@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/kyma-project/istio/operator/tests/e2e/e2e/logging"
 	"os/exec"
-	"strings"
 	"syscall"
 	"testing"
 
@@ -14,11 +13,13 @@ import (
 
 type Command struct {
 	Command string
+	Args    []string
 
 	Output   []byte
 	ExitCode int
 
-	CleanupCmd string
+	CleanupCmd  string
+	CleanupArgs []string
 }
 
 func (c *Command) Description() string {
@@ -26,8 +27,7 @@ func (c *Command) Description() string {
 }
 
 func (c *Command) Execute(t *testing.T, _ client.Client) error {
-	splitCommand := strings.Split(c.Command, " ")
-	cmd := exec.Command(splitCommand[0], splitCommand[1:]...) // #nosec G204
+	cmd := exec.Command(c.Command, c.Args...) // #nosec G204
 	logging.Debugf(t, "Executing command: %s", cmd.String())
 
 	output, err := cmd.CombinedOutput()
@@ -56,8 +56,7 @@ func (c *Command) Cleanup(t *testing.T, _ client.Client) error {
 		return nil
 	}
 
-	splitCommand := strings.Split(c.CleanupCmd, " ")
-	cmd := exec.Command(splitCommand[0], splitCommand[1:]...) // #nosec G204
+	cmd := exec.Command(c.Command, c.CleanupArgs...) // #nosec G204
 	logging.Debugf(t, "Executing cleanup command: %s", cmd.String())
 	output, err := cmd.CombinedOutput()
 	if err != nil {

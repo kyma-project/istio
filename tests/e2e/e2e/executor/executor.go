@@ -72,14 +72,14 @@ type Executor struct {
 }
 
 type Options struct {
-	IsCi        bool
-	OnlyCleanup bool
+	SkipCleanupAfterFailure bool
+	OnlyPerformCleanup      bool
 }
 
 func NewExecutorWithOptionsFromEnv(t *testing.T) *Executor {
 	options := Options{
-		IsCi:        os.Getenv("CI") == "true",
-		OnlyCleanup: os.Getenv("ONLY_CLEANUP") == "true",
+		SkipCleanupAfterFailure: os.Getenv("SKIP_CLEANUP_AFTER_FAILURE") == "true",
+		OnlyPerformCleanup:      os.Getenv("ONLY_PERFORM_CLEANUP") == "true",
 	}
 
 	return NewExecutor(t, options)
@@ -102,12 +102,12 @@ func NewExecutor(t *testing.T, options Options) *Executor {
 // RunStep executes a step and adds it to the executor's cleanup stack.
 func (e *Executor) RunStep(step Step) error {
 	e.steps.Push(step)
-	if e.OnlyCleanup {
+	if e.OnlyPerformCleanup {
 		logging.Debugf(e.t, "Skipping step execution in cleanup mode: %s", step.Description())
 		return nil
 	}
 
-	logging.Tracef(e.t, step.Description())
+	logging.Tracef(e.t, "Starting execution of step: %s", step.Description())
 
 	logging.Debugf(e.t, "Executing step: %s", step.Description())
 	if err := step.Execute(e.t, e.K8SClient); err != nil {
@@ -115,22 +115,22 @@ func (e *Executor) RunStep(step Step) error {
 		return err
 	}
 
-	logging.Untracef(e.t, step.Description())
+	logging.Tracef(e.t, "Finished execution of step: %s", step.Description())
 	return nil
 }
 
 // Cleanup performs the cleanup of all already executed steps in reverse order.
-// If the executor is running in a CI environment (Options.IsCi is true), cleanup is skipped.
-// If the executor is in cleanup mode (Options.OnlyCleanup is true),
+// If the executor is running in a CI environment (Options.SkipCleanupAfterFailure is true), cleanup is skipped.
+// If the executor is in cleanup mode (Options.OnlyPerformCleanup is true),
 // it will only perform cleanup without executing any steps.
 func (e *Executor) Cleanup() {
-	if e.IsCi && !e.OnlyCleanup {
-		logging.Infof(e.t, "Skipping cleanup in CI environment")
+	if e.SkipCleanupAfterFailure && !e.OnlyPerformCleanup && e.t.Failed() {
+		logging.Infof(e.t, "Skipping cleanup due to SKIP_CLEANUP_AFTER_FAILURE being set")
 		return
 	}
 
 	logging.Tracef(e.t, "Starting cleanup")
-	defer logging.Untracef(e.t, "Finished cleanup")
+	defer logging.Tracef(e.t, "Finished cleanup")
 
 	// Perform cleanup in reverse order
 	for !e.steps.empty() {
@@ -138,7 +138,7 @@ func (e *Executor) Cleanup() {
 		if cleaner, ok := step.(Cleaner); ok {
 			logging.Tracef(e.t, fmt.Sprintf("Cleaning up step: %s", step.Description()))
 			err := cleaner.Cleanup(e.t, e.K8SClient)
-			logging.Untracef(e.t, fmt.Sprintf("Cleaning up step: %s", step.Description()))
+			logging.Tracef(e.t, fmt.Sprintf("Finished cleaning up step: %s", step.Description()))
 			if err != nil {
 				assert.NoError(e.t, err)
 			}

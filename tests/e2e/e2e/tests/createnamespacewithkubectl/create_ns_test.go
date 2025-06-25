@@ -20,8 +20,10 @@ func TestCreateNsWithKubectl(t *testing.T) {
 		defer testExecutor.Cleanup()
 
 		createNs := &bashStep.Command{
-			Command:    "kubectl create namespace test-namespace",
-			CleanupCmd: "kubectl delete namespace test-namespace",
+			Command:     "kubectl",
+			Args:        []string{"create", "namespace", "test-namespace"},
+			CleanupCmd:  "kubectl",
+			CleanupArgs: []string{"delete", "namespace", "test-namespace"},
 		}
 
 		err := testExecutor.RunStep(createNs)
@@ -33,7 +35,8 @@ func TestCreateNsWithKubectl(t *testing.T) {
 
 		// Verify Namespace Creation
 		verifyNs := &bashStep.Command{
-			Command: "kubectl get namespace test-namespace --no-headers -o custom-columns=NAME:.metadata.name",
+			Command: "kubectl",
+			Args:    []string{"get", "namespace", "test-namespace", "--no-headers", "-o", "custom-columns=NAME:.metadata.name"},
 		}
 		err = testExecutor.RunStep(verifyNs)
 		require.NoError(t, err, "Namespace should be fetched successfully")

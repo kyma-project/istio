@@ -1,4 +1,4 @@
-envs=$(yq e '.bdba[]' sec-scanners-config.yaml | \
+envs=$(sed -n '/bdba:/,/mend:/p' sec-scanners-config.yaml | grep "\- " | sed 's/.*- //g' | \
       grep -v 'istio-manager' | \
       while read -r img; do
         var_name=$(basename "$img" | sed -r 's/\w\///g' | sed 's/\:.*//g')

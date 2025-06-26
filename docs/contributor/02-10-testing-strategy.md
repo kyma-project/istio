@@ -50,7 +50,7 @@ as this is the most common cloud provider for SAP BTP, Kyma runtime.
 To ensure stability of image building, PRs build their own local image,
 with the post-merge workflow using the image-builder image.
 As the last point to catch any issues before the release,
-the release workflow runs all tests, including compatibility, performance, and UI tests.
+the release workflow runs lint, unit, integration, and upgrade tests.
 
 ## Separation of Concerns
 

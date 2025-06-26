@@ -1,32 +1,26 @@
 package resource_test
 
 import (
-	"github.com/kyma-project/istio/operator/tests/e2e/e2e/logging"
+	"github.com/kyma-project/istio/operator/tests/e2e/e2e/setup"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/kyma-project/istio/operator/tests/e2e/e2e/executor"
-	"github.com/kyma-project/istio/operator/tests/e2e/e2e/steps/infrastructure/yamlfile"
+	"github.com/kyma-project/istio/operator/tests/e2e/e2e/helpers/infrastructure/yamlfile"
 )
 
 func TestCreateResource(t *testing.T) {
-	// Create executor
-	e2eExecutor := executor.NewExecutorWithOptionsFromEnv(t)
-	defer e2eExecutor.Cleanup()
+	k8sClient := setup.ClientFromKubeconfig(t)
 
 	// given
-	createResource := yamlfile.Create{FilePath: "pod.yaml"}
-	err := e2eExecutor.RunStep(&createResource)
+	err := yamlfile.CreateObjectFromYamlFile(t, k8sClient, "pod.yaml")
 	require.NoError(t, err)
 
 	// when
-	getResource := yamlfile.Get{FilePath: "pod.yaml"}
-	err = e2eExecutor.RunStep(&getResource)
+	res, err := yamlfile.GetObjectFromYamlFile(t, k8sClient, "pod.yaml")
 	require.NoError(t, err)
 
 	// then
-	retrievedResource := getResource.Output
-	require.NotNil(t, retrievedResource, "Expected a non-nil resource after creation")
-	logging.Debugf(t, "Created resource: %s", retrievedResource)
+	require.NotNil(t, res, "Expected a non-nil resource after creation")
+	t.Logf("Created resource: %s", res)
 }

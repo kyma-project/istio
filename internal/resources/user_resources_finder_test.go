@@ -78,4 +78,25 @@ var _ = Describe("IstioResourceFinder - UserCreated EnvoyFilters", func() {
 		err := urf.DetectUserCreatedEfOnIngress(context.Background())
 		Expect(err).To(Not(HaveOccurred()))
 	})
+
+	It("Should not return described error if there is any EnvoyFilter marked with kyma-project.io/module label present in the cluster", func() {
+		const efName = "proxy-protocol"
+		const efNamespace = "istio-system"
+		k8sClient := fake.NewClientBuilder().WithScheme(sc).WithObjects(
+			&networkingv1alpha3.EnvoyFilter{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: efNamespace,
+					Name:      efName,
+					Labels: map[string]string{
+						"kyma-project.io/module": "istio",
+					},
+				},
+				Spec: v1alpha3.EnvoyFilter{WorkloadSelector: &v1alpha3.WorkloadSelector{Labels: map[string]string{"app": "istio-ingressgateway"}}},
+			}).Build()
+
+		urf := NewUserResources(k8sClient)
+
+		err := urf.DetectUserCreatedEfOnIngress(context.Background())
+		Expect(err).To(Not(HaveOccurred()))
+	})
 })

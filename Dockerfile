@@ -1,5 +1,5 @@
 # Build the manager binary
-FROM golang:1.24.4-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.24.4-alpine AS builder
 ARG TARGETOS
 ARG TARGETARCH
 ARG GO_BUILD_TAGS
@@ -31,7 +31,7 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH:-amd64} go build -
 
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
-FROM gcr.io/distroless/static:nonroot
+FROM gcr.io/distroless/static-debian12:nonroot
 WORKDIR /
 COPY --from=builder /istio-build/manager .
 COPY --from=builder /istio-build/istio_install .

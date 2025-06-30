@@ -59,10 +59,7 @@ func isEfOwnedByRateLimit(ef *networkingv1alpha3.EnvoyFilter) bool {
 
 func isEfOwnedByKymaModule(ef *networkingv1alpha3.EnvoyFilter) bool {
 	_, ok := ef.Labels["kyma-project.io/module"]
-	if ok {
-		return true
-	}
-	return false
+	return ok
 }
 
 func isTargetingIstioIngress(ef *networkingv1alpha3.EnvoyFilter) bool {

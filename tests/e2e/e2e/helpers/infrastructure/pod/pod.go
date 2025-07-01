@@ -15,7 +15,7 @@ func CreatePod(t *testing.T, k8sClient client.Client, pod *v1.Pod) error {
 		t.Logf("Cleaning Pod: name: %s, namespace: %s", pod.Name, pod.Namespace)
 		err := k8sClient.Delete(setup.GetCleanupContext(), pod)
 		if err != nil {
-			t.Logf("Failed to delete pod: name: %s, namespace: %s, because: %w", pod.Namespace, pod.Name, err)
+			t.Logf("Failed to delete pod: name: %s, namespace: %s, because: %s", pod.Namespace, pod.Name, err)
 		}
 	})
 

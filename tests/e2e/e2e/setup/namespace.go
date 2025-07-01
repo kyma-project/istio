@@ -1,7 +1,6 @@
 package setup
 
 import (
-	"fmt"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
 
@@ -12,7 +11,7 @@ import (
 func CreateNamespaceForTest(t *testing.T, k8sClient client.Client, name string) {
 	namespace := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: fmt.Sprintf(name),
+			Name: name,
 		},
 	}
 

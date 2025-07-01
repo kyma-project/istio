@@ -192,9 +192,13 @@ envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
 $(ENVTEST): $(LOCALBIN)
 	test -s $(LOCALBIN)/setup-envtest || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
 
-.PHONY: test-e2e
-test-e2e: gotestsum
-	$(LOCALBIN)/gotestsum --rerun-fails --packages="./tests/e2e/..." --format "testname" -- -run '^TestE2E.*' ./tests/e2e/...
+.PHONY: test-e2e-egress
+test-e2e-egress: gotestsum
+	$(LOCALBIN)/gotestsum --rerun-fails --packages="./tests/e2e/egress/..." --format "testname" -- -run '^TestE2E.*' ./tests/e2e/...
+
+.PHONY: e2e-test
+e2e-test:
+	make -C tests/e2e/e2e/tests e2e-test
 ##@ Module
 
 .PHONY: module-image

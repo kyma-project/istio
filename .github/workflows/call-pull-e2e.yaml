@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test_make_target: [ "configuration-integration-test", "mesh-communication-integration-test", "installation-integration-test", "observability-integration-test"]
+        test_make_target: [ "e2e-test", "configuration-integration-test", "mesh-communication-integration-test", "installation-integration-test", "observability-integration-test"]
     steps:
       - uses: actions/checkout@v4
         with:

@@ -57,6 +57,7 @@ jobs:
       build-args: |
         VERSION=${{ needs.check-prerequisites.outputs.current_release }}
       tags: "${{ needs.check-prerequisites.outputs.current_release }}"
+      build-engine: buildx
 
   build-image-experimental:
     uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main
@@ -69,6 +70,7 @@ jobs:
         VERSION=${{ needs.check-prerequisites.outputs.current_release }}-experimental
         GO_BUILD_TAGS=experimental
       tags: "${{ needs.check-prerequisites.outputs.current_release }}-experimental"
+      build-engine: buildx
 
   unit-tests:
     uses: ./.github/workflows/call-unit-lint.yaml

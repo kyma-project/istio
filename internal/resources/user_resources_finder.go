@@ -34,7 +34,7 @@ func (urm UserResources) DetectUserCreatedEfOnIngress(ctx context.Context) descr
 		return describederrors.NewDescribedError(err, "could not list EnvoyFilters")
 	}
 	for _, ef := range envoyFilterList.Items {
-		if !isEfOwnedByRateLimit(ef) && isTargetingIstioIngress(ef) {
+		if !isEfOwnedByRateLimit(ef) && !isEfOwnedByKymaModule(ef) && isTargetingIstioIngress(ef) {
 			return describederrors.NewDescribedError(
 				fmt.Errorf(
 					"user-created EnvoyFilter %s/%s targeting Ingress Gateway found",
@@ -55,6 +55,11 @@ func isEfOwnedByRateLimit(ef *networkingv1alpha3.EnvoyFilter) bool {
 		}
 	}
 	return false
+}
+
+func isEfOwnedByKymaModule(ef *networkingv1alpha3.EnvoyFilter) bool {
+	_, ok := ef.Labels["kyma-project.io/module"]
+	return ok
 }
 
 func isTargetingIstioIngress(ef *networkingv1alpha3.EnvoyFilter) bool {

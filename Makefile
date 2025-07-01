@@ -103,13 +103,16 @@ build: generate fmt vet ## Build manager binary.
 run: manifests install build create-kyma-system-ns ## Run a controller from your host.
 	ISTIO_INSTALL_BIN_PATH=$(ISTIO_INSTALL_BIN_PATH) go run ./main.go
 
+TARGET_OS ?= linux
+TARGET_ARCH ?= amd64
+
 .PHONY: docker-build
 docker-build: ## Build docker image with the manager.
-	IMG=$(IMG) docker build -t ${IMG} --build-arg TARGETOS=${TARGETOS} --build-arg TARGETARCH=${TARGETARCH} .
+	IMG=$(IMG) docker buildx build -t ${IMG} --platform=${TARGET_OS}/${TARGET_ARCH} .
 
 .PHONY: docker-build-experimental
 docker-build-experimental: ## Build docker image with the experimental manager
-	IMG=$(IMG) docker build -t ${IMG} --build-arg GO_BUILD_TAGS=experimental --build-arg TARGETOS=${TARGETOS} --build-arg TARGETARCH=${TARGETARCH} .
+	IMG=$(IMG) docker build -t ${IMG} --build-arg GO_BUILD_TAGS=experimental --platform=${TARGET_OS}/${TARGET_ARCH} .
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.

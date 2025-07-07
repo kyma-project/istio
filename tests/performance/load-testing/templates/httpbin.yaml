@@ -56,5 +56,11 @@ spec:
       - image: werd/gofihttpbin:main
         imagePullPolicy: IfNotPresent
         name: httpbin
+        readinessProbe:
+          httpGet:
+            path: /get
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
         ports:
         - containerPort: 8080

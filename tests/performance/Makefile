@@ -10,7 +10,7 @@ deploy-helm:
 	helm dependency update load-testing
 
 	helm upgrade --install load-testing load-testing --set IngressGatewayIP=$(shell ip=$$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}'); hostname=$$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'); if [ -n "$$ip" ]; then echo "$$ip"; else echo "$$hostname"; fi) --set Domain=${KYMA_DOMAIN} --create-namespace --wait
-	until curl --silent --output /dev/null "https://any-host.${KYMA_DOMAIN}/"; echo "Waiting for the load balancer to respond on https://any-host.${KYMA_DOMAIN}"; do sleep 10; done
+	@bash -c 'until code="$$(curl -s -o /dev/null -w "%{http_code}" "https://hello.${KYMA_DOMAIN}/get")" && [ "$$code" = "200" ]; do echo "Waiting for 200 OK from https://hello.${KYMA_DOMAIN}/get - received status code: $$code"; sleep 10; done'
 
 test-deploy:
 	kubectl rollout status deployment/load-testing

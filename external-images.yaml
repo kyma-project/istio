@@ -1,6 +1,6 @@
 images:
-  - source: "istio/pilot:1.26.1-distroless"
-  - source: "istio/proxyv2:1.26.1-distroless"
-  - source: "istio/install-cni:1.26.1-distroless"
+  - source: "istio/pilot:1.26.2-distroless"
+  - source: "istio/proxyv2:1.26.2-distroless"
+  - source: "istio/install-cni:1.26.2-distroless"
   - source: "kennethreitz/httpbin:latest"
     amd64Only: true

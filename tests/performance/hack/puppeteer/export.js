@@ -1,11 +1,13 @@
 import puppeteer from 'puppeteer';
 
+const GRAFANA_BASE64_AUTH = process.env.GRAFANA_BASE64_AUTH;
+
 (async () => {
     // Launch the browser and open a new blank page
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
     await page.setExtraHTTPHeaders({
-        'Authorization': 'Basic YWRtaW46YWRtaW4='
+        'Authorization': `Basic ${GRAFANA_BASE64_AUTH}`,
     });
 
 

@@ -11,8 +11,8 @@ Learn how to expose the workload with Istio [VirtualService](https://istio.io/la
 Kyma's API Gateway module provides the APIRule custom resource (CR), which is the recommanded solution for securly exposing workloads. To create APIRule CRs, the APIGateway module must be added to your Kyma cluster. Additionally, APIRule in the newest version `v2` requires the exposed workload to be in the Istio service mesh.
 
 However, if you do not require the capabilities provided by the Istio service mesh (for example, secure service-to-service communication, tracing capabilities, or traffic management) you can expose an unsecured workload using Istio VirtualService only. Such approach might be useful in the following scenarios:
-* If you use [Unified Gateway](https://pages.github.tools.sap/unified-gateway/) as an entry point for SAP Cloud solutions. In this case, the Unified Gateway handles API exposure, JWT validation, and routing capabilities, offloading these responsibilities from the service mesh.
-* If you want to expose frontend of an application which manages authentication at the user interface level.
+* If you use [Unified Gateway](https://pages.github.tools.sap/unified-gateway/) as an entry point for SAP Cloud solutions. In this case, you can configure Unified Gateway to manage API exposure, JWT validation, and routing capabilities, offloading these responsibilities from the service mesh.
+* If you want to expose frontend services that manage their own authentication mechanisms.
 * For specific development and testing scenarios.
 
 

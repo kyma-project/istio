@@ -4,16 +4,16 @@ Learn how to expose the workload with Istio [VirtualService](https://istio.io/la
 ## Prerequisites
 - You have the Istio module added.
 - You have a deployed workload.
-- To use CLI instructions, you must install kubectl and curl.
-- You have set up your custom domain.
+- You have set up your custom domain. See [Set Up a Custom Domain](https://kyma-project.io/#/api-gateway/user/tutorials/01-10-setup-custom-domain-for-workload).
+- You have set up a custom Gateway. See [Set Up a TLS Gateway](https://kyma-project.io/#/api-gateway/user/tutorials/01-20-set-up-tls-gateway) or [Set Up an mTLS Gateway](https://kyma-project.io/#/api-gateway/user/tutorials/01-30-set-up-mtls-gateway).
 
 ## Context
-Kyma's API Gateway module provides the APIRule custom resource, which is the recommanded solution for securly exposing workloads. To use APIRules in Kyma, you must add the APIGateway module to your Kyma cluster. Additionally, APIRule in the newest version v2, requires the exposed workload to be in the Istio service mesh.
+Kyma's API Gateway module provides the APIRule custom resource (CR), which is the recommanded solution for securly exposing workloads. To create APIRule CRs in your Kyma runtime, the APIGateway module must be added to your Kyma cluster. Additionally, APIRule in the newest version v2, requires the exposed workload to be in the Istio service mesh.
 
-However, if you do not require the benefits provided by the Istio service mesh (such as secure service-to-service communication, tracing capabilities, or traffic management) and do not need additional authentication setup, you can expose an unsecured workload using Istio VirtualService only. Such approach might be useful in the following scenarios:
+However, if you do not require the benefits provided by the Istio service mesh (for example, secure service-to-service communication, tracing capabilities, or traffic management) you can expose an unsecured workload using Istio VirtualService only. Such approach might be useful in the following scenarios:
 * If you use [Unified Gateway](https://pages.github.tools.sap/unified-gateway/) as an entry point for SAP Cloud solutions. In such a case the Unified Gateway's layer is responsible for the exposure of applications and APIs, and securing SAP endpoints.
-* If you want to expose frontend of an application which manages authentication at the UI level.
-* For development and testing purposes.
+* If you want to expose frontend of an application which manages authentication at the user interface level.
+* For specific development and testing scenarios.
 
 
 ## Procedure
@@ -27,42 +27,50 @@ However, if you do not require the benefits provided by the Istio service mesh (
     Option | Description
     ---------|----------
     **Name** | The name of the VirtualService resource you're creating.
-    **Hosts** | The fully qualified domain name (FQDN) of the service within the cluster. This is constructed using the subdomain and domain name.
-    **Gateways**| The namespace which includes the Gateway you want to use. The name of the Gateway you want to use. Use the format ...
+    **Hosts** | The address or addresses the client uses when sending requests to the destination Service. You can use the fully qualified domain name (FQDN) constructed using the subdomain and domain name in the following format **{SUBDOMAIN}.{DOMAIN_NAME}**. The hosts must be defined in the referenced Gateway.
+    **Gateways**| The name of the Gateway you want to use and the namespace in which it is created. Use the format **{GATEWAY_NAMESPACE}/{GATEWAY_NAME}**.
 
 3. Go to **HTTP > Matches > Match** and provide the following configuration details:
    
     Option | Description
     ---------|----------
-    **URI** | The URI prefix used to match incoming requests. This determines which requests will be routed to the specified destination.
-    **Port** | This is the port number on which the destination service is listening. It specifies where the VirtualService will route the incoming traffic.
+    **URI** | Add the URI prefix used to match incoming requests. This determines which requests are routed to the specified destination Service.
+    **Port** | This is the port number on which the destination Service is listening. It specifies where the VirtualService routes the incoming traffic.
     
-4. Go to **Routes > Route > Destinations > Host** and add the port number on which the destination service is listening. It specifies where the VirtualService will route the incoming traffic.
+4. Go to **HTTP > Routes > Route > Destinations > Host** and add the name and namespace of the Service you want to expose using the following format: **{SERVICE_NAME}.{SERVICE_NAMESPACE}.svc.cluster.local**. The traffic is routed to this Service.
 
     
-See the following example of a VirtualService resource that exposes an HTTPBin Service:
+See a sample VirtualService configuration that directs all HTTP traffic received at `httpbin.my-domain.com` through the `my-gateway` Gateway to the [HTTPBin Service](https://github.com/istio/istio/blob/master/samples/httpbin/httpbin.yaml), which is running on port `8000` in the `default` namespace.
+
 
     ```yaml
     apiVersion: networking.istio.io/v1alpha3
     kind: VirtualService
     metadata:
-        name: example-vs
-        namespace: default
+    name: example-vs
+    namespace: default
     spec:
-        hosts:
-        - httpbin.my-domain.com
-        gateways:
-        - kyma-system/my-gateway
-        http:
-        - match:
-            - uri:
-                prefix: /
-            route:
-            - destination:
-                port:
-                    number: 80
-                    host: httpbin.my-domain.com.svc.cluster.local
+    hosts:
+    - httpbin.my-domain.com
+    gateways:
+    - default/my-gateway
+    http:
+    - match:
+        - uri:
+            prefix: /
+        route:
+        - destination:
+            port:
+            number: 8000
+            host: httpbin.default.svc.cluster.local
     ```
+
+5. To verify if the Service is exposed, run the following command:
+
+    ```bash
+    curl -s -I https://{SUBDOMAIN}.{DOMAIN_NAME}/
+    ```
+    If successful, you get code `200` in response.
 
 #### **kubectl**
 
@@ -72,11 +80,11 @@ See the following example of a VirtualService resource that exposes an HTTPBin S
     ---------|----------
     **{VS_NAME}** | The name of the VirtualService resource you're creating.
     **{NAMESPACE}** | The namespace in which you want to create the VirtualService resource. 
-    **{SUBDOMAIN}.{DOMAIN_NAME}** | The fully qualified domain name (FQDN) of the service within the cluster. This is constructed using the subdomain and domain name.
-    **{GATEWAY_NAMESPACE}** | The namespace which includes the Gateway you want to use.
-    **{GATEWAY_NAME}** | The name of the Gateway you want to use.
-    **{PATH_PREFIX}** | The URI prefix used to match incoming requests. This determines which requests will be routed to the specified destination.
-    **{PORT_NUMBER}** | This is the port number on which the destination service is listening. It specifies where the VirtualService will route the incoming traffic.
+    **{SUBDOMAIN}.{DOMAIN_NAME}** | The destination hosts to which traffic is sent. The fully qualified domain name (FQDN) of the service within the cluster constructed using the subdomain and domain name.
+    **{GATEWAY_NAMESPACE}/{GATEWAY_NAME}** | The name of the Gateway you want to use and the namespace in which it is deployed.
+    **{URI_PREFIX}** | The URI prefix used to match incoming requests. This determines which requests are routed to the specified destination Service.
+    **{PORT_NUMBER}** | This is the port number on which the destination Service is listening. It specifies where the VirtualService routes the incoming traffic. If a Service exposes only a single port it is not required to explicitly select the port.
+    **{SERVICE_NAME}.{SERVICE_NAMESPACE}** | The name and namespace of the Service you want to expose. The traffic is routed to this Service.
 
     For more configuration options, see [Virtual Service](https://istio.io/latest/docs/reference/config/networking/virtual-service/).
 
@@ -95,16 +103,16 @@ See the following example of a VirtualService resource that exposes an HTTPBin S
     http:
     - match:
         - uri:
-            prefix: {PATH_PREFIX}
+            prefix: {URI_PREFIX}
         route:
         - destination:
             port:
                 number: {PORT_NUMBER}
-                host: {SUBDOMAIN}.{DOMAIN_NAME}.svc.cluster.local
+                host: {SERVICE_NAME}.{SERVICE_NAMESPACE}.svc.cluster.local
     EOF
     ```
 
-    See the following example:
+    See a sample VirtualService configuration that directs all HTTP traffic received at `httpbin.my-domain.com` through the `my-gateway` Gateway to the [HTTPBin Service](https://github.com/istio/istio/blob/master/samples/httpbin/httpbin.yaml), which is running on port `8000` in the `default` namespace.
 
     ```yaml
     apiVersion: networking.istio.io/v1alpha3
@@ -124,13 +132,15 @@ See the following example of a VirtualService resource that exposes an HTTPBin S
         route:
         - destination:
             port:
-            number: 80
-            host: httpbin.my-domain.com.svc.cluster.local
+            number: 8000
+            host: httpbin.default.svc.cluster.local
     ```
-2. To access the secured resources, run the following command:
+2. To verify if the Service is exposed, run the following command:
 
     ```bash
-
+    curl -s -I https://{SUBDOMAIN}.{DOMAIN_NAME}/
     ```
+
+    If successful, you get code `200` in response.
 
 <!-- tabs:end -->

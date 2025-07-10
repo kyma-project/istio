@@ -1,5 +1,8 @@
 name: Workflow validation
 
+permissions:
+  contents: read
+  
 on:
   workflow_call:
 

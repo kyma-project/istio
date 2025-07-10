@@ -1,5 +1,8 @@
 name: Release Istio - Step 1
 
+permissions:
+  contents: read
+  
 on:
   workflow_dispatch:
     inputs:

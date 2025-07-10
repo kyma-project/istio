@@ -2,6 +2,9 @@
 
 name: Schedule Daily
 
+permissions:
+  contents: read
+  
 on:
   schedule:
     - cron: '0 4 * * *' # Run every day at 5:00 CET (4:00 UTC)

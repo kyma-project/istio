@@ -1,6 +1,8 @@
 # This workflow is responsible for performance, UI and compatibility tests
 
 name: Schedule Daily
+permissions:
+  contents: read
 
 on:
   schedule:

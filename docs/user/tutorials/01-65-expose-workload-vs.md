@@ -4,8 +4,14 @@ Learn how to expose the workload with Istio [VirtualService](https://istio.io/la
 ## Prerequisites
 - You have the Istio module added.
 - You have a deployed workload.
-- You have set up your custom domain. See [Set Up a Custom Domain](https://kyma-project.io/#/api-gateway/user/tutorials/01-10-setup-custom-domain-for-workload).
-- You have set up a custom Gateway. See [Set Up a TLS Gateway](https://kyma-project.io/#/api-gateway/user/tutorials/01-20-set-up-tls-gateway) or [Set Up an mTLS Gateway](https://kyma-project.io/#/api-gateway/user/tutorials/01-30-set-up-mtls-gateway).
+- You have set up your custom domain and a custom TLS Gateway. See [Set Up a Custom Domain](https://kyma-project.io/#/api-gateway/user/tutorials/01-10-setup-custom-domain-for-workload) and [Set Up a TLS Gateway](https://kyma-project.io/#/api-gateway/user/tutorials/01-20-set-up-tls-gateway). <br>Alternatively, you can use the default domain of your Kyma cluster and the default Gateway `kyma-system/kyma-gateway`. To use the dafult domain and Gateway, the API Gateway module must be added to your cluster.
+
+    >[!NOTE]
+    > To learn what the default domain of your Kyma cluster is, run the following command:
+    >```yaml
+    >kubectl get gateway -n kyma-system kyma-gateway -o jsonpath='{.spec.servers[0].hosts}'
+    >```
+
 
 ## Context
 Kyma's API Gateway module provides the APIRule custom resource (CR), which is the recommanded solution for securly exposing workloads. To create APIRule CRs, the APIGateway module must be added to your Kyma cluster. Additionally, APIRule in the newest version `v2` requires the exposed workload to be in the Istio service mesh. Including a workload in the mesh brings several benefits, such as secure service-to-service communication, tracing capabilities, or traffic management. For more information, see [Purpose and Benefits of Istio Sidecar Proxies](https://help.sap.com/docs/btp/sap-business-technology-platform/istio-sidecar-proxies?version=Cloud) and [The Istio service mesh](https://istio.io/latest/about/service-mesh/).
@@ -46,23 +52,23 @@ See a sample VirtualService configuration that directs all HTTP traffic received
     ```yaml
     apiVersion: networking.istio.io/v1alpha3
     kind: VirtualService
-    metadata:
-    name: example-vs
+      metadata:
+      name: example-vs
     namespace: default
     spec:
-    hosts:
-    - httpbin.my-domain.com
-    gateways:
-    - default/my-gateway
-    http:
-    - match:
-        - uri:
+      hosts:
+        - httpbin.my-domain.com
+      gateways:
+        - default/my-gateway
+      http:
+        - match:
+          - uri:
             prefix: /
         route:
-        - destination:
-            port:
-            number: 8000
-            host: httpbin.default.svc.cluster.local
+          - destination:
+              port:
+              number: 8000
+              host: httpbin.default.svc.cluster.local
     ```
 
 5. To verify if the Service is exposed, run the following command:
@@ -93,13 +99,13 @@ See a sample VirtualService configuration that directs all HTTP traffic received
     apiVersion: networking.istio.io/v1alpha3
     kind: VirtualService
     metadata:
-        name: {VS_NAME}
-        namespace: {NAMESPACE}
+      name: {VS_NAME}
+      namespace: {NAMESPACE}
     spec:
-        hosts:
-            - {SUBDOMAIN}.{DOMAIN_NAME}
-        gateways:
-            - {GATEWAY_NAMESPACE}/{GATEWAY_NAME}
+      hosts:
+        - {SUBDOMAIN}.{DOMAIN_NAME}
+      gateways:
+        - {GATEWAY_NAMESPACE}/{GATEWAY_NAME}
     http:
     - match:
         - uri:
@@ -118,22 +124,22 @@ See a sample VirtualService configuration that directs all HTTP traffic received
     apiVersion: networking.istio.io/v1alpha3
     kind: VirtualService
     metadata:
-    name: example-vs
-    namespace: default
+      name: example-vs
+      namespace: default
     spec:
-    hosts:
-    - httpbin.my-domain.com
-    gateways:
-    - kyma-system/my-gateway
-    http:
-    - match:
-        - uri:
-            prefix: /
+      hosts:
+        - httpbin.my-domain.com
+      gateways:
+        - kyma-system/my-gateway
+      http:
+        - match:
+            - uri:
+                prefix: /
         route:
-        - destination:
-            port:
-            number: 8000
-            host: httpbin.default.svc.cluster.local
+            - destination:
+                port: null
+                number: 8000
+                host: httpbin.default.svc.cluster.local
     ```
 2. To verify if the Service is exposed, run the following command:
 

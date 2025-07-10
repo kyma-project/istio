@@ -19,7 +19,11 @@ Kyma's API Gateway module provides the APIRule custom resource (CR), which is th
 However, if you do not require the capabilities provided by the Istio service mesh, you can expose an unsecured workload using Istio VirtualService only. Such approach might be useful in the following scenarios:
 * If you use [Unified Gateway](https://pages.github.tools.sap/unified-gateway/) as an entry point for SAP Cloud solutions. In this case, you can configure Unified Gateway to manage API exposure, JWT validation, and routing capabilities, offloading these responsibilities from the service mesh.
 * If you want to expose frontend services that manage their own authentication mechanisms.
+* If you require certain features or want to implement specific configurations that APIRule does not support.
+* If you require full control over Istio resources and you want to manage them without any higher-level abstractions.
 * For specific development and testing scenarios.
+
+The following instructions demonstrate a simple use case where VirtualService is used to expose an unsecured Servise, skipping the requirement to include it into the Istio service mesh. To implement any additional configuration, you must research and implement it based on Istio's documentation.
 
 
 ## Procedure

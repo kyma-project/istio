@@ -73,6 +73,7 @@ spec:
         port:
           number: 8000
         host: httpbin.default.svc.cluster.local
+```
 
 5. To verify if the Service is exposed, run the following command:
 

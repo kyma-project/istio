@@ -1,10 +1,10 @@
 package ns
 
 import (
-	"context"
 	"testing"
 
-	"github.com/kyma-project/istio/operator/tests/e2e/e2e/setup"
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers"
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/setup"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -21,8 +21,9 @@ func WithLabels(labels map[string]string) CreateOpts {
 	}
 }
 
-func CreateNamespace(ctx context.Context, t *testing.T, name string, cfg *envconf.Config, opts ...CreateOpts) error {
-	r, err := resources.New(cfg.Client().RESTConfig())
+func CreateNamespace(t *testing.T, name string, cfg *envconf.Config, opts ...CreateOpts) error {
+	t.Helper()
+	r, err := resources.New(helpers.WrapTestLog(t, cfg.Client().RESTConfig()))
 	if err != nil {
 		return err
 	}
@@ -35,17 +36,18 @@ func CreateNamespace(ctx context.Context, t *testing.T, name string, cfg *envcon
 
 	setup.DeclareCleanup(t, func() {
 		t.Log("Deleting namespace: ", name)
-		require.NoError(t, DeleteNamespace(ctx, name, cfg))
+		require.NoError(t, DeleteNamespace(t, name, cfg))
 	})
 	t.Log("Creating namespace: ", name)
 
-	return r.Create(ctx, ns)
+	return r.Create(t.Context(), ns)
 }
 
-func DeleteNamespace(ctx context.Context, name string, cfg *envconf.Config) error {
-	r, err := resources.New(cfg.Client().RESTConfig())
+func DeleteNamespace(t *testing.T, name string, cfg *envconf.Config) error {
+	t.Helper()
+	r, err := resources.New(helpers.WrapTestLog(t, cfg.Client().RESTConfig()))
 	if err != nil {
 		return err
 	}
-	return r.Delete(ctx, &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: name}})
+	return r.Delete(setup.GetCleanupContext(), &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: name}})
 }

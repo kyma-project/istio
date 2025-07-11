@@ -1,9 +1,11 @@
 package httprequest_test
 
 import (
-	"github.com/kyma-project/istio/operator/tests/e2e/e2e/helpers/http"
-	"github.com/stretchr/testify/require"
+	"net/http"
 	"testing"
+
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers"
+	"github.com/stretchr/testify/require"
 )
 
 func TestHTTPRequest(t *testing.T) {
@@ -11,11 +13,13 @@ func TestHTTPRequest(t *testing.T) {
 		t.Parallel()
 
 		// given
-		request := createGetJsonRequest("http://example.com")
+		c := helpers.NewHTTPClient(t)
+		req, err := http.NewRequest("GET", "http://example.com", nil)
+		req.Header.Add("User-Agent", "E2E Test Client")
+		req.Header.Add("Accept", "application/json")
 
 		// when
-		response, err := http.DoRequest(t, request)
-
+		response, err := c.Do(req)
 		// then
 		require.NoError(t, err)
 		require.NotEmpty(t, response, "Expected a non-empty response from the HTTP request")
@@ -24,15 +28,4 @@ func TestHTTPRequest(t *testing.T) {
 		t.Logf("Response Status: %s\n", response.Status)
 		t.Logf("Response Body: %s\n", response.Body)
 	})
-}
-
-func createGetJsonRequest(url string) *http.Request {
-	return &http.Request{
-		URL:    url,
-		Method: "GET",
-		Headers: map[string]string{
-			"Accept":     "application/json",
-			"User-Agent": "E2E Test Client",
-		},
-	}
 }

@@ -53,26 +53,26 @@ The following instructions demonstrate a simple use case where VirtualService ex
 See a sample VirtualService configuration that directs all HTTP traffic received at `httpbin.my-domain.com` through the `my-gateway` Gateway to the [HTTPBin Service](https://github.com/istio/istio/blob/master/samples/httpbin/httpbin.yaml), which is running on port `8000` in the `default` namespace.
 
 
-    ```yaml
-    apiVersion: networking.istio.io/v1alpha3
-    kind: VirtualService
-    metadata:
-      name: example-vs
-      namespace: default
-    spec:
-      hosts:
-        - httpbin.my-domain.com
-      gateways:
-        - default/my-gateway
-      http:
-        match:
-        - uri:
-          prefix: /
-        route:
-        - destination:
-          port:
-            number: 8000
-          host: httpbin.default.svc.cluster.local
+```yaml
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: example-vs
+  namespace: default
+spec:
+  hosts:
+    - httpbin.my-domain.com
+  gateways:
+    - default/my-gateway
+  http:
+    match:
+    - uri:
+      prefix: /
+    route:
+    - destination:
+      port:
+        number: 8000
+      host: httpbin.default.svc.cluster.local
     ```
 
 5. To verify if the Service is exposed, run the following command:

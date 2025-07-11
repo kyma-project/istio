@@ -1,5 +1,5 @@
 # Exposing Workloads Using Istio VirtualService
-Learn how to expose the workload with Istio [VirtualService](https://istio.io/latest/docs/reference/config/networking/virtual-service/) and your custom domain.
+Learn how to expose a workload with Istio [VirtualService](https://istio.io/latest/docs/reference/config/networking/virtual-service/) and your custom domain.
 
 ## Prerequisites
 - You have the Istio module added.
@@ -23,7 +23,7 @@ However, if you do not require the capabilities provided by the Istio service me
 * If you require full control over Istio resources and you want to manage them without any higher-level abstractions.
 * For specific development and testing scenarios.
 
-The following instructions demonstrate a simple use case where VirtualService exposes an unsecured Servise, skipping the requirement to include it into the Istio service mesh.
+The following instructions demonstrate a simple use case where VirtualService exposes an unsecured Service, skipping the requirement to include the Service in the Istio service mesh.
 
 
 ## Procedure
@@ -56,23 +56,23 @@ See a sample VirtualService configuration that directs all HTTP traffic received
     ```yaml
     apiVersion: networking.istio.io/v1alpha3
     kind: VirtualService
-      metadata:
+    metadata:
       name: example-vs
-    namespace: default
+      namespace: default
     spec:
       hosts:
         - httpbin.my-domain.com
       gateways:
         - default/my-gateway
       http:
-        - match:
-          - uri:
-            prefix: /
+        match:
+        - uri:
+          prefix: /
         route:
-          - destination:
-              port:
-              number: 8000
-              host: httpbin.default.svc.cluster.local
+        - destination:
+          port:
+            number: 8000
+          host: httpbin.default.svc.cluster.local
     ```
 
 5. To verify if the Service is exposed, run the following command:
@@ -104,21 +104,21 @@ See a sample VirtualService configuration that directs all HTTP traffic received
     kind: VirtualService
     metadata:
       name: {VS_NAME}
-      namespace: {NAMESPACE}
+      namespace: {VS_NAMESPACE}
     spec:
       hosts:
         - {SUBDOMAIN}.{DOMAIN_NAME}
       gateways:
         - {GATEWAY_NAMESPACE}/{GATEWAY_NAME}
-    http:
-    - match:
+      http:
+        match:
         - uri:
-            prefix: {URI_PREFIX}
+          prefix: {URI_PREFIX}
         route:
         - destination:
-            port:
-                number: {PORT_NUMBER}
-                host: {SERVICE_NAME}.{SERVICE_NAMESPACE}.svc.cluster.local
+          port:
+            number: {PORT_NUMBER}
+          host: {SERVICE_NAME}.{SERVICE_NAMESPACE}.svc.cluster.local
     EOF
     ```
 
@@ -134,16 +134,16 @@ See a sample VirtualService configuration that directs all HTTP traffic received
       hosts:
         - httpbin.my-domain.com
       gateways:
-        - kyma-system/my-gateway
+        - default/my-gateway
       http:
-        - match:
-            - uri:
-                prefix: /
+        match:
+        - uri:
+          prefix: /
         route:
-            - destination:
-                port: null
-                number: 8000
-                host: httpbin.default.svc.cluster.local
+        - destination:
+          port:
+            number: 8000
+          host: httpbin.default.svc.cluster.local
     ```
 2. To verify if the Service is exposed, run the following command:
 

@@ -20,7 +20,7 @@ However, if you do not require the capabilities provided by the Istio service me
 * If you use [Unified Gateway](https://pages.github.tools.sap/unified-gateway/) as an entry point for SAP Cloud solutions. In this case, you can configure Unified Gateway to manage API exposure, JWT validation, and routing capabilities, offloading these responsibilities from the service mesh.
 * If you want to expose frontend Services that manage their own authentication mechanisms.
 * If you require certain features or want to implement specific configurations that APIRule does not support.
-* If you require full control over Istio resources and you want to manage them without any higher-level abstractions.
+* If you require full control over Istio resources and you want to manage them directly without any higher-level abstractions.
 * For specific development and testing scenarios.
 
 The following instructions demonstrate a simple use case where VirtualService exposes an unsecured Service, skipping the requirement to include the Service in the Istio service mesh.
@@ -37,7 +37,7 @@ The following instructions demonstrate a simple use case where VirtualService ex
     Option | Description
     ---------|----------
     **Name** | The name of the VirtualService resource you're creating.
-    **Hosts** | The address or addresses the client uses when sending requests to the destination Service. You can use the fully qualified domain name (FQDN) constructed using the subdomain and domain name in the following format **{SUBDOMAIN}.{DOMAIN_NAME}**. The hosts must be defined in the referenced Gateway.
+    **Hosts** | The address or addresses the client uses when sending requests to the destination Service. Use the fully qualified domain name (FQDN) constructed with the subdomain and domain name in the following format: **{SUBDOMAIN}.{DOMAIN_NAME}**. The hosts must be defined in the referenced Gateway.
     **Gateways**| The name of the Gateway you want to use and the namespace in which it is created. Use the format **{GATEWAY_NAMESPACE}/{GATEWAY_NAME}**.
 
 3. Go to **HTTP > Matches > Match** and provide the following configuration details:
@@ -90,7 +90,7 @@ See a sample VirtualService configuration that directs all HTTP traffic received
     ---------|----------
     **{VS_NAME}** | The name of the VirtualService resource you're creating.
     **{NAMESPACE}** | The namespace in which you want to create the VirtualService resource. 
-    **{SUBDOMAIN}.{DOMAIN_NAME}** | The address or addresses the client uses when sending requests to the destination Service. You can use the fully qualified domain name (FQDN) constructed using the subdomain and domain name in the following format **{SUBDOMAIN}.{DOMAIN_NAME}**. The hosts must be defined in the referenced Gateway.
+    **{SUBDOMAIN}.{DOMAIN_NAME}** | The address or addresses the client uses when sending requests to the destination Service. Use the fully qualified domain name (FQDN) constructed with the subdomain and domain name in the following format: **{SUBDOMAIN}.{DOMAIN_NAME}**. The hosts must be defined in the referenced Gateway.
     **{GATEWAY_NAMESPACE}/{GATEWAY_NAME}** | The name of the Gateway you want to use and the namespace in which it is deployed.
     **{URI_PREFIX}** | The URI prefix used to match incoming requests. This determines which requests are routed to the specified destination Service.
     **{PORT_NUMBER}** | This is the port number on which the destination Service is listening. It specifies where the VirtualService routes incoming requests. If a Service exposes only a single port it is not required to explicitly select the port.

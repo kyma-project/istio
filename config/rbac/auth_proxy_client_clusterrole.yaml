@@ -3,7 +3,6 @@ kind: ClusterRole
 metadata:
   labels:
     kyma-project.io/module: istio
-    app.kubernetes.io/component: operator
   name: metrics-reader
 rules:
 - nonResourceURLs:

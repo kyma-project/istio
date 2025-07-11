@@ -2,20 +2,32 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  creationTimestamp: null
   name: manager-role
-  labels:
-    app.kubernetes.io/component: operator
 rules:
 - apiGroups:
   - ""
   resources:
+  - configmaps
+  - endpoints
+  - events
   - namespaces
+  - persistentvolumeclaims
+  - pods
+  - pods/portforward
+  - pods/proxy
+  - resourcequotas
+  - secrets
+  - serviceaccounts
+  - services
   verbs:
   - create
+  - delete
+  - deletecollection
   - get
+  - list
   - patch
   - update
+  - watch
 - apiGroups:
   - ""
   resources:
@@ -24,6 +36,114 @@ rules:
   - get
   - list
   - watch
+- apiGroups:
+  - admissionregistration.k8s.io
+  resources:
+  - mutatingwebhookconfigurations
+  - validatingwebhookconfigurations
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  - customresourcedefinitions.apiextensions.k8s.io
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps
+  - extensions
+  resources:
+  - daemonsets
+  - deployments
+  - deployments/finalizers
+  - replicasets
+  - statefulsets
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - authentication.istio.io
+  - config.istio.io
+  - extensions.istio.io
+  - install.istio.io
+  - networking.istio.io
+  - security.istio.io
+  - telemetry.istio.io
+  resources:
+  - '*'
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - autoscaling
+  resources:
+  - horizontalpodautoscalers
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - create
+  - get
+  - patch
+  - update
+- apiGroups:
+  - k8s.cni.cncf.io
+  resources:
+  - networkattachmentdefinitions
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - servicemonitors
+  verbs:
+  - create
+  - get
+  - update
 - apiGroups:
   - operator.kyma-project.io
   resources:
@@ -50,187 +170,14 @@ rules:
   - get
   - patch
   - update
-# istio groups
-- apiGroups:
-  - authentication.istio.io
-  resources:
-  - '*'
-  verbs:
-  - create
-  - deletecollection
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - config.istio.io
-  resources:
-  - '*'
-  verbs:
-  - create
-  - deletecollection
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - install.istio.io
-  resources:
-  - '*'
-  verbs:
-  - create
-  - deletecollection
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - networking.istio.io
-  resources:
-  - '*'
-  verbs:
-  - create
-  - deletecollection
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - security.istio.io
-  resources:
-  - '*'
-  verbs:
-  - create
-  - deletecollection
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - telemetry.istio.io
-  resources:
-  - '*'
-  verbs:
-  - create
-  - deletecollection
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - extensions.istio.io
-  resources:
-  - '*'
-  verbs:
-  - create
-  - deletecollection
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-# k8s groups
-- apiGroups:
-  - admissionregistration.k8s.io
-  resources:
-  - mutatingwebhookconfigurations
-  - validatingwebhookconfigurations
-  verbs:
-  - create
-  - deletecollection
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - apiextensions.k8s.io
-  resources:
-  - customresourcedefinitions.apiextensions.k8s.io
-  - customresourcedefinitions
-  verbs:
-  - create
-  - deletecollection
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - apps
-  - extensions
-  resources:
-  - daemonsets
-  - deployments
-  - deployments/finalizers
-  - replicasets
-  - statefulsets
-  verbs:
-  - create
-  - deletecollection
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-    - k8s.cni.cncf.io
-  resources:
-    - networkattachmentdefinitions
-  verbs:
-    - create
-    - deletecollection
-    - delete
-    - get
-    - list
-    - patch
-    - update
-    - watch
-- apiGroups:
-  - autoscaling
-  resources:
-  - horizontalpodautoscalers
-  verbs:
-  - create
-  - deletecollection
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - monitoring.coreos.com
-  resources:
-  - servicemonitors
-  verbs:
-  - get
-  - create
-  - update
 - apiGroups:
   - policy
   resources:
   - poddisruptionbudgets
   verbs:
   - create
-  - deletecollection
   - delete
+  - deletecollection
   - get
   - list
   - patch
@@ -240,12 +187,12 @@ rules:
   - rbac.authorization.k8s.io
   resources:
   - clusterrolebindings
-  - roles
   - rolebindings
+  - roles
   verbs:
   - create
-  - deletecollection
   - delete
+  - deletecollection
   - get
   - list
   - patch
@@ -256,39 +203,4 @@ rules:
   resources:
   - clusterroles
   verbs:
-  # Since the Istio installation creates the cluster role istiod-clusterrole-istio-system, for which verbs '*' is
-  # configured, we must also allow this for cluster roles.
   - '*'
-- apiGroups:
-  - coordination.k8s.io
-  resources:
-  - leases
-  verbs:
-  - get
-  - create
-  - update
-  - patch
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  - endpoints
-  - events
-  - namespaces
-  - pods
-  - pods/proxy
-  - pods/portforward
-  - persistentvolumeclaims
-  - secrets
-  - services
-  - serviceaccounts
-  - resourcequotas
-  verbs:
-  - create
-  - deletecollection
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch

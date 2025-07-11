@@ -54,7 +54,7 @@ See a sample VirtualService configuration that directs all HTTP traffic received
 
 
 ```yaml
-apiVersion: networking.istio.io/v1alpha3
+apiVersion: networking.istio.io/v1
 kind: VirtualService
 metadata:
   name: example-vs
@@ -65,15 +65,14 @@ spec:
   gateways:
     - default/my-gateway
   http:
-    match:
+  - match:
     - uri:
-      prefix: /
+        prefix: /
     route:
     - destination:
-      port:
-        number: 8000
-      host: httpbin.default.svc.cluster.local
-```
+        port:
+          number: 8000
+        host: httpbin.default.svc.cluster.local
 
 5. To verify if the Service is exposed, run the following command:
 
@@ -100,7 +99,7 @@ spec:
 
     ```bash
     cat <<EOF | kubectl apply -f -
-    apiVersion: networking.istio.io/v1alpha3
+    apiVersion: networking.istio.io/v1
     kind: VirtualService
     metadata:
       name: {VS_NAME}
@@ -111,21 +110,21 @@ spec:
       gateways:
         - {GATEWAY_NAMESPACE}/{GATEWAY_NAME}
       http:
-        match:
+      - match:
         - uri:
-          prefix: {URI_PREFIX}
+            prefix: {URI_PREFIX}
         route:
         - destination:
-          port:
-            number: {PORT_NUMBER}
-          host: {SERVICE_NAME}.{SERVICE_NAMESPACE}.svc.cluster.local
+            port:
+              number: {PORT_NUMBER}
+            host: {SERVICE_NAME}.{SERVICE_NAMESPACE}.svc.cluster.local
     EOF
     ```
 
     See a sample VirtualService configuration that directs all HTTP traffic received at `httpbin.my-domain.com` through the `my-gateway` Gateway to the [HTTPBin Service](https://github.com/istio/istio/blob/master/samples/httpbin/httpbin.yaml), which is running on port `8000` in the `default` namespace.
 
     ```yaml
-    apiVersion: networking.istio.io/v1alpha3
+    apiVersion: networking.istio.io/v1
     kind: VirtualService
     metadata:
       name: example-vs
@@ -136,14 +135,14 @@ spec:
       gateways:
         - default/my-gateway
       http:
-        match:
+      - match:
         - uri:
-          prefix: /
+            prefix: /
         route:
         - destination:
-          port:
-            number: 8000
-          host: httpbin.default.svc.cluster.local
+            port:
+              number: 8000
+            host: httpbin.default.svc.cluster.local
     ```
 2. To verify if the Service is exposed, run the following command:
 

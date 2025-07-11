@@ -1,5 +1,8 @@
 name: PR Build and Push Manager Image
 
+permissions:
+  contents: read
+  
 on:
   pull_request_target:
     types: [ synchronize, opened, reopened, ready_for_review ]

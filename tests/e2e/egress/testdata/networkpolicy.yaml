@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  generateName: network-policy
+spec:
+  egress:
+    - ports:
+        - port: 53
+          protocol: UDP
+      to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-system
+        - ipBlock:
+            cidr: "fd30:1319:f1e:230b::1/128"
+        - ipBlock:
+            cidr: "169.254.20.10/32"
+        - ipBlock:
+            cidr: "100.104.0.0/13"
+  policyTypes:
+    - Egress
+  podSelector: { }

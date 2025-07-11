@@ -1,0 +1,73 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: egress-vs
+spec:
+  gateways:
+    - egress-gateway
+    - mesh
+  hosts:
+    - httpbin.org
+  tls:
+    - match:
+        - gateways:
+            - mesh
+          port: 443
+          sniHosts:
+            - httpbin.org
+      route:
+        - destination:
+            host: istio-egressgateway.istio-system.svc.cluster.local
+            port:
+              number: 443
+            subset: kyma-project
+    - match:
+        - gateways:
+            - egress-gateway
+          port: 443
+          sniHosts:
+            - httpbin.org
+      route:
+        - destination:
+            host: httpbin.org
+            port:
+              number: 443
+          weight: 100
+---
+kind: Gateway
+apiVersion: networking.istio.io/v1
+metadata:
+  name: egress-gateway
+spec:
+  selector:
+    istio: egressgateway
+  servers:
+    - hosts:
+        - httpbin.org
+      port:
+        name: tls
+        number: 443
+        protocol: TLS
+      tls: { }
+---
+apiVersion: networking.istio.io/v1
+kind: ServiceEntry
+metadata:
+  name: e2e-service-entry
+spec:
+  hosts:
+    - httpbin.org
+  ports:
+    - name: tls
+      number: 443
+      protocol: TLS
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: egress-dr
+spec:
+  host: istio-egressgateway.istio-system.svc.cluster.local
+  subsets:
+    - name: kyma-project

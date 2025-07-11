@@ -1,0 +1,6 @@
+apiVersion: operator.kyma-project.io/v1alpha2
+kind: Istio
+metadata:
+  name: istio-operator
+  namespace: kyma-system
+spec: { }

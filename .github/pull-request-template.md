@@ -13,7 +13,15 @@ Changes proposed in this pull request:
 
 **Pre-Merge Checklist**
 
-- [ ] As a PR reviewer, verify code coverage and evaluate if it is acceptable.
+- [ ] As a PR reviewer, verify code coverage and evaluate if it is acceptable
+- [ ] Manifests are updated
+- [ ] For the changes in the PR, consider following:
+  - [ ] Old clusters are in the consistent state with the new clusters
+  - [ ] Change works on the all hyperscalers
+  - [ ] Change does not affect LoadBalancers
+  - [ ] Hyperscaler costs
+  - [ ] RBAC changes are not too permissive
+  - [ ] If any new libraries are added, security, license compliance and maintainability
 
 **Related issues**
 <!-- If you refer to a particular issue, provide its number. For example, `Resolves #123`, `Fixes #43`, or `See also #33`. -->

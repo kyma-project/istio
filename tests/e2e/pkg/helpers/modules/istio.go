@@ -79,8 +79,14 @@ func TeardownIstioCR(t *testing.T) error {
 	err = r.Delete(setup.GetCleanupContext(), icr)
 	assert.NoError(t, err)
 
-	err = wait.For(conditions.New(r).ResourceDeleted(icr))
+	err = wait.For(conditions.New(r).ResourceDeleted(icr), wait.WithTimeout(time.Minute*2))
 	if err != nil {
+		t.Logf("Failed to delete Istio custom resource: %v", err)
+		_icr := &v1alpha2.Istio{}
+		assert.NoError(t, r.Get(setup.GetCleanupContext(), icr.GetName(), icr.GetNamespace(), _icr))
+		t.Logf("Istio custom resource still exists: state=%s, description=%s",
+			_icr.Status.State, _icr.Status.Description)
+
 		return err
 	}
 

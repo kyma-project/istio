@@ -31,12 +31,15 @@ type Mock struct {
 
 func DeployMock(t *testing.T, domain string) (*Mock, error) {
 	t.Helper()
+
 	mock := &Mock{
 		IssuerURL: "mock-oauth2-server.oauth2-mock.svc.cluster.local",
 		TokenURL:  fmt.Sprintf("https://oauth2-mock.%s/oauth2/token", domain),
 		Subdomain: fmt.Sprintf("oauth2-mock.%s", domain),
 	}
 
+	t.Logf("Deploying oauth2mock with IssuerURL: %s, TokenURL: %s, Subdomain: %s",
+		mock.IssuerURL, mock.TokenURL, mock.Subdomain)
 	return mock, startMock(t, mock)
 }
 
@@ -44,10 +47,9 @@ func startMock(t *testing.T, m *Mock) error {
 	t.Helper()
 	r := infrahelpers.ResourcesClient(t)
 	setup.DeclareCleanup(t, func() {
-		t.Log("stopping oauth2-mock")
+		t.Log("Cleaning up oauth2-mock")
 		require.NoError(t, m.stop(setup.GetCleanupContext(), r))
 	})
-	t.Log("starting oauth2-mock")
 	return m.start(t, r)
 }
 

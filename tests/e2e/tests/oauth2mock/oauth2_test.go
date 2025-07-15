@@ -14,10 +14,24 @@ func TestOauth2FS(t *testing.T) {
 
 	require.NoError(t, modulehelpers.CreateIstioCR(t))
 
-	m, err := oauth2mock.DeployMock(t, "local.kyma.dev")
-	require.NoError(t, err)
+	t.Run("deploying oauth2mock in the default oauth2-mock namespace", func(t *testing.T) {
+		t.Parallel()
+		m, err := oauth2mock.DeployMock(t, "local.kyma.dev")
+		require.NoError(t, err)
 
-	assert.Equal(t, "mock-oauth2-server.oauth2-mock.svc.cluster.local", m.IssuerURL)
-	assert.Equal(t, "oauth2-mock.local.kyma.dev", m.Subdomain)
-	assert.Equal(t, "https://oauth2-mock.local.kyma.dev/oauth2/token", m.TokenURL)
+		assert.Equal(t, "mock-oauth2-server.oauth2-mock.svc.cluster.local", m.IssuerURL)
+		assert.Equal(t, "oauth2-mock.local.kyma.dev", m.Subdomain)
+		assert.Equal(t, "https://oauth2-mock.local.kyma.dev/oauth2/token", m.TokenURL)
+	})
+
+	t.Run("deploying oauth2mock in a custom namespace", func(t *testing.T) {
+		t.Parallel()
+		m, err := oauth2mock.DeployMock(t, "local.kyma.dev",
+			oauth2mock.Options{Namespace: "custom-oauth2-mock"})
+		require.NoError(t, err)
+
+		assert.Equal(t, "mock-oauth2-server.custom-oauth2-mock.svc.cluster.local", m.IssuerURL)
+		assert.Equal(t, "custom-oauth2-mock.local.kyma.dev", m.Subdomain)
+		assert.Equal(t, "https://custom-oauth2-mock.local.kyma.dev/oauth2/token", m.TokenURL)
+	})
 }

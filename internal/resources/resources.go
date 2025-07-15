@@ -91,7 +91,15 @@ func createOrUpdateResource(
 	data, dataExist := resource.Object["data"]
 	labels := resource.GetLabels()
 	result, err := controllerutil.CreateOrUpdate(ctx, k8sClient, &resource, func() error {
-		resource.SetLabels(labels)
+		l := resource.GetLabels()
+		if l == nil {
+			l = make(map[string]string)
+		}
+		for k, v := range labels {
+			l[k] = v
+		}
+		resource.SetLabels(l)
+
 		if dataExist {
 			resource.Object["data"] = data
 		}

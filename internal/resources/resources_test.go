@@ -103,7 +103,9 @@ var _ = Describe("Apply", func() {
 		Expect(ok).To(BeTrue())
 	})
 
-	It("should update resource with labels if some has been added", func() {
+	It("should append resource with labels if some has been added", func() {
+		testLabelKey := "test-label"
+		testLabelValue := "test-value"
 		var ef networkingv1alpha3.EnvoyFilter
 		Expect(yaml.Unmarshal(resourceBeforeLabels, &ef)).Should(Succeed())
 		k8sClient := createFakeClient(&ef)
@@ -112,6 +114,9 @@ var _ = Describe("Apply", func() {
 		um, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&ef)
 		unstr := unstructured.Unstructured{Object: um}
 		Expect(err).ToNot(HaveOccurred())
+		// old label that should be present
+		Expect(unstr.GetLabels()).To(HaveKeyWithValue(testLabelKey, testLabelValue))
+		// added labels that should not be present yet
 		Expect(unstr.GetLabels()).To(Not(HaveKeyWithValue("kyma-project.io/module", "istio")))
 		Expect(unstr.GetLabels()).To(Not(HaveKeyWithValue("app.kubernetes.io/component", "operator")))
 		Expect(unstr.GetLabels()).To(Not(HaveKeyWithValue("app.kubernetes.io/part-of", "istio")))
@@ -129,6 +134,9 @@ var _ = Describe("Apply", func() {
 		um, err = runtime.DefaultUnstructuredConverter.ToUnstructured(&ef)
 		unstr = unstructured.Unstructured{Object: um}
 		Expect(err).ToNot(HaveOccurred())
+		// old label that should be preserved
+		Expect(unstr.GetLabels()).To(HaveKeyWithValue(testLabelKey, testLabelValue))
+		//  new labels that should be added
 		Expect(unstr.GetLabels()).To(HaveKeyWithValue("kyma-project.io/module", "istio"))
 		Expect(unstr.GetLabels()).To(HaveKeyWithValue("app.kubernetes.io/component", "operator"))
 		Expect(unstr.GetLabels()).To(HaveKeyWithValue("app.kubernetes.io/part-of", "istio"))

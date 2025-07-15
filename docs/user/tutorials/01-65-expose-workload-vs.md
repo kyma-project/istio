@@ -6,11 +6,11 @@ Learn how to expose a workload with Istio [VirtualService](https://istio.io/late
 - You have a deployed workload.
 - You have set up your custom domain and a custom TLS Gateway. See [Set Up a Custom Domain](https://kyma-project.io/#/api-gateway/user/tutorials/01-10-setup-custom-domain-for-workload) and [Set Up a TLS Gateway](https://kyma-project.io/#/api-gateway/user/tutorials/01-20-set-up-tls-gateway). <br>Alternatively, you can use the default domain of your Kyma cluster and the default Gateway `kyma-system/kyma-gateway`. To use the default domain and Gateway, the API Gateway module must be added to your cluster.
 
-    >[!NOTE]
-    > To get the default domain of your Kyma cluster, run the following command:
-    >```yaml
-    >kubectl get gateway -n kyma-system kyma-gateway -o jsonpath='{.spec.servers[0].hosts}'
-    >```
+  >[!NOTE]
+  > To get the default domain of your Kyma cluster, run the following command:
+  >```yaml
+  >kubectl get gateway -n kyma-system kyma-gateway -o jsonpath='{.spec.servers[0].hosts}'
+  >```
 
 ## Context
 Kyma's API Gateway module provides the APIRule custom resource (CR), which is the recommended solution for securely exposing workloads. To create APIRule CRs, the APIGateway module must be added to your Kyma cluster. Additionally, APIRule in the newest version `v2` requires the exposed workload to be in the Istio service mesh. Including a workload in the mesh brings several benefits, such as secure service-to-service communication, tracing capabilities, or traffic management. For more information, see [Purpose and Benefits of Istio Sidecar Proxies](https://help.sap.com/docs/btp/sap-business-technology-platform/istio-sidecar-proxies?version=Cloud) and [The Istio service mesh](https://istio.io/latest/about/service-mesh/).

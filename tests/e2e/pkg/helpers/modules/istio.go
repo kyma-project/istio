@@ -20,7 +20,11 @@ import (
 //go:embed operator_v1alpha2_istio.yaml
 var istioTemplate []byte
 
-func CreateIstioCR(t *testing.T) error {
+type IstioCROptions struct {
+	Template string
+}
+
+func CreateIstioCR(t *testing.T, options ...IstioCROptions) error {
 	t.Helper()
 	t.Log("Creating Istio custom resource")
 
@@ -28,10 +32,15 @@ func CreateIstioCR(t *testing.T) error {
 
 	_ = v1alpha2.AddToScheme(r.GetScheme())
 
+	template := istioTemplate
+	if len(options) > 0 && options[0].Template != "" {
+		template = []byte(options[0].Template)
+	}
+
 	icr := &v1alpha2.Istio{}
 	require.NoError(t,
 		decoder.Decode(
-			bytes.NewBuffer(istioTemplate),
+			bytes.NewBuffer(template),
 			icr,
 		),
 
@@ -40,7 +49,7 @@ func CreateIstioCR(t *testing.T) error {
 
 	setup.DeclareCleanup(t, func() {
 		t.Log("Cleaning up Istio after the tests")
-		require.NoError(t, TeardownIstioCR(t))
+		require.NoError(t, TeardownIstioCR(t, options...))
 	})
 
 	t.Log("Waiting for Istio custom resource to be ready")
@@ -60,7 +69,7 @@ func CreateIstioCR(t *testing.T) error {
 	return nil
 }
 
-func TeardownIstioCR(t *testing.T) error {
+func TeardownIstioCR(t *testing.T, options ...IstioCROptions) error {
 	t.Helper()
 	t.Log("Beginning cleanup of Istio custom resource")
 
@@ -68,10 +77,15 @@ func TeardownIstioCR(t *testing.T) error {
 
 	require.NoError(t, v1alpha2.AddToScheme(r.GetScheme()))
 
+	template := istioTemplate
+	if len(options) > 0 && options[0].Template != "" {
+		template = []byte(options[0].Template)
+	}
+
 	icr := &v1alpha2.Istio{}
 	t.Log("Deleting Istio custom resource")
 	err := decoder.Decode(
-		bytes.NewBuffer(istioTemplate),
+		bytes.NewBuffer(template),
 		icr,
 	)
 	assert.NoError(t, err)

@@ -2,7 +2,6 @@ package resources
 
 import (
 	"context"
-
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -90,7 +89,9 @@ func createOrUpdateResource(
 ) (unstructured.Unstructured, controllerutil.OperationResult, error) {
 	spec, specExist := resource.Object["spec"]
 	data, dataExist := resource.Object["data"]
+	labels := resource.GetLabels()
 	result, err := controllerutil.CreateOrUpdate(ctx, k8sClient, &resource, func() error {
+		resource.SetLabels(labels)
 		if dataExist {
 			resource.Object["data"] = data
 		}

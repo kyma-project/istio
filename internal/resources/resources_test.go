@@ -3,6 +3,7 @@ package resources_test
 import (
 	"context"
 	_ "embed"
+	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 
 	"github.com/kyma-project/istio/operator/internal/resources"
 	. "github.com/onsi/ginkgo/v2"
@@ -23,6 +24,12 @@ var resourceWithSpec []byte
 
 //go:embed test_files/resource_with_data.yaml
 var resourceWithData []byte
+
+//go:embed test_files/resource_before_labels.yaml
+var resourceBeforeLabels []byte
+
+//go:embed test_files/resource_after_labels.yaml
+var resourceAfterLabels []byte
 
 var _ = Describe("Apply", func() {
 	It("should create resource with disclaimer", func() {
@@ -94,6 +101,39 @@ var _ = Describe("Apply", func() {
 		Expect(err).ToNot(HaveOccurred())
 		ok := resources.HasManagedByDisclaimer(unstr)
 		Expect(ok).To(BeTrue())
+	})
+
+	It("should update resource with labels if some has been added", func() {
+		var ef networkingv1alpha3.EnvoyFilter
+		Expect(yaml.Unmarshal(resourceBeforeLabels, &ef)).Should(Succeed())
+		k8sClient := createFakeClient(&ef)
+
+		Expect(k8sClient.Get(context.Background(), ctrlClient.ObjectKeyFromObject(&ef), &ef)).Should(Succeed())
+		um, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&ef)
+		unstr := unstructured.Unstructured{Object: um}
+		Expect(err).ToNot(HaveOccurred())
+		Expect(unstr.GetLabels()).To(Not(HaveKeyWithValue("kyma-project.io/module", "istio")))
+		Expect(unstr.GetLabels()).To(Not(HaveKeyWithValue("app.kubernetes.io/component", "operator")))
+		Expect(unstr.GetLabels()).To(Not(HaveKeyWithValue("app.kubernetes.io/part-of", "istio")))
+		Expect(unstr.GetLabels()).To(Not(HaveKeyWithValue("app.kubernetes.io/name", "istio-operator")))
+		Expect(unstr.GetLabels()).To(Not(HaveKeyWithValue("app.kubernetes.io/instance", "istio-operator-default")))
+
+		// when
+		res, err := resources.Apply(context.Background(), k8sClient, resourceAfterLabels, nil)
+
+		// then
+		Expect(err).ToNot(HaveOccurred())
+		Expect(res).To(Equal(controllerutil.OperationResultUpdated))
+
+		Expect(k8sClient.Get(context.Background(), ctrlClient.ObjectKeyFromObject(&ef), &ef)).Should(Succeed())
+		um, err = runtime.DefaultUnstructuredConverter.ToUnstructured(&ef)
+		unstr = unstructured.Unstructured{Object: um}
+		Expect(err).ToNot(HaveOccurred())
+		Expect(unstr.GetLabels()).To(HaveKeyWithValue("kyma-project.io/module", "istio"))
+		Expect(unstr.GetLabels()).To(HaveKeyWithValue("app.kubernetes.io/component", "operator"))
+		Expect(unstr.GetLabels()).To(HaveKeyWithValue("app.kubernetes.io/part-of", "istio"))
+		Expect(unstr.GetLabels()).To(HaveKeyWithValue("app.kubernetes.io/name", "istio-operator"))
+		Expect(unstr.GetLabels()).To(HaveKeyWithValue("app.kubernetes.io/instance", "istio-operator-default"))
 	})
 
 	It("should update data field of resource and add disclaimer", func() {

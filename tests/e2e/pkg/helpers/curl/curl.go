@@ -1,14 +1,14 @@
-package helpers
+package curl
 
 import (
 	"bytes"
+	infrahelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/infrastructure"
 	"testing"
 
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/setup"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
 	"sigs.k8s.io/e2e-framework/klient/wait"
 	"sigs.k8s.io/e2e-framework/klient/wait/conditions"
 	"sigs.k8s.io/e2e-framework/pkg/envconf"
@@ -19,10 +19,10 @@ const (
 	containerName = "curl"
 )
 
-//type PodOpts
-
-func RunCurlCmdInCluster(t *testing.T, namespace string, cmd []string, cfg *envconf.Config) error {
+func RunCurlCmdInCluster(t *testing.T, namespace string, cmd []string) error {
 	t.Helper()
+
+	r := infrahelpers.ResourcesClient(t)
 	podID := envconf.RandomName(podName, 16)
 	pod := corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{Name: podID, Namespace: namespace},
@@ -36,12 +36,9 @@ func RunCurlCmdInCluster(t *testing.T, namespace string, cmd []string, cfg *envc
 			},
 		},
 	}
-	r, err := resources.New(WrapTestLog(t, cfg.Client().RESTConfig()))
-	if err != nil {
-		return err
-	}
-	t.Logf("Creating pod: %s", podID)
-	err = r.Create(t.Context(), &pod)
+
+	t.Logf("Creating curl pod: %s", podID)
+	err := r.Create(t.Context(), &pod)
 	if err != nil {
 		return err
 	}

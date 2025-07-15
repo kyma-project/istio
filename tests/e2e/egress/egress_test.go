@@ -1,15 +1,15 @@
 package egress_test
 
 import (
+	curlhelper "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/curl"
+	infrahelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/infrastructure"
+	modulehelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/modules"
+
 	"os"
 	"testing"
 
-	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers"
-	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/ns"
 	"github.com/stretchr/testify/require"
-	"sigs.k8s.io/e2e-framework/klient/conf"
 	"sigs.k8s.io/e2e-framework/klient/decoder"
-	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
 	"sigs.k8s.io/e2e-framework/pkg/envconf"
 )
 
@@ -17,15 +17,11 @@ import (
 // This test expects that istio-module is installed and access to cluster is set up via KUBECONFIG env.
 func TestE2EEgressConnectivity(t *testing.T) {
 	// initialization
-	ctx := t.Context()
-	path := conf.ResolveKubeConfigFile()
-	cfg := envconf.NewWithKubeConfig(path)
-
 	fsys := os.DirFS("testdata")
 
 	// setup istio
 	t.Log("Setting up Istio for the tests")
-	require.NoError(t, helpers.SetupIstio(t, fsys, cfg))
+	require.NoError(t, modulehelpers.CreateIstioCR(t))
 
 	// initialize testcases
 	// note: test might fail randomly from random downtime to httpbin.org with error Connection reset by peer.
@@ -72,24 +68,23 @@ func TestE2EEgressConnectivity(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			runID := envconf.RandomName("e2e-egress", 16)
 			// instantiate a resources client
-			r, tErr := resources.New(helpers.WrapTestLog(t, cfg.Client().RESTConfig()))
-			require.NoError(t, tErr)
+			r := infrahelpers.ResourcesClient(t)
 
 			// namespace creation
-			require.NoError(t, ns.CreateNamespace(t, runID, cfg,
-				ns.WithLabels(map[string]string{"istio-injection": "enabled"}),
+			require.NoError(t, infrahelpers.CreateNamespace(t, runID,
+				infrahelpers.WithLabels(map[string]string{"istio-injection": "enabled"}),
 			))
 			if tt.applyEgressConfig {
 				t.Log("Applying egress config for the test: ", runID)
-				require.NoError(t, decoder.DecodeEachFile(ctx, fsys, "egress_config.yaml", decoder.CreateHandler(r), decoder.MutateNamespace(runID)))
+				require.NoError(t, decoder.DecodeEachFile(t.Context(), fsys, "egress_config.yaml", decoder.CreateHandler(r), decoder.MutateNamespace(runID)))
 			}
 			if tt.applyNetworkPolicy {
 				t.Log("Applying network policy for the test: ", runID)
-				require.NoError(t, decoder.DecodeEachFile(ctx, fsys, "networkpolicy.yaml", decoder.CreateHandler(r), decoder.MutateNamespace(runID)))
+				require.NoError(t, decoder.DecodeEachFile(t.Context(), fsys, "networkpolicy.yaml", decoder.CreateHandler(r), decoder.MutateNamespace(runID)))
 			}
 
 			// test using pod with curl
-			err := helpers.RunCurlCmdInCluster(t, runID, tt.cmd, cfg)
+			err := curlhelper.RunCurlCmdInCluster(t, runID, tt.cmd)
 			if err != nil && !tt.expectError {
 				t.Errorf("got an error but shouldn't have: %v", err)
 			}

@@ -1,15 +1,13 @@
 package createpod_test
 
 import (
+	infrahelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/infrastructure"
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/setup"
 	"testing"
 
-	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers"
-	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/ns"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
-	"sigs.k8s.io/e2e-framework/klient/conf"
 	"sigs.k8s.io/e2e-framework/klient/decoder"
-	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
 	"sigs.k8s.io/e2e-framework/klient/wait"
 	"sigs.k8s.io/e2e-framework/klient/wait/conditions"
 	"sigs.k8s.io/e2e-framework/pkg/envconf"
@@ -35,19 +33,20 @@ spec:
 func TestPodCreation(t *testing.T) {
 	testId := envconf.RandomName("test", 16)
 	namespaceName := "ns-" + testId
-	path := conf.ResolveKubeConfigFile()
-	cfg := envconf.NewWithKubeConfig(path)
 
-	require.NoError(t, ns.CreateNamespace(t, namespaceName, cfg))
+	require.NoError(t, infrahelpers.CreateNamespace(t, namespaceName))
 
 	t.Run("test", func(t *testing.T) {
 		t.Parallel()
-		r, err := resources.New(helpers.WrapTestLog(t, cfg.Client().RESTConfig()))
-		require.NoError(t, err)
+		r := infrahelpers.ResourcesClient(t)
 
 		// given
 		pod := corev1.Pod{}
 		require.NoError(t, decoder.DecodeString(nginxPod, &pod, decoder.MutateNamespace(namespaceName)))
+		setup.DeclareCleanup(t, func() {
+			t.Log("Cleaning up pod after the test")
+			require.NoError(t, r.Delete(setup.GetCleanupContext(), &pod))
+		})
 
 		// when
 		require.NoError(t, r.Create(t.Context(), &pod))

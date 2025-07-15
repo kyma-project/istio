@@ -1,10 +1,10 @@
 package httprequest_test
 
 import (
+	httphelper "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/http"
 	"net/http"
 	"testing"
 
-	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers"
 	"github.com/stretchr/testify/require"
 )
 
@@ -13,7 +13,7 @@ func TestHTTPRequest(t *testing.T) {
 		t.Parallel()
 
 		// given
-		c := helpers.NewHTTPClient(t)
+		c := httphelper.NewHTTPClient(t)
 		req, err := http.NewRequest("GET", "http://example.com", nil)
 		req.Header.Add("User-Agent", "E2E Test Client")
 		req.Header.Add("Accept", "application/json")

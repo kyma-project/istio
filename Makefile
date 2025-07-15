@@ -197,7 +197,7 @@ test-e2e-egress: gotestsum
 	$(LOCALBIN)/gotestsum --rerun-fails --packages="./tests/e2e/egress/..." --format "testname" -- -run '^TestE2E.*' ./tests/e2e/...
 
 .PHONY: e2e-test
-e2e-test:
+e2e-test: deploy
 	make -C tests/e2e/tests e2e-test
 ##@ Module
 

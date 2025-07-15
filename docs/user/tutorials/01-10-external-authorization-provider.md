@@ -9,7 +9,7 @@ Learn how to configure [oauth2-proxy](https://github.com/oauth2-proxy/manifests/
   > [!NOTE]
   > Because the default Kyma domain is a wildcard domain, which uses a simple TLS Gateway, it is recommended that you set up your custom domain for use in a production environment.
 
-  >[!NOTE]
+  >[!TIP]
   > To get the default domain of your Kyma cluster, run the following command:
   >```yaml
   >kubectl get gateway -n kyma-system kyma-gateway -o jsonpath='{.spec.servers[0].hosts}'

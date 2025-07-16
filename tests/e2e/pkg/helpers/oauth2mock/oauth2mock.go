@@ -27,28 +27,35 @@ type Options struct {
 	Namespace string
 }
 
-func DeployMock(t *testing.T, domain string, options ...Options) (*Mock, error) {
+func WithNamespace(ns string) Option {
+	return func(o *Options) {
+		o.Namespace = ns
+	}
+}
+
+type Option func(*Options)
+
+func DeployMock(t *testing.T, domain string, options ...Option) (*Mock, error) {
 	t.Helper()
+	opts := &Options{
+		Namespace: "oauth2-mock",
+	}
+	for _, opt := range options {
+		opt(opts)
+	}
 
 	mock := &Mock{
-		IssuerURL: "mock-oauth2-server.oauth2-mock.svc.cluster.local",
-		TokenURL:  fmt.Sprintf("https://oauth2-mock.%s/oauth2/token", domain),
-		Subdomain: fmt.Sprintf("oauth2-mock.%s", domain),
-	}
-	if len(options) > 0 {
-		if options[0].Namespace != "" {
-			mock.IssuerURL = fmt.Sprintf("mock-oauth2-server.%s.svc.cluster.local", options[0].Namespace)
-			mock.TokenURL = fmt.Sprintf("https://%s.%s/oauth2/token", options[0].Namespace, domain)
-			mock.Subdomain = fmt.Sprintf("%s.%s", options[0].Namespace, domain)
-		}
+		IssuerURL: fmt.Sprintf("mock-oauth2-server.%s.svc.cluster.local", opts.Namespace),
+		TokenURL:  fmt.Sprintf("https://%s.%s/oauth2/token", opts.Namespace, domain),
+		Subdomain: fmt.Sprintf("%s.%s", opts.Namespace, domain),
 	}
 
 	t.Logf("Deploying oauth2mock with IssuerURL: %s, TokenURL: %s, Subdomain: %s",
 		mock.IssuerURL, mock.TokenURL, mock.Subdomain)
-	return mock, startMock(t, mock, options...)
+	return mock, startMock(t, mock, opts)
 }
 
-func startMock(t *testing.T, m *Mock, options ...Options) error {
+func startMock(t *testing.T, m *Mock, options *Options) error {
 	t.Helper()
 	r, err := infrahelpers.ResourcesClient(t)
 	if err != nil {
@@ -56,49 +63,37 @@ func startMock(t *testing.T, m *Mock, options ...Options) error {
 		return err
 	}
 
-	namespace := "oauth2-mock"
-	if len(options) > 0 && options[0].Namespace != "" {
-		namespace = options[0].Namespace
-	}
-
-	err = infrahelpers.CreateNamespace(t, namespace, infrahelpers.NamespaceOptions{
-		IgnoreAlreadyExists: true,
-	})
+	err = infrahelpers.CreateNamespace(t, options.Namespace, infrahelpers.IgnoreAlreadyExists())
 	if err != nil {
 		t.Logf("Failed to create namespace: %v", err)
-		return fmt.Errorf("failed to create namespace %s: %w", namespace, err)
+		return fmt.Errorf("failed to create namespace %s: %w", options.Namespace, err)
 	}
 
 	// No further cleanup is needed as the namespace will be deleted
 	// as part of Namespace cleanup.
 	// setup.DeclareCleanup(t, func() {})
 
-	return m.start(t, r, options...)
+	return m.start(t, r, options)
 }
 
-func (m *Mock) start(t *testing.T, r *resources.Resources, options ...Options) error {
+func (m *Mock) start(t *testing.T, r *resources.Resources, options *Options) error {
 	err := m.parseTmpl()
 	if err != nil {
 		return err
-	}
-
-	namespace := "oauth2-mock"
-	if len(options) > 0 && options[0].Namespace != "" {
-		namespace = options[0].Namespace
 	}
 
 	err = decoder.DecodeEach(
 		t.Context(),
 		bytes.NewBuffer(m.parsedManifest),
 		decoder.CreateHandler(r),
-		decoder.MutateNamespace(namespace),
+		decoder.MutateNamespace(options.Namespace),
 	)
 	if err != nil {
 		t.Logf("Failed to deploy mock: %v", err)
 		return err
 	}
 
-	return wait.For(conditions.New(r).DeploymentAvailable("mock-oauth2-server-deployment", namespace))
+	return wait.For(conditions.New(r).DeploymentAvailable("mock-oauth2-server-deployment", options.Namespace))
 }
 
 func (m *Mock) parseTmpl() error {

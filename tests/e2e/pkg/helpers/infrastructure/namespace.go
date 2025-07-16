@@ -14,8 +14,29 @@ type NamespaceOptions struct {
 	IgnoreAlreadyExists bool
 }
 
-func CreateNamespace(t *testing.T, name string, options ...NamespaceOptions) error {
+func WithLabels(labels map[string]string) NamespaceOption {
+	return func(opts *NamespaceOptions) {
+		opts.Labels = labels
+	}
+}
+
+func IgnoreAlreadyExists() NamespaceOption {
+	return func(opts *NamespaceOptions) {
+		opts.IgnoreAlreadyExists = true
+	}
+}
+
+type NamespaceOption func(*NamespaceOptions)
+
+func CreateNamespace(t *testing.T, name string, options ...NamespaceOption) error {
 	t.Helper()
+	opts := &NamespaceOptions{
+		Labels: nil,
+	}
+	for _, opt := range options {
+		opt(opts)
+	}
+
 	r, err := ResourcesClient(t)
 	if err != nil {
 		t.Logf("Failed to get resources client: %v", err)
@@ -23,18 +44,15 @@ func CreateNamespace(t *testing.T, name string, options ...NamespaceOptions) err
 	}
 
 	ns := &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: name}}
-	if len(options) > 0 {
-		opts := options[0]
-		if opts.Labels != nil {
-			ns.ObjectMeta.Labels = opts.Labels
-		}
+	if opts.Labels != nil {
+		ns.ObjectMeta.Labels = opts.Labels
 	}
 
 	t.Log("Creating namespace: ", name)
 
 	err = r.Create(t.Context(), ns)
 	if err != nil {
-		if len(options) > 0 && options[0].IgnoreAlreadyExists && k8serrors.IsAlreadyExists(err) {
+		if opts.IgnoreAlreadyExists && k8serrors.IsAlreadyExists(err) {
 			t.Logf("Namespace %s already exists, ignoring error as per options", name)
 			return nil
 		}

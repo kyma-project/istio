@@ -7,11 +7,10 @@ import (
 	infrahelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/infrastructure"
 	modulehelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/modules"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/testid"
-
+	"sigs.k8s.io/e2e-framework/klient/decoder"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"sigs.k8s.io/e2e-framework/klient/decoder"
 )
 
 //go:embed istio_cr_with_egress.yaml
@@ -28,9 +27,7 @@ var networkPolicy []byte
 func TestE2EEgressConnectivity(t *testing.T) {
 	// setup istio
 	t.Log("Setting up Istio for the tests")
-	require.NoError(t, modulehelpers.CreateIstioCR(t, modulehelpers.IstioCROptions{
-		Template: string(istioCRWithEgress),
-	}))
+	require.NoError(t, modulehelpers.CreateIstioCR(t, modulehelpers.WithIstioTemplate(string(istioCRWithEgress))))
 
 	// initialize testcases
 	// note: test might fail randomly from random downtime to httpbin.org with error Connection reset by peer.
@@ -75,9 +72,7 @@ func TestE2EEgressConnectivity(t *testing.T) {
 
 	for _, tt := range tc {
 		t.Run(tt.name, func(t *testing.T) {
-			_, runNamespace, err := testid.CreateNamespaceWithRandomID(t, testid.Options{
-				Prefix: "egress-test",
-			})
+			_, runNamespace, err := testid.CreateNamespaceWithRandomID(t, testid.WithPrefix("egress-test"))
 			require.NoError(t, err)
 
 			// instantiate a resources client
@@ -86,7 +81,7 @@ func TestE2EEgressConnectivity(t *testing.T) {
 
 			// namespace creation
 			require.NoError(t, infrahelpers.CreateNamespace(t, runNamespace,
-				infrahelpers.NamespaceOptions{Labels: map[string]string{"istio-injection": "enabled"}},
+				infrahelpers.WithLabels(map[string]string{"istio-injection": "enabled"}),
 			))
 			if tt.applyEgressConfig {
 				t.Logf("Applying egress config for the test in namespace %s", runNamespace)

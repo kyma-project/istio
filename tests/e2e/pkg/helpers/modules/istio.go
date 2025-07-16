@@ -24,9 +24,21 @@ type IstioCROptions struct {
 	Template string
 }
 
-func CreateIstioCR(t *testing.T, options ...IstioCROptions) error {
+func WithIstioTemplate(template string) IstioCROption {
+	return func(opts *IstioCROptions) {
+		opts.Template = template
+	}
+}
+
+type IstioCROption func(*IstioCROptions)
+
+func CreateIstioCR(t *testing.T, options ...IstioCROption) error {
 	t.Helper()
 	t.Log("Creating Istio custom resource")
+	opts := &IstioCROptions{}
+	for _, opt := range options {
+		opt(opts)
+	}
 
 	r, err := infrahelpers.ResourcesClient(t)
 	if err != nil {
@@ -41,8 +53,8 @@ func CreateIstioCR(t *testing.T, options ...IstioCROptions) error {
 	}
 
 	template := istioTemplate
-	if len(options) > 0 && options[0].Template != "" {
-		template = []byte(options[0].Template)
+	if opts.Template != "" {
+		template = []byte(opts.Template)
 	}
 
 	icr := &v1alpha2.Istio{}
@@ -121,9 +133,13 @@ func waitForICRDeletion(t *testing.T, r *resources.Resources, icr *v1alpha2.Isti
 	return nil
 }
 
-func TeardownIstioCR(t *testing.T, options ...IstioCROptions) error {
+func TeardownIstioCR(t *testing.T, options ...IstioCROption) error {
 	t.Helper()
 	t.Log("Beginning cleanup of Istio custom resource")
+	opts := &IstioCROptions{}
+	for _, opt := range options {
+		opt(opts)
+	}
 
 	r, err := infrahelpers.ResourcesClient(t)
 	if err != nil {
@@ -138,8 +154,8 @@ func TeardownIstioCR(t *testing.T, options ...IstioCROptions) error {
 	}
 
 	template := istioTemplate
-	if len(options) > 0 && options[0].Template != "" {
-		template = []byte(options[0].Template)
+	if opts.Template != "" {
+		template = []byte(opts.Template)
 	}
 
 	icr := &v1alpha2.Istio{}

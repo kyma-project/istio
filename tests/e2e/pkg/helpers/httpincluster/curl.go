@@ -22,8 +22,14 @@ type Options struct {
 	Method string
 }
 
-func RunRequestFromInsideCluster(t *testing.T, namespace string, url string, options ...Options) (string, string, error) {
+type Option func(o *Options)
+
+func RunRequestFromInsideCluster(t *testing.T, namespace string, url string, options ...Option) (string, string, error) {
 	t.Helper()
+	opts := &Options{}
+	for _, opt := range options {
+		opt(opts)
+	}
 
 	r, err := infrahelpers.ResourcesClient(t)
 	if err != nil {
@@ -63,11 +69,8 @@ func RunRequestFromInsideCluster(t *testing.T, namespace string, url string, opt
 	}
 
 	cmd := []string{"curl", "-ik", "-sSL", "-m", "10", "--fail-with-body", url}
-	if len(options) > 0 {
-		opts := options[0]
-		if opts.Method != "" {
-			cmd = append(cmd, "-X", opts.Method)
-		}
+	if opts.Method != "" {
+		cmd = append(cmd, "-X", opts.Method)
 	}
 
 	var stdout, stderr bytes.Buffer

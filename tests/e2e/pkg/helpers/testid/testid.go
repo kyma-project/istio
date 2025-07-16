@@ -10,12 +10,25 @@ type Options struct {
 	Prefix string
 }
 
-func CreateNamespaceWithRandomID(t *testing.T, options ...Options) (testId string, namespaceName string, err error) {
+func WithPrefix(prefix string) Option {
+	return func(o *Options) {
+		o.Prefix = prefix
+	}
+}
+
+type Option func(*Options)
+
+func CreateNamespaceWithRandomID(t *testing.T, options ...Option) (testId string, namespaceName string, err error) {
 	t.Helper()
+	opts := &Options{}
+	for _, opt := range options {
+		opt(opts)
+	}
+
 	testId = envconf.RandomName("test", 16)
 	ns := testId
-	if len(options) > 0 && options[0].Prefix != "" {
-		ns = options[0].Prefix + "-" + testId
+	if opts.Prefix != "" {
+		ns = opts.Prefix + "-" + testId
 	}
 
 	t.Logf("Creating namespace %s", ns)

@@ -28,13 +28,11 @@ func TestOauth2FS(t *testing.T) {
 
 	t.Run("deploying oauth2mock in a custom namespace", func(t *testing.T) {
 		t.Parallel()
-		_, testNamespace, err := testid.CreateNamespaceWithRandomID(t, testid.Options{
-			Prefix: "custom-oauth2-mock",
-		})
+		_, testNamespace, err := testid.CreateNamespaceWithRandomID(t, testid.WithPrefix("oauth2-mock"))
 		require.NoError(t, err, "Failed to create a test namespace")
 
 		m, err := oauth2mock.DeployMock(t, "local.kyma.dev",
-			oauth2mock.Options{Namespace: testNamespace})
+			oauth2mock.WithNamespace(testNamespace))
 		require.NoError(t, err)
 
 		assert.Equal(t, fmt.Sprintf("mock-oauth2-server.%s.svc.cluster.local", testNamespace), m.IssuerURL)

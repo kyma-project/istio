@@ -20,8 +20,9 @@ please ensure that it follows the following guidelines:
 
 **Arguments and return values**
 1. The function **MAY** have an associated `Options` type if it has optional arguments.
+   The `Options` type **SHOULD** be configurable with functional options.
 2. The function **MUST** follow argument and return structure as follows:
-   - Arguments: `t *testing.T, [...], options ...Options`
+   - Arguments: `t *testing.T, [...], options ...Option`
    - Returns: `[...], error`
    Where `[...]` is a list of required arguments or return values.
 3. Arguments that are optional **MUST** be put in the `Options` type.

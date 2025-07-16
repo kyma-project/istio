@@ -17,9 +17,7 @@ import (
 var nginxPod []byte
 
 func TestPodCreation(t *testing.T) {
-	_, ns, err := testid.CreateNamespaceWithRandomID(t, testid.Options{
-		Prefix: "create-pod",
-	})
+	_, ns, err := testid.CreateNamespaceWithRandomID(t, testid.WithPrefix("create-pod"))
 	require.NoError(t, err, "Failed to create test namespace")
 
 	t.Run("test", func(t *testing.T) {

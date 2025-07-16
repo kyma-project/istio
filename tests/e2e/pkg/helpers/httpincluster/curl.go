@@ -3,6 +3,7 @@ package httpincluster
 import (
 	"bytes"
 	infrahelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/infrastructure"
+	"net/http"
 	"testing"
 
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/setup"
@@ -22,11 +23,19 @@ type Options struct {
 	Method string
 }
 
+func WithMethod(method string) Option {
+	return func(o *Options) {
+		o.Method = method
+	}
+}
+
 type Option func(o *Options)
 
 func RunRequestFromInsideCluster(t *testing.T, namespace string, url string, options ...Option) (string, string, error) {
 	t.Helper()
-	opts := &Options{}
+	opts := &Options{
+		Method: http.MethodGet,
+	}
 	for _, opt := range options {
 		opt(opts)
 	}
@@ -68,10 +77,7 @@ func RunRequestFromInsideCluster(t *testing.T, namespace string, url string, opt
 		return "", "", err
 	}
 
-	cmd := []string{"curl", "-ik", "-sSL", "-m", "10", "--fail-with-body", url}
-	if opts.Method != "" {
-		cmd = append(cmd, "-X", opts.Method)
-	}
+	cmd := []string{"curl", "-ik", "-sSL", "-m", "10", "-X", opts.Method, "--fail-with-body", url}
 
 	var stdout, stderr bytes.Buffer
 	err = r.ExecInPod(t.Context(), pod.GetNamespace(), pod.GetName(), containerName, cmd, &stdout, &stderr)

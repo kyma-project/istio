@@ -21,12 +21,12 @@ import (
 var istioTemplate []byte
 
 type IstioCROptions struct {
-	Template string
+	Template []byte
 }
 
 func WithIstioTemplate(template string) IstioCROption {
 	return func(opts *IstioCROptions) {
-		opts.Template = template
+		opts.Template = []byte(template)
 	}
 }
 
@@ -35,7 +35,9 @@ type IstioCROption func(*IstioCROptions)
 func CreateIstioCR(t *testing.T, options ...IstioCROption) error {
 	t.Helper()
 	t.Log("Creating Istio custom resource")
-	opts := &IstioCROptions{}
+	opts := &IstioCROptions{
+		Template: istioTemplate,
+	}
 	for _, opt := range options {
 		opt(opts)
 	}
@@ -52,14 +54,9 @@ func CreateIstioCR(t *testing.T, options ...IstioCROption) error {
 		return err
 	}
 
-	template := istioTemplate
-	if opts.Template != "" {
-		template = []byte(opts.Template)
-	}
-
 	icr := &v1alpha2.Istio{}
 	err = decoder.Decode(
-		bytes.NewBuffer(template),
+		bytes.NewBuffer(opts.Template),
 		icr,
 	)
 	if err != nil {
@@ -136,7 +133,9 @@ func waitForICRDeletion(t *testing.T, r *resources.Resources, icr *v1alpha2.Isti
 func TeardownIstioCR(t *testing.T, options ...IstioCROption) error {
 	t.Helper()
 	t.Log("Beginning cleanup of Istio custom resource")
-	opts := &IstioCROptions{}
+	opts := &IstioCROptions{
+		Template: istioTemplate,
+	}
 	for _, opt := range options {
 		opt(opts)
 	}
@@ -153,15 +152,10 @@ func TeardownIstioCR(t *testing.T, options ...IstioCROption) error {
 		return err
 	}
 
-	template := istioTemplate
-	if opts.Template != "" {
-		template = []byte(opts.Template)
-	}
-
 	icr := &v1alpha2.Istio{}
 	t.Log("Deleting Istio custom resource")
 	err = decoder.Decode(
-		bytes.NewBuffer(template),
+		bytes.NewBuffer(opts.Template),
 		icr,
 	)
 	if err != nil {

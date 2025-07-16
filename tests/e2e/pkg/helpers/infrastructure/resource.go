@@ -6,13 +6,21 @@ import (
 	"testing"
 
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/setup"
-	"github.com/stretchr/testify/require"
 )
 
-func CreateResource(t *testing.T, resourceTemplate string, resource k8s.Object, opts ...decoder.DecodeOption) k8s.Object {
+func CreateResource(t *testing.T, resourceTemplate string, resource k8s.Object, opts ...decoder.DecodeOption) (k8s.Object, error) {
 	t.Helper()
-	r := ResourcesClient(t)
-	require.NoError(t, decoder.DecodeString(resourceTemplate, resource, opts...))
+	r, err := ResourcesClient(t)
+	if err != nil {
+		t.Logf("Failed to get resources client: %v", err)
+		return nil, err
+	}
+
+	err = decoder.DecodeString(resourceTemplate, resource, opts...)
+	if err != nil {
+		t.Logf("Failed to decode resource template %s: %v", resourceTemplate, err)
+		return nil, err
+	}
 
 	t.Logf("Creating %s/%s: name=\"%s\" namespace=\"%s\"",
 		resource.GetObjectKind().GroupVersionKind().Kind,
@@ -22,15 +30,23 @@ func CreateResource(t *testing.T, resourceTemplate string, resource k8s.Object, 
 
 	setup.DeclareCleanup(t, func() {
 		cleanupResource := resource.DeepCopyObject().(k8s.Object)
-		require.NoError(t, decoder.DecodeString(resourceTemplate, cleanupResource, opts...))
+		err := decoder.DecodeString(resourceTemplate, cleanupResource, opts...)
+		if err != nil {
+			t.Logf("Failed to decode cleanup resource template %s: %v", resourceTemplate, err)
+			return
+		}
+
 		t.Logf("Cleaning up %s/%s: name=\"%s\" namespace=\"%s\"",
 			cleanupResource.GetObjectKind().GroupVersionKind().Kind,
 			cleanupResource.GetObjectKind().GroupVersionKind().Version,
 			cleanupResource.GetName(),
 			cleanupResource.GetNamespace())
-		require.NoError(t, r.Delete(setup.GetCleanupContext(), resource))
+		err = r.Delete(setup.GetCleanupContext(), resource)
+		if err != nil {
+			t.Logf("Failed to delete resource %s: %v", resource.GetName(), err)
+			return
+		}
 	})
 
-	require.NoError(t, r.Create(t.Context(), resource))
-	return resource
+	return resource, r.Create(t.Context(), resource)
 }

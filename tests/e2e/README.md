@@ -1,56 +1,63 @@
 # End-to-End Tests
 
 This directory contains definitions and implementations of end-to-end tests for Istio Operator.
-These tests verify the connectivity of Istio components to external services, implementing user scenarios.
 
 ## Running End-to-End Tests
 
 E2E tests run against a cluster that is set up as active in your `KUBECONFIG` file. If you want to change the target,
-export an environment vairable `KUBECONFIG` to specific kubeconfig file. Make sure you have admin permission on a
+export an environment variable `KUBECONFIG` to specific kubeconfig file. Make sure you have admin permission on the
 cluster.
 
-To run the E2E tests, use the `make test-e2e-egress` command in the project's root directory.
-You can also use `go test -run '^TestE2E.*' ./tests/e2e/...`directly, if you don't want to use make.
+To run the E2E tests, use the `make e2e-test` command in the project's root directory.
+You can also set the IMG variable to specify the Istio Operator image to test.
 
 ## Writing End-to-End Tests
 
-If you want to add another E2E test, there are several topics to follow.
+### Helper Functions
 
-Tests use lightweight testing framework included in the Go language.
-For more information and reference, read the official Testing package documentation: https://pkg.go.dev/testing.
+When providing a helper function (part of `test/e2e/pkg/helpers`),
+please ensure that it follows the following guidelines:
 
-The tests are separate functions that expect that the test cluster is configured with Istio manager installed without the Istio CR applied.
-Each function has to configure the cluster in runtime and then clean up the cluster back to its initial state, removing all created resources.
+**Arguments and return values**
+1. The function **MAY** have an associated `Options` type if it has optional arguments.
+2. The function **MUST** follow argument and return structure as follows:
+   - Arguments: `t *testing.T, [...], options ...Options`
+   - Returns: `[...], error`
+   Where `[...]` is a list of required arguments or return values.
+3. Arguments that are optional **MUST** be put in the `Options` type.
+4. The function **MAY** assume that options contains at most one element,
+   but **MUST** check that it is not empty.
+5. The function **MUST** use the `t.Context()` as context for any operations that require a context.
+   In case there is a need to extend the context, (e.g. to add a timeout), it **MUST** build it on top of `t.Context()`.
 
-For cleanup tasks, use the default `t.Cleanup()` function from the `Testing` package.
+**Error handling**
+1. The function **MUST** return an error if it fails to complete its task.
+2. There **MUST NOT** be any assertion present that would cause the test to fail.
+   Example: `assert.NoError(t, err)` or `t.Fail()` is not allowed.
 
-For helper functions, use the `t.Helper()` call. Each helper function should accept `t *testing.T` as an argument.
-Returning errors in this case is not really necessary. Just use `t.Error()` or `t.Fatal()` like with usual tests.
+**Cleanup**
 
-Avoid using global variables unless necessary. Do not import variables from other test packages, unless the external
-package is a library.
+1. If the function creates any resources, it **MUST** declare a cleanup function
+   that will clean up those resources after the test completes.
+   This is done by calling `setup.DeclareCleanup` function from `test/e2e/pkg/setup`.
+2. The cleanup function **MUST NOT** return an error.
+3. In case an error occurs during cleanup, it **SHOULD** be logged using `t.Logf`.
+4. The cleanup function **MUST** use the `setup.GetCleanupContext` from `test/e2e/pkg/setup` in case it requires a context.
 
-For logging additional information, use the default `t.Log()` and `t.Logf()` functions from the `Testing` package.
+**Logging**
+1. The function **MUST** use `t.Log` or `t.Logf` for logging.
+2. The function **SHOULD** log the start and end of the operation.
+3. The function **SHOULD** log any errors that occur during the operation.
+4. Performing of any major operation (e.g. creating a resource) **SHOULD** generally be logged.
 
-Each of the tests should be put in its own package. Keep the fixtures under the `testdata` directory in the same package.
+### Test cases
 
-Put libraries used in tests under the `pkg` directory, just as in the standard Go project scheme.
+When writing a test case, please ensure that it follows the following guidelines:
 
-The function's body does not follow a strict methodology. Just keep it simple. Usually, they are written as procedural functions.
-If you need to implement more advanced logic, remember not to leak the implementation outside the package/function.
-
-Start each function's name with the prefix `TestE2E`.
-When running `go test`, we set up a pattern for running tests that only start with this prefix.
-
-When you want to conditionally run specific test, use environment variables.
-Those environment variables must be set in the environment before running `go test`. Do not set the variable in the test file.
-For example, when the test should run only on Gardener, add the simple `if` statement at the beginning of your test function:
-```go
-if os.Getenv("VARIABLE") == "true" {
-	// for better visibility, add message in the function call
-	t.Skip()
-}
-```
-
-When you need to test multiple options in a single configuration of a cluster, consider using table-driven tests.
-For more information, follow official Go documentation: https://go.dev/wiki/TableDrivenTests.
+1. If multiple test cases are defined with the same background, they **MUST** be called using a `t.Run` subtest.
+2. Setup of the test background (e.g., creating a cluster, installing Istio Operator) **MUST** be done outside the `t.Run` subtest.
+3. Tests **MAY** use the assertions `assert` or `require` from the `github.com/stretchr/testify` package.
+4. Related `yaml` files **SHOULD** be placed in the same directory as the test case, and **SHOULD** generally be loaded
+   with `//go:embed` directive.
+5. Tests **SHOULD** generally have as little logic and setup in them as possible.
+   The test should be easily readable, and logic (e.g. generation of random names, creating test Pods) should be moved to helper functions.

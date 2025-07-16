@@ -4,13 +4,13 @@ import (
 	"bytes"
 	_ "embed"
 	infrahelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/infrastructure"
-	"github.com/stretchr/testify/assert"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
 	"testing"
 	"time"
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/setup"
-	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/e2e-framework/klient/decoder"
 	"sigs.k8s.io/e2e-framework/klient/k8s"
 	"sigs.k8s.io/e2e-framework/klient/wait"
@@ -28,9 +28,17 @@ func CreateIstioCR(t *testing.T, options ...IstioCROptions) error {
 	t.Helper()
 	t.Log("Creating Istio custom resource")
 
-	r := infrahelpers.ResourcesClient(t)
+	r, err := infrahelpers.ResourcesClient(t)
+	if err != nil {
+		t.Logf("Failed to get resources client: %v", err)
+		return err
+	}
 
-	_ = v1alpha2.AddToScheme(r.GetScheme())
+	err = v1alpha2.AddToScheme(r.GetScheme())
+	if err != nil {
+		t.Logf("Failed to add Istio v1alpha2 scheme: %v", err)
+		return err
+	}
 
 	template := istioTemplate
 	if len(options) > 0 && options[0].Template != "" {
@@ -38,23 +46,47 @@ func CreateIstioCR(t *testing.T, options ...IstioCROptions) error {
 	}
 
 	icr := &v1alpha2.Istio{}
-	require.NoError(t,
-		decoder.Decode(
-			bytes.NewBuffer(template),
-			icr,
-		),
-
-		r.Create(t.Context(), icr),
+	err = decoder.Decode(
+		bytes.NewBuffer(template),
+		icr,
 	)
+	if err != nil {
+		t.Logf("Failed to decode Istio custom resource template: %v", err)
+		return err
+	}
+
+	err = r.Create(t.Context(), icr)
+	if err != nil {
+		t.Logf("Failed to create Istio custom resource: %v", err)
+		return err
+	}
 
 	setup.DeclareCleanup(t, func() {
 		t.Log("Cleaning up Istio after the tests")
-		require.NoError(t, TeardownIstioCR(t, options...))
+		err := TeardownIstioCR(t, options...)
+		if err != nil {
+			t.Logf("Failed to clean up Istio custom resource: %v", err)
+		} else {
+			t.Log("Istio custom resource cleaned up successfully")
+		}
 	})
 
+	err = waitForICRReadiness(t, r, icr)
+	if err != nil {
+		t.Logf("Failed to wait for Istio custom resource readiness: %v", err)
+		return err
+	}
+
+	t.Log("Istio custom resource created successfully")
+	return nil
+}
+
+func waitForICRReadiness(t *testing.T, r *resources.Resources, icr *v1alpha2.Istio) error {
+	t.Helper()
 	t.Log("Waiting for Istio custom resource to be ready")
+
 	clock := time.Now()
-	require.NoError(t, wait.For(conditions.New(r).ResourceMatch(icr, func(obj k8s.Object) bool {
+	err := wait.For(conditions.New(r).ResourceMatch(icr, func(obj k8s.Object) bool {
 		t.Logf("Waiting for Istio custom resource %s to be ready", obj.GetName())
 		t.Logf("Elapsed time: %s", time.Since(clock))
 
@@ -63,9 +95,29 @@ func CreateIstioCR(t *testing.T, options ...IstioCROptions) error {
 			return false
 		}
 		return icrObj.Status.State == v1alpha2.Ready
-	})))
+	}))
+	if err != nil {
+		t.Logf("Failed to wait for Istio custom resource to be ready: %v", err)
+		return err
+	}
 
-	t.Log("Istio custom resource created successfully")
+	t.Log("Istio custom resource is ready")
+	return nil
+}
+
+const icrDeletionTimeout = time.Minute * 2
+
+func waitForICRDeletion(t *testing.T, r *resources.Resources, icr *v1alpha2.Istio) error {
+	t.Helper()
+	t.Log("Waiting for Istio custom resource to be deleted")
+
+	err := wait.For(conditions.New(r).ResourceDeleted(icr), wait.WithTimeout(icrDeletionTimeout))
+	if err != nil {
+		t.Logf("Failed to wait for Istio custom resource deletion: %v", err)
+		return err
+	}
+
+	t.Log("Istio custom resource deleted successfully")
 	return nil
 }
 
@@ -73,9 +125,17 @@ func TeardownIstioCR(t *testing.T, options ...IstioCROptions) error {
 	t.Helper()
 	t.Log("Beginning cleanup of Istio custom resource")
 
-	r := infrahelpers.ResourcesClient(t)
+	r, err := infrahelpers.ResourcesClient(t)
+	if err != nil {
+		t.Logf("Failed to get resources client: %v", err)
+		return err
+	}
 
-	require.NoError(t, v1alpha2.AddToScheme(r.GetScheme()))
+	err = v1alpha2.AddToScheme(r.GetScheme())
+	if err != nil {
+		t.Logf("Failed to add Istio v1alpha2 scheme: %v", err)
+		return err
+	}
 
 	template := istioTemplate
 	if len(options) > 0 && options[0].Template != "" {
@@ -84,26 +144,24 @@ func TeardownIstioCR(t *testing.T, options ...IstioCROptions) error {
 
 	icr := &v1alpha2.Istio{}
 	t.Log("Deleting Istio custom resource")
-	err := decoder.Decode(
+	err = decoder.Decode(
 		bytes.NewBuffer(template),
 		icr,
 	)
-	assert.NoError(t, err)
-
-	err = r.Delete(setup.GetCleanupContext(), icr)
-	assert.NoError(t, err)
-
-	err = wait.For(conditions.New(r).ResourceDeleted(icr), wait.WithTimeout(time.Minute*2))
 	if err != nil {
-		t.Logf("Failed to delete Istio custom resource: %v", err)
-		_icr := &v1alpha2.Istio{}
-		assert.NoError(t, r.Get(setup.GetCleanupContext(), icr.GetName(), icr.GetNamespace(), _icr))
-		t.Logf("Istio custom resource still exists: state=%s, description=%s",
-			_icr.Status.State, _icr.Status.Description)
-
+		t.Logf("Failed to decode Istio custom resource template: %v", err)
 		return err
 	}
 
-	t.Log("Istio custom resource deleted successfully")
-	return nil
+	err = r.Delete(setup.GetCleanupContext(), icr)
+	if err != nil {
+		t.Logf("Failed to delete Istio custom resource: %v", err)
+		if k8serrors.IsNotFound(err) {
+			t.Log("Istio custom resource not found, nothing to delete")
+			return nil
+		}
+		return err
+	}
+
+	return waitForICRDeletion(t, r, icr)
 }

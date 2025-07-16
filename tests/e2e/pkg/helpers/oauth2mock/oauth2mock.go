@@ -5,8 +5,6 @@ import (
 	_ "embed"
 	"fmt"
 	infrahelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/infrastructure"
-	"github.com/kyma-project/istio/operator/tests/e2e/pkg/setup"
-	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/e2e-framework/klient/decoder"
 	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
 	"sigs.k8s.io/e2e-framework/klient/wait"
@@ -52,19 +50,29 @@ func DeployMock(t *testing.T, domain string, options ...Options) (*Mock, error) 
 
 func startMock(t *testing.T, m *Mock, options ...Options) error {
 	t.Helper()
-	r := infrahelpers.ResourcesClient(t)
+	r, err := infrahelpers.ResourcesClient(t)
+	if err != nil {
+		t.Logf("Failed to get resources client: %v", err)
+		return err
+	}
 
 	namespace := "oauth2-mock"
 	if len(options) > 0 && options[0].Namespace != "" {
 		namespace = options[0].Namespace
 	}
 
-	require.NoError(t, infrahelpers.CreateNamespace(t, namespace))
-	setup.DeclareCleanup(t, func() {
-		t.Log("Cleaning up oauth2-mock")
-		// No further cleanup is needed as the namespace will be deleted
-		// as part of Namespace cleanup.
+	err = infrahelpers.CreateNamespace(t, namespace, infrahelpers.NamespaceOptions{
+		IgnoreAlreadyExists: true,
 	})
+	if err != nil {
+		t.Logf("Failed to create namespace: %v", err)
+		return fmt.Errorf("failed to create namespace %s: %w", namespace, err)
+	}
+
+	// No further cleanup is needed as the namespace will be deleted
+	// as part of Namespace cleanup.
+	// setup.DeclareCleanup(t, func() {})
+
 	return m.start(t, r, options...)
 }
 
@@ -79,14 +87,16 @@ func (m *Mock) start(t *testing.T, r *resources.Resources, options ...Options) e
 		namespace = options[0].Namespace
 	}
 
-	require.NoError(t,
-		decoder.DecodeEach(
-			t.Context(),
-			bytes.NewBuffer(m.parsedManifest),
-			decoder.CreateHandler(r),
-			decoder.MutateNamespace(namespace),
-		),
+	err = decoder.DecodeEach(
+		t.Context(),
+		bytes.NewBuffer(m.parsedManifest),
+		decoder.CreateHandler(r),
+		decoder.MutateNamespace(namespace),
 	)
+	if err != nil {
+		t.Logf("Failed to deploy mock: %v", err)
+		return err
+	}
 
 	return wait.For(conditions.New(r).DeploymentAvailable("mock-oauth2-server-deployment", namespace))
 }

@@ -1,7 +1,6 @@
 package infrastructure
 
 import (
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"sigs.k8s.io/e2e-framework/klient/conf"
 	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
@@ -14,13 +13,11 @@ import (
 
 const KubernetesClientLogPrefix = "kube-client"
 
-func ResourcesClient(t *testing.T) *resources.Resources {
+func ResourcesClient(t *testing.T) (*resources.Resources, error) {
 	path := conf.ResolveKubeConfigFile()
 	cfg := envconf.NewWithKubeConfig(path)
 
-	r, err := resources.New(wrapTestLog(t, cfg.Client().RESTConfig()))
-	require.NoError(t, err)
-	return r
+	return resources.New(wrapTestLog(t, cfg.Client().RESTConfig()))
 }
 
 func wrapTestLog(t *testing.T, cfg *rest.Config) *rest.Config {

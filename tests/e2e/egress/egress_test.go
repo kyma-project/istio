@@ -3,15 +3,15 @@ package egress_test
 import (
 	"bytes"
 	_ "embed"
-	curlhelper "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/curl"
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/httpincluster"
 	infrahelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/infrastructure"
 	modulehelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/modules"
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/testid"
 
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/e2e-framework/klient/decoder"
-	"sigs.k8s.io/e2e-framework/pkg/envconf"
 )
 
 //go:embed istio_cr_with_egress.yaml
@@ -37,7 +37,7 @@ func TestE2EEgressConnectivity(t *testing.T) {
 	// This is a flake, and we need to think how to resolve that eventually.
 	tc := []struct {
 		name                 string
-		cmd                  []string
+		url                  string
 		expectError          bool
 		applyNetworkPolicy   bool
 		applyEgressConfig    bool
@@ -45,13 +45,13 @@ func TestE2EEgressConnectivity(t *testing.T) {
 	}{
 		{
 			name:              "connection to httpbin service is OK when egress is deployed",
-			cmd:               []string{"curl", "-sSL", "-m", "10", "https://httpbin.org/headers"},
+			url:               "https://httpbin.org/headers",
 			applyEgressConfig: true,
 			expectError:       false,
 		},
 		{
 			name:               "connection to httpbin service is refused when NetworkPolicy is applied",
-			cmd:                []string{"curl", "-sSL", "-m", "10", "https://httpbin.org/headers"},
+			url:                "https://httpbin.org/headers",
 			applyNetworkPolicy: true,
 			// sidecar init fails when NP is applied. When uncommented, the test will pass despite confirming manually
 			// that connection is refused with NP
@@ -59,14 +59,14 @@ func TestE2EEgressConnectivity(t *testing.T) {
 		},
 		{
 			name:               "connection to httpbin service is OK when NetworkPolicy is applied and egress is configured",
-			cmd:                []string{"curl", "-sSL", "-m", "10", "https://httpbin.org/headers"},
+			url:                "https://httpbin.org/headers",
 			applyEgressConfig:  true,
 			applyNetworkPolicy: true,
 			expectError:        false,
 		},
 		{
 			name:               "connection to kyma-project is refused when NetworkPolicy is applied and egress is configured",
-			cmd:                []string{"curl", "-sSL", "-m", "10", "https://kyma-project.io"},
+			url:                "https://kyma-project.io",
 			applyEgressConfig:  true,
 			applyNetworkPolicy: true,
 			expectError:        true,
@@ -75,13 +75,18 @@ func TestE2EEgressConnectivity(t *testing.T) {
 
 	for _, tt := range tc {
 		t.Run(tt.name, func(t *testing.T) {
-			runNamespace := envconf.RandomName("e2e-egress", 16)
+			_, runNamespace, err := testid.CreateNamespaceWithRandomID(t, testid.Options{
+				Prefix: "egress-test",
+			})
+			require.NoError(t, err)
+
 			// instantiate a resources client
-			r := infrahelpers.ResourcesClient(t)
+			r, err := infrahelpers.ResourcesClient(t)
+			require.NoError(t, err, "Failed to get resources client")
 
 			// namespace creation
 			require.NoError(t, infrahelpers.CreateNamespace(t, runNamespace,
-				infrahelpers.WithLabels(map[string]string{"istio-injection": "enabled"}),
+				infrahelpers.NamespaceOptions{Labels: map[string]string{"istio-injection": "enabled"}},
 			))
 			if tt.applyEgressConfig {
 				t.Logf("Applying egress config for the test in namespace %s", runNamespace)
@@ -107,7 +112,9 @@ func TestE2EEgressConnectivity(t *testing.T) {
 			}
 
 			// test using pod with curl
-			err := curlhelper.RunCurlCmdInCluster(t, runNamespace, tt.cmd)
+			stdOut, stdErr, err := httpincluster.RunRequestFromInsideCluster(t, runNamespace, tt.url)
+			t.Logf("stdout: %s", stdOut)
+			t.Logf("stderr: %s", stdErr)
 			if err != nil && !tt.expectError {
 				t.Errorf("got an error but shouldn't have: %v", err)
 			}

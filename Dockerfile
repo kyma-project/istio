@@ -3,7 +3,7 @@ FROM --platform=$BUILDPLATFORM golang:1.24.5-alpine AS builder
 ARG TARGETOS
 ARG TARGETARCH
 ARG GO_BUILD_TAGS
-ARG VERSION=dev
+ARG VERSION
 
 WORKDIR /istio-build
 # Copy the Go Modules manifests
@@ -26,7 +26,7 @@ COPY cmd/ cmd/
 # was called. For example, if we call make docker-build in a local env which has the Apple Silicon M1 SO
 # the docker BUILDPLATFORM arg will be linux/arm64 when for Apple x86 it will be linux/amd64. Therefore,
 # by leaving it empty we can ensure that the container and binary shipped on it will have the same platform.
-RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -tags ${GO_BUILD_TAGS} -ldflags="-s -w -X github.com/kyma-project/istio/operator/internal/resources.version=${VERSION}" -o manager main.go
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -tags "${GO_BUILD_TAGS}" -ldflags="-s -w -X github.com/kyma-project/istio/operator/internal/resources.version=${VERSION}" -o manager main.go
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags="-s -w" -o istio_install cmd/istio-install/main.go
 
 # Use distroless as minimal base image to package the manager binary

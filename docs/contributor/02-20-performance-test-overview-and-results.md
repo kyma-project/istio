@@ -1,14 +1,14 @@
-## Performance Tests for Istio Module
+## Performance Tests for the Istio Module
 
-These tests evaluate workloads with and without the Istio sidecar, using a virtual service. They are executed daily as part of the main workflow, and the results are available in the `summary-no-sidecar` and `summary-sidecar` reports.
+These tests evaluate workloads with and without the Istio sidecar, using a VirtualService. They are executed daily as part of the main workflow, and the results are available in the `summary-no-sidecar` and `summary-sidecar` reports.
 
-Performance testing is conducted with the `k6` load testing tool, which simulates traffic to a service exposed via Istio. The tests measure the performance of HTTP GET and POST requests to a sample service configured to respond with headers and echo the request body.
+Performance testing is conducted with the `k6` load testing tool, which simulates traffic to a service exposed via Istio. The tests measure the performance of HTTP `GET` and `POST` requests to a sample service configured to respond with headers and echo the request body.
 Tests are performed on a service running in the Kyma cluster, both with and without Istio sidecar injection. This setup enables a direct comparison of performance metrics between the two configurations.
 
-The `k6` tool is configured to run with 500 virtual users making constant requests for 1 minute. Tests are conducted on a Gardener AWS cluster, and the results are stored in HTML format.
+The `k6` tool is configured to run with 500 virtual users, making constant requests for 1 minute. Tests are conducted on a Gardener AWS cluster, and the results are stored in HTML format.
 You can run the tests using the `make test-performance` command, which deploys the necessary resources and executes the tests.
 
-The HTTPBin service is deployed as a simple HTTP request and response service for testing HTTP clients. It is exposed via an Istio Virtual Service, which routes traffic to HTTPBin based on the request path.
+The HTTPBin service is deployed as a simple HTTP request and response service for testing HTTP clients. It is exposed via an Istio VirtualService, which routes traffic to HTTPBin based on the request path.
 
 The performance tests evaluate the following metrics:
 - **http_req_failed**: The rate of failed HTTP requests, with a threshold of less than 1% failures.
@@ -18,7 +18,7 @@ Additionally, the Istio ingress gateway is configured with 10 replicas to handle
 
 ## Performance of Deployments With and Without Istio Sidecar
 
-Data collected from the performance tests is summarized in following tables, which compares the performance of deployments with and without Istio sidecar injection. The metrics include the number of successful and failed calls, data received and sent by the server, transfer speeds. Data presented in this table are an average of 2 values from 2 runs of the tests, so they are not exact values, but rather an average of the results. 
+Data collected from the performance tests is summarized in the following tables, which compare the performance of deployments with and without Istio sidecar injection. The metrics include the number of successful and failed calls, data received and sent by the server, transfer speeds. The data presented in this table are not exact values but an average of two values from two runs of the tests.
 
 
 | Type       | No. of successful calls | No. of failed calls | Data received by server \[MB\] | Transfer speed (receiving) \[mB/s\] | Data sent by server \[MB\] | Transfer speed (sending) \[mB/s\] |

@@ -13,11 +13,11 @@ Learn how to expose a workload with Istio [VirtualService](https://istio.io/late
   >```
 
 ## Context
-Kyma's API Gateway module provides the APIRule custom resource (CR), which is the recommended solution for securely exposing workloads. To create APIRule CRs, the APIGateway module must be added to your Kyma cluster. Additionally, APIRule in the newest version `v2` requires the exposed workload to be in the Istio service mesh. Including a workload in the mesh brings several benefits, such as secure service-to-service communication, tracing capabilities, or traffic management. For more information, see [Purpose and Benefits of Istio Sidecar Proxies](https://help.sap.com/docs/btp/sap-business-technology-platform/istio-sidecar-proxies?version=Cloud) and [The Istio service mesh](https://istio.io/latest/about/service-mesh/).
+Kyma's API Gateway module provides the APIRule custom resource (CR), which is the recommended solution for securely exposing workloads. To expose a workload using an APIRule v2, you must include the workload in the Istio service mesh. Including a workload in the mesh brings several benefits, such as secure service-to-service communication, tracing capabilities, or traffic management. For more information, see [Purpose and Benefits of Istio Sidecar Proxies](https://help.sap.com/docs/btp/sap-business-technology-platform/istio-sidecar-proxies?version=Cloud) and [The Istio service mesh](https://istio.io/latest/about/service-mesh/).
 
-However, if you do not require the capabilities provided by the Istio service mesh, you can expose an unsecured workload using Istio VirtualService only. Such an approach might be useful in the following scenarios:
+However, if you do not need the capabilities provided by the Istio service mesh, you can expose an unsecured workload using Istio VirtualService only. Such an approach might be useful in the following scenarios:
 * If you use [Unified Gateway](https://pages.github.tools.sap/unified-gateway/) as an entry point for SAP Cloud solutions. In this case, you can configure Unified Gateway to manage API exposure, JWT validation, and routing capabilities, offloading these responsibilities from the service mesh.
-* If you want to expose frontend Services that manage their own authentication mechanisms.
+* If you want to expose front-end Services that manage their own authentication mechanisms.
 * If you require certain features or want to implement specific configurations that APIRule does not support.
 * If you require full control over Istio resources and you want to manage them directly without any higher-level abstractions.
 * For specific development and testing scenarios.

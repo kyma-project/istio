@@ -4,6 +4,7 @@ import (
 	"bytes"
 	infrahelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/infrastructure"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/setup"
@@ -78,6 +79,7 @@ func RunRequestFromInsideCluster(t *testing.T, namespace string, url string, opt
 	}
 
 	cmd := []string{"curl", "-ik", "-sSL", "-m", "10", "-X", opts.Method, "--fail-with-body", url}
+	t.Logf("Executing command in pod %s: %v", curlPodName, strings.Join(cmd, " "))
 
 	var stdout, stderr bytes.Buffer
 	err = r.ExecInPod(t.Context(), pod.GetNamespace(), pod.GetName(), containerName, cmd, &stdout, &stderr)

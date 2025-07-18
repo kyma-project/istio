@@ -7,12 +7,19 @@ import (
 )
 
 type Options struct {
-	Prefix string
+	Prefix                   string
+	NamespaceCreationOptions []infrastructure.NamespaceOption
 }
 
 func WithPrefix(prefix string) Option {
 	return func(o *Options) {
 		o.Prefix = prefix
+	}
+}
+
+func WithSidecarInjectionEnabled() Option {
+	return func(o *Options) {
+		o.NamespaceCreationOptions = append(o.NamespaceCreationOptions, infrastructure.WithSidecarInjectionEnabled())
 	}
 }
 
@@ -32,5 +39,5 @@ func CreateNamespaceWithRandomID(t *testing.T, options ...Option) (testId string
 	}
 
 	t.Logf("Creating namespace %s", ns)
-	return testId, ns, infrastructure.CreateNamespace(t, ns)
+	return testId, ns, infrastructure.CreateNamespace(t, ns, opts.NamespaceCreationOptions...)
 }

@@ -72,17 +72,15 @@ func TestE2EEgressConnectivity(t *testing.T) {
 
 	for _, tt := range tc {
 		t.Run(tt.name, func(t *testing.T) {
-			_, runNamespace, err := testid.CreateNamespaceWithRandomID(t, testid.WithPrefix("egress-test"))
+			_, runNamespace, err := testid.CreateNamespaceWithRandomID(t,
+				testid.WithPrefix("egress-test"),
+				testid.WithSidecarInjectionEnabled())
 			require.NoError(t, err)
 
 			// instantiate a resources client
 			r, err := infrahelpers.ResourcesClient(t)
 			require.NoError(t, err, "Failed to get resources client")
 
-			// namespace creation
-			require.NoError(t, infrahelpers.CreateNamespace(t, runNamespace,
-				infrahelpers.WithLabels(map[string]string{"istio-injection": "enabled"}),
-			))
 			if tt.applyEgressConfig {
 				t.Logf("Applying egress config for the test in namespace %s", runNamespace)
 				require.NoError(t,

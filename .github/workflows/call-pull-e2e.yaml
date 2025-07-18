@@ -5,6 +5,11 @@ permissions:
   
 on:
   workflow_call:
+    inputs:
+      operator_version:
+        description: 'Operator version'
+        required: true
+        type: string
 
 jobs:
   istio-e2e-test-k3d:

@@ -45,6 +45,8 @@ jobs:
     name: Dispatch E2E tests
     needs: [build-image]
     uses: ./.github/workflows/call-pull-e2e.yaml
+    with:
+      operator_version: "dev"
     if: github.event.pull_request.draft == false
     secrets: inherit
 
@@ -61,6 +63,7 @@ jobs:
         with:
           operator-image-name: "istio-manager:PR-${{github.event.number}}"
           target_branch: ${{ github.base_ref }}
+          operator-version: "dev"
 
   verify-pins:
     name: Dispatch verify-commit-pins

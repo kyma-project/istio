@@ -3,7 +3,7 @@ FROM --platform=$BUILDPLATFORM golang:1.24.5-alpine AS builder
 ARG TARGETOS
 ARG TARGETARCH
 ARG GO_BUILD_TAGS
-ARG VERSION
+ARG VERSION=dev
 
 WORKDIR /istio-build
 # Copy the Go Modules manifests

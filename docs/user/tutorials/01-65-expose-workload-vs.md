@@ -20,7 +20,6 @@ However, if you do not need the capabilities provided by the Istio service mesh,
 * If you want to expose front-end Services that manage their own authentication mechanisms.
 * If you require certain features or want to implement specific configurations that APIRule does not support.
 * If you require full control over Istio resources and you want to manage them directly without any higher-level abstractions.
-* For specific development and testing scenarios.
 
 The following instructions demonstrate a simple use case where VirtualService exposes an unsecured Service, skipping the requirement to include the Service in the Istio service mesh.
 

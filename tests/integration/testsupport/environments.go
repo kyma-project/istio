@@ -39,7 +39,7 @@ func setDefaultEnvs() error {
 	for _, env := range requiredEnvs {
 		err := os.Setenv(env.Name, env.Default)
 		if err != nil {
-			return fmt.Errorf("failed to set default environment variable: " + env.Name + " with error: " + err.Error())
+			return fmt.Errorf("failed to set default environment variable: %s with error: %s", env.Name, err.Error())
 		}
 	}
 
@@ -49,7 +49,7 @@ func setDefaultEnvs() error {
 func validateEnvs() error {
 	for _, env := range requiredEnvs {
 		if os.Getenv(env.Name) == "" {
-			return fmt.Errorf("required environment variable is not set: " + env.Name + ". Please set it to run the tests.")
+			return fmt.Errorf("required environment variable is not set: %s. Please set it to run the tests", env.Name)
 		}
 	}
 

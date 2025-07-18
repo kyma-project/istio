@@ -16,6 +16,10 @@ inputs:
   test_make_target:
     description: "Make target for integration tests to run"
     default: 'test-integration'
+  operator_version:
+    description: 'Version of the operator image'
+    required: true
+
 runs:
   using: "composite"
   steps:
@@ -43,6 +47,7 @@ runs:
       shell: bash
       env:
         IMG: ${{ inputs.manager_image }}
+        OPERATOR_VERSION: ${{ inputs.operator_version }}
         CLUSTER_KUBECONFIG: "${{ github.workspace }}/${{ env.CLUSTER_NAME }}_kubeconfig.yaml"
       run: EXPORT_RESULT=true "${{ github.workspace }}/hack/ci/scripts-v2/integration-test-gardener.sh" ${{ inputs.test_make_target }}
     - name: Check deprecations

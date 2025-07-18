@@ -80,6 +80,7 @@ jobs:
     uses: ./.github/workflows/call-integration-tests.yaml
     with:
       image: "europe-docker.pkg.dev/kyma-project/prod/istio/releases/istio-manager:${{ needs.check-prerequisites.outputs.current_release }}"
+      operator_version: ${{ needs.check-prerequisites.outputs.current_release }}
     secrets: inherit
 
   create-draft:

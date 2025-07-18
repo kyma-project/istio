@@ -64,6 +64,7 @@ jobs:
         with:
           operator-image-name: "europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager:${{github.sha}}"
           target_branch: ${{ github.ref_name }}
+          operator-version: ${{ github.ref_name }}
 
   istio-upgrade-test-aws:
     name: Istio upgrade integration test AWS
@@ -83,6 +84,7 @@ jobs:
           gardener_project_name: ${{ vars.GARDENER_PROJECT_NAME }}
           gardener_provider: aws
           test_make_target: "istio-upgrade-integration-test"
+          operator_version: ${{ github.ref_name }}
 
   istio-e2e-test-k3d:
     name: Istio E2E test K3D
@@ -101,6 +103,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           test_make_target: ${{ matrix.test_make_target }}
+          operator-version: ${{ github.ref_name }}
           operator-image-name: "europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager:${{github.sha}}"
           servers-memory: "16"
           agents: 2
@@ -126,6 +129,7 @@ jobs:
           gardener_project_name: ${{ vars.GARDENER_PROJECT_NAME }}
           gardener_provider: gcp
           test_make_target: ${{ matrix.test_make_target }}
+          operator_version: ${{ github.ref_name }}
 
   istio-e2e-aws-specific:
     name: Istio E2E test AWS specific
@@ -144,6 +148,7 @@ jobs:
           gardener_project_name: ${{ vars.GARDENER_PROJECT_NAME }}
           gardener_provider: aws
           test_make_target: aws-integration-test
+          operator_version: ${{ github.ref_name }}
 
   istio-e2e-gcp-specific:
     name: Istio E2E test GCP specific
@@ -162,6 +167,7 @@ jobs:
           gardener_project_name: ${{ vars.GARDENER_PROJECT_NAME }}
           gardener_provider: gcp
           test_make_target: gcp-integration-test
+          operator_version: ${{ github.ref_name }}
 
   istio-e2e-aws:
     name: Istio E2E test AWS
@@ -184,6 +190,7 @@ jobs:
           gardener_project_name: ${{ vars.GARDENER_PROJECT_NAME }}
           gardener_provider: aws
           test_make_target: ${{ matrix.test_make_target }}
+          operator_version: ${{ github.ref_name }}
 
   slack_failed_notification:
     name: Slack Notification

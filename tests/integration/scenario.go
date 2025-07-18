@@ -3,6 +3,8 @@ package integration
 import (
 	"github.com/cucumber/godog"
 	"github.com/kyma-project/istio/operator/tests/integration/steps"
+	"github.com/kyma-project/istio/operator/tests/integration/testsupport"
+	"log"
 )
 
 func initScenario(ctx *godog.ScenarioContext) {
@@ -10,6 +12,12 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.After(testObjectsTearDown)
 	ctx.After(istioCrTearDown)
 	t := steps.TemplatedIstioCr{}
+
+	err := testsupport.EnvironmentVariables()
+	if err != nil {
+		panic("Failed to set environment variables: " + err.Error())
+	}
+	log.Printf("initializing tests with Istio Module version: %s", testsupport.GetOperatorVersion())
 
 	// This structure holds all Tester instances
 	// every test scenario should have an own instance to allow parallel execution
@@ -69,4 +77,5 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^Application "([^"]*)" in namespace "([^"]*)" has required version of proxy as an init container$`, steps.ApplicationHasRequiredVersionInitContainerWithIstioProxy)
 	ctx.Step(`^There are continuous requests to host "([^"]*)" and path "([^"]*)"`, zd.StartZeroDowntimeTest)
 	ctx.Step(`^All continuous requests should succeed`, zd.FinishZeroDowntimeTests)
+	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" has proper value in app.kubernetes.io/version label$`, steps.ManagedResourceHasOperatorVersionLabelWithProperValue)
 }

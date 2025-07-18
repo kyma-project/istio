@@ -3,8 +3,8 @@ package steps
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-project/istio/operator/tests/integration/testsupport"
 	"github.com/kyma-project/istio/operator/tests/testcontext"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/avast/retry-go"
@@ -444,5 +444,41 @@ func IstioResourceContainerHasRequiredVersion(ctx context.Context, containerName
 		}
 
 		return nil
+	}, testcontext.GetRetryOpts()...)
+}
+
+func ManagedResourceHasOperatorVersionLabelWithProperValue(ctx context.Context, kind, name, namespace string) error {
+	labelKey := "app.kubernetes.io/version"
+	version := testsupport.GetOperatorVersion()
+
+	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	return retry.Do(func() error {
+		var object client.Object
+		switch kind {
+		case EnvoyFilter.String():
+			object = &networkingv1alpha3.EnvoyFilter{}
+		case PeerAuthentication.String():
+			object = &securityv1.PeerAuthentication{}
+		default:
+			return godog.ErrUndefined
+		}
+
+		err := k8sClient.Get(ctx, client.ObjectKey{Namespace: namespace, Name: name}, object)
+		if err != nil {
+			return err
+		}
+
+		l := object.GetLabels()
+		for k, v := range l {
+			if k == labelKey && v == version {
+				return nil
+			}
+		}
+
+		return fmt.Errorf("resource %s/%s in namespace %s does not have label %s with value %s", kind, name, namespace, labelKey, version)
 	}, testcontext.GetRetryOpts()...)
 }

@@ -7,6 +7,10 @@ inputs:
   test_make_target:
     description: 'Make target for integration tests to run'
     default: 'istio-test-integration'
+  operator_version:
+    description: 'Version of the operator image'
+    required: true
+
 runs:
   using: "composite"
   steps:
@@ -18,6 +22,8 @@ runs:
       with:
         k3s-version: "1.32.3"
     - name: Run integration tests
+      env:
+        OPERATOR_VERSION: ${{ inputs.operator_version }}
       run: |
         if [ "${{ github.event_name }}" == "pull_request" ]; then
           k3d image import ${{ inputs.operator_image_name }}

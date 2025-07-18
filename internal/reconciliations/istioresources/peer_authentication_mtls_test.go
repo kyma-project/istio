@@ -27,14 +27,14 @@ var _ = Describe("Apply", func() {
 		sample := NewPeerAuthenticationMtls(client)
 
 		//when
-		changed, err := sample.reconcile(context.TODO(), client, owner, templateValues)
+		changed, err := sample.reconcile(context.Background(), client, owner, templateValues)
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(changed).To(Equal(controllerutil.OperationResultCreated))
 
 		var s securityv1.PeerAuthenticationList
-		listErr := client.List(context.TODO(), &s)
+		listErr := client.List(context.Background(), &s)
 		Expect(listErr).To(Not(HaveOccurred()))
 		Expect(s.Items).To(HaveLen(1))
 
@@ -52,27 +52,32 @@ var _ = Describe("Apply", func() {
 	})
 
 	It("should return not changed if no change was applied", func() {
-		//given
-		var p securityv1.PeerAuthentication
-		err := yaml.Unmarshal(paMtls, &p)
-		Expect(err).To(Not(HaveOccurred()))
-
-		client := createFakeClient(&p)
-
+		client := createFakeClient()
 		sample := NewPeerAuthenticationMtls(client)
 
 		//when
-		changed, err := sample.reconcile(context.TODO(), client, owner, templateValues)
-
-		//then
+		changed, err := sample.reconcile(context.Background(), client, owner, templateValues)
+		// first reconciliation required because we add app.kubernetes.io/version in runtime, so it's not present in the yaml
 		Expect(err).To(Not(HaveOccurred()))
-		Expect(changed).To(Equal(controllerutil.OperationResultNone))
+		Expect(changed).To(Equal(controllerutil.OperationResultCreated))
 
 		var s securityv1.PeerAuthenticationList
-		listErr := client.List(context.TODO(), &s)
+		listErr := client.List(context.Background(), &s)
 		Expect(listErr).To(Not(HaveOccurred()))
 		Expect(s.Items).To(HaveLen(1))
 
+		Expect(s.Items[0].Annotations).To(Not(BeNil()))
+		Expect(s.Items[0].Annotations[resources.DisclaimerKey]).To(Not(BeNil()))
+
+		// then
+		// we check in the second reconciliation that nothing changed
+		sample = NewPeerAuthenticationMtls(client)
+		changed, err = sample.reconcile(context.Background(), client, owner, templateValues)
+		Expect(err).To(Not(HaveOccurred()))
+		Expect(changed).To(Equal(controllerutil.OperationResultNone))
+
+		Expect(listErr).To(Not(HaveOccurred()))
+		Expect(s.Items).To(HaveLen(1))
 		Expect(s.Items[0].Annotations).To(Not(BeNil()))
 		Expect(s.Items[0].Annotations[resources.DisclaimerKey]).To(Not(BeNil()))
 	})
@@ -89,14 +94,14 @@ var _ = Describe("Apply", func() {
 		sample := NewPeerAuthenticationMtls(client)
 
 		//when
-		changed, err := sample.reconcile(context.TODO(), client, owner, templateValues)
+		changed, err := sample.reconcile(context.Background(), client, owner, templateValues)
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(changed).To(Equal(controllerutil.OperationResultUpdated))
 
 		var s securityv1.PeerAuthenticationList
-		listErr := client.List(context.TODO(), &s)
+		listErr := client.List(context.Background(), &s)
 		Expect(listErr).To(Not(HaveOccurred()))
 		Expect(s.Items).To(HaveLen(1))
 

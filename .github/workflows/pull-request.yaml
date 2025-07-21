@@ -34,6 +34,7 @@ jobs:
       - uses: ./.github/actions/build-manager-image
         with:
           operator-image-name: "istio-manager:PR-${{github.event.number}}"
+          operator-version: "PR-${{github.event.number}}"
 
   lint-unit-tests:
     name: Dispatch lint & unit test

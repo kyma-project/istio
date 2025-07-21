@@ -212,4 +212,4 @@ jobs:
           git push -f -u origin dependabot-config/$CURRENT_RELEASE
           gh pr create --base main --head dependabot-config/$CURRENT_RELEASE --fill || true 
 
-          gh api --method DELETE repos/${{ github.repository }}/git/refs/heads/sec-scanners-config/$CURRENT_RELEASE || echo "Failed to delete branch"
+          git push upstream --delete dependabot-config/$CURRENT_RELEASE

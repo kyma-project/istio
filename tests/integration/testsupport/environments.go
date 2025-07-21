@@ -15,7 +15,10 @@ var requiredEnvs = []EnvVar{
 }
 
 func EnvironmentVariables() error {
-	ciMode := os.Getenv("GITHUB_WORKFLOW")
+	// env variable should always be set to true in the workflow
+	// according to the documentation: https://docs.github.com/en/actions/reference/variables-reference#default-environment-variables
+	// it is present in the Github Actions workflows
+	ciMode := os.Getenv("CI")
 	if ciMode != "true" {
 		err := setDefaultEnvs()
 		if err != nil {

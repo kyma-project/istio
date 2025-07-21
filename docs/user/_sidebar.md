@@ -9,6 +9,7 @@
   * [Expose Workloads Using oauth2-proxy](/istio/user/tutorials/01-10-external-authorization-provider.md)
   * [Expose Workloads Using Gateway API](/istio/user/tutorials/01-20-expose-httbin-gateway-api.md)
   * [Expose a TCP Service Using Gateway API Aplha Support](/istio/user/tutorials/01-30-expose-tcp-gateway-api.md)
+  * [Exposing Workloads Using Istio VirtualService](/istio/user/tutorials/01-65-expose-workload-vs.md)
   * [Configure Istio Access Logs](/istio/user/tutorials/01-45-enable-istio-access-logs.md)
   * [Send Requests Using Istio Egress Gateway](/istio/user/tutorials/01-50-send-requests-using-egress.md)
   * [Send mTLS Requests Using Istio Egress Gateway](/istio/user/tutorials/01-55-send-requests-using-egress-and-mtls.md)

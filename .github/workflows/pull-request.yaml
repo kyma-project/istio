@@ -30,6 +30,7 @@ jobs:
       - uses: ./.github/actions/build-manager-image
         with:
           operator-image-name: "istio-manager:PR-${{github.event.number}}"
+          operator-version: "PR-${{github.event.number}}"
 
   lint-unit-tests:
     name: Dispatch lint & unit test
@@ -41,6 +42,8 @@ jobs:
     name: Dispatch E2E tests
     needs: [build-image]
     uses: ./.github/workflows/call-pull-e2e.yaml
+    with:
+      operator_version: "PR-${{github.event.number}}"
     if: github.event.pull_request.draft == false
     secrets: inherit
 
@@ -57,6 +60,7 @@ jobs:
         with:
           operator-image-name: "istio-manager:PR-${{github.event.number}}"
           target_branch: ${{ github.base_ref }}
+          operator-version: "PR-${{github.event.number}}"
 
   verify-pins:
     name: Dispatch verify-commit-pins

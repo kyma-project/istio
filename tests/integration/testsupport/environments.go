@@ -2,6 +2,7 @@ package testsupport
 
 import (
 	"fmt"
+	"log"
 	"os"
 )
 
@@ -20,6 +21,7 @@ func LoadEnvironmentVariables() error {
 	// it is present in the Github Actions workflows
 	ciMode := os.Getenv("CI")
 	if ciMode != "true" {
+		log.Println("CI environment variable is not set to true, setting default environment variables")
 		err := setDefaultEnvs()
 		if err != nil {
 			return err

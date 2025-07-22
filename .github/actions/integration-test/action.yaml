@@ -8,9 +8,9 @@ inputs:
   test_make_target:
     description: 'Make target for integration tests to run'
     default: 'istio-test-integration'
-  version:
+  operator-version:
     description: 'Version of the operator image'
-    default: 'dev'
+    required: true
   agents:
     description: 'Number of k3d agents created'
     required: true
@@ -32,7 +32,7 @@ runs:
     - name: Run integration tests
       shell: bash
       env:
-        VERSION: ${{ inputs.version }}
+        OPERATOR_VERSION: ${{ inputs.operator-version }}
       run: |    
         if [ "${{ github.event_name }}" == "pull_request" ]; then
           k3d image import ${{ inputs.operator-image-name }}

@@ -212,4 +212,5 @@ jobs:
           git push -f -u origin dependabot-config/$CURRENT_RELEASE
           gh pr create --base main --head dependabot-config/$CURRENT_RELEASE --fill || true 
 
-          git push upstream --delete dependabot-config/$CURRENT_RELEASE
+          #removing branch created in "Release Istio - Step 1"
+          git push upstream --delete sec-scanners-config/$CURRENT_RELEASE

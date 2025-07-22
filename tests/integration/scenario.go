@@ -13,7 +13,7 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.After(istioCrTearDown)
 	t := steps.TemplatedIstioCr{}
 
-	err := testsupport.EnvironmentVariables()
+	err := testsupport.LoadEnvironmentVariables()
 	if err != nil {
 		panic("Failed to set environment variables: " + err.Error())
 	}

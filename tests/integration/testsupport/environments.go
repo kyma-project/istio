@@ -14,7 +14,7 @@ var requiredEnvs = []EnvVar{
 	{"OPERATOR_VERSION", "dev"},
 }
 
-func EnvironmentVariables() error {
+func LoadEnvironmentVariables() error {
 	// env variable should always be set to true in the workflow
 	// according to the documentation: https://docs.github.com/en/actions/reference/variables-reference#default-environment-variables
 	// it is present in the Github Actions workflows

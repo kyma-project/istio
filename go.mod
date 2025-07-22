@@ -8,7 +8,7 @@ replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.5
 require (
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/coreos/go-semver v0.3.1
-	github.com/cucumber/godog v0.15.0
+	github.com/cucumber/godog v0.15.1
 	github.com/distribution/reference v0.6.0
 	github.com/go-logr/logr v1.4.3
 	github.com/imdario/mergo v1.0.0
@@ -162,7 +162,7 @@ require (
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cast v1.7.0 // indirect
 	github.com/spf13/cobra v1.9.1 // indirect
-	github.com/spf13/pflag v1.0.6 // indirect
+	github.com/spf13/pflag v1.0.7 // indirect
 	github.com/spf13/viper v1.19.0 // indirect
 	github.com/stoewer/go-strcase v1.3.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect

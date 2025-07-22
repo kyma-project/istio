@@ -14,6 +14,10 @@ on:
         description: Image used to run tests
         required: true
         type: string
+      operator_version:
+        description: Version of the operator image
+        required: true
+        type: string
 
 jobs:
   istio-upgrade-integration-test-aws:
@@ -36,6 +40,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MAKE_TEST_TARGET: "istio-upgrade-integration-test"
           TARGET_BRANCH: ${{github.ref_name}}
+          OPERATOR_VERSION: "${{ inputs.operator_version }}"
           GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"
           GARDENER_PROJECT_NAME: "goats"
           GARDENER_PROVIDER_SECRET_NAME: "aws-gardener-access"
@@ -59,6 +64,7 @@ jobs:
         with:
           operator-image-name: ${{ inputs.image }}
           target_branch: ${{ github.ref_name }}
+          operator-version: ${{ inputs.operator_version }}
 
   istio-integration-test:
     name: Istio integration test
@@ -76,6 +82,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           test_make_target: ${{ matrix.test_make_target }}
+          operator-version: ${{ inputs.operator_version }}
           operator-image-name: "${{ inputs.image }}"
           servers-memory: "16"
           agents: 2
@@ -114,6 +121,7 @@ jobs:
           SCALER_MAX: 20
           SCALER_MIN: 3
           MAKE_TEST_TARGET: ${{ matrix.test_make_target }}
+          OPERATOR_VERSION: "${{ inputs.operator_version }}"
 
   istio-integration-aws-specific:
     name: Istio integration test AWS specific
@@ -144,6 +152,7 @@ jobs:
           DISK_TYPE: "gp2"
           SCALER_MAX: 3
           SCALER_MIN: 3
+          OPERATOR_VERSION: "${{ inputs.operator_version }}"
 
   istio-integration-gcp-specific:
     name: Istio integration test GCP specific
@@ -174,6 +183,7 @@ jobs:
           DISK_TYPE: "pd-standard"
           SCALER_MAX: 20
           SCALER_MIN: 3
+          OPERATOR_VERSION: "${{ inputs.operator_version }}"
 
   istio-e2e-aws:
     name: Istio E2E test AWS
@@ -195,3 +205,4 @@ jobs:
           gardener_project_name: ${{ vars.GARDENER_PROJECT_NAME }}
           gardener_provider: aws
           test_make_target: ${{ matrix.test_make_target }}
+          operator_version: ${{ inputs.operator_version }}

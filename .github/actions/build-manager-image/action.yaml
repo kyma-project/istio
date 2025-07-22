@@ -4,6 +4,9 @@ inputs:
   operator-image-name:
     description: 'Operator image name used for creation of Istio manager image'
     required: true
+  operator-version:
+    description: 'Version of the operator'
+    required: true
   push-image:
     description: 'Push the image to GCP'
     required: false
@@ -32,6 +35,8 @@ runs:
         platforms: 'linux/amd64'
         push: true
         tags: ${{ inputs.operator-image-name }}
+        build-args: |
+          VERSION=${{ inputs.operator-version }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
     - name: Build and Load
@@ -43,6 +48,8 @@ runs:
         push: false
         load: true
         tags: ${{ inputs.operator-image-name }}
+        build-args: |
+          VERSION=${{ inputs.operator-version }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
         outputs: type=docker,dest=/tmp/manager-image.tar

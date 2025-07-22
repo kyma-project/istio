@@ -48,6 +48,8 @@ runs:
         push: false
         load: true
         tags: ${{ inputs.operator-image-name }}
+        build-args: |
+          VERSION=${{ inputs.operator-version }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
         outputs: type=docker,dest=/tmp/manager-image.tar

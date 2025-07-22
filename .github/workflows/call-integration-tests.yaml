@@ -80,9 +80,9 @@ jobs:
       - uses: ./.github/actions/integration-test
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OPERATOR_VERSION: "${{ inputs.operator_version }}"
         with:
           test_make_target: ${{ matrix.test_make_target }}
+          operator-version: ${{ inputs.operator_version }}
           operator-image-name: "${{ inputs.image }}"
           servers-memory: "16"
           agents: 2
@@ -184,7 +184,6 @@ jobs:
           SCALER_MAX: 20
           SCALER_MIN: 3
           OPERATOR_VERSION: "${{ inputs.operator_version }}"
-
 
   istio-e2e-aws:
     name: Istio E2E test AWS

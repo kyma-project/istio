@@ -13,19 +13,19 @@ Changes proposed in this pull request:
 
 **Pre-Merge Checklist**
 
-Consider all the following items. If any of them are violated, or you are not sure about them, please add a comment to the PR.
+Consider all the following items. If your contribution violates any of them, or you are not sure about it, add a comment to the PR.
 
 - [ ] Verify code coverage and evaluate if it is acceptable.
-- [ ] Create RN for introduced changes.
+- [ ] Create release notes for introduced changes.
 - [ ] If Kubebuilder changes were made, run `make generate-manifests` and commit the changes before merge.
-- [ ] Ensure whether pre-existing managed resources are correctly handled.
-- [ ] Change works on all hyperscalers supported by BTP Kyma Runtime.
-- [ ] There is no upgrade downtime.
-- [ ] For infrastructure changes, check the cost in the hyperscaler.
-- [ ] RBAC settings are as restrictive as possible.
+- [ ] Ensure that pre-existing managed resources are correctly handled.
+- [ ] Ensure that the change works on all hyperscalers supported by SAP BTP, Kyma runtime.
+- [ ] Ensure that there is no upgrade downtime.
+- [ ] If you made infrastructure changes, check if they increase/affect the hyperscaler's costs.
+- [ ] Ensure that RBAC settings are as restrictive as possible.
 - [ ] If any new libraries are added, verify license compliance and maintainability and make a comment in the PR with details. We only allow to include stable releases into the project.
-- [ ] If this change should be cherry-picked to active release branches.
-- [ ] If the change of the configuration does not introduce any additional latency.
+- [ ] Check if this change should be cherry-picked to active release branches.
+- [ ] Check if the change of the configuration does not introduce any additional latency.
 
 **Related issues**
 <!-- If you refer to a particular issue, provide its number. For example, `Resolves #123`, `Fixes #43`, or `See also #33`. -->

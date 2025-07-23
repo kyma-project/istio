@@ -27,14 +27,14 @@ var _ = Describe("Apply", func() {
 		sample := NewProxyProtocolEnvoyFilter(client, false)
 
 		//when
-		changed, err := sample.reconcile(context.TODO(), client, owner, templateValues)
+		changed, err := sample.reconcile(context.Background(), client, owner, templateValues)
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(changed).To(Equal(controllerutil.OperationResultCreated))
 
 		var s networkingv1alpha3.EnvoyFilterList
-		listErr := client.List(context.TODO(), &s)
+		listErr := client.List(context.Background(), &s)
 		Expect(listErr).To(Not(HaveOccurred()))
 		Expect(s.Items).To(HaveLen(1))
 
@@ -53,23 +53,32 @@ var _ = Describe("Apply", func() {
 
 	It("should return not changed if no change was applied", func() {
 		//given
-		var p networkingv1alpha3.EnvoyFilter
-		err := yaml.Unmarshal(proxyProtocolEnvoyFilter, &p)
-		Expect(err).To(Not(HaveOccurred()))
-
-		client := createFakeClient(&p)
-
+		client := createFakeClient()
 		sample := NewProxyProtocolEnvoyFilter(client, false)
 
 		//when
-		changed, err := sample.reconcile(context.TODO(), client, owner, templateValues)
+		changed, err := sample.reconcile(context.Background(), client, owner, templateValues)
+		// first reconciliation required because we add app.kubernetes.io/version in runtime, so it's not present in the yaml
+		Expect(err).To(Not(HaveOccurred()))
+		Expect(changed).To(Equal(controllerutil.OperationResultCreated))
 
-		//then
+		var s networkingv1alpha3.EnvoyFilterList
+		listErr := client.List(context.Background(), &s)
+		Expect(listErr).To(Not(HaveOccurred()))
+		Expect(s.Items).To(HaveLen(1))
+
+		Expect(s.Items[0].Annotations).To(Not(BeNil()))
+		Expect(s.Items[0].Annotations[resources.DisclaimerKey]).To(Not(BeNil()))
+
+		// then
+		// we check in the second reconciliation that nothing changed
+		sample = NewProxyProtocolEnvoyFilter(client, false)
+		changed, err = sample.reconcile(context.Background(), client, owner, templateValues)
+
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(changed).To(Equal(controllerutil.OperationResultNone))
 
-		var s networkingv1alpha3.EnvoyFilterList
-		listErr := client.List(context.TODO(), &s)
+		listErr = client.List(context.Background(), &s)
 		Expect(listErr).To(Not(HaveOccurred()))
 		Expect(s.Items).To(HaveLen(1))
 
@@ -89,14 +98,14 @@ var _ = Describe("Apply", func() {
 		sample := NewProxyProtocolEnvoyFilter(client, false)
 
 		//when
-		changed, err := sample.reconcile(context.TODO(), client, owner, templateValues)
+		changed, err := sample.reconcile(context.Background(), client, owner, templateValues)
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(changed).To(Equal(controllerutil.OperationResultUpdated))
 
 		var s networkingv1alpha3.EnvoyFilterList
-		listErr := client.List(context.TODO(), &s)
+		listErr := client.List(context.Background(), &s)
 		Expect(listErr).To(Not(HaveOccurred()))
 		Expect(s.Items).To(HaveLen(1))
 

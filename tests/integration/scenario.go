@@ -3,6 +3,8 @@ package integration
 import (
 	"github.com/cucumber/godog"
 	"github.com/kyma-project/istio/operator/tests/integration/steps"
+	"github.com/kyma-project/istio/operator/tests/integration/testsupport"
+	"log"
 )
 
 func initScenario(ctx *godog.ScenarioContext) {
@@ -11,6 +13,14 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.After(istioCrTearDown)
 
 	t := steps.TemplatedIstioCr{}
+
+	err := testsupport.LoadEnvironmentVariables()
+	if err != nil {
+		panic("Failed to set environment variables: " + err.Error())
+	}
+	log.Printf("initializing tests with Istio Module version: %s", testsupport.GetOperatorVersion())
+
+
 	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" is "([^"]*)"`, steps.ResourceIsPresent)
 	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" is deleted$`, steps.ResourceInNamespaceIsDeleted)
 	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" is ready$`, steps.ResourceIsReady)
@@ -58,4 +68,5 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^Tracing is enabled for the mesh using provider "([^"]*)"$`, steps.EnableTracing)
 	ctx.Step(`^Virtual service "([^"]*)" exposing service "([^"]*)" by gateway "([^"]*)" is configured in namespace "([^"]*)"$`, steps.CreateVirtualService)
 	ctx.Step(`^Virtual service "([^"]*)" exposing service "([^"]*)" with port "([^"]*)" by gateway "([^"]*)" is configured in namespace "([^"]*)"$`, steps.CreateVirtualServiceWithPort)
+	ctx.Step(`^"([^"]*)" "([^"]*)" in namespace "([^"]*)" has proper value in app.kubernetes.io/version label$`, steps.ManagedResourceHasOperatorVersionLabelWithProperValue)
 }

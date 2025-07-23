@@ -2,6 +2,11 @@ name: PR E2E
 
 on:
   workflow_call:
+    inputs:
+      operator_version:
+        description: 'Operator version'
+        required: true
+        type: string
 
 jobs:
   istio-e2e-test-k3d:
@@ -22,6 +27,7 @@ jobs:
         with:
           test_make_target: ${{ matrix.test_make_target }}
           operator-image-name: "istio-manager:PR-${{github.event.number}}"
+          operator-version: "PR-${{github.event.number}}"
           servers-memory: "16"
           agents: 2
 
@@ -39,5 +45,6 @@ jobs:
         with:
           test_make_target: "evaluation-integration-test"
           operator-image-name: "istio-manager:PR-${{github.event.number}}"
+          operator-version: "PR-${{github.event.number}}"
           servers-memory: "4"
           agents: 0

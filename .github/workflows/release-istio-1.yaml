@@ -53,7 +53,7 @@ jobs:
           git config user.email "$EMAIL"
           
           git fetch origin
-          git checkout -f sec-scanners-config/release
+          git checkout -b sec-scanners-config/$IMAGE_TAG
 
           # Reset to current release branch
           if [ "$BRANCH_EXISTS" == "true" ]; then

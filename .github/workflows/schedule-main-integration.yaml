@@ -97,6 +97,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           operator_image_name: "europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager:${{needs.get-sha.outputs.sha }}"
+          operator_version: ${{ github.ref_name }} # should equal to the image build arg VERSION passed in the post main workflow
           test_make_target: ${{ matrix.test_make_target }}
 
   k8s-compatibility-check-aws:
@@ -117,6 +118,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           manager_image: "europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager:${{ needs.get-sha.outputs.sha }}"
+          operator_version: ${{ github.ref_name }} # should equal to the image build arg VERSION passed in the post main workflow
           test_make_target: ${{ matrix.test_make_target }}
           gardener_secret: ${{ secrets.GARDENER_TOKEN }}
           gardener_project_name: ${{ vars.GARDENER_PROJECT_NAME }}

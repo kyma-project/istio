@@ -15,17 +15,17 @@ Changes proposed in this pull request:
 
 Consider all the following items. If your contribution violates any of them, or you are not sure about it, add a comment to the PR.
 
-- [ ] Verify code coverage and evaluate if it is acceptable.
-- [ ] Create release notes for introduced changes.
-- [ ] If Kubebuilder changes were made, run `make generate-manifests` and commit the changes before merge.
-- [ ] Ensure that pre-existing managed resources are correctly handled.
-- [ ] Ensure that the change works on all hyperscalers supported by SAP BTP, Kyma runtime.
-- [ ] Ensure that there is no upgrade downtime.
-- [ ] If you made infrastructure changes, check if they increase/affect the hyperscaler's costs.
-- [ ] Ensure that RBAC settings are as restrictive as possible.
-- [ ] If any new libraries are added, verify license compliance and maintainability and make a comment in the PR with details. We only allow to include stable releases into the project.
-- [ ] Check if this change should be cherry-picked to active release branches.
-- [ ] Check if the change of the configuration does not introduce any additional latency.
+- [ ] The code coverage is acceptable.
+- [ ] Release notes for the introduced changes are created.
+- [ ] If Kubebuilder changes were made, you ran `make generate-manifests` and committed the changes before the merge.
+- [ ] Pre-existing managed resources are correctly handled.
+- [ ] The change works on all hyperscalers supported by SAP BTP, Kyma runtime.
+- [ ] There is no upgrade downtime.
+- [ ] For infrastructure changes, you checked if the changes affect the hyperscaler's costs.
+- [ ] RBAC settings are as restrictive as possible.
+- [ ] If any new libraries are added, you verified license compliance and maintainability, and made a comment in the PR with details. We only allow stable releases to be included in the project.
+- [ ] You checked if this change should be cherry-picked to active release branches.
+- [ ] The configuration does not introduce any additional latency.
 
 **Related issues**
 <!-- If you refer to a particular issue, provide its number. For example, `Resolves #123`, `Fixes #43`, or `See also #33`. -->

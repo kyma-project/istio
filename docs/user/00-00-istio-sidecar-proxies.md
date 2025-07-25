@@ -49,4 +49,4 @@ The Istio module supports restarting both types of sidecar containers: regular o
 > If you need to use this setting, you must be aware of the risk until the issue is fixed. If you don't have a specific need for setting **restartPolicy** to `Never`, consider using a different option.
 
 > [!TIP]
-> The workload restarts' disruptive effects can be mitigated by proper configured [Pod Disruption Budgets](https://kubernetes.io/docs/tasks/run-application/configure-pdb/) in kubernetes. With the proper PDP configuration continuous service operation can be ensured during service istio rollouts.
+> To improve resiliency and ensure continuous service operation during the Istio module's rollouts, you must properly configure [Pod Disruption Budgets (PDBs)](https://kubernetes.io/docs/tasks/run-application/configure-pdb/) in Kubernetes. If PDBs are properly configured, workload restarts do not cause any disruptions.

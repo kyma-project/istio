@@ -50,3 +50,4 @@ The Istio module supports restarting both types of sidecar containers: regular o
 
 > [!TIP]
 > To improve resiliency and ensure continuous service operation during the Istio module's rollouts, you must properly configure [Pod Disruption Budgets (PDBs)](https://kubernetes.io/docs/tasks/run-application/configure-pdb/) in Kubernetes. If PDBs are properly configured, workload restarts do not cause any disruptions.
+> Important to note, that PDPs are only functioning properly if the workload is well prepared to be run in a kubernetes environment, such as properly implementing the [kubernetes probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/).

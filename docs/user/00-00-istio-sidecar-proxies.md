@@ -36,7 +36,7 @@ The Pods that have Istio sidecar proxy injection enabled are automatically resta
 - During an Istio update.
 - When you update the field **spec.config.telemetry.metrics.prometheusMerge** in the Istio CR.
 - When you enable the compatibility mode (**spec.compatibilityMode**), and the compatibility version introduces any flags to the Istio proxy component.
-- When you update the field **spec.config.NumTrustedProxies** in the Istio CR, only Istio proxies that are part of the `istio-ingressgateway` Deployment are restarted.  
+- When you update the field **spec.config.NumTrustedProxies** in the Istio CR, only Istio proxies that are part of the `istio-ingressgateway` Deployment are restarted.
 
 Restarting the Istio sidecar proxies is possible for all resources that allow for a rolling restart. If Istio is uninstalled, the workloads are restarted again to remove the Istio sidecar proxies. However, if a resource is a Job, a ReplicaSet that is not managed by any Deployment, or a Pod that is not managed by any other resource, the restart cannot be performed automatically. In such cases, a warning is logged, and you must manually restart the resources. See [Incompatible Istio Sidecar Version After the Istio Module's Update](./troubleshooting/03-40-incompatible-istio-sidecar-version.md).
 
@@ -45,5 +45,8 @@ The Istio module does not restart an Istio sidecar proxy if it has a custom imag
 The Istio module supports restarting both types of sidecar containers: regular ones and Kubernetes native sidecars.
 
 > [!WARNING]
-> Istio-injected Pods with `restartPolicy: Never` may end up in a permanently broken state due to a known issue in Istio. See [issue #49210](https://github.com/istio/istio/issues/49210). 
+> Istio-injected Pods with `restartPolicy: Never` may end up in a permanently broken state due to a known issue in Istio. See [issue #49210](https://github.com/istio/istio/issues/49210).
 > If you need to use this setting, you must be aware of the risk until the issue is fixed. If you don't have a specific need for setting **restartPolicy** to `Never`, consider using a different option.
+
+> [!TIP]
+> The workload restarts' disruptive effects can be mitigated by proper configured [Pod Disruption Budgets](https://kubernetes.io/docs/tasks/run-application/configure-pdb/) in kubernetes. With the proper PDP configuration continuous service operation can be ensured during service istio rollouts.

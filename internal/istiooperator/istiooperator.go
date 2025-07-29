@@ -58,7 +58,15 @@ type Merger interface {
 }
 
 type IstioMerger struct {
-	workingDir string
+	workingDir     string
+	istioImagesHub string
+}
+
+func NewIstioMerger(istioImagesHub string) IstioMerger {
+	return IstioMerger{
+		workingDir:     "/tmp",
+		istioImagesHub: istioImagesHub,
+	}
 }
 
 func NewDefaultIstioMerger() IstioMerger {

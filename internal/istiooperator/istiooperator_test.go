@@ -1,25 +1,28 @@
 package istiooperator_test
 
 import (
-	meshv1alpha1 "istio.io/api/mesh/v1alpha1"
-	"istio.io/istio/operator/pkg/values"
-	"istio.io/istio/pkg/util/protomarshal"
 	"os"
 	"path"
 	"testing"
 
+	meshv1alpha1 "istio.io/api/mesh/v1alpha1"
+	"istio.io/istio/operator/pkg/values"
+	"istio.io/istio/pkg/util/protomarshal"
+
+	"github.com/onsi/ginkgo/v2/types"
+
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/kyma-project/istio/operator/internal/tests"
-	"github.com/onsi/ginkgo/v2/types"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
+
+	"github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 )
 
 func TestManifest(t *testing.T) {
@@ -47,7 +50,7 @@ var _ = Describe("Merge", func() {
 
 	DescribeTable("Merge for different cluster sizes", func(clusterSize clusterconfig.ClusterSize, shouldError bool, igwMinReplicas int) {
 		// given
-		sut := istiooperator.NewDefaultIstioMerger()
+		sut := istiooperator.NewIstioMerger("docker.io/istio")
 
 		// when
 		mergedIstioOperatorPath, err := sut.Merge(clusterSize, istioCR, clusterconfig.ClusterConfiguration{})
@@ -101,7 +104,7 @@ var _ = Describe("Merge", func() {
 			},
 		}
 
-		sut := istiooperator.NewDefaultIstioMerger()
+		sut := istiooperator.NewIstioMerger("docker.io/istio")
 
 		// when
 		mergedIstioOperatorPath, err := sut.Merge(clusterconfig.Production, istioCR, clusterConfig)
@@ -133,6 +136,35 @@ var _ = Describe("Merge", func() {
 		err = os.Remove(mergedIstioOperatorPath)
 		Expect(err).ShouldNot(HaveOccurred())
 	})
+
+	It("should return merged istio hub when iamge ", func() {
+		// given
+		istioImagesHub := "docker.io/overridden/istio-hub"
+
+		sut := istiooperator.NewIstioMerger(istioImagesHub)
+
+		clusterConfig := map[string]interface{}{
+			"spec": map[string]interface{}{
+				"components": map[string]interface{}{
+					"base": map[string]bool{
+						"enabled": false,
+					},
+				},
+				"values": map[string]interface{}{
+					"cni": map[string]string{
+						"cniBinDir": "overriden/path",
+					},
+				},
+			}}
+		// when
+		mergedIstioOperatorPath, err := sut.Merge(clusterconfig.Production, istioCR, clusterConfig)
+
+		// then
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(mergedIstioOperatorPath).To(Equal(path.Join("/tmp", istiooperator.MergedIstioOperatorFile)))
+		iop := readIOP(mergedIstioOperatorPath)
+		Expect(iop.Spec.Hub).To(Equal(istioImagesHub))
+	})
 })
 
 var _ = Describe("NewIstioImageVersionFromTag", func() {
@@ -161,7 +193,7 @@ var _ = Describe("NewIstioImageVersionFromTag", func() {
 var _ = Describe("GetIstioImageVersion", func() {
 	It("should return Istio version and verify production and evaluation istio operator files have same hub and tag", func() {
 		// given
-		merger := istiooperator.NewDefaultIstioMerger()
+		merger := istiooperator.NewIstioMerger("docker.io/istio")
 
 		// when
 		imageVersion, err := merger.GetIstioImageVersion()

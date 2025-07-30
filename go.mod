@@ -7,6 +7,7 @@ replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.5
 
 require (
 	github.com/avast/retry-go v3.0.0+incompatible
+	github.com/caarlos0/env/v11 v11.3.1
 	github.com/coreos/go-semver v0.3.1
 	github.com/cucumber/godog v0.15.1
 	github.com/distribution/reference v0.6.0
@@ -19,7 +20,6 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.10.0
 	github.com/thoas/go-funk v0.9.3
-	github.com/vrischmann/envconfig v1.4.1
 	gitlab.com/rodrigoodhin/gocure v0.0.0-20220718065339-f14dfe79276a
 	golang.org/x/exp v0.0.0-20241215155358-4a5509556b9e // indirect
 	golang.org/x/time v0.12.0

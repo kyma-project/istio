@@ -63,8 +63,8 @@ const (
 	reconciliationRequeueTimeWarning = 1 * time.Hour
 )
 
-func NewController(mgr manager.Manager, reconciliationInterval time.Duration) *IstioReconciler {
-	merger := istiooperator.NewDefaultIstioMerger()
+func NewController(mgr manager.Manager, reconciliationInterval time.Duration, istioImagesHub string) *IstioReconciler {
+	merger := istiooperator.NewIstioMerger(istioImagesHub)
 
 	statusHandler := status.NewStatusHandler(mgr.GetClient())
 	logger := mgr.GetLogger()

@@ -3,15 +3,17 @@
 package istiooperator_test
 
 import (
-	"github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/internal/clusterconfig"
-	"github.com/kyma-project/istio/operator/internal/istiooperator"
+	"reflect"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	istiov1alpha1 "istio.io/istio/operator/pkg/apis"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"reflect"
+
+	"github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig"
+	"github.com/kyma-project/istio/operator/internal/istiooperator"
 )
 
 var _ = Describe("Merge", func() {
@@ -27,7 +29,7 @@ var _ = Describe("Merge", func() {
 				}},
 			},
 		}
-		merger := istiooperator.NewDefaultIstioMerger()
+		merger := istiooperator.NewIstioMerger("docker.io/istio")
 
 		p, err := merger.Merge(clusterconfig.Evaluation, &istioCR, clusterconfig.ClusterConfiguration{})
 		Expect(err).ShouldNot(HaveOccurred())

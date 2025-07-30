@@ -40,7 +40,6 @@ jobs:
       build-args: |
         VERSION=${{ github.event.inputs.version }}
       tags: "${{ github.event.inputs.version }}"
-      build-engine: buildx
 
   build-image-experimental:
     uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main
@@ -53,7 +52,6 @@ jobs:
         VERSION=${{ github.event.inputs.version }}-experimental
         GO_BUILD_TAGS=experimental
       tags: "${{ github.event.inputs.version }}-experimental"
-      build-engine: buildx
 
   unit-tests:
     uses: ./.github/workflows/call-unit-lint.yaml

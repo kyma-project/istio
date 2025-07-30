@@ -36,7 +36,6 @@ jobs:
       build-args: |
         VERSION=${{ github.ref_name }}
       tags: "${{ github.sha }}"
-      build-engine: buildx
 
   build-experimental-image:
     name: Build manager image - experimental
@@ -50,7 +49,6 @@ jobs:
         VERSION=${{ github.ref_name }}-experimental
         GO_BUILD_TAGS=experimental
       tags: "${{ github.sha }}-experimental"
-      build-engine: buildx
 
   istio-upgrade-test-k3d:
     name: Istio upgrade integration test K3D

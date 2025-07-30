@@ -137,7 +137,7 @@ var _ = Describe("Merge", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 	})
 
-	It("should return merged istio hub when iamge ", func() {
+	It("should return merged istio hub", func() {
 		// given
 		istioImagesHub := "docker.io/overridden/istio-hub"
 

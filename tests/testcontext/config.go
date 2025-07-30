@@ -9,9 +9,9 @@ import (
 )
 
 type Config struct {
-	ClientTimeout time.Duration `env:"TEST_CLIENT_TIMEOUT envDefault=10s"`
-	ReqTimeout    time.Duration `env:"TEST_REQUEST_TIMEOUT envDefault=300s"`
-	ReqDelay      time.Duration `env:"TEST_REQUEST_DELAY envDefault=5s"`
+	ClientTimeout time.Duration `env:"TEST_CLIENT_TIMEOUT" envDefault:"10s"`
+	ReqTimeout    time.Duration `env:"TEST_REQUEST_TIMEOUT" envDefault:"300s"`
+	ReqDelay      time.Duration `env:"TEST_REQUEST_DELAY" envDefault:"5s"`
 }
 
 var (

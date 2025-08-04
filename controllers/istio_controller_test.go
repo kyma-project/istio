@@ -46,6 +46,11 @@ var _ = Describe("Istio Controller", func() {
 			_ = os.Setenv("proxyv2", "europe-docker.pkg.dev/kyma-project/prod/external/istio/proxyv2:1.26.2-distroless")
 			_ = os.Setenv("pilot", "europe-docker.pkg.dev/kyma-project/prod/external/istio/pilot:1.26.2-distroless")
 		})
+		AfterEach(func() {
+			_ = os.Unsetenv("install-cni")
+			_ = os.Unsetenv("proxyv2")
+			_ = os.Unsetenv("pilot")
+		})
 		It("should fail to reconcile Istio CR in different than kyma-system namespace and set error state", func() {
 			//given
 			numTrustedProxies := 1

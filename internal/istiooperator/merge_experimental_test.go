@@ -29,9 +29,9 @@ var _ = Describe("Merge", func() {
 				}},
 			},
 		}
-		merger := istiooperator.NewIstioMerger("docker.io/istio")
+		merger := istiooperator.NewDefaultIstioMerger()
 
-		p, err := merger.Merge(clusterconfig.Evaluation, &istioCR, clusterconfig.ClusterConfiguration{})
+		p, err := merger.Merge(clusterconfig.Evaluation, &istioCR, clusterconfig.ClusterConfiguration{}, "docker.io/istio")
 		Expect(err).ShouldNot(HaveOccurred())
 		iop := readIOP(p)
 		Expect(iop.Spec.Components.Pilot).ToNot(BeNil())

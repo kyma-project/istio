@@ -6,22 +6,25 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kyma-project/istio/operator/pkg/labels"
 	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
+
+	"github.com/kyma-project/istio/operator/pkg/labels"
+
+	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/kyma-project/istio/operator/internal/describederrors"
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/kyma-project/istio/operator/internal/resources"
 	"github.com/kyma-project/istio/operator/internal/status"
-	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/pkg/errors"
+
+	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
-	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -73,7 +76,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, "docker.io/istio")
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -118,7 +121,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, "docker.io/istio")
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -160,7 +163,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, "docker.io/istio")
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -207,7 +210,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, "docker.io/istio")
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -247,7 +250,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, "docker.io/istio")
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -289,7 +292,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, "docker.io/istio")
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -331,7 +334,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, "docker.io/istio")
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -369,7 +372,7 @@ var _ = Describe("Installation reconciliation", func() {
 			statusHandler := status.NewStatusHandler(c)
 
 			// when
-			_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
+			_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, "docker.io/istio")
 
 			// then
 			Expect(err).Should(HaveOccurred())
@@ -420,7 +423,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, "docker.io/istio")
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -462,7 +465,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, "docker.io/istio")
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -509,7 +512,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, "docker.io/istio")
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -553,7 +556,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, "docker.io/istio")
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -597,7 +600,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, "docker.io/istio")
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -643,7 +646,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, "docker.io/istio")
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -683,7 +686,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, "docker.io/istio")
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -722,7 +725,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, "docker.io/istio")
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -772,7 +775,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, "docker.io/istio")
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -821,7 +824,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, "docker.io/istio")
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -867,7 +870,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler)
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, "docker.io/istio")
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
@@ -975,7 +978,7 @@ type MergerMock struct {
 	tag                   string
 }
 
-func (m MergerMock) Merge(_ clusterconfig.ClusterSize, _ *operatorv1alpha2.Istio, _ clusterconfig.ClusterConfiguration) (string, error) {
+func (m MergerMock) Merge(_ clusterconfig.ClusterSize, _ *operatorv1alpha2.Istio, _ clusterconfig.ClusterConfiguration, _ string) (string, error) {
 	return "mocked istio operator merge result", m.mergeError
 }
 

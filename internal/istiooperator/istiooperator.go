@@ -52,21 +52,13 @@ func (i *IstioImageVersion) Empty() bool {
 }
 
 type Merger interface {
-	Merge(clusterSize clusterconfig.ClusterSize, istioCR *operatorv1alpha2.Istio, overrides clusterconfig.ClusterConfiguration) (string, error)
+	Merge(clusterSize clusterconfig.ClusterSize, istioCR *operatorv1alpha2.Istio, overrides clusterconfig.ClusterConfiguration, istioImagesHub string) (string, error)
 	GetIstioOperator(clusterSize clusterconfig.ClusterSize) (iopv1alpha1.IstioOperator, error)
 	GetIstioImageVersion() (IstioImageVersion, error)
 }
 
 type IstioMerger struct {
-	workingDir     string
-	istioImagesHub string
-}
-
-func NewIstioMerger(istioImagesHub string) IstioMerger {
-	return IstioMerger{
-		workingDir:     "/tmp",
-		istioImagesHub: istioImagesHub,
-	}
+	workingDir string
 }
 
 func NewDefaultIstioMerger() IstioMerger {

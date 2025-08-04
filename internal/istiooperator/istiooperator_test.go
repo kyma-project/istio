@@ -50,10 +50,10 @@ var _ = Describe("Merge", func() {
 
 	DescribeTable("Merge for different cluster sizes", func(clusterSize clusterconfig.ClusterSize, shouldError bool, igwMinReplicas int) {
 		// given
-		sut := istiooperator.NewIstioMerger("docker.io/istio")
+		sut := istiooperator.NewDefaultIstioMerger()
 
 		// when
-		mergedIstioOperatorPath, err := sut.Merge(clusterSize, istioCR, clusterconfig.ClusterConfiguration{})
+		mergedIstioOperatorPath, err := sut.Merge(clusterSize, istioCR, clusterconfig.ClusterConfiguration{}, "docker.io/istio")
 
 		// then
 		if shouldError {
@@ -104,10 +104,10 @@ var _ = Describe("Merge", func() {
 			},
 		}
 
-		sut := istiooperator.NewIstioMerger("docker.io/istio")
+		sut := istiooperator.NewDefaultIstioMerger()
 
 		// when
-		mergedIstioOperatorPath, err := sut.Merge(clusterconfig.Production, istioCR, clusterConfig)
+		mergedIstioOperatorPath, err := sut.Merge(clusterconfig.Production, istioCR, clusterConfig, "docker.io/istio")
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -141,7 +141,7 @@ var _ = Describe("Merge", func() {
 		// given
 		istioImagesHub := "docker.io/overridden/istio-hub"
 
-		sut := istiooperator.NewIstioMerger(istioImagesHub)
+		sut := istiooperator.NewDefaultIstioMerger()
 
 		clusterConfig := map[string]interface{}{
 			"spec": map[string]interface{}{
@@ -157,7 +157,7 @@ var _ = Describe("Merge", func() {
 				},
 			}}
 		// when
-		mergedIstioOperatorPath, err := sut.Merge(clusterconfig.Production, istioCR, clusterConfig)
+		mergedIstioOperatorPath, err := sut.Merge(clusterconfig.Production, istioCR, clusterConfig, istioImagesHub)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -193,7 +193,7 @@ var _ = Describe("NewIstioImageVersionFromTag", func() {
 var _ = Describe("GetIstioImageVersion", func() {
 	It("should return Istio version and verify production and evaluation istio operator files have same hub and tag", func() {
 		// given
-		merger := istiooperator.NewIstioMerger("docker.io/istio")
+		merger := istiooperator.NewDefaultIstioMerger()
 
 		// when
 		imageVersion, err := merger.GetIstioImageVersion()

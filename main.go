@@ -27,7 +27,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
-	"github.com/kyma-project/istio/operator/internal/images"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 
 	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
@@ -117,18 +116,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	istioImages, err := images.GetImages()
-	if err != nil {
-		setupLog.Error(err, "Unable to get Istio images environments")
-		os.Exit(1)
-	}
-	hub, err := istioImages.GetHub()
-	if err != nil {
-		setupLog.Error(err, "Unable to get Istio images hub")
-		os.Exit(1)
-	}
-
-	if err = controllers.NewController(mgr, flagVar.reconciliationInterval, hub).SetupWithManager(mgr, rateLimiter); err != nil {
+	if err = controllers.NewController(mgr, flagVar.reconciliationInterval).SetupWithManager(mgr, rateLimiter); err != nil {
 		setupLog.Error(err, "Unable to create controller", "controller", "Istio")
 		os.Exit(1)
 	}

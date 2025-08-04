@@ -13,7 +13,7 @@ import (
 )
 
 type InstallationReconciliation interface {
-	Reconcile(ctx context.Context, istioCR *operatorv1alpha2.Istio, statusHandler status.Status) (istiooperator.IstioImageVersion, describederrors.DescribedError)
+	Reconcile(ctx context.Context, istioCR *operatorv1alpha2.Istio, statusHandler status.Status, istioImageHub string) (istiooperator.IstioImageVersion, describederrors.DescribedError)
 }
 
 type Installation struct {
@@ -27,6 +27,7 @@ func (i *Installation) Reconcile(
 	ctx context.Context,
 	istioCR *operatorv1alpha2.Istio,
 	statusHandler status.Status,
+	istioImagesHub string,
 ) (istiooperator.IstioImageVersion, describederrors.DescribedError) {
 	istioImageVersion, err := i.Merger.GetIstioImageVersion()
 	if err != nil {
@@ -42,6 +43,7 @@ func (i *Installation) Reconcile(
 			istioOperatorMerger: i.Merger,
 			istioImageVersion:   istioImageVersion,
 			istioClient:         i.IstioClient,
+			istioImagesHub:      istioImagesHub,
 		}
 		return installIstio(ctx, args)
 	}

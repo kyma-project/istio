@@ -4,15 +4,18 @@ package controllers
 
 import (
 	"context"
+	"os"
+
 	"github.com/go-logr/logr"
-	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/internal/status"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/internal/status"
 )
 
 var _ = Describe("Istio Controller", func() {
@@ -36,7 +39,14 @@ var _ = Describe("Istio Controller", func() {
 					},
 				}},
 		}
-
+		_ = os.Setenv("install-cni", "europe-docker.pkg.dev/kyma-project/prod/external/istio/install-cni:1.26.2-distroless")
+		_ = os.Setenv("proxyv2", "europe-docker.pkg.dev/kyma-project/prod/external/istio/proxyv2:1.26.2-distroless")
+		_ = os.Setenv("pilot", "europe-docker.pkg.dev/kyma-project/prod/external/istio/pilot:1.26.2-distroless")
+		defer func() {
+			_ = os.Unsetenv("install-cni")
+			_ = os.Unsetenv("proxyv2")
+			_ = os.Unsetenv("pilot")
+		}()
 		fakeClient := createFakeClient(istioCR)
 		sut := &IstioReconciler{
 			Client:                 fakeClient,

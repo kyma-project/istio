@@ -23,6 +23,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/kyma-project/istio/operator/internal/images"
 	"github.com/kyma-project/istio/operator/internal/resources"
 
 	"github.com/kyma-project/istio/operator/internal/restarter"
@@ -105,6 +106,17 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 	r.statusHandler.SetCondition(&istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileUnknown))
 
+	istioImages, imgErr := images.GetImages()
+	if imgErr != nil {
+		return r.terminateReconciliation(ctx, &istioCR, describederrors.NewDescribedError(imgErr, "Unable to get Istio images environments"),
+			operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileFailed))
+	}
+	hub, imgErr := istioImages.GetHub()
+	if imgErr != nil {
+		return r.terminateReconciliation(ctx, &istioCR, describederrors.NewDescribedError(imgErr, "Unable to get Istio images hub"),
+			operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileFailed))
+	}
+
 	err := validation.ValidateAuthorizers(istioCR)
 	if err != nil {
 		return r.terminateReconciliation(ctx, &istioCR, err, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonValidationFailed))
@@ -156,7 +168,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		}
 	}
 
-	istioImageVersion, installationErr := r.istioInstallation.Reconcile(ctx, &istioCR, r.statusHandler)
+	istioImageVersion, installationErr := r.istioInstallation.Reconcile(ctx, &istioCR, r.statusHandler, hub)
 	if installationErr != nil {
 		return r.requeueReconciliation(ctx, &istioCR, installationErr,
 			operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIstioInstallUninstallFailed),

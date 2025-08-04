@@ -1,25 +1,28 @@
 package istiooperator_test
 
 import (
-	meshv1alpha1 "istio.io/api/mesh/v1alpha1"
-	"istio.io/istio/operator/pkg/values"
-	"istio.io/istio/pkg/util/protomarshal"
 	"os"
 	"path"
 	"testing"
 
+	meshv1alpha1 "istio.io/api/mesh/v1alpha1"
+	"istio.io/istio/operator/pkg/values"
+	"istio.io/istio/pkg/util/protomarshal"
+
+	"github.com/onsi/ginkgo/v2/types"
+
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/kyma-project/istio/operator/internal/tests"
-	"github.com/onsi/ginkgo/v2/types"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
+
+	"github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 )
 
 func TestManifest(t *testing.T) {
@@ -50,7 +53,7 @@ var _ = Describe("Merge", func() {
 		sut := istiooperator.NewDefaultIstioMerger()
 
 		// when
-		mergedIstioOperatorPath, err := sut.Merge(clusterSize, istioCR, clusterconfig.ClusterConfiguration{})
+		mergedIstioOperatorPath, err := sut.Merge(clusterSize, istioCR, clusterconfig.ClusterConfiguration{}, "docker.io/istio")
 
 		// then
 		if shouldError {
@@ -104,7 +107,7 @@ var _ = Describe("Merge", func() {
 		sut := istiooperator.NewDefaultIstioMerger()
 
 		// when
-		mergedIstioOperatorPath, err := sut.Merge(clusterconfig.Production, istioCR, clusterConfig)
+		mergedIstioOperatorPath, err := sut.Merge(clusterconfig.Production, istioCR, clusterConfig, "docker.io/istio")
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -132,6 +135,35 @@ var _ = Describe("Merge", func() {
 
 		err = os.Remove(mergedIstioOperatorPath)
 		Expect(err).ShouldNot(HaveOccurred())
+	})
+
+	It("should return merged istio hub", func() {
+		// given
+		istioImagesHub := "docker.io/overridden/istio-hub"
+
+		sut := istiooperator.NewDefaultIstioMerger()
+
+		clusterConfig := map[string]interface{}{
+			"spec": map[string]interface{}{
+				"components": map[string]interface{}{
+					"base": map[string]bool{
+						"enabled": false,
+					},
+				},
+				"values": map[string]interface{}{
+					"cni": map[string]string{
+						"cniBinDir": "overriden/path",
+					},
+				},
+			}}
+		// when
+		mergedIstioOperatorPath, err := sut.Merge(clusterconfig.Production, istioCR, clusterConfig, istioImagesHub)
+
+		// then
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(mergedIstioOperatorPath).To(Equal(path.Join("/tmp", istiooperator.MergedIstioOperatorFile)))
+		iop := readIOP(mergedIstioOperatorPath)
+		Expect(iop.Spec.Hub).To(Equal(istioImagesHub))
 	})
 })
 

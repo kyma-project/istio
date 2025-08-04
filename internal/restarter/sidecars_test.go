@@ -6,17 +6,6 @@ import (
 	"strings"
 
 	"github.com/go-logr/logr"
-	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/internal/clusterconfig"
-	"github.com/kyma-project/istio/operator/internal/describederrors"
-	"github.com/kyma-project/istio/operator/internal/istiooperator"
-	"github.com/kyma-project/istio/operator/internal/restarter"
-	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
-	"github.com/kyma-project/istio/operator/internal/status"
-	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
-	"github.com/kyma-project/istio/operator/pkg/lib/sidecars"
-	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
-	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/restart"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
@@ -28,6 +17,18 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/yaml"
+
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig"
+	"github.com/kyma-project/istio/operator/internal/describederrors"
+	"github.com/kyma-project/istio/operator/internal/istiooperator"
+	"github.com/kyma-project/istio/operator/internal/restarter"
+	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
+	"github.com/kyma-project/istio/operator/internal/status"
+	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
+	"github.com/kyma-project/istio/operator/pkg/lib/sidecars"
+	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
+	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/restart"
 )
 
 var _ = Describe("SidecarsRestarter reconciliation", func() {
@@ -276,7 +277,7 @@ type MergerMock struct {
 	tag string
 }
 
-func (m MergerMock) Merge(_ clusterconfig.ClusterSize, _ *operatorv1alpha2.Istio, _ clusterconfig.ClusterConfiguration) (string, error) {
+func (m MergerMock) Merge(_ clusterconfig.ClusterSize, _ *operatorv1alpha2.Istio, _ clusterconfig.ClusterConfiguration, _ string) (string, error) {
 	return "mocked istio operator merge result", nil
 }
 

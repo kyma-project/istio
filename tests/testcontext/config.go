@@ -2,15 +2,16 @@ package testcontext
 
 import (
 	"fmt"
-	"github.com/avast/retry-go"
-	"github.com/vrischmann/envconfig"
 	"time"
+
+	"github.com/avast/retry-go"
+	"github.com/caarlos0/env/v11"
 )
 
 type Config struct {
-	ClientTimeout time.Duration `envconfig:"TEST_CLIENT_TIMEOUT,default=10s"`
-	ReqTimeout    time.Duration `envconfig:"TEST_REQUEST_TIMEOUT,default=300s"`
-	ReqDelay      time.Duration `envconfig:"TEST_REQUEST_DELAY,default=5s"`
+	ClientTimeout time.Duration `env:"TEST_CLIENT_TIMEOUT" envDefault:"10s"`
+	ReqTimeout    time.Duration `env:"TEST_REQUEST_TIMEOUT" envDefault:"300s"`
+	ReqDelay      time.Duration `env:"TEST_REQUEST_DELAY" envDefault:"5s"`
 }
 
 var (
@@ -19,9 +20,8 @@ var (
 
 func GetRetryOpts() []retry.Option {
 	if retryOpts == nil {
-
-		var config Config
-		if err := envconfig.Init(&config); err != nil {
+		config, err := env.ParseAs[Config]()
+		if err != nil {
 			panic(fmt.Sprintf("Unable to setup test config: %v", err))
 		}
 

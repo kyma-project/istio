@@ -3,26 +3,29 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"istio.io/api/networking/v1alpha3"
 
+	"k8s.io/utils/ptr"
+
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/kyma-project/istio/operator/internal/restarter"
-	"k8s.io/utils/ptr"
 
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istioresources"
 	"github.com/kyma-project/istio/operator/internal/status"
 
 	"github.com/go-logr/logr"
-	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/internal/describederrors"
 	"github.com/pkg/errors"
 	_ "istio.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/internal/describederrors"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -38,6 +41,16 @@ const (
 
 var _ = Describe("Istio Controller", func() {
 	Context("Reconcile", func() {
+		BeforeEach(func() {
+			_ = os.Setenv("install-cni", "europe-docker.pkg.dev/kyma-project/prod/external/istio/install-cni:1.26.2-distroless")
+			_ = os.Setenv("proxyv2", "europe-docker.pkg.dev/kyma-project/prod/external/istio/proxyv2:1.26.2-distroless")
+			_ = os.Setenv("pilot", "europe-docker.pkg.dev/kyma-project/prod/external/istio/pilot:1.26.2-distroless")
+		})
+		AfterEach(func() {
+			_ = os.Unsetenv("install-cni")
+			_ = os.Unsetenv("proxyv2")
+			_ = os.Unsetenv("pilot")
+		})
 		It("should fail to reconcile Istio CR in different than kyma-system namespace and set error state", func() {
 			//given
 			numTrustedProxies := 1
@@ -1142,7 +1155,7 @@ type istioInstallationReconciliationMock struct {
 	err describederrors.DescribedError
 }
 
-func (i *istioInstallationReconciliationMock) Reconcile(_ context.Context, _ *operatorv1alpha2.Istio, _ status.Status) (istiooperator.IstioImageVersion, describederrors.DescribedError) {
+func (i *istioInstallationReconciliationMock) Reconcile(_ context.Context, _ *operatorv1alpha2.Istio, _ status.Status, _ string) (istiooperator.IstioImageVersion, describederrors.DescribedError) {
 	version, err := istiooperator.NewIstioImageVersionFromTag("1.16.0-distroless")
 	if err != nil {
 		i.err = describederrors.NewDescribedError(err, "error creating IstioImageVersion")

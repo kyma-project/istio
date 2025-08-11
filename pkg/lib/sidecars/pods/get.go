@@ -149,10 +149,11 @@ func getSidecarPods(ctx context.Context, c client.Client, logger *logr.Logger, l
 func containsSidecar(pod v1.Pod) bool {
 	// If the pod has one container it is not injected
 	// This skips IngressGateway and EgressGateway pods, as those only have istio-proxy
-	if len(pod.Spec.Containers) == 1 {
+	c := append(pod.Spec.Containers, pod.Spec.InitContainers...)
+	if len(c) == 1 {
 		return false
 	}
-	for _, container := range pod.Spec.Containers {
+	for _, container := range c {
 		if container.Name == istioSidecarContainerName {
 			return true
 		}

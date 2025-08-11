@@ -385,6 +385,13 @@ var _ = Describe("GetAllInjectedPods", func() {
 			assertFunc: func(podList *v1.PodList) { Expect(podList.Items).To(HaveLen(1)) },
 		},
 		{
+			name: "Should return pod with istio sidecar as init container",
+			c: createClientSet(
+				helpers.FixPodWithSidecarAsInitContainer("app", "default"),
+			),
+			assertFunc: func(podList *v1.PodList) { Expect(podList.Items).To(HaveLen(1)) },
+		},
+		{
 			name: "Should not return pod with only istio sidecar",
 			c: createClientSet(
 				helpers.FixPodWithOnlySidecar("app", "custom"),

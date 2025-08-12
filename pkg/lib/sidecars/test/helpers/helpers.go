@@ -240,13 +240,81 @@ func FixPodWithoutSidecar(name, namespace string) *v1.Pod {
 	}
 }
 
-func FixPodWithOnlySidecar(name, namespace string) *v1.Pod {
+func FixPodWithSidecarAsInitContainer(name, namespace string) *v1.Pod {
 	return &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 			OwnerReferences: []metav1.OwnerReference{
 				{Kind: "ReplicaSet"},
+			},
+		},
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Pod",
+			APIVersion: "v1",
+		},
+		Status: v1.PodStatus{
+			Phase: "Running",
+		},
+		Spec: v1.PodSpec{
+			Containers: []v1.Container{
+				{
+					Name:  "workload-container",
+					Image: "workload-image:1.0",
+				},
+			},
+			InitContainers: []v1.Container{
+				{
+					Name:      "istio-proxy",
+					Image:     "istio/istio-proxy:1.0.0",
+					Resources: DefaultSidecarResources,
+				},
+			},
+		},
+	}
+}
+
+func FixPodIngressGateway() *v1.Pod {
+	return &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "istio-ingressgateway-1234567890-abcde",
+			Namespace: "istio-system",
+			OwnerReferences: []metav1.OwnerReference{
+				{Kind: "ReplicaSet"},
+			},
+			Labels: map[string]string{
+				"istio": "ingressgateway",
+			},
+		},
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Pod",
+			APIVersion: "v1",
+		},
+		Status: v1.PodStatus{
+			Phase: "Running",
+		},
+		Spec: v1.PodSpec{
+			Containers: []v1.Container{
+				{
+					Name:      "istio-proxy",
+					Image:     "istio/istio-proxy:1.0.0",
+					Resources: DefaultSidecarResources,
+				},
+			},
+		},
+	}
+}
+
+func FixPodIEgressGateway() *v1.Pod {
+	return &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "istio-egressgateway-1234567890-abcde",
+			Namespace: "istio-system",
+			OwnerReferences: []metav1.OwnerReference{
+				{Kind: "ReplicaSet"},
+			},
+			Labels: map[string]string{
+				"istio": "egressgateway",
 			},
 		},
 		TypeMeta: metav1.TypeMeta{

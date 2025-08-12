@@ -147,13 +147,19 @@ func getSidecarPods(ctx context.Context, c client.Client, logger *logr.Logger, l
 }
 
 func containsSidecar(pod v1.Pod) bool {
-	// If the pod has one container it is not injected
-	// This skips IngressGateway and EgressGateway pods, as those only have istio-proxy
-	if len(pod.Spec.Containers) == 1 {
+	// Exclude pods with label istio=ingressgateway or istio=egressgateway
+	// These pods are not meant to be restarted by this part of the code
+	// This function is used only for restart of the the user workloads during uninstalling Istio, so the sidecars are removed
+	if val, ok := pod.Labels["istio"]; ok && (val == "ingressgateway" || val == "egressgateway") {
 		return false
 	}
 	for _, container := range pod.Spec.Containers {
 		if container.Name == istioSidecarContainerName {
+			return true
+		}
+	}
+	for _, initContainer := range pod.Spec.InitContainers {
+		if initContainer.Name == istioSidecarContainerName {
 			return true
 		}
 	}

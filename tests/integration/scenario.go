@@ -1,10 +1,11 @@
 package integration
 
 import (
+	"log"
+
 	"github.com/cucumber/godog"
 	"github.com/kyma-project/istio/operator/tests/integration/steps"
 	"github.com/kyma-project/istio/operator/tests/integration/testsupport"
-	"log"
 )
 
 func initScenario(ctx *godog.ScenarioContext) {
@@ -73,7 +74,7 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^Virtual service "([^"]*)" exposing service "([^"]*)" by gateway "([^"]*)" is configured in namespace "([^"]*)"$`, steps.CreateVirtualService)
 	ctx.Step(`^Virtual service "([^"]*)" exposing service "([^"]*)" with port "([^"]*)" by gateway "([^"]*)" is configured in namespace "([^"]*)"$`, steps.CreateVirtualServiceWithPort)
 	ctx.Step(`^Httpbin application "([^"]*)" deployment with proxy as a native sidecar is created in namespace "([^"]*)"$`, steps.ApplicationWithInitSidecarCreated)
-	ctx.Step(`^Application "([^"]*)" in namespace "([^"]*)" has init container with Istio proxy present$`, steps.ApplicationHasInitContainerWithIstioProxy)
+	ctx.Step(`^Application "([^"]*)" in namespace "([^"]*)" has init container with Istio proxy "([^"]*)"$`, steps.ApplicationHasInitContainerWithIstioProxy)
 	ctx.Step(`^Application "([^"]*)" in namespace "([^"]*)" has required version of proxy as an init container$`, steps.ApplicationHasRequiredVersionInitContainerWithIstioProxy)
 	ctx.Step(`^There are continuous requests to host "([^"]*)" and path "([^"]*)"`, zd.StartZeroDowntimeTest)
 	ctx.Step(`^All continuous requests should succeed`, zd.FinishZeroDowntimeTests)

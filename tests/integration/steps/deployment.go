@@ -360,13 +360,13 @@ func ApplicationWithInitSidecarCreated(ctx context.Context, appName, namespace s
 	return ctx, err
 }
 
-func ApplicationHasInitContainerWithIstioProxy(ctx context.Context, appName, namespace string) error {
+func ApplicationHasInitContainerWithIstioProxy(ctx context.Context, appName, namespace, shouldBePresent string) error {
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return err
 	}
 
-	shouldHaveProxy := true
+	shouldHaveProxy := shouldBePresent == "present"
 
 	var podList corev1.PodList
 	return retry.Do(func() error {

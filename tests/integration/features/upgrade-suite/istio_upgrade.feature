@@ -10,7 +10,7 @@ Feature: Upgrade Istio
     And Httpbin application "test-app" deployment is created in namespace "default"
     And Httpbin application "test-app-init-container" deployment with proxy as a native sidecar is created in namespace "default"
     And Application pod "test-app" in namespace "default" has Istio proxy "present"
-    And Application "test-app-init-container" in namespace "default" has init container with Istio proxy present
+    And Application "test-app-init-container" in namespace "default" has init container with Istio proxy "present"
     And Istio gateway "test-gateway" is configured in namespace "default"
     And Virtual service "upgrade-test-vs" exposing service "test-app.default.svc.cluster.local" by gateway "default/test-gateway" is configured in namespace "default"
     And Virtual service "upgrade-test-vs-init-container" exposing service "test-app-init-container.default.svc.cluster.local" by gateway "default/test-gateway" is configured in namespace "default"

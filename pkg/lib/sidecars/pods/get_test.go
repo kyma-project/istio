@@ -392,9 +392,16 @@ var _ = Describe("GetAllInjectedPods", func() {
 			assertFunc: func(podList *v1.PodList) { Expect(podList.Items).To(HaveLen(1)) },
 		},
 		{
-			name: "Should not return pod with only istio sidecar",
+			name: "Should not return Pod that belongs to istio-ingressgateway",
 			c: createClientSet(
-				helpers.FixPodWithOnlySidecar("app", "custom"),
+				helpers.FixPodIngressGateway(),
+			),
+			assertFunc: func(podList *v1.PodList) { Expect(podList.Items).To(HaveLen(0)) },
+		},
+		{
+			name: "Should not return Pod that belongs to istio-egressgateway",
+			c: createClientSet(
+				helpers.FixPodIEgressGateway(),
 			),
 			assertFunc: func(podList *v1.PodList) { Expect(podList.Items).To(HaveLen(0)) },
 		},

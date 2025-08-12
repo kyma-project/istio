@@ -24,7 +24,7 @@ jobs:
     name: Istio upgrade integration test AWS
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - run: ./tests/integration/scripts/gardener-kubeconfig.sh
@@ -57,7 +57,7 @@ jobs:
     name: Istio upgrade integration test K3D
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - uses: ./.github/actions/upgrade-integration-test
@@ -74,7 +74,7 @@ jobs:
       matrix:
         test_make_target: [ "configuration-integration-test", "mesh-communication-integration-test", "installation-integration-test", "observability-integration-test" ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - uses: ./.github/actions/integration-test
@@ -95,7 +95,7 @@ jobs:
       matrix:
         test_make_target: [ "configuration-integration-test", "mesh-communication-integration-test", "installation-integration-test", "observability-integration-test" ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - run: ./tests/integration/scripts/gardener-kubeconfig.sh
@@ -127,7 +127,7 @@ jobs:
     name: Istio integration test AWS specific
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - run: ./tests/integration/scripts/gardener-kubeconfig.sh
@@ -158,7 +158,7 @@ jobs:
     name: Istio integration test GCP specific
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - run: ./tests/integration/scripts/gardener-kubeconfig.sh
@@ -193,7 +193,7 @@ jobs:
       matrix:
         test_make_target: [ "test-e2e-egress", "e2e-test", "configuration-integration-test", "mesh-communication-integration-test", "installation-integration-test", "observability-integration-test" ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - uses: ./.github/actions/e2e-test-gardener

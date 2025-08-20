@@ -16,7 +16,7 @@ jobs:
     outputs:
       sha: ${{ steps.get-sha.outputs.sha }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - id: get-sha
@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ get-sha ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - uses: ./.github/actions/perf-test-gardener
@@ -54,7 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ get-sha ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - uses: actions/setup-go@v5
@@ -88,7 +88,7 @@ jobs:
       matrix:
         test_make_target: [ "configuration-integration-test", "mesh-communication-integration-test", "installation-integration-test", "observability-integration-test" ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
@@ -109,7 +109,7 @@ jobs:
       matrix:
         test_make_target: [ "configuration-integration-test", "mesh-communication-integration-test", "installation-integration-test", "observability-integration-test" ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
@@ -130,7 +130,7 @@ jobs:
     if: ${{ failure() }}
     needs: [istio-performance-test, run-ui-tests-periodic, k8s-compatibility-check-k3d, k8s-compatibility-check-aws]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Notify
         uses: ./.github/actions/slack-notification-failed-workflow
         with:

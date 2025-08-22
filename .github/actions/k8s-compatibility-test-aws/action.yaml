@@ -64,13 +64,11 @@ runs:
     - name: Check that deprecations are empty
       run: if [[ $(wc -l deprecations.txt | awk '{print $1}' ) != '0' ]]; then exit 1; fi
       shell: bash
-    - name: Upload deprecation report
-      if: failure()
-      shell: bash
-      uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v4
       with:
         name: deprecation-report-${{ github.job }}-${{ inputs.test_make_target }}
         path: deprecations.txt
+      if: failure()
     - name: Deprovision cluster
       if: success()
       shell: bash

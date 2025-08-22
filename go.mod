@@ -15,7 +15,7 @@ require (
 	github.com/imdario/mergo v1.0.0
 	github.com/masterminds/semver v1.5.0
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
-	github.com/onsi/ginkgo/v2 v2.24.0
+	github.com/onsi/ginkgo/v2 v2.25.1
 	github.com/onsi/gomega v1.38.0
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.10.0

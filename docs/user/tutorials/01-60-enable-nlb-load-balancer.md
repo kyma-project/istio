@@ -1,4 +1,4 @@
-# Migrate From Using Elastic Load Balancer (ELB) to Network Load Balancer (NLB) for the Istio Module Running on AWS
+# Migrating From Using Elastic Load Balancer (ELB) to Network Load Balancer (NLB) for the Istio Module Running on AWS
 
 > [!WARNING]
 >

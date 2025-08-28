@@ -29,24 +29,3 @@ If you have an Istio sidecar proxy injected into every workload, you can use Ist
 ### Resiliency
 
 Application resiliency is an important topic within traffic management. Traditionally, application libraries implemented resiliency features like timeouts, retries, and circuit breakers. However, with service mesh, you can delegate such tasks to the mesh, and the same configuration options work regardless of the programming language of your application. See [Network Resilience and Testing](https://istio.io/latest/docs/concepts/traffic-management/#network-resilience-and-testing).
-
-## Restart of Workloads with Enabled Istio Sidecar Injection
-
-The Pods that have Istio sidecar proxy injection enabled are automatically restarted in the following scenarios:
-- During an Istio update.
-- When you update the field **spec.config.telemetry.metrics.prometheusMerge** in the Istio CR.
-- When you enable the compatibility mode (**spec.compatibilityMode**), and the compatibility version introduces any flags to the Istio proxy component.
-- When you update the field **spec.config.NumTrustedProxies** in the Istio CR, only Istio proxies that are part of the `istio-ingressgateway` Deployment are restarted.
-
-Restarting the Istio sidecar proxies is possible for all resources that allow for a rolling restart. If Istio is uninstalled, the workloads are restarted again to remove the Istio sidecar proxies. However, if a resource is a Job, a ReplicaSet that is not managed by any Deployment, or a Pod that is not managed by any other resource, the restart cannot be performed automatically. In such cases, a warning is logged, and you must manually restart the resources. See [Incompatible Istio Sidecar Version After the Istio Module's Update](./troubleshooting/03-40-incompatible-istio-sidecar-version.md).
-
-The Istio module does not restart an Istio sidecar proxy if it has a custom image set. See [Resource Annotations](https://istio.io/latest/docs/reference/config/annotations/#SidecarProxyImage).
-
-The Istio module supports restarting both types of sidecar containers: regular ones and Kubernetes native sidecars.
-
-> [!WARNING]
-> Istio-injected Pods with `restartPolicy: Never` may end up in a permanently broken state due to a known issue in Istio. See [issue #49210](https://github.com/istio/istio/issues/49210).
-> If you need to use this setting, you must be aware of the risk until the issue is fixed. If you don't have a specific need for setting **restartPolicy** to `Never`, consider using a different option.
-
-> [!TIP]
-> To improve resiliency and ensure continuous service operation during the Istio module's rollouts, you must properly configure [Pod Disruption Budgets (PDBs)](https://kubernetes.io/docs/tasks/run-application/configure-pdb/) in Kubernetes. Additionally, for PDBs to function correctly, your application must be well-prepared to run in the Kubernetes environment. This includes implementing [Kubernetes probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/). Adhering to these practices highly reduces the risk of disruptions caused by workload restarts.

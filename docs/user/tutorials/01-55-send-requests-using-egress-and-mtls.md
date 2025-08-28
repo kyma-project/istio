@@ -1,4 +1,4 @@
-# Send mTLS Requests Using Istio Egress Gateway
+# Sending mTLS Requests Using Istio Egress Gateway
 Learn how to configure and use the Istio egress Gateway to allow mTLS-secured outbound traffic from your Kyma runtime cluster to a workload in another cluster.
 
 ## Prerequisites

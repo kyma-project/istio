@@ -1,4 +1,4 @@
-# Send Requests Using Istio Egress Gateway
+# Sending Requests Using Istio Egress Gateway
 Learn how to configure and use the Istio egress Gateway to allow outbound traffic from your Kyma runtime cluster to specific external destinations. Test your configuration by sending an HTTPS request to an external website using a sample Deployment.
 
 ## Prerequisites

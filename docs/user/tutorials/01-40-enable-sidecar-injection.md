@@ -1,4 +1,4 @@
-# Enable Istio Sidecar Proxy Injection
+# Enabling Istio Sidecar Proxy Injection
 
 You can enable Istio sidecar proxy injection for either an entire namespace or a single Deployment. Learn how to perform both these operations.
 

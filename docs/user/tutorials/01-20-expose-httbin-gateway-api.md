@@ -1,4 +1,4 @@
-# Expose Workloads Using Gateway API 
+# Exposing Workloads Using Gateway API 
 
 Use [Gateway API](https://gateway-api.sigs.k8s.io/) to expose a workload.
 

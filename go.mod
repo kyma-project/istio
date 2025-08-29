@@ -14,10 +14,11 @@ require (
 	github.com/go-logr/logr v1.4.3
 	github.com/imdario/mergo v1.0.0
 	github.com/masterminds/semver v1.5.0
-	github.com/onsi/ginkgo/v2 v2.25.1
-	github.com/onsi/gomega v1.38.1
+	github.com/mitchellh/mapstructure v1.5.0 // indirect
+	github.com/onsi/ginkgo/v2 v2.25.2
+	github.com/onsi/gomega v1.38.2
 	github.com/pkg/errors v0.9.1
-	github.com/stretchr/testify v1.11.0
+	github.com/stretchr/testify v1.11.1
 	github.com/thoas/go-funk v0.9.3
 	gitlab.com/rodrigoodhin/gocure v0.0.0-20220718065339-f14dfe79276a
 	golang.org/x/exp v0.0.0-20250506013437-ce4c2cf36ca6 // indirect

@@ -126,3 +126,30 @@ It shows only the application container without istio-proxy:
 ```
 test-job
 ```
+
+## Known Hacks That Can Be Eliminated by Native Sidecars
+
+### /quitquitquit call
+
+It was proposed here: https://github.com/istio/istio/issues/6324#issuecomment-533923427
+
+The istio-proxy offers an additional endpoint `/quitquitquit` that can be used to tell the istio-proxy to shut down in the following way:
+
+```
+curl -sf -XPOST http://127.0.0.1:15020/quitquitquit
+```
+
+This is not required anymore if the istio-proxy runs as native sidecar, because its lifecycle is bound with the main application container, so it shuts down automatically when the main container is finished.
+
+### runAsUser 1337 or excludeOutboundIPRanges or excludeOutboundPorts
+
+It was proposed here: https://community.sap.com/t5/technology-blog-posts-by-sap/upcoming-breaking-change-in-sap-btp-kyma-runtime-enabling-the-istio-cni/ba-p/13550765
+
+Configuring UID 1337, excludeOutboundIPRanges or excludeOutboundPorts prevents the traffic from being redirected to the istio-proxy which hasn't been started yet.
+
+This is not required anymore if the istio-proxy runs as native sidecar, because native sidecars are started before other init containers.
+
+## More information
+
+- [Kubernetes blog post about native sidecars](https://kubernetes.io/blog/2023/08/25/native-sidecar-containers/)
+- [Istio blog post about native sidecars](https://istio.io/latest/blog/2023/native-sidecars/)

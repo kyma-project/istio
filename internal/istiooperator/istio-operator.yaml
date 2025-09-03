@@ -7,7 +7,7 @@ metadata:
     kyma-project.io/module: istio
 spec:
   hub: europe-docker.pkg.dev/kyma-project/prod/external/istio
-  tag: "1.26.2-distroless"
+  tag: "1.27.0-distroless"
   components:
     base:
       enabled: true
@@ -190,6 +190,8 @@ spec:
           value: "6h"
         - name: METRIC_GRACEFUL_DELETION_INTERVAL
           value: "6h"
+        - name: ENABLE_NATIVE_SIDECARS
+          value: "false"
         hpaSpec:
           scaleTargetRef:
             apiVersion: apps/v1

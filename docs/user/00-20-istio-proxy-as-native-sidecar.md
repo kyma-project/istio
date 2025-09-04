@@ -100,16 +100,16 @@ The Istio module fully supports both types of sidecar containers. In particular,
     ```
 
 The key differences when compared to the `istio-proxy` run as a regular sidecar container:
-- When the Pod starts, it has the `Init` status with two containers.
-- The application container only starts after the `istio-proxy` native sidecar is fully operational.
-- After the main container completes its job, the Pod finishes with the status `Completed`.
+  - When the Pod starts, it has the `Init` status with two containers.
+  - The application container only starts after the `istio-proxy` native sidecar is fully operational.
+  - After the main container completes its job, the Pod finishes with the status `Completed`.
 
 4. List init containers:
 
     ```
     kubectl get pod -n test -o jsonpath='{.items[0].spec.initContainers[*].name}'
     ```
-The output contains two containers, and `istio-proxy` is now an init container:
+    The output contains two containers, and `istio-proxy` is now an init container:
     
     ```
     istio-validation istio-proxy

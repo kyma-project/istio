@@ -54,50 +54,50 @@ The Istio module fully supports both types of sidecar containers. In particular,
 
 1. Create a `test` namespace with Istio injection enabled:
 
-```bash
-kubectl create ns test
-kubectl label namespace test istio-injection=enabled
-```
+    ```bash
+    kubectl create ns test
+    kubectl label namespace test istio-injection=enabled
+    ```
 
 2. Create a workload with istio-proxy running as a native sidecar container:
 
-```bash
-kubectl apply -f - <<EOF
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: test-job
-  namespace: test
-spec:
-  template:
+    ```bash
+    kubectl apply -f - <<EOF
+    apiVersion: batch/v1
+    kind: Job
     metadata:
-      annotations:
-        sidecar.istio.io/nativeSidecar: "true"
+      name: test-job
+      namespace: test
     spec:
-      containers:
-      - name: test-job
-        image: alpine:latest
-        command: [ "/bin/sleep", "10" ]
-      restartPolicy: Never
-EOF
-```
+      template:
+        metadata:
+          annotations:
+            sidecar.istio.io/nativeSidecar: "true"
+        spec:
+          containers:
+          - name: test-job
+            image: alpine:latest
+            command: [ "/bin/sleep", "10" ]
+          restartPolicy: Never
+    EOF
+    ```
 
 3. To observe the progress, run:
-```
-kubectl get pod -n test -w
-```
+    ```
+    kubectl get pod -n test -w
+    ```
 
-```
-NAME             READY   STATUS     RESTARTS   AGE
-test-job-2tt95   0/2     Init:0/2   0          0s
-test-job-2tt95   0/2     Init:1/2   0          1s
-test-job-2tt95   0/2     Init:1/2   0          2s
-test-job-2tt95   0/2     PodInitializing   0          10s
-test-job-2tt95   1/2     PodInitializing   0          10s
-test-job-2tt95   2/2     Running           0          11s
-test-job-2tt95   1/2     Completed         0          21s
-test-job-2tt95   0/2     Completed         0          22s
-```
+    ```
+    NAME             READY   STATUS     RESTARTS   AGE
+    test-job-2tt95   0/2     Init:0/2   0          0s
+    test-job-2tt95   0/2     Init:1/2   0          1s
+    test-job-2tt95   0/2     Init:1/2   0          2s
+    test-job-2tt95   0/2     PodInitializing   0          10s
+    test-job-2tt95   1/2     PodInitializing   0          10s
+    test-job-2tt95   2/2     Running           0          11s
+    test-job-2tt95   1/2     Completed         0          21s
+    test-job-2tt95   0/2     Completed         0          22s
+    ```
 
 The key differences when compared to the `istio-proxy` run as a regular sidecar container:
 - When the Pod starts, it has the `Init` status with two containers.
@@ -106,26 +106,26 @@ The key differences when compared to the `istio-proxy` run as a regular sidecar 
 
 4. List init containers:
 
-```
-kubectl get pod -n test -o jsonpath='{.items[0].spec.initContainers[*].name}'
-```
+    ```
+    kubectl get pod -n test -o jsonpath='{.items[0].spec.initContainers[*].name}'
+    ```
 The output contains two containers, and `istio-proxy` is now an init container:
-
-```
-istio-validation istio-proxy
-```
+    
+    ```
+    istio-validation istio-proxy
+    ```
 
 5. List regular containers:
 
-```
-kubectl get pod -n test -o jsonpath='{.items[0].spec.containers[*].name}'
-```
+    ```
+    kubectl get pod -n test -o jsonpath='{.items[0].spec.containers[*].name}'
+    ```
 
-The output includes only the application container without `istio-proxy`:
+    The output includes only the application container without `istio-proxy`:
 
-```
-test-job
-```
+    ```
+    test-job
+    ```
 
 ## Known Hacks that Native Sidecars Can Replace
 

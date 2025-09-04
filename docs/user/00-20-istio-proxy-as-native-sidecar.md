@@ -19,7 +19,7 @@ The Istio module configures the default type of the `istio-proxy` sidecar contai
 - Istio module up to 1.20 - native sidecars are disabled by default
 - Istio module 1.21 with Istio 1.27 - native sidecars are disabled by default
 - Istio module 1.22 with Istio 1.27 - native sidecars are enabled by default, unless you set **compatibilityMode** in the Istio CR to `true`
-- Istio module 1.23 or any later version with Istio 1.28 - native sidecars are enabled by default
+- Istio module with Istio 1.28 - native sidecars are enabled by default
 
 ## Configuring the Type of Istio Sidecar Proxy for a Particular Workload
 

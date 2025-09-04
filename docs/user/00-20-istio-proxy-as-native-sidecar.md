@@ -1,27 +1,27 @@
 # Istio Proxy as Native Sidecar Container
 
-# Regular vs Native Sidecars Containers
+# Differences Between Regular and Native Sidecar Containers
 
-Every pod in the Istio mesh is given an additional istio-proxy sidecar container, which intercepts the network traffic in order to provide Istio features.
+Every Pod in the Istio mesh gets an additional `istio-proxy` sidecar container, which intercepts network traffic to provide Istio features.
 
-In past the Kubernetes had no concept of 'sidecar' containers, so there was no way to control the order of starting or stopping containers within a pod. This may cause multiple issues, like:
-- application container can start before istio-proxy sidecar is ready, so the application doesn't have the network access at startup
-- istio-proxy may stop, before the application container is stopped, so the application loses the network access during shutdown
-- init container runs before istio-proxy sidecar, so it can't access the network
-- running istio-proxy container prevents pods from being finished (like in Jobs)
+In the past, Kubernetes didn't support the concept of sidecar containers, so it wasn't possible to control the order in which containers within a Pod were started or stopped. This approach causes multiple issues, such as:
+- When an application container starts before the `istio-proxy` sidecar container is ready, the application doesn't have network access at startup.
+- When the `istio-proxy` sidecar stops before the application container stops, the application loses network access during shutdown.
+- An init container runs before the `istio-proxy` sidecar container, so it can't access the network.
+- A running `istio-proxy` sidecar container prevents Pods from being finished (for example, in the case of Jobs).
 
-Kubernetes since 1.28 offers [native sidecar containers](https://kubernetes.io/blog/2023/08/25/native-sidecar-containers/) functionality to address such problems. An init container with restartPolicy set to Always is considered as native sidecar and Kubernetes treats it differently.
-Istio [can use this feature](https://istio.io/latest/blog/2023/native-sidecars/) for istio-proxy sidecars.
+Since version 1.28, Kubernetes has offered [native sidecar containers](https://kubernetes.io/blog/2023/08/25/native-sidecar-containers/) functionality to address such problems. If an init container has **restartPolicy** set to `Always`, Kubernetes considers it a native sidecar and treats it differently.
+Istio uses native sidecars introduced by Kubernetes for `istio-proxy` sidecars. See [Kubernetes Native Sidecars in Istio](https://istio.io/latest/blog/2023/native-sidecars/).
 
-## How to Configure Istio Proxy Sidecar Type for a Particular Workload
+## Configuring the Type of Istio Sidecar Proxy for a Particular Workload
 
-You can always configure the sidecar type explicitly for a particular workload.
-- in order to inject istio-proxy as native sidecar container you need to set `sidecar.istio.io/nativeSidecar` annotation on a given pod or pod template to `true`
-- in order to inject istio-proxy as regular sidecar container you need to set `sidecar.istio.io/nativeSidecar` annotation on a given pod or pod template to `false`
+You can configure the sidecar type explicitly for a particular workload.
+- To inject `istio-proxy` as a native sidecar container, set the `sidecar.istio.io/nativeSidecar` annotation to `"true"` on a given Pod or in the Pod template.
+- To inject `istio-proxy` as a regular sidecar container, set the `sidecar.istio.io/nativeSidecar` annotation to `"false"` on a given Pod or in the Pod template.
 
-If the annotation is not set then the default setting is used.
+If you do not set the annotation, the default setting is used.
 
-The annotation must be set on a Pod level, so when a Pod is created by a parent resource (like Deployment, StatefulSet, ReplicaSet, DaemonSet, Job, CronJob, etc.) you need to configure the annotation in the pod template. See the example:
+You must set the annotation at the Pod level. So, when a Pod is created by a parent resource (for example, Deployment, StatefulSet, ReplicaSet, DaemonSet, Job, CronJob), you must configure the annotation in the Pod template. See the example:
 
 ```yaml
 apiVersion: apps/v1
@@ -36,30 +36,30 @@ spec:
 ...
 ```
 
-Setting the sidecar type explicitly is recommended especially when the given workload works well only with one sidecar type and causes issues otherwise. This approach guarantees that the sidecar type doesn't change after the Istio module upgrade. The good example are Job pods, which can't finish if the main container finishes, because the istio-proxy container still runs. In this case setting the `sidecar.istio.io/nativeSidecar` annotation on the pod template solves the problem.
+Setting the sidecar type explicitly is especially recommended when a given workload works well only with one sidecar type and causes issues otherwise. This approach guarantees that the sidecar type doesn't change after the Istio module upgrade. A good example are Job Pods, which can't finish if the main container finishes because the `istio-proxy` sidecar container is still running. In this case, setting the `sidecar.istio.io/nativeSidecar` annotation in the Pod template solves the problem.
 
 ## Default Istio Proxy Sidecar Type
 
-The default istio-proxy sidecar type varies depending on the particular Istio module and Istio version:
+The Istio module configures the default type of the `istio-proxy` sidecar container, which is injected into all Pods that allow for Istio sidecar proxy injection. However, you can override this default setting for a specific Pod, allowing it to use another type of sidecar container regardless of the Istio module’s default configuration. The default `istio-proxy` sidecar type varies depending on the particular Istio module and Istio version:
 - Istio module up to 1.20 - native sidecars are disabled by default
-- Istio module 1.21 with Istio 1.27 - native sidecars are still disabled by default
-- Istio module 1.22 with Istio 1.27 - native sidecars are enabled by default, unless compatibilityMode in the Istio CR is set to true
-- Istio module 1.23 or newer with Istio 1.28 - native sidecars are always enabled by default
+- Istio module 1.21 with Istio 1.27 - native sidecars are disabled by default
+- Istio module 1.22 with Istio 1.27 - native sidecars are enabled by default, unless you set **compatibilityMode** in the Istio CR to `true`
+- Istio module 1.23 or any later version with Istio 1.28 - native sidecars are enabled by default
 
-## Support in Istio Module
+## Support in the Istio Module
 
-Istio module fully supports both types of sidecar containers. In particular, it is able to restart workloads with outdated istio-proxy version regardless if it runs as native sidecar or regular sidecar container.
+The Istio module fully supports both types of sidecar containers. In particular, it can restart workloads with outdated `istio-proxy` versions regardless of whether they run as native sidecars or regular sidecar containers.
 
 ## Example of Istio Proxy as Native Sidecar
 
-Let's suppose that there is a 'test' namespace with istio injection enabled:
+1. Create a `test` namespace with Istio injection enabled:
 
 ```bash
 kubectl create ns test
 kubectl label namespace test istio-injection=enabled
 ```
 
-Let's now create a workload with istio-proxy running as native sidecar container:
+2. Create a workload with istio-proxy running as a native sidecar container:
 
 ```bash
 kubectl apply -f - <<EOF
@@ -82,7 +82,7 @@ spec:
 EOF
 ```
 
-You can observe the progress:
+3. To observe the progress, run:
 ```
 kubectl get pod -n test -w
 ```
@@ -99,57 +99,57 @@ test-job-2tt95   1/2     Completed         0          21s
 test-job-2tt95   0/2     Completed         0          22s
 ```
 
-The key differences when compared to the istio-proxy run as regular sidecar container:
-- Pod starts with Init status with two containers
-- application container is started after istio-proxy native sidecar is fully operational
-- Pod finishes with status Completed after the main container finished its job
+The key differences when compared to the `istio-proxy` run as a regular sidecar container:
+- When the Pod starts, it has the `Init` status with two containers.
+- The application container only starts after the `istio-proxy` native sidecar is fully operational.
+- After the main container completes its job, the Pod finishes with the status `Completed`.
 
-Let's also list init containers:
+4. List init containers:
 
 ```
 kubectl get pod -n test -o jsonpath='{.items[0].spec.initContainers[*].name}'
 ```
-It shows two containers - istio-proxy is now an init container:
+The output contains two containers, and `istio-proxy` is now an init container:
 
 ```
 istio-validation istio-proxy
 ```
 
-Let's now list regular containers:
+5. List regular containers:
 
 ```
 kubectl get pod -n test -o jsonpath='{.items[0].spec.containers[*].name}'
 ```
 
-It shows only the application container without istio-proxy:
+The output includes only the application container without `istio-proxy`:
 
 ```
 test-job
 ```
 
-## Known Hacks That Can Be Eliminated by Native Sidecars
+## Known Hacks that Native Sidecars Can Replace
 
-### /quitquitquit call
+### The /quitquitquit call
 
-It was proposed here: https://github.com/istio/istio/issues/6324#issuecomment-533923427
+The solution was proposed under [issue #6324](https://github.com/istio/istio/issues/6324#issuecomment-533923427).
 
-The istio-proxy offers an additional endpoint `/quitquitquit` that can be used to tell the istio-proxy to shut down in the following way:
+The `istio-proxy` sidecar offers an additional endpoint `/quitquitquit` that you can use in the following way to shut down `istio-proxy`:
 
 ```
 curl -sf -XPOST http://127.0.0.1:15020/quitquitquit
 ```
 
-This is not required anymore if the istio-proxy runs as native sidecar, because its lifecycle is bound with the main application container, so it shuts down automatically when the main container is finished.
+Using the endpoint is no longer required if `istio-proxy` runs as a native sidecar. Its lifecycle is bound to the main application container, so the `istio-proxy` sidecar shuts down automatically when the main container is finished.
 
-### runAsUser 1337 or excludeOutboundIPRanges or excludeOutboundPorts
+### runAsUser 1337, or excludeOutboundIPRanges, or excludeOutboundPorts
 
-It was proposed here: https://community.sap.com/t5/technology-blog-posts-by-sap/upcoming-breaking-change-in-sap-btp-kyma-runtime-enabling-the-istio-cni/ba-p/13550765
+The solution was proposed in the blog post [Upcoming breaking change in SAP BTP, Kyma Runtime: Enabling the Istio CNI plugin](https://community.sap.com/t5/technology-blog-posts-by-sap/upcoming-breaking-change-in-sap-btp-kyma-runtime-enabling-the-istio-cni/ba-p/13550765).
 
-Configuring UID 1337, excludeOutboundIPRanges or excludeOutboundPorts prevents the traffic from being redirected to the istio-proxy which hasn't been started yet.
+Configuring **UID 1337**, **excludeOutboundIPRanges**, or **excludeOutboundPorts** prevents traffic from being redirected to the `istio-proxy` sidecar that hasn't been started yet.
 
-This is not required anymore if the istio-proxy runs as native sidecar, because native sidecars are started before other init containers.
+This is no longer required if `istio-proxy` runs as a native sidecar because native sidecars are started before other init containers.
 
-## More information
+## Related Links
 
 - [Kubernetes blog post about native sidecars](https://kubernetes.io/blog/2023/08/25/native-sidecar-containers/)
 - [Istio blog post about native sidecars](https://istio.io/latest/blog/2023/native-sidecars/)

@@ -27,7 +27,7 @@
   * [SAP HANA Database Connection Issues](/istio/user/troubleshooting/03-80-cannot-connect-to-hana-db.md) 
   * [Not Found Error](/istio/user/troubleshooting/03-60-404-on-istio-gateway.md)
   * [Incompatible Istio Sidecar](/istio/user/troubleshooting/03-40-incompatible-istio-sidecar-version.md)
-  * [Pods Created by Jobs can't Finish](/istio/user/troubleshooting/03-45-jobs-cant-finish.md)
+  * [Pods Created by Jobs Can't Finish](/istio/user/troubleshooting/03-45-jobs-cant-finish.md)
   * [Modified Istio Resources](/istio/user/troubleshooting/03-70-reconciliation-fails-on-istio-install.md)
   * [Istio Cannot Verify an HTTPS Certificate](/istio/user/troubleshooting/03-90-istio-cert-unknown.md)
 * [Default Istio Configuration](/istio/user/00-15-overview-istio-setup.md)

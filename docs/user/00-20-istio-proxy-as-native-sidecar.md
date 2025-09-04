@@ -13,6 +13,14 @@ In the past, Kubernetes didn't support the concept of sidecar containers, so it 
 Since version 1.28, Kubernetes has offered [native sidecar containers](https://kubernetes.io/blog/2023/08/25/native-sidecar-containers/) functionality to address such problems. If an init container has **restartPolicy** set to `Always`, Kubernetes considers it a native sidecar and treats it differently.
 Istio uses native sidecars introduced by Kubernetes for `istio-proxy` sidecars. See [Kubernetes Native Sidecars in Istio](https://istio.io/latest/blog/2023/native-sidecars/).
 
+## Default Istio Proxy Sidecar Type
+
+The Istio module configures the default type of the `istio-proxy` sidecar container, which is injected into all Pods that allow for Istio sidecar proxy injection. However, you can override this default setting for a specific Pod, allowing it to use another type of sidecar container regardless of the Istio module’s default configuration. The default `istio-proxy` sidecar type varies depending on the particular Istio module and Istio version:
+- Istio module up to 1.20 - native sidecars are disabled by default
+- Istio module 1.21 with Istio 1.27 - native sidecars are disabled by default
+- Istio module 1.22 with Istio 1.27 - native sidecars are enabled by default, unless you set **compatibilityMode** in the Istio CR to `true`
+- Istio module 1.23 or any later version with Istio 1.28 - native sidecars are enabled by default
+
 ## Configuring the Type of Istio Sidecar Proxy for a Particular Workload
 
 You can configure the sidecar type explicitly for a particular workload.
@@ -38,17 +46,9 @@ spec:
 
 Setting the sidecar type explicitly is especially recommended when a given workload works well only with one sidecar type and causes issues otherwise. This approach guarantees that the sidecar type doesn't change after the Istio module upgrade. A good example are Job Pods, which can't finish if the main container finishes because the `istio-proxy` sidecar container is still running. In this case, setting the `sidecar.istio.io/nativeSidecar` annotation in the Pod template solves the problem.
 
-## Default Istio Proxy Sidecar Type
-
-The Istio module configures the default type of the `istio-proxy` sidecar container, which is injected into all Pods that allow for Istio sidecar proxy injection. However, you can override this default setting for a specific Pod, allowing it to use another type of sidecar container regardless of the Istio module’s default configuration. The default `istio-proxy` sidecar type varies depending on the particular Istio module and Istio version:
-- Istio module up to 1.20 - native sidecars are disabled by default
-- Istio module 1.21 with Istio 1.27 - native sidecars are disabled by default
-- Istio module 1.22 with Istio 1.27 - native sidecars are enabled by default, unless you set **compatibilityMode** in the Istio CR to `true`
-- Istio module 1.23 or any later version with Istio 1.28 - native sidecars are enabled by default
-
 ## Support in the Istio Module
 
-The Istio module fully supports both types of sidecar containers. In particular, it can restart workloads with outdated `istio-proxy` versions regardless of whether they run as native sidecars or regular sidecar containers.
+The Istio module fully supports both types of sidecar containers. In particular, in case of Istio version update it detects which workloads should be restarted and this mechanism works with both sidecar types.
 
 ## Example of Istio Proxy as Native Sidecar
 
@@ -145,9 +145,11 @@ Using the endpoint is no longer required if `istio-proxy` runs as a native sidec
 
 The solution was proposed in the blog post [Upcoming breaking change in SAP BTP, Kyma Runtime: Enabling the Istio CNI plugin](https://community.sap.com/t5/technology-blog-posts-by-sap/upcoming-breaking-change-in-sap-btp-kyma-runtime-enabling-the-istio-cni/ba-p/13550765).
 
-Configuring **UID 1337**, **excludeOutboundIPRanges**, or **excludeOutboundPorts** prevents traffic from being redirected to the `istio-proxy` sidecar that hasn't been started yet.
+Init containers are started before regular containers are started. This means that the `istio-proxy` as regular sidecar doesn't work when init containers are running. As a result init containers don't have network access.
 
-This is no longer required if `istio-proxy` runs as a native sidecar because native sidecars are started before other init containers.
+By configuring **UID 1337**, **excludeOutboundIPRanges**, or **excludeOutboundPorts** you can exclude the network traffic from being captured by the `istio-proxy`. This allows init containers to access the network, but they are able to connect only to resources outside service mesh.
+
+This is no longer required if `istio-proxy` runs as a native sidecar because the `istio-proxy` is injected as first init container and runs until the main application container finishes. So init containers are able to access network in the same way as regular application containers, and they may connect to resources inside and outside the service mesh.
 
 ## Related Links
 

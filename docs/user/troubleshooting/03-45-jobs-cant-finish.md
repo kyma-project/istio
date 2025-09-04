@@ -1,4 +1,3 @@
-<!-- open-source-only -->
 # Pods Created by Jobs can't Finish
 
 ## Symptom

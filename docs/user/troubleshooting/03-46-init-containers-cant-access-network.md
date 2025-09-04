@@ -1,12 +1,12 @@
-# Init Containers can't Access Network
+# Init Containers Can't Access the Network
 
 ## Symptom
 
-Init containers can't access network.
+Init containers can't access the network.
 
 ## Cause
 
-If istio injection is enabled the whole network traffic from all containers is intercepted by the `istio-proxy` container. Init containers are started before regular containers are started. This means that the `istio-proxy` as regular sidecar doesn't work when init containers are running. As a result init containers don't have network access.
+If Istio injection is enabled, the `istio-proxy` container intercepts all network traffic from all containers. Init containers are started before regular containers. This means that `istio-proxy` running as a regular sidecar doesn't work when init containers are running. As a result, init containers don't have network access.
 
 ## Solution
 
@@ -38,7 +38,7 @@ spec:
 EOF
 ```
 
-This annotation instructs Istio to run `istio-proxy` as a native sidecar container. In this case the Istio injects the `istio-proxy` as the first init container, so all containers running later are able to access the network.
+This annotation instructs Istio to run `istio-proxy` as a native sidecar container. In this case, Istio injects `istio-proxy` as the first init container, so all containers running later are able to access the network.
 
 ## Related Links
 

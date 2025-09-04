@@ -149,7 +149,7 @@ Init containers are started before regular containers are started. This means th
 
 By configuring **UID 1337**, **excludeOutboundIPRanges**, or **excludeOutboundPorts** you can exclude the network traffic from being captured by the `istio-proxy`. This allows init containers to access the network, but they are able to connect only to resources outside service mesh.
 
-This is no longer required if `istio-proxy` runs as a native sidecar because the `istio-proxy` is injected as first init container and runs until the main application container finishes. So init containers are able to access network in the same way as regular application containers, and they may connect to resources inside and outside the service mesh.
+This is no longer required if `istio-proxy` runs as a native sidecar because the `istio-proxy` is injected as the first init container and runs until the main application container finishes. So, init containers are able to access the network in the same way as regular application containers, and they may connect to resources inside and outside the service mesh.
 
 ## Related Links
 

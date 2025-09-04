@@ -1,4 +1,4 @@
-# Pods Created by Jobs can't Finish
+# Pods Created by Jobs Can't Finish
 
 ## Symptom
 

@@ -1,6 +1,6 @@
 # Istio Proxy as Native Sidecar Container
 
-# Differences Between Regular and Native Sidecar Containers
+## Differences Between Regular and Native Sidecar Containers
 
 Every Pod in the Istio mesh gets an additional `istio-proxy` sidecar container, which intercepts network traffic to provide Istio features.
 

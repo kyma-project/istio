@@ -13,8 +13,8 @@ spec:
         - name: manager
           env:
             - name: install-cni
-              value: europe-docker.pkg.dev/kyma-project/prod/external/istio/install-cni:1.27.0-distroless
+              value: europe-docker.pkg.dev/kyma-project/prod/external/istio/install-cni:1.27.1-distroless
             - name: proxyv2
-              value: europe-docker.pkg.dev/kyma-project/prod/external/istio/proxyv2:1.27.0-distroless
+              value: europe-docker.pkg.dev/kyma-project/prod/external/istio/proxyv2:1.27.1-distroless
             - name: pilot
-              value: europe-docker.pkg.dev/kyma-project/prod/external/istio/pilot:1.27.0-distroless
+              value: europe-docker.pkg.dev/kyma-project/prod/external/istio/pilot:1.27.1-distroless

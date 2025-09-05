@@ -20,7 +20,7 @@ jobs:
         shell: bash
         env:
           GARDENER_TOKEN: ${{ secrets.GARDENER_TOKEN }}
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: "go.mod"
       - run: make gardener-istio-integration-test
@@ -53,7 +53,7 @@ jobs:
         shell: bash
         env:
           GARDENER_TOKEN: ${{ secrets.GARDENER_TOKEN }}
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: "go.mod"
       - run: make gardener-aws-integration-test
@@ -85,7 +85,7 @@ jobs:
         shell: bash
         env:
           GARDENER_TOKEN: ${{ secrets.GARDENER_TOKEN }}
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: "go.mod"
       - run: make gardener-gcp-integration-test

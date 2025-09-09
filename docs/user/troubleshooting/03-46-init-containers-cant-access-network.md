@@ -42,4 +42,4 @@ This annotation instructs Istio to run `istio-proxy` as a native sidecar contain
 
 ## Related Links
 
-[Istio Proxy as Native Sidecar Container](../00--istio-proxy-as-native-sidecar.md)
+[Istio Proxy as Native Sidecar Container](../00-20-istio-proxy-as-native-sidecar.md)

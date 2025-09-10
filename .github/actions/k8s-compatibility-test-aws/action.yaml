@@ -62,7 +62,7 @@ runs:
         name: html-reports_${{ github.job }}_${{ github.action }}_${{ inputs.test_make_target }}
         path: tests/integration/reports/
     - name: Check that deprecations are empty
-      run: if [[ $(wc -l deprecations.txt | awk '{print $1}' ) != '0' ]]; then exit 1; fi
+      run: if [[ $(cat deprecations.txt | jq 'select(.resource != "endpoints")') ]]; then exit 1; fi # we ignore endpoints as Gardener makes a request to this deprecated (since v1.33) k8s resource, see: https://github.com/gardener/gardener/issues/12154
       shell: bash
     - uses: actions/upload-artifact@v4
       with:

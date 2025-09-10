@@ -1,0 +1,44 @@
+# ADR 11: Extend External Authorizer definition in the IstioCR to include pathPrefix and timeout configurations
+
+## Status
+<!--- Specify the current state of the ADR, such as whether it is proposed, accepted, rejected, deprecated, superseded, etc. -->
+Proposed
+
+## Context
+<!--- Describe the issue or problem that is motivating this decision or change. -->
+The current implementation of the External Authorizer in IstioCR lacks the ability to specify a custom path prefix and timeout for the authorization requests.
+This limitation can lead to challenges in integrating with external authorization services that require specific endpoints or have different performance characteristics.
+
+## Decision
+<!--- Explain the proposed change or action and the reason behind it. -->
+To enhance the flexibility and usability of the External Authorizer in IstioCR, we propose to extend its configuration options to include:
+1. **pathPrefix**: Allow users to specify a custom path prefix for the authorization requests. For example if the external authorizer service expects requests at `/auth/users`, while requests to the end service are sent to `/users`, the pathPrefix can be set to `/auth` to ensure correct routing.
+2. **timeout**: Introduce a timeout setting to define how long the system should wait for a response from the external authorizer before considering the request as failed.
+
+Above fields are exposed as one to one mapping of the Istio Mesh Config configuration. They are optional and if not set, the values will fall back to Istio's defaults.
+
+These additions will enable better integration with a wider range of external authorization services and improve the overall reliability of the authorization process.
+
+API structure after the change:
+```yaml
+apiVersion: istios.kyma-project.io/v1alpha1
+kind: IstioCR
+spec:
+  config:
+    authorizers:
+      name: string (required)
+      service: string (required)
+      port: int  (required)
+      headers: Headers (optional)
+      pathPrefix: string (optional) # New field to specify the path prefix for the authorization requests
+      timeout: Duration (optional) # New field to specify the timeout duration for the authorization requests
+  # Other fields remain unchanged. Omitted for clarity
+```
+
+## Consequences
+<!--- Discuss the impact of this change, including what becomes easier or more complicated as a result. -->
+
+1. **Improved Flexibility**: Users can now tailor the authorization requests to match the requirements of their external services.
+2. **Enhanced Reliability**: The timeout setting helps adjust waiting time for the responses depending on the authorization service characteristics, improving the system's resilience to slow or unresponsive external services.
+3. **Documentation Updates**: The IstioCR documentation needs to be updated to reflect the new configuration options.
+4. **E2E Testing**: This feature requires end-to-end testing to ensure that the new parameters work as expected and do not introduce regressions.

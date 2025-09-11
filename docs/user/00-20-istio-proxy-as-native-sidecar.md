@@ -3,7 +3,7 @@ Understand the differences between regular and native sidecar containers, learn 
 
 ## Advantages of Native Sidecar Containers
 
-Every Pod in the Istio mesh gets an additional `istio-proxy` sidecar container, which intercepts network traffic to provide Istio features. For sidecar proxies, Istio uses two types of sidecar containers: regular sidecars and native sidecars. Native sidecars are init containers that have **restartPolicy** set to `Always`. This new approach, introduced with Kubernetes 1.28, allows for controlling the startup and shutdown sequence of containers within a Pod, which is not possible with sidecars deployed as regular containers.
+Every Pod in the Istio mesh gets an additional `istio-proxy` sidecar container, which intercepts network traffic to provide Istio features. For sidecar proxies, Istio uses two types of sidecar containers: regular sidecars and native sidecars. Native sidecars are init containers that have **restartPolicy** set to `Always`. This approach, introduced with Kubernetes 1.28, allows for controlling the startup and shutdown sequence of containers within a Pod, which is not possible with sidecars deployed as regular containers.
 
 Using native sidecars resolves the following problems that regular sidecars cause:
 - When an application container starts before the `istio-proxy` sidecar container is ready, the application doesn't have network access at startup.

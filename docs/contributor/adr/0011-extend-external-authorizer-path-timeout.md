@@ -34,11 +34,3 @@ spec:
       timeout: Duration (optional) # New field to specify the timeout duration for the authorization requests
   # Other fields remain unchanged. Omitted for clarity
 ```
-
-## Consequences
-<!--- Discuss the impact of this change, including what becomes easier or more complicated as a result. -->
-
-1. **Improved Flexibility**: Users can now tailor the authorization requests to match the requirements of their external services.
-2. **Enhanced Reliability**: The timeout setting helps adjust waiting time for the responses depending on the authorization service characteristics, improving the system's resilience to slow or unresponsive external services.
-3. **Documentation Updates**: The IstioCR documentation needs to be updated to reflect the new configuration options.
-4. **E2E Testing**: This feature requires end-to-end testing to ensure that the new parameters work as expected and do not introduce regressions.

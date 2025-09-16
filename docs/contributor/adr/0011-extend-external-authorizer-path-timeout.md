@@ -2,7 +2,7 @@
 
 ## Status
 <!--- Specify the current state of the ADR, such as whether it is proposed, accepted, rejected, deprecated, superseded, etc. -->
-Proposed
+Accepted
 
 ## Context
 <!--- Describe the issue or problem that is motivating this decision or change. -->

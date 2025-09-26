@@ -4,7 +4,8 @@ metadata:
   name: ${CLUSTER_NAME}
 spec:
   secretBindingName: ${GARDENER_PROVIDER_SECRET_NAME}
-  cloudProfileName: gcp
+  cloudProfile:
+    name: gcp
   region: ${GARDENER_REGION}
   purpose: evaluation
   controlPlane:

@@ -42,6 +42,7 @@ runs:
         GARDENER_PROVIDER: ${{ inputs.gardener_provider }}
         GARDENER_PROJECT_NAME: ${{ inputs.gardener_project_name }}
         PIPELINE_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}
+        COMPATIBILITY_TEST: "true"
       run: "${{ github.workspace }}/hack/ci/scripts-v2/provision-gardener.sh"
     - name: Run integration tests
       shell: bash

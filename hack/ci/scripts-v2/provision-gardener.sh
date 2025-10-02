@@ -45,7 +45,11 @@ if [ ! -f "${script_dir}/set-${GARDENER_PROVIDER}-gardener.sh" ]; then
     exit 2
 fi
 set -a # autoexport variables in the sourced file
-source "${script_dir}/set-${GARDENER_PROVIDER}-gardener.sh"
+if [ -n "${COMPATIBILITY_TEST}" ]; then
+  source "${script_dir}/set-${GARDENER_PROVIDER}-compatibility-gardener.sh"
+else
+  source "${script_dir}/set-${GARDENER_PROVIDER}-gardener.sh"
+fi
 set +a
 
 requiredVars=(

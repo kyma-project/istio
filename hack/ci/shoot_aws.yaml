@@ -4,7 +4,9 @@ metadata:
   name: ${CLUSTER_NAME}
 spec:
   secretBindingName: ${GARDENER_PROVIDER_SECRET_NAME}
-  cloudProfileName: aws
+  cloudProfile:
+    kind: CloudProfile
+    name: aws
   region: ${GARDENER_REGION}
   purpose: evaluation
   controlPlane:

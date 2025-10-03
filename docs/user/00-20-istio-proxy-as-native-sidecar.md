@@ -11,10 +11,11 @@ Using native sidecars resolves the following problems that regular sidecars caus
 - An init container runs before the `istio-proxy` sidecar container, so it can't access the network.
 - A running `istio-proxy` sidecar container prevents Pods from being finished (for example, in the case of Jobs).
 
-## Default Istio Proxy Sidecar Type
+## Native Sidecars as the Default Istio Proxy Sidecar Type
 
-The Istio module configures the default type of the `istio-proxy` sidecar container, which is injected into all Pods that allow for Istio sidecar proxy injection. However, you can override this default setting for a specific Pod, allowing it to use another type of sidecar container regardless of the Istio module’s default configuration. The default `istio-proxy` sidecar type varies depending on the particular Istio module and Istio version.
+By default, the Istio module 1.22 uses `istio-proxy` native sidecar containers. This setting is configured globally and applied to all Pods that allow for Istio sidecar proxy injection. However, you can override this default setting for a specific Pod, allowing it to use regular sidecar container instead.
 
+Furthermore, if the Istio module deploys Istio version 1.27, you have the option to set the **compatibilityMode** in the Istio Custom Resource (CR) to `true`. This setting will make Istio behave as though it is version 1.26, which uses regular sidecar containers by default.
 
 Istio module version | Istio version | Default Sidecar Type
 ---------|----------|---------
@@ -23,13 +24,9 @@ Istio module version | Istio version | Default Sidecar Type
  1.22 | 1.27 | Native sidecars, unless you set **compatibilityMode** in the Istio CR to `true`
  One of the next versions after 1.22 with updated Istio | 1.28 | Native sidecars
 
-## Configuring the Type of Istio Sidecar Proxy for a Particular Workload
+## Using Regular Sidecar Containers for a Particular Workload
 
-You can configure the sidecar type explicitly for a particular workload.
-- To inject `istio-proxy` as a native sidecar container, set the `sidecar.istio.io/nativeSidecar` annotation to `"true"` on a given Pod or in the Pod template.
-- To inject `istio-proxy` as a regular sidecar container, set the `sidecar.istio.io/nativeSidecar` annotation to `"false"` on a given Pod or in the Pod template.
-
-If you do not set the annotation, the default setting is used.
+You can configure the sidecar type explicitly for a particular workload. To inject `istio-proxy` as a regular sidecar container, set the `sidecar.istio.io/nativeSidecar` annotation to `"false"` on a given Pod or in the Pod template. If you do not set the annotation, native sidecars are used.
 
 You must set the annotation at the Pod level. So, when a Pod is created by a parent resource (for example, Deployment, StatefulSet, ReplicaSet, DaemonSet, Job, CronJob), you must configure the annotation in the Pod template. See the example:
 
@@ -42,17 +39,17 @@ spec:
   template:
     metadata:
       annotations:
-        sidecar.istio.io/nativeSidecar: "true"
+        sidecar.istio.io/nativeSidecar: "false"
 ...
 ```
 
-Setting the sidecar type explicitly is especially recommended when a given workload works well only with one sidecar type and causes issues otherwise. This approach guarantees that the sidecar type doesn't change after the Istio module upgrade. A good example are Job Pods, which can't finish if the main container finishes because the `istio-proxy` sidecar container is still running. In this case, setting the `sidecar.istio.io/nativeSidecar` annotation in the Pod template solves the problem.
+Setting the sidecar type explicitly is only recommended when a specific workload requires regular sidecar containers to function properly and experiences issues otherwise. This might be necessary if you have implemented workarounds to address problems caused by regular sidecars and now need additional time to adapt to native sidecars becoming the new default.
 
 ## Support in the Istio Module
 
 The Istio module fully supports both types of sidecar containers. In particular, in case of Istio version update it detects which workloads should be restarted and this mechanism works with both sidecar types.
 
-## Example of Istio Proxy as Native Sidecar
+## Example: Differences Between Regular and Native Sidecars
 
 1. Create a `test` namespace with Istio injection enabled:
 

@@ -5,16 +5,12 @@
 Pods created by Jobs remain stuck in the `NotReady` status after the main containers have finished.
 
 ## Cause
+By default, the Istio module injects `istio-proxy` containers as native sidecars. However, you can also set the annotation `sidecar.istio.io/nativeSidecar` annotation to `"false"` for a specific Pod. This annotation overwrites the default setting and indicates that instead of native sidecars, the annotated Pod must be injected with a regular sidecar container.
 
-The `istio-proxy` sidecar runs as a regular sidecar container, independently of the application container. There is no mechanism that shuts down the `istio-proxy` sidecar when the main container completes its tasks. Consequently, the Pod is also running.
+When the `istio-proxy` container is a regular sidecar container, it runs independently of the application container. There is no mechanism that shuts down the `istio-proxy` sidecar when the main container completes its tasks. Consequently, the Pod is also running.
 
 ## Solution
-
-Inject `istio-proxy` as a native sidecar container.
-
-To do this, set the `sidecar.istio.io/nativeSidecar` annotation in the Pod template to `"true"`.
-
-See the following example:
+Check if your Pod or the Pod's template contains the annotation `sidecar.istio.io/nativeSidecar: "false"`. See the following example of a Job annotated with `sidecar.istio.io/nativeSidecar: "false"`:
 
 ```
 apiVersion: batch/v1
@@ -26,7 +22,7 @@ spec:
   template:
     metadata:
       annotations:
-        sidecar.istio.io/nativeSidecar: "true"
+        sidecar.istio.io/nativeSidecar: "false"
     spec:
       containers:
       - name: test-job
@@ -35,7 +31,10 @@ spec:
       restartPolicy: Never
 ```
 
-This annotation instructs Istio to run `istio-proxy` as a native sidecar container. Then, the lifecycle of the native sidecar depends on the main application container, so `istio-proxy` finishes automatically at the same time as the main application container. After this, the Pod's state changes to `Completed`.
+If the annotation is present, determine the reason for applying the annotation to your workload and, if possible, remove the annotation.
+
+Removing the annotation `sidecar.istio.io/nativeSidecar: "false"` from a Pod template, allows the Istio module to run this container as a native sidecar. Then, the lifecycle of the native sidecar depends on the main application container, so `istio-proxy` finishes automatically at the same time as the main application container. After this, the Pod's state changes to `Completed`.
+
 
 ## Related Links
 

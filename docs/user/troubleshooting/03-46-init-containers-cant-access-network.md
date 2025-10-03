@@ -5,16 +5,13 @@
 Init containers can't access the network.
 
 ## Cause
+If Istio injection is enabled, the `istio-proxy` container intercepts all network traffic from all containers. By default, the Istio module injects `istio-proxy` containers as native sidecars. However, you can also set the annotation `sidecar.istio.io/nativeSidecar` annotation to `"false"` for a specific Pod. This annotation overwrites the default setting and indicates that instead of native sidecars, the annotated Pod must be injected with a regular sidecar container.
 
-If Istio injection is enabled, the `istio-proxy` container intercepts all network traffic from all containers. Init containers are started before regular containers. This means that `istio-proxy` running as a regular sidecar doesn't work when init containers are running. As a result, init containers don't have network access.
+Init containers are started before regular containers. If `istio-proxy` is a regular sidecar, it doesn't work when init containers are running. As a result, init containers don't have network access.
 
 ## Solution
 
-Inject `istio-proxy` as a native sidecar container.
-
-To do this, set the `sidecar.istio.io/nativeSidecar` annotation in the Pod to `"true"`.
-
-See the following example:
+Check if your Pod or the Pod's template contains the annotation `sidecar.istio.io/nativeSidecar: "false"`. See the following example of a Pod annotated with `sidecar.istio.io/nativeSidecar: "false"`:
 
 ```
 cat <<EOF | kubectl apply -f -
@@ -24,7 +21,7 @@ metadata:
   name: init-container-network-check
   namespace: test
   annotations:
-    sidecar.istio.io/nativeSidecar: "true"
+    sidecar.istio.io/nativeSidecar: "false"
 spec:
   initContainers:
   - name: init
@@ -38,7 +35,9 @@ spec:
 EOF
 ```
 
-This annotation instructs Istio to run `istio-proxy` as a native sidecar container. In this case, Istio injects `istio-proxy` as the first init container, so all containers running later are able to access the network.
+If the annotation is present, determine the reason for applying the annotation to your workload and, if possible, remove the annotation.
+
+Removing the annotation `sidecar.istio.io/nativeSidecar: "false"` from a Pod template, allows the Istio module to run this container as a native sidecar. In this case, Istio injects `istio-proxy` as the first init container, so all containers running later are able to access the network.
 
 ## Related Links
 

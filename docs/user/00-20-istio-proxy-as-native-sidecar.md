@@ -58,7 +58,9 @@ The Istio module fully supports both types of sidecar containers. In particular,
     kubectl label namespace test istio-injection=enabled
     ```
 
-2. Create a workload with istio-proxy running as a native sidecar container:
+2. Create a workload with `istio-proxy` running as a native sidecar container. 
+
+    The Pod template does not contain the annotation `sidecar.istio.io/nativeSidecar: "false"`, so the `istio-proxy` is injected as a native sidecar container.
 
     ```bash
     kubectl apply -f - <<EOF
@@ -69,9 +71,6 @@ The Istio module fully supports both types of sidecar containers. In particular,
       namespace: test
     spec:
       template:
-        metadata:
-          annotations:
-            sidecar.istio.io/nativeSidecar: "true"
         spec:
           containers:
           - name: test-job

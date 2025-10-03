@@ -10,7 +10,7 @@ By default, the Istio module injects `istio-proxy` containers as native sidecars
 When the `istio-proxy` container is a regular sidecar container, it runs independently of the application container. There is no mechanism that shuts down the `istio-proxy` sidecar when the main container completes its tasks. Consequently, the Pod is also running.
 
 ## Solution
-Check if your Pod or the Pod's template contains the annotation `sidecar.istio.io/nativeSidecar: "false"`. See the following example of a Job annotated with `sidecar.istio.io/nativeSidecar: "false"`:
+Check if your Pod or the Pod's template contains the annotation `sidecar.istio.io/nativeSidecar: "false"`. See the following example of an annotated Job:
 
 ```
 apiVersion: batch/v1

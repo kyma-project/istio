@@ -11,7 +11,7 @@ Init containers are started before regular containers. If `istio-proxy` is a reg
 
 ## Solution
 
-Check if your Pod or the Pod's template contains the annotation `sidecar.istio.io/nativeSidecar: "false"`. See the following example of a Pod annotated with `sidecar.istio.io/nativeSidecar: "false"`:
+Check if your Pod or the Pod's template contains the annotation `sidecar.istio.io/nativeSidecar: "false"`. See the following example of an annotated Pod:
 
 ```
 cat <<EOF | kubectl apply -f -

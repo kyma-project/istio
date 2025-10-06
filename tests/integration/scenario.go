@@ -73,7 +73,7 @@ func initScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^Tracing is enabled for the mesh using provider "([^"]*)"$`, steps.EnableTracing)
 	ctx.Step(`^Virtual service "([^"]*)" exposing service "([^"]*)" by gateway "([^"]*)" is configured in namespace "([^"]*)"$`, steps.CreateVirtualService)
 	ctx.Step(`^Virtual service "([^"]*)" exposing service "([^"]*)" with port "([^"]*)" by gateway "([^"]*)" is configured in namespace "([^"]*)"$`, steps.CreateVirtualServiceWithPort)
-	ctx.Step(`^Httpbin application "([^"]*)" deployment with proxy as a native sidecar is created in namespace "([^"]*)"$`, steps.ApplicationWithInitSidecarCreated)
+	ctx.Step(`^Httpbin application "([^"]*)" deployment with proxy as a regular sidecar is created in namespace "([^"]*)"$`, steps.ApplicationWithRegularSidecarCreated)
 	ctx.Step(`^Application "([^"]*)" in namespace "([^"]*)" has init container with Istio proxy "([^"]*)"$`, steps.ApplicationHasInitContainerWithIstioProxy)
 	ctx.Step(`^Application "([^"]*)" in namespace "([^"]*)" has required version of proxy as an init container$`, steps.ApplicationHasRequiredVersionInitContainerWithIstioProxy)
 	ctx.Step(`^There are continuous requests to host "([^"]*)" and path "([^"]*)"`, zd.StartZeroDowntimeTest)

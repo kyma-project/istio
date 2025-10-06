@@ -15,14 +15,14 @@ Feature: Uninstall Istio module
     And Istio injection is "enabled" in namespace "default"
     And Httpbin application "test-app" deployment is created in namespace "default"
     And Application pod "test-app" in namespace "default" has Istio proxy "present"
-    And Httpbin application "test-app-init-container" deployment with proxy as a native sidecar is created in namespace "default"
-    And Application "test-app-init-container" in namespace "default" has init container with Istio proxy "present"
+    And Httpbin application "test-app-regular-container" deployment with proxy as a regular sidecar is created in namespace "default"
+    And Application pod "test-app-regular-container" in namespace "default" has Istio proxy "present"
     When "Istio CR" "istio-sample" in namespace "kyma-system" is deleted
     Then "Istio CR" is not present on cluster
     And Istio CRDs "should not" be present on cluster
     And Namespace "istio-system" is "not present"
     And Application pod "test-app" in namespace "default" has Istio proxy "not present"
-    And Application "test-app-init-container" in namespace "default" has init container with Istio proxy "not present"
+    And Application pod "test-app-regular-container" in namespace "default" has Istio proxy "not present"
 
   Scenario: Uninstallation respects the Istio resources created by the user
     Given Istio CR "istio-sample" from "istio_cr_template" is applied in namespace "kyma-system"

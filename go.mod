@@ -14,7 +14,7 @@ require (
 	github.com/go-logr/logr v1.4.3
 	github.com/imdario/mergo v1.0.0
 	github.com/masterminds/semver v1.5.0
-	github.com/onsi/ginkgo/v2 v2.25.3
+	github.com/onsi/ginkgo/v2 v2.26.0
 	github.com/onsi/gomega v1.38.2
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.11.1

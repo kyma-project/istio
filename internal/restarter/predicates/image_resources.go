@@ -98,7 +98,7 @@ func hasSidecarContainerWithWithDifferentImage(pod v1.Pod, expectedImage Sidecar
 }
 
 func hasDifferentSidecarResources(pod v1.Pod, expectedResources v1.ResourceRequirements) bool {
-	for _, container := range pod.Spec.Containers {
+	for _, container := range append(pod.Spec.Containers, pod.Spec.InitContainers...) {
 		if isContainerIstioSidecar(container) && !containerHasResources(container, expectedResources) {
 			return true
 		}

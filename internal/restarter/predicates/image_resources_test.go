@@ -5,6 +5,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -35,7 +36,7 @@ var _ = Describe("Matches", func() {
 
 })
 
-var _ = Describe("handling of proxy sidecar as container or init container", func() {
+var _ = Describe("handling of image bump of proxy sidecar as container or init container", func() {
 	It("should return true when sidecar is a regular container in the Pod", func() {
 		// given
 		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", map[string]string{}, false)
@@ -52,6 +53,50 @@ var _ = Describe("handling of proxy sidecar as container or init container", fun
 		// given
 		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", map[string]string{}, true)
 		predicate := predicates.NewImageResourcesPredicate(predicates.NewSidecarImage("istio", "1.22.0"), v1.ResourceRequirements{})
+
+		// when
+		shouldRestart := predicate.Matches(pod)
+
+		// then
+		Expect(shouldRestart).To(BeTrue())
+	})
+})
+
+var _ = Describe("handling of resources change of proxy sidecar as container or init container", func() {
+	It("should return true when sidecar is a regular container in the Pod", func() {
+		// given
+		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", map[string]string{}, false)
+		predicate := predicates.NewImageResourcesPredicate(predicates.NewSidecarImage("istio", "1.21.0"), v1.ResourceRequirements{
+			Requests: v1.ResourceList{
+				v1.ResourceCPU:    resource.MustParse("100m"),
+				v1.ResourceMemory: resourceMustParse("128Mi"),
+			},
+			Limits: v1.ResourceList{
+				v1.ResourceCPU:    resourceMustParse("200m"),
+				v1.ResourceMemory: resourceMustParse("256Mi"),
+			},
+		})
+
+		// when
+		shouldRestart := predicate.Matches(pod)
+
+		// then
+		Expect(shouldRestart).To(BeTrue())
+	})
+
+	It("should return true when sidecar is an init container in the Pod", func() {
+		// given
+		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", map[string]string{}, true)
+		predicate := predicates.NewImageResourcesPredicate(predicates.NewSidecarImage("istio", "1.21.0"), v1.ResourceRequirements{
+			Requests: v1.ResourceList{
+				v1.ResourceCPU:    resource.MustParse("100m"),
+				v1.ResourceMemory: resourceMustParse("128Mi"),
+			},
+			Limits: v1.ResourceList{
+				v1.ResourceCPU:    resourceMustParse("200m"),
+				v1.ResourceMemory: resourceMustParse("256Mi"),
+			},
+		})
 
 		// when
 		shouldRestart := predicate.Matches(pod)
@@ -141,4 +186,12 @@ func createPodWithProxySidecar(name, namespace, proxyIstioVersion string, annota
 		},
 		Spec: spec,
 	}
+}
+
+func resourceMustParse(s string) resource.Quantity {
+	q, err := resource.ParseQuantity(s)
+	if err != nil {
+		panic(err)
+	}
+	return q
 }

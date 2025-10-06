@@ -13,7 +13,7 @@ Using native sidecars resolves the following problems that regular sidecars caus
 
 ## Native Sidecars as the Default Istio Proxy Sidecar Type
 
-By default, the Istio module 1.22 uses `istio-proxy` native sidecar containers. This setting is configured globally and applied to all Pods that allow for Istio sidecar proxy injection. However, you can override this default setting for a specific Pod, allowing it to use a regular sidecar container instead.
+By default, Istio module 1.22 and later versions use `istio-proxy` native sidecar containers. This setting is configured globally and applied to all Pods that allow for Istio sidecar proxy injection. However, you can override this default setting for a specific Pod, allowing it to use a regular sidecar container instead.
 
 Furthermore, as long as the Istio module deploys Istio version 1.27, you have the option to set the **compatibilityMode** in the Istio Custom Resource (CR) to `true`. This setting makes Istio behave as version 1.26, which uses regular sidecar containers by default.
 

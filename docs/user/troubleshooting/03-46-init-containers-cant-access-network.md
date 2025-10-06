@@ -5,7 +5,7 @@
 Init containers can't access the network.
 
 ## Cause
-If Istio injection is enabled, the `istio-proxy` container intercepts all network traffic from all containers. By default, the Istio module injects `istio-proxy` containers as native sidecars. However, you can also set the annotation `sidecar.istio.io/nativeSidecar` annotation to `"false"` for a specific Pod. This annotation overwrites the default setting and indicates that instead of native sidecars, the annotated Pod must be injected with a regular sidecar container.
+If Istio injection is enabled, the `istio-proxy` container intercepts all network traffic from all containers. By default, the Istio module injects `istio-proxy` containers as native sidecars. However, you can also set the annotation `sidecar.istio.io/nativeSidecar` to `"false"` for a specific Pod. This annotation overwrites the default setting and indicates that instead of native sidecars, the annotated Pod must be injected with a regular sidecar container.
 
 Init containers are started before regular containers. If `istio-proxy` is a regular sidecar, it doesn't work when init containers are running. As a result, init containers don't have network access.
 

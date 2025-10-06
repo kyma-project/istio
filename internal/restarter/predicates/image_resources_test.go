@@ -69,11 +69,11 @@ var _ = Describe("handling of resources change of proxy sidecar as container or 
 		predicate := predicates.NewImageResourcesPredicate(predicates.NewSidecarImage("istio", "1.21.0"), v1.ResourceRequirements{
 			Requests: v1.ResourceList{
 				v1.ResourceCPU:    resource.MustParse("100m"),
-				v1.ResourceMemory: resourceMustParse("128Mi"),
+				v1.ResourceMemory: resource.MustParse("128Mi"),
 			},
 			Limits: v1.ResourceList{
-				v1.ResourceCPU:    resourceMustParse("200m"),
-				v1.ResourceMemory: resourceMustParse("256Mi"),
+				v1.ResourceCPU:    resource.MustParse("200m"),
+				v1.ResourceMemory: resource.MustParse("256Mi"),
 			},
 		})
 
@@ -90,11 +90,11 @@ var _ = Describe("handling of resources change of proxy sidecar as container or 
 		predicate := predicates.NewImageResourcesPredicate(predicates.NewSidecarImage("istio", "1.21.0"), v1.ResourceRequirements{
 			Requests: v1.ResourceList{
 				v1.ResourceCPU:    resource.MustParse("100m"),
-				v1.ResourceMemory: resourceMustParse("128Mi"),
+				v1.ResourceMemory: resource.MustParse("128Mi"),
 			},
 			Limits: v1.ResourceList{
-				v1.ResourceCPU:    resourceMustParse("200m"),
-				v1.ResourceMemory: resourceMustParse("256Mi"),
+				v1.ResourceCPU:    resource.MustParse("200m"),
+				v1.ResourceMemory: resource.MustParse("256Mi"),
 			},
 		})
 
@@ -186,12 +186,4 @@ func createPodWithProxySidecar(name, namespace, proxyIstioVersion string, annota
 		},
 		Spec: spec,
 	}
-}
-
-func resourceMustParse(s string) resource.Quantity {
-	q, err := resource.ParseQuantity(s)
-	if err != nil {
-		panic(err)
-	}
-	return q
 }

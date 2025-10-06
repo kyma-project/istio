@@ -94,7 +94,7 @@ func main() {
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
 
-	err := os.Setenv("GODEBUG", "fips140=only,tlsmlkem=0")
+	err := os.Setenv("GODEBUG", "fips140=on,tlsmlkem=0")
 	if err != nil {
 		return
 	}

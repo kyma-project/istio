@@ -92,12 +92,19 @@ var _ = Describe("RestartProxies", func() {
 		Expect(podsListerMock.Predicates[0][1]).To(BeAssignableToTypeOf(&predicates.PrometheusMergeRestartPredicate{}))
 		Expect(podsListerMock.Predicates[0][2]).To(BeAssignableToTypeOf(&predicates.ImageResourcesPredicate{}))
 		Expect(podsListerMock.Predicates[0][3]).To(BeAssignableToTypeOf(&predicates.NativeSidecarRestartPredicate{}))
+		// the one predicate bellow might start failing if you add a new predicate at the end of the list that creates all the predicates above
+		// it is because the order has coupling to the implementation
+		// go deeper into the invocation chain, and you will find that there is another place where KymaWorkload or Customer workload is injected
 		Expect(podsListerMock.Predicates[0][4]).To(BeAssignableToTypeOf(&predicates.KymaWorkloadRestartPredicate{}))
+
 		Expect(podsListerMock.Predicates[1]).To(HaveLen(5))
 		Expect(podsListerMock.Predicates[1][0]).To(BeAssignableToTypeOf(&predicates.CompatibilityRestartPredicate{}))
 		Expect(podsListerMock.Predicates[1][1]).To(BeAssignableToTypeOf(&predicates.PrometheusMergeRestartPredicate{}))
 		Expect(podsListerMock.Predicates[1][2]).To(BeAssignableToTypeOf(&predicates.ImageResourcesPredicate{}))
 		Expect(podsListerMock.Predicates[1][3]).To(BeAssignableToTypeOf(&predicates.NativeSidecarRestartPredicate{}))
+		// the one predicate bellow might start failing if you add a new predicate at the end of the list that creates all the predicates above
+		// it is because the order has coupling to the implementation
+		// go deeper into the invocation chain, and you will find that there is another place where KymaWorkload or Customer workload is injected
 		Expect(podsListerMock.Predicates[1][4]).To(BeAssignableToTypeOf(&predicates.CustomerWorkloadRestartPredicate{}))
 
 		Expect(podsListerMock.Limits).To(HaveLen(2))

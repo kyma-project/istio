@@ -19,36 +19,27 @@ func NewNativeSidecarRestartPredicate(istioCR *v1alpha2.Istio) *NativeSidecarRes
 }
 
 func (p *NativeSidecarRestartPredicate) Matches(pod v1.Pod) bool {
-	isNativeSidecar := false
+	isPodWithNativeSidecar := false
 	for _, initContainer := range pod.Spec.InitContainers {
 		if initContainer.Name == "istio-proxy" {
-			isNativeSidecar = true
+			isPodWithNativeSidecar = true
 			break
 		}
 	}
-
-	if !isNativeSidecar && !p.compatibilityMode && pod.Annotations[nativeSidecarAnnotation] == "" {
-		return true
-	}
-
-	if !isNativeSidecar && !p.compatibilityMode && pod.Annotations[nativeSidecarAnnotation] == "true" {
-		return true
-	}
-
-	if !isNativeSidecar && p.compatibilityMode && pod.Annotations[nativeSidecarAnnotation] == "true" {
-		return true
-	}
-
-	if isNativeSidecar && p.compatibilityMode && pod.Annotations[nativeSidecarAnnotation] == "" {
-		return true
-	}
-
-	if isNativeSidecar && !p.compatibilityMode && pod.Annotations[nativeSidecarAnnotation] == "false" {
-		return true
-	}
-
-	if isNativeSidecar && p.compatibilityMode && pod.Annotations[nativeSidecarAnnotation] == "false" {
-		return true
+	if isPodWithNativeSidecar {
+		if p.compatibilityMode && pod.Annotations[nativeSidecarAnnotation] != "true" {
+			return true
+		}
+		if !p.compatibilityMode && pod.Annotations[nativeSidecarAnnotation] == "false" {
+			return true
+		}
+	} else {
+		if !p.compatibilityMode && pod.Annotations[nativeSidecarAnnotation] != "false" {
+			return true
+		}
+		if p.compatibilityMode && pod.Annotations[nativeSidecarAnnotation] == "true" {
+			return true
+		}
 	}
 
 	return false

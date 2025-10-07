@@ -24,15 +24,15 @@ const (
 	extAuthzImage = "gcr.io/istio-testing/ext-authz:latest"
 )
 
-func CreateDeployment(ctx context.Context, appName, namespace string, container corev1.Container, proxyAsInitContainer bool, volumes ...corev1.Volume) (context.Context, error) {
+func CreateDeployment(ctx context.Context, appName, namespace string, container corev1.Container, proxyAsRegularContainer bool, volumes ...corev1.Volume) (context.Context, error) {
 	k8sClient, err := testcontext.GetK8sClientFromContext(ctx)
 	if err != nil {
 		return ctx, err
 	}
 
-	annotations := map[string]string{}
-	if proxyAsInitContainer {
-		annotations["sidecar.istio.io/nativeSidecar"] = "true"
+	podTemplateAnnotations := map[string]string{}
+	if proxyAsRegularContainer {
+		podTemplateAnnotations["sidecar.istio.io/nativeSidecar"] = "false"
 	}
 
 	dep := v1.Deployment{
@@ -54,7 +54,7 @@ func CreateDeployment(ctx context.Context, appName, namespace string, container 
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      map[string]string{"app": appName},
-					Annotations: annotations,
+					Annotations: podTemplateAnnotations,
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
@@ -81,7 +81,7 @@ func CreateDeployment(ctx context.Context, appName, namespace string, container 
 	return ctx, err
 }
 
-func CreateApplicationDeployment(ctx context.Context, appName, image, namespace string, proxyAsInitContainer bool) (context.Context, error) {
+func CreateApplicationDeployment(ctx context.Context, appName, image, namespace string, proxyAsRegularContainer bool) (context.Context, error) {
 	c := corev1.Container{
 		Name:  appName,
 		Image: image,
@@ -97,7 +97,7 @@ func CreateApplicationDeployment(ctx context.Context, appName, image, namespace 
 		},
 	}
 
-	return CreateDeployment(ctx, appName, namespace, c, proxyAsInitContainer)
+	return CreateDeployment(ctx, appName, namespace, c, proxyAsRegularContainer)
 }
 
 func ApplicationHasProxyResourcesSetToCpuAndMemory(ctx context.Context, appName, appNamespace, resourceType, cpu, memory string) error {
@@ -124,7 +124,7 @@ func ApplicationHasProxyResourcesSetToCpuAndMemory(ctx context.Context, appName,
 
 		hasResources := false
 		for _, pod := range podList.Items {
-			for _, container := range pod.Spec.Containers {
+			for _, container := range append(pod.Spec.Containers, pod.Spec.InitContainers...) {
 				if container.Name != "istio-proxy" {
 					continue
 				}
@@ -181,7 +181,7 @@ func ApplicationPodShouldHaveIstioProxy(ctx context.Context, appName, namespace,
 
 		hasProxy := false
 		for _, pod := range podList.Items {
-			for _, container := range pod.Spec.Containers {
+			for _, container := range append(pod.Spec.Containers, pod.Spec.InitContainers...) {
 				if container.Name == "istio-proxy" {
 					hasProxy = true
 				}
@@ -238,7 +238,7 @@ func ApplicationPodShouldHaveIstioProxyInRequiredVersion(ctx context.Context, ap
 
 		hasProxyInVersion := false
 		for _, pod := range podList.Items {
-			for _, container := range pod.Spec.Containers {
+			for _, container := range append(pod.Spec.Containers, pod.Spec.InitContainers...) {
 				if container.Name != "istio-proxy" {
 					continue
 				}
@@ -346,7 +346,7 @@ func CreateServiceWithPort(ctx context.Context, appName, namespace string, port,
 	return ctx, err
 }
 
-func ApplicationWithInitSidecarCreated(ctx context.Context, appName, namespace string) (context.Context, error) {
+func ApplicationWithRegularSidecarCreated(ctx context.Context, appName, namespace string) (context.Context, error) {
 	ctx, err := CreateApplicationDeployment(ctx, appName, httpbinImage, namespace, true)
 	if err != nil {
 		return ctx, err

@@ -3,6 +3,9 @@ package steps
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/avast/retry-go"
 	"github.com/kyma-project/istio/operator/tests/testcontext"
 	"github.com/pkg/errors"
@@ -11,8 +14,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strconv"
-	"strings"
 )
 
 type resourceStruct struct {
@@ -77,7 +78,7 @@ func getPodsControlledByDeployment(k8sClient client.Client, depNamespace string,
 }
 
 func getContainerResources(pod v1.Pod, container, resourceType string) (resourceStruct, error) {
-	for _, c := range pod.Spec.Containers {
+	for _, c := range append(pod.Spec.Containers, pod.Spec.InitContainers...) {
 		if c.Name == container {
 			switch resourceType {
 			case "limits":

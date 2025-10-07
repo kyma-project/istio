@@ -69,6 +69,7 @@ func (p *ProxyRestart) RestartProxies(
 		compatibiltyPredicate,
 		prometheusMergePredicate,
 		predicates.NewImageResourcesPredicate(expectedImage, expectedResources),
+		predicates.NewNativeSidecarRestartPredicate(istioCR),
 	}
 
 	err = p.restartKymaProxies(ctx, predicates)

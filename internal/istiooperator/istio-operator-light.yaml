@@ -137,8 +137,6 @@ spec:
           value: "6h"
         - name: METRIC_GRACEFUL_DELETION_INTERVAL
           value: "6h"
-        - name: ENABLE_NATIVE_SIDECARS
-          value: "false"
         hpaSpec:
           scaleTargetRef:
             apiVersion: apps/v1

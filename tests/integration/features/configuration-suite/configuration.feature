@@ -16,9 +16,13 @@ Feature: Configuration of Istio module
     And Istio CR "istio-sample" in namespace "kyma-system" has status "Ready"
     And Istio injection is "enabled" in namespace "default"
     And Httpbin application "test-app" deployment is created in namespace "default"
+    And Httpbin application "test-app-regular-container" deployment with proxy as a regular sidecar is created in namespace "default"
     And Application "test-app" in namespace "default" has proxy with "requests" set to cpu - "30m" and memory - "190Mi"
     And Application "test-app" in namespace "default" has proxy with "limits" set to cpu - "700m" and memory - "700Mi"
+    And Application "test-app-regular-container" in namespace "default" has proxy with "requests" set to cpu - "30m" and memory - "190Mi"
+    And Application "test-app-regular-container" in namespace "default" has proxy with "limits" set to cpu - "700m" and memory - "700Mi"
     And "Deployment" "test-app" in namespace "default" is ready
+    And "Deployment" "test-app-regular-container" in namespace "default" is ready
     And Template value "ProxyCPURequest" is set to "80m"
     And Template value "ProxyMemoryRequest" is set to "230Mi"
     And Template value "ProxyCPULimit" is set to "900m"
@@ -28,6 +32,9 @@ Feature: Configuration of Istio module
     Then "Deployment" "test-app" in namespace "default" is ready
     And Application "test-app" in namespace "default" has proxy with "requests" set to cpu - "80m" and memory - "230Mi"
     And Application "test-app" in namespace "default" has proxy with "limits" set to cpu - "900m" and memory - "900Mi"
+    And "Deployment" "test-app-regular-container" in namespace "default" is ready
+    And Application "test-app-regular-container" in namespace "default" has proxy with "requests" set to cpu - "80m" and memory - "230Mi"
+    And Application "test-app-regular-container" in namespace "default" has proxy with "limits" set to cpu - "900m" and memory - "900Mi"
 
   Scenario: Ingress Gateway adds correct X-Envoy-External-Address header after updating numTrustedProxies
     Given Template value "NumTrustedProxies" is set to "1"

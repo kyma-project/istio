@@ -94,11 +94,6 @@ func main() {
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
 
-	err := os.Setenv("GODEBUG", "fips140=on,tlsmlkem=0")
-	if err != nil {
-		return
-	}
-
 	rateLimiter := controllers.RateLimiter{
 		Burst:           flagVar.rateLimiterBurst,
 		Frequency:       flagVar.rateLimiterFrequency,
@@ -109,7 +104,7 @@ func main() {
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
 	// We configure the Istio logging here to make it visible that global log config is updated instead of hiding it in the scope of istio package.
-	err = istio.ConfigureIstioLogScopes()
+	err := istio.ConfigureIstioLogScopes()
 	if err != nil {
 		setupLog.Error(err, "Unable to configure Istio log scopes")
 		os.Exit(1)

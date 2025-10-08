@@ -15,7 +15,7 @@ Check whether `istio-proxy` is declared as **initContainer** or **container**.
 
 - If it is an **initContainer**, it means that `istio-proxy` already runs as a native sidecar. Since native sidecars do not cause networking problems with init containers, the root cause of the issue is not related to the type of containers used by Istio proxies.
    
-- If `istio-proxy` is declared as a regular container, use a native sidecar insted. To do this, apply the annotation `sidecar.istio.io/nativeSidecar=true` on the Pod or in the Pod template. See the following example:
+- If `istio-proxy` is declared as a regular container, switch to using a native sidecar insted. To do this, apply the annotation `sidecar.istio.io/nativeSidecar=true` on the Pod or in the Pod template. See the following example:
    
   ```
   apiVersion: v1

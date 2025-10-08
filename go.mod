@@ -21,7 +21,7 @@ require (
 	github.com/thoas/go-funk v0.9.3
 	gitlab.com/rodrigoodhin/gocure v0.0.0-20220718065339-f14dfe79276a
 	golang.org/x/exp v0.0.0-20250506013437-ce4c2cf36ca6 // indirect
-	golang.org/x/time v0.13.0
+	golang.org/x/time v0.14.0
 	google.golang.org/protobuf v1.36.10
 	gopkg.in/inf.v0 v0.9.1
 	gopkg.in/yaml.v3 v3.0.1

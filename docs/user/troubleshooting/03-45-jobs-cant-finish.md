@@ -5,7 +5,7 @@
 Pods created by Jobs remain stuck in the `NotReady` status after the main containers have finished.
 
 ## Cause
-By default, the Istio module injects `istio-proxy` containers as native sidecars. However, you can also set the annotation `sidecar.istio.io/nativeSidecar` annotation to `"false"` for a specific Pod. This annotation overwrites the default setting and indicates that instead of native sidecars, the annotated Pod must be injected with a regular sidecar container.
+By default, the Istio module injects `istio-proxy` containers as native sidecars. However, you can also set the annotation `sidecar.istio.io/nativeSidecar` to `"false"` for a specific Pod. This annotation overwrites the default setting and indicates that instead of native sidecars, the annotated Pod must be injected with a regular sidecar container.
 
 When the `istio-proxy` container is a regular sidecar container, it runs independently of the application container. There is no mechanism that shuts down the `istio-proxy` sidecar when the main container completes its tasks. Consequently, the Pod is also running.
 

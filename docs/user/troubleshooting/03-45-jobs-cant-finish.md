@@ -7,15 +7,15 @@ Pods created by Jobs remain stuck in the `NotReady` status after the main contai
 ## Cause
 By default, Istio module 1.22 and later versions inject `istio-proxy` containers as native sidecars. However, you can also set the annotation `sidecar.istio.io/nativeSidecar` to `"false"` for a specific Pod. This annotation overwrites the default setting and indicates that instead of native sidecars, the annotated Pod must be injected with a regular `istio-proxy` container.
 
-When the `istio-proxy` container is a regular container, it runs independently of the application container. There is no mechanism that shuts down the `istio-proxy` regular container when the main container completes its tasks. Consequently, the Pod is also running.
+When `istio-proxy` is a regular container, it runs independently of the application container. There is no mechanism that shuts down the `istio-proxy` regular container when the main container completes its tasks. Consequently, the Pod is also running.
 
 ## Solution
 
 Check whether `istio-proxy` is declared as **initContainer** or **container**.
 
-- If it is an **initContainer**, it means that `istio-proxy` already runs as a native sidecar. Since native sidecars do not cause problems with not finished Jobs, the root cause of the issue is not related to the type of containers used by Istio proxies.
+- If it is an **initContainer**, it means that `istio-proxy` already runs as a native sidecar. Since native sidecars do not cause problems with incomplete Jobs, the root cause of the issue is not related to the type of containers used by Istio proxies.
    
-- If `istio-proxy` is declared as a regular container, switch to using a native sidecar insted. To do this, apply the annotation `sidecar.istio.io/nativeSidecar="true"` on the Pod or in the Pod template. See the following example:
+- If `istio-proxy` is declared as a regular container, use a native sidecar insted. To do this, apply the annotation `sidecar.istio.io/nativeSidecar="true"` on the Pod or in the Pod template. See the following example:
 
   ```
   apiVersion: batch/v1

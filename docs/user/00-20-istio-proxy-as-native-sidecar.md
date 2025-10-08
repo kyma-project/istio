@@ -7,13 +7,13 @@ Every Pod in the Istio mesh gets an additional `istio-proxy` container, which in
 
 Using native sidecars resolves the following problems that occur when Istio proxies run as regular containers:
 - When an application container starts before the regular `istio-proxy` container is ready, the application doesn't have network access at startup.
-- When the regular `istio-proxy` container stops before the application container stops, the application loses network access during shutdown.
+- When `istio-proxy` running as a regular container stops before the application container stops, the application loses network access during shutdown.
 - An init container runs before the `istio-proxy` regular container, so it can't access the network.
 - A running regular `istio-proxy` container prevents Pods from being finished (for example, in the case of Jobs).
 
-## Default Istio Proxy Container Type
+## Native Sidecars as the Default Istio Proxy Container Type
 
-By default, the Istio module 1.22 uses `istio-proxy` native sidecars. This setting is configured globally and applied to all Pods that allow for Istio sidecar proxy injection. However, you can override this default setting for a specific Pod, allowing run `istio-proxy` as a regular container instead.
+By default, Istio module 1.22 and later versions use `istio-proxy` native sidecars. This setting is configured globally and applied to all Pods that allow for Istio sidecar proxy injection. However, you can override this default setting for a specific Pod, allowing it to run `istio-proxy` as a regular container instead.
 
 Furthermore, as long as the Istio module deploys Istio version 1.27, you have the option to set the **compatibilityMode** in the Istio Custom Resource (CR) to `true`. This setting makes Istio behave as version 1.26, which uses regular `istio-proxy` containers by default.
 
@@ -24,7 +24,7 @@ Istio module version | Istio version | Default `istio-proxy` Container Type
  1.22 | 1.27 | Native sidecars, unless you set **compatibilityMode** in the Istio CR to `true`
  One of the next versions after 1.22 with updated Istio | 1.28 | Native sidecars
 
-## Using Regular Istio Proxy Containers for a Particular Workload
+## Configuring Regular Istio Proxy Containers for a Particular Workload
 
 You can explicitly configure a specific workload to run `istio-proxy` as a regular  container. To inject `istio-proxy` as a regular container, set the `sidecar.istio.io/nativeSidecar` annotation to `"false"` on a given Pod or in the Pod template. If you do not set the annotation, native sidecars are used.
 
@@ -43,7 +43,7 @@ spec:
 ...
 ```
 
-Running `istio-proxy` as a regular container is only recommended when a specific workload requires this to function properly and experiences issues otherwise. This might be necessary if you have implemented workarounds to address problems caused by Istio proxies running as regular containers and now need additional time to adapt to native sidecars becoming the new default.
+Running `istio-proxy` as a regular container is only recommended when a specific workload experiences issues when the Istio proxy is a native sidecar. This might be necessary if you have implemented workarounds to address problems caused by Istio proxies running as regular containers and now need additional time to adapt to native sidecars becoming the new default.
 
 ## Support in the Istio Module
 
@@ -102,7 +102,7 @@ The key differences when compared to the `istio-proxy` run as a regular containe
   - The application container only starts after the `istio-proxy` native sidecar is fully operational.
   - After the main container completes its job, the Pod finishes with the status `Completed`.
 
-1. List init containers:
+4. List init containers:
 
     ```
     kubectl get pod -n test -o jsonpath='{.items[0].spec.initContainers[*].name}'
@@ -113,7 +113,7 @@ The key differences when compared to the `istio-proxy` run as a regular containe
     istio-validation istio-proxy
     ```
 
-2. List regular containers:
+5. List regular containers:
 
     ```
     kubectl get pod -n test -o jsonpath='{.items[0].spec.containers[*].name}'

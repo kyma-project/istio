@@ -31,8 +31,6 @@ spec:
       restartPolicy: Never
 ```
 
-If the annotation is present, determine the reason for applying the annotation to your workload and, if possible, remove the annotation.
-
 Removing the annotation `sidecar.istio.io/nativeSidecar: "false"` from a Pod template, allows the Istio module to run this container as a native sidecar. Then, the lifecycle of the native sidecar depends on the main application container, so `istio-proxy` finishes automatically at the same time as the main application container. After this, the Pod's state changes to `Completed`.
 
 

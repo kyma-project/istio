@@ -5,7 +5,7 @@
 Init containers can't access the network.
 
 ## Cause
-If Istio injection is enabled, the `istio-proxy` container intercepts all network traffic from all containers. By default, the Istio module 1.22 and later versions inject `istio-proxy` containers as native sidecars. However, you can also set the annotation `sidecar.istio.io/nativeSidecar` annotation to `"false"` for a specific Pod. This annotation overwrites the default setting and indicates that instead of native sidecars, the annotated Pod must be injected with a regular sidecar container.
+If Istio injection is enabled, the `istio-proxy` container intercepts all network traffic from all containers. By default, the Istio module 1.22 and later versions inject `istio-proxy` containers as native sidecars. However, you can also set the `sidecar.istio.io/nativeSidecar` annotation to `"false"` for a specific Pod. This annotation overwrites the default setting and indicates that instead of native sidecars, the annotated Pod must be injected with a regular sidecar container.
 
 Init containers are started before regular containers. If `istio-proxy` is a regular sidecar, it doesn't work when init containers are running. As a result, init containers don't have network access.
 
@@ -15,7 +15,7 @@ Check whether `istio-proxy` is declared as **initContainer** or **container**.
 
 - If it is an **initContainer**, it means that `istio-proxy` already runs as a native sidecar. Since native sidecars do not cause networking problems with init containers, the root cause of the issue is not related to the type of containers used by Istio proxies.
    
-- If `istio-proxy` is declared as a regular container, switch to using a native sidecar insted. To do this, apply the annotation `sidecar.istio.io/nativeSidecar=true` on the Pod or in the Pod template. See the following example:
+- If `istio-proxy` is declared as a regular container, switch to using a native sidecar instead. To do this, apply the annotation `sidecar.istio.io/nativeSidecar=true` on the Pod or in the Pod template. See the following example:
    
   ```
   apiVersion: v1

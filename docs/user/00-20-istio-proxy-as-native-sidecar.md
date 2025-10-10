@@ -13,7 +13,7 @@ Using native sidecars resolves the following problems that occur when Istio prox
 
 ## Native Sidecars as the Default Istio Proxy Container Type
 
-By default, Istio module 1.22 and later versions use `istio-proxy` native sidecars. This setting is configured globally and applied to all Pods that allow for Istio sidecar proxy injection. However, you can override this default setting for a specific Pod, allowing it to run `istio-proxy` as a regular container instead.
+By default, the Istio module 1.22 and later versions use `istio-proxy` native sidecars. This setting is configured globally and applied to all Pods that allow for Istio sidecar proxy injection. However, you can override this default setting for a specific Pod, allowing it to run `istio-proxy` as a regular container instead.
 
 Furthermore, as long as the Istio module deploys Istio version 1.27, you have the option to set the **compatibilityMode** in the Istio Custom Resource (CR) to `true`. This setting makes Istio behave as version 1.26, which uses regular `istio-proxy` containers by default.
 
@@ -140,7 +140,7 @@ Using the endpoint is no longer required if `istio-proxy` runs as a native sidec
 
 ### runAsUser 1337, or excludeOutboundIPRanges, or excludeOutboundPorts
 
-Init containers are started before regular containers are started. This means that the `istio-proxy` running as a regular container doesn't work when init containers are running. As a result init containers don't have network access.
+Init containers are started before regular containers. This means that the `istio-proxy` running as a regular container doesn't work when init containers are running. As a result, init containers don't have network access.
 
 By configuring **UID 1337**, **excludeOutboundIPRanges**, or **excludeOutboundPorts** you can exclude the network traffic from being captured by the `istio-proxy`. This allows init containers to access the network, but they are able to connect only to resources outside service mesh. The solution was proposed in the blog post [Upcoming breaking change in SAP BTP, Kyma Runtime: Enabling the Istio CNI plugin](https://community.sap.com/t5/technology-blog-posts-by-sap/upcoming-breaking-change-in-sap-btp-kyma-runtime-enabling-the-istio-cni/ba-p/13550765).
 

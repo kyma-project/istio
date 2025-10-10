@@ -97,10 +97,10 @@ The Istio module fully supports Istio proxies run as regular containers and as i
     test-job-2tt95   0/2     Completed         0          22s
     ```
 
-The key differences when compared to the `istio-proxy` run as a regular container:
-  - When the Pod starts, it has the `Init` status with two containers.
-  - The application container only starts after the `istio-proxy` native sidecar is fully operational.
-  - After the main container completes its job, the Pod finishes with the status `Completed`.
+    The key differences when compared to the `istio-proxy` run as a regular container:
+    - When the Pod starts, it has the `Init` status with two containers.
+    - The application container only starts after the `istio-proxy` native sidecar is fully operational.
+    - After the main container completes its job, the Pod finishes with the status `Completed`.
 
 4. List init containers:
 

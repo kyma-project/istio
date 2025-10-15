@@ -1,6 +1,6 @@
 module github.com/kyma-project/istio/operator
 
-go 1.24.2
+go 1.25
 
 // Client-go does not handle different versions of mergo due to some breaking changes - use the matching version
 replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.5

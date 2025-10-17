@@ -48,3 +48,7 @@ func (p *NativeSidecarRestartPredicate) Matches(pod v1.Pod) bool {
 func (p *NativeSidecarRestartPredicate) MustMatch() bool {
 	return false
 }
+
+func (p *NativeSidecarRestartPredicate) Name() string {
+	return "NativeSidecarRestartPredicate"
+}

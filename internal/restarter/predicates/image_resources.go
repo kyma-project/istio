@@ -50,6 +50,10 @@ func (p ImageResourcesPredicate) MustMatch() bool {
 	return false
 }
 
+func (p ImageResourcesPredicate) Name() string {
+	return "ImageResourcesPredicate"
+}
+
 func needsRestart(pod v1.Pod, expectedImage SidecarImage, expectedResources v1.ResourceRequirements) bool {
 	if hasCustomImageAnnotation(pod) {
 		return false

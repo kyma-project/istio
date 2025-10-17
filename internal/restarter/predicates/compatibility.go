@@ -45,3 +45,7 @@ func (p CompatibilityRestartPredicate) Matches(_ v1.Pod) bool {
 func (p CompatibilityRestartPredicate) MustMatch() bool {
 	return false
 }
+
+func (p CompatibilityRestartPredicate) Name() string {
+	return "CompatibilityRestartPredicate"
+}

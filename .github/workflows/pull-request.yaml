@@ -7,6 +7,10 @@ on:
   pull_request:
     types: [ synchronize, opened, reopened, ready_for_review ]
 
+concurrency:
+  group: branch-${{ github.ref_name }}
+  cancel-in-progress: true
+  
 env:
   GITLEAKS_VERSION: 8.21.0
 jobs:

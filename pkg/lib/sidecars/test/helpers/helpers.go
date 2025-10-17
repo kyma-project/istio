@@ -84,13 +84,29 @@ func (r *SidecarPodFixtureBuilder) SetPodStatusPhase(value v1.PodPhase) *Sidecar
 	return r
 }
 
-func (r *SidecarPodFixtureBuilder) SetPodAnnotations(value map[string]string) *SidecarPodFixtureBuilder {
+func (r *SidecarPodFixtureBuilder) ReplacePodAnnotations(value map[string]string) *SidecarPodFixtureBuilder {
 	r.podAnnotations = value
 	return r
 }
 
-func (r *SidecarPodFixtureBuilder) SetPodLabels(value map[string]string) *SidecarPodFixtureBuilder {
+func (r *SidecarPodFixtureBuilder) AddPodAnnotation(key, value string) *SidecarPodFixtureBuilder {
+	if r.podAnnotations == nil {
+		r.podAnnotations = map[string]string{}
+	}
+	r.podAnnotations[key] = value
+	return r
+}
+
+func (r *SidecarPodFixtureBuilder) ReplacePodLabels(value map[string]string) *SidecarPodFixtureBuilder {
 	r.podLabels = value
+	return r
+}
+
+func (r *SidecarPodFixtureBuilder) AddPodLabel(key, value string) *SidecarPodFixtureBuilder {
+	if r.podLabels == nil {
+		r.podLabels = map[string]string{}
+	}
+	r.podLabels[key] = value
 	return r
 }
 

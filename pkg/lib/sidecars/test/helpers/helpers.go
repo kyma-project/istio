@@ -160,6 +160,12 @@ func (r *SidecarPodFixtureBuilder) SetDeletionTimestamp(value time.Time) *Sideca
 	return r
 }
 
+func (r *SidecarPodFixtureBuilder) ClearProxyResources() *SidecarPodFixtureBuilder {
+	r.resources.Requests = v1.ResourceList{}
+	r.resources.Limits = v1.ResourceList{}
+	return r
+}
+
 func (r *SidecarPodFixtureBuilder) SetCpuRequest(value string) *SidecarPodFixtureBuilder {
 	r.resources.Requests[v1.ResourceCPU] = resource.MustParse(value)
 	return r

@@ -335,6 +335,7 @@ var _ = Describe("GetPodsToRestart", func() {
 				c: createClientSet(
 					helpers.NewSidecarPodBuilder().
 						AddPodAnnotation("sidecar.istio.io/proxyCPU", "500m").
+						ClearProxyResources().
 						SetCpuRequest("500m").
 						Build(),
 				),
@@ -345,6 +346,7 @@ var _ = Describe("GetPodsToRestart", func() {
 				c: createClientSet(
 					helpers.NewSidecarPodBuilder().
 						AddPodAnnotation("sidecar.istio.io/proxyMemory", "1Gi").
+						ClearProxyResources().
 						SetMemoryRequest("1Gi").
 						Build(),
 				),
@@ -355,7 +357,9 @@ var _ = Describe("GetPodsToRestart", func() {
 				c: createClientSet(
 					helpers.NewSidecarPodBuilder().
 						AddPodAnnotation("sidecar.istio.io/proxyCPULimit", "600m").
+						ClearProxyResources().
 						SetCpuLimit("600m").
+						SetCpuRequest("600m").
 						Build(),
 				),
 				assertFunc: func(podList *v1.PodList) { Expect(podList.Items).To(BeEmpty()) },
@@ -365,7 +369,9 @@ var _ = Describe("GetPodsToRestart", func() {
 				c: createClientSet(
 					helpers.NewSidecarPodBuilder().
 						AddPodAnnotation("sidecar.istio.io/proxyMemoryLimit", "3Gi").
+						ClearProxyResources().
 						SetMemoryLimit("3Gi").
+						SetMemoryRequest("3Gi").
 						Build(),
 				),
 				assertFunc: func(podList *v1.PodList) { Expect(podList.Items).To(BeEmpty()) },
@@ -378,6 +384,7 @@ var _ = Describe("GetPodsToRestart", func() {
 						AddPodAnnotation("sidecar.istio.io/proxyMemory", "1Gi").
 						AddPodAnnotation("sidecar.istio.io/proxyCPULimit", "500m").
 						AddPodAnnotation("sidecar.istio.io/proxyMemoryLimit", "3Gi").
+						ClearProxyResources().
 						SetCpuRequest("400m").
 						SetMemoryRequest("900Mi").
 						SetCpuLimit("400m").

@@ -1,16 +1,20 @@
 package v1alpha2
 
+import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
 type Authorizer struct {
 	// A unique name identifying the extension authorization provider.
 	// +kubebuilder:validation:Required
 	Name string `json:"name"`
 
 	// Specifies the service that implements the Envoy ext_authz HTTP authorization service.
-	// The format is "[<Namespace>/]<Hostname>".
-	// The specification of "<Namespace>"
+	// The format is "\[\<Namespace>/\]\<Hostname\>".
+	// The specification of "\<Namespace\>"
 	// is required only when it is insufficient to unambiguously resolve a service in the service registry.
-	// The "<Hostname>" is a fully qualified host name of a service defined by the Kubernetes service or ServiceEntry.
-	// The recommended format is "[<Namespace>/]<Hostname>"
+	// The "\<Hostname\>" is a fully qualified host name of a service defined by the Kubernetes service or ServiceEntry.
+	// The recommended format is "\[\<Namespace\>\/\]\<Hostname\>"
 	// Example: "my-ext-authz.foo.svc.cluster.local" or "bar/my-ext-authz".
 	// +kubebuilder:validation:Required
 	Service string `json:"service"`
@@ -21,6 +25,16 @@ type Authorizer struct {
 
 	// Specifies headers to be included, added or forwarded during authorization.
 	Headers *Headers `json:"headers,omitempty"`
+
+	// Specifies the prefix which will be included in the request sent to the authorization service.
+	// The prefix might be constructed with special characters (e.g., "/test?original_path=").
+	// +kubebuilder:validation:Optional
+	PathPrefix *string `json:"pathPrefix,omitempty"`
+
+	// Specifies the timeout for the HTTP authorization request to the external service.
+	// Default timeout, as defined in [Envoy](https://www.envoyproxy.io/docs/envoy/latest/api-v3/extensions/filters/http/ext_authz/v3/ext_authz.proto#extensions-filters-http-ext-authz-v3-extauthz) is 200ms.
+	// +kubebuilder:validation:Optional
+	Timeout *metav1.Duration `json:"timeout,omitempty"`
 }
 
 // Exact, prefix and suffix matches are supported (similar to the authorization policy rule syntax except the presence match
@@ -33,10 +47,10 @@ type Headers struct {
 	// Defines headers to be included or added in check authorization request.
 	InCheck *InCheck `json:"inCheck,omitempty"`
 
-	// Defines headers to be forwarded to the upstream.
+	// Defines headers to be forwarded to the upstream (to the backend service).
 	ToUpstream *ToUpstream `json:"toUpstream,omitempty"`
 
-	// Defines headers to be forwarded to the downstream.
+	// Defines headers to be forwarded to the downstream (the client).
 	ToDownstream *ToDownstream `json:"toDownstream,omitempty"`
 }
 

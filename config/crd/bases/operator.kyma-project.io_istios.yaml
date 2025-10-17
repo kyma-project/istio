@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.5
+    controller-gen.kubebuilder.io/version: v0.19.0
   name: istios.operator.kyma-project.io
 spec:
   group: operator.kyma-project.io
@@ -44,12 +44,13 @@ spec:
           metadata:
             type: object
           spec:
-            description: IstioSpec describes the desired specification for installing
-              or updating Istio.
+            description: Spec defines the desired state of the Istio installation.
             properties:
               compatibilityMode:
+                description: Enables compatibility mode for Istio installation.
                 type: boolean
               components:
+                description: Defines configuration of Istio components.
                 properties:
                   cni:
                     description: Cni defines component configuration for Istio CNI
@@ -59,8 +60,8 @@ spec:
                         description: CniK8sConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec
                         properties:
                           affinity:
-                            description: Affinity is a group of affinity scheduling
-                              rules.
+                            description: 'Affinity defines the Pod scheduling affinity
+                              constraints: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity'
                             properties:
                               nodeAffinity:
                                 description: Describes node affinity scheduling rules
@@ -347,7 +348,6 @@ spec:
                                                 pod labels will be ignored. The default value is empty.
                                                 The same key is forbidden to exist in both matchLabelKeys and labelSelector.
                                                 Also, matchLabelKeys cannot be set when labelSelector isn't set.
-                                                This is a beta field and requires enabling MatchLabelKeysInPodAffinity feature gate (enabled by default).
                                               items:
                                                 type: string
                                               type: array
@@ -362,7 +362,6 @@ spec:
                                                 pod labels will be ignored. The default value is empty.
                                                 The same key is forbidden to exist in both mismatchLabelKeys and labelSelector.
                                                 Also, mismatchLabelKeys cannot be set when labelSelector isn't set.
-                                                This is a beta field and requires enabling MatchLabelKeysInPodAffinity feature gate (enabled by default).
                                               items:
                                                 type: string
                                               type: array
@@ -531,7 +530,6 @@ spec:
                                             pod labels will be ignored. The default value is empty.
                                             The same key is forbidden to exist in both matchLabelKeys and labelSelector.
                                             Also, matchLabelKeys cannot be set when labelSelector isn't set.
-                                            This is a beta field and requires enabling MatchLabelKeysInPodAffinity feature gate (enabled by default).
                                           items:
                                             type: string
                                           type: array
@@ -546,7 +544,6 @@ spec:
                                             pod labels will be ignored. The default value is empty.
                                             The same key is forbidden to exist in both mismatchLabelKeys and labelSelector.
                                             Also, mismatchLabelKeys cannot be set when labelSelector isn't set.
-                                            This is a beta field and requires enabling MatchLabelKeysInPodAffinity feature gate (enabled by default).
                                           items:
                                             type: string
                                           type: array
@@ -713,7 +710,6 @@ spec:
                                                 pod labels will be ignored. The default value is empty.
                                                 The same key is forbidden to exist in both matchLabelKeys and labelSelector.
                                                 Also, matchLabelKeys cannot be set when labelSelector isn't set.
-                                                This is a beta field and requires enabling MatchLabelKeysInPodAffinity feature gate (enabled by default).
                                               items:
                                                 type: string
                                               type: array
@@ -728,7 +724,6 @@ spec:
                                                 pod labels will be ignored. The default value is empty.
                                                 The same key is forbidden to exist in both mismatchLabelKeys and labelSelector.
                                                 Also, mismatchLabelKeys cannot be set when labelSelector isn't set.
-                                                This is a beta field and requires enabling MatchLabelKeysInPodAffinity feature gate (enabled by default).
                                               items:
                                                 type: string
                                               type: array
@@ -897,7 +892,6 @@ spec:
                                             pod labels will be ignored. The default value is empty.
                                             The same key is forbidden to exist in both matchLabelKeys and labelSelector.
                                             Also, matchLabelKeys cannot be set when labelSelector isn't set.
-                                            This is a beta field and requires enabling MatchLabelKeysInPodAffinity feature gate (enabled by default).
                                           items:
                                             type: string
                                           type: array
@@ -912,7 +906,6 @@ spec:
                                             pod labels will be ignored. The default value is empty.
                                             The same key is forbidden to exist in both mismatchLabelKeys and labelSelector.
                                             Also, mismatchLabelKeys cannot be set when labelSelector isn't set.
-                                            This is a beta field and requires enabling MatchLabelKeysInPodAffinity feature gate (enabled by default).
                                           items:
                                             type: string
                                           type: array
@@ -1026,12 +1019,15 @@ spec:
                     description: EgressGateway defines configuration for Istio egressGateway.
                     properties:
                       enabled:
+                        description: Enables or disables the Istio egress gateway.
                         type: boolean
                       k8s:
-                        description: KubernetesResourcesConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec
+                        description: Defines the Kubernetes resources configuration
+                          for Istio egress gateway.
                         properties:
                           hpaSpec:
-                            description: HPASpec defines configuration for HorizontalPodAutoscaler.
+                            description: 'HPASpec defines configuration for HorizontalPodAutoscaler:
+                              https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/'
                             properties:
                               maxReplicas:
                                 format: int32
@@ -1068,7 +1064,8 @@ spec:
                                 type: object
                             type: object
                           strategy:
-                            description: Strategy defines rolling update strategy.
+                            description: 'Strategy defines configuration for rolling
+                              updates: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#rolling-update-deployment'
                             properties:
                               rollingUpdate:
                                 description: 'RollingUpdate defines configuration
@@ -1110,7 +1107,8 @@ spec:
                         description: KubernetesResourcesConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec
                         properties:
                           hpaSpec:
-                            description: HPASpec defines configuration for HorizontalPodAutoscaler.
+                            description: 'HPASpec defines configuration for HorizontalPodAutoscaler:
+                              https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/'
                             properties:
                               maxReplicas:
                                 format: int32
@@ -1147,7 +1145,8 @@ spec:
                                 type: object
                             type: object
                           strategy:
-                            description: Strategy defines rolling update strategy.
+                            description: 'Strategy defines configuration for rolling
+                              updates: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#rolling-update-deployment'
                             properties:
                               rollingUpdate:
                                 description: 'RollingUpdate defines configuration
@@ -1190,7 +1189,8 @@ spec:
                         description: KubernetesResourcesConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec
                         properties:
                           hpaSpec:
-                            description: HPASpec defines configuration for HorizontalPodAutoscaler.
+                            description: 'HPASpec defines configuration for HorizontalPodAutoscaler:
+                              https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/'
                             properties:
                               maxReplicas:
                                 format: int32
@@ -1227,7 +1227,8 @@ spec:
                                 type: object
                             type: object
                           strategy:
-                            description: Strategy defines rolling update strategy.
+                            description: 'Strategy defines configuration for rolling
+                              updates: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#rolling-update-deployment'
                             properties:
                               rollingUpdate:
                                 description: 'RollingUpdate defines configuration
@@ -1299,7 +1300,7 @@ spec:
                     type: object
                 type: object
               config:
-                description: Config is the configuration for the Istio installation.
+                description: Defines configuration of the Istio installation.
                 properties:
                   authorizers:
                     description: Defines a list of external authorization providers.
@@ -1333,7 +1334,7 @@ spec:
                               type: object
                             toDownstream:
                               description: Defines headers to be forwarded to the
-                                downstream.
+                                downstream (the client).
                               properties:
                                 onAllow:
                                   description: |-
@@ -1355,7 +1356,7 @@ spec:
                               type: object
                             toUpstream:
                               description: Defines headers to be forwarded to the
-                                upstream.
+                                upstream (to the backend service).
                               properties:
                                 onAllow:
                                   description: |-
@@ -1371,6 +1372,11 @@ spec:
                           description: A unique name identifying the extension authorization
                             provider.
                           type: string
+                        pathPrefix:
+                          description: |-
+                            Specifies the prefix which will be included in the request sent to the authorization service.
+                            The prefix might be constructed with special characters (e.g., "/test?original_path=").
+                          type: string
                         port:
                           description: Specifies the port of the service.
                           format: int32
@@ -1378,12 +1384,17 @@ spec:
                         service:
                           description: |-
                             Specifies the service that implements the Envoy ext_authz HTTP authorization service.
-                            The format is "[<Namespace>/]<Hostname>".
-                            The specification of "<Namespace>"
+                            The format is "\[\<Namespace>/\]\<Hostname\>".
+                            The specification of "\<Namespace\>"
                             is required only when it is insufficient to unambiguously resolve a service in the service registry.
-                            The "<Hostname>" is a fully qualified host name of a service defined by the Kubernetes service or ServiceEntry.
-                            The recommended format is "[<Namespace>/]<Hostname>"
+                            The "\<Hostname\>" is a fully qualified host name of a service defined by the Kubernetes service or ServiceEntry.
+                            The recommended format is "\[\<Namespace\>\/\]\<Hostname\>"
                             Example: "my-ext-authz.foo.svc.cluster.local" or "bar/my-ext-authz".
+                          type: string
+                        timeout:
+                          description: |-
+                            Specifies the timeout for the HTTP authorization request to the external service.
+                            Default timeout, as defined in [Envoy](https://www.envoyproxy.io/docs/envoy/latest/api-v3/extensions/filters/http/ext_authz/v3/ext_authz.proto#extensions-filters-http-ext-authz-v3-extauthz) is 200ms.
                           type: string
                       required:
                       - name
@@ -1421,6 +1432,7 @@ spec:
                     type: object
                 type: object
               experimental:
+                description: Defines experimental configuration options.
                 properties:
                   pilot:
                     properties:
@@ -1432,7 +1444,7 @@ spec:
                 type: object
             type: object
           status:
-            description: IstioStatus defines the observed state of IstioCR.
+            description: Status represents the current state of the Istio installation.
             properties:
               conditions:
                 description: ' Conditions associated with IstioStatus.'
@@ -1492,7 +1504,7 @@ spec:
                   type: object
                 type: array
               description:
-                description: Description of Istio status
+                description: Description of Istio status.
                 type: string
               state:
                 description: |-

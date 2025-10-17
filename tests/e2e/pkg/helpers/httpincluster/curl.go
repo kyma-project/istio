@@ -2,7 +2,7 @@ package httpincluster
 
 import (
 	"bytes"
-	infrahelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/infrastructure"
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
 	"net/http"
 	"strings"
 	"testing"
@@ -41,7 +41,7 @@ func RunRequestFromInsideCluster(t *testing.T, namespace string, url string, opt
 		opt(opts)
 	}
 
-	r, err := infrahelpers.ResourcesClient(t)
+	r, err := client.ResourcesClient(t)
 	if err != nil {
 		t.Logf("Could not create resources client: err=%s", err)
 		return "", "", err
@@ -79,14 +79,13 @@ func RunRequestFromInsideCluster(t *testing.T, namespace string, url string, opt
 	}
 
 	cmd := []string{"curl", "-ik", "-sSL", "-m", "10", "-X", opts.Method, "--fail-with-body", url}
-	t.Logf("Executing command in pod %s: %v", curlPodName, strings.Join(cmd, " "))
 
 	var stdout, stderr bytes.Buffer
 	err = r.ExecInPod(t.Context(), pod.GetNamespace(), pod.GetName(), containerName, cmd, &stdout, &stderr)
-	t.Logf("[%s] stdout: %v", curlPodName, stdout.String())
-	t.Logf("[%s] stderr: %v", curlPodName, stderr.String())
-	if err != nil {
-		return "", "", err
-	}
-	return stdout.String(), stderr.String(), nil
+	stdOutStr := strings.TrimSpace(stdout.String())
+	stdErrStr := strings.TrimSpace(stderr.String())
+	t.Logf("[%s] stdout: %v", curlPodName, stdOutStr)
+	t.Logf("[%s] stderr: %v", curlPodName, stdErrStr)
+
+	return stdOutStr, stdErrStr, err
 }

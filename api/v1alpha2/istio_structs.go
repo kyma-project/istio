@@ -43,8 +43,14 @@ type Components struct {
 
 // KubernetesResourcesConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec
 type KubernetesResourcesConfig struct {
-	HPASpec   *HPASpec   `json:"hpaSpec,omitempty"`
-	Strategy  *Strategy  `json:"strategy,omitempty"`
+	// HPASpec defines configuration for HorizontalPodAutoscaler: https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/
+	// +kubebuilder:validation:Optional
+	HPASpec *HPASpec `json:"hpaSpec,omitempty"`
+	// Strategy defines configuration for rolling updates: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#rolling-update-deployment
+	// +kubebuilder:validation:Optional
+	Strategy *Strategy `json:"strategy,omitempty"`
+	// Resources define Kubernetes resources configuration: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+	// +kubebuilder:validation:Optional
 	Resources *Resources `json:"resources,omitempty"`
 }
 
@@ -61,14 +67,18 @@ type ProxyK8sConfig struct {
 
 // CniComponent defines configuration for CNI Istio component.
 type CniComponent struct {
+	// CniK8sConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec
 	// +kubebuilder:validation:Required
 	K8S *CniK8sConfig `json:"k8s"`
 }
 
-// CniK8sConfig is a subset of https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec
 type CniK8sConfig struct {
-	Affinity  *corev1.Affinity `json:"affinity,omitempty"`
-	Resources *Resources       `json:"resources,omitempty"`
+	// Affinity defines the Pod scheduling affinity constraints: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
+	// +kubebuilder:validation:Optional
+	Affinity *corev1.Affinity `json:"affinity,omitempty"`
+	// Resources define Kubernetes resources configuration: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+	// +kubebuilder:validation:Optional
+	Resources *Resources `json:"resources,omitempty"`
 }
 
 // HPASpec defines configuration for HorizontalPodAutoscaler.
@@ -122,8 +132,10 @@ type ResourceClaims struct {
 
 // EgressGateway defines configuration for Istio egressGateway.
 type EgressGateway struct {
+	// Defines the Kubernetes resources configuration for Istio egress gateway.
 	// +kubebuilder:validation:Optional
 	K8s *KubernetesResourcesConfig `json:"k8s"`
+	// Enables or disables the Istio egress gateway.
 	// +kubebuilder:validation:Optional
 	Enabled *bool `json:"enabled,omitempty"`
 }

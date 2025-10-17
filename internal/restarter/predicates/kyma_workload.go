@@ -18,3 +18,7 @@ func (p KymaWorkloadRestartPredicate) Matches(pod v1.Pod) bool {
 func (p KymaWorkloadRestartPredicate) MustMatch() bool {
 	return true
 }
+
+func (p KymaWorkloadRestartPredicate) Name() string {
+	return "KymaWorkloadRestartPredicate"
+}

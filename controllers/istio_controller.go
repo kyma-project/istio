@@ -175,24 +175,24 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			reconciliationRequeueTimeError)
 	}
 
-	updateIstioTagErr := r.updateIstioTag(ctx, client.ObjectKeyFromObject(&istioCR), istioImageVersion.Tag())
-	if updateIstioTagErr != nil {
-		r.log.Error(err, "Could not update Istio tag in annotation")
-		result, err := r.requeueReconciliation(ctx,
-			&istioCR,
-			describederrors.NewDescribedError(updateIstioTagErr, "Could not update Istio tag in annotation"),
-			operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIstioInstallUninstallFailed),
-			reconciliationRequeueTimeError)
-		if err != nil {
-			return result, err
-		}
-	}
-
 	// If there are no finalizers left, we must assume that the resource is deleted and therefore must stop the reconciliation
 	// to prevent accidental read or write to the resource.
 	if !istioCR.HasFinalizers() {
 		r.log.Info("End reconciliation because all finalizers have been removed")
 		return ctrl.Result{}, nil
+	}
+
+	updateIstioTagErr := r.updateIstioTag(ctx, client.ObjectKeyFromObject(&istioCR), istioImageVersion.Tag())
+	if updateIstioTagErr != nil {
+		r.log.Error(err, "Could not update Istio tag in annotation")
+		result, requeueReconcileErr := r.requeueReconciliation(ctx,
+			&istioCR,
+			describederrors.NewDescribedError(updateIstioTagErr, "Could not update Istio tag in annotation"),
+			operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIstioInstallUninstallFailed),
+			reconciliationRequeueTimeError)
+		if requeueReconcileErr != nil {
+			return result, err
+		}
 	}
 
 	resourcesErr := r.istioResources.Reconcile(ctx, istioCR)

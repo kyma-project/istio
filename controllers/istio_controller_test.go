@@ -388,6 +388,7 @@ var _ = Describe("Istio Controller", func() {
 			result, err := sut.Reconcile(context.Background(), reconcile.Request{NamespacedName: types.NamespacedName{Namespace: testNamespace, Name: istioCrName}})
 
 			// then
+			Expect(err).Should(HaveOccurred())
 			Expect(err.Error()).To(Equal("Update to ready error"))
 			Expect(result).Should(Equal(reconcile.Result{}))
 			Expect(statusMock.updatedToReadyCalled).Should(BeTrue())

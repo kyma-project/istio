@@ -99,8 +99,7 @@ func UpdateIstioTag(istioCR *v1alpha2.Istio, istioTag string) error {
 		istioCR.Annotations = map[string]string{}
 	}
 	appliedConfig := AppliedConfig{}
-	if lastAppliedConfiguration, ok := istioCR.Annotations[labels.LastAppliedConfiguration]; !ok {
-
+	if lastAppliedConfiguration, ok := istioCR.Annotations[labels.LastAppliedConfiguration]; ok {
 		err := json.Unmarshal([]byte(lastAppliedConfiguration), &appliedConfig)
 		if err != nil {
 			return err

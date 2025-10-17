@@ -18,3 +18,7 @@ func (p CustomerWorkloadRestartPredicate) Matches(pod v1.Pod) bool {
 func (p CustomerWorkloadRestartPredicate) MustMatch() bool {
 	return true
 }
+
+func (p CustomerWorkloadRestartPredicate) Name() string {
+	return "CustomerWorkloadRestartPredicate"
+}

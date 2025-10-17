@@ -2,8 +2,9 @@ package predicates
 
 import (
 	"fmt"
-
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+	"log"
 )
 
 const (
@@ -49,9 +50,23 @@ func (p ImageResourcesPredicate) MustMatch() bool {
 	return false
 }
 
+func (p ImageResourcesPredicate) Name() string {
+	return "ImageResourcesPredicate"
+}
+
 func needsRestart(pod v1.Pod, expectedImage SidecarImage, expectedResources v1.ResourceRequirements) bool {
-	return !hasCustomImageAnnotation(pod) &&
-		(hasSidecarContainerWithWithDifferentImage(pod, expectedImage) || hasDifferentSidecarResources(pod, expectedResources))
+	if hasCustomImageAnnotation(pod) {
+		return false
+	}
+	if hasSidecarContainerWithWithDifferentImage(pod, expectedImage) {
+		log.Default().Printf("Pod %s/%s has different sidecar image than expected", pod.Namespace, pod.Name)
+		return true
+	}
+	if hasDifferentSidecarResources(pod, expectedResources) {
+		log.Default().Printf("Pod %s/%s has different sidecar resources than expected", pod.Namespace, pod.Name)
+		return true
+	}
+	return false
 }
 
 func IsReadyWithIstioAnnotation(pod v1.Pod) bool {
@@ -97,7 +112,61 @@ func hasSidecarContainerWithWithDifferentImage(pod v1.Pod, expectedImage Sidecar
 	return false
 }
 
+const (
+	istioProxyCPULimitName       = "sidecar.istio.io/proxyCPULimit"
+	istioProxyMemoryLimitName    = "sidecar.istio.io/proxyMemoryLimit"
+	istioProxyCPURequestsName    = "sidecar.istio.io/proxyCPU"
+	istioProxyMemoryRequestsName = "sidecar.istio.io/proxyMemory"
+)
+
 func hasDifferentSidecarResources(pod v1.Pod, expectedResources v1.ResourceRequirements) bool {
+	// Override expected resources with annotations if they exist
+	// In case of parsing error, this function will return false to avoid restart, as
+	// istiod injection mutating webhook will reject the pod anyway
+	if pod.Annotations != nil {
+		// Reset expected resources to avoid using previous values
+		// This is how istio defaults those values
+		if pod.Annotations[istioProxyCPULimitName] != "" || pod.Annotations[istioProxyMemoryLimitName] != "" ||
+			pod.Annotations[istioProxyCPURequestsName] != "" || pod.Annotations[istioProxyMemoryRequestsName] != "" {
+			expectedResources.Limits = v1.ResourceList{}
+			expectedResources.Requests = v1.ResourceList{}
+		}
+
+		if cpuLimit, found := pod.Annotations[istioProxyCPULimitName]; found {
+			l, err := resource.ParseQuantity(cpuLimit)
+			if err != nil {
+				return false
+			}
+			expectedResources.Limits[v1.ResourceCPU] = l
+			if pod.Annotations[istioProxyCPURequestsName] == "" {
+				expectedResources.Requests[v1.ResourceCPU] = l
+			}
+		}
+		if memoryLimit, found := pod.Annotations[istioProxyMemoryLimitName]; found {
+			l, err := resource.ParseQuantity(memoryLimit)
+			if err != nil {
+				return false
+			}
+			expectedResources.Limits[v1.ResourceMemory] = l
+			if pod.Annotations[istioProxyMemoryRequestsName] == "" {
+				expectedResources.Requests[v1.ResourceMemory] = l
+			}
+		}
+		if cpuRequest, found := pod.Annotations[istioProxyCPURequestsName]; found {
+			r, err := resource.ParseQuantity(cpuRequest)
+			if err != nil {
+				return false
+			}
+			expectedResources.Requests[v1.ResourceCPU] = r
+		}
+		if memoryRequest, found := pod.Annotations[istioProxyMemoryRequestsName]; found {
+			r, err := resource.ParseQuantity(memoryRequest)
+			if err != nil {
+				return false
+			}
+			expectedResources.Requests[v1.ResourceMemory] = r
+		}
+	}
 	for _, container := range pod.Spec.Containers {
 		if isContainerIstioSidecar(container) && !containerHasResources(container, expectedResources) {
 			return true

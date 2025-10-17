@@ -93,3 +93,27 @@ func CheckIstioVersionUpdate(currentIstioVersionString, targetIstioVersionString
 func amongOneMinor(current, target semver.Version) bool {
 	return current.Minor == target.Minor || current.Minor-target.Minor == -1 || current.Minor-target.Minor == 1
 }
+
+func UpdateIstioTag(istioCR *v1alpha2.Istio, istioTag string) error {
+	if len(istioCR.Annotations) == 0 {
+		istioCR.Annotations = map[string]string{}
+	}
+	appliedConfig := AppliedConfig{}
+	if lastAppliedConfiguration, ok := istioCR.Annotations[labels.LastAppliedConfiguration]; !ok {
+
+		err := json.Unmarshal([]byte(lastAppliedConfiguration), &appliedConfig)
+		if err != nil {
+			return err
+		}
+	}
+
+	appliedConfig.IstioTag = istioTag
+
+	config, err := json.Marshal(appliedConfig)
+	if err != nil {
+		return err
+	}
+
+	istioCR.Annotations[labels.LastAppliedConfiguration] = string(config)
+	return nil
+}

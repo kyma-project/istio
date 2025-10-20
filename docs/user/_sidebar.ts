@@ -4,7 +4,6 @@ export default [
   { text: 'Default Istio Configuration', link: './00-15-overview-istio-setup' },
   { text: 'Istio Custom Resource', link: './04-00-istio-custom-resource' },
   { text: 'Tutorials', link: './tutorials/README', collapsed: true, items: [
-    { text: 'Enable Istio Sidecar Injection', link: './tutorials/01-40-enable-sidecar-injection' },
     { text: 'Expose Workloads Using oauth2-proxy', link: './tutorials/01-10-external-authorization-provider' },
     { text: 'Expose Workloads Using Gateway API', link: './tutorials/01-20-expose-httbin-gateway-api' },
     { text: 'Expose a TCP Service Using Gateway API Aplha Support', link: './tutorials/01-30-expose-tcp-gateway-api' },

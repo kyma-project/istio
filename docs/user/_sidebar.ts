@@ -1,7 +1,10 @@
 export default [
-  { text: 'Istio Sidecar Proxies', link: './00-00-istio-sidecar-proxies' },
-  { text: 'Istio Version', link: './00-10-istio-version' },
-  { text: 'Default Istio Configuration', link: './00-15-overview-istio-setup' },
+  { text: 'Istio Service Mesh', link: './00-00-istio-sidecar-proxies.md', collapsed: true, items: [
+    { text: 'Restart of Workloads in the Istio Service Mesh', link: './00-05-restart-of-workloads-in-service-mesh.md' },
+    { text: 'Enabling Istio Sidecar Injection', link: './01-40-enable-sidecar-injection.md' },
+    { text: 'Istio Version', link: './00-10-istio-version.md' },
+    { text: 'Istio Proxy as Native Sidecar Container', link: './00-20-istio-proxy-as-native-sidecar.md' }
+  ] },
   { text: 'Istio Custom Resource', link: './04-00-istio-custom-resource' },
   { text: 'Tutorials', link: './tutorials/README', collapsed: true, items: [
     { text: 'Expose Workloads Using oauth2-proxy', link: './tutorials/01-10-external-authorization-provider' },

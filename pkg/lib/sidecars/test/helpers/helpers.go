@@ -84,13 +84,29 @@ func (r *SidecarPodFixtureBuilder) SetPodStatusPhase(value v1.PodPhase) *Sidecar
 	return r
 }
 
-func (r *SidecarPodFixtureBuilder) SetPodAnnotations(value map[string]string) *SidecarPodFixtureBuilder {
+func (r *SidecarPodFixtureBuilder) ReplacePodAnnotations(value map[string]string) *SidecarPodFixtureBuilder {
 	r.podAnnotations = value
 	return r
 }
 
-func (r *SidecarPodFixtureBuilder) SetPodLabels(value map[string]string) *SidecarPodFixtureBuilder {
+func (r *SidecarPodFixtureBuilder) AddPodAnnotation(key, value string) *SidecarPodFixtureBuilder {
+	if r.podAnnotations == nil {
+		r.podAnnotations = map[string]string{}
+	}
+	r.podAnnotations[key] = value
+	return r
+}
+
+func (r *SidecarPodFixtureBuilder) ReplacePodLabels(value map[string]string) *SidecarPodFixtureBuilder {
 	r.podLabels = value
+	return r
+}
+
+func (r *SidecarPodFixtureBuilder) AddPodLabel(key, value string) *SidecarPodFixtureBuilder {
+	if r.podLabels == nil {
+		r.podLabels = map[string]string{}
+	}
+	r.podLabels[key] = value
 	return r
 }
 
@@ -141,6 +157,12 @@ func (r *SidecarPodFixtureBuilder) SetConditionStatus(value v1.ConditionStatus) 
 func (r *SidecarPodFixtureBuilder) SetDeletionTimestamp(value time.Time) *SidecarPodFixtureBuilder {
 	r.deletionTimestamp = &metav1.Time{Time: value}
 	r.finalizers = []string{"istios.operator.kyma-project.io/test-mock"}
+	return r
+}
+
+func (r *SidecarPodFixtureBuilder) ClearProxyResources() *SidecarPodFixtureBuilder {
+	r.resources.Requests = v1.ResourceList{}
+	r.resources.Limits = v1.ResourceList{}
 	return r
 }
 

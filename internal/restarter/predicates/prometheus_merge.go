@@ -52,6 +52,10 @@ func (p PrometheusMergeRestartPredicate) MustMatch() bool {
 	return false
 }
 
+func (p PrometheusMergeRestartPredicate) Name() string {
+	return "PrometheusMergeRestartPredicate"
+}
+
 // Gets statusPort directly from already merged IstioOperator CR, for now it is 15020 by default and not configurable,
 // but once it is configurable, it will fetch the configured statusPort from the CR directly.
 func getStatusPort(ctx context.Context, client client.Client) int32 {

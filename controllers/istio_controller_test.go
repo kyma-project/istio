@@ -12,6 +12,7 @@ import (
 
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/kyma-project/istio/operator/internal/restarter"
+	"github.com/kyma-project/istio/operator/pkg/labels"
 
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istioresources"
 	"github.com/kyma-project/istio/operator/internal/status"
@@ -1108,6 +1109,45 @@ var _ = Describe("Istio Controller", func() {
 				Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonReconcileRequeued)))
 				Expect((*updatedIstioCR.Status.Conditions)[0].Message).To(Equal(operatorv1alpha2.ConditionReasonReconcileRequeuedMessage))
 				Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
+			})
+		})
+		Context("LastAppliedConfiguration", func() {
+			It("should update LastAppliedConfiguration with istioTag version even if restarter is blocked", func() {
+				//given
+				istioCR := &operatorv1alpha2.Istio{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:              istioCrName,
+						Namespace:         testNamespace,
+						UID:               "1",
+						CreationTimestamp: metav1.Unix(1494505756, 0),
+						Finalizers: []string{
+							"istios.operator.kyma-project.io/istio-installation",
+						},
+					},
+				}
+
+				fakeClient := createFakeClient(istioCR)
+				proxySidecarsRestarter := &restarterMock{restarted: false, requeue: true, err: describederrors.NewDescribedError(errors.New("test described error"), "test error description")}
+				sut := &IstioReconciler{
+					Client:                 fakeClient,
+					Scheme:                 getTestScheme(),
+					istioInstallation:      &istioInstallationReconciliationMock{},
+					istioResources:         &istioResourcesReconciliationMock{},
+					userResources:          &UserResourcesMock{},
+					restarters:             []restarter.Restarter{proxySidecarsRestarter},
+					log:                    logr.Discard(),
+					statusHandler:          status.NewStatusHandler(fakeClient),
+					reconciliationInterval: testReconciliationInterval,
+				}
+
+				//when
+				_, err := sut.Reconcile(context.Background(), reconcile.Request{NamespacedName: types.NamespacedName{Namespace: testNamespace, Name: istioCrName}})
+
+				//then
+				_ = fakeClient.Get(context.Background(), client.ObjectKeyFromObject(istioCR), istioCR)
+
+				Expect(err).To(HaveOccurred())
+				Expect(istioCR.Annotations[labels.LastAppliedConfiguration]).To(ContainSubstring(`"IstioTag":"1.16.0-distroless"`))
 			})
 		})
 	})

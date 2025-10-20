@@ -411,7 +411,7 @@ func (r *IstioReconciler) updateIstioTag(ctx context.Context, objectKey types.Na
 		if err != nil {
 			return err
 		}
-		return nil
+		return r.Update(ctx, &lacIstioCR)
 	})
 }
 

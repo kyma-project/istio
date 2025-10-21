@@ -182,6 +182,19 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, nil
 	}
 
+	updateIstioTagErr := r.updateIstioTag(ctx, client.ObjectKeyFromObject(&istioCR), istioImageVersion.Tag())
+	if updateIstioTagErr != nil {
+		r.log.Error(err, "Could not update Istio tag in annotation")
+		result, requeueReconcileErr := r.requeueReconciliation(ctx,
+			&istioCR,
+			describederrors.NewDescribedError(updateIstioTagErr, "Could not update Istio tag in annotation"),
+			operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIstioInstallUninstallFailed),
+			reconciliationRequeueTimeError)
+		if requeueReconcileErr != nil {
+			return result, err
+		}
+	}
+
 	resourcesErr := r.istioResources.Reconcile(ctx, istioCR)
 	if resourcesErr != nil {
 		return r.requeueReconciliation(ctx, &istioCR, resourcesErr,
@@ -383,6 +396,20 @@ func (r *IstioReconciler) updateLastAppliedConfiguration(ctx context.Context, ob
 		lastAppliedErr := configuration.UpdateLastAppliedConfiguration(&lacIstioCR, istioTag)
 		if lastAppliedErr != nil {
 			return lastAppliedErr
+		}
+		return r.Update(ctx, &lacIstioCR)
+	})
+}
+
+func (r *IstioReconciler) updateIstioTag(ctx context.Context, objectKey types.NamespacedName, istioTag string) error {
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		lacIstioCR := operatorv1alpha2.Istio{}
+		if err := r.Get(ctx, objectKey, &lacIstioCR); err != nil {
+			return err
+		}
+		err := configuration.UpdateIstioTag(&lacIstioCR, istioTag)
+		if err != nil {
+			return err
 		}
 		return r.Update(ctx, &lacIstioCR)
 	})

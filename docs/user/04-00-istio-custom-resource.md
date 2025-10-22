@@ -56,12 +56,14 @@ This table lists all the possible parameters of Istio CR together with their des
 
 ### Authorizer
 
-| Parameter              | Type    | Description                                                                                                                                   |
-|------------------------|---------|-----------------------------------------------------------------------------------------------------------------------------------------------|
-| **name** (required)    | string  | A unique name identifying the extension authorization provider.                                                                               |
-| **service** (required) | string  | Specifies the service that implements the Envoy `ext_authz` HTTP authorization service. The recommended format is `[<Namespace>/]<Hostname>`. |
-| **port** (required)    | integer | Specifies the port number of the external authorizer used to make the authorization request.                                                  |
-| **headers**            | headers | Specifies headers to be included, added, or forwarded during authorization.                                                                   |
+| Parameter              | Type     | Description                                                                                                                                                                                                                                                                                    |
+|------------------------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **name** (required)    | string   | A unique name identifying the extension authorization provider.                                                                                                                                                                                                                                |
+| **service** (required) | string   | Specifies the service that implements the Envoy `ext_authz` HTTP authorization service. The recommended format is `[<Namespace>/]<Hostname>`.                                                                                                                                                  |
+| **port** (required)    | integer  | Specifies the port number of the external authorizer used to make the authorization request.                                                                                                                                                                                                   |
+| **headers**            | headers  | Specifies headers to be included, added, or forwarded during authorization.                                                                                                                                                                                                                    |
+| **timeout**            | duration | Specifies the timeout for the HTTP authorization request to the external service.<br />Default timeout, as defined in [Envoy](https://www.envoyproxy.io/docs/envoy/latest/api-v3/extensions/filters/http/ext_authz/v3/ext_authz.proto#extensions-filters-http-ext-authz-v3-extauthz) is 200ms. |
+| **pathPrefix**         | string   | Specifies the prefix which will be included in the request sent to the authorization service.<br />The prefix might be constructed with special characters (e.g., "/test?original_path=").                                                                                                     |
 
 
 ### Headers

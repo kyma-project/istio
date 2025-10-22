@@ -13,13 +13,10 @@ type Authorizer struct {
 	Name string `json:"name"`
 
 	// Specifies the service that implements the Envoy ext_authz HTTP authorization service.
-	// The format is "\[\<Namespace>/\]\<Hostname\>".
-	// The specification of "\<Namespace\>"
-	// is required only when it is insufficient to unambiguously resolve a service in the service registry.
-	// The "\<Hostname\>" is a fully qualified host name of a service defined by the Kubernetes service or ServiceEntry.
-	// The recommended format is "\[\<Namespace\>\/\]\<Hostname\>"
-	// Example: "my-ext-authz.foo.svc.cluster.local" or "bar/my-ext-authz".
-	// +kubebuilder:validation:Required
+	// The format is "[Namespace/]Hostname".
+	// The specification of "Namespace" is required only when it is insufficient to unambiguously resolve a service in the service registry.
+	// The "Hostname" is a fully qualified host name of a service defined by the Kubernetes service or ServiceEntry.
+	// The recommended format is "[Namespace/]Hostname".
 	Service string `json:"service"`
 
 	// Specifies the port of the service.

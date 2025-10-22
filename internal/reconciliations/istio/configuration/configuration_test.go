@@ -10,8 +10,9 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/kyma-project/istio/operator/internal/tests"
 	"github.com/onsi/ginkgo/v2/types"
+
+	"github.com/kyma-project/istio/operator/internal/tests"
 )
 
 const (
@@ -85,4 +86,32 @@ var _ = Describe("Istio Configuration", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 		})
 	})
+	Context("UpdateIstioTagVersion", func() {
+		It("should create Istio tag version when it is first installation", func() {
+			// given
+			istioCR := operatorv1alpha2.Istio{Spec: operatorv1alpha2.IstioSpec{}}
+			installedIstioTagVersion := "1.16.1-distroless"
+			// when
+			err := configuration.UpdateIstioTag(&istioCR, installedIstioTagVersion)
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(istioCR.Annotations).To(Not(BeEmpty()))
+			Expect(istioCR.Annotations[lastAppliedConfiguration]).To(Equal(`{"config":{"telemetry":{"metrics":{}}},"IstioTag":"1.16.1-distroless"}`))
+		})
+
+		It("should update Istio tag version for existing upgraded Istio", func() {
+			// given
+			istioCR := operatorv1alpha2.Istio{Spec: operatorv1alpha2.IstioSpec{}}
+			istioCR.Annotations = map[string]string{}
+			istioCR.Annotations[lastAppliedConfiguration] = `{"config":{"numTrustedProxies":1,"telemetry":{"metrics":{}}},"IstioTag":"1.15.0-distroless"}`
+			installedIstioTagVersion := "1.16.1-distroless"
+			// when
+			err := configuration.UpdateIstioTag(&istioCR, installedIstioTagVersion)
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(istioCR.Annotations).To(Not(BeEmpty()))
+			Expect(istioCR.Annotations[lastAppliedConfiguration]).To(Equal(`{"config":{"numTrustedProxies":1,"telemetry":{"metrics":{}}},"IstioTag":"1.16.1-distroless"}`))
+		})
+	})
+
 })

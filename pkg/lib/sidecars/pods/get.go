@@ -2,7 +2,7 @@ package pods
 
 import (
 	"context"
-
+	"fmt"
 	"github.com/go-logr/logr"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -59,11 +59,13 @@ func (p *Pods) GetPodsToRestart(ctx context.Context, preds []predicates.SidecarP
 			for _, predicate := range preds {
 				matched := predicate.Matches(pod)
 				if predicate.MustMatch() { // if predicate must match, all must match
+					p.logger.Info(fmt.Sprintf("Pod %s matches MustMatch predicate %s", pod.Name, predicate.Name()))
 					if !matched {
 						requiredMatched = false
 						break
 					}
 				} else if !optionalMatched && matched { // if predicate is optional, at least one must match
+					p.logger.Info(fmt.Sprintf("Pod %s matches not MustMatch predicate %s", pod.Name, predicate.Name()))
 					optionalMatched = true
 				}
 			}

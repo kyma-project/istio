@@ -1,7 +1,7 @@
 module-name: istio
 kind: kyma
 bdba:
-  - europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager:af51d2240df17c2d7bde2930161acddbb0a4848d
+  - europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager:401781ee2a5cc0addbb354b42167dddd030136d1
   - europe-docker.pkg.dev/kyma-project/prod/external/istio/install-cni:1.27.1-distroless
   - europe-docker.pkg.dev/kyma-project/prod/external/istio/proxyv2:1.27.1-distroless
   - europe-docker.pkg.dev/kyma-project/prod/external/istio/pilot:1.27.1-distroless

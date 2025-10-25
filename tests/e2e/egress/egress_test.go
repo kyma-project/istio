@@ -3,10 +3,10 @@ package egress_test
 import (
 	"bytes"
 	_ "embed"
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/httpincluster"
-	infrahelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/infrastructure"
 	modulehelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/modules"
-	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/testid"
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/testsetup"
 	"sigs.k8s.io/e2e-framework/klient/decoder"
 	"testing"
 
@@ -27,7 +27,7 @@ var networkPolicy []byte
 func TestE2EEgressConnectivity(t *testing.T) {
 	// setup istio
 	t.Log("Setting up Istio for the tests")
-	require.NoError(t, modulehelpers.CreateIstioCR(t, modulehelpers.WithIstioTemplate(string(istioCRWithEgress))))
+	require.NoError(t, modulehelpers.CreateIstioOperatorCR(t, modulehelpers.WithIstioOperatorTemplate(string(istioCRWithEgress))))
 
 	// initialize testcases
 	// note: test might fail randomly from random downtime to httpbin.org with error Connection reset by peer.
@@ -72,13 +72,13 @@ func TestE2EEgressConnectivity(t *testing.T) {
 
 	for _, tt := range tc {
 		t.Run(tt.name, func(t *testing.T) {
-			_, runNamespace, err := testid.CreateNamespaceWithRandomID(t,
-				testid.WithPrefix("egress-test"),
-				testid.WithSidecarInjectionEnabled())
+			_, runNamespace, err := testsetup.CreateNamespaceWithRandomID(t,
+				testsetup.WithPrefix("egress-test"),
+				testsetup.WithSidecarInjectionEnabled())
 			require.NoError(t, err)
 
 			// instantiate a resources client
-			r, err := infrahelpers.ResourcesClient(t)
+			r, err := client.ResourcesClient(t)
 			require.NoError(t, err, "Failed to get resources client")
 
 			if tt.applyEgressConfig {

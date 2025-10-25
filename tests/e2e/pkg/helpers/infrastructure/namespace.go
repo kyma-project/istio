@@ -1,12 +1,15 @@
 package infrastructure
 
 import (
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
 	"testing"
 
-	"github.com/kyma-project/istio/operator/tests/e2e/pkg/setup"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/setup"
 )
 
 type NamespaceOptions struct {
@@ -46,7 +49,7 @@ func CreateNamespace(t *testing.T, name string, options ...NamespaceOption) erro
 		opt(opts)
 	}
 
-	r, err := ResourcesClient(t)
+	r, err := client.ResourcesClient(t)
 	if err != nil {
 		t.Logf("Failed to get resources client: %v", err)
 		return err
@@ -54,7 +57,7 @@ func CreateNamespace(t *testing.T, name string, options ...NamespaceOption) erro
 
 	ns := &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: name}}
 	if opts.Labels != nil {
-		ns.ObjectMeta.Labels = opts.Labels
+		ns.Labels = opts.Labels
 	}
 
 	t.Log("Creating namespace: ", name)
@@ -80,7 +83,7 @@ func CreateNamespace(t *testing.T, name string, options ...NamespaceOption) erro
 
 func DeleteNamespace(t *testing.T, name string) error {
 	t.Helper()
-	r, err := ResourcesClient(t)
+	r, err := client.ResourcesClient(t)
 	if err != nil {
 		t.Logf("Failed to get resources client: %v", err)
 		return err

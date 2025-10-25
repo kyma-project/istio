@@ -26,81 +26,121 @@ type ConditionReason string
 
 // Valid IstioCR States.
 const (
-	Ready      State = "Ready"
+	// Ready is reported when the Istio installation / upgrade process has completed successfully.
+	Ready State = "Ready"
+	// Processing is reported when the Istio installation / upgrade process is in progress.
 	Processing State = "Processing"
-	Error      State = "Error"
-	Deleting   State = "Deleting"
-	Warning    State = "Warning"
+	// Error is reported when the Istio installation / upgrade process has failed.
+	Error State = "Error"
+	// Deleting is reported when the Istio installation / upgrade process is being deleted.
+	Deleting State = "Deleting"
+	// Warning is reported when the Istio installation / upgrade process has completed with warnings.
+	// This state warrants user attention, as some features may not work as expected.
+	Warning State = "Warning"
 
 	ConditionTypeReady                             ConditionType = "Ready"
 	ConditionTypeProxySidecarRestartSucceeded      ConditionType = "ProxySidecarRestartSucceeded"
 	ConditionTypeIngressTargetingUserResourceFound ConditionType = "IngressTargetingUserResourceFound"
 
-	// general.
+	// General
+
+	// Reconciliation finished with full success.
 	ConditionReasonReconcileSucceeded        ConditionReason = "ReconcileSucceeded"
 	ConditionReasonReconcileSucceededMessage                 = "Reconciliation succeeded"
-	ConditionReasonReconcileUnknown          ConditionReason = "ReconcileUnknown"
-	ConditionReasonReconcileUnknownMessage                   = "Module readiness is unknown. Either a reconciliation is progressing, or failed previously. Check status of other conditions"
-	ConditionReasonReconcileRequeued         ConditionReason = "ReconcileRequeued"
-	ConditionReasonReconcileRequeuedMessage                  = "Proxy reset is still ongoing. Reconciliation requeued"
-	ConditionReasonReconcileFailed           ConditionReason = "ReconcileFailed"
-	ConditionReasonReconcileFailedMessage                    = "Reconciliation failed"
-	ConditionReasonValidationFailed          ConditionReason = "ValidationFailed"
-	ConditionReasonValidationFailedMessage                   = "Reconciliation did not happen as Istio Custom Resource failed to validate"
-	ConditionReasonOlderCRExists             ConditionReason = "OlderCRExists"
-	ConditionReasonOlderCRExistsMessage                      = "This Istio custom resource is not the oldest one and does not represent the module state"
-	ConditionReasonOldestCRNotFound          ConditionReason = "OldestCRNotFound"
-	ConditionReasonOldestCRNotFoundMessage                   = "Oldest Istio custom resource could not be found"
+	// Reconciliation is in progress or failed previously.
+	ConditionReasonReconcileUnknown        ConditionReason = "ReconcileUnknown"
+	ConditionReasonReconcileUnknownMessage                 = "Module readiness is unknown. Either a reconciliation is progressing, or failed previously. Check status of other conditions"
+	// Reconciliation is requeued to be tried again later.
+	ConditionReasonReconcileRequeued        ConditionReason = "ReconcileRequeued"
+	ConditionReasonReconcileRequeuedMessage                 = "Proxy reset is still ongoing. Reconciliation requeued"
+	// Reconciliation failed.
+	ConditionReasonReconcileFailed        ConditionReason = "ReconcileFailed"
+	ConditionReasonReconcileFailedMessage                 = "Reconciliation failed"
+	// Reconciliation did not happen as validation of Istio Custom Resource failed.
+	ConditionReasonValidationFailed        ConditionReason = "ValidationFailed"
+	ConditionReasonValidationFailedMessage                 = "Reconciliation did not happen as Istio Custom Resource failed to validate"
+	// Reconciliation did not happen as there exists an older Istio Custom Resource.
+	ConditionReasonOlderCRExists        ConditionReason = "OlderCRExists"
+	ConditionReasonOlderCRExistsMessage                 = "This Istio custom resource is not the oldest one and does not represent the module state"
+	// Reconciliation did not happen as the oldest Istio Custom Resource could not be found.
+	ConditionReasonOldestCRNotFound        ConditionReason = "OldestCRNotFound"
+	ConditionReasonOldestCRNotFoundMessage                 = "Oldest Istio custom resource could not be found"
 
-	// install / uninstall.
-	ConditionReasonIstioInstallNotNeeded               ConditionReason = "IstioInstallNotNeeded"
-	ConditionReasonIstioInstallNotNeededMessage                        = "Istio installation is not needed"
-	ConditionReasonIstioInstallSucceeded               ConditionReason = "IstioInstallSucceeded"
-	ConditionReasonIstioInstallSucceededMessage                        = "Istio installation succeeded"
-	ConditionReasonIstioUninstallSucceeded             ConditionReason = "IstioUninstallSucceeded"
-	ConditionReasonIstioUninstallSucceededMessage                      = "Istio uninstallation succeded"
-	ConditionReasonIstioInstallUninstallFailed         ConditionReason = "IstioInstallUninstallFailed"
-	ConditionReasonIstioInstallUninstallFailedMessage                  = "Istio install or uninstall failed"
-	ConditionReasonCustomResourceMisconfigured         ConditionReason = "IstioCustomResourceMisconfigured"
-	ConditionReasonCustomResourceMisconfiguredMessage                  = "Istio custom resource has invalid configuration"
-	ConditionReasonIstioCRsDangling                    ConditionReason = "IstioCustomResourcesDangling"
-	ConditionReasonIstioCRsDanglingMessage                             = "Istio deletion blocked because of existing Istio custom resources"
+	// Istio installation / uninstallation
+
+	// Istio installtion is not needed.
+	ConditionReasonIstioInstallNotNeeded        ConditionReason = "IstioInstallNotNeeded"
+	ConditionReasonIstioInstallNotNeededMessage                 = "Istio installation is not needed"
+	// Istio installation or uninstallation succeeded.
+	ConditionReasonIstioInstallSucceeded        ConditionReason = "IstioInstallSucceeded"
+	ConditionReasonIstioInstallSucceededMessage                 = "Istio installation succeeded"
+	// Istio uninstallation succeeded.
+	ConditionReasonIstioUninstallSucceeded        ConditionReason = "IstioUninstallSucceeded"
+	ConditionReasonIstioUninstallSucceededMessage                 = "Istio uninstallation succeded"
+	// Istio installation or uninstallation failed.
+	ConditionReasonIstioInstallUninstallFailed        ConditionReason = "IstioInstallUninstallFailed"
+	ConditionReasonIstioInstallUninstallFailedMessage                 = "Istio install or uninstall failed"
+	// Istio Custom Resource has invalid configuration.
+	ConditionReasonCustomResourceMisconfigured        ConditionReason = "IstioCustomResourceMisconfigured"
+	ConditionReasonCustomResourceMisconfiguredMessage                 = "Istio custom resource has invalid configuration"
+	// Istio Custom Resources are blocking Istio uninstallation.
+	ConditionReasonIstioCRsDangling        ConditionReason = "IstioCustomResourcesDangling"
+	ConditionReasonIstioCRsDanglingMessage                 = "Istio deletion blocked because of existing Istio custom resources"
+	// Istio version update is not allowed.
 	ConditionReasonIstioVersionUpdateNotAllowed        ConditionReason = "IstioVersionUpdateNotAllowed"
 	ConditionReasonIstioVersionUpdateNotAllowedMessage                 = "Update to the new Istio version is not allowed"
 
-	// Istio CRs.
+	// Istio CRs
+
+	// Custom resources reconciliation succeeded.
 	ConditionReasonCRsReconcileSucceeded        ConditionReason = "CustomResourcesReconcileSucceeded"
 	ConditionReasonCRsReconcileSucceededMessage                 = "Custom resources reconciliation succeeded"
-	ConditionReasonCRsReconcileFailed           ConditionReason = "CustomResourcesReconcileFailed"
-	ConditionReasonCRsReconcileFailedMessage                    = "Custom resources reconciliation failed"
+	// Custom resources reconciliation failed.
+	ConditionReasonCRsReconcileFailed        ConditionReason = "CustomResourcesReconcileFailed"
+	ConditionReasonCRsReconcileFailedMessage                 = "Custom resources reconciliation failed"
 
-	// proxy reset.
-	ConditionReasonProxySidecarRestartSucceeded                 ConditionReason = "ProxySidecarRestartSucceeded"
-	ConditionReasonProxySidecarRestartSucceededMessage                          = "Proxy sidecar restart succeeded"
-	ConditionReasonProxySidecarRestartFailed                    ConditionReason = "ProxySidecarRestartFailed"
-	ConditionReasonProxySidecarRestartFailedMessage                             = "Proxy sidecar restart failed"
+	// Proxy reset
+
+	// Proxy sidecar restart succeeded.
+	ConditionReasonProxySidecarRestartSucceeded        ConditionReason = "ProxySidecarRestartSucceeded"
+	ConditionReasonProxySidecarRestartSucceededMessage                 = "Proxy sidecar restart succeeded"
+	// Proxy sidecar restart failed.
+	ConditionReasonProxySidecarRestartFailed        ConditionReason = "ProxySidecarRestartFailed"
+	ConditionReasonProxySidecarRestartFailedMessage                 = "Proxy sidecar restart failed"
+	// Proxy sidecar restart partially succeeded.
 	ConditionReasonProxySidecarRestartPartiallySucceeded        ConditionReason = "ProxySidecarRestartPartiallySucceeded"
 	ConditionReasonProxySidecarRestartPartiallySucceededMessage                 = "Proxy sidecar restart partially succeeded"
-	ConditionReasonProxySidecarManualRestartRequired            ConditionReason = "ProxySidecarManualRestartRequired"
-	ConditionReasonProxySidecarManualRestartRequiredMessage                     = "Proxy sidecar manual restart is required for some workloads"
+	// Proxy sidecar manual restart is required.
+	ConditionReasonProxySidecarManualRestartRequired        ConditionReason = "ProxySidecarManualRestartRequired"
+	ConditionReasonProxySidecarManualRestartRequiredMessage                 = "Proxy sidecar manual restart is required for some workloads"
 
-	// ingress gateway.
+	// Ingress gateway
+
+	// Istio ingress gateway restart succeeded.
 	ConditionReasonIngressGatewayRestartSucceeded        ConditionReason = "IngressGatewayRestartSucceeded"
 	ConditionReasonIngressGatewayRestartSucceededMessage                 = "Istio Ingress Gateway restart succeeded"
-	ConditionReasonIngressGatewayRestartFailed           ConditionReason = "IngressGatewayRestartFailed"
-	ConditionReasonIngressGatewayRestartFailedMessage                    = "Istio Ingress Gateway restart failed"
+	// Istio ingress gateway restart failed.
+	ConditionReasonIngressGatewayRestartFailed        ConditionReason = "IngressGatewayRestartFailed"
+	ConditionReasonIngressGatewayRestartFailedMessage                 = "Istio Ingress Gateway restart failed"
 
-	// egress gateway.
+	// Egress gateway
+
+	// Istio egress gateway restart succeeded.
 	ConditionReasonEgressGatewayRestartSucceeded        ConditionReason = "EgressGatewayRestartSucceeded"
 	ConditionReasonEgressGatewayRestartSucceededMessage                 = "Istio Egress Gateway restart succeeded"
-	ConditionReasonEgressGatewayRestartFailed           ConditionReason = "EgressGatewayRestartFailed"
-	ConditionReasonEgressGatewayRestartFailedMessage                    = "Istio Egress Gateway restart failed"
+	// Istio egress gateway restart failed.
+	ConditionReasonEgressGatewayRestartFailed        ConditionReason = "EgressGatewayRestartFailed"
+	ConditionReasonEgressGatewayRestartFailedMessage                 = "Istio Egress Gateway restart failed"
 
-	// user resource.
-	ConditionReasonIngressTargetingUserResourceFound                  ConditionReason = "IngressTargetingUserResourceFound"
-	ConditionReasonIngressTargetingUserResourceFoundMessage                           = "Resource targeting Istio Ingress Gateway found"
-	ConditionReasonIngressTargetingUserResourceNotFound               ConditionReason = "IngressTargetingUserResourceNotFound"
-	ConditionReasonIngressTargetingUserResourceNotFoundMessage                        = "Resources targeting Istio Ingress Gateway not found"
+	// User resource
+
+	// Resource targeting Istio Ingress Gateway found.
+	ConditionReasonIngressTargetingUserResourceFound        ConditionReason = "IngressTargetingUserResourceFound"
+	ConditionReasonIngressTargetingUserResourceFoundMessage                 = "Resource targeting Istio Ingress Gateway found"
+	// No resources targeting Istio Ingress Gateway found.
+	ConditionReasonIngressTargetingUserResourceNotFound        ConditionReason = "IngressTargetingUserResourceNotFound"
+	ConditionReasonIngressTargetingUserResourceNotFoundMessage                 = "Resources targeting Istio Ingress Gateway not found"
+	// Resource targeting Istio Ingress Gateway detection failed.
 	ConditionReasonIngressTargetingUserResourceDetectionFailed        ConditionReason = "IngressTargetingUserResourceDetectionFailed"
 	ConditionReasonIngressTargetingUserResourceDetectionFailedMessage                 = "Resource targeting Istio Ingress Gateway detection failed"
 )
@@ -112,12 +152,16 @@ type ReasonWithMessage struct {
 
 // IstioSpec describes the desired specification for installing or updating Istio.
 type IstioSpec struct {
+	// Defines configuration of the Istio installation.
 	// +kubebuilder:validation:Optional
 	Config Config `json:"config,omitempty"`
+	// Defines configuration of Istio components.
 	// +kubebuilder:validation:Optional
 	Components *Components `json:"components,omitempty"`
+	// Defines experimental configuration options.
 	// +kubebuilder:validation:Optional
 	Experimental *Experimental `json:"experimental,omitempty"`
+	// Enables compatibility mode for Istio installation.
 	// +kubebuilder:validation:Optional
 	CompatibilityMode bool `json:"compatibilityMode,omitempty"`
 }
@@ -133,7 +177,9 @@ type Istio struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   IstioSpec   `json:"spec,omitempty"`
+	// Spec defines the desired state of the Istio installation.
+	Spec IstioSpec `json:"spec,omitempty"`
+	// Status represents the current state of the Istio installation.
 	Status IstioStatus `json:"status,omitempty"`
 }
 
@@ -155,7 +201,7 @@ type IstioStatus struct {
 	State State `json:"state"`
 	//  Conditions associated with IstioStatus.
 	Conditions *[]metav1.Condition `json:"conditions,omitempty"`
-	// Description of Istio status
+	// Description of Istio status.
 	Description string `json:"description,omitempty"`
 }
 

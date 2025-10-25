@@ -1,0 +1,12 @@
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: ext-auth
+spec:
+  action: CUSTOM
+  provider:
+    name: "httpbin-authorizer"
+  rules:
+    - to:
+        - operation:
+            paths: ["/*"]

@@ -3,6 +3,7 @@ package v1alpha2_test
 import (
 	"encoding/json"
 	"testing"
+	"time"
 
 	istiov1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 
@@ -179,6 +180,135 @@ var _ = Describe("Merge", func() {
 			}
 			Expect(foundAuthorizer1).To(BeTrue(), "Could not find the first authorizer by the name")
 			Expect(foundAuthorizer2).To(BeTrue(), "Could not find the second authorizer by the name")
+		})
+
+		It("should set timeout for authorizer", func() {
+			//given
+			m := mesh.DefaultMeshConfig()
+			meshConfigRaw := convert(m)
+
+			iop := iopv1alpha1.IstioOperator{
+				Spec: iopv1alpha1.IstioOperatorSpec{
+					MeshConfig: meshConfigRaw,
+				},
+			}
+
+			provName := "test-authorizer"
+			timeout := metav1.Duration{
+				Duration: 1 * time.Second,
+			}
+
+			authorizer := istiov1alpha2.Authorizer{
+				Name:    provName,
+				Service: "xauth",
+				Port:    1337,
+				Timeout: &timeout,
+			}
+			istioCR := istiov1alpha2.Istio{
+				Spec: istiov1alpha2.IstioSpec{
+					Config: istiov1alpha2.Config{
+						Authorizers: []*istiov1alpha2.Authorizer{
+							&authorizer,
+						},
+					},
+				},
+			}
+
+			// when
+			out, err := istioCR.MergeInto(iop)
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+			meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
+			Expect(err).ShouldNot(HaveOccurred())
+			extensionProvidersInt, exists := meshConfig.GetPath("extensionProviders")
+			Expect(exists).To(BeTrue())
+			extensionProviders := extensionProvidersInt.([]interface{})
+			var foundAuthorizer bool
+			for _, extensionProviderInt := range extensionProviders {
+				extensionProvider, ok := extensionProviderInt.(map[string]interface{})
+				Expect(ok).To(BeTrue())
+
+				if extensionProvider["name"] == provName {
+					extensionProviderMap, errMap := values.MapFromObject(extensionProvider)
+					Expect(errMap).ShouldNot(HaveOccurred())
+
+					authProvider, okGetPath := extensionProviderMap.GetPathMap("envoyExtAuthzHttp")
+					Expect(okGetPath).To(BeTrue())
+
+					Expect(authProvider).ShouldNot(BeNil())
+					Expect(authProvider["port"]).To(BeEquivalentTo(1337))
+					Expect(authProvider["service"]).To(Equal("xauth"))
+					Expect(authProvider["timeout"]).To(Equal("1s"))
+
+					foundAuthorizer = true
+					break
+				}
+			}
+			Expect(foundAuthorizer).To(BeTrue(), "Could not find the authorizer by the name")
+		})
+
+		It("should set pathPrefix for authorizer", func() {
+			//given
+			m := mesh.DefaultMeshConfig()
+			meshConfigRaw := convert(m)
+
+			iop := iopv1alpha1.IstioOperator{
+				Spec: iopv1alpha1.IstioOperatorSpec{
+					MeshConfig: meshConfigRaw,
+				},
+			}
+
+			provName := "test-authorizer"
+
+			authorizer := istiov1alpha2.Authorizer{
+				Name:       provName,
+				Service:    "xauth",
+				Port:       1337,
+				PathPrefix: ptr.To("/check"),
+			}
+			istioCR := istiov1alpha2.Istio{
+				Spec: istiov1alpha2.IstioSpec{
+					Config: istiov1alpha2.Config{
+						Authorizers: []*istiov1alpha2.Authorizer{
+							&authorizer,
+						},
+					},
+				},
+			}
+
+			// when
+			out, err := istioCR.MergeInto(iop)
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+			meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
+			Expect(err).ShouldNot(HaveOccurred())
+			extensionProvidersInt, exists := meshConfig.GetPath("extensionProviders")
+			Expect(exists).To(BeTrue())
+			extensionProviders := extensionProvidersInt.([]interface{})
+			var foundAuthorizer bool
+			for _, extensionProviderInt := range extensionProviders {
+				extensionProvider, ok := extensionProviderInt.(map[string]interface{})
+				Expect(ok).To(BeTrue())
+
+				if extensionProvider["name"] == provName {
+					extensionProviderMap, errMap := values.MapFromObject(extensionProvider)
+					Expect(errMap).ShouldNot(HaveOccurred())
+
+					authProvider, okGetPath := extensionProviderMap.GetPathMap("envoyExtAuthzHttp")
+					Expect(okGetPath).To(BeTrue())
+
+					Expect(authProvider).ShouldNot(BeNil())
+					Expect(authProvider["port"]).To(BeEquivalentTo(1337))
+					Expect(authProvider["service"]).To(Equal("xauth"))
+					Expect(authProvider["pathPrefix"]).To(Equal("/check"))
+
+					foundAuthorizer = true
+					break
+				}
+			}
+			Expect(foundAuthorizer).To(BeTrue(), "Could not find the authorizer by the name")
 		})
 
 		It("should set headers for authorizer", func() {

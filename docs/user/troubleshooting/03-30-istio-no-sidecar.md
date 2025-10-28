@@ -19,7 +19,7 @@ Find out which Pods do not have Istio sidecar proxy injection enabled and why. Y
 
 ### Check Pods in All Namespaces
 
-1. Download the [script](../../assets/sidecar-analysis.sh).
+1. Download the [script](https://github.com/kyma-project/istio/blob/main/docs/assets/sidecar-analysis.sh).
 2. Run the script.
 
     ```bash
@@ -40,11 +40,11 @@ Find out which Pods do not have Istio sidecar proxy injection enabled and why. Y
         - namespace/Pod
         ...
     ```
-4. To learn how to include a Pod into the Istio service mesh, see [Enabling Istio Sidecar Proxy Injection](../tutorials/01-40-enable-sidecar-injection.md).
+4. To learn how to include a Pod into the Istio service mesh, see [Enabling Istio Sidecar Proxy Injection](https://kyma-project.io/#/istio/user/tutorials/01-40-enable-sidecar-injection).
 
 ### Check Pods in a Selective Namespace
 
-1. Download the [script](../../assets/sidecar-analysis.sh).
+1. Download the [script](https://github.com/kyma-project/istio/blob/main/docs/assets/sidecar-analysis.sh).
 2. Run the script passing the namespace name as a parameter.
 
     ```bash
@@ -60,7 +60,7 @@ Find out which Pods do not have Istio sidecar proxy injection enabled and why. Y
      ...
     Reason: The namespace default has Istio sidecar proxy injection disabled, so none of its Pods have been injected with an Istio sidecar proxy.
     ```
-4. To learn how to include a Pod into the Istio service mesh, see [Enabling Istio Sidecar Proxy Injection](../tutorials/01-40-enable-sidecar-injection.md).
+4. To learn how to include a Pod into the Istio service mesh, see [Enabling Istio Sidecar Proxy Injection](https://kyma-project.io/#/istio/user/tutorials/01-40-enable-sidecar-injection).
 
 ### Check a Selective Pod
 
@@ -70,7 +70,7 @@ Find out which Pods do not have Istio sidecar proxy injection enabled and why. Y
 
 1. Go to the Pod's namespace.
 2. Check if Istio sidecar proxy injection is enabled at the namespace level.
-    Verify if the `Labels` section contains `istio-injection=disabled` or `istio-injection=enabled`. If Istio sidecar proxy injection is disabled at the namespace level, none of its Pods are injected with an Istio sidecar proxy.
+    Verify if the `Labels` section contains the `istio-injection` label. If the label is set to `disabled` or it is not set at all, Istio sidecar proxy injection is disabled at the namespace level and none of its Pods are injected with an Istio sidecar proxy.
 3. Check if Istio sidecar proxy injection is enabled for the Pod's Deployment.
    1. In the **Workloads** section, choose **Deployments**
    2. Choose **Edit**. 
@@ -97,6 +97,6 @@ Find out which Pods do not have Istio sidecar proxy injection enabled and why. Y
     ```bash
     kubectl get pod {POD} -n default -o=jsonpath='{.metadata.labels.sidecar\.istio\.io/inject}
     ```
-4. To learn how to include a Pod into the Istio service mesh, see [Enabling Istio Sidecar Proxy Injection](https://help.sap.com/docs/btp/sap-business-technology-platform-internal/enabling-istio-sidecar-proxy?locale=en-US&state=DRAFT&version=Internal).
+4. To learn how to include a Pod into the Istio service mesh, see [Enabling Istio Sidecar Proxy Injection](https://kyma-project.io/#/istio/user/tutorials/01-40-enable-sidecar-injection).
 
 <!-- tabs:end -->

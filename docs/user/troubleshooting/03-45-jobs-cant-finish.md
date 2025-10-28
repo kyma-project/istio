@@ -41,4 +41,4 @@ When `istio-proxy` runs as a native sidecar, its lifecycle depends on the main a
 
 ## Related Links
 
-[Istio Proxy as Native Sidecar Container](../00-20-istio-proxy-as-native-sidecar.md)
+[Regular and Native Sidecar Containers](https://kyma-project.io/#/istio/user/00-20-istio-proxy-as-native-sidecar)

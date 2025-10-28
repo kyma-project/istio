@@ -41,4 +41,4 @@ When `istio-proxy` is a native sidecar, Istio injects it as the first init conta
 
 ## Related Links
 
-[Istio Proxy as Native Sidecar Container](../00-20-istio-proxy-as-native-sidecar.md)
+[Regular and Native Sidecar Containers](https://kyma-project.io/#/istio/user/00-20-istio-proxy-as-native-sidecar)

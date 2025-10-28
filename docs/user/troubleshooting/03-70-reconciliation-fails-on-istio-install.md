@@ -1,5 +1,5 @@
-<!-- open-source-only -->
 # Changes to Istio Resources Are Not Reverted After Reconciliation
+<!-- open-source-only -->
 
 ## Symptoms
 
@@ -16,8 +16,8 @@
 1. Check if a given resource's Pod template has been modified to include an additional container.
 2. Check if the newly injected container fails to start.
 
-> [!TIP]
-> To retrieve information for the above steps, you can use the command `kubectl describe {RESOURCE_NAME} -n istio-system -o yaml`.
+   > ### Tip:
+   > To retrieve information for the above steps, you can use the command `kubectl describe {RESOURCE_NAME} -n istio-system -o yaml`.
 
 3. If the container is unable to start, remove it from the Pod template of the given resource.
 

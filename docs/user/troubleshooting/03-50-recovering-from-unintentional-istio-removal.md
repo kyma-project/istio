@@ -15,7 +15,7 @@ You get an output similar to this one:
 {"lastTransitionTime":"2024-09-26T18:23:00Z","message":"Istio deletion blocked because of existing Istio custom resources","reason":"IstioCustomResourcesDangling","status":"False","type":"Ready"}
 ```
 
->[!NOTE]
+>### Note:
 > If you intended to delete the Istio module, the symptoms described in this document are expected, and you must clean up the remaining resources yourself. To check which resources are blocking the deletion, see the logs of the `istio-controller-manager` container.
 
 ## Cause

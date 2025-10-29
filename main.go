@@ -159,6 +159,7 @@ func createManager(flagVar *FlagVar) (manager.Manager, error) {
 				// to have a significant peak when sidecar restart was triggered.
 				DisableFor: []client.Object{
 					&v1.DaemonSet{},
+					&networkingv1alpha3.EnvoyFilter{},
 					&v1.Deployment{},
 					&v1.StatefulSet{},
 					&v1.ReplicaSet{},

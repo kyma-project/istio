@@ -63,7 +63,6 @@ func installIstioInExternalProcess(mergedIstioOperatorPath string) error {
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, istioInstallPath, mergedIstioOperatorPath)
-
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()

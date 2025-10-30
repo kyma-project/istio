@@ -29,8 +29,8 @@ export default [
     { text: 'SAP HANA Database Connection Issues', link: './troubleshooting/03-80-cannot-connect-to-hana-db' },
     { text: 'Not Found Error', link: './troubleshooting/03-60-404-on-istio-gateway' },
     { text: 'Incompatible Istio Sidecar', link: './troubleshooting/03-40-incompatible-istio-sidecar-version' },
-    { text: 'Pods Created by Jobs Can't Finish', link: './troubleshooting/03-45-jobs-cant-finish' },
-    { text: 'Init Containers Can't Access the Network', link: './troubleshooting/03-46-init-containers-cant-access-network' },
+    { text: 'Pods Created by Jobs Can\'t Finish', link: './troubleshooting/03-45-jobs-cant-finish' },
+    { text: 'Init Containers Can\'t Access the Network', link: './troubleshooting/03-46-init-containers-cant-access-network' },
     { text: 'Modified Istio Resources', link: './troubleshooting/03-70-reconciliation-fails-on-istio-install' },
     { text: 'Istio Cannot Verify an HTTPS Certificate', link: './troubleshooting/03-90-istio-cert-unknown' }
     ] }

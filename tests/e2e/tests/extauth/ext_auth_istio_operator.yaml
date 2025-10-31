@@ -1,0 +1,13 @@
+apiVersion: operator.kyma-project.io/v1alpha2
+kind: Istio
+metadata:
+  name: default
+  namespace: kyma-system
+spec:
+  config:
+    authorizers:
+      - name: httpbin-authorizer
+        port: {{ .ExtAuthServicePort }}
+        service: "{{ .ExtAuthServiceName }}.{{ .ExtAuthServiceNamespace }}.svc.cluster.local"
+        pathPrefix: {{ .PathPrefix }}
+        timeout: {{ .Timeout }}

@@ -21,8 +21,8 @@ limitations under the License.
 package v1alpha2
 
 import (
-	"k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -34,6 +34,16 @@ func (in *Authorizer) DeepCopyInto(out *Authorizer) {
 		in, out := &in.Headers, &out.Headers
 		*out = new(Headers)
 		(*in).DeepCopyInto(*out)
+	}
+	if in.PathPrefix != nil {
+		in, out := &in.PathPrefix, &out.PathPrefix
+		*out = new(string)
+		**out = **in
+	}
+	if in.Timeout != nil {
+		in, out := &in.Timeout, &out.Timeout
+		*out = new(v1.Duration)
+		**out = **in
 	}
 }
 
@@ -72,7 +82,7 @@ func (in *CniK8sConfig) DeepCopyInto(out *CniK8sConfig) {
 	*out = *in
 	if in.Affinity != nil {
 		in, out := &in.Affinity, &out.Affinity
-		*out = new(v1.Affinity)
+		*out = new(corev1.Affinity)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.Resources != nil {
@@ -402,10 +412,10 @@ func (in *IstioStatus) DeepCopyInto(out *IstioStatus) {
 	*out = *in
 	if in.Conditions != nil {
 		in, out := &in.Conditions, &out.Conditions
-		*out = new([]metav1.Condition)
+		*out = new([]v1.Condition)
 		if **in != nil {
 			in, out := *in, *out
-			*out = make([]metav1.Condition, len(*in))
+			*out = make([]v1.Condition, len(*in))
 			for i := range *in {
 				(*in)[i].DeepCopyInto(&(*out)[i])
 			}

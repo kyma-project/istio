@@ -2,6 +2,7 @@ package v1alpha2
 
 import (
 	"encoding/json"
+	"github.com/golang/protobuf/ptypes/duration"
 
 	"istio.io/istio/operator/pkg/values"
 	"istio.io/istio/pkg/util/protomarshal"
@@ -141,6 +142,16 @@ func (m *meshConfigBuilder) BuildExternalAuthorizerConfiguration(authorizers []*
 		envoyXAuthProvider.EnvoyExtAuthzHttp = &meshv1alpha1.MeshConfig_ExtensionProvider_EnvoyExternalAuthorizationHttpProvider{
 			Service: authorizer.Service,
 			Port:    authorizer.Port,
+		}
+
+		if authorizer.PathPrefix != nil {
+			envoyXAuthProvider.EnvoyExtAuthzHttp.PathPrefix = *authorizer.PathPrefix
+		}
+
+		if authorizer.Timeout != nil {
+			envoyXAuthProvider.EnvoyExtAuthzHttp.Timeout = &duration.Duration{
+				Seconds: int64(authorizer.Timeout.Seconds()),
+			}
 		}
 
 		headers := authorizer.Headers

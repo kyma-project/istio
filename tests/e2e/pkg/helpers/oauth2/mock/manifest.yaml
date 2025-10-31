@@ -19,13 +19,17 @@ spec:
           imagePullPolicy: Always
           env:
             - name: iss
-              value: http://{{ .IssuerURL }}
+              value: "{{ .IssuerURL }}"
             - name: PORT
               value: "8000"
           ports:
             - containerPort: 8000
               name: http
               protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /.well-known/openid-configuration
+              port: 8000
       restartPolicy: Always
 ---
 apiVersion: v1
@@ -55,6 +59,6 @@ spec:
   http:
     - route:
         - destination:
-            host: "{{ .IssuerURL }}"
+            host: "{{ .VirtualServiceDestination }}"
             port:
               number: 80

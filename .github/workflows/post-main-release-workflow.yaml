@@ -1,4 +1,4 @@
-name: Post Main Workflow
+name: Post Main and Release Workflow
 
 permissions:
   id-token: write # This is required by image-builder

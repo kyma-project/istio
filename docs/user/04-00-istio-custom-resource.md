@@ -63,7 +63,7 @@ This table lists all the possible parameters of Istio CR together with their des
 | **port** (required)    | integer  | Specifies the port number of the external authorizer used to make the authorization request.                                                                                                                                                                                                   |
 | **headers**            | headers  | Specifies headers to be included, added, or forwarded during authorization.                                                                                                                                                                                                                    |
 | **timeout**            | duration | Specifies the timeout for the HTTP authorization request to the external service.<br />Default timeout, as defined in [Envoy](https://www.envoyproxy.io/docs/envoy/latest/api-v3/extensions/filters/http/ext_authz/v3/ext_authz.proto#extensions-filters-http-ext-authz-v3-extauthz) is 200ms. |
-| **pathPrefix**         | string   | Specifies the prefix which will be included in the request sent to the authorization service.<br />The prefix might be constructed with special characters (e.g., "/test?original_path=").                                                                                                     |
+| **pathPrefix**         | string   | Specifies the prefix included in the request sent to the authorization service.<br />The prefix might be constructed using special characters (for example, `"/test?original_path="`).                                                                                                     |
 
 
 ### Headers

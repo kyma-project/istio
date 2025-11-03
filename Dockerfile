@@ -36,6 +36,7 @@ WORKDIR /
 COPY --from=builder /istio-build/manager .
 COPY --from=builder /istio-build/istio_install .
 
+ENV GODEBUG="fips140=on,tlsmlkem=0"
 USER 65532:65532
 
 ENTRYPOINT ["/manager"]

@@ -96,7 +96,7 @@ _Appears in:_
 | `port` _integer_ | Specifies the port of the service. |  | Required <br /> |
 | `headers` _[Headers](#headers)_ | Specifies headers to be included, added or forwarded during authorization. |  |  |
 | `pathPrefix` _string_ | Specifies the prefix which will be included in the request sent to the authorization service.<br />The prefix might be constructed with special characters (e.g., "/test?original_path="). |  | Optional <br /> |
-| `timeout` _[Duration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#duration-v1-meta)_ | Specifies the timeout for the HTTP authorization request to the external service. |  | Optional <br /> |
+| `timeout` _[Duration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.33/#duration-v1-meta)_ | Specifies the timeout for the HTTP authorization request to the external service. |  | Optional <br /> |
 
 
 #### CniComponent
@@ -128,7 +128,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `affinity` _[Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#affinity-v1-core)_ | Affinity defines the Pod scheduling affinity constraints: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity |  | Optional <br /> |
+| `affinity` _[Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.33/#affinity-v1-core)_ | Affinity defines the Pod scheduling affinity constraints: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity |  | Optional <br /> |
 | `resources` _[Resources](#resources)_ | Resources define Kubernetes resources configuration: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/ |  | Optional <br /> |
 
 
@@ -314,7 +314,7 @@ Istio contains Istio CR specification and current status.
 | --- | --- | --- | --- |
 | `apiVersion` _string_ | `operator.kyma-project.io/v1alpha2` | | |
 | `kind` _string_ | `Istio` | | |
-| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.33/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
 | `spec` _[IstioSpec](#istiospec)_ | Spec defines the desired state of the Istio installation. |  |  |
 | `status` _[IstioStatus](#istiostatus)_ | Status represents the current state of the Istio installation. |  |  |
 
@@ -368,7 +368,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `state` _[State](#state)_ | State signifies the current state of CustomObject. Value<br />can be one of ("Ready", "Processing", "Error", "Deleting", "Warning"). |  | Enum: [Processing Deleting Ready Error Warning] <br />Required <br /> |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#condition-v1-meta)_ |  Conditions associated with IstioStatus. |  |  |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.33/#condition-v1-meta)_ |  Conditions associated with IstioStatus. |  |  |
 | `description` _string_ | Description of Istio status. |  |  |
 
 
@@ -507,8 +507,8 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `maxSurge` _[IntOrString](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#intorstring-intstr-util)_ |  |  | Pattern: `^[0-9]+%?$` <br />XIntOrString: \{\} <br /> |
-| `maxUnavailable` _[IntOrString](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#intorstring-intstr-util)_ |  |  | Pattern: `^((100\|[0-9]\{1,2\})%\|[0-9]+)$` <br />XIntOrString: \{\} <br /> |
+| `maxSurge` _[IntOrString](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.33/#intorstring-intstr-util)_ |  |  | Pattern: `^[0-9]+%?$` <br />XIntOrString: \{\} <br /> |
+| `maxUnavailable` _[IntOrString](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.33/#intorstring-intstr-util)_ |  |  | Pattern: `^((100\|[0-9]\{1,2\})%\|[0-9]+)$` <br />XIntOrString: \{\} <br /> |
 
 
 #### State
@@ -544,7 +544,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `rollingUpdate` _[RollingUpdate](#rollingupdate)_ |  |  | Required <br /> |
+| `rollingUpdate` _[RollingUpdate](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.33/#rollingupdatedeployment-v1-apps)_ |  |  | Required <br /> |
 
 
 #### Telemetry

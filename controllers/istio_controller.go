@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	istiocrmetrics "github.com/kyma-project/istio/operator/internal/metrics"
 	"time"
 
 	"github.com/pkg/errors"
@@ -64,7 +65,7 @@ const (
 	reconciliationRequeueTimeWarning = 1 * time.Hour
 )
 
-func NewController(mgr manager.Manager, reconciliationInterval time.Duration) *IstioReconciler {
+func NewController(mgr manager.Manager, reconciliationInterval time.Duration, crMetrics *istiocrmetrics.IstioCRMetrics) *IstioReconciler {
 	merger := istiooperator.NewDefaultIstioMerger()
 
 	statusHandler := status.NewStatusHandler(mgr.GetClient())
@@ -87,6 +88,7 @@ func NewController(mgr manager.Manager, reconciliationInterval time.Duration) *I
 		log:                    mgr.GetLogger(),
 		statusHandler:          statusHandler,
 		reconciliationInterval: reconciliationInterval,
+		crMetrics:              crMetrics,
 	}
 }
 
@@ -104,6 +106,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, err
 	}
 
+	r.crMetrics.EmitIstioCRMetrics(&istioCR)
 	r.statusHandler.SetCondition(&istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileUnknown))
 
 	if err := r.validate(&istioCR); err != nil {

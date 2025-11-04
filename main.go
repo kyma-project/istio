@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+	istiocrmetrics "github.com/kyma-project/istio/operator/internal/metrics"
 	"os"
 	"time"
 
@@ -116,7 +117,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = controllers.NewController(mgr, flagVar.reconciliationInterval).SetupWithManager(mgr, rateLimiter); err != nil {
+	crMetrics := istiocrmetrics.RegisterMetrics()
+	if err = controllers.NewController(mgr, flagVar.reconciliationInterval, crMetrics).SetupWithManager(mgr, rateLimiter); err != nil {
 		setupLog.Error(err, "Unable to create controller", "controller", "Istio")
 		os.Exit(1)
 	}

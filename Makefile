@@ -295,11 +295,12 @@ bin/crd-ref-docs:
 .PHONY: generate-istio-crd-docs
 generate-istio-crd-docs: bin/crd-ref-docs ## Generate CRD reference docs
 	./bin/crd-ref-docs \
-	--output-path=docs/contributor/istio-crd.md \
+	--output-path=docs/user/04-00-istio-custom-resource.md \
 	--source-path=api/v1alpha2 \
 	--renderer=markdown \
 	--config=crd-ref-docs/config.yaml \
 	--templates-dir=crd-ref-docs/templates
 	# Replace Optional: \{\} and Required: \{\} with Optional and Required
-	sed -i'' -e 's/Optional: \\{\\}/Optional/g' docs/contributor/istio-crd.md
-	sed -i'' -e 's/Required: \\{\\}/Required/g' docs/contributor/istio-crd.md
+	sed -i'' -e 's/Optional: \\{\\}/Optional/g' docs/user/04-00-istio-custom-resource.md
+	sed -i'' -e 's/Required: \\{\\}/Required/g' docs/user/04-00-istio-custom-resource.md
+	rm docs/user/04-00-istio-custom-resource.md-e

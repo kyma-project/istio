@@ -18,7 +18,6 @@ Any additional Istio CR is placed in the `Warning` state.
 
 
 
-<<<<<<< HEAD
 This table lists all the possible parameters of Istio CR together with their descriptions:
 
 ### Spec

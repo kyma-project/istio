@@ -64,10 +64,6 @@ func main() {
 }
 
 func IstioInstall(kubeClient kube.CLIClient, iopFileNames []string, l clog.Logger) error {
-	if err := k8sversion.IsK8VersionSupported(kubeClient, l); err != nil {
-		return fmt.Errorf("check minimum supported Kubernetes version: %v", err)
-	}
-
 	manifests, vals, err := render.GenerateManifest(iopFileNames, []string{}, false, kubeClient, l)
 	if err != nil {
 		return fmt.Errorf("generate config: %v", err)

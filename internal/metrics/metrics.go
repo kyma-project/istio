@@ -16,6 +16,7 @@ import (
 //   - Usage of compatibility mode.
 type IstioCRMetrics struct {
 	extAuthMetrics *extAuthMetrics
+	Registered     bool
 }
 
 type extAuthMetrics struct {
@@ -48,10 +49,15 @@ func RegisterMetrics() *IstioCRMetrics {
 		crMetrics.extAuthMetrics.PathPrefixConfiguredNumberTotal,
 	)
 
+	crMetrics.Registered = true
 	return crMetrics
 }
 
 func (m *IstioCRMetrics) EmitIstioCRMetrics(cr *v1alpha2.Istio) {
+	if !m.Registered {
+		return
+	}
+
 	providersTotal := len(cr.Spec.Config.Authorizers)
 	m.extAuthMetrics.ProvidersTotal.Set(float64(providersTotal))
 

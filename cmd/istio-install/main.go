@@ -4,13 +4,17 @@
 package main
 
 import (
+	"fmt"
+	"istio.io/istio/operator/pkg/install"
+	"istio.io/istio/operator/pkg/render"
+	"istio.io/istio/operator/pkg/util/clog"
+	"istio.io/istio/operator/pkg/util/progress"
 	"os"
 	"time"
 
 	istioclient "github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 
 	"istio.io/istio/istioctl/pkg/install/k8sversion"
-	istio "istio.io/istio/operator/cmd/mesh"
 	"istio.io/istio/pkg/kube"
 	"k8s.io/client-go/rest"
 )
@@ -20,16 +24,18 @@ const (
 )
 
 func main() {
-	iopFileNames := []string{os.Args[1]}
-
 	consoleLogger := istioclient.CreateIstioLibraryLogger()
+
+	if len(os.Args) <= 1 {
+		consoleLogger.LogAndError("IOP file names must be provided as first parameter")
+		os.Exit(1)
+	}
+	iopFileNames := []string{os.Args[1]}
 
 	if err := istioclient.ConfigureIstioLogScopes(); err != nil {
 		consoleLogger.LogAndError("Failed to configure Istio log: ", err)
 		os.Exit(1)
 	}
-
-	printer := istio.NewPrinterForWriter(os.Stdout)
 
 	rc, err := kube.DefaultRestConfig("", "", func(config *rest.Config) {
 		config.QPS = 50
@@ -51,11 +57,31 @@ func main() {
 		os.Exit(1)
 	}
 
-	// We don't want to verify after installation, because it is unreliable
-	installArgs := &istio.InstallArgs{ReadinessTimeout: DefaultReadinessTimeout, SkipConfirmation: true, Verify: false, InFilenames: iopFileNames}
-
-	if err = istio.Install(cliClient, &istio.RootArgs{}, installArgs, os.Stdout, consoleLogger, printer); err != nil {
+	if err = IstioInstall(cliClient, iopFileNames, consoleLogger); err != nil {
 		consoleLogger.LogAndError("Istio install error: ", err)
 		os.Exit(1)
 	}
+}
+
+func IstioInstall(kubeClient kube.CLIClient, iopFileNames []string, l clog.Logger) error {
+	manifests, vals, err := render.GenerateManifest(iopFileNames, []string{}, false, kubeClient, l)
+	if err != nil {
+		return fmt.Errorf("generate config: %v", err)
+	}
+
+	i := install.Installer{
+		Force:          false,
+		DryRun:         false,
+		SkipWait:       false,
+		Kube:           kubeClient,
+		WaitTimeout:    DefaultReadinessTimeout,
+		Logger:         l,
+		Values:         vals,
+		ProgressLogger: progress.NewLog(),
+	}
+	if err := i.InstallManifests(manifests); err != nil {
+		return fmt.Errorf("failed to install manifests: %v", err)
+	}
+
+	return nil
 }

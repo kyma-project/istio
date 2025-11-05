@@ -16,10 +16,6 @@ type extAuthMetrics struct {
 	PathPrefixConfiguredNumberTotal prometheus.Gauge
 }
 
-//type gatewayMetrics struct {
-//	gatewayExternalTrafficPolicyEnabled *prometheus.Gauge
-//}
-
 func RegisterMetrics() *IstioCRMetrics {
 	crMetrics := &IstioCRMetrics{
 		extAuthMetrics: &extAuthMetrics{

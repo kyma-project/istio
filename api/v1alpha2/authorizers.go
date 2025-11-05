@@ -32,7 +32,6 @@ type Authorizer struct {
 	PathPrefix *string `json:"pathPrefix,omitempty"`
 
 	// Specifies the timeout for the HTTP authorization request to the external service.
-	// Default timeout, as defined in [Envoy](https://www.envoyproxy.io/docs/envoy/latest/api-v3/extensions/filters/http/ext_authz/v3/ext_authz.proto#extensions-filters-http-ext-authz-v3-extauthz) is 200ms.
 	// +kubebuilder:validation:Optional
 	Timeout *metav1.Duration `json:"timeout,omitempty"`
 }

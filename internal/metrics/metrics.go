@@ -6,6 +6,14 @@ import (
 	ctrlmetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
 )
 
+// IstioCRMetrics holds metrics related to the Istio Custom Resource
+// For now, only external authorization metrics are included
+// Possible other metrics,
+//   - Usage of traffic policy local,
+//   - Num trusted proxies set up (yes or no, regardless of number),
+//   - Prometheus merge enabled,
+//   - Usage of egress gateway,
+//   - Usage of compatibility mode.
 type IstioCRMetrics struct {
 	extAuthMetrics *extAuthMetrics
 }

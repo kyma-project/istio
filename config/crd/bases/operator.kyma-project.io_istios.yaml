@@ -1305,6 +1305,10 @@ spec:
                   authorizers:
                     description: Defines a list of external authorization providers.
                     items:
+                      description: |-
+                        Authorizer defines an external authorization provider configuration.
+                        The defined authorizer can be referenced by name in an AuthorizationPolicy
+                        with action CUSTOM to enforce requests to be authorized by the external authorization service.
                       properties:
                         headers:
                           description: Specifies headers to be included, added or
@@ -1384,22 +1388,18 @@ spec:
                         service:
                           description: |-
                             Specifies the service that implements the Envoy ext_authz HTTP authorization service.
-                            The format is "\[\<Namespace>/\]\<Hostname\>".
-                            The specification of "\<Namespace\>"
-                            is required only when it is insufficient to unambiguously resolve a service in the service registry.
-                            The "\<Hostname\>" is a fully qualified host name of a service defined by the Kubernetes service or ServiceEntry.
-                            The recommended format is "\[\<Namespace\>\/\]\<Hostname\>"
-                            Example: "my-ext-authz.foo.svc.cluster.local" or "bar/my-ext-authz".
+                            The format is "[Namespace/]Hostname".
+                            The specification of "Namespace" is required only when it is insufficient to unambiguously resolve a service in the service registry.
+                            The "Hostname" is a fully qualified host name of a service defined by the Kubernetes service or ServiceEntry.
+                            The recommended format is "[Namespace/]Hostname".
                           type: string
                         timeout:
-                          description: |-
-                            Specifies the timeout for the HTTP authorization request to the external service.
-                            Default timeout, as defined in [Envoy](https://www.envoyproxy.io/docs/envoy/latest/api-v3/extensions/filters/http/ext_authz/v3/ext_authz.proto#extensions-filters-http-ext-authz-v3-extauthz) is 200ms.
+                          description: Specifies the timeout for the HTTP authorization
+                            request to the external service.
                           type: string
                       required:
                       - name
                       - port
-                      - service
                       type: object
                     type: array
                   gatewayExternalTrafficPolicy:

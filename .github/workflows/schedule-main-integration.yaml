@@ -8,19 +8,37 @@ permissions:
 on:
   schedule:
     - cron: '0 4 * * *' # Run every day at 5:00 CET (4:00 UTC)
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+env:
+  image-name: "europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager"
 
 jobs:
-  get-sha:
-    name: Get manager SHA
+  get-image:
+    name: Get manager image
     runs-on: ubuntu-latest
     outputs:
-      sha: ${{ steps.get-sha.outputs.sha }}
+      image: "${{ steps.get-image.outputs.image }}"
     steps:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-      - id: get-sha
-        uses: ./.github/actions/get-latest-sha
+      - id: get-image
+        name: get image
+        shell: bash
+        run: |
+          commit_id=$("${{ github.workspace }}/hack/ci/get-latest-sha.sh" "${{ env.image-name }}")
+          image="${{ env.image-name }}:${commit_id}"
+          echo "image=${image}"
+          echo "image=${image}" >> $GITHUB_OUTPUT
+      - id: check-image
+        name: check whether image exists
+        shell: bash
+        run: docker pull "${{ steps.get-image.outputs.image }}"
 
   #############################################
   # Performance tests
@@ -30,16 +48,14 @@ jobs:
   istio-performance-test:
     name: Istio performance test
     runs-on: ubuntu-latest
-    needs: [ get-sha ]
+    needs: [ get-image ]
     steps:
       - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
       - uses: ./.github/actions/perf-test-gardener
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          manager_image: "europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager:${{ needs.get-sha.outputs.sha }}"
+          manager_image: ${{ needs.get-image.outputs.image }}
           gardener_secret: ${{ secrets.GARDENER_TOKEN }}
           gardener_project_name: ${{ vars.GARDENER_PROJECT_NAME }}
           gardener_provider: aws
@@ -52,11 +68,9 @@ jobs:
   run-ui-tests-periodic:
     name: Run UI tests
     runs-on: ubuntu-latest
-    needs: [ get-sha ]
+    needs: [ get-image ]
     steps:
       - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
       - uses: actions/setup-go@v6
         with:
           go-version-file: "go.mod"
@@ -64,8 +78,8 @@ jobs:
         run: |
           sudo echo "127.0.0.1 local.kyma.dev" | sudo tee -a /etc/hosts
           wget -q -O - https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | sudo bash
-          docker pull europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager:"${{ needs.get-sha.outputs.sha }}"
-          IMG=europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager:"${{ needs.get-sha.outputs.sha }}" ./tests/ui/scripts/k3d-ci-kyma-dashboard-integration.sh stage
+          docker pull  ${{ needs.get-image.outputs.image }}
+          IMG="${{ needs.get-image.outputs.image }}" ./tests/ui/scripts/k3d-ci-kyma-dashboard-integration.sh stage
       - uses: actions/upload-artifact@v4
         if: always()
         name: Export Cypress output
@@ -82,42 +96,36 @@ jobs:
   k8s-compatibility-check-k3d:
     name: Kubernetes version compatibility test - K3D
     runs-on: ubuntu-latest
-    needs: [get-sha]
+    needs: [ get-image ]
     strategy:
       fail-fast: false
       matrix:
         test_make_target: [ "configuration-integration-test", "mesh-communication-integration-test", "installation-integration-test", "observability-integration-test" ]
     steps:
       - uses: actions/checkout@v5
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          fetch-depth: 0
       - uses: ./.github/actions/k8s-compatibility-test
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          operator_image_name: "europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager:${{needs.get-sha.outputs.sha }}"
+          operator_image_name: ${{ needs.get-image.outputs.image }}
           operator_version: ${{ github.ref_name }} # should equal to the image build arg VERSION passed in the post main workflow
           test_make_target: ${{ matrix.test_make_target }}
 
   k8s-compatibility-check-aws:
     name: Kubernetes version compatibility test - AWS
     runs-on: ubuntu-latest
-    needs: [get-sha]
+    needs: [ get-image ]
     strategy:
       fail-fast: false
       matrix:
         test_make_target: [ "configuration-integration-test", "mesh-communication-integration-test", "installation-integration-test", "observability-integration-test" ]
     steps:
       - uses: actions/checkout@v5
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          fetch-depth: 0
       - uses: ./.github/actions/k8s-compatibility-test-aws
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          manager_image: "europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager:${{ needs.get-sha.outputs.sha }}"
+          manager_image: ${{ needs.get-image.outputs.image }}
           operator_version: ${{ github.ref_name }} # should equal to the image build arg VERSION passed in the post main workflow
           test_make_target: ${{ matrix.test_make_target }}
           gardener_secret: ${{ secrets.GARDENER_TOKEN }}

@@ -16,10 +16,6 @@ on:
       - "external-images.yaml"
     branches:
       - 'main'
-
-concurrency:
-  group: branch-${{ github.ref_name }}
-  cancel-in-progress: true
   
 jobs:
   build-image:

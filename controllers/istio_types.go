@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	istiocrmetrics "github.com/kyma-project/istio/operator/internal/metrics"
 	"time"
 
 	"github.com/kyma-project/istio/operator/internal/resources"
@@ -34,6 +35,7 @@ type IstioReconciler struct {
 	log                    logr.Logger
 	statusHandler          status.Status
 	reconciliationInterval time.Duration
+	crMetrics              *istiocrmetrics.IstioCRMetrics
 }
 
 type RateLimiter struct {

@@ -1,7 +1,7 @@
 export default [
   { text: 'Istio Service Mesh', link: './00-00-istio-sidecar-proxies.md', collapsed: true, items: [
     { text: 'Restart of Workloads in the Istio Service Mesh', link: './00-05-restart-of-workloads-in-service-mesh.md' },
-    { text: 'Enabling Istio Sidecar Injection', link: './01-40-enable-sidecar-injection.md' },
+    { text: 'Enabling Istio Sidecar Injection', link: './tutorials/01-40-enable-sidecar-injection.md' },
     { text: 'Istio Version', link: './00-10-istio-version.md' },
     { text: 'Istio Proxy as Native Sidecar Container', link: './00-20-istio-proxy-as-native-sidecar.md' }
   ] },

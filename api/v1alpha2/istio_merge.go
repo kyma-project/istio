@@ -205,7 +205,7 @@ func (i *Istio) mergeConfig(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOper
 	op.Spec.MeshConfig = newMeshConfig
 
 	op = applyGatewayExternalTrafficPolicy(op, i)
-	
+
 	op, err = applyDualStack(op, i)
 	if err != nil {
 		return op, err
@@ -247,13 +247,14 @@ func applyGatewayExternalTrafficPolicy(op iopv1alpha1.IstioOperator, i *Istio) i
 }
 
 func applyDualStack(op iopv1alpha1.IstioOperator, i *Istio) (iopv1alpha1.IstioOperator, error) {
-	if i.Spec.Experimental != nil && i.Spec.Experimental.EnableDualStack != nil && *i.Spec.Experimental.EnableDualStack {
-		return enableDualStack(op, i)
+	dualStackEnabled := i.Spec.Experimental != nil && i.Spec.Experimental.EnableDualStack != nil && *i.Spec.Experimental.EnableDualStack
+	var ipFamilyPolicy string
+	if dualStackEnabled {
+		ipFamilyPolicy = "RequireDualStack"
+	} else {
+		ipFamilyPolicy = "SingleStack"
 	}
-	return op, nil
-}
 
-func enableDualStack(op iopv1alpha1.IstioOperator, i *Istio) (iopv1alpha1.IstioOperator, error) {
 	valuesMap, err := values.MapFromObject(op.Spec.Values)
 	if err != nil {
 		return op, err
@@ -263,19 +264,21 @@ func enableDualStack(op iopv1alpha1.IstioOperator, i *Istio) (iopv1alpha1.IstioO
 		valuesMap = make(values.Map)
 	}
 
-	err = valuesMap.SetPath("pilot.env.ISTIO_DUAL_STACK", "true")
+	if dualStackEnabled {
+		err = valuesMap.SetPath("pilot.env.ISTIO_DUAL_STACK", "true")
+		if err != nil {
+			return iopv1alpha1.IstioOperator{}, err
+		}
+	}
+	err = valuesMap.SetPath("pilot.ipFamilyPolicy", ipFamilyPolicy)
 	if err != nil {
 		return iopv1alpha1.IstioOperator{}, err
 	}
-	err = valuesMap.SetPath("pilot.ipFamilyPolicy", "RequireDualStack")
+	err = valuesMap.SetPath("gateways.istio-ingressgateway.ipFamilyPolicy", ipFamilyPolicy)
 	if err != nil {
 		return iopv1alpha1.IstioOperator{}, err
 	}
-	err = valuesMap.SetPath("gateways.istio-ingressgateway.ipFamilyPolicy", "RequireDualStack")
-	if err != nil {
-		return iopv1alpha1.IstioOperator{}, err
-	}
-	err = valuesMap.SetPath("gateways.istio-egressgateway.ipFamilyPolicy", "RequireDualStack")
+	err = valuesMap.SetPath("gateways.istio-egressgateway.ipFamilyPolicy", ipFamilyPolicy)
 	if err != nil {
 		return iopv1alpha1.IstioOperator{}, err
 	}

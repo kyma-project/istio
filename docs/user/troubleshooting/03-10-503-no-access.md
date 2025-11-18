@@ -49,7 +49,7 @@ If the restart doesn't help, follow these steps:
    kubectl logs -n istio-system -l app=istio-ingressgateway -c istio-proxy
    ```
 
-3. To make sure that a corrupted certificate is regenerated, verify if the **spec.enableKymaGateway** field of your APIGateway custom resource is set to `true`. If you are running Kyma provisioned through Gardener, follow the [Gardener troubleshooting guide](https://kyma-project.io/docs/kyma/latest/04-operation-guides/troubleshooting/security/sec-01-certificates-gardener/) instead.
+3. To make sure that a corrupted certificate is regenerated, verify if the **spec.enableKymaGateway** field of your APIGateway custom resource is set to `true`. If you are running Kyma provisioned through Gardener, follow the [Issues with Certificates on Gardener](https://kyma-project.io/04-operation-guides/troubleshooting/security/sec-01-certificates-gardener.html#issues-with-certificates-on-gardener) troubleshooting guide instead.
 
 #### **Kyma Dashboard**
 
@@ -62,6 +62,6 @@ If the restart doesn't help, follow these steps:
 
 2. If the ports `80` and `443` are not used, check the logs of the `istio-proxy` container for errors related to certificates. To do this, click **View Logs**.
 
-3. To make sure that a corrupted certificate is regenerated, verify if the **spec.enableKymaGateway** field of your APIGateway custom resource is set to `true`. If you are running Kyma provisioned through Gardener, follow the [Gardener troubleshooting guide](https://kyma-project.io/docs/kyma/latest/04-operation-guides/troubleshooting/security/sec-01-certificates-gardener/) instead.
+3. To make sure that a corrupted certificate is regenerated, verify if the **spec.enableKymaGateway** field of your APIGateway custom resource is set to `true`. If you are running Kyma provisioned through Gardener, follow the [Issues with Certificates on Gardener](https://kyma-project.io/docs/kyma/latest/04-operation-guides/troubleshooting/security/sec-01-certificates-gardener/) troubleshooting guide instead.
 
 <!-- tabs:end -->

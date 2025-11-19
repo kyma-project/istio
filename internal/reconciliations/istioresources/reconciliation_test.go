@@ -123,7 +123,6 @@ var _ = Describe("Reconciliation", func() {
 		It("should be created when hyperscaler is AWS, and the dual stack is enabled", func() {
 			//given
 			n := corev1.Node{Spec: corev1.NodeSpec{ProviderID: "aws://asdasdads"}}
-			//given
 			ingressSvc := corev1.Service{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "istio-ingressgateway",
@@ -149,7 +148,6 @@ var _ = Describe("Reconciliation", func() {
 		It("should not be created when hyperscaler is AWS, but the dual stack is disabled", func() {
 			//given
 			n := corev1.Node{Spec: corev1.NodeSpec{ProviderID: "aws://asdasdads"}}
-			//given
 			ingressSvc := corev1.Service{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "istio-ingressgateway",
@@ -177,7 +175,6 @@ var _ = Describe("Reconciliation", func() {
 		It("should not be created when hyperscaler is AWS, even if proxy-protocol is set but the dual stack is not enabled", func() {
 			//given
 			n := corev1.Node{Spec: corev1.NodeSpec{ProviderID: "aws://asdasdads"}}
-			//given
 			ingressSvc := corev1.Service{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "istio-ingressgateway",

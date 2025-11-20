@@ -1,9 +1,13 @@
 package images
 
 import (
+	"os"
+
 	"github.com/imdario/mergo"
 	"sigs.k8s.io/yaml"
 )
+
+const pullSecretEnvVar = "SKR_IMG_PULL_SECRET"
 
 // MergeHubConfiguration merges the Istio hub configuration to the provided manifest.
 func MergeHubConfiguration(manifest []byte, istioImagesHub string) ([]byte, error) {
@@ -23,4 +27,59 @@ func MergeHubConfiguration(manifest []byte, istioImagesHub string) ([]byte, erro
 	}
 
 	return yaml.Marshal(templateMap)
+}
+
+func MergePullSecretEnv(manifest []byte) ([]byte, error) {
+	secret, pullSecretEnvExists := os.LookupEnv(pullSecretEnvVar)
+	if !pullSecretEnvExists {
+		return manifest, nil
+	}
+
+	var templateMap map[string]interface{}
+	_ = yaml.Unmarshal(manifest, &templateMap)
+
+	spec := ensureMap(templateMap, "spec")
+	values := ensureMap(spec, "values")
+	global := ensureMap(values, "global")
+
+	ips, ok := global["imagePullSecrets"].([]interface{})
+	if !ok {
+		ips = []interface{}{}
+	}
+
+	secretName := secret
+	already := false
+	for _, v := range ips {
+		if v == secretName {
+			already = true
+			break
+		}
+	}
+	if !already {
+		ips = append(ips, secretName)
+	}
+
+	global["imagePullSecrets"] = ips
+
+	out, err := yaml.Marshal(templateMap)
+	if err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+func ensureMap(m map[string]interface{}, key string) map[string]interface{} {
+	v, ok := m[key]
+	if !ok {
+		nm := map[string]interface{}{}
+		m[key] = nm
+		return nm
+	}
+	nm, ok := v.(map[string]interface{})
+	if !ok {
+		nm = map[string]interface{}{}
+		m[key] = nm
+	}
+	return nm
 }

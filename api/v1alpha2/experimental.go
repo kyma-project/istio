@@ -6,6 +6,7 @@ type Experimental struct {
 	// Enables the Dual Stack support
 	// +kubebuilder:validation:Optional
 	EnableDualStack *bool `json:"enableDualStack,omitempty"`
+	EnableAmbient   *bool `json:"enableAmbient,omitempty"`
 }
 
 type PilotFeatures struct {

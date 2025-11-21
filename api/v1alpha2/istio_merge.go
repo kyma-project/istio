@@ -2,7 +2,11 @@ package v1alpha2
 
 import (
 	"encoding/json"
+
 	"github.com/golang/protobuf/ptypes/duration"
+	"google.golang.org/protobuf/types/known/structpb"
+	meshv1alpha1 "istio.io/api/mesh/v1alpha1"
+	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
 	"istio.io/istio/operator/pkg/values"
 	"istio.io/istio/pkg/util/protomarshal"
 	appsv1 "k8s.io/api/apps/v1"
@@ -10,10 +14,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/intstr"
-
-	"google.golang.org/protobuf/types/known/structpb"
-	meshv1alpha1 "istio.io/api/mesh/v1alpha1"
-	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
 )
 
 func (i *Istio) MergeInto(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {
@@ -79,6 +79,17 @@ func (m *meshConfigBuilder) BuildPrometheusMergeConfig(prometheusMerge bool) *me
 func (m *meshConfigBuilder) BuildDualStackConfig(enableDualStack bool) *meshConfigBuilder {
 	if enableDualStack {
 		err := m.c.SetPath("defaultConfig.proxyMetadata.ISTIO_DUAL_STACK", "true")
+		if err != nil {
+			return nil
+		}
+	}
+
+	return m
+}
+
+func (m *meshConfigBuilder) BuildAmbientConfig(ambientEnabled bool) *meshConfigBuilder {
+	if ambientEnabled {
+		err := m.c.SetPath("defaultConfig.proxyMetadata.ISTIO_META_ENABLE_HBONE", "true")
 		if err != nil {
 			return nil
 		}
@@ -194,19 +205,26 @@ func (i *Istio) mergeConfig(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOper
 	}
 
 	dualStackEnabled := i.Spec.Experimental != nil && i.Spec.Experimental.EnableDualStack != nil && *i.Spec.Experimental.EnableDualStack
+	ambientEnabled := i.Spec.Experimental != nil && i.Spec.Experimental.EnableAmbient != nil && *i.Spec.Experimental.EnableAmbient == true
 
 	newMeshConfig := mcb.
 		BuildNumTrustedProxies(i.Spec.Config.NumTrustedProxies).
 		BuildExternalAuthorizerConfiguration(i.Spec.Config.Authorizers).
 		BuildPrometheusMergeConfig(i.Spec.Config.Telemetry.Metrics.PrometheusMerge).
 		BuildDualStackConfig(dualStackEnabled).
+		BuildAmbientConfig(ambientEnabled).
 		Build()
 
 	op.Spec.MeshConfig = newMeshConfig
 
 	op = applyGatewayExternalTrafficPolicy(op, i)
-	
+
 	op, err = applyDualStack(op, i)
+	if err != nil {
+		return op, err
+	}
+
+	op, err = enableAmbient(op, ambientEnabled)
 	if err != nil {
 		return op, err
 	}
@@ -276,6 +294,54 @@ func enableDualStack(op iopv1alpha1.IstioOperator, i *Istio) (iopv1alpha1.IstioO
 		return iopv1alpha1.IstioOperator{}, err
 	}
 	err = valuesMap.SetPath("gateways.istio-egressgateway.ipFamilyPolicy", "RequireDualStack")
+	if err != nil {
+		return iopv1alpha1.IstioOperator{}, err
+	}
+
+	op.Spec.Values, err = values.ConvertMap[json.RawMessage](valuesMap)
+	if err != nil {
+		return op, err
+	}
+
+	return op, nil
+}
+
+func enableAmbient(op iopv1alpha1.IstioOperator, ambientEnabled bool) (iopv1alpha1.IstioOperator, error) {
+	// if ambient is not enabled in the spec.Experimental, then we exit early without changes
+	if !ambientEnabled {
+		return op, nil
+	}
+
+	// enable ztunnel component
+	boolValue := iopv1alpha1.BoolValue{}
+	err := boolValue.UnmarshalJSON([]byte("true"))
+	if err != nil {
+		return iopv1alpha1.IstioOperator{}, err
+	}
+	if op.Spec.Components == nil {
+		op.Spec.Components = &iopv1alpha1.IstioComponentSpec{}
+	}
+
+	op.Spec.Components.Ztunnel = &iopv1alpha1.ComponentSpec{
+		Enabled: &boolValue,
+	}
+
+	// set values
+	valuesMap, err := values.MapFromObject(op.Spec.Values)
+	if err != nil {
+		return iopv1alpha1.IstioOperator{}, err
+	}
+
+	if valuesMap == nil {
+		valuesMap = make(values.Map)
+	}
+
+	err = valuesMap.SetPath("pilot.env.PILOT_ENABLE_AMBIENT", "true")
+	if err != nil {
+		return iopv1alpha1.IstioOperator{}, err
+	}
+
+	err = valuesMap.SetPath("cni.ambient.enabled", true)
 	if err != nil {
 		return iopv1alpha1.IstioOperator{}, err
 	}

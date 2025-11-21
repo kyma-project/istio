@@ -193,6 +193,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `pilot` _[PilotFeatures](#pilotfeatures)_ |  |  |  |
+| `enableDualStack` _boolean_ | Enables the Dual Stack support |  | Optional <br /> |
 
 
 #### HPASpec

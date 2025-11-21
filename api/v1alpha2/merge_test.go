@@ -664,6 +664,76 @@ var _ = Describe("Merge", func() {
 
 	})
 
+	It("should set ipFamilyPolicy to RequireDualStack if dualStack is enabled in the Istio CR", func() {
+		// given
+		enableDualStack := true
+		iop := iopv1alpha1.IstioOperator{
+			Spec: iopv1alpha1.IstioOperatorSpec{},
+		}
+		istioCR := istiov1alpha2.Istio{Spec: istiov1alpha2.IstioSpec{
+			Config: istiov1alpha2.Config{},
+			Experimental: &istiov1alpha2.Experimental{
+				EnableDualStack: &enableDualStack,
+			},
+		}}
+
+		// when
+		out, err := istioCR.MergeInto(iop)
+
+		valuesMap, err := values.MapFromObject(out.Spec.Values)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		Expect(values.TryGetPathAs[string](valuesMap, "pilot.ipFamilyPolicy")).To(Equal("RequireDualStack"))
+		Expect(values.TryGetPathAs[string](valuesMap, "gateways.istio-ingressgateway.ipFamilyPolicy")).To(Equal("RequireDualStack"))
+		Expect(values.TryGetPathAs[string](valuesMap, "gateways.istio-egressgateway.ipFamilyPolicy")).To(Equal("RequireDualStack"))
+	})
+
+	It("should set dual stack env for Istio pilot if dualStack is enabled in the Istio CR", func() {
+		// given
+		enableDualStack := true
+		iop := iopv1alpha1.IstioOperator{
+			Spec: iopv1alpha1.IstioOperatorSpec{},
+		}
+		istioCR := istiov1alpha2.Istio{Spec: istiov1alpha2.IstioSpec{
+			Config: istiov1alpha2.Config{},
+			Experimental: &istiov1alpha2.Experimental{
+				EnableDualStack: &enableDualStack,
+			},
+		}}
+
+		// when
+		out, err := istioCR.MergeInto(iop)
+
+		valuesMap, err := values.MapFromObject(out.Spec.Values)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		Expect(values.TryGetPathAs[string](valuesMap, "pilot.env.ISTIO_DUAL_STACK")).To(Equal("true"))
+	})
+
+	It("should set dual stack in the mesh Config if dualStack is enabled in the Istio CR", func() {
+		// given
+		enableDualStack := true
+		iop := iopv1alpha1.IstioOperator{
+			Spec: iopv1alpha1.IstioOperatorSpec{},
+		}
+		istioCR := istiov1alpha2.Istio{Spec: istiov1alpha2.IstioSpec{
+			Config: istiov1alpha2.Config{},
+			Experimental: &istiov1alpha2.Experimental{
+				EnableDualStack: &enableDualStack,
+			},
+		}}
+
+		// when
+		out, err := istioCR.MergeInto(iop)
+
+		meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		dualStack, exists := meshConfig.GetPath("defaultConfig.proxyMetadata.ISTIO_DUAL_STACK")
+		Expect(exists).To(BeTrue())
+		Expect(dualStack).To(Equal("true"))
+	})
+
 	Context("Pilot", func() {
 		Context("When Istio CR has 500m configured for CPU limits", func() {
 			It("should set CPU limits to 500m in IOP", func() {

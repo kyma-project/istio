@@ -106,6 +106,10 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 	r.statusHandler.SetCondition(&istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileUnknown))
 
+	if err := r.validate(&istioCR); err != nil {
+		return ctrl.Result{}, r.statusHandler.UpdateToError(ctx, &istioCR, err)
+	}
+
 	istioImages, imgErr := images.GetImages()
 	if imgErr != nil {
 		return r.terminateReconciliation(ctx, &istioCR, describederrors.NewDescribedError(imgErr, "Unable to get Istio images environments"),
@@ -299,9 +303,6 @@ func (r *IstioReconciler) finishReconcile(ctx context.Context, istioCR *operator
 
 	r.statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileSucceeded))
 	r.statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIngressTargetingUserResourceNotFound))
-	if err := r.validate(istioCR); err != nil {
-		return ctrl.Result{}, r.statusHandler.UpdateToError(ctx, istioCR, err)
-	}
 
 	if err := r.statusHandler.UpdateToReady(ctx, istioCR); err != nil {
 		r.log.Error(err, "Error during updating status to ready")

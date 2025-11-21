@@ -187,6 +187,18 @@ func (m *meshConfigBuilder) BuildExternalAuthorizerConfiguration(authorizers []*
 	return m
 }
 
+func (m *meshConfigBuilder) BuildForwardClientCertDetails(details *XFCCStrategy) *meshConfigBuilder {
+	if details == nil {
+		return m
+	}
+
+	err := m.c.SetPath("defaultConfig.gatewayTopology.forwardClientCertDetails", *details)
+	if err != nil {
+		return nil
+	}
+	return m
+}
+
 func (i *Istio) mergeConfig(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {
 	mcb, err := newMeshConfigBuilder(op)
 	if err != nil {
@@ -200,12 +212,13 @@ func (i *Istio) mergeConfig(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOper
 		BuildExternalAuthorizerConfiguration(i.Spec.Config.Authorizers).
 		BuildPrometheusMergeConfig(i.Spec.Config.Telemetry.Metrics.PrometheusMerge).
 		BuildDualStackConfig(dualStackEnabled).
+		BuildForwardClientCertDetails(i.Spec.Config.ForwardClientCertDetails).
 		Build()
 
 	op.Spec.MeshConfig = newMeshConfig
 
 	op = applyGatewayExternalTrafficPolicy(op, i)
-	
+
 	op, err = applyDualStack(op, i)
 	if err != nil {
 		return op, err

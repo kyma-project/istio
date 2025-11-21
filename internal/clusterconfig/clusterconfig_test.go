@@ -406,6 +406,72 @@ var _ = Describe("EvaluateClusterSize", func() {
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(size).To(Equal(clusterconfig.Production))
 	})
+
+	It("should detect dual stack Ingress if an ip-address-type annotation is set to dual stack", func() {
+		//given
+		ingressSvc := corev1.Service{
+			ObjectMeta: v1.ObjectMeta{
+				Name:      "istio-ingressgateway",
+				Namespace: "istio-system",
+				Annotations: map[string]string{
+					"service.beta.kubernetes.io/aws-load-balancer-ip-address-type": "dualstack",
+				},
+			},
+			Spec: corev1.ServiceSpec{},
+		}
+
+		client := createFakeClient(&ingressSvc)
+
+		//when
+		ds, err := clusterconfig.IsDualStack(context.Background(), client)
+
+		//then
+		Expect(err).To(Not(HaveOccurred()))
+		Expect(ds).To(Equal(true))
+	})
+
+	It("should detect single stack Ingress if an ip-address-type annotation is not set dual stack", func() {
+		//given
+		ingressSvc := corev1.Service{
+			ObjectMeta: v1.ObjectMeta{
+				Name:      "istio-ingressgateway",
+				Namespace: "istio-system",
+				Annotations: map[string]string{
+					"service.beta.kubernetes.io/aws-load-balancer-ip-address-type": "ipv4",
+				},
+			},
+			Spec: corev1.ServiceSpec{},
+		}
+
+		client := createFakeClient(&ingressSvc)
+
+		//when
+		ds, err := clusterconfig.IsDualStack(context.Background(), client)
+
+		//then
+		Expect(err).To(Not(HaveOccurred()))
+		Expect(ds).To(Equal(false))
+	})
+
+	It("should detect single stack Ingress if an ip-address-type annotation is not set", func() {
+		//given
+		ingressSvc := corev1.Service{
+			ObjectMeta: v1.ObjectMeta{
+				Name:      "istio-ingressgateway",
+				Namespace: "istio-system",
+			},
+			Spec: corev1.ServiceSpec{},
+		}
+
+		client := createFakeClient(&ingressSvc)
+
+		//when
+		ds, err := clusterconfig.IsDualStack(context.Background(), client)
+
+		//then
+		Expect(err).To(Not(HaveOccurred()))
+		Expect(ds).To(Equal(false))
+	})
 })
 
 func createFakeClient(objects ...client.Object) client.Client {

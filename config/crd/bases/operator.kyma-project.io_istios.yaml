@@ -1434,6 +1434,9 @@ spec:
               experimental:
                 description: Defines experimental configuration options.
                 properties:
+                  enableDualStack:
+                    description: Enables the Dual Stack support
+                    type: boolean
                   pilot:
                     properties:
                       enableAlphaGatewayAPI:

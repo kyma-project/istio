@@ -3,7 +3,6 @@ package v1alpha2
 import (
 	"encoding/json"
 	"github.com/golang/protobuf/ptypes/duration"
-
 	"istio.io/istio/operator/pkg/values"
 	"istio.io/istio/pkg/util/protomarshal"
 	appsv1 "k8s.io/api/apps/v1"
@@ -72,6 +71,17 @@ func (m *meshConfigBuilder) BuildPrometheusMergeConfig(prometheusMerge bool) *me
 	err := m.c.SetPath("enablePrometheusMerge", prometheusMerge)
 	if err != nil {
 		return nil
+	}
+
+	return m
+}
+
+func (m *meshConfigBuilder) BuildDualStackConfig(enableDualStack bool) *meshConfigBuilder {
+	if enableDualStack {
+		err := m.c.SetPath("defaultConfig.proxyMetadata.ISTIO_DUAL_STACK", "true")
+		if err != nil {
+			return nil
+		}
 	}
 
 	return m
@@ -183,15 +193,23 @@ func (i *Istio) mergeConfig(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOper
 		return op, err
 	}
 
+	dualStackEnabled := i.Spec.Experimental != nil && i.Spec.Experimental.EnableDualStack != nil && *i.Spec.Experimental.EnableDualStack
+
 	newMeshConfig := mcb.
 		BuildNumTrustedProxies(i.Spec.Config.NumTrustedProxies).
 		BuildExternalAuthorizerConfiguration(i.Spec.Config.Authorizers).
 		BuildPrometheusMergeConfig(i.Spec.Config.Telemetry.Metrics.PrometheusMerge).
+		BuildDualStackConfig(dualStackEnabled).
 		Build()
 
 	op.Spec.MeshConfig = newMeshConfig
 
 	op = applyGatewayExternalTrafficPolicy(op, i)
+	
+	op, err = applyDualStack(op, i)
+	if err != nil {
+		return op, err
+	}
 
 	return op, nil
 }
@@ -226,6 +244,48 @@ func applyGatewayExternalTrafficPolicy(op iopv1alpha1.IstioOperator, i *Istio) i
 		})
 	}
 	return op
+}
+
+func applyDualStack(op iopv1alpha1.IstioOperator, i *Istio) (iopv1alpha1.IstioOperator, error) {
+	if i.Spec.Experimental != nil && i.Spec.Experimental.EnableDualStack != nil && *i.Spec.Experimental.EnableDualStack {
+		return enableDualStack(op, i)
+	}
+	return op, nil
+}
+
+func enableDualStack(op iopv1alpha1.IstioOperator, i *Istio) (iopv1alpha1.IstioOperator, error) {
+	valuesMap, err := values.MapFromObject(op.Spec.Values)
+	if err != nil {
+		return op, err
+	}
+
+	if valuesMap == nil {
+		valuesMap = make(values.Map)
+	}
+
+	err = valuesMap.SetPath("pilot.env.ISTIO_DUAL_STACK", "true")
+	if err != nil {
+		return iopv1alpha1.IstioOperator{}, err
+	}
+	err = valuesMap.SetPath("pilot.ipFamilyPolicy", "RequireDualStack")
+	if err != nil {
+		return iopv1alpha1.IstioOperator{}, err
+	}
+	err = valuesMap.SetPath("gateways.istio-ingressgateway.ipFamilyPolicy", "RequireDualStack")
+	if err != nil {
+		return iopv1alpha1.IstioOperator{}, err
+	}
+	err = valuesMap.SetPath("gateways.istio-egressgateway.ipFamilyPolicy", "RequireDualStack")
+	if err != nil {
+		return iopv1alpha1.IstioOperator{}, err
+	}
+
+	op.Spec.Values, err = values.ConvertMap[json.RawMessage](valuesMap)
+	if err != nil {
+		return op, err
+	}
+
+	return op, nil
 }
 
 //nolint:gocognit,gocyclo,cyclop,funlen // cognitive complexity 189 of func `(*Istio).mergeResources` is high (> 20), cyclomatic complexity 70 of func `(*Istio).mergeResources` is high (> 30), Function 'mergeResources' has too many statements (129 > 50) TODO: refactor this function

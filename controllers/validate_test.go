@@ -19,7 +19,7 @@ import (
 )
 
 var _ = Describe("Istio Controller", func() {
-	It("should set CR status to warning if experimental fields have been defined", func() {
+	It("should set CR status to error if experimental fields have been defined", func() {
 		// given
 		istioCR := &operatorv1alpha2.Istio{
 			ObjectMeta: metav1.ObjectMeta{
@@ -70,7 +70,7 @@ var _ = Describe("Istio Controller", func() {
 		err = fakeClient.Get(context.Background(), client.ObjectKeyFromObject(istioCR), &updatedIstioCR)
 		Expect(err).To(Not(HaveOccurred()))
 
-		Expect(updatedIstioCR.Status.State).Should(Equal(operatorv1alpha2.Warning))
+		Expect(updatedIstioCR.Status.State).Should(Equal(operatorv1alpha2.Error))
 		Expect(updatedIstioCR.Status.Description).To(ContainSubstring("Experimental features are not supported in this image flavour"))
 	})
 })

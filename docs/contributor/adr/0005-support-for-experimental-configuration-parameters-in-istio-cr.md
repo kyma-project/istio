@@ -19,7 +19,7 @@ spec:
       #[...]
 ```
 
-The experimental features should be only available to be used with a separately built controller image. Using the experimental features with production image should result in setting the Istio rustom resource to the `Warning` state.
+The experimental features should be only available to be used with a separately built controller image. Using the experimental features with production image should result in setting the Istio custom resource to the `Error` state and break the reconciliation to avoid unintended changes.
 
 ### SAP BTP, Kyma Runtime
 In context of SAP BTP, Kyma runtime, experimental features should only be available in the experimental release channel.

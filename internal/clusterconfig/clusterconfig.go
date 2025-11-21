@@ -140,9 +140,14 @@ const (
 	loadBalancerNlbTargetType           = "instance"
 	loadBalancerTypeAnnotation          = "service.beta.kubernetes.io/aws-load-balancer-type"
 	loadBalancerType                    = "nlb"
+	loadBalancerDualStackAnnotation     = "service.beta.kubernetes.io/aws-load-balancer-ip-address-type"
+	loadBalancerDualStack               = "dualstack"
 
 	loadBalancerProxyProtocolOpenStackAnnotation = "loadbalancer.openstack.org/proxy-protocol"
 	loadBalancerProxyProtocolOpenStack           = "v1"
+
+	istioIngressServiceName = "istio-ingressgateway"
+	istioIngressNamespace   = "istio-system"
 )
 
 func ShouldUseNLB(ctx context.Context, k8sClient client.Client) (bool, error) {
@@ -156,7 +161,7 @@ func ShouldUseNLB(ctx context.Context, k8sClient client.Client) (bool, error) {
 	}
 
 	var ingressGatewaySvc corev1.Service
-	err = k8sClient.Get(ctx, client.ObjectKey{Namespace: "istio-system", Name: "istio-ingressgateway"}, &ingressGatewaySvc)
+	err = k8sClient.Get(ctx, client.ObjectKey{Namespace: istioIngressNamespace, Name: istioIngressServiceName}, &ingressGatewaySvc)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return false, nil
@@ -165,6 +170,26 @@ func ShouldUseNLB(ctx context.Context, k8sClient client.Client) (bool, error) {
 	}
 
 	if value, ok := ingressGatewaySvc.Annotations[loadBalancerTypeAnnotation]; ok && value == loadBalancerType {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+// IsDualStack checks whether the Ingress service has an IP address type annotation set to 'dualstack'
+// This annotation is set automatically by 'gardener-extension-provider-aws' on the Gardener side
+// if the cluster infrastructure supports IPv6
+func IsDualStack(ctx context.Context, k8sClient client.Client) (bool, error) {
+	var ingressGatewaySvc corev1.Service
+	err := k8sClient.Get(ctx, client.ObjectKey{Namespace: istioIngressNamespace, Name: istioIngressServiceName}, &ingressGatewaySvc)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	if value, ok := ingressGatewaySvc.Annotations[loadBalancerDualStackAnnotation]; ok && value == loadBalancerDualStack {
 		return true, nil
 	}
 

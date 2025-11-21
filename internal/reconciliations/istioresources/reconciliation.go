@@ -78,12 +78,30 @@ func getResources(k8sClient client.Client, provider string) ([]Resource, error) 
 	switch provider {
 	case clusterconfig.Aws:
 
+		var shouldDelete bool
 		shouldUseNLB, err := clusterconfig.ShouldUseNLB(context.Background(), k8sClient)
 		if err != nil {
 			return nil, err
 		}
 
-		istioResources = append(istioResources, NewProxyProtocolEnvoyFilter(k8sClient, shouldUseNLB))
+		if shouldUseNLB {
+			isDualStack, err := clusterconfig.IsDualStack(context.Background(), k8sClient)
+			if err != nil {
+				return nil, err
+			}
+			if isDualStack {
+				// NLB with DualStack, so Proxy Protocol enabled
+				shouldDelete = false
+			} else {
+				// NLB without DualStack, so Proxy Protocol disabled
+				shouldDelete = true
+			}
+		} else {
+			// ELB, so Proxy Protocol enabled
+			shouldDelete = false
+		}
+
+		istioResources = append(istioResources, NewProxyProtocolEnvoyFilter(k8sClient, shouldDelete))
 
 	case clusterconfig.Openstack:
 		// NLB is a default only for AWS clusters so for OpenStack we need to set the usage of NLB to false

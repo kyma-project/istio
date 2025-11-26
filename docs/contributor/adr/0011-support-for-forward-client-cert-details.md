@@ -18,12 +18,12 @@ The Istio CustomResourceDefinition will be extended to include a new optional fi
 This field will be added under the `spec.config` section.
 
 The field will be of type string and will accept the following values:
-- `AppendForward` - When the client connection is mTLS, append the client certificate information to the request’s XFCC header and forward it.
-- `SanitizeSet` - When the client connection is mTLS, reset the XFCC header with the client certificate information and send it to the next hop.
-- `Sanitize` - Do not send the XFCC header to the next hop.
-- `AlwaysForwardOnly` - Always forward the XFCC header in the request, regardless of whether the client connection is mTLS.
-- `ForwardOnly` - When the client connection is mTLS (Mutual TLS), forward the XFCC header in the request.
+- `APPEND_FORWARD` - When the client connection is mTLS, append the client certificate information to the request’s XFCC header and forward it.
+- `SANITIZE_SET` - When the client connection is mTLS, reset the XFCC header with the client certificate information and send it to the next hop.
+- `SANITIZE` - Do not send the XFCC header to the next hop.
+- `ALWAYS_FORWARD_ONLY` - Always forward the XFCC header in the request, regardless of whether the client connection is mTLS.
+- `FORWARD_ONLY` - When the client connection is mTLS (Mutual TLS), forward the XFCC header in the request.
 
-The default value for this field will be `Sanitize`, ensuring that by default,
+The default value for this field will be `SANITIZE`, ensuring that by default,
 the XFCC header is not forwarded unless explicitly configured otherwise.
 This default behaviour is defined by Envoy.

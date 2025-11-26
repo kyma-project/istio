@@ -22,3 +22,4 @@ jobs:
             actions/download-artifact
             actions/github-script
             kyma-project/test-infra
+            dependabot/fetch-metadata

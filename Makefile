@@ -285,7 +285,7 @@ module-version:
 
 ########## Docs generation ###########
 bin/crd-ref-docs:
-    mkdir -p bin
+	mkdir -p bin
 	wget "https://github.com/elastic/crd-ref-docs/releases/download/v0.2.0/crd-ref-docs_0.2.0_${OS_TYPE}_${OS_ARCH}.tar.gz" -O bin/crd-ref-docs.tar.gz
 	mkdir -p bin/crd-ref-docs-x
 	tar -xzf bin/crd-ref-docs.tar.gz -C bin/crd-ref-docs-x

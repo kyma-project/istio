@@ -12,7 +12,7 @@ jobs:
       matrix:
         test_make_target: [ "configuration-integration-test", "mesh-communication-integration-test", "installation-integration-test", "observability-integration-test" ]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
@@ -45,7 +45,7 @@ jobs:
     name: Istio integration test AWS specific
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
@@ -77,7 +77,7 @@ jobs:
     name: Istio integration test GCP specific
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0

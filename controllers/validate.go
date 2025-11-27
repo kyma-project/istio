@@ -13,9 +13,9 @@ func (r *IstioReconciler) validate(istioCR *operatorv1alpha2.Istio) describederr
 	if istioCR.Spec.Experimental != nil {
 		// user has experimental field applied in their CR
 		// return error with description
-		r.log.Info("Experimental features are not supported in this image flavour")
-		return describederrors.NewDescribedError(errors.New("istio CR contains experimental feature"), "Experimental features are not supported in this image flavour").
-			SetWarning().
+		err := errors.New("istio CR contains experimental feature")
+		r.log.Error(err, "Experimental features are not supported in this image flavour")
+		return describederrors.NewDescribedError(err, "Experimental features are not supported in this image flavour").
 			SetCondition(false)
 	}
 	return nil

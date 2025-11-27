@@ -293,8 +293,8 @@ bin/crd-ref-docs:
 	mv bin/crd-ref-docs-x/crd-ref-docs bin/crd-ref-docs
 	rm -r bin/crd-ref-docs-x
 
-.PHONY: generate-istio-crd-docs
-generate-istio-crd-docs: bin/crd-ref-docs ## Generate CRD reference docs
+.PHONY: generate-crd-docs
+generate-crd-docs: bin/crd-ref-docs ## Generate CRD reference docs
 	./bin/crd-ref-docs \
 	--output-path=docs/user/04-00-istio-custom-resource.md \
 	--source-path=api/v1alpha2 \

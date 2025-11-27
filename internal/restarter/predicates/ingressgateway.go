@@ -21,10 +21,32 @@ func (i RestartPredicate) NewIngressGatewayEvaluator(_ context.Context) (Ingress
 		return nil, err
 	}
 
-	return NumTrustedProxiesRestartEvaluator{
-		NewNumTrustedProxies: i.istioCR.Spec.Config.NumTrustedProxies,
-		OldNumTrustedProxies: lastAppliedConfig.Config.NumTrustedProxies,
+	return CompositeIngressGatewayRestartEvaluator{
+		Evaluators: []IngressGatewayRestartEvaluator{
+			NumTrustedProxiesRestartEvaluator{
+				NewNumTrustedProxies: i.istioCR.Spec.Config.NumTrustedProxies,
+				OldNumTrustedProxies: lastAppliedConfig.Config.NumTrustedProxies,
+			},
+			XForwardClientCertRestartEvaluator{
+				NewXForwardClientCert: i.istioCR.Spec.Config.ForwardClientCertDetails,
+				OldXForwardClientCert: lastAppliedConfig.Config.ForwardClientCertDetails,
+			},
+		},
 	}, nil
+}
+
+type CompositeIngressGatewayRestartEvaluator struct {
+	Evaluators []IngressGatewayRestartEvaluator
+}
+
+func (c CompositeIngressGatewayRestartEvaluator) RequiresIngressGatewayRestart() bool {
+	for _, evaluator := range c.Evaluators {
+		if evaluator.RequiresIngressGatewayRestart() {
+			return true
+		}
+	}
+
+	return false
 }
 
 type NumTrustedProxiesRestartEvaluator struct {
@@ -32,10 +54,27 @@ type NumTrustedProxiesRestartEvaluator struct {
 	OldNumTrustedProxies *int
 }
 
+type XForwardClientCertRestartEvaluator struct {
+	NewXForwardClientCert *operatorv1alpha2.XFCCStrategy
+	OldXForwardClientCert *operatorv1alpha2.XFCCStrategy
+}
+
 func (i NumTrustedProxiesRestartEvaluator) RequiresIngressGatewayRestart() bool {
 	isNewNotNil := i.NewNumTrustedProxies != nil
 	isOldNotNil := i.OldNumTrustedProxies != nil
 	if isNewNotNil && isOldNotNil && *i.NewNumTrustedProxies != *i.OldNumTrustedProxies {
+		return true
+	} else if isNewNotNil != isOldNotNil {
+		return true
+	}
+
+	return false
+}
+
+func (i XForwardClientCertRestartEvaluator) RequiresIngressGatewayRestart() bool {
+	isNewNotNil := i.NewXForwardClientCert != nil
+	isOldNotNil := i.OldXForwardClientCert != nil
+	if isNewNotNil && isOldNotNil && *i.NewXForwardClientCert != *i.OldXForwardClientCert {
 		return true
 	} else if isNewNotNil != isOldNotNil {
 		return true

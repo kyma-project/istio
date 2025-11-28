@@ -33,6 +33,13 @@ type Config struct {
 	// Defines the telemetry configuration of Istio.
 	// +kubebuilder:validation:Optional
 	Telemetry Telemetry `json:"telemetry,omitempty"`
+
+	// Defines trust domain configuration of Istio.
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=255
+	// +kubebuilder:validation:Pattern=`^[a-z0-9]*([a-z0-9-_]*)?(\.[a-z0-9]*([a-z0-9-_]*[a-z0-9]*)?)*$`
+	TrustDomain *string `json:"trustDomain,omitempty"`
 }
 
 // Defines how to handle the x-forwarded-client-cert (XFCC) of the HTTP header.

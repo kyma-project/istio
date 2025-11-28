@@ -4,14 +4,14 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kyma-project/istio/operator/pkg/labels"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	predicates "github.com/kyma-project/istio/operator/internal/restarter/predicates"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
+
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
+	"github.com/kyma-project/istio/operator/pkg/labels"
 )
 
 var _ = Describe("Ingress Gateway Predicate", func() {
@@ -57,6 +57,38 @@ var _ = Describe("Ingress Gateway Predicate", func() {
 
 			Expect(evaluator.RequiresIngressGatewayRestart()).To(BeFalse())
 
+		})
+	})
+
+	Context("TrustDomainsRestartEvaluator", func() {
+		It("should evaluate to false if newTrustDomain is the same", func() {
+			evaluator := predicates.TrustDomainsRestartEvaluator{
+				NewTrustDomain: ptr.To("cluster.local"),
+				OldTrustDomain: ptr.To("cluster.local"),
+			}
+			Expect(evaluator.RequiresIngressGatewayRestart()).To(BeFalse())
+		})
+
+		It("should evaluate to true if newTrustDomain is different", func() {
+			evaluator := predicates.TrustDomainsRestartEvaluator{
+				NewTrustDomain: ptr.To("cluster.local"),
+				OldTrustDomain: ptr.To("old.local"),
+			}
+			Expect(evaluator.RequiresIngressGatewayRestart()).To(BeTrue())
+		})
+		It("should evaluate to true if newTrustDomain is nil and oldTrustDomain is not nil", func() {
+			evaluator := predicates.TrustDomainsRestartEvaluator{
+				NewTrustDomain: nil,
+				OldTrustDomain: ptr.To("old.local"),
+			}
+			Expect(evaluator.RequiresIngressGatewayRestart()).To(BeTrue())
+		})
+		It("should evaluate to true if newTrustDomain is not nil and oldTrustDomain is nil", func() {
+			evaluator := predicates.TrustDomainsRestartEvaluator{
+				NewTrustDomain: ptr.To("cluster.local"),
+				OldTrustDomain: nil,
+			}
+			Expect(evaluator.RequiresIngressGatewayRestart()).To(BeTrue())
 		})
 	})
 
@@ -200,7 +232,7 @@ var _ = Describe("Ingress Gateway Predicate", func() {
 			Expect(evaluator).NotTo(BeNil())
 			Expect(evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators).To(HaveLen(2))
 			Expect(*evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[0].(predicates.NumTrustedProxiesRestartEvaluator).NewNumTrustedProxies).To(BeEquivalentTo(1))
-			Expect(*evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[0].(predicates.NumTrustedProxiesRestartEvaluator).OldNumTrustedProxies).To(BeEquivalentTo(2))
+			Expect(*evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[0].(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[0].(predicates.NumTrustedProxiesRestartEvaluator).OldNumTrustedProxies).To(BeEquivalentTo(2))
 			Expect(*evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[1].(predicates.XForwardClientCertRestartEvaluator).OldXForwardClientCert).To(BeEquivalentTo(operatorv1alpha2.Sanitize))
 			Expect(*evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[1].(predicates.XForwardClientCertRestartEvaluator).NewXForwardClientCert).To(BeEquivalentTo(operatorv1alpha2.AppendForward))
 		})

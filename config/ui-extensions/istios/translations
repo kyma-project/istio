@@ -1,6 +1,7 @@
 en:
   compatibilityMode: Compatibility Mode
   config.numTrustedProxies: Number of trusted proxies
+  config.trustDomain: Trust Domain
 
   config.authorizers: Authorizers
   config.authorizers.name: Name
@@ -38,4 +39,5 @@ en:
   description.requests.cpu: Total CPU requests of all Pods that are in a non-terminal state must not exceed this value
   description.requests.memory: Total memory requests of all Pods that are in a non-terminal state must not exceed this value
   description.externalTrafficPolicy: Specifies externalTrafficPolicy for the Istio Ingress Gateway Service
+  description.trustDomain: Defines the trust domain for the Istio service mesh. Change the value only if you have a specific requirement. Change of domain reconfiguring mTLS certificates and causes restart of all workloads in the mesh, this can lead to downtime.
   description.compatibilityMode: Sets Istio compatibility version the last minor version.

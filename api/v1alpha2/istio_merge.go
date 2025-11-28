@@ -198,6 +198,18 @@ func (m *meshConfigBuilder) BuildExternalAuthorizerConfiguration(authorizers []*
 	return m
 }
 
+func (m *meshConfigBuilder) BuildTrustDomainConfig(domain *string) *meshConfigBuilder {
+	if domain == nil {
+		return m
+	}
+
+	err := m.c.SetPath("trustDomain", *domain)
+	if err != nil {
+		return nil
+	}
+	return m
+}
+
 func (m *meshConfigBuilder) BuildForwardClientCertDetails(xfccStrategy *XFCCStrategy) *meshConfigBuilder {
 	if xfccStrategy == nil {
 		return m
@@ -226,6 +238,7 @@ func (i *Istio) mergeConfig(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOper
 		BuildDualStackConfig(dualStackEnabled).
 		BuildForwardClientCertDetails(i.Spec.Config.ForwardClientCertDetails).
 		BuildAmbientConfig(ambientEnabled).
+		BuildTrustDomainConfig(i.Spec.Config.TrustDomain).
 		Build()
 
 	op.Spec.MeshConfig = newMeshConfig

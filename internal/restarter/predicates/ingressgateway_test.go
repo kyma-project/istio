@@ -176,7 +176,8 @@ var _ = Describe("Ingress Gateway Predicate", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(evaluator).NotTo(BeNil())
-			Expect(evaluator.(predicates.NumTrustedProxiesRestartEvaluator).OldNumTrustedProxies).To(BeNil())
+			Expect(evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators).To(HaveLen(2))
+			Expect(evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[0].(predicates.NumTrustedProxiesRestartEvaluator).OldNumTrustedProxies).To(BeNil())
 		})
 
 		It("should return correct not nil value for new and old numTrustedProxies", func() {
@@ -196,8 +197,9 @@ var _ = Describe("Ingress Gateway Predicate", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(evaluator).NotTo(BeNil())
-			Expect(*(evaluator.(predicates.NumTrustedProxiesRestartEvaluator).NewNumTrustedProxies)).To(Equal(1))
-			Expect(*(evaluator.(predicates.NumTrustedProxiesRestartEvaluator).OldNumTrustedProxies)).To(Equal(2))
+			Expect(evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators).To(HaveLen(2))
+			Expect(*evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[0].(predicates.NumTrustedProxiesRestartEvaluator).NewNumTrustedProxies).To(BeEquivalentTo(1))
+			Expect(*evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[0].(predicates.NumTrustedProxiesRestartEvaluator).OldNumTrustedProxies).To(BeEquivalentTo(2))
 		})
 
 		It("should return correct nil value for new and old numTrustedProxies", func() {
@@ -217,8 +219,9 @@ var _ = Describe("Ingress Gateway Predicate", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(evaluator).NotTo(BeNil())
-			Expect(evaluator.(predicates.NumTrustedProxiesRestartEvaluator).NewNumTrustedProxies).To(BeNil())
-			Expect(evaluator.(predicates.NumTrustedProxiesRestartEvaluator).OldNumTrustedProxies).To(BeNil())
+			Expect(evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators).To(HaveLen(2))
+			Expect(evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[0].(predicates.NumTrustedProxiesRestartEvaluator).NewNumTrustedProxies).To(BeNil())
+			Expect(evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[0].(predicates.NumTrustedProxiesRestartEvaluator).OldNumTrustedProxies).To(BeNil())
 		})
 
 	})

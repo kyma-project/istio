@@ -106,7 +106,11 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, err
 	}
 
-	r.crMetrics.EmitIstioCRMetrics(&istioCR)
+	if r.crMetrics != nil {
+		r.crMetrics.EmitIstioCRMetrics(&istioCR)
+	} else {
+		r.log.Info("WARNING: Istio CR metrics emitter is not initialized")
+	}
 	r.statusHandler.SetCondition(&istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileUnknown))
 
 	if err := r.validate(&istioCR); err != nil {

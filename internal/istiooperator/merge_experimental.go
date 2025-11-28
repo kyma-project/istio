@@ -34,7 +34,11 @@ func (m *IstioMerger) Merge(clusterSize clusterconfig.ClusterSize, istioCR *oper
 	if err != nil {
 		return "", err
 	}
-	iopWithOverrides, err := clusterconfig.MergeOverrides(manifestWithOverrideImagesHub, overrides)
+	manifestWithOverridePullSecret, err := images.MergePullSecretEnv(manifestWithOverrideImagesHub)
+	if err != nil {
+		return "", err
+	}
+	iopWithOverrides, err := clusterconfig.MergeOverrides(manifestWithOverridePullSecret, overrides)
 	if err != nil {
 		return "", err
 	}

@@ -20,21 +20,23 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// Signifies the current state of the Istio custom resource. 
+// The possible values are `Ready`, `Processing`, `Error`, `Deleting`, or `Warning`.
 type State string
 type ConditionType string
 type ConditionReason string
 
 // Valid IstioCR States.
 const (
-	// Ready is reported when the Istio installation / upgrade process has completed successfully.
+	// Istio installation or upgrade process has completed successfully.
 	Ready State = "Ready"
-	// Processing is reported when the Istio installation / upgrade process is in progress.
+	// Istio installation or upgrade process is in progress.
 	Processing State = "Processing"
-	// Error is reported when the Istio installation / upgrade process has failed.
+	// Istio installation or upgrade process has failed.
 	Error State = "Error"
-	// Deleting is reported when the Istio installation / upgrade process is being deleted.
+	// The Istio custom resource is being deleted.
 	Deleting State = "Deleting"
-	// Warning is reported when the Istio installation / upgrade process has completed with warnings.
+	// Istio installation or upgrade process has completed with warnings.
 	// This state warrants user attention, as some features may not work as expected.
 	Warning State = "Warning"
 
@@ -44,7 +46,7 @@ const (
 
 	// General
 
-	// Reconciliation finished with full success.
+	// Reconciliation finished successfully.
 	ConditionReasonReconcileSucceeded        ConditionReason = "ReconcileSucceeded"
 	ConditionReasonReconcileSucceededMessage                 = "Reconciliation succeeded"
 	// Reconciliation is in progress or failed previously.
@@ -59,7 +61,7 @@ const (
 	// Reconciliation did not happen as validation of Istio Custom Resource failed.
 	ConditionReasonValidationFailed        ConditionReason = "ValidationFailed"
 	ConditionReasonValidationFailedMessage                 = "Reconciliation did not happen as Istio Custom Resource failed to validate"
-	// Reconciliation did not happen as there exists an older Istio Custom Resource.
+	// Reconciliation did not happen because an older Istio CR exists.
 	ConditionReasonOlderCRExists        ConditionReason = "OlderCRExists"
 	ConditionReasonOlderCRExistsMessage                 = "This Istio custom resource is not the oldest one and does not represent the module state"
 	// Reconciliation did not happen as the oldest Istio Custom Resource could not be found.
@@ -68,7 +70,7 @@ const (
 
 	// Istio installation / uninstallation
 
-	// Istio installtion is not needed.
+	// Istio installation is not needed.
 	ConditionReasonIstioInstallNotNeeded        ConditionReason = "IstioInstallNotNeeded"
 	ConditionReasonIstioInstallNotNeededMessage                 = "Istio installation is not needed"
 	// Istio installation or uninstallation succeeded.
@@ -80,10 +82,10 @@ const (
 	// Istio installation or uninstallation failed.
 	ConditionReasonIstioInstallUninstallFailed        ConditionReason = "IstioInstallUninstallFailed"
 	ConditionReasonIstioInstallUninstallFailedMessage                 = "Istio install or uninstall failed"
-	// Istio Custom Resource has invalid configuration.
+	// The Istio custom resource has invalid configuration.
 	ConditionReasonCustomResourceMisconfigured        ConditionReason = "IstioCustomResourceMisconfigured"
 	ConditionReasonCustomResourceMisconfiguredMessage                 = "Istio custom resource has invalid configuration"
-	// Istio Custom Resources are blocking Istio uninstallation.
+	// Istio custom resources are blocking Istio uninstallation.
 	ConditionReasonIstioCRsDangling        ConditionReason = "IstioCustomResourcesDangling"
 	ConditionReasonIstioCRsDanglingMessage                 = "Istio deletion blocked because of existing Istio custom resources"
 	// Istio version update is not allowed.
@@ -92,10 +94,10 @@ const (
 
 	// Istio CRs
 
-	// Custom resources reconciliation succeeded.
+	// Reconciliation of custom resources succeeded.
 	ConditionReasonCRsReconcileSucceeded        ConditionReason = "CustomResourcesReconcileSucceeded"
 	ConditionReasonCRsReconcileSucceededMessage                 = "Custom resources reconciliation succeeded"
-	// Custom resources reconciliation failed.
+	// Reconciliation of custom resources failed.
 	ConditionReasonCRsReconcileFailed        ConditionReason = "CustomResourcesReconcileFailed"
 	ConditionReasonCRsReconcileFailedMessage                 = "Custom resources reconciliation failed"
 
@@ -110,7 +112,7 @@ const (
 	// Proxy sidecar restart partially succeeded.
 	ConditionReasonProxySidecarRestartPartiallySucceeded        ConditionReason = "ProxySidecarRestartPartiallySucceeded"
 	ConditionReasonProxySidecarRestartPartiallySucceededMessage                 = "Proxy sidecar restart partially succeeded"
-	// Proxy sidecar manual restart is required.
+	// A manual restart of the proxy sidecar is required for some workloads.
 	ConditionReasonProxySidecarManualRestartRequired        ConditionReason = "ProxySidecarManualRestartRequired"
 	ConditionReasonProxySidecarManualRestartRequiredMessage                 = "Proxy sidecar manual restart is required for some workloads"
 
@@ -152,16 +154,16 @@ type ReasonWithMessage struct {
 
 // IstioSpec describes the desired specification for installing or updating Istio.
 type IstioSpec struct {
-	// Defines configuration of the Istio installation.
+	// Configures the Istio installation.
 	// +kubebuilder:validation:Optional
 	Config Config `json:"config,omitempty"`
-	// Defines configuration of Istio components.
+	// Configures Istio components.
 	// +kubebuilder:validation:Optional
 	Components *Components `json:"components,omitempty"`
 	// Defines experimental configuration options.
 	// +kubebuilder:validation:Optional
 	Experimental *Experimental `json:"experimental,omitempty"`
-	// Enables compatibility mode for Istio installation.
+	// Enables the compatibility mode for the Istio installation.
 	// +kubebuilder:validation:Optional
 	CompatibilityMode bool `json:"compatibilityMode,omitempty"`
 }
@@ -172,36 +174,35 @@ type IstioSpec struct {
 //+kubebuilder:printcolumn:JSONPath=".status.state",name="State",type="string"
 //+kubebuilder:storageversion
 
-// Istio contains Istio CR specification and current status.
+// Contains the Istio custom resource's specification and its current status.
 type Istio struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	// Spec defines the desired state of the Istio installation.
+	// Defines the desired state of the Istio installation.
 	Spec IstioSpec `json:"spec,omitempty"`
-	// Status represents the current state of the Istio installation.
+	// Defines the current state of the Istio installation.
 	Status IstioStatus `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 
-// IstioList contains a list of Istio's.
+// Contains a list of Istios.
 type IstioList struct {
 	metav1.TypeMeta `        json:",inline"`
 	metav1.ListMeta `        json:"metadata,omitempty"`
 	Items           []Istio `json:"items"`
 }
 
-// IstioStatus defines the observed state of IstioCR.
+// Defines the observed state of the Istio custom resource.
 type IstioStatus struct {
-	// State signifies the current state of CustomObject. Value
-	// can be one of ("Ready", "Processing", "Error", "Deleting", "Warning").
+	// Signifies the current state of the Istio custom resource. Possible values are `Ready`, `Processing`, `Error`, `Deleting`, or `Warning`.
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Enum=Processing;Deleting;Ready;Error;Warning
 	State State `json:"state"`
-	//  Conditions associated with IstioStatus.
+	// Contains conditions associated with **IstioStatus**.
 	Conditions *[]metav1.Condition `json:"conditions,omitempty"`
-	// Description of Istio status.
+	// Describes the Istio status.
 	Description string `json:"description,omitempty"`
 }
 

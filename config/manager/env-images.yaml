@@ -18,3 +18,5 @@ spec:
               value: europe-docker.pkg.dev/kyma-project/prod/external/istio/proxyv2:1.27.1-distroless
             - name: pilot
               value: europe-docker.pkg.dev/kyma-project/prod/external/istio/pilot:1.27.1-distroless
+            - name: ztunnel
+              value: europe-docker.pkg.dev/kyma-project/prod/external/istio/ztunnel:1.27.1-distroless

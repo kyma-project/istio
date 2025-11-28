@@ -21,6 +21,7 @@ var _ = Describe("Images.GetHub", func() {
 		Pilot      images.Image
 		InstallCNI images.Image
 		ProxyV2    images.Image
+		Ztunnel    images.Image
 	}
 
 	DescribeTable("GetHub",
@@ -29,6 +30,7 @@ var _ = Describe("Images.GetHub", func() {
 				Pilot:      f.Pilot,
 				InstallCNI: f.InstallCNI,
 				ProxyV2:    f.ProxyV2,
+				Ztunnel:    f.Ztunnel,
 			}
 			got, err := e.GetHub()
 			if wantErr {
@@ -44,6 +46,7 @@ var _ = Describe("Images.GetHub", func() {
 				Pilot:      "docker.io/istio/pilot:1.10.0",
 				InstallCNI: "docker.io/istio/cni:1.10.0",
 				ProxyV2:    "docker.io/istio/proxyv2:1.10.0",
+				Ztunnel:    "docker.io/istio/ztunnel:1.10.0",
 			},
 			"docker.io/istio",
 			false,
@@ -54,6 +57,7 @@ var _ = Describe("Images.GetHub", func() {
 				Pilot:      "pilot:1.10.0",
 				InstallCNI: "docker.io/istio/cni:1.10.0",
 				ProxyV2:    "docker.io/istio/proxyv2:1.10.0",
+				Ztunnel:    "docker.io/istio/ztunnel:1.10.0",
 			},
 			"",
 			true,
@@ -64,11 +68,11 @@ var _ = Describe("Images.GetHub", func() {
 				Pilot:      "docker.io/istio/pilot:1.10.0",
 				InstallCNI: "docker.io/istio/cni:1.10.0",
 				ProxyV2:    "foo.bar/istio/proxyv2:1.10.0",
+				Ztunnel:    "docker.io/istio/ztunnel:1.10.0",
 			},
 			"",
 			true,
 			fmt.Errorf("image foo.bar/istio/proxyv2:1.10.0 is not from the same hub as docker.io/istio/pilot:1.10.0"),
 		),
 	)
-
 })

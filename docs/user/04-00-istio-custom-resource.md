@@ -161,6 +161,7 @@ Appears in:
 | --- | --- | --- |
 | **pilot** <br /> [PilotFeatures](#pilotfeatures) |  | Optional |
 | **enableDualStack** <br /> boolean | Enables the Dual Stack support | Optional <br /> |
+| **enableAmbient** <br /> boolean | Enables the Ambient mode support. | Optional <br /> |
 
 ### HPASpec
 

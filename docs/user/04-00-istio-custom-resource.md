@@ -160,7 +160,7 @@ Appears in:
 | Field | Description | Validation |
 | --- | --- | --- |
 | **pilot** <br /> [PilotFeatures](#pilotfeatures) |  | Optional |
-| **enableDualStack** <br /> boolean | Enables dual-stack support | Optional <br /> |
+| **enableDualStack** <br /> boolean | Enables dual-stack support. | Optional <br /> |
 | **enableAmbient** <br /> boolean | Enables ambient mode support. | Optional <br /> |
 
 ### HPASpec

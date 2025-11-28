@@ -180,15 +180,16 @@ var _ = Describe("Ingress Gateway Predicate", func() {
 			Expect(evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[0].(predicates.NumTrustedProxiesRestartEvaluator).OldNumTrustedProxies).To(BeNil())
 		})
 
-		It("should return correct not nil value for new and old numTrustedProxies", func() {
+		It("should return correct not nil values", func() {
 			istio := &operatorv1alpha2.Istio{
 				Spec: operatorv1alpha2.IstioSpec{
 					Config: operatorv1alpha2.Config{
-						NumTrustedProxies: ptr.To(1),
+						NumTrustedProxies:        ptr.To(1),
+						ForwardClientCertDetails: ptr.To(operatorv1alpha2.AppendForward),
 					},
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					Annotations: map[string]string{lastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":2},"IstioTag":"%s"}`, mockIstioTag)},
+					Annotations: map[string]string{lastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":2, "forwardClientCertDetails": "SANITIZE"},"IstioTag":"%s"}`, mockIstioTag)},
 				},
 			}
 
@@ -200,6 +201,8 @@ var _ = Describe("Ingress Gateway Predicate", func() {
 			Expect(evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators).To(HaveLen(2))
 			Expect(*evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[0].(predicates.NumTrustedProxiesRestartEvaluator).NewNumTrustedProxies).To(BeEquivalentTo(1))
 			Expect(*evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[0].(predicates.NumTrustedProxiesRestartEvaluator).OldNumTrustedProxies).To(BeEquivalentTo(2))
+			Expect(*evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[1].(predicates.XForwardClientCertRestartEvaluator).OldXForwardClientCert).To(BeEquivalentTo(operatorv1alpha2.Sanitize))
+			Expect(*evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[1].(predicates.XForwardClientCertRestartEvaluator).NewXForwardClientCert).To(BeEquivalentTo(operatorv1alpha2.AppendForward))
 		})
 
 		It("should return correct nil value for new and old numTrustedProxies", func() {

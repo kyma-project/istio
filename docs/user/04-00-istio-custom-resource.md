@@ -136,6 +136,7 @@ Appears in:
 | Field | Description | Validation |
 | --- | --- | --- |
 | **numTrustedProxies** <br /> integer | Defines the number of trusted proxies deployed in front of the Istio gateway proxy. | Maximum: 4.294967295e+09 <br />Minimum: 0 <br /> |
+| **forwardClientCertDetails** <br /> [XFCCStrategy](#xfccstrategy) | Defines strategy of handling the X-Forwarded-Client-Cert header.<br />Default behavior is "SANITIZE". | Enum: [APPEND_FORWARD SANITIZE_SET SANITIZE ALWAYS_FORWARD_ONLY FORWARD_ONLY] <br />Optional <br /> |
 | **authorizers** <br /> [Authorizer](#authorizer) array | Defines a list of external authorization providers. | Optional |
 | **gatewayExternalTrafficPolicy** <br /> string | Defines the external traffic policy for the Istio Ingress Gateway Service. Valid configurations are "Local" or "Cluster". The external traffic policy set to "Local" preserves the client IP in the request, but also introduces the risk of unbalanced traffic distribution.<br />WARNING: Switching `externalTrafficPolicy` may result in a temporal increase in request delay. Make sure that this is acceptable. | Enum: [Local Cluster] <br />Optional <br /> |
 | **telemetry** <br /> [Telemetry](#telemetry) | Defines the telemetry configuration of Istio. | Optional <br /> |
@@ -390,4 +391,19 @@ Appears in:
 | Field | Description | Validation |
 | --- | --- | --- |
 | **onAllow** <br /> string array | List of headers from the authorization service that should be added or overridden in the original request and forwarded to the upstream when the authorization check result is allowed (HTTP code 200).<br />If not specified, the original request will not be modified and forwarded to backend as-is.<br />Note, any existing headers will be overridden. | Optional |
+
+### XFCCStrategy
+
+Underlying type: string
+
+Appears in:
+- [Config](#config)
+
+| Field | Description |
+| --- | --- |
+| **APPEND_FORWARD** | When the client connection is mTLS, append the client certificate information to the request’s XFCC header and forward it.<br /> |
+| **SANITIZE_SET** | When the client connection is mTLS, reset the XFCC header with the client certificate information and send it to the next hop.<br /> |
+| **SANITIZE** | Do not send the XFCC header to the next hop.<br /> |
+| **ALWAYS_FORWARD_ONLY** | Always forward the XFCC header in the request, regardless of whether the client connection is mTLS.<br /> |
+| **FORWARD_ONLY** | When the client connection is mTLS (Mutual TLS), forward the XFCC header in the request.<br /> |
 

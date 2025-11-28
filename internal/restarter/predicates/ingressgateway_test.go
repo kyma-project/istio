@@ -15,7 +15,7 @@ import (
 )
 
 var _ = Describe("Ingress Gateway Predicate", func() {
-	Context("RequiresIngressGatewayRestart", func() {
+	Context("NumTrustedProxiesRestartEvaluator", func() {
 		It("should evaluate to true if new is nil and old is not nil", func() {
 			evaluator := predicates.NumTrustedProxiesRestartEvaluator{
 				NewNumTrustedProxies: nil,
@@ -60,6 +60,93 @@ var _ = Describe("Ingress Gateway Predicate", func() {
 		})
 	})
 
+	Context("XForwardClientCertRestartEvaluator", func() {
+		It("should evaluate to true if new is nil and old is not nil", func() {
+			evaluator := predicates.XForwardClientCertRestartEvaluator{
+				NewXForwardClientCert: nil,
+				OldXForwardClientCert: new(operatorv1alpha2.XFCCStrategy),
+			}
+
+			Expect(evaluator.RequiresIngressGatewayRestart()).To(BeTrue())
+		})
+
+		It("should evaluate to true if new is not nil and old is nil", func() {
+			evaluator := predicates.XForwardClientCertRestartEvaluator{
+				NewXForwardClientCert: new(operatorv1alpha2.XFCCStrategy),
+				OldXForwardClientCert: nil,
+			}
+
+			Expect(evaluator.RequiresIngressGatewayRestart()).To(BeTrue())
+		})
+
+		It("should evaluate to true if XForwardClientCert is different", func() {
+			newXForwardClientCert := operatorv1alpha2.Sanitize
+			oldXForwardClientCert := operatorv1alpha2.AppendForward
+
+			evaluator := predicates.XForwardClientCertRestartEvaluator{
+				NewXForwardClientCert: &newXForwardClientCert,
+				OldXForwardClientCert: &oldXForwardClientCert,
+			}
+
+			Expect(evaluator.RequiresIngressGatewayRestart()).To(BeTrue())
+		})
+
+		It("should evaluate to false if XForwardClientCert is the same", func() {
+			xForwardClientCert := operatorv1alpha2.Sanitize
+
+			evaluator := predicates.XForwardClientCertRestartEvaluator{
+				NewXForwardClientCert: &xForwardClientCert,
+				OldXForwardClientCert: &xForwardClientCert,
+			}
+
+			Expect(evaluator.RequiresIngressGatewayRestart()).To(BeFalse())
+		})
+	})
+
+	Context("CompositeIngressGatewayRestartEvaluator", func() {
+		It("should evaluate to false if there are no evaluators", func() {
+			evaluator := predicates.CompositeIngressGatewayRestartEvaluator{
+				Evaluators: []predicates.IngressGatewayRestartEvaluator{},
+			}
+
+			Expect(evaluator.RequiresIngressGatewayRestart()).To(BeFalse())
+		})
+
+		It("should evaluate to true if at least one evaluator requires restart", func() {
+			evaluator := predicates.CompositeIngressGatewayRestartEvaluator{
+				Evaluators: []predicates.IngressGatewayRestartEvaluator{
+					predicates.NumTrustedProxiesRestartEvaluator{
+						NewNumTrustedProxies: ptr.To(1),
+						OldNumTrustedProxies: ptr.To(2),
+					},
+					predicates.XForwardClientCertRestartEvaluator{
+						NewXForwardClientCert: ptr.To(operatorv1alpha2.Sanitize),
+						OldXForwardClientCert: ptr.To(operatorv1alpha2.Sanitize),
+					},
+				},
+			}
+
+			Expect(evaluator.RequiresIngressGatewayRestart()).To(BeTrue())
+		})
+
+		It("should evaluate to false if no evaluator requires restart", func() {
+			evaluator := predicates.CompositeIngressGatewayRestartEvaluator{
+				Evaluators: []predicates.IngressGatewayRestartEvaluator{
+					predicates.NumTrustedProxiesRestartEvaluator{
+						NewNumTrustedProxies: ptr.To(1),
+						OldNumTrustedProxies: ptr.To(1),
+					},
+					predicates.XForwardClientCertRestartEvaluator{
+						NewXForwardClientCert: ptr.To(operatorv1alpha2.Sanitize),
+						OldXForwardClientCert: ptr.To(operatorv1alpha2.Sanitize),
+					},
+				},
+			}
+
+			Expect(evaluator.RequiresIngressGatewayRestart()).To(BeFalse())
+		})
+	})
+
 	Context("NewIngressGatewayEvaluator", func() {
 		const (
 			mockIstioTag             string = "1.16.1-distroless"
@@ -89,18 +176,20 @@ var _ = Describe("Ingress Gateway Predicate", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(evaluator).NotTo(BeNil())
-			Expect(evaluator.(predicates.NumTrustedProxiesRestartEvaluator).OldNumTrustedProxies).To(BeNil())
+			Expect(evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators).To(HaveLen(2))
+			Expect(evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[0].(predicates.NumTrustedProxiesRestartEvaluator).OldNumTrustedProxies).To(BeNil())
 		})
 
-		It("should return correct not nil value for new and old numTrustedProxies", func() {
+		It("should return correct not nil values", func() {
 			istio := &operatorv1alpha2.Istio{
 				Spec: operatorv1alpha2.IstioSpec{
 					Config: operatorv1alpha2.Config{
-						NumTrustedProxies: ptr.To(1),
+						NumTrustedProxies:        ptr.To(1),
+						ForwardClientCertDetails: ptr.To(operatorv1alpha2.AppendForward),
 					},
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					Annotations: map[string]string{lastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":2},"IstioTag":"%s"}`, mockIstioTag)},
+					Annotations: map[string]string{lastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":2, "forwardClientCertDetails": "SANITIZE"},"IstioTag":"%s"}`, mockIstioTag)},
 				},
 			}
 
@@ -109,8 +198,11 @@ var _ = Describe("Ingress Gateway Predicate", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(evaluator).NotTo(BeNil())
-			Expect(*(evaluator.(predicates.NumTrustedProxiesRestartEvaluator).NewNumTrustedProxies)).To(Equal(1))
-			Expect(*(evaluator.(predicates.NumTrustedProxiesRestartEvaluator).OldNumTrustedProxies)).To(Equal(2))
+			Expect(evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators).To(HaveLen(2))
+			Expect(*evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[0].(predicates.NumTrustedProxiesRestartEvaluator).NewNumTrustedProxies).To(BeEquivalentTo(1))
+			Expect(*evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[0].(predicates.NumTrustedProxiesRestartEvaluator).OldNumTrustedProxies).To(BeEquivalentTo(2))
+			Expect(*evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[1].(predicates.XForwardClientCertRestartEvaluator).OldXForwardClientCert).To(BeEquivalentTo(operatorv1alpha2.Sanitize))
+			Expect(*evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[1].(predicates.XForwardClientCertRestartEvaluator).NewXForwardClientCert).To(BeEquivalentTo(operatorv1alpha2.AppendForward))
 		})
 
 		It("should return correct nil value for new and old numTrustedProxies", func() {
@@ -130,8 +222,9 @@ var _ = Describe("Ingress Gateway Predicate", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(evaluator).NotTo(BeNil())
-			Expect(evaluator.(predicates.NumTrustedProxiesRestartEvaluator).NewNumTrustedProxies).To(BeNil())
-			Expect(evaluator.(predicates.NumTrustedProxiesRestartEvaluator).OldNumTrustedProxies).To(BeNil())
+			Expect(evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators).To(HaveLen(2))
+			Expect(evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[0].(predicates.NumTrustedProxiesRestartEvaluator).NewNumTrustedProxies).To(BeNil())
+			Expect(evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[0].(predicates.NumTrustedProxiesRestartEvaluator).OldNumTrustedProxies).To(BeNil())
 		})
 
 	})

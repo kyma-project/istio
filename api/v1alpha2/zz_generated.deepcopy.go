@@ -150,6 +150,11 @@ func (in *Config) DeepCopyInto(out *Config) {
 		*out = new(int)
 		**out = **in
 	}
+	if in.ForwardClientCertDetails != nil {
+		in, out := &in.ForwardClientCertDetails, &out.ForwardClientCertDetails
+		*out = new(XFCCStrategy)
+		**out = **in
+	}
 	if in.Authorizers != nil {
 		in, out := &in.Authorizers, &out.Authorizers
 		*out = make([]*Authorizer, len(*in))

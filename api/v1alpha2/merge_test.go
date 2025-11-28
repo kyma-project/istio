@@ -753,9 +753,9 @@ var _ = Describe("Merge", func() {
 		meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
 		Expect(err).ShouldNot(HaveOccurred())
 
-		dualStack, exists := meshConfig.GetPath("defaultConfig.proxyMetadata.ISTIO_META_ENABLE_HBONE")
+		hbone, exists := meshConfig.GetPath("defaultConfig.proxyMetadata.ISTIO_META_ENABLE_HBONE")
 		Expect(exists).To(BeTrue())
-		Expect(dualStack).To(Equal("true"))
+		Expect(hbone).To(Equal("true"))
 	})
 
 	Context("Pilot", func() {

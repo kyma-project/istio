@@ -2,9 +2,17 @@ package images
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/caarlos0/env/v11"
+)
+
+const (
+	kymaFipsModeEnabledEnv = "KYMA_FIPS_MODE_ENABLED"
+	pilotFipsImageEnv      = "PILOT_FIPS_IMAGE"
+	installCNIFipsImageEnv = "INSTALL_CNI_FIPS_IMAGE"
+	proxyFipsImageEnv      = "PROXY_FIPS_IMAGE"
 )
 
 type Image string
@@ -34,6 +42,14 @@ func GetImages() (*Images, error) {
 		return nil, fmt.Errorf("missing required environment variables %w", err)
 	}
 
+	kymaFipsModeEnabled := os.Getenv(kymaFipsModeEnabledEnv)
+	if kymaFipsModeEnabled == "true" {
+		err = environments.GetFipsImages()
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return &environments, nil
 }
 
@@ -56,4 +72,29 @@ func (e *Images) GetHub() (string, error) {
 		}
 	}
 	return initialHub, nil
+}
+
+func (e *Images) GetFipsImages() error {
+	pilotFipsImage := os.Getenv(pilotFipsImageEnv)
+	if pilotFipsImage == "" {
+		return fmt.Errorf("please set FIPS image url for pilot in %s environment variable", pilotFipsImageEnv)
+	} else {
+		e.Pilot = Image(pilotFipsImage)
+	}
+
+	installCNIFipsImage := os.Getenv(installCNIFipsImageEnv)
+	if installCNIFipsImage == "" {
+		return fmt.Errorf("please set FIPS image url for Install CNI from %s environment variable", installCNIFipsImageEnv)
+	} else {
+		e.InstallCNI = Image(installCNIFipsImage)
+	}
+
+	proxyFipsImage := os.Getenv(proxyFipsImageEnv)
+	if proxyFipsImage == "" {
+		return fmt.Errorf("please set FIPS image url for proxy from %s environment variable", proxyFipsImageEnv)
+	} else {
+		e.ProxyV2 = Image(proxyFipsImage)
+	}
+
+	return nil
 }

@@ -25,7 +25,7 @@ type Authorizer struct {
 	// Specifies the headers included, added, or forwarded during authorization.
 	Headers *Headers `json:"headers,omitempty"`
 
-	// Specifies the prefix which included in the request sent to the authorization service.
+	// Specifies the prefix included in the request sent to the authorization service.
 	// The prefix might be constructed with special characters (for example, `/test?original_path=`).
 	// +kubebuilder:validation:Optional
 	PathPrefix *string `json:"pathPrefix,omitempty"`
@@ -56,10 +56,10 @@ type InCheck struct {
 	// Lists client request headers included in the authorization request sent to the authorization service.
 	// In addition to the headers specified here, the following headers are included by default:
 	// - *Host*, *Method*, *Path*, and *Content-Length* are automatically sent.
-	// - *Content-Length* is set to `0`, and the request does have a message body. However, the authorization request can include the buffered client request body (controlled by the **include_request_body_in_check** setting), consequently the **Content-Length** value of the authorization request reflects its payload size.
+	// - *Content-Length* is set to `0`, and the request doesn't have a message body. However, the authorization request can include the buffered client request body (controlled by the **include_request_body_in_check** setting), consequently the **Content-Length** value of the authorization request reflects its payload size.
 	Include []string `json:"include,omitempty"`
 
-	// Specifies a set of additional fixed headers that included in the authorization request sent to the authorization service.
+	// Specifies a set of additional fixed headers included in the authorization request sent to the authorization service.
 	// The key is the header name and value is the header value.
 	// Client request of the same key or headers specified in `Include` are overridden.
 	Add map[string]string `json:"add,omitempty"`

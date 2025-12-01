@@ -130,7 +130,7 @@ type RollingUpdate struct {
 type Resources struct {
 	// The maximum amount of resources a container is allowed to use.
 	Limits   *ResourceClaims `json:"limits,omitempty"`
-	// The minimum amount of resources ( such as CPU and memory) a container needs to run.
+	// The minimum amount of resources (such as CPU and memory) a container needs to run.
 	Requests *ResourceClaims `json:"requests,omitempty"`
 }
 

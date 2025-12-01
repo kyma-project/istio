@@ -100,7 +100,7 @@ func (e *Images) GetFipsImages() error {
 
 	ztunnelFipsImage := os.Getenv(ztunnelFipsImageEnv)
 	if ztunnelFipsImage == "" {
-		return fmt.Errorf("please set FIPS image url for proxy from %s environment variable", ztunnelFipsImageEnv)
+		return fmt.Errorf("please set FIPS image url for ztunnel from %s environment variable", ztunnelFipsImageEnv)
 	} else {
 		e.Ztunnel = Image(ztunnelFipsImage)
 	}

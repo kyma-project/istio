@@ -30,7 +30,7 @@ spec:
 ## Custom Resource Parameters
 The following tables list all the possible parameters of a given resource together with their descriptions.
 
-### APIVersions
+### APIVersions <!-- markdown-link-check-disable-next-line -->
 - [operator.kyma-project.io/v1alpha2](#operatorkyma-projectiov1alpha2)
 
 ### Resource Types
@@ -92,7 +92,7 @@ Appears in:
 
 Underlying type: string
 
-Appears in:
+Appears in: <!-- markdown-link-check-disable-next-line -->
 - [ReasonWithMessage](#reasonwithmessage)
 
 | Field | Description |

@@ -13,6 +13,7 @@ const (
 	pilotFipsImageEnv      = "PILOT_FIPS_IMAGE"
 	installCNIFipsImageEnv = "INSTALL_CNI_FIPS_IMAGE"
 	proxyFipsImageEnv      = "PROXY_FIPS_IMAGE"
+	ztunnelFipsImageEnv    = "ZTUNNEL_FIPS_IMAGE"
 )
 
 type Image string
@@ -95,6 +96,13 @@ func (e *Images) GetFipsImages() error {
 		return fmt.Errorf("please set FIPS image url for proxy from %s environment variable", proxyFipsImageEnv)
 	} else {
 		e.ProxyV2 = Image(proxyFipsImage)
+	}
+
+	ztunnelFipsImage := os.Getenv(ztunnelFipsImageEnv)
+	if ztunnelFipsImage == "" {
+		return fmt.Errorf("please set FIPS image url for proxy from %s environment variable", ztunnelFipsImageEnv)
+	} else {
+		e.Ztunnel = Image(ztunnelFipsImage)
 	}
 
 	return nil

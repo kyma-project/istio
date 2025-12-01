@@ -92,6 +92,7 @@ var _ = Describe("Images.GetFipsImages", func() {
 	_ = os.Setenv("pilot", "docker.io/istio/pilot:1.10.0")
 	_ = os.Setenv("install-cni", "docker.io/istio/cni:1.10.0")
 	_ = os.Setenv("proxyv2", "docker.io/istio/proxyv2:1.10.0")
+	_ = os.Setenv("ztunnel", "docker.io/istio/ztunnel:1.10.0")
 
 	Context("when KYMA_FIPS_MODE_ENABLED is true", func() {
 		It("should set the FIPS images", func() {
@@ -99,12 +100,14 @@ var _ = Describe("Images.GetFipsImages", func() {
 			_ = os.Setenv("PILOT_FIPS_IMAGE", "docker.io/istio/pilot-fips:1.10.0")
 			_ = os.Setenv("INSTALL_CNI_FIPS_IMAGE", "docker.io/istio/cni-fips:1.10.0")
 			_ = os.Setenv("PROXY_FIPS_IMAGE", "docker.io/istio/proxyv2-fips:1.10.0")
+			_ = os.Setenv("ZTUNNEL_FIPS_IMAGE", "docker.io/istio/ztunnel-fips:1.10.0")
 
 			e, err := images.GetImages()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(e.Pilot).To(Equal(images.Image("docker.io/istio/pilot-fips:1.10.0")))
 			Expect(e.InstallCNI).To(Equal(images.Image("docker.io/istio/cni-fips:1.10.0")))
 			Expect(e.ProxyV2).To(Equal(images.Image("docker.io/istio/proxyv2-fips:1.10.0")))
+			Expect(e.Ztunnel).To(Equal(images.Image("docker.io/istio/ztunnel-fips:1.10.0")))
 		})
 
 		It("should return an error when FIPS image environment variables are missing", func() {
@@ -112,6 +115,7 @@ var _ = Describe("Images.GetFipsImages", func() {
 			_ = os.Unsetenv("PILOT_FIPS_IMAGE")
 			_ = os.Unsetenv("INSTALL_CNI_FIPS_IMAGE")
 			_ = os.Unsetenv("PROXY_FIPS_IMAGE")
+			_ = os.Unsetenv("ZTUNNEL_FIPS_IMAGE")
 
 			_, err := images.GetImages()
 			Expect(err).To(HaveOccurred())
@@ -125,12 +129,15 @@ var _ = Describe("Images.GetFipsImages", func() {
 			_ = os.Setenv("PILOT_FIPS_IMAGE", "docker.io/istio/pilot-fips:1.10.0")
 			_ = os.Setenv("INSTALL_CNI_FIPS_IMAGE", "docker.io/istio/cni-fips:1.10.0")
 			_ = os.Setenv("PROXY_FIPS_IMAGE", "docker.io/istio/proxyv2-fips:1.10.0")
+			_ = os.Setenv("ZTUNNEL_FIPS_IMAGE", "docker.io/istio/ztunnel-fips:1.10.0")
 
 			e, err := images.GetImages()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(e.Pilot).To(Equal(images.Image("docker.io/istio/pilot:1.10.0")))
 			Expect(e.InstallCNI).To(Equal(images.Image("docker.io/istio/cni:1.10.0")))
 			Expect(e.ProxyV2).To(Equal(images.Image("docker.io/istio/proxyv2:1.10.0")))
+			Expect(e.Ztunnel).To(Equal(images.Image("docker.io/istio/ztunnel:1.10.0")))
+
 		})
 	})
 })

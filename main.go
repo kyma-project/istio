@@ -117,7 +117,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	crMetrics := istiocrmetrics.RegisterMetrics()
+	crMetrics := istiocrmetrics.NewMetrics()
 	if err = controllers.NewController(mgr, flagVar.reconciliationInterval, crMetrics).SetupWithManager(mgr, rateLimiter); err != nil {
 		setupLog.Error(err, "Unable to create controller", "controller", "Istio")
 		os.Exit(1)

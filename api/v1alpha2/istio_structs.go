@@ -29,7 +29,7 @@ type Config struct {
 
 // Configures Istio components.
 type Components struct {
-	// Configures the Istio Pilot component.
+	// Configures the Istiod component.
 	Pilot *IstioComponent `json:"pilot,omitempty"`
 	// Configures the Istio Ingress Gateway component.
 	IngressGateway *IstioComponent `json:"ingressGateway,omitempty"`

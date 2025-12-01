@@ -20,7 +20,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// Signifies the current state of the Istio custom resource. 
+// Signifies the current state of the Istio custom resource.
 // The possible values are `Ready`, `Processing`, `Error`, `Deleting`, or `Warning`.
 type State string
 type ConditionType string
@@ -147,9 +147,12 @@ const (
 	ConditionReasonIngressTargetingUserResourceDetectionFailedMessage                 = "Resource targeting Istio Ingress Gateway detection failed"
 )
 
+// Couples a condition's reason with its message.
 type ReasonWithMessage struct {
-	Reason  ConditionReason
-	Message string
+	// Contains the reason for setting up a condition.
+	Reason ConditionReason `json:"reason"`
+	// Describes the reason.
+	Message string `json:"message"`
 }
 
 // IstioSpec describes the desired specification for installing or updating Istio.

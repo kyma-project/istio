@@ -302,7 +302,7 @@ generate-crd-docs: bin/crd-ref-docs ## Generate CRD reference docs
 	--config=crd-ref-docs/config.yaml \
 	--templates-dir=crd-ref-docs/templates \
 	--max-depth=25
-	# Replace Optional: \{\} and Required: \{\} with Optional and Required
 	sed -i'' -e 's/Optional: \\{\\}/Optional/g' docs/user/04-00-istio-custom-resource.md
 	sed -i'' -e 's/Required: \\{\\}/Required/g' docs/user/04-00-istio-custom-resource.md
+	sed -i'' -e 's/XIntOrString: `\\{\\}`/XIntOrString/g' docs/user/04-00-istio-custom-resource.md
 	rm docs/user/04-00-istio-custom-resource.md-e

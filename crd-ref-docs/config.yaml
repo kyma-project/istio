@@ -10,6 +10,3 @@ render:
     - name: RollingUpdate
       package: "github.com/kyma-project/istio/operator/api/v1alpha2"
       link: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.33/#rollingupdatedeployment-v1-apps
-    - name: ReasonWithMessage
-      package: "github.com/kyma-project/istio/operator/api/v1alpha2"
-      link:

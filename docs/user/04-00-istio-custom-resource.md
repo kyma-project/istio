@@ -96,9 +96,6 @@ Appears in:
 
 Underlying type: string
 
-Appears in:
-- ReasonWithMessage
-
 | Field | Description |
 | --- | --- |
 | **ReconcileSucceeded** | Reconciliation finished successfully.<br /> |
@@ -415,5 +412,3 @@ Appears in:
 
 | Field | Description | Validation |
 | --- | --- | --- |
-| **onAllow** <br /> string array | Lists headers from the authorization service added or overridden in the original request and forwarded to the upstream when the authorization check result is allowed (HTTP code `200`).<br />If not specified, the original request is forwarded to the backend unmodified.<br />Any existing headers are overridden. | Optional |
-

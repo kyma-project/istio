@@ -15,6 +15,12 @@
     name: config.numTrustedProxies
     value:
       type: number
+  - path: config.trustDomain
+    name: config.trustDomain
+    simple: true
+    description: description.trustDomain
+    value:
+      type: string
   - path: compatibilityMode
     simple: true
     name: compatibilityMode

@@ -1009,7 +1009,7 @@ spec:
                                     type: string
                                 type: object
                               requests:
-                                description: The minimum amount of resources ( such
+                                description: The minimum amount of resources (such
                                   as CPU and memory) a container needs to run.
                                 properties:
                                   cpu:
@@ -1076,7 +1076,7 @@ spec:
                                     type: string
                                 type: object
                               requests:
-                                description: The minimum amount of resources ( such
+                                description: The minimum amount of resources (such
                                   as CPU and memory) a container needs to run.
                                 properties:
                                   cpu:
@@ -1181,7 +1181,7 @@ spec:
                                     type: string
                                 type: object
                               requests:
-                                description: The minimum amount of resources ( such
+                                description: The minimum amount of resources (such
                                   as CPU and memory) a container needs to run.
                                 properties:
                                   cpu:
@@ -1244,7 +1244,7 @@ spec:
                     - k8s
                     type: object
                   pilot:
-                    description: Configures the Istio Pilot component.
+                    description: Configures the Istiod component.
                     properties:
                       k8s:
                         description: Defines the Kubernetes resources' configuration
@@ -1288,7 +1288,7 @@ spec:
                                     type: string
                                 type: object
                               requests:
-                                description: The minimum amount of resources ( such
+                                description: The minimum amount of resources (such
                                   as CPU and memory) a container needs to run.
                                 properties:
                                   cpu:
@@ -1376,7 +1376,7 @@ spec:
                                     type: string
                                 type: object
                               requests:
-                                description: The minimum amount of resources ( such
+                                description: The minimum amount of resources (such
                                   as CPU and memory) a container needs to run.
                                 properties:
                                   cpu:
@@ -1419,7 +1419,7 @@ spec:
                                   additionalProperties:
                                     type: string
                                   description: |-
-                                    Specifies a set of additional fixed headers that included in the authorization request sent to the authorization service.
+                                    Specifies a set of additional fixed headers included in the authorization request sent to the authorization service.
                                     The key is the header name and value is the header value.
                                     Client request of the same key or headers specified in `Include` are overridden.
                                   type: object
@@ -1428,7 +1428,7 @@ spec:
                                     Lists client request headers included in the authorization request sent to the authorization service.
                                     In addition to the headers specified here, the following headers are included by default:
                                     - *Host*, *Method*, *Path*, and *Content-Length* are automatically sent.
-                                    - *Content-Length* is set to `0`, and the request does have a message body. However, the authorization request can include the buffered client request body (controlled by the **include_request_body_in_check** setting), consequently the **Content-Length** value of the authorization request reflects its payload size.
+                                    - *Content-Length* is set to `0`, and the request doesn't have a message body. However, the authorization request can include the buffered client request body (controlled by the **include_request_body_in_check** setting), consequently the **Content-Length** value of the authorization request reflects its payload size.
                                   items:
                                     type: string
                                   type: array
@@ -1475,7 +1475,7 @@ spec:
                           type: string
                         pathPrefix:
                           description: |-
-                            Specifies the prefix which included in the request sent to the authorization service.
+                            Specifies the prefix included in the request sent to the authorization service.
                             The prefix might be constructed with special characters (for example, `/test?original_path=`).
                           type: string
                         port:

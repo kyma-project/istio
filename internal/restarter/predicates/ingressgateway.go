@@ -28,8 +28,8 @@ func (i RestartPredicate) NewIngressGatewayEvaluator(_ context.Context) (Ingress
 				OldNumTrustedProxies: lastAppliedConfig.Config.NumTrustedProxies,
 			},
 			TrustDomainsRestartEvaluator{
-				NewTrustedDomains: i.istioCR.Spec.Config.TrustDomain,
-				OldTrustedDomains: lastAppliedConfig.Config.TrustDomain,
+				NewTrustDomain: i.istioCR.Spec.Config.TrustDomain,
+				OldTrustDomain: lastAppliedConfig.Config.TrustDomain,
 			},
 		},
 	}, nil
@@ -66,14 +66,14 @@ func (i NumTrustedProxiesRestartEvaluator) RequiresIngressGatewayRestart() bool 
 }
 
 type TrustDomainsRestartEvaluator struct {
-	NewTrustedDomains *string
-	OldTrustedDomains *string
+	NewTrustDomain *string
+	OldTrustDomain *string
 }
 
 func (i TrustDomainsRestartEvaluator) RequiresIngressGatewayRestart() bool {
-	isNewNotNil := i.NewTrustedDomains != nil
-	isOldNotNil := i.OldTrustedDomains != nil
-	if isNewNotNil && isOldNotNil && *i.NewTrustedDomains != *i.OldTrustedDomains {
+	isNewNotNil := i.NewTrustDomain != nil
+	isOldNotNil := i.OldTrustDomain != nil
+	if isNewNotNil && isOldNotNil && *i.NewTrustDomain != *i.OldTrustDomain {
 		return true
 	}
 	if isNewNotNil != isOldNotNil {

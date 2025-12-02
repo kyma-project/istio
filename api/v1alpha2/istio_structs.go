@@ -31,7 +31,7 @@ type Config struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:MaxLength=255
-	// +kubebuilder:validation:Pattern=`^[a-z0-9._-]+$`
+	// +kubebuilder:validation:Pattern=`^[a-z0-9]*([a-z0-9-_]*)?(\.[a-z0-9]*([a-z0-9-_]*[a-z0-9]*)?)*$`
 	TrustDomain *string `json:"trustDomain,omitempty"`
 }
 

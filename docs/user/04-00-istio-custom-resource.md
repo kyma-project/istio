@@ -51,7 +51,7 @@ Appears in:
 | **service** <br /> string | Specifies the service that implements the Envoy `ext_authz` HTTP authorization service.<br />The recommended format is `[Namespace/]Hostname`.<br />Specify the namespace if it is required to unambiguously resolve a service in the service registry.<br />The host name refers to the fully qualified host name of a service defined by either a Kubernetes Service or a ServiceEntry. | Optional |
 | **port** <br /> integer | Specifies the port of the Service. | Required <br /> |
 | **headers** <br /> [Headers](#headers) | Specifies the headers included, added, or forwarded during authorization. | Optional |
-| **pathPrefix** <br /> string | Specifies the prefix which included in the request sent to the authorization service.<br />The prefix might be constructed with special characters (for example, `/test?original_path=`). | Optional <br /> |
+| **pathPrefix** <br /> string | Specifies the prefix included in the request sent to the authorization service.<br />The prefix might be constructed with special characters (for example, `/test?original_path=`). | Optional <br /> |
 | **timeout** <br /> [Duration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.33/#duration-v1-meta) | Specifies the timeout for the HTTP authorization request to the external service. | Optional <br /> |
 
 ### CniComponent
@@ -86,7 +86,7 @@ Appears in:
 
 | Field | Description | Validation |
 | --- | --- | --- |
-| **pilot** <br /> [IstioComponent](#istiocomponent) | Configures the Istio Pilot component. | Optional |
+| **pilot** <br /> [IstioComponent](#istiocomponent) | Configures the Istiod component. | Optional |
 | **ingressGateway** <br /> [IstioComponent](#istiocomponent) | Configures the Istio Ingress Gateway component. | Optional |
 | **cni** <br /> [CniComponent](#cnicomponent) | Configures the Istio CNI DaemonSet component. | Optional |
 | **proxy** <br /> [ProxyComponent](#proxycomponent) | Configures the Istio sidecar proxy component. | Optional |
@@ -97,7 +97,7 @@ Appears in:
 Underlying type: string
 
 Appears in:
-- [ReasonWithMessage](#reasonwithmessage)
+- ReasonWithMessage
 
 | Field | Description |
 | --- | --- |
@@ -204,8 +204,8 @@ Appears in:
 
 | Field | Description | Validation |
 | --- | --- | --- |
-| **include** <br /> string array | Lists client request headers included in the authorization request sent to the authorization service.<br />In addition to the headers specified here, the following headers are included by default:<br />- *Host*, *Method*, *Path*, and *Content-Length* are automatically sent.<br />- *Content-Length* is set to `0`, and the request does have a message body. However, the authorization request can include the buffered client request body (controlled by the **include_request_body_in_check** setting), consequently the **Content-Length** value of the authorization request reflects its payload size. | Optional |
-| **add** <br /> object (keys:string, values:string) | Specifies a set of additional fixed headers that included in the authorization request sent to the authorization service.<br />The key is the header name and value is the header value.<br />Client request of the same key or headers specified in `Include` are overridden. | Optional |
+| **include** <br /> string array | Lists client request headers included in the authorization request sent to the authorization service.<br />In addition to the headers specified here, the following headers are included by default:<br />- *Host*, *Method*, *Path*, and *Content-Length* are automatically sent.<br />- *Content-Length* is set to `0`, and the request doesn't have a message body. However, the authorization request can include the buffered client request body (controlled by the **include_request_body_in_check** setting), consequently the **Content-Length** value of the authorization request reflects its payload size. | Optional |
+| **add** <br /> object (keys:string, values:string) | Specifies a set of additional fixed headers included in the authorization request sent to the authorization service.<br />The key is the header name and value is the header value.<br />Client request of the same key or headers specified in `Include` are overridden. | Optional |
 
 ### Istio
 
@@ -339,7 +339,7 @@ Appears in:
 | Field | Description | Validation |
 | --- | --- | --- |
 | **limits** <br /> [ResourceClaims](#resourceclaims) | The maximum amount of resources a container is allowed to use. | Optional |
-| **requests** <br /> [ResourceClaims](#resourceclaims) | The minimum amount of resources ( such as CPU and memory) a container needs to run. | Optional |
+| **requests** <br /> [ResourceClaims](#resourceclaims) | The minimum amount of resources (such as CPU and memory) a container needs to run. | Optional |
 
 ### RollingUpdate
 

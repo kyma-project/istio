@@ -139,9 +139,9 @@ Appears in:
 
 | Field | Description | Validation |
 | --- | --- | --- |
-| **numTrustedProxies** <br /> integer | Defines the number of trusted proxies deployed in front of the Istio gateway proxy. | Maximum: `4.294967295e+09` <br />Minimum: `0` <br /> |
+| **numTrustedProxies** <br /> integer | Defines the number of trusted proxies deployed in front of the Istio gateway proxy. | Maximum: 4.294967295e+09 <br />Minimum: 0 <br /> |
 | **authorizers** <br /> [Authorizer](#authorizer) array | Defines a list of external authorization providers. | Optional |
-| **gatewayExternalTrafficPolicy** <br /> string | Defines the external traffic policy for the Istio Ingress Gateway Service. Valid configurations are `"Local"` or `"Cluster"`. The external traffic policy set to `"Local"` preserves the client IP in the request, but also introduces the risk of unbalanced traffic distribution.<br />WARNING: Switching **externalTrafficPolicy** may result in a temporal increase in request delay. Make sure that this is acceptable. | Enum: `[Local Cluster]` <br />Optional <br /> |
+| **gatewayExternalTrafficPolicy** <br /> string | Defines the external traffic policy for the Istio Ingress Gateway Service. Valid configurations are `"Local"` or `"Cluster"`. The external traffic policy set to `"Local"` preserves the client IP in the request, but also introduces the risk of unbalanced traffic distribution.<br />WARNING: Switching **externalTrafficPolicy** may result in a temporal increase in request delay. Make sure that this is acceptable. | Enum: [Local Cluster] <br />Optional <br /> |
 | **telemetry** <br /> [Telemetry](#telemetry) | Defines the telemetry configuration of Istio. | Optional <br /> |
 
 ### EgressGateway
@@ -175,8 +175,8 @@ Appears in:
 
 | Field | Description | Validation |
 | --- | --- | --- |
-| **maxReplicas** <br /> integer | Defines the minimum number of replicas for the HorizontalPodAutoscaler. | Maximum: `2.147483647e+09` <br />Minimum: `0` <br /> |
-| **minReplicas** <br /> integer | Defines the maximum number of replicas for the HorizontalPodAutoscaler. | Maximum: `2.147483647e+09` <br />Minimum: `0` <br /> |
+| **maxReplicas** <br /> integer | Defines the minimum number of replicas for the HorizontalPodAutoscaler. | Maximum: 2.147483647e+09 <br />Minimum: 0 <br /> |
+| **minReplicas** <br /> integer | Defines the maximum number of replicas for the HorizontalPodAutoscaler. | Maximum: 2.147483647e+09 <br />Minimum: 0 <br /> |
 
 ### Headers
 
@@ -253,7 +253,7 @@ Appears in:
 
 | Field | Description | Validation |
 | --- | --- | --- |
-| **state** <br /> [State](#state) | Signifies the current state of the Istio custom resource. Possible values are `Ready`, `Processing`, `Error`, `Deleting`, or `Warning`. | Enum: `[Processing Deleting Ready Error Warning]` <br />Required <br /> |
+| **state** <br /> [State](#state) | Signifies the current state of the Istio custom resource. Possible values are `Ready`, `Processing`, `Error`, `Deleting`, or `Warning`. | Enum: [Processing Deleting Ready Error Warning] <br />Required <br /> |
 | **conditions** <br /> [Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.33/#condition-v1-meta) | Contains conditions associated with **IstioStatus**. | Optional |
 | **description** <br /> string | Describes the Istio status. | Optional |
 
@@ -350,8 +350,8 @@ Appears in:
 
 | Field | Description | Validation |
 | --- | --- | --- |
-| **maxSurge** <br /> [IntOrString](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.33/#intorstring-intstr-util) | Specifies the maximum number of Pods that can be unavailable during the update process. See [Max Surge](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-surge). | Pattern: `^[0-9]+%?$` <br />XIntOrString <br /> |
-| **maxUnavailable** <br /> [IntOrString](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.33/#intorstring-intstr-util) | Specifies the maximum number of Pods that can be created over the desired number of Pods. See [Max Unavailable](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-unavailable) | Pattern: `^((100\|[0-9]\{1,2\})%\|[0-9]+)$` <br />XIntOrString <br /> |
+| **maxSurge** <br /> [IntOrString](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.33/#intorstring-intstr-util) | Specifies the maximum number of Pods that can be unavailable during the update process. See [Max Surge](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-surge). | Pattern: `^[0-9]+%?$` <br />XIntOrString: \{\} <br /> |
+| **maxUnavailable** <br /> [IntOrString](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.33/#intorstring-intstr-util) | Specifies the maximum number of Pods that can be created over the desired number of Pods. See [Max Unavailable](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-unavailable) | Pattern: `^((100\|[0-9]\{1,2\})%\|[0-9]+)$` <br />XIntOrString: \{\} <br /> |
 
 ### State
 

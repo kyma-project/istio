@@ -38,7 +38,7 @@ type Config struct {
 type XFCCStrategy string
 
 const (
-	// When the client connection is mTLS, append the client certificate information to the request’s XFCC header and forward it.
+	// When the client connection is mTLS (Mutual TLS), append the client certificate information to the request’s XFCC header and forward it.
 	AppendForward XFCCStrategy = "APPEND_FORWARD"
 	// When the client connection is mTLS, reset the XFCC header with the client certificate information and send it to the next hop.
 	SanitizeSet XFCCStrategy = "SANITIZE_SET"
@@ -46,7 +46,7 @@ const (
 	Sanitize XFCCStrategy = "SANITIZE"
 	// Always forward the XFCC header in the request, regardless of whether the client connection is mTLS.
 	AlwaysForwardOnly XFCCStrategy = "ALWAYS_FORWARD_ONLY"
-	// When the client connection is mTLS (Mutual TLS), forward the XFCC header in the request.
+	// When the client connection is mTLS, forward the XFCC header in the request.
 	ForwardOnly XFCCStrategy = "FORWARD_ONLY"
 )
 

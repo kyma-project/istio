@@ -394,6 +394,9 @@ Appears in:
 
 ### XFCCStrategy
 
+XFCCStrategy defines how to handle the x-forwarded-client-cert (XFCC) of HTTP header.
+XFCC is a proxy header which indicates certificate information of part or all of the clients or proxies that a request has flowed through, on its way from the client to the server.
+
 Underlying type: string
 
 Appears in:
@@ -401,9 +404,9 @@ Appears in:
 
 | Field | Description |
 | --- | --- |
-| **APPEND_FORWARD** | When the client connection is mTLS, append the client certificate information to the request’s XFCC header and forward it.<br /> |
+| **APPEND_FORWARD** | When the client connection is mTLS (Mutual TLS), append the client certificate information to the request’s XFCC header and forward it.<br /> |
 | **SANITIZE_SET** | When the client connection is mTLS, reset the XFCC header with the client certificate information and send it to the next hop.<br /> |
 | **SANITIZE** | Do not send the XFCC header to the next hop.<br /> |
 | **ALWAYS_FORWARD_ONLY** | Always forward the XFCC header in the request, regardless of whether the client connection is mTLS.<br /> |
-| **FORWARD_ONLY** | When the client connection is mTLS (Mutual TLS), forward the XFCC header in the request.<br /> |
+| **FORWARD_ONLY** | When the client connection is mTLS, forward the XFCC header in the request.<br /> |
 

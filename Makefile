@@ -304,7 +304,7 @@ generate-crd-docs: bin/crd-ref-docs ## Generate CRD reference docs
 	--max-depth=25
 	sed -i'' -e 's/Optional: \\{\\}/Optional/g' docs/user/04-00-istio-custom-resource.md
 	sed -i'' -e 's/Required: \\{\\}/Required/g' docs/user/04-00-istio-custom-resource.md
-	sed -i'' -e 's/XIntOrString: `\\{\\}`/XIntOrString/g' docs/user/04-00-istio-custom-resource.md
-	sed -i'' -e '1N;$!N;/\n.*ReasonWithMessage/!P;D' docs/user/04-00-istio-custom-resource.md
+	sed -i'' -e 's/XIntOrString: \\{\\}/XIntOrString/g' docs/user/04-00-istio-custom-resource.md
+	sed -i'' -e '1N;$$!N;/\n.*ReasonWithMessage/!P;D' docs/user/04-00-istio-custom-resource.md
 	sed -i'' -e '/ReasonWithMessage/d' docs/user/04-00-istio-custom-resource.md
 	rm -f docs/user/04-00-istio-custom-resource.md-e

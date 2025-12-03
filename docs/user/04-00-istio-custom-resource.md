@@ -348,8 +348,8 @@ Appears in:
 
 | Field | Description | Validation |
 | --- | --- | --- |
-| **maxSurge** <br /> [IntOrString](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.33/#intorstring-intstr-util) | Specifies the maximum number of Pods that can be unavailable during the update process. See [Max Surge](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-surge). | Pattern: `^[0-9]+%?$` <br />XIntOrString: \{\} <br /> |
-| **maxUnavailable** <br /> [IntOrString](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.33/#intorstring-intstr-util) | Specifies the maximum number of Pods that can be created over the desired number of Pods. See [Max Unavailable](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-unavailable) | Pattern: `^((100\|[0-9]\{1,2\})%\|[0-9]+)$` <br />XIntOrString: \{\} <br /> |
+| **maxSurge** <br /> [IntOrString](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.33/#intorstring-intstr-util) | Specifies the maximum number of Pods that can be unavailable during the update process. See [Max Surge](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-surge). | Pattern: `^[0-9]+%?$` <br />XIntOrString <br /> |
+| **maxUnavailable** <br /> [IntOrString](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.33/#intorstring-intstr-util) | Specifies the maximum number of Pods that can be created over the desired number of Pods. See [Max Unavailable](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-unavailable) | Pattern: `^((100\|[0-9]\{1,2\})%\|[0-9]+)$` <br />XIntOrString <br /> |
 
 ### State
 
@@ -412,3 +412,5 @@ Appears in:
 
 | Field | Description | Validation |
 | --- | --- | --- |
+| **onAllow** <br /> string array | Lists headers from the authorization service added or overridden in the original request and forwarded to the upstream when the authorization check result is allowed (HTTP code `200`).<br />If not specified, the original request is forwarded to the backend unmodified.<br />Any existing headers are overridden. | Optional |
+

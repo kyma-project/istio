@@ -35,6 +35,8 @@ type Config struct {
 	Telemetry Telemetry `json:"telemetry,omitempty"`
 }
 
+// XFCCStrategy defines how to handle the x-forwarded-client-cert (XFCC) of HTTP header. 
+// XFCC is a proxy header which indicates certificate information of part or all of the clients or proxies that a request has flowed through, on its way from the client to the server. 
 type XFCCStrategy string
 
 const (

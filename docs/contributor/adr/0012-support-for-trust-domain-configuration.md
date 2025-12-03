@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed //@TODO change to Accepted upon approval
+Accepted
 
 ## Context
 

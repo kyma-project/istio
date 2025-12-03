@@ -1446,8 +1446,11 @@ spec:
               experimental:
                 description: Defines experimental configuration options.
                 properties:
+                  enableAmbient:
+                    description: Enables ambient mode support.
+                    type: boolean
                   enableDualStack:
-                    description: Enables the Dual Stack support
+                    description: Enables dual-stack support.
                     type: boolean
                   pilot:
                     properties:

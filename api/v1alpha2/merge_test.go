@@ -766,6 +766,30 @@ var _ = Describe("Merge", func() {
 		Expect(dualStack).To(Equal("true"))
 	})
 
+	It("should set ISTIO_META_ENABLE_HBONE in the mesh Config if ambient is enabled in the Istio CR", func() {
+		// given
+		enableAmbient := true
+		iop := iopv1alpha1.IstioOperator{
+			Spec: iopv1alpha1.IstioOperatorSpec{},
+		}
+		istioCR := istiov1alpha2.Istio{Spec: istiov1alpha2.IstioSpec{
+			Config: istiov1alpha2.Config{},
+			Experimental: &istiov1alpha2.Experimental{
+				EnableAmbient: &enableAmbient,
+			},
+		}}
+
+		// when
+		out, err := istioCR.MergeInto(iop)
+
+		meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		hbone, exists := meshConfig.GetPath("defaultConfig.proxyMetadata.ISTIO_META_ENABLE_HBONE")
+		Expect(exists).To(BeTrue())
+		Expect(hbone).To(Equal("true"))
+	})
+
 	Context("Pilot", func() {
 		Context("When Istio CR has 500m configured for CPU limits", func() {
 			It("should set CPU limits to 500m in IOP", func() {
@@ -894,6 +918,83 @@ var _ = Describe("Merge", func() {
 				iopMemoryRequests := out.Spec.Components.IngressGateways[0].Kubernetes.Resources.Requests["memory"]
 				Expect(iopMemoryRequests.String()).To(Equal(memoryRequests))
 			})
+		})
+	})
+
+	Context("Ztunnel", func() {
+		It("should set dual stack env for Istio pilot if dualStack is enabled in the Istio CR", func() {
+			iop := iopv1alpha1.IstioOperator{
+				Spec: iopv1alpha1.IstioOperatorSpec{},
+			}
+
+			enabled := true
+
+			istioCR := istiov1alpha2.Istio{
+				Spec: istiov1alpha2.IstioSpec{
+					Experimental: &istiov1alpha2.Experimental{
+						EnableAmbient: &enabled,
+					},
+				},
+			}
+
+			// when
+			out, err := istioCR.MergeInto(iop)
+
+			valuesMap, err := values.MapFromObject(out.Spec.Values)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			Expect(values.TryGetPathAs[string](valuesMap, "pilot.env.PILOT_ENABLE_AMBIENT")).To(Equal("true"))
+		})
+
+		It("should set dual stack env for Istio pilot if dualStack is enabled in the Istio CR", func() {
+			iop := iopv1alpha1.IstioOperator{
+				Spec: iopv1alpha1.IstioOperatorSpec{},
+			}
+
+			enabled := true
+
+			istioCR := istiov1alpha2.Istio{
+				Spec: istiov1alpha2.IstioSpec{
+					Experimental: &istiov1alpha2.Experimental{
+						EnableAmbient: &enabled,
+					},
+				},
+			}
+
+			// when
+			out, err := istioCR.MergeInto(iop)
+
+			valuesMap, err := values.MapFromObject(out.Spec.Values)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			gp, good := valuesMap.GetPath("cni.ambient.enabled")
+			Expect(good).To(BeTrue())
+			Expect(gp).To(BeTrue())
+
+		})
+
+		It("should set Ztunnel component to enabled if experimental enableAmbient is set to true", func() {
+			iop := iopv1alpha1.IstioOperator{
+				Spec: iopv1alpha1.IstioOperatorSpec{},
+			}
+
+			enabled := true
+
+			istioCR := istiov1alpha2.Istio{
+				Spec: istiov1alpha2.IstioSpec{
+					Experimental: &istiov1alpha2.Experimental{
+						EnableAmbient: &enabled,
+					},
+				},
+			}
+
+			// when
+			out, err := istioCR.MergeInto(iop)
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+			ztunnelEnabled := out.Spec.Components.Ztunnel.Enabled.GetValueOrFalse()
+			Expect(ztunnelEnabled).To(BeTrue())
 		})
 	})
 

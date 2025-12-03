@@ -97,10 +97,10 @@ var _ = Describe("Images.GetFipsImages", func() {
 	Context("when KYMA_FIPS_MODE_ENABLED is true", func() {
 		It("should set the FIPS images", func() {
 			_ = os.Setenv("KYMA_FIPS_MODE_ENABLED", "true")
-			_ = os.Setenv("PILOT_FIPS_IMAGE", "docker.io/istio/pilot-fips:1.10.0")
-			_ = os.Setenv("INSTALL_CNI_FIPS_IMAGE", "docker.io/istio/cni-fips:1.10.0")
-			_ = os.Setenv("PROXY_FIPS_IMAGE", "docker.io/istio/proxyv2-fips:1.10.0")
-			_ = os.Setenv("ZTUNNEL_FIPS_IMAGE", "docker.io/istio/ztunnel-fips:1.10.0")
+			_ = os.Setenv("pilot-fips", "docker.io/istio/pilot-fips:1.10.0")
+			_ = os.Setenv("install-cni-fips", "docker.io/istio/cni-fips:1.10.0")
+			_ = os.Setenv("proxyv2-fips", "docker.io/istio/proxyv2-fips:1.10.0")
+			_ = os.Setenv("ztunnel-fips", "docker.io/istio/ztunnel-fips:1.10.0")
 
 			e, err := images.GetImages()
 			Expect(err).NotTo(HaveOccurred())
@@ -112,24 +112,27 @@ var _ = Describe("Images.GetFipsImages", func() {
 
 		It("should return an error when FIPS image environment variables are missing", func() {
 			_ = os.Setenv("KYMA_FIPS_MODE_ENABLED", "true")
-			_ = os.Unsetenv("PILOT_FIPS_IMAGE")
-			_ = os.Unsetenv("INSTALL_CNI_FIPS_IMAGE")
-			_ = os.Unsetenv("PROXY_FIPS_IMAGE")
-			_ = os.Unsetenv("ZTUNNEL_FIPS_IMAGE")
+			_ = os.Unsetenv("pilot-fips")
+			_ = os.Unsetenv("install-cni-fips")
+			_ = os.Unsetenv("proxyv2-fips")
+			_ = os.Unsetenv("ztunnel-fips")
 
 			_, err := images.GetImages()
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("please set FIPS image url"))
+			Expect(err.Error()).To(ContainSubstring("environment variable \"pilot-fips\" should not be empty"))
+			Expect(err.Error()).To(ContainSubstring("environment variable \"install-cni-fips\" should not be empty"))
+			Expect(err.Error()).To(ContainSubstring("environment variable \"proxyv2-fips\" should not be empty"))
+			Expect(err.Error()).To(ContainSubstring("environment variable \"ztunnel-fips\" should not be empty"))
 		})
 	})
 
 	Context("when KYMA_FIPS_MODE_ENABLED is false", func() {
 		It("should use standard images", func() {
 			_ = os.Setenv("KYMA_FIPS_MODE_ENABLED", "false")
-			_ = os.Setenv("PILOT_FIPS_IMAGE", "docker.io/istio/pilot-fips:1.10.0")
-			_ = os.Setenv("INSTALL_CNI_FIPS_IMAGE", "docker.io/istio/cni-fips:1.10.0")
-			_ = os.Setenv("PROXY_FIPS_IMAGE", "docker.io/istio/proxyv2-fips:1.10.0")
-			_ = os.Setenv("ZTUNNEL_FIPS_IMAGE", "docker.io/istio/ztunnel-fips:1.10.0")
+			_ = os.Setenv("pilot-fips", "docker.io/istio/pilot-fips:1.10.0")
+			_ = os.Setenv("install-cni-fips", "docker.io/istio/cni-fips:1.10.0")
+			_ = os.Setenv("proxyv2-fips", "docker.io/istio/proxyv2-fips:1.10.0")
+			_ = os.Setenv("ztunnel-fips", "docker.io/istio/ztunnel-fips:1.10.0")
 
 			e, err := images.GetImages()
 			Expect(err).NotTo(HaveOccurred())

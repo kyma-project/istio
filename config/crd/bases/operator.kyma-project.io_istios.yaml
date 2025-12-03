@@ -1538,10 +1538,13 @@ spec:
                     description: Enables dual-stack support.
                     type: boolean
                   pilot:
+                    description: Defines experimental features for Istio Pilot.
                     properties:
                       enableAlphaGatewayAPI:
+                        description: Defines alpha Gateway API support.
                         type: boolean
                       enableMultiNetworkDiscoverGatewayAPI:
+                        description: Enables multi-network discovery for Gateway API.
                         type: boolean
                     required:
                     - enableAlphaGatewayAPI

@@ -198,12 +198,12 @@ func (m *meshConfigBuilder) BuildExternalAuthorizerConfiguration(authorizers []*
 	return m
 }
 
-func (m *meshConfigBuilder) BuildForwardClientCertDetails(details *XFCCStrategy) *meshConfigBuilder {
-	if details == nil {
+func (m *meshConfigBuilder) BuildForwardClientCertDetails(xfccStrategy *XFCCStrategy) *meshConfigBuilder {
+	if xfccStrategy == nil {
 		return m
 	}
 
-	err := m.c.SetPath("defaultConfig.gatewayTopology.forwardClientCertDetails", *details)
+	err := m.c.SetPath("defaultConfig.gatewayTopology.forwardClientCertDetails", *xfccStrategy)
 	if err != nil {
 		return nil
 	}

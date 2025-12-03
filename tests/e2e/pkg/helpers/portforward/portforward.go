@@ -15,6 +15,63 @@ import (
 	"time"
 )
 
+func CreateControllerPortForwading(t *testing.T) (host string, port int, err error) {
+	config := client.GetKubeConfig(t)
+
+	transport, upgrader, err := spdy.RoundTripperFor(config)
+	if err != nil {
+		return "", 0, err
+	}
+
+	k8sClient, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return "", 0, err
+	}
+
+	pods, err := k8sClient.CoreV1().Pods("kyma-system").List(t.Context(), metav1.ListOptions{
+		LabelSelector: "app.kubernetes.io/name=istio-operator",
+	})
+	if err != nil {
+		return "", 0, err
+	}
+
+	url := k8sClient.CoreV1().RESTClient().Post().
+		Resource("pods").
+		Namespace("kyma-system").
+		Name(pods.Items[0].Name).
+		SubResource("portforward").URL()
+
+	stopChan := make(chan struct{}, 1)
+	readyChan := make(chan struct{})
+
+	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: transport}, http.MethodPost, url)
+
+	ports := []string{"8080:8080"}
+
+	fw, err := portforward.New(dialer, ports, stopChan, readyChan, test_writer.NewTLogWriter(t), test_writer.NewTLogWriter(t))
+	if err != nil {
+		return "", 0, err
+	}
+
+	setup.DeclareCleanup(t, func() {
+		t.Log("Cleaning up Istio operator port-forwarding...")
+		close(stopChan)
+		fw.Close()
+		t.Log("Port-forward for Istio operator stopped")
+	})
+
+	t.Logf("Creating port-forward for Istio operator...; url: %s, ports: %v", url.String(), ports)
+	go func() {
+		err = fw.ForwardPorts()
+		if err != nil {
+			t.Logf("Failed to forward ports: %v", err)
+			return
+		}
+	}()
+	<-fw.Ready
+	return "localhost", 8080, nil
+}
+
 func CreateIngressGatewayPortForwarding(t *testing.T) (host string, port int, err error) {
 	config := client.GetKubeConfig(t)
 

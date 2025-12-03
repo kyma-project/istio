@@ -118,7 +118,7 @@ func (m *IstioCRMetrics) EmitIstioCRMetrics(cr *v1alpha2.Istio) {
 		m.configMetrics.compatibilityModeEnabled.Set(0)
 	}
 
-	if cr.Spec.Components.EgressGateway != nil &&
+	if cr.Spec.Components != nil && cr.Spec.Components.EgressGateway != nil &&
 		cr.Spec.Components.EgressGateway.Enabled != nil &&
 		*cr.Spec.Components.EgressGateway.Enabled {
 		m.componentMetrics.egressGatewayEnabled.Set(1)

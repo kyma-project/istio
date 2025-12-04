@@ -24,6 +24,6 @@ The field will be of type string and will accept the following values:
 - `ALWAYS_FORWARD_ONLY` - Always forward the XFCC header in the request, regardless of whether the client connection is mTLS.
 - `FORWARD_ONLY` - When the client connection is mTLS, forward the XFCC header in the request.
 
-The default value for this field will be `SANITIZE`, ensuring that by default,
+The default value for this field will be `SANITIZE`, ensuring that, by default,
 the XFCC header is not forwarded unless explicitly configured otherwise.
 This default behaviour is defined by Envoy.

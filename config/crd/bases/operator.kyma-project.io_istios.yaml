@@ -1405,8 +1405,8 @@ spec:
                   forwardClientCertDetails:
                     default: SANITIZE
                     description: |-
-                      Defines strategy of handling the X-Forwarded-Client-Cert header.
-                      Default behavior is "SANITIZE".
+                      Defines the strategy of handling the **X-Forwarded-Client-Cert** header.
+                      The default behavior is "SANITIZE".
                     enum:
                     - APPEND_FORWARD
                     - SANITIZE_SET

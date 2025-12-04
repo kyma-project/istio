@@ -177,9 +177,6 @@ func TestAPIRuleExtAuth(t *testing.T) {
 				),
 			)
 			require.NoError(t, gatewayhelper.CreateHTTPGateway(t))
-			gatewayDomain, gatewayPort, err := portforward.CreateIngressGatewayPortForwarding(t)
-			require.NoError(t, err, "Failed to create port-forwarding to kyma-gateway")
-
 			testBackground, err := testsetup.SetupRandomNamespaceWithOauth2MockAndHttpbin(t, testsetup.WithPrefix("extauth-test"))
 			require.NoError(t, err, "Failed to setup test background with OAuth2 mock and httpbin")
 			require.NoError(t, err, "Failed to deploy httpbin")
@@ -207,6 +204,9 @@ func TestAPIRuleExtAuth(t *testing.T) {
 			)
 			require.NoError(t, err, "Failed to create AuthorizationPolicy resource")
 			require.NotEmpty(t, createdAP, "Created AuthorizationPolicy resource should not be empty")
+
+			gatewayDomain, gatewayPort, err := portforward.CreateIngressGatewayPortForwarding(t)
+			require.NoError(t, err, "Failed to create port-forwarding to kyma-gateway")
 
 			// then
 			waitFrom := time.Now()

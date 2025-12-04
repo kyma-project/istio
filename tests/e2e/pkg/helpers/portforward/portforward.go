@@ -1,6 +1,7 @@
 package portforward
 
 import (
+	"context"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/test_writer"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/setup"
@@ -9,7 +10,9 @@ import (
 	"k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/transport/spdy"
 	"net/http"
+	"sigs.k8s.io/e2e-framework/klient/wait"
 	"testing"
+	"time"
 )
 
 func CreateIngressGatewayPortForwarding(t *testing.T) (host string, port int, err error) {
@@ -31,6 +34,22 @@ func CreateIngressGatewayPortForwarding(t *testing.T) (host string, port int, er
 	if err != nil {
 		return "", 0, err
 	}
+
+	// wait until all pods are running
+	err = wait.For(func(ctx context.Context) (done bool, err error) {
+		pods, err = k8sClient.CoreV1().Pods("istio-system").List(t.Context(), metav1.ListOptions{
+			LabelSelector: "app=istio-ingressgateway",
+		})
+		if err != nil {
+			return false, err
+		}
+		for _, pod := range pods.Items {
+			if pod.Status.Phase != "Running" {
+				return false, nil
+			}
+		}
+		return true, nil
+	}, wait.WithTimeout(15*time.Second), wait.WithInterval(1*time.Second))
 
 	url := k8sClient.CoreV1().RESTClient().Post().
 		Resource("pods").

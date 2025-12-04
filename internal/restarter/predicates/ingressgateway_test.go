@@ -4,18 +4,18 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kyma-project/istio/operator/pkg/labels"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	predicates "github.com/kyma-project/istio/operator/internal/restarter/predicates"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
+
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
+	"github.com/kyma-project/istio/operator/pkg/labels"
 )
 
 var _ = Describe("Ingress Gateway Predicate", func() {
-	Context("RequiresIngressGatewayRestart", func() {
+	Context("NumTrustedProxiesRestartEvaluator", func() {
 		It("should evaluate to true if new is nil and old is not nil", func() {
 			evaluator := predicates.NumTrustedProxiesRestartEvaluator{
 				NewNumTrustedProxies: nil,
@@ -60,6 +60,38 @@ var _ = Describe("Ingress Gateway Predicate", func() {
 		})
 	})
 
+	Context("TrustDomainsRestartEvaluator", func() {
+		It("should evaluate to false if newTrustDomain is the same", func() {
+			evaluator := predicates.TrustDomainsRestartEvaluator{
+				NewTrustDomain: ptr.To("cluster.local"),
+				OldTrustDomain: ptr.To("cluster.local"),
+			}
+			Expect(evaluator.RequiresIngressGatewayRestart()).To(BeFalse())
+		})
+
+		It("should evaluate to true if newTrustDomain is different", func() {
+			evaluator := predicates.TrustDomainsRestartEvaluator{
+				NewTrustDomain: ptr.To("cluster.local"),
+				OldTrustDomain: ptr.To("old.local"),
+			}
+			Expect(evaluator.RequiresIngressGatewayRestart()).To(BeTrue())
+		})
+		It("should evaluate to true if newTrustDomain is nil and oldTrustDomain is not nil", func() {
+			evaluator := predicates.TrustDomainsRestartEvaluator{
+				NewTrustDomain: nil,
+				OldTrustDomain: ptr.To("old.local"),
+			}
+			Expect(evaluator.RequiresIngressGatewayRestart()).To(BeTrue())
+		})
+		It("should evaluate to true if newTrustDomain is not nil and oldTrustDomain is nil", func() {
+			evaluator := predicates.TrustDomainsRestartEvaluator{
+				NewTrustDomain: ptr.To("cluster.local"),
+				OldTrustDomain: nil,
+			}
+			Expect(evaluator.RequiresIngressGatewayRestart()).To(BeTrue())
+		})
+	})
+
 	Context("NewIngressGatewayEvaluator", func() {
 		const (
 			mockIstioTag             string = "1.16.1-distroless"
@@ -89,7 +121,8 @@ var _ = Describe("Ingress Gateway Predicate", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(evaluator).NotTo(BeNil())
-			Expect(evaluator.(predicates.NumTrustedProxiesRestartEvaluator).OldNumTrustedProxies).To(BeNil())
+			Expect(evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators).To(HaveLen(2))
+			Expect(evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[0].(predicates.NumTrustedProxiesRestartEvaluator).OldNumTrustedProxies).To(BeNil())
 		})
 
 		It("should return correct not nil value for new and old numTrustedProxies", func() {
@@ -109,8 +142,9 @@ var _ = Describe("Ingress Gateway Predicate", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(evaluator).NotTo(BeNil())
-			Expect(*(evaluator.(predicates.NumTrustedProxiesRestartEvaluator).NewNumTrustedProxies)).To(Equal(1))
-			Expect(*(evaluator.(predicates.NumTrustedProxiesRestartEvaluator).OldNumTrustedProxies)).To(Equal(2))
+			Expect(evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators).To(HaveLen(2))
+			Expect(*evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[0].(predicates.NumTrustedProxiesRestartEvaluator).NewNumTrustedProxies).To(Equal(1))
+			Expect(*evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[0].(predicates.NumTrustedProxiesRestartEvaluator).OldNumTrustedProxies).To(Equal(2))
 		})
 
 		It("should return correct nil value for new and old numTrustedProxies", func() {
@@ -130,8 +164,9 @@ var _ = Describe("Ingress Gateway Predicate", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(evaluator).NotTo(BeNil())
-			Expect(evaluator.(predicates.NumTrustedProxiesRestartEvaluator).NewNumTrustedProxies).To(BeNil())
-			Expect(evaluator.(predicates.NumTrustedProxiesRestartEvaluator).OldNumTrustedProxies).To(BeNil())
+			Expect(evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators).To(HaveLen(2))
+			Expect(evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[0].(predicates.NumTrustedProxiesRestartEvaluator).NewNumTrustedProxies).To(BeNil())
+			Expect(evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[0].(predicates.NumTrustedProxiesRestartEvaluator).OldNumTrustedProxies).To(BeNil())
 		})
 
 	})

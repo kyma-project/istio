@@ -198,6 +198,18 @@ func (m *meshConfigBuilder) BuildExternalAuthorizerConfiguration(authorizers []*
 	return m
 }
 
+func (m *meshConfigBuilder) BuildTrustDomainConfig(domain *string) *meshConfigBuilder {
+	if domain == nil {
+		return m
+	}
+
+	err := m.c.SetPath("trustDomain", *domain)
+	if err != nil {
+		return nil
+	}
+	return m
+}
+
 func (i *Istio) mergeConfig(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {
 	mcb, err := newMeshConfigBuilder(op)
 	if err != nil {
@@ -213,6 +225,7 @@ func (i *Istio) mergeConfig(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOper
 		BuildPrometheusMergeConfig(i.Spec.Config.Telemetry.Metrics.PrometheusMerge).
 		BuildDualStackConfig(dualStackEnabled).
 		BuildAmbientConfig(ambientEnabled).
+		BuildTrustDomainConfig(i.Spec.Config.TrustDomain).
 		Build()
 
 	op.Spec.MeshConfig = newMeshConfig

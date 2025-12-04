@@ -21,10 +21,31 @@ func (i RestartPredicate) NewIngressGatewayEvaluator(_ context.Context) (Ingress
 		return nil, err
 	}
 
-	return NumTrustedProxiesRestartEvaluator{
-		NewNumTrustedProxies: i.istioCR.Spec.Config.NumTrustedProxies,
-		OldNumTrustedProxies: lastAppliedConfig.Config.NumTrustedProxies,
+	return CompositeIngressGatewayRestartEvaluator{
+		Evaluators: []IngressGatewayRestartEvaluator{
+			NumTrustedProxiesRestartEvaluator{
+				NewNumTrustedProxies: i.istioCR.Spec.Config.NumTrustedProxies,
+				OldNumTrustedProxies: lastAppliedConfig.Config.NumTrustedProxies,
+			},
+			TrustDomainsRestartEvaluator{
+				NewTrustDomain: i.istioCR.Spec.Config.TrustDomain,
+				OldTrustDomain: lastAppliedConfig.Config.TrustDomain,
+			},
+		},
 	}, nil
+}
+
+type CompositeIngressGatewayRestartEvaluator struct {
+	Evaluators []IngressGatewayRestartEvaluator
+}
+
+func (c CompositeIngressGatewayRestartEvaluator) RequiresIngressGatewayRestart() bool {
+	for _, evaluator := range c.Evaluators {
+		if evaluator.RequiresIngressGatewayRestart() {
+			return true
+		}
+	}
+	return false
 }
 
 type NumTrustedProxiesRestartEvaluator struct {
@@ -41,5 +62,22 @@ func (i NumTrustedProxiesRestartEvaluator) RequiresIngressGatewayRestart() bool 
 		return true
 	}
 
+	return false
+}
+
+type TrustDomainsRestartEvaluator struct {
+	NewTrustDomain *string
+	OldTrustDomain *string
+}
+
+func (i TrustDomainsRestartEvaluator) RequiresIngressGatewayRestart() bool {
+	isNewNotNil := i.NewTrustDomain != nil
+	isOldNotNil := i.OldTrustDomain != nil
+	if isNewNotNil && isOldNotNil && *i.NewTrustDomain != *i.OldTrustDomain {
+		return true
+	}
+	if isNewNotNil != isOldNotNil {
+		return true
+	}
 	return false
 }

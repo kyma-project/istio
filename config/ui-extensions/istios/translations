@@ -14,6 +14,7 @@ en:
   config.authorizers.headers.toDownstream.onDeny: Forward To Downstream On Deny
   config.gatewayExternalTrafficPolicy: Gateway external traffic policy
   config.prometheusMerge: Enable PrometheusMerge
+  config.forwardClientCertDetails: X-Forwarded-Client-Cert header population strategy
 
   k8s.hpaSpec: Horizontal Pod Autoscaler
   k8s.hpaSpec.minReplicas: Minimum number of replicas

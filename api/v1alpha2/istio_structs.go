@@ -14,6 +14,13 @@ type Config struct {
 	// +kubebuilder:validation:Maximum=4294967295
 	NumTrustedProxies *int `json:"numTrustedProxies,omitempty"`
 
+	// Defines the strategy of handling the **X-Forwarded-Client-Cert** header.
+	// The default behavior is "SANITIZE".
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default=SANITIZE
+	// +kubebuilder:validation:Enum=APPEND_FORWARD;SANITIZE_SET;SANITIZE;ALWAYS_FORWARD_ONLY;FORWARD_ONLY
+	ForwardClientCertDetails *XFCCStrategy `json:"forwardClientCertDetails,omitempty"`
+
 	// Defines a list of external authorization providers.
 	Authorizers []*Authorizer `json:"authorizers,omitempty"`
 
@@ -27,6 +34,23 @@ type Config struct {
 	// +kubebuilder:validation:Optional
 	Telemetry Telemetry `json:"telemetry,omitempty"`
 }
+
+// Defines how to handle the x-forwarded-client-cert (XFCC) of the HTTP header.
+// XFCC is a proxy header that indicates certificate information of part or all of the clients or proxies that a request has passed through on its route from the client to the server.
+type XFCCStrategy string
+
+const (
+	// When the client connection is mutual TLS (mTLS), append the client certificate information to the request’s XFCC header and forward it.
+	AppendForward XFCCStrategy = "APPEND_FORWARD"
+	// When the client connection is mTLS, reset the XFCC header with the client certificate information and send it to the next hop.
+	SanitizeSet XFCCStrategy = "SANITIZE_SET"
+	// Do not send the XFCC header to the next hop.
+	Sanitize XFCCStrategy = "SANITIZE"
+	// Always forward the XFCC header in the request, regardless of whether the client connection is mTLS.
+	AlwaysForwardOnly XFCCStrategy = "ALWAYS_FORWARD_ONLY"
+	// When the client connection is mTLS, forward the XFCC header in the request.
+	ForwardOnly XFCCStrategy = "FORWARD_ONLY"
+)
 
 type Components struct {
 	// Pilot defines component configuration for Istiod

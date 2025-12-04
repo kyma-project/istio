@@ -119,7 +119,6 @@ func TestAPIRuleExtAuth(t *testing.T) {
 
 			testBackground, err := testsetup.SetupRandomNamespaceWithOauth2MockAndHttpbin(t, testsetup.WithPrefix("extauth-test"))
 			require.NoError(t, err, "Failed to setup test background with OAuth2 mock and httpbin")
-			require.NoError(t, err, "Failed to deploy httpbin")
 
 			// when
 			createdVS, err := infrahelpers.CreateResourceWithTemplateValues(
@@ -177,12 +176,11 @@ func TestAPIRuleExtAuth(t *testing.T) {
 				),
 			)
 			require.NoError(t, gatewayhelper.CreateHTTPGateway(t))
-			gatewayDomain, gatewayPort, err := portforward.CreateIngressGatewayPortForwarding(t)
-			require.NoError(t, err, "Failed to create port-forwarding to kyma-gateway")
-
 			testBackground, err := testsetup.SetupRandomNamespaceWithOauth2MockAndHttpbin(t, testsetup.WithPrefix("extauth-test"))
 			require.NoError(t, err, "Failed to setup test background with OAuth2 mock and httpbin")
-			require.NoError(t, err, "Failed to deploy httpbin")
+
+			gatewayDomain, gatewayPort, err := portforward.CreateIngressGatewayPortForwarding(t)
+			require.NoError(t, err, "Failed to create port-forwarding to kyma-gateway")
 
 			// when
 			createdVS, err := infrahelpers.CreateResourceWithTemplateValues(

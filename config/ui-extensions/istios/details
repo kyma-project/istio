@@ -21,6 +21,9 @@ body:
     - source: spec.config.gatewayExternalTrafficPolicy
       name: config.gatewayExternalTrafficPolicy
       visibility: '$exists($value)'
+    - source: spec.config.forwardClientCertDetails
+      name: config.forwardClientCertDetails
+      visibility: '$exists($value)'
     - source: spec.config.numTrustedProxies
       name: config.numTrustedProxies
       placeholder: '1'

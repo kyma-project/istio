@@ -82,7 +82,7 @@ func NewMetrics() *IstioCRMetrics {
 	return crMetrics
 }
 
-func (m *IstioCRMetrics) EmitIstioCRMetrics(cr *v1alpha2.Istio) {
+func (m *IstioCRMetrics) UpdateIstioCRMetrics(cr *v1alpha2.Istio) {
 	providersTotal := len(cr.Spec.Config.Authorizers)
 	m.extAuthMetrics.providersTotal.Set(float64(providersTotal))
 

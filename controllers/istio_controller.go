@@ -107,7 +107,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 
 	if r.crMetrics != nil {
-		r.crMetrics.EmitIstioCRMetrics(&istioCR)
+		r.crMetrics.UpdateIstioCRMetrics(&istioCR)
 	} else {
 		r.log.Info("WARNING: Istio CR metrics emitter is not initialized")
 	}

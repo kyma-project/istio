@@ -2,8 +2,8 @@
 
 ## Overview
 
-Istio operator metrics provides metrics about the configuration status of Istio custom resources (CRs) deployed in the cluster. 
-These metrics help monitor the health and status of Kyma Istio managed Istio installations.
+Istio Operator provides metrics that indicate the configuration status of Istio custom resources (CRs) deployed in the cluster. 
+These metrics help monitor the health and status of Istio installations managed by the Istio module.
 
 ## Metrics
 

@@ -16,9 +16,10 @@ type IstioCRMetrics struct {
 }
 
 type configMetrics struct {
-	numTrustedProxiesConfigured prometheus.Gauge
-	prometheusMergeEnabled      prometheus.Gauge
-	compatibilityModeEnabled    prometheus.Gauge
+	numTrustedProxiesConfigured        prometheus.Gauge
+	prometheusMergeEnabled             prometheus.Gauge
+	compatibilityModeEnabled           prometheus.Gauge
+	forwardClientCertDetailsConfigured prometheus.Gauge
 }
 
 type componentMetrics struct {
@@ -60,6 +61,10 @@ func NewMetrics() *IstioCRMetrics {
 				Name: "istio_compatibility_mode_enabled",
 				Help: "Indicates whether compatibility mode is enabled in the Istio CR (1 for enabled, 0 for disabled).",
 			}),
+			forwardClientCertDetailsConfigured: prometheus.NewGauge(prometheus.GaugeOpts{
+				Name: "istio_forward_client_cert_details_configured",
+				Help: "Indicates whether forwardClientCertDetails is configured in the Istio CR (1 for configured, 0 for not configured).",
+			}),
 		},
 		componentMetrics: &componentMetrics{
 			egressGatewayEnabled: prometheus.NewGauge(prometheus.GaugeOpts{
@@ -76,6 +81,7 @@ func NewMetrics() *IstioCRMetrics {
 		crMetrics.configMetrics.numTrustedProxiesConfigured,
 		crMetrics.configMetrics.prometheusMergeEnabled,
 		crMetrics.configMetrics.compatibilityModeEnabled,
+		crMetrics.configMetrics.forwardClientCertDetailsConfigured,
 		crMetrics.componentMetrics.egressGatewayEnabled,
 	)
 
@@ -110,6 +116,12 @@ func (m *IstioCRMetrics) UpdateIstioCRMetrics(cr *v1alpha2.Istio) {
 		m.configMetrics.prometheusMergeEnabled.Set(1)
 	} else {
 		m.configMetrics.prometheusMergeEnabled.Set(0)
+	}
+
+	if cr.Spec.Config.ForwardClientCertDetails != nil && *cr.Spec.Config.ForwardClientCertDetails != v1alpha2.Sanitize {
+		m.configMetrics.forwardClientCertDetailsConfigured.Set(1)
+	} else {
+		m.configMetrics.forwardClientCertDetailsConfigured.Set(0)
 	}
 
 	if cr.Spec.CompatibilityMode {

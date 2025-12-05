@@ -2,10 +2,13 @@ package images
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/caarlos0/env/v11"
 )
+
+const kymaFipsModeEnabledEnv = "KYMA_FIPS_MODE_ENABLED"
 
 type Image string
 
@@ -29,7 +32,23 @@ type Images struct {
 	Ztunnel    Image `env:"ztunnel,notEmpty"`
 }
 
+type ImagesFips struct {
+	Pilot      Image `env:"pilot-fips,notEmpty"`
+	InstallCNI Image `env:"install-cni-fips,notEmpty"`
+	ProxyV2    Image `env:"proxyv2-fips,notEmpty"`
+	Ztunnel    Image `env:"ztunnel-fips,notEmpty"`
+}
+
 func GetImages() (*Images, error) {
+	kymaFipsModeEnabled := os.Getenv(kymaFipsModeEnabledEnv)
+	if kymaFipsModeEnabled == "true" {
+		environments, err := env.ParseAs[ImagesFips]()
+		if err != nil {
+			return nil, fmt.Errorf("missing required environment variables %w", err)
+		}
+		return (*Images)(&environments), nil
+	}
+
 	environments, err := env.ParseAs[Images]()
 	if err != nil {
 		return nil, fmt.Errorf("missing required environment variables %w", err)

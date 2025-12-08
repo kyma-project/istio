@@ -1548,12 +1548,7 @@ spec:
                       enableMultiNetworkDiscoverGatewayAPI:
                         description: Enables multi-network discovery for Gateway API.
                         type: boolean
-                    required:
-                    - enableAlphaGatewayAPI
-                    - enableMultiNetworkDiscoverGatewayAPI
                     type: object
-                required:
-                - pilot
                 type: object
             type: object
           status:

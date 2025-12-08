@@ -161,7 +161,7 @@ Appears in:
 
 | Field | Description | Validation |
 | --- | --- | --- |
-| **pilot** <br /> [PilotFeatures](#pilotfeatures) | Defines experimental features for Istio Pilot. | Optional |
+| **pilot** <br /> [PilotFeatures](#pilotfeatures) | Defines experimental features for Istio Pilot. | Optional <br /> |
 | **enableDualStack** <br /> boolean | Enables dual-stack support. | Optional <br /> |
 | **enableAmbient** <br /> boolean | Enables ambient mode support. | Optional <br /> |
 
@@ -290,8 +290,8 @@ Appears in:
 
 | Field | Description | Validation |
 | --- | --- | --- |
-| **enableAlphaGatewayAPI** <br /> boolean | Defines alpha Gateway API support. | Optional |
-| **enableMultiNetworkDiscoverGatewayAPI** <br /> boolean | Enables multi-network discovery for Gateway API. | Optional |
+| **enableAlphaGatewayAPI** <br /> boolean | Defines alpha Gateway API support. | Optional <br /> |
+| **enableMultiNetworkDiscoverGatewayAPI** <br /> boolean | Enables multi-network discovery for Gateway API. | Optional <br /> |
 
 ### ProxyComponent
 

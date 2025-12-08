@@ -39,6 +39,6 @@ For more information, see [Plug in CA Certificates](https://istio.io/latest/docs
 
 ### Security Considerations
 
-For enhanced security, it is not recommended that you store the sensitive data directly in a Kubernetes Secret. Insted, store your root CA on a secure, offline machine and use it only to issue intermediate certificates, which are then provided to Istio in each cluster.
+For enhanced security, it is not recommended that you store the sensitive data directly in a Kubernetes Secret. Insted, manage your root CA on a secure, offline machine and use it only to issue intermediate certificates, which are then provided to Istio in each cluster.
 
 Additionally, make sure to implement proper certificate rotation procedures according to your organization's security policies.

@@ -76,7 +76,7 @@ func GetImages() (*Images, error) {
 }
 
 func (e *Images) GetHubAndImageTag() (HubTag, error) {
-	environments := []Image{e.Pilot, e.InstallCNI, e.ProxyV2}
+	environments := []Image{e.Pilot, e.InstallCNI, e.ProxyV2, e.Ztunnel}
 
 	initialHub, err := environments[0].GetHub()
 	if err != nil {

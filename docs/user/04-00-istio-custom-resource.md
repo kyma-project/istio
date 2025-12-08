@@ -351,8 +351,8 @@ Appears in:
 
 | Field | Description | Validation |
 | --- | --- | --- |
-| **maxSurge** <br /> [IntOrString](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.33/#intorstring-intstr-util) | Specifies the maximum number of Pods that can be unavailable during the update process. See [Max Surge](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-surge). | Optional <br />Pattern: `^[0-9]+%?$` <br />XIntOrString <br /> |
-| **maxUnavailable** <br /> [IntOrString](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.33/#intorstring-intstr-util) | Specifies the maximum number of Pods that can be created over the desired number of Pods. See [Max Unavailable](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-unavailable) | Optional <br />Pattern: `^((100\|[0-9]\{1,2\})%\|[0-9]+)$` <br />XIntOrString <br /> |
+| **maxSurge** <br /> [IntOrString](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.33/#intorstring-intstr-util) | Specifies the maximum number of Pods that can be created over the desired number of Pods. See [Max Surge](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-surge). | Optional <br />Pattern: `^[0-9]+%?$` <br />XIntOrString <br /> |
+| **maxUnavailable** <br /> [IntOrString](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.33/#intorstring-intstr-util) | Specifies the maximum number of Pods that can be unavailable during the update process. See [Max Unavailable](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-unavailable) | Optional <br />Pattern: `^((100\|[0-9]\{1,2\})%\|[0-9]+)$` <br />XIntOrString <br /> |
 
 ### State
 

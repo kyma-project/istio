@@ -136,13 +136,13 @@ type Strategy struct {
 
 // Defines the configuration for rolling updates. See [Rolling Update Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#rolling-update-deployment).
 type RollingUpdate struct {
-	// Specifies the maximum number of Pods that can be unavailable during the update process. See [Max Surge](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-surge).
+	// Specifies the maximum number of Pods that can be created over the desired number of Pods. See [Max Surge](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-surge).
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:XIntOrString
 	// +kubebuilder:validation:Pattern=`^[0-9]+%?$`
 	// +kubebuilder:validation:XValidation:rule="(type(self) == int ? self >= 0 && self <= 2147483647: self.size() >= 0)",message="must not be negative, more than 2147483647 or an empty string"
 	MaxSurge *intstr.IntOrString `json:"maxSurge"       protobuf:"bytes,2,opt,name=maxSurge"`
-	// Specifies the maximum number of Pods that can be created over the desired number of Pods. See [Max Unavailable](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-unavailable)
+	// Specifies the maximum number of Pods that can be unavailable during the update process. See [Max Unavailable](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-unavailable)
 	// +kubebuilder:validation:XIntOrString
 	// +kubebuilder:validation:Pattern="^((100|[0-9]{1,2})%|[0-9]+)$"
 	// +kubebuilder:validation:XValidation:rule="(type(self) == int ? self >= 0 && self <= 2147483647: self.size() >= 0)",message="must not be negative, more than 2147483647 or an empty string"

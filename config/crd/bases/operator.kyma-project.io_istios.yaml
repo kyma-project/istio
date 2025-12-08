@@ -1104,8 +1104,8 @@ spec:
                                     - type: integer
                                     - type: string
                                     description: Specifies the maximum number of Pods
-                                      that can be unavailable during the update process.
-                                      See [Max Surge](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-surge).
+                                      that can be created over the desired number
+                                      of Pods. See [Max Surge](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-surge).
                                     pattern: ^[0-9]+%?$
                                     x-kubernetes-int-or-string: true
                                     x-kubernetes-validations:
@@ -1118,8 +1118,8 @@ spec:
                                     - type: integer
                                     - type: string
                                     description: Specifies the maximum number of Pods
-                                      that can be created over the desired number
-                                      of Pods. See [Max Unavailable](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-unavailable)
+                                      that can be unavailable during the update process.
+                                      See [Max Unavailable](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-unavailable)
                                     pattern: ^((100|[0-9]{1,2})%|[0-9]+)$
                                     x-kubernetes-int-or-string: true
                                     x-kubernetes-validations:
@@ -1206,8 +1206,8 @@ spec:
                                     - type: integer
                                     - type: string
                                     description: Specifies the maximum number of Pods
-                                      that can be unavailable during the update process.
-                                      See [Max Surge](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-surge).
+                                      that can be created over the desired number
+                                      of Pods. See [Max Surge](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-surge).
                                     pattern: ^[0-9]+%?$
                                     x-kubernetes-int-or-string: true
                                     x-kubernetes-validations:
@@ -1220,8 +1220,8 @@ spec:
                                     - type: integer
                                     - type: string
                                     description: Specifies the maximum number of Pods
-                                      that can be created over the desired number
-                                      of Pods. See [Max Unavailable](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-unavailable)
+                                      that can be unavailable during the update process.
+                                      See [Max Unavailable](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-unavailable)
                                     pattern: ^((100|[0-9]{1,2})%|[0-9]+)$
                                     x-kubernetes-int-or-string: true
                                     x-kubernetes-validations:
@@ -1310,8 +1310,8 @@ spec:
                                     - type: integer
                                     - type: string
                                     description: Specifies the maximum number of Pods
-                                      that can be unavailable during the update process.
-                                      See [Max Surge](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-surge).
+                                      that can be created over the desired number
+                                      of Pods. See [Max Surge](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-surge).
                                     pattern: ^[0-9]+%?$
                                     x-kubernetes-int-or-string: true
                                     x-kubernetes-validations:
@@ -1324,8 +1324,8 @@ spec:
                                     - type: integer
                                     - type: string
                                     description: Specifies the maximum number of Pods
-                                      that can be created over the desired number
-                                      of Pods. See [Max Unavailable](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-unavailable)
+                                      that can be unavailable during the update process.
+                                      See [Max Unavailable](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-unavailable)
                                     pattern: ^((100|[0-9]{1,2})%|[0-9]+)$
                                     x-kubernetes-int-or-string: true
                                     x-kubernetes-validations:

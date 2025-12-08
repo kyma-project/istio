@@ -1127,9 +1127,6 @@ spec:
                                         or an empty string
                                       rule: '(type(self) == int ? self >= 0 && self
                                         <= 2147483647: self.size() >= 0)'
-                                required:
-                                - maxSurge
-                                - maxUnavailable
                                 type: object
                             required:
                             - rollingUpdate
@@ -1232,9 +1229,6 @@ spec:
                                         or an empty string
                                       rule: '(type(self) == int ? self >= 0 && self
                                         <= 2147483647: self.size() >= 0)'
-                                required:
-                                - maxSurge
-                                - maxUnavailable
                                 type: object
                             required:
                             - rollingUpdate
@@ -1339,9 +1333,6 @@ spec:
                                         or an empty string
                                       rule: '(type(self) == int ? self >= 0 && self
                                         <= 2147483647: self.size() >= 0)'
-                                required:
-                                - maxSurge
-                                - maxUnavailable
                                 type: object
                             required:
                             - rollingUpdate
@@ -1496,7 +1487,6 @@ spec:
                       required:
                       - name
                       - port
-                      - service
                       type: object
                     type: array
                   gatewayExternalTrafficPolicy:

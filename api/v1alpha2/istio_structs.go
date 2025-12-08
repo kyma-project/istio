@@ -6,7 +6,6 @@ import (
 )
 
 // Configures the Istio installation.
-// +kubebuilder:validation:Optional
 type Config struct {
 	// Defines the number of trusted proxies deployed in front of the Istio gateway proxy.
 	// +kubebuilder:validation:Minimum=0
@@ -115,6 +114,7 @@ type Strategy struct {
 // Defines the configuration for rolling updates. See [Rolling Update Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#rolling-update-deployment).
 type RollingUpdate struct {
 	// Specifies the maximum number of Pods that can be unavailable during the update process. See [Max Surge](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-surge).
+	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:XIntOrString
 	// +kubebuilder:validation:Pattern=`^[0-9]+%?$`
 	// +kubebuilder:validation:XValidation:rule="(type(self) == int ? self >= 0 && self <= 2147483647: self.size() >= 0)",message="must not be negative, more than 2147483647 or an empty string"
@@ -123,13 +123,14 @@ type RollingUpdate struct {
 	// +kubebuilder:validation:XIntOrString
 	// +kubebuilder:validation:Pattern="^((100|[0-9]{1,2})%|[0-9]+)$"
 	// +kubebuilder:validation:XValidation:rule="(type(self) == int ? self >= 0 && self <= 2147483647: self.size() >= 0)",message="must not be negative, more than 2147483647 or an empty string"
+	// +kubebuilder:validation:Optional
 	MaxUnavailable *intstr.IntOrString `json:"maxUnavailable" protobuf:"bytes,1,opt,name=maxUnavailable"`
 }
 
 // Defines Kubernetes resources' configuration. See [Resource Management for Pods and Containers](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/).
 type Resources struct {
 	// The maximum amount of resources a container is allowed to use.
-	Limits   *ResourceClaims `json:"limits,omitempty"`
+	Limits *ResourceClaims `json:"limits,omitempty"`
 	// The minimum amount of resources (such as CPU and memory) a container needs to run.
 	Requests *ResourceClaims `json:"requests,omitempty"`
 }

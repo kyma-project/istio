@@ -14,8 +14,9 @@ type Authorizer struct {
 
 	// Specifies the service that implements the Envoy `ext_authz` HTTP authorization service.
 	// The recommended format is `[Namespace/]Hostname`.
-	// Specify the namespace if it is required to unambiguously resolve a service in the service registry. 
+	// Specify the namespace if it is required to unambiguously resolve a service in the service registry.
 	// The host name refers to the fully qualified host name of a service defined by either a Kubernetes Service or a ServiceEntry.
+	// +kubebuilder:validation:Optional
 	Service string `json:"service"`
 
 	// Specifies the port of the Service.
@@ -65,7 +66,7 @@ type InCheck struct {
 	Add map[string]string `json:"add,omitempty"`
 }
 
-// Defines the headers to be forwarded to the upstream (to the backend service).	
+// Defines the headers to be forwarded to the upstream (to the backend service).
 type ToUpstream struct {
 	// Lists headers from the authorization service added or overridden in the original request and forwarded to the upstream when the authorization check result is allowed (HTTP code `200`).
 	// If not specified, the original request is forwarded to the backend unmodified.

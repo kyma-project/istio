@@ -12,6 +12,11 @@ const kymaFipsModeEnabledEnv = "KYMA_FIPS_MODE_ENABLED"
 
 type Image string
 
+type HubTag struct {
+	Hub string
+	Tag string
+}
+
 func (i Image) GetHub() (string, error) {
 	if i == "" {
 		return "", fmt.Errorf("image can not be empty")
@@ -23,6 +28,19 @@ func (i Image) GetHub() (string, error) {
 	}
 
 	return strings.Join(parts[:len(parts)-1], "/"), nil
+}
+
+func (i Image) GetTag() (string, error) {
+	if i == "" {
+		return "", fmt.Errorf("image can not be empty")
+	}
+
+	parts := strings.Split(string(i), ":")
+	if len(parts) != 2 {
+		return "", fmt.Errorf("image %s does not contain a valid tag", i)
+	}
+
+	return strings.Join(parts[len(parts)-1:], "/"), nil
 }
 
 type Images struct {
@@ -57,23 +75,36 @@ func GetImages() (*Images, error) {
 	return &environments, nil
 }
 
-func (e *Images) GetHub() (string, error) {
+func (e *Images) GetHubAndImageTag() (HubTag, error) {
 	environments := []Image{e.Pilot, e.InstallCNI, e.ProxyV2}
 
 	initialHub, err := environments[0].GetHub()
 	if err != nil {
-		return "", fmt.Errorf("failed to get hub for image %s: %w", environments[0], err)
+		return HubTag{}, fmt.Errorf("failed to get hub for image %s: %w", environments[0], err)
 	}
-	// Ensure that all required images are from the same hub
+	initialTag, err := environments[0].GetTag()
+	if err != nil {
+		return HubTag{}, fmt.Errorf("failed to get tag for image %s: %w", environments[0], err)
+	}
+
+	// Ensure that all required images are from the same hub and have the same version tag
 	for _, image := range environments {
 		currentHub, err := image.GetHub()
 		if err != nil {
-			return "", fmt.Errorf("failed to get hub for image %s: %w", image, err)
+			return HubTag{}, fmt.Errorf("failed to get hub for image %s: %w", image, err)
+		}
+		if currentHub != initialHub {
+			return HubTag{}, fmt.Errorf("image %s is not from the same hub as %s", image, environments[0])
 		}
 
-		if currentHub != initialHub {
-			return "", fmt.Errorf("image %s is not from the same hub as %s", image, initialHub)
+		currentTag, err := image.GetTag()
+		if err != nil {
+			return HubTag{}, fmt.Errorf("failed to get tag for image %s: %w", image, err)
+		}
+		if currentTag != initialTag {
+			return HubTag{}, fmt.Errorf("image %s does not have the same tag as %s", image, environments[0])
 		}
 	}
-	return initialHub, nil
+
+	return HubTag{Hub: initialHub, Tag: initialTag}, nil
 }

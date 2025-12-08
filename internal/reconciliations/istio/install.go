@@ -3,6 +3,7 @@ package istio
 import (
 	"context"
 
+	"github.com/kyma-project/istio/operator/internal/images"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -25,7 +26,7 @@ type installArgs struct {
 	istioOperatorMerger istiooperator.Merger
 	istioImageVersion   istiooperator.IstioImageVersion
 	istioClient         libraryClient
-	istioImagesHub      string
+	istioImagesHubTag   images.HubTag
 }
 
 //nolint:funlen // Function 'installIstio' has too many statements (51 > 50) TODO: refactor.
@@ -36,7 +37,7 @@ func installIstio(ctx context.Context, args installArgs) (istiooperator.IstioIma
 	statusHandler := args.statusHandler
 	iopMerger := args.istioOperatorMerger
 	istioClient := args.istioClient
-	istioImagesHub := args.istioImagesHub
+	istioImagesHubTag := args.istioImagesHubTag
 
 	ctrl.Log.Info("Starting Istio install", "istio version", istioImageVersion.Version())
 
@@ -80,7 +81,7 @@ func installIstio(ctx context.Context, args installArgs) (istiooperator.IstioIma
 
 	ctrl.Log.Info("Installing Istio with", "profile", clusterSize.String())
 
-	mergedIstioOperatorPath, err := iopMerger.Merge(clusterSize, istioCR, clusterConfiguration, istioImagesHub)
+	mergedIstioOperatorPath, err := iopMerger.Merge(clusterSize, istioCR, clusterConfiguration, istioImagesHubTag)
 	if err != nil {
 		statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonCustomResourceMisconfigured))
 		return istioImageVersion, describederrors.NewDescribedError(err, "Could not merge Istio operator configuration").SetCondition(false)

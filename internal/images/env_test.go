@@ -17,7 +17,7 @@ func TestEnvs(t *testing.T) {
 	RunSpecs(t, "Environment Suite")
 }
 
-var _ = Describe("Images.GetHub", func() {
+var _ = Describe("Images.GetHubAndImageTag", func() {
 	type fields struct {
 		Pilot      images.Image
 		InstallCNI images.Image
@@ -25,18 +25,19 @@ var _ = Describe("Images.GetHub", func() {
 		Ztunnel    images.Image
 	}
 
-	DescribeTable("GetHub",
-		func(f fields, want string, wantErr bool, err error) {
+	DescribeTable("GetHubAndImageTag",
+		func(f fields, want images.HubTag, wantErr bool, expErr error) {
 			e := &images.Images{
 				Pilot:      f.Pilot,
 				InstallCNI: f.InstallCNI,
 				ProxyV2:    f.ProxyV2,
 				Ztunnel:    f.Ztunnel,
 			}
-			got, err := e.GetHub()
+			got, err := e.GetHubAndImageTag()
 			if wantErr {
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("image"))
+				Expect(err.Error()).To(ContainSubstring(expErr.Error()))
 			} else {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(got).To(Equal(want))
@@ -49,20 +50,31 @@ var _ = Describe("Images.GetHub", func() {
 				ProxyV2:    "docker.io/istio/proxyv2:1.10.0",
 				Ztunnel:    "docker.io/istio/ztunnel:1.10.0",
 			},
-			"docker.io/istio",
+			images.HubTag{Hub: "docker.io/istio", Tag: "1.10.0"},
 			false,
 			nil,
 		),
-		Entry("invalid image format",
+		Entry("invalid image hub",
 			fields{
 				Pilot:      "pilot:1.10.0",
 				InstallCNI: "docker.io/istio/cni:1.10.0",
 				ProxyV2:    "docker.io/istio/proxyv2:1.10.0",
 				Ztunnel:    "docker.io/istio/ztunnel:1.10.0",
 			},
-			"",
+			images.HubTag{},
 			true,
 			fmt.Errorf("image pilot:1.10.0 does not contain a valid hub URL"),
+		),
+		Entry("missing image tag",
+			fields{
+				Pilot:      "docker.io/istio/pilot1.10.0",
+				InstallCNI: "docker.io/istio/cni:1.10.0",
+				ProxyV2:    "docker.io/istio/proxyv2:1.10.0",
+				Ztunnel:    "docker.io/istio/ztunnel:1.10.0",
+			},
+			images.HubTag{},
+			true,
+			fmt.Errorf("image docker.io/istio/pilot1.10.0 does not contain a valid tag"),
 		),
 		Entry("images from different hubs",
 			fields{
@@ -71,9 +83,20 @@ var _ = Describe("Images.GetHub", func() {
 				ProxyV2:    "foo.bar/istio/proxyv2:1.10.0",
 				Ztunnel:    "docker.io/istio/ztunnel:1.10.0",
 			},
-			"",
+			images.HubTag{},
 			true,
 			fmt.Errorf("image foo.bar/istio/proxyv2:1.10.0 is not from the same hub as docker.io/istio/pilot:1.10.0"),
+		),
+		Entry("images with different tags",
+			fields{
+				Pilot:      "docker.io/istio/pilot:1.10.0",
+				InstallCNI: "docker.io/istio/cni:1.10.0",
+				ProxyV2:    "docker.io/istio/proxyv2:1.11.0",
+				Ztunnel:    "docker.io/istio/ztunnel:1.10.0",
+			},
+			images.HubTag{},
+			true,
+			fmt.Errorf("image docker.io/istio/proxyv2:1.11.0 does not have the same tag as docker.io/istio/pilot:1.10.0"),
 		),
 		Entry("empty image",
 			fields{
@@ -81,7 +104,7 @@ var _ = Describe("Images.GetHub", func() {
 				InstallCNI: "docker.io/istio/cni:1.10.0",
 				ProxyV2:    "docker.io/istio/proxyv2:1.10.0",
 			},
-			"",
+			images.HubTag{},
 			true,
 			fmt.Errorf("image can not be empty"),
 		),

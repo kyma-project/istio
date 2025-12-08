@@ -48,7 +48,7 @@ Appears in:
 | Field | Description | Validation |
 | --- | --- | --- |
 | **name** <br /> string | Specifies a unique name identifying the authorization provider. | Required <br /> |
-| **service** <br /> string | Specifies the service that implements the Envoy `ext_authz` HTTP authorization service.<br />The recommended format is `[Namespace/]Hostname`.<br />Specify the namespace if it is required to unambiguously resolve a service in the service registry.<br />The host name refers to the fully qualified host name of a service defined by either a Kubernetes Service or a ServiceEntry. | Optional |
+| **service** <br /> string | Specifies the service that implements the Envoy `ext_authz` HTTP authorization service.<br />The recommended format is `[Namespace/]Hostname`.<br />Specify the namespace if it is required to unambiguously resolve a service in the service registry.<br />The host name refers to the fully qualified host name of a service defined by either a Kubernetes Service or a ServiceEntry. | Optional <br /> |
 | **port** <br /> integer | Specifies the port of the Service. | Required <br /> |
 | **headers** <br /> [Headers](#headers) | Specifies the headers included, added, or forwarded during authorization. | Optional |
 | **pathPrefix** <br /> string | Specifies the prefix included in the request sent to the authorization service.<br />The prefix might be constructed with special characters (for example, `/test?original_path=`). | Optional <br /> |
@@ -78,8 +78,6 @@ Appears in:
 | **resources** <br /> [Resources](#resources) | Defines Kubernetes resources' configuration. See [Resource Management for Pods and Containers](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/). | Optional <br /> |
 
 ### Components
-
-Configures Istio components.
 
 Appears in:
 - [IstioSpec](#istiospec)
@@ -353,8 +351,8 @@ Appears in:
 
 | Field | Description | Validation |
 | --- | --- | --- |
-| **maxSurge** <br /> [IntOrString](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.33/#intorstring-intstr-util) | Specifies the maximum number of Pods that can be unavailable during the update process. See [Max Surge](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-surge). | Pattern: `^[0-9]+%?$` <br />XIntOrString <br /> |
-| **maxUnavailable** <br /> [IntOrString](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.33/#intorstring-intstr-util) | Specifies the maximum number of Pods that can be created over the desired number of Pods. See [Max Unavailable](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-unavailable) | Pattern: `^((100\|[0-9]\{1,2\})%\|[0-9]+)$` <br />XIntOrString <br /> |
+| **maxSurge** <br /> [IntOrString](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.33/#intorstring-intstr-util) | Specifies the maximum number of Pods that can be unavailable during the update process. See [Max Surge](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-surge). | Optional <br />Pattern: `^[0-9]+%?$` <br />XIntOrString <br /> |
+| **maxUnavailable** <br /> [IntOrString](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.33/#intorstring-intstr-util) | Specifies the maximum number of Pods that can be created over the desired number of Pods. See [Max Unavailable](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-unavailable) | Optional <br />Pattern: `^((100\|[0-9]\{1,2\})%\|[0-9]+)$` <br />XIntOrString <br /> |
 
 ### State
 

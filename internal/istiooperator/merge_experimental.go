@@ -30,11 +30,11 @@ func (m *IstioMerger) Merge(clusterSize clusterconfig.ClusterSize, istioCR *oper
 		return "", err
 	}
 
-	manifestWithOverrideImagesHub, err := images.MergeHubTagConfiguration(mergedManifest, istioImagesHubTag)
+	manifestWithOverrideImagesHubTag, err := images.MergeHubTagConfiguration(mergedManifest, istioImagesHubTag)
 	if err != nil {
 		return "", err
 	}
-	manifestWithOverridePullSecret, err := images.MergePullSecretEnv(manifestWithOverrideImagesHub)
+	manifestWithOverridePullSecret, err := images.MergePullSecretEnv(manifestWithOverrideImagesHubTag)
 	if err != nil {
 		return "", err
 	}

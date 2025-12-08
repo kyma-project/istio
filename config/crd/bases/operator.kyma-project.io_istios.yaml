@@ -1489,6 +1489,18 @@ spec:
                       - port
                       type: object
                     type: array
+                  forwardClientCertDetails:
+                    default: SANITIZE
+                    description: |-
+                      Defines the strategy of handling the **X-Forwarded-Client-Cert** header.
+                      The default behavior is "SANITIZE".
+                    enum:
+                    - APPEND_FORWARD
+                    - SANITIZE_SET
+                    - SANITIZE
+                    - ALWAYS_FORWARD_ONLY
+                    - FORWARD_ONLY
+                    type: string
                   gatewayExternalTrafficPolicy:
                     description: |-
                       Defines the external traffic policy for the Istio Ingress Gateway Service. Valid configurations are `"Local"` or `"Cluster"`. The external traffic policy set to `"Local"` preserves the client IP in the request, but also introduces the risk of unbalanced traffic distribution.

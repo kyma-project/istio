@@ -20,6 +20,9 @@
     name: compatibilityMode
     value:
       type: bool
+  - path: config.forwardClientCertDetails
+    simple: true
+    name: config.forwardClientCertDetails
   - path: config.telemetry.metrics.prometheusMerge
     simple: true
     name: config.prometheusMerge

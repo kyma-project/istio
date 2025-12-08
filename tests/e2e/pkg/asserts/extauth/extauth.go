@@ -44,3 +44,32 @@ func AssertEndpointWithJWT(t *testing.T, method, url string, expectedHttpCode in
 	assert.Equal(t, expectedHttpCode, statusCode, "unexpected status code")
 	return nil
 }
+
+func AssertMetricsExistOnEndpoint(t *testing.T, url string, metrics map[string]string) error {
+	t.Helper()
+	httpClient := httphelper.NewHTTPClient(t, httphelper.WithPrefix("ext-auth-client"))
+	request, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	response, err := httpClient.Do(request)
+	if err != nil {
+		return fmt.Errorf("failed to perform request: %w", err)
+	}
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(response.Body)
+
+	bodyBytes, err := io.ReadAll(response.Body)
+	if err != nil {
+		return fmt.Errorf("failed to read response body: %w", err)
+	}
+	bodyString := string(bodyBytes)
+
+	for key, value := range metrics {
+		assert.Contains(t, bodyString, fmt.Sprintf("%s %s", key, value), "metric not found in response body")
+	}
+
+	return nil
+}

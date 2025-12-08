@@ -35,6 +35,35 @@ func TestAPIRuleExtAuth(t *testing.T) {
 	require.NoError(t, infrahelpers.CreateNamespace(t, "ext-auth"))
 	svcName, svcPort, err := httpbin.DeployHttpbin(t, "ext-auth")
 	require.NoError(t, err, "Failed to deploy httpbin")
+	t.Run("Metric tests", func(t *testing.T) {
+		t.Run("setting extauth configuration in Istio should cause metrics to be set", func(t *testing.T) {
+			// given
+			require.NoError(
+				t,
+				modulehelpers.CreateIstioOperatorCR(t,
+					modulehelpers.WithIstioOperatorTemplate(IstioExtAuthOperatorConfig),
+					modulehelpers.WithIstioOperatorTemplateValues(map[string]interface{}{
+						"ExtAuthServiceName":      svcName,
+						"ExtAuthServicePort":      svcPort,
+						"ExtAuthServiceNamespace": "ext-auth",
+						"PathPrefix":              "/status/200?original=",
+						"Timeout":                 "5s",
+					}),
+				),
+			)
+			istioManagerDomain, istioManagerPort, err := portforward.CreateControllerPortForwading(t)
+			require.NoError(t, err, "Failed to create port-forwarding to istio-manager")
+
+			// when
+			err = extauth.AssertMetricsExistOnEndpoint(t, fmt.Sprintf("http://%s:%d/metrics", istioManagerDomain, istioManagerPort),
+				map[string]string{
+					"istio_ext_auth_providers_total":                     "1",
+					"istio_ext_auth_timeout_configured_number_total":     "1",
+					"istio_ext_auth_path_prefix_configured_number_total": "1",
+				},
+			)
+		})
+	})
 
 	t.Run("Timeout tests", func(t *testing.T) {
 		t.Run("extauth set to /delay/1 should always return 200", func(t *testing.T) {
@@ -119,7 +148,6 @@ func TestAPIRuleExtAuth(t *testing.T) {
 
 			testBackground, err := testsetup.SetupRandomNamespaceWithOauth2MockAndHttpbin(t, testsetup.WithPrefix("extauth-test"))
 			require.NoError(t, err, "Failed to setup test background with OAuth2 mock and httpbin")
-			require.NoError(t, err, "Failed to deploy httpbin")
 
 			// when
 			createdVS, err := infrahelpers.CreateResourceWithTemplateValues(
@@ -177,12 +205,11 @@ func TestAPIRuleExtAuth(t *testing.T) {
 				),
 			)
 			require.NoError(t, gatewayhelper.CreateHTTPGateway(t))
-			gatewayDomain, gatewayPort, err := portforward.CreateIngressGatewayPortForwarding(t)
-			require.NoError(t, err, "Failed to create port-forwarding to kyma-gateway")
-
 			testBackground, err := testsetup.SetupRandomNamespaceWithOauth2MockAndHttpbin(t, testsetup.WithPrefix("extauth-test"))
 			require.NoError(t, err, "Failed to setup test background with OAuth2 mock and httpbin")
-			require.NoError(t, err, "Failed to deploy httpbin")
+
+			gatewayDomain, gatewayPort, err := portforward.CreateIngressGatewayPortForwarding(t)
+			require.NoError(t, err, "Failed to create port-forwarding to kyma-gateway")
 
 			// when
 			createdVS, err := infrahelpers.CreateResourceWithTemplateValues(

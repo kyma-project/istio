@@ -56,8 +56,8 @@ type Headers struct {
 type InCheck struct {
 	// Lists client request headers included in the authorization request sent to the authorization service.
 	// In addition to the headers specified here, the following headers are included by default:
-	// - *Host*, *Method*, *Path*, and *Content-Length* are automatically sent.
-	// - *Content-Length* is set to `0`, and the request doesn't have a message body. However, the authorization request can include the buffered client request body (controlled by the **include_request_body_in_check** setting), consequently the **Content-Length** value of the authorization request reflects its payload size.
+	// - **Host**, **Method**, **Path**, and **Content-Length** are automatically sent.
+	// - **Content-Length** is set to `0`, and the request doesn't have a message body. However, the authorization request can include the buffered client request body (controlled by the **include_request_body_in_check** setting), consequently the **Content-Length** value of the authorization request reflects its payload size.
 	Include []string `json:"include,omitempty"`
 
 	// Specifies a set of additional fixed headers included in the authorization request sent to the authorization service.
@@ -82,8 +82,8 @@ type ToDownstream struct {
 	OnAllow []string `json:"onAllow,omitempty"`
 
 	// Lists headers from the authorization service forwarded to downstream when the authorization check result is not allowed (HTTP code is other than `200`).
-	// If not specified, all the authorization response headers, except *Authority (Host)*, are included in the response to the downstream.
-	// When a header is included in this list, the following headers are automatically added: *Path*, *Status*, *Content-Length*, *WWWAuthenticate*, and *Location*.
+	// If not specified, all the authorization response headers, except **Authority (Host)**, are included in the response to the downstream.
+	// When a header is included in this list, the following headers are automatically added: **Path**, **Status**, **Content-Length**, **WWWAuthenticate**, and **Location**.
 	// The body from the authorization service is always included in the response to downstream.
 	OnDeny []string `json:"onDeny,omitempty"`
 }

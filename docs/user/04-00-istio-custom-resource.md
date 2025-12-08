@@ -203,7 +203,7 @@ Appears in:
 
 | Field | Description | Validation |
 | --- | --- | --- |
-| **include** <br /> string array | Lists client request headers included in the authorization request sent to the authorization service.<br />In addition to the headers specified here, the following headers are included by default:<br />- *Host*, *Method*, *Path*, and *Content-Length* are automatically sent.<br />- *Content-Length* is set to `0`, and the request doesn't have a message body. However, the authorization request can include the buffered client request body (controlled by the **include_request_body_in_check** setting), consequently the **Content-Length** value of the authorization request reflects its payload size. | Optional |
+| **include** <br /> string array | Lists client request headers included in the authorization request sent to the authorization service.<br />In addition to the headers specified here, the following headers are included by default:<br />- **Host**, **Method**, **Path**, and **Content-Length** are automatically sent.<br />- **Content-Length** is set to `0`, and the request doesn't have a message body. However, the authorization request can include the buffered client request body (controlled by the **include_request_body_in_check** setting), consequently the **Content-Length** value of the authorization request reflects its payload size. | Optional |
 | **add** <br /> object (keys:string, values:string) | Specifies a set of additional fixed headers included in the authorization request sent to the authorization service.<br />The key is the header name and value is the header value.<br />Client request of the same key or headers specified in `Include` are overridden. | Optional |
 
 ### Istio
@@ -302,11 +302,11 @@ Appears in:
 
 | Field | Description | Validation |
 | --- | --- | --- |
-| **k8s** <br /> [ProxyK8sConfig](#proxyk8sconfig) | **ProxyK8sConfig** is a subset of [KubernetesResourcesSpec](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec). | Required <br /> |
+| **k8s** <br /> [ProxyK8sConfig](#proxyk8sconfig) | Contains a subset of [KubernetesResourcesSpec](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec). | Required <br /> |
 
 ### ProxyK8sConfig
 
-**ProxyK8sConfig** is a subset of [KubernetesResourcesSpec](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec).
+Contains a subset of [KubernetesResourcesSpec](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec).
 
 Appears in:
 - [ProxyComponent](#proxycomponent)
@@ -404,7 +404,7 @@ Appears in:
 | Field | Description | Validation |
 | --- | --- | --- |
 | **onAllow** <br /> string array | Lists headers from the authorization service forwarded to downstream when the authorization check result is allowed (HTTP code `200`).<br />If not specified, the original request is forwarded to the backend unmodified.<br />Any existing headers are overridden. | Optional |
-| **onDeny** <br /> string array | Lists headers from the authorization service forwarded to downstream when the authorization check result is not allowed (HTTP code is other than `200`).<br />If not specified, all the authorization response headers, except *Authority (Host)*, are included in the response to the downstream.<br />When a header is included in this list, the following headers are automatically added: *Path*, *Status*, *Content-Length*, *WWWAuthenticate*, and *Location*.<br />The body from the authorization service is always included in the response to downstream. | Optional |
+| **onDeny** <br /> string array | Lists headers from the authorization service forwarded to downstream when the authorization check result is not allowed (HTTP code is other than `200`).<br />If not specified, all the authorization response headers, except **Authority (Host)**, are included in the response to the downstream.<br />When a header is included in this list, the following headers are automatically added: **Path**, **Status**, **Content-Length**, **WWWAuthenticate**, and **Location**.<br />The body from the authorization service is always included in the response to downstream. | Optional |
 
 ### ToUpstream
 

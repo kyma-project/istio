@@ -79,12 +79,12 @@ type KubernetesResourcesConfig struct {
 
 // Configures the Istio sidecar proxy component.
 type ProxyComponent struct {
-	// **ProxyK8sConfig** is a subset of [KubernetesResourcesSpec](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec).
+	// Contains a subset of [KubernetesResourcesSpec](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec).
 	// +kubebuilder:validation:Required
 	K8S *ProxyK8sConfig `json:"k8s"`
 }
 
-// **ProxyK8sConfig** is a subset of [KubernetesResourcesSpec](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec).
+// Contains a subset of [KubernetesResourcesSpec](https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/#KubernetesResourcesSpec).
 type ProxyK8sConfig struct {
 	// Defines Kubernetes resources' configuration. See [Resource Management for Pods and Containers](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/).
 	Resources *Resources `json:"resources,omitempty"`

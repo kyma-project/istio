@@ -12,7 +12,7 @@ const kymaFipsModeEnabledEnv = "KYMA_FIPS_MODE_ENABLED"
 
 type Image string
 
-type HubTag struct {
+type RegistryAndTag struct {
 	Hub string
 	Tag string
 }
@@ -75,36 +75,36 @@ func GetImages() (*Images, error) {
 	return &environments, nil
 }
 
-func (e *Images) GetHubAndImageTag() (HubTag, error) {
+func (e *Images) GetImageRegistryAndTag() (RegistryAndTag, error) {
 	environments := []Image{e.Pilot, e.InstallCNI, e.ProxyV2, e.Ztunnel}
 
 	initialHub, err := environments[0].GetHub()
 	if err != nil {
-		return HubTag{}, fmt.Errorf("failed to get hub for image %s: %w", environments[0], err)
+		return RegistryAndTag{}, fmt.Errorf("failed to get hub for image %s: %w", environments[0], err)
 	}
 	initialTag, err := environments[0].GetTag()
 	if err != nil {
-		return HubTag{}, fmt.Errorf("failed to get tag for image %s: %w", environments[0], err)
+		return RegistryAndTag{}, fmt.Errorf("failed to get tag for image %s: %w", environments[0], err)
 	}
 
 	// Ensure that all required images are from the same hub and have the same version tag
 	for _, image := range environments {
 		currentHub, err := image.GetHub()
 		if err != nil {
-			return HubTag{}, fmt.Errorf("failed to get hub for image %s: %w", image, err)
+			return RegistryAndTag{}, fmt.Errorf("failed to get hub for image %s: %w", image, err)
 		}
 		if currentHub != initialHub {
-			return HubTag{}, fmt.Errorf("image %s is not from the same hub as %s", image, environments[0])
+			return RegistryAndTag{}, fmt.Errorf("image %s is not from the same hub as %s", image, environments[0])
 		}
 
 		currentTag, err := image.GetTag()
 		if err != nil {
-			return HubTag{}, fmt.Errorf("failed to get tag for image %s: %w", image, err)
+			return RegistryAndTag{}, fmt.Errorf("failed to get tag for image %s: %w", image, err)
 		}
 		if currentTag != initialTag {
-			return HubTag{}, fmt.Errorf("image %s does not have the same tag as %s", image, environments[0])
+			return RegistryAndTag{}, fmt.Errorf("image %s does not have the same tag as %s", image, environments[0])
 		}
 	}
 
-	return HubTag{Hub: initialHub, Tag: initialTag}, nil
+	return RegistryAndTag{Hub: initialHub, Tag: initialTag}, nil
 }

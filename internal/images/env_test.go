@@ -17,7 +17,7 @@ func TestEnvs(t *testing.T) {
 	RunSpecs(t, "Environment Suite")
 }
 
-var _ = Describe("Images.GetHubAndImageTag", func() {
+var _ = Describe("Images.GetImageRegistryAndTag", func() {
 	type fields struct {
 		Pilot      images.Image
 		InstallCNI images.Image
@@ -25,15 +25,15 @@ var _ = Describe("Images.GetHubAndImageTag", func() {
 		Ztunnel    images.Image
 	}
 
-	DescribeTable("GetHubAndImageTag",
-		func(f fields, want images.HubTag, wantErr bool, expErr error) {
+	DescribeTable("GetImageRegistryAndTag",
+		func(f fields, want images.RegistryAndTag, wantErr bool, expErr error) {
 			e := &images.Images{
 				Pilot:      f.Pilot,
 				InstallCNI: f.InstallCNI,
 				ProxyV2:    f.ProxyV2,
 				Ztunnel:    f.Ztunnel,
 			}
-			got, err := e.GetHubAndImageTag()
+			got, err := e.GetImageRegistryAndTag()
 			if wantErr {
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("image"))
@@ -50,7 +50,7 @@ var _ = Describe("Images.GetHubAndImageTag", func() {
 				ProxyV2:    "docker.io/istio/proxyv2:1.10.0",
 				Ztunnel:    "docker.io/istio/ztunnel:1.10.0",
 			},
-			images.HubTag{Hub: "docker.io/istio", Tag: "1.10.0"},
+			images.RegistryAndTag{Hub: "docker.io/istio", Tag: "1.10.0"},
 			false,
 			nil,
 		),
@@ -61,7 +61,7 @@ var _ = Describe("Images.GetHubAndImageTag", func() {
 				ProxyV2:    "docker.io/istio/proxyv2:1.10.0",
 				Ztunnel:    "docker.io/istio/ztunnel:1.10.0",
 			},
-			images.HubTag{},
+			images.RegistryAndTag{},
 			true,
 			fmt.Errorf("image pilot:1.10.0 does not contain a valid hub URL"),
 		),
@@ -72,7 +72,7 @@ var _ = Describe("Images.GetHubAndImageTag", func() {
 				ProxyV2:    "docker.io/istio/proxyv2:1.10.0",
 				Ztunnel:    "docker.io/istio/ztunnel:1.10.0",
 			},
-			images.HubTag{},
+			images.RegistryAndTag{},
 			true,
 			fmt.Errorf("image docker.io/istio/pilot1.10.0 does not contain a valid tag"),
 		),
@@ -83,7 +83,7 @@ var _ = Describe("Images.GetHubAndImageTag", func() {
 				ProxyV2:    "foo.bar/istio/proxyv2:1.10.0",
 				Ztunnel:    "docker.io/istio/ztunnel:1.10.0",
 			},
-			images.HubTag{},
+			images.RegistryAndTag{},
 			true,
 			fmt.Errorf("image foo.bar/istio/proxyv2:1.10.0 is not from the same hub as docker.io/istio/pilot:1.10.0"),
 		),
@@ -94,7 +94,7 @@ var _ = Describe("Images.GetHubAndImageTag", func() {
 				ProxyV2:    "docker.io/istio/proxyv2:1.11.0",
 				Ztunnel:    "docker.io/istio/ztunnel:1.10.0",
 			},
-			images.HubTag{},
+			images.RegistryAndTag{},
 			true,
 			fmt.Errorf("image docker.io/istio/proxyv2:1.11.0 does not have the same tag as docker.io/istio/pilot:1.10.0"),
 		),
@@ -104,7 +104,7 @@ var _ = Describe("Images.GetHubAndImageTag", func() {
 				InstallCNI: "docker.io/istio/cni:1.10.0",
 				ProxyV2:    "docker.io/istio/proxyv2:1.10.0",
 			},
-			images.HubTag{},
+			images.RegistryAndTag{},
 			true,
 			fmt.Errorf("image can not be empty"),
 		),

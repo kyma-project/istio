@@ -9,8 +9,8 @@ import (
 
 const pullSecretEnvVar = "SKR_IMG_PULL_SECRET"
 
-// MergeHubTagConfiguration merges the Istio hub and tag configuration to the provided manifest.
-func MergeHubTagConfiguration(manifest []byte, istioImagesHubTag HubTag) ([]byte, error) {
+// MergeRegistryAndTagConfiguration merges the Istio hub and tag configuration to the provided manifest.
+func MergeRegistryAndTagConfiguration(manifest []byte, istioImagesRegistryAndTag RegistryAndTag) ([]byte, error) {
 	var templateMap map[string]interface{}
 	err := yaml.Unmarshal(manifest, &templateMap)
 	if err != nil {
@@ -19,8 +19,8 @@ func MergeHubTagConfiguration(manifest []byte, istioImagesHubTag HubTag) ([]byte
 
 	err = mergo.Merge(&templateMap, map[string]interface{}{
 		"spec": map[string]interface{}{
-			"hub": istioImagesHubTag.Hub,
-			"tag": istioImagesHubTag.Tag,
+			"hub": istioImagesRegistryAndTag.Hub,
+			"tag": istioImagesRegistryAndTag.Tag,
 		},
 	}, mergo.WithOverride)
 	if err != nil {

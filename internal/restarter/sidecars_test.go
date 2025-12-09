@@ -278,7 +278,7 @@ type MergerMock struct {
 	tag string
 }
 
-func (m MergerMock) Merge(_ clusterconfig.ClusterSize, _ *operatorv1alpha2.Istio, _ clusterconfig.ClusterConfiguration, _ images.HubTag) (string, error) {
+func (m MergerMock) Merge(_ clusterconfig.ClusterSize, _ *operatorv1alpha2.Istio, _ clusterconfig.ClusterConfiguration, _ images.RegistryAndTag) (string, error) {
 	return "mocked istio operator merge result", nil
 }
 

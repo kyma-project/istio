@@ -54,7 +54,7 @@ var _ = Describe("Merge", func() {
 		sut := istiooperator.NewDefaultIstioMerger()
 
 		// when
-		mergedIstioOperatorPath, err := sut.Merge(clusterSize, istioCR, clusterconfig.ClusterConfiguration{}, images.HubTag{Hub: "docker.io/istio", Tag: "1.27.1-distroless"})
+		mergedIstioOperatorPath, err := sut.Merge(clusterSize, istioCR, clusterconfig.ClusterConfiguration{}, images.RegistryAndTag{Hub: "docker.io/istio", Tag: "1.27.1-distroless"})
 
 		// then
 		if shouldError {
@@ -108,7 +108,7 @@ var _ = Describe("Merge", func() {
 		sut := istiooperator.NewDefaultIstioMerger()
 
 		// when
-		mergedIstioOperatorPath, err := sut.Merge(clusterconfig.Production, istioCR, clusterConfig, images.HubTag{Hub: "docker.io/istio", Tag: "1.27.1-distroless"})
+		mergedIstioOperatorPath, err := sut.Merge(clusterconfig.Production, istioCR, clusterConfig, images.RegistryAndTag{Hub: "docker.io/istio", Tag: "1.27.1-distroless"})
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -140,7 +140,7 @@ var _ = Describe("Merge", func() {
 
 	It("should return merged istio hub", func() {
 		// given
-		istioImagesHub := images.HubTag{Hub: "docker.io/overridden/istio-hub", Tag: "1.27.1-overridden"}
+		istioImagesHub := images.RegistryAndTag{Hub: "docker.io/overridden/istio-hub", Tag: "1.27.1-overridden"}
 
 		sut := istiooperator.NewDefaultIstioMerger()
 

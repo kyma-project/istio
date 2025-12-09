@@ -13,11 +13,11 @@ import (
 
 var _ = Describe("Images merging", func() {
 
-	Describe("MergeHubTagConfiguration", func() {
+	Describe("MergeRegistryAndTagConfiguration", func() {
 
 		DescribeTable("merges hub correctly",
-			func(input string, hubTag images.HubTag, expectedHub string, expectedTag string, expectsError bool) {
-				out, err := images.MergeHubTagConfiguration([]byte(input), hubTag)
+			func(input string, registryAndTag images.RegistryAndTag, expectedHub string, expectedTag string, expectsError bool) {
+				out, err := images.MergeRegistryAndTagConfiguration([]byte(input), registryAndTag)
 
 				if expectsError {
 					Expect(err).To(HaveOccurred())
@@ -39,7 +39,7 @@ var _ = Describe("Images merging", func() {
 spec:
   profile: default
 `,
-				images.HubTag{Hub: "my-hub", Tag: "my-tag"},
+				images.RegistryAndTag{Hub: "my-hub", Tag: "my-tag"},
 				"my-hub",
 				"my-tag",
 				false,
@@ -51,7 +51,7 @@ spec:
   hub: old-hub
   tag: old-tag
 `,
-				images.HubTag{Hub: "new-hub", Tag: "new-tag"},
+				images.RegistryAndTag{Hub: "new-hub", Tag: "new-tag"},
 				"new-hub",
 				"new-tag",
 				false,
@@ -59,7 +59,7 @@ spec:
 
 			Entry("fails on invalid yaml",
 				`::: bad yaml :::`,
-				images.HubTag{},
+				images.RegistryAndTag{},
 				"",
 				"",
 				true,

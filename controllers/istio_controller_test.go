@@ -1199,7 +1199,7 @@ type istioInstallationReconciliationMock struct {
 	err describederrors.DescribedError
 }
 
-func (i *istioInstallationReconciliationMock) Reconcile(_ context.Context, _ *operatorv1alpha2.Istio, _ status.Status, _ images.HubTag) (istiooperator.IstioImageVersion, describederrors.DescribedError) {
+func (i *istioInstallationReconciliationMock) Reconcile(_ context.Context, _ *operatorv1alpha2.Istio, _ status.Status, _ images.RegistryAndTag) (istiooperator.IstioImageVersion, describederrors.DescribedError) {
 	version, err := istiooperator.NewIstioImageVersionFromTag("1.16.0-distroless")
 	if err != nil {
 		i.err = describederrors.NewDescribedError(err, "error creating IstioImageVersion")

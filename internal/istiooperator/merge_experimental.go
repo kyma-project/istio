@@ -16,7 +16,7 @@ import (
 	"github.com/kyma-project/istio/operator/internal/images"
 )
 
-func (m *IstioMerger) Merge(clusterSize clusterconfig.ClusterSize, istioCR *operatorv1alpha2.Istio, overrides clusterconfig.ClusterConfiguration, istioImagesHubTag images.HubTag) (string, error) {
+func (m *IstioMerger) Merge(clusterSize clusterconfig.ClusterSize, istioCR *operatorv1alpha2.Istio, overrides clusterconfig.ClusterConfiguration, istioImagesRegistryAndTag images.RegistryAndTag) (string, error) {
 	toBeInstalledIop, err := m.GetIstioOperator(clusterSize)
 	if err != nil {
 		return "", err
@@ -30,11 +30,11 @@ func (m *IstioMerger) Merge(clusterSize clusterconfig.ClusterSize, istioCR *oper
 		return "", err
 	}
 
-	manifestWithOverrideImagesHubTag, err := images.MergeHubTagConfiguration(mergedManifest, istioImagesHubTag)
+	manifestWithOverrideImagesRegistryAndTag, err := images.MergeRegistryAndTagConfiguration(mergedManifest, istioImagesRegistryAndTag)
 	if err != nil {
 		return "", err
 	}
-	manifestWithOverridePullSecret, err := images.MergePullSecretEnv(manifestWithOverrideImagesHubTag)
+	manifestWithOverridePullSecret, err := images.MergePullSecretEnv(manifestWithOverrideImagesRegistryAndTag)
 	if err != nil {
 		return "", err
 	}

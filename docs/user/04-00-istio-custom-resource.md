@@ -139,6 +139,7 @@ Appears in:
 | **authorizers** <br /> [Authorizer](#authorizer) array | Defines a list of external authorization providers. | Optional |
 | **gatewayExternalTrafficPolicy** <br /> string | Defines the external traffic policy for the Istio Ingress Gateway Service. Valid configurations are `"Local"` or `"Cluster"`. The external traffic policy set to `"Local"` preserves the client IP in the request, but also introduces the risk of unbalanced traffic distribution.<br />WARNING: Switching **externalTrafficPolicy** may result in a temporal increase in request delay. Make sure that this is acceptable. | Enum: [Local Cluster] <br />Optional <br /> |
 | **telemetry** <br /> [Telemetry](#telemetry) | Defines the telemetry configuration of Istio. | Optional <br /> |
+| **trustDomain** <br /> string | Defines trust domain configuration of Istio. | MaxLength: 255 <br />MinLength: 1 <br />Optional <br />Pattern: `^[a-z0-9]*([a-z0-9-_]*)?(\.[a-z0-9]*([a-z0-9-_]*[a-z0-9]*)?)*$` <br /> |
 
 ### EgressGateway
 

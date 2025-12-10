@@ -1529,6 +1529,12 @@ spec:
                             type: boolean
                         type: object
                     type: object
+                  trustDomain:
+                    description: Defines trust domain configuration of Istio.
+                    maxLength: 255
+                    minLength: 1
+                    pattern: ^[a-z0-9]*([a-z0-9-_]*)?(\.[a-z0-9]*([a-z0-9-_]*[a-z0-9]*)?)*$
+                    type: string
                 type: object
               experimental:
                 description: Defines experimental configuration options.

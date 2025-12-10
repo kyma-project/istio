@@ -789,6 +789,65 @@ var _ = Describe("Merge", func() {
 		Expect(exists).To(BeTrue())
 		Expect(hbone).To(Equal("true"))
 	})
+	Context("TrustDomain", func() {
+		It("Should set IstioOperator TrustDomain, when Istio CR configures it", func() {
+			// given
+			m := mesh.DefaultMeshConfig()
+			meshConfigRaw := convert(m)
+			iop := iopv1alpha1.IstioOperator{
+				Spec: iopv1alpha1.IstioOperatorSpec{
+					MeshConfig: meshConfigRaw,
+				},
+			}
+
+			istioCR := istiov1alpha2.Istio{
+				Spec: istiov1alpha2.IstioSpec{
+					Config: istiov1alpha2.Config{
+						TrustDomain: ptr.To("trusted.com"),
+					},
+				},
+			}
+
+			// when
+			out, err := istioCR.MergeInto(iop)
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+			meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
+			Expect(err).ShouldNot(HaveOccurred())
+			trustDomain, exists := meshConfig.GetPath("trustDomain")
+			Expect(exists).To(BeTrue())
+			Expect(trustDomain).To(Equal("trusted.com"))
+		})
+
+		It("Should set IstioOperator TrustDomain, when Istio CR configures it", func() {
+			// given
+			m := mesh.DefaultMeshConfig()
+			meshConfigRaw := convert(m)
+			iop := iopv1alpha1.IstioOperator{
+				Spec: iopv1alpha1.IstioOperatorSpec{
+					MeshConfig: meshConfigRaw,
+				},
+			}
+
+			istioCR := istiov1alpha2.Istio{
+				Spec: istiov1alpha2.IstioSpec{
+					Config: istiov1alpha2.Config{},
+				},
+			}
+
+			// when
+			out, err := istioCR.MergeInto(iop)
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+			meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
+			Expect(err).ShouldNot(HaveOccurred())
+			trustDomain, exists := meshConfig.GetPath("trustDomain")
+			Expect(exists).To(BeTrue())
+			Expect(trustDomain).To(Equal("cluster.local"))
+		})
+	})
 
 	Context("Pilot", func() {
 		Context("When Istio CR has 500m configured for CPU limits", func() {

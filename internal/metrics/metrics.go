@@ -1,9 +1,10 @@
 package istiocrmetrics
 
 import (
-	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/prometheus/client_golang/prometheus"
 	ctrlmetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
+
+	"github.com/kyma-project/istio/operator/api/v1alpha2"
 )
 
 // IstioCRMetrics holds all the metrics related to the Istio CR.
@@ -20,6 +21,7 @@ type configMetrics struct {
 	prometheusMergeEnabled             prometheus.Gauge
 	compatibilityModeEnabled           prometheus.Gauge
 	forwardClientCertDetailsConfigured prometheus.Gauge
+	trustDomainConfigured              prometheus.Gauge
 }
 
 type componentMetrics struct {
@@ -64,6 +66,10 @@ func NewMetrics() *IstioCRMetrics {
 			forwardClientCertDetailsConfigured: prometheus.NewGauge(prometheus.GaugeOpts{
 				Name: "istio_forward_client_cert_details_configured",
 				Help: "Indicates whether forwardClientCertDetails is configured in the Istio CR (1 for configured, 0 for not configured).",
+			}),
+			trustDomainConfigured: prometheus.NewGauge(prometheus.GaugeOpts{
+				Name: "istio_trust_domain_configured",
+				Help: "Indicates whether a custom trust domain is configured in the Istio CR (1 for configured, 0 for not configured).",
 			}),
 		},
 		componentMetrics: &componentMetrics{
@@ -122,6 +128,12 @@ func (m *IstioCRMetrics) UpdateIstioCRMetrics(cr *v1alpha2.Istio) {
 		m.configMetrics.forwardClientCertDetailsConfigured.Set(1)
 	} else {
 		m.configMetrics.forwardClientCertDetailsConfigured.Set(0)
+	}
+
+	if cr.Spec.Config.TrustDomain != nil && *cr.Spec.Config.TrustDomain != "" && *cr.Spec.Config.TrustDomain != "cluster.local" {
+		m.configMetrics.trustDomainConfigured.Set(1)
+	} else {
+		m.configMetrics.trustDomainConfigured.Set(0)
 	}
 
 	if cr.Spec.CompatibilityMode {

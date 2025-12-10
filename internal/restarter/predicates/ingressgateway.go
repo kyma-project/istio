@@ -31,6 +31,10 @@ func (i RestartPredicate) NewIngressGatewayEvaluator(_ context.Context) (Ingress
 				NewXForwardClientCert: i.istioCR.Spec.Config.ForwardClientCertDetails,
 				OldXForwardClientCert: lastAppliedConfig.Config.ForwardClientCertDetails,
 			},
+			TrustDomainsRestartEvaluator{
+				NewTrustDomain: i.istioCR.Spec.Config.TrustDomain,
+				OldTrustDomain: lastAppliedConfig.Config.TrustDomain,
+			},
 		},
 	}, nil
 }
@@ -68,6 +72,23 @@ func (i NumTrustedProxiesRestartEvaluator) RequiresIngressGatewayRestart() bool 
 		return true
 	}
 
+	return false
+}
+
+type TrustDomainsRestartEvaluator struct {
+	NewTrustDomain *string
+	OldTrustDomain *string
+}
+
+func (i TrustDomainsRestartEvaluator) RequiresIngressGatewayRestart() bool {
+	isNewNotNil := i.NewTrustDomain != nil
+	isOldNotNil := i.OldTrustDomain != nil
+	if isNewNotNil && isOldNotNil && *i.NewTrustDomain != *i.OldTrustDomain {
+		return true
+	}
+	if isNewNotNil != isOldNotNil {
+		return true
+	}
 	return false
 }
 

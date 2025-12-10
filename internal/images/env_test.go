@@ -50,7 +50,7 @@ var _ = Describe("Images.GetImageRegistryAndTag", func() {
 				ProxyV2:    "docker.io/istio/proxyv2:1.10.0",
 				Ztunnel:    "docker.io/istio/ztunnel:1.10.0",
 			},
-			images.RegistryAndTag{Hub: "docker.io/istio", Tag: "1.10.0"},
+			images.RegistryAndTag{Registry: "docker.io/istio", Tag: "1.10.0"},
 			false,
 			nil,
 		),

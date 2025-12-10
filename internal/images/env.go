@@ -13,8 +13,8 @@ const kymaFipsModeEnabledEnv = "KYMA_FIPS_MODE_ENABLED"
 type Image string
 
 type RegistryAndTag struct {
-	Hub string
-	Tag string
+	Registry string
+	Tag      string
 }
 
 func (i Image) GetHub() (string, error) {
@@ -106,5 +106,5 @@ func (e *Images) GetImageRegistryAndTag() (RegistryAndTag, error) {
 		}
 	}
 
-	return RegistryAndTag{Hub: initialHub, Tag: initialTag}, nil
+	return RegistryAndTag{Registry: initialHub, Tag: initialTag}, nil
 }

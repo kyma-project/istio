@@ -32,7 +32,7 @@ var _ = Describe("Merge", func() {
 		}
 		merger := istiooperator.NewDefaultIstioMerger()
 
-		p, err := merger.Merge(clusterconfig.Evaluation, &istioCR, clusterconfig.ClusterConfiguration{}, images.RegistryAndTag{Hub: "docker.io/istio", Tag: "1.27.1-distroless"})
+		p, err := merger.Merge(clusterconfig.Evaluation, &istioCR, clusterconfig.ClusterConfiguration{}, images.RegistryAndTag{Registry: "docker.io/istio", Tag: "1.27.1-distroless"})
 		Expect(err).ShouldNot(HaveOccurred())
 		iop := readIOP(p)
 		Expect(iop.Spec.Components.Pilot).ToNot(BeNil())

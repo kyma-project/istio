@@ -39,7 +39,7 @@ var _ = Describe("Images merging", func() {
 spec:
   profile: default
 `,
-				images.RegistryAndTag{Hub: "my-hub", Tag: "my-tag"},
+				images.RegistryAndTag{Registry: "my-hub", Tag: "my-tag"},
 				"my-hub",
 				"my-tag",
 				false,
@@ -51,7 +51,7 @@ spec:
   hub: old-hub
   tag: old-tag
 `,
-				images.RegistryAndTag{Hub: "new-hub", Tag: "new-tag"},
+				images.RegistryAndTag{Registry: "new-hub", Tag: "new-tag"},
 				"new-hub",
 				"new-tag",
 				false,

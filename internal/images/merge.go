@@ -19,7 +19,7 @@ func MergeRegistryAndTagConfiguration(manifest []byte, istioImagesRegistryAndTag
 
 	err = mergo.Merge(&templateMap, map[string]interface{}{
 		"spec": map[string]interface{}{
-			"hub": istioImagesRegistryAndTag.Hub,
+			"hub": istioImagesRegistryAndTag.Registry,
 			"tag": istioImagesRegistryAndTag.Tag,
 		},
 	}, mergo.WithOverride)

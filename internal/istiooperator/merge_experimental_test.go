@@ -13,6 +13,7 @@ import (
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
+	"github.com/kyma-project/istio/operator/internal/images"
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
 )
 
@@ -31,7 +32,7 @@ var _ = Describe("Merge", func() {
 		}
 		merger := istiooperator.NewDefaultIstioMerger()
 
-		p, err := merger.Merge(clusterconfig.Evaluation, &istioCR, clusterconfig.ClusterConfiguration{}, "docker.io/istio")
+		p, err := merger.Merge(clusterconfig.Evaluation, &istioCR, clusterconfig.ClusterConfiguration{}, images.RegistryAndTag{Registry: "docker.io/istio", Tag: "1.27.1-distroless"})
 		Expect(err).ShouldNot(HaveOccurred())
 		iop := readIOP(p)
 		Expect(iop.Spec.Components.Pilot).ToNot(BeNil())

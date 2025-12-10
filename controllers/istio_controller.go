@@ -19,8 +19,9 @@ package controllers
 import (
 	"context"
 	"fmt"
-	istiocrmetrics "github.com/kyma-project/istio/operator/internal/metrics"
 	"time"
+
+	istiocrmetrics "github.com/kyma-project/istio/operator/internal/metrics"
 
 	"github.com/pkg/errors"
 
@@ -122,9 +123,9 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return r.terminateReconciliation(ctx, &istioCR, describederrors.NewDescribedError(imgErr, "Unable to get Istio images environments"),
 			operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileFailed))
 	}
-	hub, imgErr := istioImages.GetHub()
+	registryAndTag, imgErr := istioImages.GetImageRegistryAndTag()
 	if imgErr != nil {
-		return r.terminateReconciliation(ctx, &istioCR, describederrors.NewDescribedError(imgErr, "Unable to get Istio images hub"),
+		return r.terminateReconciliation(ctx, &istioCR, describederrors.NewDescribedError(imgErr, "Unable to get Istio images registryAndTag"),
 			operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileFailed))
 	}
 
@@ -179,7 +180,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		}
 	}
 
-	istioImageVersion, installationErr := r.istioInstallation.Reconcile(ctx, &istioCR, r.statusHandler, hub)
+	istioImageVersion, installationErr := r.istioInstallation.Reconcile(ctx, &istioCR, r.statusHandler, registryAndTag)
 	if installationErr != nil {
 		return r.requeueReconciliation(ctx, &istioCR, installationErr,
 			operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIstioInstallUninstallFailed),

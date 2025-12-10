@@ -21,7 +21,7 @@ type configMetrics struct {
 	prometheusMergeEnabled             prometheus.Gauge
 	compatibilityModeEnabled           prometheus.Gauge
 	forwardClientCertDetailsConfigured prometheus.Gauge
-	trustedDomainConfigured            prometheus.Gauge
+	trustDomainConfigured              prometheus.Gauge
 }
 
 type componentMetrics struct {
@@ -67,8 +67,8 @@ func NewMetrics() *IstioCRMetrics {
 				Name: "istio_forward_client_cert_details_configured",
 				Help: "Indicates whether forwardClientCertDetails is configured in the Istio CR (1 for configured, 0 for not configured).",
 			}),
-			trustedDomainConfigured: prometheus.NewGauge(prometheus.GaugeOpts{
-				Name: "istio_trusted_domain_configured",
+			trustDomainConfigured: prometheus.NewGauge(prometheus.GaugeOpts{
+				Name: "istio_trust_domain_configured",
 				Help: "Indicates whether a custom trust domain is configured in the Istio CR (1 for configured, 0 for not configured).",
 			}),
 		},
@@ -131,9 +131,9 @@ func (m *IstioCRMetrics) UpdateIstioCRMetrics(cr *v1alpha2.Istio) {
 	}
 
 	if cr.Spec.Config.TrustDomain != nil && *cr.Spec.Config.TrustDomain != "" && *cr.Spec.Config.TrustDomain != "cluster.local" {
-		m.configMetrics.trustedDomainConfigured.Set(1)
+		m.configMetrics.trustDomainConfigured.Set(1)
 	} else {
-		m.configMetrics.trustedDomainConfigured.Set(0)
+		m.configMetrics.trustDomainConfigured.Set(0)
 	}
 
 	if cr.Spec.CompatibilityMode {

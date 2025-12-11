@@ -7,14 +7,14 @@ spec:
     - egress-gateway
     - mesh
   hosts:
-    - httpbin.org
+    - httpbin.io
   tls:
     - match:
         - gateways:
             - mesh
           port: 443
           sniHosts:
-            - httpbin.org
+            - httpbin.io
       route:
         - destination:
             host: istio-egressgateway.istio-system.svc.cluster.local
@@ -26,10 +26,10 @@ spec:
             - egress-gateway
           port: 443
           sniHosts:
-            - httpbin.org
+            - httpbin.io
       route:
         - destination:
-            host: httpbin.org
+            host: httpbin.io
             port:
               number: 443
           weight: 100
@@ -43,7 +43,7 @@ spec:
     istio: egressgateway
   servers:
     - hosts:
-        - httpbin.org
+        - httpbin.io
       port:
         name: tls
         number: 443
@@ -56,7 +56,7 @@ metadata:
   name: e2e-service-entry
 spec:
   hosts:
-    - httpbin.org
+    - httpbin.io
   ports:
     - name: tls
       number: 443

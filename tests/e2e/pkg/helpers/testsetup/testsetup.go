@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/e2e-framework/pkg/envconf"
 
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/httpbin"
@@ -46,11 +47,13 @@ func CreateNamespaceWithRandomID(t *testing.T, options ...Option) (testId string
 	}
 	setup.DeclareCleanup(t,
 		func() {
-			if err := infrastructure.DeleteNamespace(t, ns); err != nil {
-				t.Logf("Failed to delete namespace %s: %v", namespaceName, err)
+			err := infrastructure.DeleteNamespace(t, ns)
+			if err != nil && k8serrors.IsNotFound(err) {
+				t.Logf("Namespace %s not found", namespaceName)
 			} else {
-				t.Logf("Namespace %s deleted successfully", namespaceName)
+				t.Logf("Failed to delete namespace %s: %v", namespaceName, err)
 			}
+			t.Logf("Namespace %s deleted successfully", namespaceName)
 		},
 	)
 	t.Logf("Creating namespace %s", ns)

@@ -1,7 +1,6 @@
 package infrastructure
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -9,10 +8,13 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/e2e-framework/klient/wait"
+	"sigs.k8s.io/e2e-framework/klient/wait/conditions"
 
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/setup"
 )
+
+const namespaceDeletionTimeout = 1 * time.Minute
 
 type NamespaceOptions struct {
 	Labels              map[string]string
@@ -91,23 +93,18 @@ func DeleteNamespace(t *testing.T, name string) error {
 		return err
 	}
 
-	err = r.Delete(setup.GetCleanupContext(), &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: name}})
+	namespace := &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: name}}
+	err = r.Delete(setup.GetCleanupContext(), namespace)
 	if err != nil {
 		t.Logf("Failed to delete namespace: %v", err)
 		return err
 	}
 
-	err = wait.For(
-		func(ctx context.Context) (bool, error) {
-			ns := &corev1.Namespace{}
-			obj := &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: name}}
-			err := r.Get(ctx, name, ns.Name, obj)
-			if k8serrors.IsNotFound(err) {
-				return true, nil
-			}
-			return false, err
-		},
-		wait.WithTimeout(2*time.Minute))
+	err = wait.For(conditions.New(r).ResourceDeleted(namespace), wait.WithTimeout(namespaceDeletionTimeout))
+	if err != nil {
+		t.Logf("Failed to wait for Istio custom resource deletion: %v", err)
+		return err
+	}
 
 	return err
 }

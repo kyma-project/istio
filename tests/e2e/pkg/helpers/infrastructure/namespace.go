@@ -1,14 +1,16 @@
 package infrastructure
 
 import (
-	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
+	"context"
 	"testing"
-
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/e2e-framework/klient/wait"
 
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/setup"
 )
 
@@ -88,5 +90,24 @@ func DeleteNamespace(t *testing.T, name string) error {
 		t.Logf("Failed to get resources client: %v", err)
 		return err
 	}
-	return r.Delete(setup.GetCleanupContext(), &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: name}})
+
+	err = r.Delete(setup.GetCleanupContext(), &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: name}})
+	if err != nil {
+		t.Logf("Failed to delete namespace: %v", err)
+		return err
+	}
+
+	err = wait.For(
+		func(ctx context.Context) (bool, error) {
+			ns := &corev1.Namespace{}
+			obj := &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: name}}
+			err := r.Get(ctx, name, ns.Name, obj)
+			if k8serrors.IsNotFound(err) {
+				return true, nil
+			}
+			return false, err
+		},
+		wait.WithTimeout(2*time.Minute))
+
+	return err
 }

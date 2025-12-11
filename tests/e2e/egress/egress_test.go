@@ -3,12 +3,14 @@ package egress_test
 import (
 	"bytes"
 	_ "embed"
+	"testing"
+
+	"sigs.k8s.io/e2e-framework/klient/decoder"
+
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/httpincluster"
 	modulehelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/modules"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/testsetup"
-	"sigs.k8s.io/e2e-framework/klient/decoder"
-	"testing"
 
 	"github.com/stretchr/testify/require"
 )
@@ -42,13 +44,13 @@ func TestE2EEgressConnectivity(t *testing.T) {
 	}{
 		{
 			name:              "connection to httpbin service is OK when egress is deployed",
-			url:               "https://httpbin.org/headers",
+			url:               "https://httpbin.io/headers",
 			applyEgressConfig: true,
 			expectError:       false,
 		},
 		{
 			name:               "connection to httpbin service is refused when NetworkPolicy is applied",
-			url:                "https://httpbin.org/headers",
+			url:                "https://httpbin.io/headers",
 			applyNetworkPolicy: true,
 			// sidecar init fails when NP is applied. When uncommented, the test will pass despite confirming manually
 			// that connection is refused with NP
@@ -56,7 +58,7 @@ func TestE2EEgressConnectivity(t *testing.T) {
 		},
 		{
 			name:               "connection to httpbin service is OK when NetworkPolicy is applied and egress is configured",
-			url:                "https://httpbin.org/headers",
+			url:                "https://httpbin.io/headers",
 			applyEgressConfig:  true,
 			applyNetworkPolicy: true,
 			expectError:        false,

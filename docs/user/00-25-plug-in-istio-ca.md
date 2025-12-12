@@ -39,6 +39,6 @@ For more information, see [Plug in CA Certificates](https://istio.io/latest/docs
 
 ### Security Considerations
 
-For enhanced security, it is not recommended that you store the sensitive data directly in a Kubernetes Secret. Instead, use a production-ready CA and manage your root CA on a secure, offline machine.
+For enhanced security, it is not recommended that you manage sensitive data directly in a Kyma cluster. Instead, use a production-ready CA and manage your root CA on a secure, offline machine.
 
 Additionally, make sure to implement proper certificate rotation procedures according to your organization's security policies.

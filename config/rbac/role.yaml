@@ -251,7 +251,13 @@ rules:
   resources:
   - ingresses/status
   verbs:
-  - '*'
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
   - networking.x-k8s.io
   resources:

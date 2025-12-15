@@ -80,7 +80,7 @@ jobs:
           wget -q -O - https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | sudo bash
           docker pull  ${{ needs.get-image.outputs.image }}
           IMG="${{ needs.get-image.outputs.image }}" ./tests/ui/scripts/k3d-ci-kyma-dashboard-integration.sh stage
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         if: always()
         name: Export Cypress output
         with:

@@ -29,6 +29,7 @@ rules:
   - ""
   resources:
   - nodes
+  - replicationcontrollers
   verbs:
   - get
   - list
@@ -251,6 +252,14 @@ rules:
   - ingresses/status
   verbs:
   - '*'
+- apiGroups:
+  - networking.x-k8s.io
+  resources:
+  - gateways
+  verbs:
+  - get
+  - list
+  - watch
 - apiGroups:
   - operator.kyma-project.io
   resources:

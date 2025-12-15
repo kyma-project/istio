@@ -322,7 +322,7 @@ func (r *IstioReconciler) finishReconcile(ctx context.Context, istioCR *operator
 
 // +kubebuilder:rbac:groups="",resources=configmaps;endpoints;events;namespaces;pods;secrets;services;services/status;serviceaccounts,verbs=create;deletecollection;delete;get;list;patch;update;watch
 // +kubebuilder:rbac:groups="",resources=namespaces,verbs=create;get;patch;update
-// +kubebuilder:rbac:groups="",resources=nodes,verbs=get;list;watch
+// +kubebuilder:rbac:groups="",resources=nodes;replicationcontrollers,verbs=get;list;watch
 // +kubebuilder:rbac:groups=admissionregistration.k8s.io,resources=mutatingwebhookconfigurations;validatingwebhookconfigurations,verbs=create;deletecollection;delete;get;list;patch;update;watch
 // +kubebuilder:rbac:groups=apiextensions.k8s.io,resources=customresourcedefinitions.apiextensions.k8s.io;customresourcedefinitions,verbs=create;deletecollection;delete;get;list;patch;update;watch
 // +kubebuilder:rbac:groups=apps;extensions,resources=daemonsets;deployments;deployments/finalizers;replicasets;statefulsets,verbs=create;deletecollection;delete;get;list;patch;update;watch
@@ -350,6 +350,7 @@ func (r *IstioReconciler) finishReconcile(ctx context.Context, istioCR *operator
 // +kubebuilder:rbac:groups=networking.k8s.io,resources=ingressclasses,verbs=get;list;watch
 // +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=get;list;watch
 // +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses/status,verbs=*
+// +kubebuilder:rbac:groups=networking.x-k8s.io,resources=gateways,verbs=get;watch;list
 // +kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios,verbs=create;delete;get;list;patch;update;watch
 // +kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios/finalizers,verbs=update
 // +kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios/status,verbs=get;patch;update

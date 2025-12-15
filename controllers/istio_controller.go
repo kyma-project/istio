@@ -340,9 +340,9 @@ func (r *IstioReconciler) finishReconcile(ctx context.Context, istioCR *operator
 // +kubebuilder:rbac:groups=monitoring.coreos.com,resources=servicemonitors,verbs=get;create;update
 // +kubebuilder:rbac:groups=policy,resources=poddisruptionbudgets,verbs=create;deletecollection;delete;get;list;patch;update;watch
 // +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=clusterrolebindings;roles;rolebindings,verbs=create;deletecollection;delete;get;list;patch;update;watch
-// +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=clusterroles,verbs=*
+// +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=clusterroles,verbs=create;deletecollection;delete;get;list;patch;update;watch
 // +kubebuilder:rbac:groups=coordination.k8s.io,resources=leases,verbs=get;create;update;patch
-// +kubebuilder:rbac:groups="",resources=configmaps;endpoints;events;namespaces;pods;pods/proxy;pods/portforward;persistentvolumeclaims;secrets;services;serviceaccounts;resourcequotas,verbs=create;deletecollection;delete;get;list;patch;update;watch
+// +kubebuilder:rbac:groups="",resources=configmaps;endpoints;events;namespaces;pods;secrets;services;serviceaccounts,verbs=create;deletecollection;delete;get;list;patch;update;watch
 
 //nolint:revive,staticcheck
 func (r *IstioReconciler) SetupWithManager(mgr ctrl.Manager, rateLimiter RateLimiter) error {

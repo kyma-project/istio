@@ -11,11 +11,7 @@ rules:
   - endpoints
   - events
   - namespaces
-  - persistentvolumeclaims
   - pods
-  - pods/portforward
-  - pods/proxy
-  - resourcequotas
   - secrets
   - serviceaccounts
   - services
@@ -187,6 +183,7 @@ rules:
   - rbac.authorization.k8s.io
   resources:
   - clusterrolebindings
+  - clusterroles
   - rolebindings
   - roles
   verbs:
@@ -198,9 +195,3 @@ rules:
   - patch
   - update
   - watch
-- apiGroups:
-  - rbac.authorization.k8s.io
-  resources:
-  - clusterroles
-  verbs:
-  - '*'

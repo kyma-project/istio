@@ -34,7 +34,20 @@ func (m *IstioMerger) Merge(clusterSize clusterconfig.ClusterSize, istioCR *oper
 	if err != nil {
 		return "", err
 	}
-	manifestWithOverridePullSecret, err := images.MergePullSecretEnv(manifestWithOverrideImagesRegistryAndTag)
+
+	// Get the full image references from environment variables
+	istioImages, err := images.GetImages()
+	if err != nil {
+		return "", err
+	}
+
+	// Merge component-specific images
+	manifestWithComponentImages, err := images.MergeComponentImages(manifestWithOverrideImagesRegistryAndTag, istioImages)
+	if err != nil {
+		return "", err
+	}
+
+	manifestWithOverridePullSecret, err := images.MergePullSecretEnv(manifestWithComponentImages)
 	if err != nil {
 		return "", err
 	}

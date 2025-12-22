@@ -6,12 +6,12 @@ import (
 	"fmt"
 
 	"github.com/coreos/go-semver/semver"
-	"github.com/kyma-project/istio/operator/internal/images"
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
 	"sigs.k8s.io/yaml"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
+	"github.com/kyma-project/istio/operator/internal/images"
 )
 
 //go:embed istio-operator.yaml
@@ -53,7 +53,7 @@ func (i *IstioImageVersion) Empty() bool {
 }
 
 type Merger interface {
-	Merge(clusterSize clusterconfig.ClusterSize, istioCR *operatorv1alpha2.Istio, overrides clusterconfig.ClusterConfiguration, istioImagesRegistryAndTag images.RegistryAndTag) (string, error)
+	Merge(clusterSize clusterconfig.ClusterSize, istioCR *operatorv1alpha2.Istio, overrides clusterconfig.ClusterConfiguration, istioImages images.Images) (string, error)
 	GetIstioOperator(clusterSize clusterconfig.ClusterSize) (iopv1alpha1.IstioOperator, error)
 	GetIstioImageVersion() (IstioImageVersion, error)
 }

@@ -9,14 +9,19 @@ import (
 
 const pullSecretEnvVar = "SKR_IMG_PULL_SECRET"
 
-// MergeRegistryAndTagConfiguration merges the Istio hub and tag configuration to the provided manifest.
-func MergeRegistryAndTagConfiguration(manifest []byte, istioImagesRegistryAndTag RegistryAndTag) ([]byte, error) {
+// MergeComponentImages merges component-specific image values into the IstioOperator manifest.
+// This overrides the values.<component>.image fields with the full image references from environment variables.
+// It also sets the global hub and tag to match the registry and tag of the provided images.
+func MergeComponentImages(manifest []byte, images Images) ([]byte, error) {
 	var templateMap map[string]interface{}
 	err := yaml.Unmarshal(manifest, &templateMap)
 	if err != nil {
 		return nil, err
 	}
-
+	istioImagesRegistryAndTag, err := images.GetImageRegistryAndTag()
+	if err != nil {
+		return nil, err
+	}
 	err = mergo.Merge(&templateMap, map[string]interface{}{
 		"spec": map[string]interface{}{
 			"hub": istioImagesRegistryAndTag.Registry,
@@ -26,6 +31,42 @@ func MergeRegistryAndTagConfiguration(manifest []byte, istioImagesRegistryAndTag
 	if err != nil {
 		return nil, err
 	}
+
+	spec := ensureMap(templateMap, "spec")
+	values := ensureMap(spec, "values")
+
+	// Set pilot image: values.pilot.image
+	pilot := ensureMap(values, "pilot")
+	pilotImage, err := images.Pilot.GetName()
+	if err != nil {
+		return nil, err
+	}
+	pilot["image"] = pilotImage
+
+	// Set CNI image: values.cni.image
+	cni := ensureMap(values, "cni")
+	installCNI, err := images.InstallCNI.GetName()
+	if err != nil {
+		return nil, err
+	}
+	cni["image"] = installCNI
+
+	// Set proxy image: values.global.proxy.image
+	global := ensureMap(values, "global")
+	proxy := ensureMap(global, "proxy")
+	proxyV2, err := images.ProxyV2.GetName()
+	if err != nil {
+		return nil, err
+	}
+	proxy["image"] = proxyV2
+
+	// Set ztunnel image: values.ztunnel.image
+	ztunnel := ensureMap(values, "ztunnel")
+	ztunnelImage, err := images.Ztunnel.GetName()
+	if err != nil {
+		return nil, err
+	}
+	ztunnel["image"] = ztunnelImage
 
 	return yaml.Marshal(templateMap)
 }

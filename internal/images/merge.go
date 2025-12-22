@@ -60,14 +60,6 @@ func MergeComponentImages(manifest []byte, images Images) ([]byte, error) {
 	}
 	proxy["image"] = proxyV2
 
-	// Set ztunnel image: values.ztunnel.image
-	ztunnel := ensureMap(values, "ztunnel")
-	ztunnelImage, err := images.Ztunnel.GetName()
-	if err != nil {
-		return nil, err
-	}
-	ztunnel["image"] = ztunnelImage
-
 	return yaml.Marshal(templateMap)
 }
 

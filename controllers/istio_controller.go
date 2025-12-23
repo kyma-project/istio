@@ -320,29 +320,46 @@ func (r *IstioReconciler) finishReconcile(ctx context.Context, istioCR *operator
 	return ctrl.Result{RequeueAfter: r.reconciliationInterval}, nil
 }
 
+// +kubebuilder:rbac:groups="",resources=configmaps;endpoints;events;namespaces;pods;secrets;services;services/status;serviceaccounts,verbs=create;deletecollection;delete;get;list;patch;update;watch
 // +kubebuilder:rbac:groups="",resources=namespaces,verbs=create;get;patch;update
-// +kubebuilder:rbac:groups="",resources=nodes,verbs=get;list;watch
-// +kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios,verbs=create;delete;get;list;patch;update;watch
-// +kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios/finalizers,verbs=update
-// +kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios/status,verbs=get;patch;update
-// +kubebuilder:rbac:groups=authentication.istio.io,resources=*,verbs=create;deletecollection;delete;get;list;patch;update;watch
-// +kubebuilder:rbac:groups=config.istio.io,resources=*,verbs=create;deletecollection;delete;get;list;patch;update;watch
-// +kubebuilder:rbac:groups=install.istio.io,resources=*,verbs=create;deletecollection;delete;get;list;patch;update;watch
-// +kubebuilder:rbac:groups=networking.istio.io,resources=*,verbs=create;deletecollection;delete;get;list;patch;update;watch
-// +kubebuilder:rbac:groups=security.istio.io,resources=*,verbs=create;deletecollection;delete;get;list;patch;update;watch
-// +kubebuilder:rbac:groups=telemetry.istio.io,resources=*,verbs=create;deletecollection;delete;get;list;patch;update;watch
-// +kubebuilder:rbac:groups=extensions.istio.io,resources=*,verbs=create;deletecollection;delete;get;list;patch;update;watch
+// +kubebuilder:rbac:groups="",resources=nodes;replicationcontrollers,verbs=get;list;watch
 // +kubebuilder:rbac:groups=admissionregistration.k8s.io,resources=mutatingwebhookconfigurations;validatingwebhookconfigurations,verbs=create;deletecollection;delete;get;list;patch;update;watch
 // +kubebuilder:rbac:groups=apiextensions.k8s.io,resources=customresourcedefinitions.apiextensions.k8s.io;customresourcedefinitions,verbs=create;deletecollection;delete;get;list;patch;update;watch
 // +kubebuilder:rbac:groups=apps;extensions,resources=daemonsets;deployments;deployments/finalizers;replicasets;statefulsets,verbs=create;deletecollection;delete;get;list;patch;update;watch
-// +kubebuilder:rbac:groups=k8s.cni.cncf.io,resources=networkattachmentdefinitions,verbs=create;deletecollection;delete;get;list;patch;update;watch
+// +kubebuilder:rbac:groups=authentication.istio.io,resources=*,verbs=create;deletecollection;delete;get;list;patch;update;watch
+// +kubebuilder:rbac:groups=authentication.k8s.io,resources=tokenreviews,verbs=create
+// +kubebuilder:rbac:groups=authorization.k8s.io,resources=subjectaccessreviews,verbs=create
 // +kubebuilder:rbac:groups=autoscaling,resources=horizontalpodautoscalers,verbs=create;deletecollection;delete;get;list;patch;update;watch
+// +kubebuilder:rbac:groups=config.istio.io,resources=*,verbs=create;deletecollection;delete;get;list;patch;update;watch
+// +kubebuilder:rbac:groups=coordination.k8s.io,resources=leases,verbs=get;create;update;patch
+// +kubebuilder:rbac:groups=discovery.k8s.io,resources=endpointslices,verbs=get;list;watch
+// +kubebuilder:rbac:groups=extensions.istio.io,resources=*,verbs=create;deletecollection;delete;get;list;patch;update;watch
+// +kubebuilder:rbac:groups=gateway.networking.k8s.io,resources=*,verbs=get;watch;list
+// +kubebuilder:rbac:groups=gateway.networking.k8s.io,resources=backendtlspolicies/status;gatewayclasses/status;gateways/status;grpcroutes/status;httproutes/status;referencegrants/status;tcproutes/status;tlsroutes/status;udproutes/status,verbs=update;patch
+// +kubebuilder:rbac:groups=gateway.networking.k8s.io,resources=gatewayclasses,verbs=create;update;patch;delete
+// +kubebuilder:rbac:groups=gateway.networking.x-k8s.io,resources=*,verbs=get;watch;list
+// +kubebuilder:rbac:groups=gateway.networking.x-k8s.io,resources=xbackendtrafficpolicies/status;xlistenersets/status,verbs=update;patch
+// +kubebuilder:rbac:groups=inference.networking.x-k8s.io,resources=inferencepools,verbs=get;watch;list
+// +kubebuilder:rbac:groups=inference.networking.x-k8s.io,resources=inferencepools/status,verbs=update;patch
+// +kubebuilder:rbac:groups=install.istio.io,resources=*,verbs=create;deletecollection;delete;get;list;patch;update;watch
+// +kubebuilder:rbac:groups=k8s.cni.cncf.io,resources=networkattachmentdefinitions,verbs=create;deletecollection;delete;get;list;patch;update;watch
 // +kubebuilder:rbac:groups=monitoring.coreos.com,resources=servicemonitors,verbs=get;create;update
+// +kubebuilder:rbac:groups=multicluster.x-k8s.io,resources=serviceexports,verbs=get;watch;list;create;delete
+// +kubebuilder:rbac:groups=multicluster.x-k8s.io,resources=serviceimports,verbs=get;watch;list
+// +kubebuilder:rbac:groups=networking.istio.io,resources=*,verbs=create;deletecollection;delete;get;list;patch;update;watch
+// +kubebuilder:rbac:groups=networking.k8s.io,resources=ingressclasses,verbs=get;list;watch
+// +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=get;list;watch
+// +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses/status,verbs=*
+// +kubebuilder:rbac:groups=networking.x-k8s.io,resources=gateways,verbs=get;watch;list
+// +kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios,verbs=create;delete;get;list;patch;update;watch
+// +kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios/finalizers,verbs=update
+// +kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios/status,verbs=get;patch;update
 // +kubebuilder:rbac:groups=policy,resources=poddisruptionbudgets,verbs=create;deletecollection;delete;get;list;patch;update;watch
 // +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=clusterrolebindings;roles;rolebindings,verbs=create;deletecollection;delete;get;list;patch;update;watch
-// +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=clusterroles,verbs=*
-// +kubebuilder:rbac:groups=coordination.k8s.io,resources=leases,verbs=get;create;update;patch
-// +kubebuilder:rbac:groups="",resources=configmaps;endpoints;events;namespaces;pods;pods/proxy;pods/portforward;persistentvolumeclaims;secrets;services;serviceaccounts;resourcequotas,verbs=create;deletecollection;delete;get;list;patch;update;watch
+// +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=clusterroles,verbs=create;deletecollection;delete;get;list;patch;update;watch
+// +kubebuilder:rbac:groups=rbac.istio.io,resources=*,verbs=get;watch;list
+// +kubebuilder:rbac:groups=security.istio.io,resources=*,verbs=create;deletecollection;delete;get;list;patch;update;watch
+// +kubebuilder:rbac:groups=telemetry.istio.io,resources=*,verbs=create;deletecollection;delete;get;list;patch;update;watch
 
 //nolint:revive,staticcheck
 func (r *IstioReconciler) SetupWithManager(mgr ctrl.Manager, rateLimiter RateLimiter) error {

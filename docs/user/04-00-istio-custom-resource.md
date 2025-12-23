@@ -135,7 +135,7 @@ Appears in:
 | Field | Description | Validation |
 | --- | --- | --- |
 | **numTrustedProxies** <br /> integer | Defines the number of trusted proxies deployed in front of the Istio gateway proxy. | Maximum: 4.294967295e+09 <br />Minimum: 0 <br /> |
-| **forwardClientCertDetails** <br /> [XFCCStrategy](#xfccstrategy) | Defines the strategy of handling the **X-Forwarded-Client-Cert** header.<br />The default behavior is "SANITIZE". | Enum: [APPEND_FORWARD SANITIZE_SET SANITIZE ALWAYS_FORWARD_ONLY FORWARD_ONLY] <br />Optional <br /> |
+| **forwardClientCertDetails** <br /> [XFCCStrategy](#xfccstrategy) | Defines the strategy of handling the **X-Forwarded-Client-Cert** header.<br />The default behavior is "SANITIZE_SET". | Enum: [APPEND_FORWARD SANITIZE_SET SANITIZE ALWAYS_FORWARD_ONLY FORWARD_ONLY] <br />Optional <br /> |
 | **authorizers** <br /> [Authorizer](#authorizer) array | Defines a list of external authorization providers. | Optional |
 | **gatewayExternalTrafficPolicy** <br /> string | Defines the external traffic policy for the Istio Ingress Gateway Service. Valid configurations are `"Local"` or `"Cluster"`. The external traffic policy set to `"Local"` preserves the client IP in the request, but also introduces the risk of unbalanced traffic distribution.<br />WARNING: Switching **externalTrafficPolicy** may result in a temporal increase in request delay. Make sure that this is acceptable. | Enum: [Local Cluster] <br />Optional <br /> |
 | **telemetry** <br /> [Telemetry](#telemetry) | Defines the telemetry configuration of Istio. | Optional <br /> |

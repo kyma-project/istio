@@ -1490,10 +1490,10 @@ spec:
                       type: object
                     type: array
                   forwardClientCertDetails:
-                    default: SANITIZE
+                    default: SANITIZE_SET
                     description: |-
                       Defines the strategy of handling the **X-Forwarded-Client-Cert** header.
-                      The default behavior is "SANITIZE".
+                      The default behavior is "SANITIZE_SET".
                     enum:
                     - APPEND_FORWARD
                     - SANITIZE_SET

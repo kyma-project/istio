@@ -30,9 +30,17 @@ var _ = Describe("Merge", func() {
 				}},
 			},
 		}
+
+		istioImages := images.Images{
+			Pilot:      "docker.io/istio/pilot:1.27.1-distroless",
+			ProxyV2:    "docker.io/istio/proxyv2:1.27.1-distroless",
+			InstallCNI: "docker.io/istio/cni:1.27.1-distroless",
+			Ztunnel:    "docker.io/istio/ztunnel:1.27.1-distroless",
+		}
+
 		merger := istiooperator.NewDefaultIstioMerger()
 
-		p, err := merger.Merge(clusterconfig.Evaluation, &istioCR, clusterconfig.ClusterConfiguration{}, images.RegistryAndTag{Registry: "docker.io/istio", Tag: "1.27.1-distroless"})
+		p, err := merger.Merge(clusterconfig.Evaluation, &istioCR, clusterconfig.ClusterConfiguration{}, istioImages)
 		Expect(err).ShouldNot(HaveOccurred())
 		iop := readIOP(p)
 		Expect(iop.Spec.Components.Pilot).ToNot(BeNil())

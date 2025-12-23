@@ -160,7 +160,7 @@ spec:
 	Describe("Merge configurable istio images ", func() {
 
 		DescribeTable("merges component images correctly",
-			func(input string, img images.Images, expectedPilot string, expectedCNI string, expectedProxy string, expectedZtunnel string, expectsError bool) {
+			func(input string, img images.Images, expectedPilot string, expectedCNI string, expectedProxy string, expectsError bool) {
 				out, err := images.MergeComponentImages([]byte(input), img)
 
 				if expectsError {
@@ -188,10 +188,6 @@ spec:
 				global := values["global"].(map[string]interface{})
 				proxy := global["proxy"].(map[string]interface{})
 				Expect(proxy["image"]).To(Equal(expectedProxy))
-
-				// Check ztunnel image
-				ztunnel := values["ztunnel"].(map[string]interface{})
-				Expect(ztunnel["image"]).To(Equal(expectedZtunnel))
 			},
 
 			Entry("sets all component images when values section is empty",
@@ -208,7 +204,6 @@ spec:
 				"my-pilot",
 				"my-cni",
 				"my-proxy",
-				"my-ztunnel",
 				false,
 			),
 
@@ -223,8 +218,6 @@ spec:
     global:
       proxy:
         image: old-proxy
-    ztunnel:
-      image: old-ztunnel
 `,
 				images.Images{
 					Pilot:      "new-hub/new-pilot:new-tag",
@@ -235,7 +228,6 @@ spec:
 				"new-pilot",
 				"new-cni",
 				"new-proxy",
-				"new-ztunnel",
 				false,
 			),
 
@@ -257,9 +249,6 @@ spec:
         resources:
           requests:
             memory: 128Mi
-    ztunnel:
-      image: old-ztunnel
-      enabled: true
 `,
 				images.Images{
 					Pilot:      "updated-hub/updated-pilot:v1.0",
@@ -270,7 +259,6 @@ spec:
 				"updated-pilot",
 				"updated-cni",
 				"updated-proxy",
-				"updated-ztunnel",
 				false,
 			),
 
@@ -288,7 +276,6 @@ spec:
 				"pilot",
 				"install-cni",
 				"proxyv2",
-				"ztunnel",
 				false,
 			),
 
@@ -303,7 +290,6 @@ spec:
 					ProxyV2:    "my-hub/my-proxy:my-tag",
 					Ztunnel:    "my-hub/my-ztunnel:my-tag",
 				},
-				"",
 				"",
 				"",
 				"",
@@ -324,7 +310,6 @@ spec:
 				"",
 				"",
 				"",
-				"",
 				true,
 			),
 
@@ -339,25 +324,6 @@ spec:
 					ProxyV2:    "invalid-no-tag",
 					Ztunnel:    "my-hub/my-ztunnel:my-tag",
 				},
-				"",
-				"",
-				"",
-				"",
-				true,
-			),
-
-			Entry("fails when ztunnel image is invalid",
-				`
-spec:
-  profile: default
-`,
-				images.Images{
-					Pilot:      "my-hub/my-pilot:my-tag",
-					InstallCNI: "my-hub/my-cni:my-tag",
-					ProxyV2:    "my-hub/my-proxy:my-tag",
-					Ztunnel:    "invalid-no-tag",
-				},
-				"",
 				"",
 				"",
 				"",
@@ -406,9 +372,6 @@ spec:
 			global := values["global"].(map[string]interface{})
 			proxy := global["proxy"].(map[string]interface{})
 			Expect(proxy["image"]).To(Equal("proxyv2"))
-
-			ztunnel := values["ztunnel"].(map[string]interface{})
-			Expect(ztunnel["image"]).To(Equal("ztunnel"))
 
 			// Verify other settings are preserved
 			pilotResources := pilot["resources"].(map[string]interface{})

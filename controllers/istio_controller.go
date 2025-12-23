@@ -123,11 +123,6 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return r.terminateReconciliation(ctx, &istioCR, describederrors.NewDescribedError(imgErr, "Unable to get Istio images environments"),
 			operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileFailed))
 	}
-	registryAndTag, imgErr := istioImages.GetImageRegistryAndTag()
-	if imgErr != nil {
-		return r.terminateReconciliation(ctx, &istioCR, describederrors.NewDescribedError(imgErr, "Unable to get Istio images registryAndTag"),
-			operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileFailed))
-	}
 
 	err := validation.ValidateAuthorizers(istioCR)
 	if err != nil {
@@ -180,7 +175,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		}
 	}
 
-	istioImageVersion, installationErr := r.istioInstallation.Reconcile(ctx, &istioCR, r.statusHandler, registryAndTag)
+	istioImageVersion, installationErr := r.istioInstallation.Reconcile(ctx, &istioCR, r.statusHandler, *istioImages)
 	if installationErr != nil {
 		return r.requeueReconciliation(ctx, &istioCR, installationErr,
 			operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIstioInstallUninstallFailed),

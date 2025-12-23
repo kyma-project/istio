@@ -5,10 +5,11 @@ import (
 	"path"
 	"testing"
 
-	"github.com/kyma-project/istio/operator/internal/images"
 	meshv1alpha1 "istio.io/api/mesh/v1alpha1"
 	"istio.io/istio/operator/pkg/values"
 	"istio.io/istio/pkg/util/protomarshal"
+
+	"github.com/kyma-project/istio/operator/internal/images"
 
 	"github.com/onsi/ginkgo/v2/types"
 
@@ -48,13 +49,18 @@ var _ = Describe("Merge", func() {
 			},
 		},
 	}
-
+	img := images.Images{
+		Pilot:      "docker.io/istio/pilot:1.27.1-distroless",
+		ProxyV2:    "docker.io/istio/proxyv2:1.27.1-distroless",
+		InstallCNI: "docker.io/istio/cni:1.27.1-distroless",
+		Ztunnel:    "docker.io/istio/ztunnel:1.27.1-distroless",
+	}
 	DescribeTable("Merge for different cluster sizes", func(clusterSize clusterconfig.ClusterSize, shouldError bool, igwMinReplicas int) {
 		// given
 		sut := istiooperator.NewDefaultIstioMerger()
 
 		// when
-		mergedIstioOperatorPath, err := sut.Merge(clusterSize, istioCR, clusterconfig.ClusterConfiguration{}, images.RegistryAndTag{Registry: "docker.io/istio", Tag: "1.27.1-distroless"})
+		mergedIstioOperatorPath, err := sut.Merge(clusterSize, istioCR, clusterconfig.ClusterConfiguration{}, img)
 
 		// then
 		if shouldError {
@@ -108,7 +114,7 @@ var _ = Describe("Merge", func() {
 		sut := istiooperator.NewDefaultIstioMerger()
 
 		// when
-		mergedIstioOperatorPath, err := sut.Merge(clusterconfig.Production, istioCR, clusterConfig, images.RegistryAndTag{Registry: "docker.io/istio", Tag: "1.27.1-distroless"})
+		mergedIstioOperatorPath, err := sut.Merge(clusterconfig.Production, istioCR, clusterConfig, img)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -140,8 +146,12 @@ var _ = Describe("Merge", func() {
 
 	It("should return merged istio hub", func() {
 		// given
-		istioImagesHub := images.RegistryAndTag{Registry: "docker.io/overridden/istio-hub", Tag: "1.27.1-overridden"}
-
+		imagesWithOveridenHub := images.Images{
+			Pilot:      "docker.io/overridden/istio-hub/pilot:1.27.1-overridden",
+			ProxyV2:    "docker.io/overridden/istio-hub/proxyv2:1.27.1-overridden",
+			InstallCNI: "docker.io/overridden/istio-hub/cni:1.27.1-overridden",
+			Ztunnel:    "docker.io/overridden/istio-hub/ztunnel:1.27.1-overridden",
+		}
 		sut := istiooperator.NewDefaultIstioMerger()
 
 		clusterConfig := map[string]interface{}{
@@ -158,14 +168,14 @@ var _ = Describe("Merge", func() {
 				},
 			}}
 		// when
-		mergedIstioOperatorPath, err := sut.Merge(clusterconfig.Production, istioCR, clusterConfig, istioImagesHub)
+		mergedIstioOperatorPath, err := sut.Merge(clusterconfig.Production, istioCR, clusterConfig, imagesWithOveridenHub)
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(mergedIstioOperatorPath).To(Equal(path.Join("/tmp", istiooperator.MergedIstioOperatorFile)))
 		iop := readIOP(mergedIstioOperatorPath)
-		Expect(iop.Spec.Hub).To(Equal(istioImagesHub.Registry))
-		Expect(iop.Spec.Tag).To(Equal(istioImagesHub.Tag))
+		Expect(iop.Spec.Hub).To(Equal("docker.io/overridden/istio-hub"))
+		Expect(iop.Spec.Tag).To(Equal("1.27.1-overridden"))
 	})
 })
 

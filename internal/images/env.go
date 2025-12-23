@@ -40,7 +40,20 @@ func (i Image) GetTag() (string, error) {
 		return "", fmt.Errorf("image %s does not contain a valid tag", i)
 	}
 
-	return strings.Join(parts[len(parts)-1:], "/"), nil
+	return parts[len(parts)-1], nil
+}
+
+func (i Image) GetName() (string, error) {
+	if i == "" {
+		return "", fmt.Errorf("image can not be empty")
+	}
+
+	parts := strings.Split(string(i), ":")
+	if len(parts) != 2 {
+		return "", fmt.Errorf("image %s does not contain a valid image name", i)
+	}
+	parts = strings.Split(parts[0], "/")
+	return parts[len(parts)-1], nil
 }
 
 type Images struct {

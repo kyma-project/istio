@@ -145,7 +145,7 @@ var _ = Describe("Images.GetFipsImages", func() {
 			Expect(err.Error()).To(ContainSubstring("environment variable \"pilot-fips\" should not be empty"))
 			Expect(err.Error()).To(ContainSubstring("environment variable \"install-cni-fips\" should not be empty"))
 			Expect(err.Error()).To(ContainSubstring("environment variable \"proxyv2-fips\" should not be empty"))
-			Expect(err.Error()).To(ContainSubstring("environment variable \"ztunnel-fips\" should not be empty"))
+			Expect(err.Error()).NotTo(ContainSubstring("environment variable \"ztunnel-fips\" should not be empty"))
 		})
 	})
 

@@ -26,7 +26,7 @@ type Images struct {
 	Pilot      Image `env:"pilot,notEmpty"`
 	InstallCNI Image `env:"install-cni,notEmpty"`
 	ProxyV2    Image `env:"proxyv2,notEmpty"`
-	Ztunnel    Image `env:"ztunnel,notEmpty"`
+	Ztunnel    Image `env:"ztunnel"`
 }
 
 func GetImages() (*Images, error) {

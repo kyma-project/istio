@@ -208,10 +208,12 @@ module-image: docker-build docker-push ## Build the Module Image and push it to 
 .PHONY: generate-manifests
 generate-manifests: kustomize module-version
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-ifneq (,$(findstring experimental,$(VERSION)))
-	$(KUSTOMIZE) build config/experimental > istio-manager.yaml
-else
+ifeq (,$(findstring experimental,$(VERSION)))
+	echo "generating default manifest"
 	$(KUSTOMIZE) build config/default > istio-manager.yaml
+else
+	echo "generating experimental manifest"
+	$(KUSTOMIZE) build config/experimental > istio-manager.yaml
 endif
 	cat config/namespace/istio_system_namespace.yaml >> istio-manager.yaml
 

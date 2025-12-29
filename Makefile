@@ -209,11 +209,11 @@ module-image: docker-build docker-push ## Build the Module Image and push it to 
 generate-manifests: kustomize module-version
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 ifeq (,$(findstring experimental,$(VERSION)))
-	echo "generating default manifest"
-	$(KUSTOMIZE) build config/default > istio-manager.yaml
+	echo "Generating manifest for regular and fast channel releases"
+	$(KUSTOMIZE) build config/regular > istio-manager.yaml
 else
-	echo "generating experimental manifest"
-	$(KUSTOMIZE) build config/experimental > istio-manager.yaml
+	echo "Generating manifest for experimental channel releases"
+	$(KUSTOMIZE) build config/default > istio-manager.yaml
 endif
 	cat config/namespace/istio_system_namespace.yaml >> istio-manager.yaml
 

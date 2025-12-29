@@ -13,9 +13,9 @@ type Config struct {
 	NumTrustedProxies *int `json:"numTrustedProxies,omitempty"`
 
 	// Defines the strategy of handling the **X-Forwarded-Client-Cert** header.
-	// The default behavior is "SANITIZE".
+	// The default behavior is "SANITIZE_SET".
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default=SANITIZE
+	// +kubebuilder:default=SANITIZE_SET
 	// +kubebuilder:validation:Enum=APPEND_FORWARD;SANITIZE_SET;SANITIZE;ALWAYS_FORWARD_ONLY;FORWARD_ONLY
 	ForwardClientCertDetails *XFCCStrategy `json:"forwardClientCertDetails,omitempty"`
 

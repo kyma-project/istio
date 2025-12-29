@@ -8,7 +8,7 @@ metadata:
 spec:
   containers:
     - name: test-container
-      image: eu.gcr.io/kyma-project/external/kennethreitz/httpbin
+      image: docker.io/mccutchen/go-httpbin:v2.15.0
       command: ["/bin/sh", "-c"]
       args:
         - while true; do sleep 1; done;

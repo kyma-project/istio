@@ -108,6 +108,17 @@ var _ = Describe("Images.GetImageRegistryAndTag", func() {
 			true,
 			fmt.Errorf("image can not be empty"),
 		),
+		Entry("ztunnel is empty",
+			fields{
+				Pilot:      "docker.io/istio/pilot:1.10.0",
+				InstallCNI: "docker.io/istio/cni:1.10.0",
+				ProxyV2:    "docker.io/istio/proxyv2:1.10.0",
+				Ztunnel:    "",
+			},
+			images.RegistryAndTag{Registry: "docker.io/istio", Tag: "1.10.0"},
+			false,
+			nil,
+		),
 	)
 })
 

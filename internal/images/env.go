@@ -76,7 +76,10 @@ func GetImages() (*Images, error) {
 }
 
 func (e *Images) GetImageRegistryAndTag() (RegistryAndTag, error) {
-	environments := []Image{e.Pilot, e.InstallCNI, e.ProxyV2, e.Ztunnel}
+	environments := []Image{e.Pilot, e.InstallCNI, e.ProxyV2}
+	if e.Ztunnel != "" {
+		environments = append(environments, e.Ztunnel)
+	}
 
 	initialHub, err := environments[0].GetHub()
 	if err != nil {

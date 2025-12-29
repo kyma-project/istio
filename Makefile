@@ -150,7 +150,12 @@ uninstall: manifests kustomize module-version ## Uninstall CRDs from the K8s clu
 .PHONY: deploy
 deploy: create-kyma-system-ns manifests kustomize module-version ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+ifeq (,$(findstring experimental,$(VERSION)))
+	$(KUSTOMIZE) build config/regular | kubectl apply -f -
+else
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
+endif
+
 
 .PHONY: undeploy
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.

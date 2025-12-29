@@ -47,14 +47,14 @@ type Images struct {
 	Pilot      Image `env:"pilot,notEmpty"`
 	InstallCNI Image `env:"install-cni,notEmpty"`
 	ProxyV2    Image `env:"proxyv2,notEmpty"`
-	Ztunnel    Image `env:"ztunnel,notEmpty"`
+	Ztunnel    Image `env:"ztunnel"`
 }
 
 type ImagesFips struct {
 	Pilot      Image `env:"pilot-fips,notEmpty"`
 	InstallCNI Image `env:"install-cni-fips,notEmpty"`
 	ProxyV2    Image `env:"proxyv2-fips,notEmpty"`
-	Ztunnel    Image `env:"ztunnel-fips,notEmpty"`
+	Ztunnel    Image `env:"ztunnel-fips"`
 }
 
 func GetImages() (*Images, error) {

@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/go-logr/logr"
-	"github.com/kyma-project/istio/operator/internal/images"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
@@ -18,6 +17,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/yaml"
+
+	"github.com/kyma-project/istio/operator/internal/images"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
@@ -278,7 +279,7 @@ type MergerMock struct {
 	tag string
 }
 
-func (m MergerMock) Merge(_ clusterconfig.ClusterSize, _ *operatorv1alpha2.Istio, _ clusterconfig.ClusterConfiguration, _ images.RegistryAndTag) (string, error) {
+func (m MergerMock) Merge(_ clusterconfig.ClusterSize, _ *operatorv1alpha2.Istio, _ clusterconfig.ClusterConfiguration, _ images.Images) (string, error) {
 	return "mocked istio operator merge result", nil
 }
 

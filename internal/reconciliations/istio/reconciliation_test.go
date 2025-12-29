@@ -6,8 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kyma-project/istio/operator/internal/images"
 	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
+
+	"github.com/kyma-project/istio/operator/internal/images"
 
 	"github.com/kyma-project/istio/operator/pkg/labels"
 
@@ -77,7 +78,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.RegistryAndTag{Registry: "docker.io/istio", Tag: "1.10"})
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.Images{Pilot: "docker.io/istio/pilot:1.10"})
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -122,7 +123,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.RegistryAndTag{Registry: "docker.io/istio", Tag: "1.10"})
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.Images{Pilot: "docker.io/istio/pilot:1.10"})
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -164,7 +165,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.RegistryAndTag{Registry: "docker.io/istio", Tag: "1.10"})
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.Images{Pilot: "docker.io/istio/pilot:1.10"})
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -211,7 +212,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.RegistryAndTag{Registry: "docker.io/istio", Tag: "1.10"})
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.Images{Pilot: "docker.io/istio/pilot:1.10"})
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -251,7 +252,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.RegistryAndTag{Registry: "docker.io/istio", Tag: "1.10"})
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.Images{Pilot: "docker.io/istio/pilot:1.10"})
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -293,7 +294,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.RegistryAndTag{Registry: "docker.io/istio", Tag: "1.10"})
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.Images{Pilot: "docker.io/istio/pilot:1.10"})
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -335,7 +336,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.RegistryAndTag{Registry: "docker.io/istio", Tag: "1.10"})
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.Images{Pilot: "docker.io/istio/pilot:1.10"})
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -373,7 +374,7 @@ var _ = Describe("Installation reconciliation", func() {
 			statusHandler := status.NewStatusHandler(c)
 
 			// when
-			_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.RegistryAndTag{Registry: "docker.io/istio", Tag: "1.10"})
+			_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.Images{Pilot: "docker.io/istio/pilot:1.10"})
 
 			// then
 			Expect(err).Should(HaveOccurred())
@@ -424,7 +425,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.RegistryAndTag{Registry: "docker.io/istio", Tag: "1.10"})
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.Images{Pilot: "docker.io/istio/pilot:1.10"})
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -466,7 +467,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.RegistryAndTag{Registry: "docker.io/istio", Tag: "1.10"})
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.Images{Pilot: "docker.io/istio/pilot:1.10"})
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -513,7 +514,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.RegistryAndTag{Registry: "docker.io/istio", Tag: "1.10"})
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.Images{Pilot: "docker.io/istio/pilot:1.10"})
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -557,7 +558,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.RegistryAndTag{Registry: "docker.io/istio", Tag: "1.10"})
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.Images{Pilot: "docker.io/istio/pilot:1.10"})
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -601,7 +602,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.RegistryAndTag{Registry: "docker.io/istio", Tag: "1.10"})
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.Images{Pilot: "docker.io/istio/pilot:1.10"})
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -647,7 +648,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.RegistryAndTag{Registry: "docker.io/istio", Tag: "1.10"})
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.Images{Pilot: "docker.io/istio/pilot:1.10"})
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -687,7 +688,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.RegistryAndTag{Registry: "docker.io/istio", Tag: "1.10"})
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.Images{Pilot: "docker.io/istio/pilot:1.10"})
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -726,7 +727,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.RegistryAndTag{Registry: "docker.io/istio", Tag: "1.10"})
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.Images{Pilot: "docker.io/istio/pilot:1.10"})
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -776,7 +777,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.RegistryAndTag{Registry: "docker.io/istio", Tag: "1.10"})
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.Images{Pilot: "docker.io/istio/pilot:1.10"})
 
 		// then
 		Expect(err).ShouldNot(HaveOccurred())
@@ -825,7 +826,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.RegistryAndTag{Registry: "docker.io/istio", Tag: "1.10"})
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.Images{Pilot: "docker.io/istio/pilot:1.10"})
 
 		// then
 		Expect(err).Should(HaveOccurred())
@@ -871,7 +872,7 @@ var _ = Describe("Installation reconciliation", func() {
 		statusHandler := status.NewStatusHandler(c)
 
 		// when
-		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.RegistryAndTag{Registry: "docker.io/istio", Tag: "1.10"})
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.Images{Pilot: "docker.io/istio/pilot:1.10"})
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(mockClient.installCalled).To(BeTrue())
 		Expect(mockClient.uninstallCalled).To(BeFalse())
@@ -979,7 +980,7 @@ type MergerMock struct {
 	tag                   string
 }
 
-func (m MergerMock) Merge(_ clusterconfig.ClusterSize, _ *operatorv1alpha2.Istio, _ clusterconfig.ClusterConfiguration, _ images.RegistryAndTag) (string, error) {
+func (m MergerMock) Merge(_ clusterconfig.ClusterSize, _ *operatorv1alpha2.Istio, _ clusterconfig.ClusterConfiguration, _ images.Images) (string, error) {
 	return "mocked istio operator merge result", m.mergeError
 }
 

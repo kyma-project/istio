@@ -18,7 +18,7 @@ type Experimental struct {
 type PilotFeatures struct {
 	// Defines alpha Gateway API support.
 	// +kubebuilder:validation:Optional
-	EnableAlphaGatewayAPI                bool `json:"enableAlphaGatewayAPI"`
+	EnableAlphaGatewayAPI bool `json:"enableAlphaGatewayAPI"`
 	// Enables multi-network discovery for Gateway API.
 	// +kubebuilder:validation:Optional
 	EnableMultiNetworkDiscoverGatewayAPI bool `json:"enableMultiNetworkDiscoverGatewayAPI"`

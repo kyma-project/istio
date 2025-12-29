@@ -208,7 +208,13 @@ module-image: docker-build docker-push ## Build the Module Image and push it to 
 .PHONY: generate-manifests
 generate-manifests: kustomize module-version
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+ifeq (,$(findstring experimental,$(VERSION)))
+	echo "Generating manifest for regular and fast channel releases"
+	$(KUSTOMIZE) build config/regular > istio-manager.yaml
+else
+	echo "Generating manifest for experimental channel releases"
 	$(KUSTOMIZE) build config/default > istio-manager.yaml
+endif
 	cat config/namespace/istio_system_namespace.yaml >> istio-manager.yaml
 
 ########## Grafana Dashboard ###########

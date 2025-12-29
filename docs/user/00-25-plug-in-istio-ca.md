@@ -3,7 +3,7 @@ For enhanced security, replace Istio's default self-signed certificates with adm
 
 ## Default Istio Behavior
 
-By default, Istio generates a self-signed root certificate and stores in a Secret within a Kyma cluster. Istio uses this certificate to issue certificates for each workload in the service mesh.
+By default, Istio generates a self-signed root certificate and stores it in a Secret within a Kyma cluster. Istio uses this certificate to issue certificates for each workload in the service mesh.
 
 ### Configuring a Custom CA
 You can replace the default self-signed certificate provided by Istio and use a certificate issued by your organization. Istio supports the following PKI hierarchy:

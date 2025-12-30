@@ -3,9 +3,10 @@ package istio
 import (
 	"context"
 
-	"github.com/kyma-project/istio/operator/internal/images"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/kyma-project/istio/operator/internal/images"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/describederrors"
@@ -14,7 +15,7 @@ import (
 )
 
 type InstallationReconciliation interface {
-	Reconcile(ctx context.Context, istioCR *operatorv1alpha2.Istio, statusHandler status.Status, istioImageHub images.RegistryAndTag) (istiooperator.IstioImageVersion, describederrors.DescribedError)
+	Reconcile(ctx context.Context, istioCR *operatorv1alpha2.Istio, statusHandler status.Status, istioImageHub images.Images) (istiooperator.IstioImageVersion, describederrors.DescribedError)
 }
 
 type Installation struct {
@@ -28,7 +29,7 @@ func (i *Installation) Reconcile(
 	ctx context.Context,
 	istioCR *operatorv1alpha2.Istio,
 	statusHandler status.Status,
-	istioImagesRegistryAndTag images.RegistryAndTag,
+	images images.Images,
 ) (istiooperator.IstioImageVersion, describederrors.DescribedError) {
 	istioImageVersion, err := i.Merger.GetIstioImageVersion()
 	if err != nil {
@@ -38,13 +39,13 @@ func (i *Installation) Reconcile(
 
 	if istioCR.DeletionTimestamp.IsZero() {
 		args := installArgs{
-			client:                    i.Client,
-			istioCR:                   istioCR,
-			statusHandler:             statusHandler,
-			istioOperatorMerger:       i.Merger,
-			istioImageVersion:         istioImageVersion,
-			istioClient:               i.IstioClient,
-			istioImagesRegistryAndTag: istioImagesRegistryAndTag,
+			client:              i.Client,
+			istioCR:             istioCR,
+			statusHandler:       statusHandler,
+			istioOperatorMerger: i.Merger,
+			istioImageVersion:   istioImageVersion,
+			istioClient:         i.IstioClient,
+			istioImages:         images,
 		}
 		return installIstio(ctx, args)
 	}

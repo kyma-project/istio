@@ -124,7 +124,7 @@ func (m *IstioCRMetrics) UpdateIstioCRMetrics(cr *v1alpha2.Istio) {
 		m.configMetrics.prometheusMergeEnabled.Set(0)
 	}
 
-	if cr.Spec.Config.ForwardClientCertDetails != nil && *cr.Spec.Config.ForwardClientCertDetails != v1alpha2.SanitizeSet {
+	if cr.Spec.Config.ForwardClientCertDetails != nil {
 		m.configMetrics.forwardClientCertDetailsConfigured.Set(1)
 	} else {
 		m.configMetrics.forwardClientCertDetailsConfigured.Set(0)

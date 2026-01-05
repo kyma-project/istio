@@ -43,7 +43,7 @@ jobs:
           OPERATOR_VERSION: "${{ inputs.operator_version }}"
           GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"
           GARDENER_PROJECT_NAME: "goats"
-          GARDENER_PROVIDER_SECRET_NAME: "aws-gardener-access"
+          GARDENER_PROVIDER_SECRET_NAME: "goat-aws-secret"
           GARDENER_PROVIDER: "aws"
           GARDENER_CLUSTER_VERSION: "1.33.3"
           GARDENER_REGION: "eu-west-1"
@@ -111,7 +111,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"
           GARDENER_PROJECT_NAME: "goats"
-          GARDENER_PROVIDER_SECRET_NAME: "goat"
+          GARDENER_PROVIDER_SECRET_NAME: "goat-gcp-secret"
           GARDENER_PROVIDER: "gcp"
           GARDENER_REGION: "europe-west3"
           GARDENER_CLUSTER_VERSION: "1.33.3"
@@ -143,7 +143,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"
           GARDENER_PROJECT_NAME: "goats"
-          GARDENER_PROVIDER_SECRET_NAME: "aws-gardener-access"
+          GARDENER_PROVIDER_SECRET_NAME: "goat-aws-secret"
           GARDENER_PROVIDER: "aws"
           GARDENER_CLUSTER_VERSION: "1.33.3"
           GARDENER_REGION: "eu-west-1"
@@ -174,7 +174,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GARDENER_KUBECONFIG: "/home/runner/work/istio/istio/gardener_kubeconfig.yaml"
           GARDENER_PROJECT_NAME: "goats"
-          GARDENER_PROVIDER_SECRET_NAME: "goat"
+          GARDENER_PROVIDER_SECRET_NAME: "goat-gcp-secret"
           GARDENER_PROVIDER: "gcp"
           GARDENER_REGION: "europe-west3"
           GARDENER_CLUSTER_VERSION: "1.33.3"

@@ -3,7 +3,7 @@ kind: Shoot
 metadata:
   name: ${CLUSTER_NAME}
 spec:
-  secretBindingName: ${GARDENER_PROVIDER_SECRET_NAME}
+  credentialsBindingName: ${GARDENER_PROVIDER_SECRET_NAME}
   cloudProfile:
     kind: CloudProfile
     name: aws

@@ -9,4 +9,4 @@ SCALER_MIN=3 # we need at least 3 machines, because there are 3 availability zon
 GARDENER_PROVIDER="aws"
 GARDENER_REGION="eu-west-1"
 GARDENER_PROVIDER_SECRET_NAME="goat-aws-secret"
-GARDENER_CLUSTER_VERSION="1.33.4"
+GARDENER_CLUSTER_VERSION="1.34.3"

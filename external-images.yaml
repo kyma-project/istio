@@ -1,8 +1,8 @@
 images:
-  - source: "istio/pilot:1.28.1-distroless"
-  - source: "istio/proxyv2:1.28.1-distroless"
-  - source: "istio/install-cni:1.28.1-distroless"
-  - source: "istio/ztunnel:1.28.1-distroless"
+  - source: "istio/pilot:1.28.2-distroless"
+  - source: "istio/proxyv2:1.28.2-distroless"
+  - source: "istio/install-cni:1.28.2-distroless"
+  - source: "istio/ztunnel:1.28.2-distroless"
   - source: "istio/pilot:1.27.4-distroless"
   - source: "istio/proxyv2:1.27.4-distroless"
   - source: "istio/install-cni:1.27.4-distroless"

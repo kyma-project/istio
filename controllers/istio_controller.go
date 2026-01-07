@@ -334,8 +334,6 @@ func (r *IstioReconciler) finishReconcile(ctx context.Context, istioCR *operator
 // +kubebuilder:rbac:groups=gateway.networking.k8s.io,resources=gatewayclasses,verbs=create;update;patch;delete
 // +kubebuilder:rbac:groups=gateway.networking.x-k8s.io,resources=*,verbs=get;watch;list
 // +kubebuilder:rbac:groups=gateway.networking.x-k8s.io,resources=xbackendtrafficpolicies/status;xlistenersets/status,verbs=update;patch
-// +kubebuilder:rbac:groups=inference.networking.x-k8s.io,resources=inferencepools,verbs=get;watch;list
-// +kubebuilder:rbac:groups=inference.networking.x-k8s.io,resources=inferencepools/status,verbs=update;patch
 // +kubebuilder:rbac:groups=install.istio.io,resources=*,verbs=create;deletecollection;delete;get;list;patch;update;watch
 // +kubebuilder:rbac:groups=k8s.cni.cncf.io,resources=networkattachmentdefinitions,verbs=create;deletecollection;delete;get;list;patch;update;watch
 // +kubebuilder:rbac:groups=monitoring.coreos.com,resources=servicemonitors,verbs=get;create;update
@@ -355,6 +353,8 @@ func (r *IstioReconciler) finishReconcile(ctx context.Context, istioCR *operator
 // +kubebuilder:rbac:groups=rbac.istio.io,resources=*,verbs=get;watch;list
 // +kubebuilder:rbac:groups=security.istio.io,resources=*,verbs=create;deletecollection;delete;get;list;patch;update;watch
 // +kubebuilder:rbac:groups=telemetry.istio.io,resources=*,verbs=create;deletecollection;delete;get;list;patch;update;watch
+// +kubebuilder:rbac:groups=inference.networking.k8s.io,resources=inferencepools,verbs=get;watch;list
+// +kubebuilder:rbac:groups=inference.networking.k8s.io,resources=inferencepools/status,verbs=update;patch
 
 //nolint:revive,staticcheck
 func (r *IstioReconciler) SetupWithManager(mgr ctrl.Manager, rateLimiter RateLimiter) error {

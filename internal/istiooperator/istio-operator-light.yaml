@@ -7,7 +7,7 @@ metadata:
     kyma-project.io/module: istio
 spec:
   hub: europe-docker.pkg.dev/kyma-project/prod/external/istio
-  tag: "1.27.4-distroless"
+  tag: "1.28.2-distroless"
   components:
     base:
       enabled: true
@@ -133,10 +133,6 @@ spec:
         env:
         - name: PILOT_HTTP10
           value: "1"
-        - name: METRIC_ROTATION_INTERVAL
-          value: "6h"
-        - name: METRIC_GRACEFUL_DELETION_INTERVAL
-          value: "6h"
         hpaSpec:
           scaleTargetRef:
             apiVersion: apps/v1
@@ -392,6 +388,8 @@ spec:
       replicaCount: 1
       traceSampling: 1
     sidecarInjectorWebhook:
+      injectedAnnotations:
+        sidecar.istio.io/statsEvictionInterval: "6h"
       enableNamespacesByDefault: false
       rewriteAppHTTPProbe: true
     telemetry:

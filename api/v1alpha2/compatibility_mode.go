@@ -8,7 +8,8 @@ import (
 //nolint:gochecknoglobals // vairables are used to set compatibility mode for IstioOperator TODO: refactor to constants
 var (
 	PilotCompatibilityEnvVars = map[string]string{
-		"ENABLE_NATIVE_SIDECARS": "false",
+		"DISABLE_SHADOW_HOST_SUFFIX": "false",
+		"PILOT_SPAWN_UPSTREAM_SPAN_FOR_GATEWAY": "false",
 	}
 	ProxyMetaDataCompatibility = map[string]string{}
 )

@@ -449,6 +449,33 @@ var _ = Describe("Merge", func() {
 			Expect(exists).To(BeTrue())
 			Expect(forwardClientCertDetails).To(Equal("APPEND_FORWARD"))
 		})
+		It("Should not set IstioOperator ForwardClientCertDetails , when Istio CR don't configures it", func() {
+			// given
+			m := mesh.DefaultMeshConfig()
+			meshConfigRaw := convert(m)
+			iop := iopv1alpha1.IstioOperator{
+				Spec: iopv1alpha1.IstioOperatorSpec{
+					MeshConfig: meshConfigRaw,
+				},
+			}
+
+			istioCR := istiov1alpha2.Istio{
+				Spec: istiov1alpha2.IstioSpec{
+					Config: istiov1alpha2.Config{},
+				},
+			}
+
+			// when
+			out, err := istioCR.MergeInto(iop)
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+			meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
+			Expect(err).ShouldNot(HaveOccurred())
+			_, exists := meshConfig.GetPath("defaultConfig.gatewayTopology.forwardClientCertDetails")
+			Expect(exists).To(BeFalse())
+
+		})
 	})
 
 	It("should update numTrustedProxies on IstioOperator from 1 to 5", func() {

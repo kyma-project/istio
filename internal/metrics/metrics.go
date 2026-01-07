@@ -17,11 +17,11 @@ type IstioCRMetrics struct {
 }
 
 type configMetrics struct {
-	numTrustedProxiesConfigured        prometheus.Gauge
-	prometheusMergeEnabled             prometheus.Gauge
-	compatibilityModeEnabled           prometheus.Gauge
-	forwardClientCertDetailsConfigured prometheus.Gauge
-	trustDomainConfigured              prometheus.Gauge
+	numTrustedProxiesConfigured     prometheus.Gauge
+	prometheusMergeEnabled          prometheus.Gauge
+	compatibilityModeEnabled        prometheus.Gauge
+	forwardClientCertDetailsSetting *prometheus.GaugeVec
+	trustDomainConfigured           prometheus.Gauge
 }
 
 type componentMetrics struct {
@@ -63,10 +63,15 @@ func NewMetrics() *IstioCRMetrics {
 				Name: "istio_compatibility_mode_enabled",
 				Help: "Indicates whether compatibility mode is enabled in the Istio CR (1 for enabled, 0 for disabled).",
 			}),
-			forwardClientCertDetailsConfigured: prometheus.NewGauge(prometheus.GaugeOpts{
-				Name: "istio_forward_client_cert_details_configured",
-				Help: "Indicates whether forwardClientCertDetails is configured in the Istio CR (1 for configured, 0 for not configured).",
-			}),
+			forwardClientCertDetailsSetting: prometheus.NewGaugeVec(
+				prometheus.GaugeOpts{
+					Name: "istio_forward_client_cert_details_setting",
+					Help: "Selected forwardClientCertDetails setting value in the Istio CR (1 for selected setting, the others are 0)",
+				},
+				[]string{
+					"xfcc_setting",
+				},
+			),
 			trustDomainConfigured: prometheus.NewGauge(prometheus.GaugeOpts{
 				Name: "istio_trust_domain_configured",
 				Help: "Indicates whether a custom trust domain is configured in the Istio CR (1 for configured, 0 for not configured).",
@@ -87,7 +92,7 @@ func NewMetrics() *IstioCRMetrics {
 		crMetrics.configMetrics.numTrustedProxiesConfigured,
 		crMetrics.configMetrics.prometheusMergeEnabled,
 		crMetrics.configMetrics.compatibilityModeEnabled,
-		crMetrics.configMetrics.forwardClientCertDetailsConfigured,
+		crMetrics.configMetrics.forwardClientCertDetailsSetting,
 		crMetrics.componentMetrics.egressGatewayEnabled,
 	)
 
@@ -124,10 +129,20 @@ func (m *IstioCRMetrics) UpdateIstioCRMetrics(cr *v1alpha2.Istio) {
 		m.configMetrics.prometheusMergeEnabled.Set(0)
 	}
 
-	if cr.Spec.Config.ForwardClientCertDetails != nil && *cr.Spec.Config.ForwardClientCertDetails != v1alpha2.Sanitize {
-		m.configMetrics.forwardClientCertDetailsConfigured.Set(1)
+	if cr.Spec.Config.ForwardClientCertDetails != nil {
+		m.configMetrics.forwardClientCertDetailsSetting.WithLabelValues(string(v1alpha2.AppendForward)).Set(0)
+		m.configMetrics.forwardClientCertDetailsSetting.WithLabelValues(string(v1alpha2.SanitizeSet)).Set(0)
+		m.configMetrics.forwardClientCertDetailsSetting.WithLabelValues(string(v1alpha2.Sanitize)).Set(0)
+		m.configMetrics.forwardClientCertDetailsSetting.WithLabelValues(string(v1alpha2.AlwaysForwardOnly)).Set(0)
+		m.configMetrics.forwardClientCertDetailsSetting.WithLabelValues(string(v1alpha2.ForwardOnly)).Set(0)
+
+		m.configMetrics.forwardClientCertDetailsSetting.WithLabelValues(string(*cr.Spec.Config.ForwardClientCertDetails)).Set(1)
 	} else {
-		m.configMetrics.forwardClientCertDetailsConfigured.Set(0)
+		m.configMetrics.forwardClientCertDetailsSetting.WithLabelValues(string(v1alpha2.AppendForward)).Set(0)
+		m.configMetrics.forwardClientCertDetailsSetting.WithLabelValues(string(v1alpha2.SanitizeSet)).Set(0)
+		m.configMetrics.forwardClientCertDetailsSetting.WithLabelValues(string(v1alpha2.Sanitize)).Set(0)
+		m.configMetrics.forwardClientCertDetailsSetting.WithLabelValues(string(v1alpha2.AlwaysForwardOnly)).Set(0)
+		m.configMetrics.forwardClientCertDetailsSetting.WithLabelValues(string(v1alpha2.ForwardOnly)).Set(0)
 	}
 
 	if cr.Spec.Config.TrustDomain != nil && *cr.Spec.Config.TrustDomain != "" && *cr.Spec.Config.TrustDomain != "cluster.local" {

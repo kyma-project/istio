@@ -4,7 +4,8 @@ Learn how to configure [oauth2-proxy](https://github.com/oauth2-proxy/manifests/
 
 ## Prerequisites
 * You have the Istio module added. If you want to use a Kyma domain to expose a workload, also the API Gateway module must be added.
-* You have [set up your custom domain](https://kyma-project.io/external-content/api-gateway/docs/user/tutorials/01-10-setup-custom-domain-for-workload.html). Alternatively, you can use the default domain of your Kyma cluster and the default Gateway `kyma-system/kyma-gateway`.
+* You have set up your custom domain and a custom TLS Gateway. See [Configure a TLS Gateway in SAP BTP, Kyma Runtime](https://kyma-project.io/external-content/api-gateway/docs/user/tutorials/01-20-set-up-tls-gateway.html).
+Alternatively, you can use the default domain of your Kyma cluster and the default Gateway `kyma-system/kyma-gateway`.
   
   > [!NOTE]
   > Because the default Kyma domain is a wildcard domain, which uses a simple TLS Gateway, it is recommended that you set up your custom domain for use in a production environment.

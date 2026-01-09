@@ -20,7 +20,7 @@ runs:
     - name: Create Cluster
       uses: ./.github/actions/provision-k3d-cluster
       with:
-        k3s-version: "1.34.3"
+        k3s-version: "1.33.2"
     - name: Run integration tests
       env:
         OPERATOR_VERSION: ${{ inputs.operator_version }}

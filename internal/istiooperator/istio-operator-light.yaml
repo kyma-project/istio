@@ -69,6 +69,8 @@ spec:
     ingressGateways:
     - enabled: true
       k8s:
+        podAnnotations:
+          sidecar.istio.io/statsEvictionInterval: "6h"
         affinity:
           podAntiAffinity:
             preferredDuringSchedulingIgnoredDuringExecution:

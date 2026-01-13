@@ -185,6 +185,7 @@ rules:
   - update
 - apiGroups:
   - inference.networking.k8s.io
+  - inference.networking.x-k8s.io
   resources:
   - inferencepools
   verbs:
@@ -193,6 +194,7 @@ rules:
   - watch
 - apiGroups:
   - inference.networking.k8s.io
+  - inference.networking.x-k8s.io
   resources:
   - inferencepools/status
   verbs:

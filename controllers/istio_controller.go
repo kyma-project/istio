@@ -355,6 +355,8 @@ func (r *IstioReconciler) finishReconcile(ctx context.Context, istioCR *operator
 // +kubebuilder:rbac:groups=rbac.istio.io,resources=*,verbs=get;watch;list
 // +kubebuilder:rbac:groups=security.istio.io,resources=*,verbs=create;deletecollection;delete;get;list;patch;update;watch
 // +kubebuilder:rbac:groups=telemetry.istio.io,resources=*,verbs=create;deletecollection;delete;get;list;patch;update;watch
+// +kubebuilder:rbac:groups=inference.networking.k8s.io,resources=inferencepools,verbs=get;watch;list
+// +kubebuilder:rbac:groups=inference.networking.k8s.io,resources=inferencepools/status,verbs=update;patch
 
 //nolint:revive,staticcheck
 func (r *IstioReconciler) SetupWithManager(mgr ctrl.Manager, rateLimiter RateLimiter) error {

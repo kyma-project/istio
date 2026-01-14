@@ -19,7 +19,8 @@ import (
 
 func TestEvaluationProfile(t *testing.T) {
 	t.Run("Installation of Istio Module with evaluation profile", func(t *testing.T) {
-		infrastructure.EnsureEvaluationClusterProfile(t)
+		err := infrastructure.EnsureEvaluationClusterProfile(t)
+		require.NoError(t, err)
 
 		istioCR, err := modulehelpers.NewIstioCRBuilder().ApplyAndCleanup(t)
 		require.NoError(t, err)

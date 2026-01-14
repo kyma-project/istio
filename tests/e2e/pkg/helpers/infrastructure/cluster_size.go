@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
@@ -9,38 +10,40 @@ import (
 
 // EnsureEvaluationClusterProfile ensures the cluster is running in Evaluation profile.
 // If the cluster is not in Evaluation profile or the cluster size cannot be determined, the test fails.
-func EnsureEvaluationClusterProfile(t *testing.T) {
+func EnsureEvaluationClusterProfile(t *testing.T) error {
 	t.Helper()
 
 	clusterSize := getClusterSize(t)
 
 	if clusterSize == clusterconfig.Production {
-		t.Fatalf("Test requires Evaluation cluster profile, but cluster is %s", clusterSize.String())
+		return errors.New("test requires Evaluation cluster profile, but cluster is Production")
 	}
 
 	if clusterSize == clusterconfig.UnknownSize {
-		t.Fatalf("Test requires Evaluation cluster profile, but cluster size cannot be determined")
+		return errors.New("test requires Evaluation cluster profile, but cluster is Unknown")
 	}
 
 	t.Logf("Cluster profile: %s", clusterSize.String())
+	return nil
 }
 
 // EnsureProductionClusterProfile ensures the cluster is running in Production profile.
 // If the cluster is not in Production profile or the cluster size cannot be determined, the test fails.
-func EnsureProductionClusterProfile(t *testing.T) {
+func EnsureProductionClusterProfile(t *testing.T) error {
 	t.Helper()
 
 	clusterSize := getClusterSize(t)
 
 	if clusterSize == clusterconfig.Evaluation {
-		t.Fatalf("Test requires Production cluster profile, but cluster is %s", clusterSize.String())
+		return errors.New("test requires Production cluster profile, but cluster is Evaluation")
 	}
 
 	if clusterSize == clusterconfig.UnknownSize {
-		t.Fatalf("Test requires Production cluster profile, but cluster size cannot be determined")
+		return errors.New("test requires Production cluster profile, but cluster is Unknown")
 	}
 
 	t.Logf("Cluster profile: %s", clusterSize.String())
+	return nil
 }
 
 func getClusterSize(t *testing.T) clusterconfig.ClusterSize {

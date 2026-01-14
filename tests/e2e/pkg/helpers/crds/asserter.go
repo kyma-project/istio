@@ -48,21 +48,3 @@ func AssertIstioCRDsNotPresent(ctx context.Context, c client.Client) error {
 
 	return errors.New("expected Istio CRDs to not to be present")
 }
-
-// TODO: I think it's not needed as if it's not present IstioCR creation will return error
-//func AssertIstioModuleCRDsPresent(ctx context.Context, c client.Client) error {
-//	crdGVK := schema.GroupVersionKind{
-//		Group:   "apiextensions.k8s.io",
-//		Version: "v1",
-//		Kind:    "CustomResourceDefinition",
-//	}
-//	crd := unstructured.Unstructured{}
-//	crd.SetGroupVersionKind(crdGVK)
-//
-//	err := c.Get(ctx, client.ObjectKey{Name: "istios.operator.kyma-project.io"}, &crd)
-//	if err != nil {
-//		return err
-//	}
-//
-//	return nil
-//}

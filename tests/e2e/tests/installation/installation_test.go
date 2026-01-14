@@ -21,10 +21,10 @@ import (
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/crds"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/httpbin"
 	modulehelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/modules"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/namespace"
-	"github.com/kyma-project/istio/operator/tests/integration/pkg/crds"
 )
 
 func TestInstallation(t *testing.T) {
@@ -116,10 +116,9 @@ func TestInstallation(t *testing.T) {
 			ApplyAndCleanup(t)
 		require.NoError(t, err)
 
-		crdLister, err := crds.NewCRDListerFromFile(c.GetControllerRuntimeClient(), "istio_crd_list.yaml")
+		err = crds.AssertIstioCRDsPresent(t.Context(), c.GetControllerRuntimeClient())
 		require.NoError(t, err)
-		err = crdLister.EnsureCRDsArePresent(t.Context())
-		require.NoError(t, err)
+
 
 		istioNs := v1.Namespace{}
 		err = c.Get(t.Context(), "istio-system", "", &istioNs)

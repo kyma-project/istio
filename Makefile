@@ -72,6 +72,11 @@ generate-integration-test-manifest: manifests kustomize module-version
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default -o tests/integration/steps/operator_generated_manifest.yaml
 
+.PHONY: generate-integration-test-manifest-migration
+generate-integration-test-manifest-migration: manifests kustomize module-version
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build config/default -o tests/e2e/tests/upgrade/operator_generated_manifest.yaml
+
 .PHONY: generate
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."

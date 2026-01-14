@@ -2,11 +2,14 @@ package crds
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"os"
+
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
-	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 )
@@ -27,15 +30,16 @@ func NewCRDListerFromFile(k8sClient client.Client, path string) (*CRDLister, err
 	if err != nil {
 		return nil, err
 	}
+	if len(lister.CRDList) == 0 {
+		return nil, errors.New("CRDList is empty")
+	}
 	lister.k8sClient = k8sClient
 
 	return &lister, nil
 }
 
-// CheckForCRDs checks whether lister CRDs are present on cluster, returns list of CRDs that don't are present / are not present
-// in context of shouldHave parameter
-func (lister *CRDLister) CheckForCRDs(ctx context.Context, shouldHave bool) ([]string, error) {
-	var wrong []string
+func (lister *CRDLister) EnsureCRDsArePresent(ctx context.Context) error {
+	var missing []string
 	for _, kind := range lister.CRDList {
 		var u unstructured.Unstructured
 		u.SetGroupVersionKind(schema.GroupVersionKind{
@@ -45,15 +49,48 @@ func (lister *CRDLister) CheckForCRDs(ctx context.Context, shouldHave bool) ([]s
 		})
 
 		err := lister.k8sClient.Get(ctx, types.NamespacedName{Name: kind}, &u)
-		if k8serrors.IsNotFound(err) {
-			if shouldHave {
-				wrong = append(wrong, kind)
+
+		if err != nil {
+			if k8serrors.IsNotFound(err) {
+				missing = append(missing, kind)
+			} else {
+				return fmt.Errorf("error getting CRD %s: %v", kind, err)
 			}
-		} else if err != nil {
-			return nil, err
-		} else if err == nil && !shouldHave {
-			wrong = append(wrong, kind)
 		}
 	}
-	return wrong, nil
+
+	if len(missing) > 0 {
+		return fmt.Errorf("the following CRDs are missing: %v", missing)
+	}
+
+	return nil
+}
+
+func (lister *CRDLister) EnsureCRDsAreNotPresent(ctx context.Context) error {
+	var exists []string
+	for _, kind := range lister.CRDList {
+		var u unstructured.Unstructured
+		u.SetGroupVersionKind(schema.GroupVersionKind{
+			Group:   "apiextensions.k8s.io",
+			Version: "v1",
+			Kind:    "CustomResourceDefinition",
+		})
+
+		err := lister.k8sClient.Get(ctx, types.NamespacedName{Name: kind}, &u)
+
+		if !k8serrors.IsNotFound(err) {
+			return fmt.Errorf("error getting CRD %s: %v", kind, err)
+		}
+
+		if err == nil {
+			exists = append(exists, kind)
+		}
+
+	}
+
+	if len(exists) > 0 {
+		return fmt.Errorf("the following CRDs are present but shouldn't: %v", exists)
+	}
+
+	return nil
 }

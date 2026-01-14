@@ -72,6 +72,11 @@ generate-integration-test-manifest: manifests kustomize module-version
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default -o tests/integration/steps/operator_generated_manifest.yaml
 
+.PHONY: generate-integration-test-manifest-migration
+generate-integration-test-manifest-migration: manifests kustomize module-version
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build config/default -o tests/e2e/tests/upgrade/operator_generated_manifest.yaml
+
 .PHONY: generate
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
@@ -204,6 +209,62 @@ test-e2e-egress: gotestsum
 .PHONY: e2e-test
 e2e-test: deploy
 	make -C tests/e2e/tests e2e-test
+
+.PHONY: evaluation-e2e-test
+evaluation-e2e-test: gotestsum deploy
+	@echo "Running e2e tests"
+	go clean -testcache
+	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/evaluation/..." --junitfile tests.xml --jsonfile tests.json
+	@echo "E2E tests completed successfully"
+
+.PHONY: configuration-e2e-test
+configuration-e2e-test: gotestsum deploy
+	@echo "Running e2e tests"
+	go clean -testcache
+	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/configuration/..." --junitfile tests.xml --jsonfile tests.json -- -timeout 20m
+	@echo "E2E tests completed successfully"
+
+.PHONY: mesh-communication-e2e-test
+mesh-communication-e2e-test: gotestsum deploy
+	@echo "Running e2e tests"
+	go clean -testcache
+	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/mesh_communication/..." --junitfile tests.xml --jsonfile tests.json
+	@echo "E2E tests completed successfully"
+
+.PHONY: installation-e2e-test
+installation-e2e-test: gotestsum deploy
+	@echo "Running e2e tests"
+	go clean -testcache
+	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/installation/..." --junitfile tests.xml --jsonfile tests.json
+	@echo "E2E tests completed successfully"
+
+.PHONY: observability-e2e-test
+observability-e2e-test: gotestsum deploy
+	@echo "Running e2e tests"
+	go clean -testcache
+	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/observability/..." --junitfile tests.xml --jsonfile tests.json
+	@echo "E2E tests completed successfully"
+
+.PHONY: ext-auth-e2e-test
+ext-auth-e2e-test: gotestsum deploy
+	@echo "Running e2e tests"
+	go clean -testcache
+	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/extauth/..." --junitfile tests.xml --jsonfile tests.json
+	@echo "E2E tests completed successfully"
+
+.PHONY: egress-e2e-test
+egress-e2e-test: gotestsum deploy
+	@echo "Running e2e tests"
+	go clean -testcache
+	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/egress/..." --junitfile tests.xml --jsonfile tests.json
+	@echo "E2E tests completed successfully"
+
+.PHONY: upgrade-e2e-test
+upgrade-e2e-test: generate-integration-test-manifest-migration gotestsum deploy
+	@echo "Running e2e tests"
+	go clean -testcache
+	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/upgrade/..." --junitfile tests.xml --jsonfile tests.json
+	@echo "E2E tests completed successfully"
 ##@ Module
 
 .PHONY: module-image

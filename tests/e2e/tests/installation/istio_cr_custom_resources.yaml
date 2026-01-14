@@ -1,0 +1,35 @@
+apiVersion: operator.kyma-project.io/v1alpha1
+kind: Istio
+metadata:
+  name: default
+  namespace: kyma-system
+spec:
+  components:
+    pilot:
+      k8s:
+        resources:
+          limits:
+            cpu: {{.PilotCPULimit}}
+            memory: {{.PilotMemoryLimit}}
+          requests:
+            cpu: {{.PilotCPURequests}}
+            memory: {{.PilotMemoryRequests}}
+    ingressGateway:
+      k8s:
+        resources:
+          limits:
+            cpu: {{.IGCPULimit}}
+            memory: {{.IGMemoryLimit}}
+          requests:
+            cpu: {{.IGCPURequests}}
+            memory: {{.IGMemoryRequests}}
+    egressGateway:
+      enabled: {{.EgressGatewayEnabled}}
+      k8s:
+        resources:
+          limits:
+            cpu: {{.EGCPULimit}}
+            memory: {{.EGMemoryLimit}}
+          requests:
+            cpu: {{.EGCPURequests}}
+            memory: {{.EGMemoryRequests}}

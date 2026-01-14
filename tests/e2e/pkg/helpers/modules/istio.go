@@ -3,15 +3,16 @@ package modules
 import (
 	"bytes"
 	_ "embed"
-	"github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
-	"sigs.k8s.io/e2e-framework/klient/k8s"
 	"testing"
 	"text/template"
 	"time"
 
+	"sigs.k8s.io/e2e-framework/klient/k8s"
+
+	"github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
+
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/e2e-framework/klient/decoder"
 	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
 	"sigs.k8s.io/e2e-framework/klient/wait"
@@ -90,7 +91,7 @@ func CreateIstioOperatorCR(t *testing.T, options ...IstioCROption) error {
 
 	setup.DeclareCleanup(t, func() {
 		t.Log("Cleaning up Istio after the tests")
-		err := TeardownIstioCR(t, options...)
+		err := teardownIstioCR(t, icr)
 		if err != nil {
 			t.Logf("Failed to clean up Istio custom resource: %v", err)
 		} else {
@@ -108,11 +109,12 @@ func CreateIstioOperatorCR(t *testing.T, options ...IstioCROption) error {
 	return nil
 }
 
-func TeardownIstioCR(t *testing.T, options ...IstioCROption) error {
+func UpdateIstioOperatorCR(t *testing.T, options ...IstioCROption) error {
 	t.Helper()
-	t.Log("Beginning cleanup of Istio custom resource")
+	t.Log("Updating Istio custom resource")
 	opts := &IstioCROptions{
-		Template: []byte(IstioDefaultTemplate),
+		Template:       []byte(IstioDefaultTemplate),
+		TemplateValues: map[string]interface{}{},
 	}
 	for _, opt := range options {
 		opt(opts)
@@ -124,7 +126,8 @@ func TeardownIstioCR(t *testing.T, options ...IstioCROption) error {
 		return err
 	}
 
-	icr := &unstructured.Unstructured{}
+	icr := &v1alpha2.Istio{}
+
 	tmpl, err := template.New("").Option("missingkey=error").Parse(string(opts.Template))
 	if err != nil {
 		t.Logf("Failed to parse resource template %s: %v", opts.Template, err)
@@ -145,7 +148,43 @@ func TeardownIstioCR(t *testing.T, options ...IstioCROption) error {
 		t.Logf("Failed to decode Istio custom resource template: %v", err)
 		return err
 	}
-	err = r.Delete(setup.GetCleanupContext(), icr)
+
+	err = r.Create(t.Context(), icr)
+	if err != nil {
+		t.Logf("Failed to create Istio custom resource: %v", err)
+		return err
+	}
+
+	setup.DeclareCleanup(t, func() {
+		t.Log("Cleaning up Istio after the tests")
+		err := teardownIstioCR(t, icr)
+		if err != nil {
+			t.Logf("Failed to clean up Istio custom resource: %v", err)
+		} else {
+			t.Log("Istio custom resource cleaned up successfully")
+		}
+	})
+
+	err = waitForIstioCRReadiness(t, r, icr)
+	if err != nil {
+		t.Logf("Istio custom resource is not ready: %v", err)
+		return err
+	}
+
+	t.Log("Istio custom resource created successfully")
+	return nil
+}
+
+func teardownIstioCR(t *testing.T, istioCR *v1alpha2.Istio) error {
+	t.Helper()
+	t.Log("Beginning cleanup of Istio custom resource")
+	r, err := client.ResourcesClient(t)
+	if err != nil {
+		t.Logf("Failed to get resources client: %v", err)
+		return err
+	}
+
+	err = r.Delete(setup.GetCleanupContext(), istioCR)
 	if err != nil {
 		t.Logf("Failed to delete Istio custom resource: %v", err)
 		if k8serrors.IsNotFound(err) {
@@ -155,7 +194,7 @@ func TeardownIstioCR(t *testing.T, options ...IstioCROption) error {
 		return err
 	}
 
-	return waitForIstioCRDeletion(t, r, icr)
+	return waitForIstioCRDeletion(t, r, istioCR)
 }
 
 var istioCRDeletionTimeout = 2 * time.Minute
@@ -189,7 +228,7 @@ func waitForIstioCRReadiness(t *testing.T, r *resources.Resources, istio *v1alph
 	return nil
 }
 
-func waitForIstioCRDeletion(t *testing.T, r *resources.Resources, istioCR *unstructured.Unstructured) error {
+func waitForIstioCRDeletion(t *testing.T, r *resources.Resources, istioCR *v1alpha2.Istio) error {
 	t.Helper()
 	t.Log("Waiting for Istio custom resource to be deleted")
 

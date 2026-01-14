@@ -4,17 +4,21 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
+	"testing"
+
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/setup"
 	"sigs.k8s.io/e2e-framework/klient/decoder"
 	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
 	"sigs.k8s.io/e2e-framework/klient/wait"
 	"sigs.k8s.io/e2e-framework/klient/wait/conditions"
-	"testing"
 )
 
 //go:embed manifest.yaml
 var manifest []byte
+
+//go:embed manifest_regular_sidecar.yaml
+var manifest_regular_sidecar []byte
 
 func DeployHttpbin(t *testing.T, namespace string) (svcName string, svcPort int, err error) {
 	t.Helper()
@@ -25,10 +29,22 @@ func DeployHttpbin(t *testing.T, namespace string) (svcName string, svcPort int,
 		return "", 0, fmt.Errorf("failed to get resources client: %w", err)
 	}
 
-	return "httpbin", 8000, start(t, r, namespace)
+	return "httpbin", 8000, start(t, r, namespace, manifest)
 }
 
-func start(t *testing.T, r *resources.Resources, namespace string) error {
+func DeployHttpbinWithRegularSidecar(t *testing.T, namespace string) (svcName string, svcPort int, err error) {
+	t.Helper()
+
+	r, err := client.ResourcesClient(t)
+	if err != nil {
+		t.Logf("Failed to get resources client: %v", err)
+		return "", 0, fmt.Errorf("failed to get resources client: %w", err)
+	}
+
+	return "httpbin-regular-sidecar", 8000, start(t, r, namespace, manifest_regular_sidecar)
+}
+
+func start(t *testing.T, r *resources.Resources, namespace string, manifest []byte) error {
 	err := decoder.DecodeEach(
 		t.Context(),
 		bytes.NewBuffer(manifest),

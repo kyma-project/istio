@@ -2,14 +2,13 @@ package setup
 
 import (
 	"context"
-	"os"
 	"testing"
+
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/config"
 )
 
-var shouldSkipCleanup = os.Getenv("SKIP_CLEANUP") == "true"
-
 func ShouldSkipCleanup(t *testing.T) bool {
-	return t.Failed() && shouldSkipCleanup
+	return t.Failed() && config.Get().SkipCleanup
 }
 
 func DeclareCleanup(t *testing.T, f func()) {

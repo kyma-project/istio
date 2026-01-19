@@ -1,4 +1,4 @@
-# Configure Istio CA with Custom Certificates
+# Configure Istio Certificate Authority (CA) with Custom Certificates
 For enhanced security, replace Istio's default self-signed certificates with administrator-provided certificates.
 
 ## Default Istio Behavior
@@ -6,7 +6,13 @@ For enhanced security, replace Istio's default self-signed certificates with adm
 By default, Istio generates a self-signed root certificate and stores it in a Secret within a Kyma cluster. Istio uses this certificate to issue certificates for each workload in the service mesh.
 
 ## Configuring a Custom CA
-You can replace the default self-signed certificate provided by Istio and use a certificate issued by your organization. Istio supports the following PKI hierarchy:
+
+> [!NOTE]
+>For live landscapes, it is recommended to use a production-ready CA and manage your root CA on a secure, offline machine. In addition, consider using an additional intermediate CA outside of the cluster and automate the submission of the CA certificates to the clusters.
+>
+>Additionally, make sure to implement proper certificate rotation procedures according to your organization's security policies.
+
+You can replace the default self-signed certificate provided by Istio and use a certificate issued by your organization. Istio supports the following public key infrastructure (PKI) hierarchy:
 
 - **Root CA**: A self-signed certificate running outside of the cluster that issues intermediate certificates to the Istio CAs that run in each cluster. It's recommended that this certificate runs on an offline, secure machine.
 - **Intermediate CAs**: Issued by the Root CA to each Kubernetes cluster running Istio. It is recommended to keep the Intermediate CA certificates as short-lived as possible.
@@ -32,9 +38,3 @@ kubectl create secret generic cacerts -n istio-system \
 ```
 
 For more information, see [Plug in CA Certificates](https://istio.io/latest/docs/tasks/security/cert-management/plugin-ca-cert/).
-
-## Security Considerations
-
-For live landscapes, it is recommended to use a production-ready CA and manage your root CA on a secure, offline machine. In addition, consider using an additional intermediate CA outside of the cluster and automate the submission of the CA certificates to the clusters.
-
-Additionally, make sure to implement proper certificate rotation procedures according to your organization's security policies.

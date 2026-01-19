@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/load_balancer"
-	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/virtual_service"
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
-	"sigs.k8s.io/e2e-framework/klient/decoder"
 	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
+
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/load_balancer"
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/virtual_service"
 
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
 
@@ -24,9 +24,6 @@ import (
 	modulehelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/modules"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/nginx"
 )
-
-//go:embed virtual_service_nginx.yaml
-var VirtualServiceSourceWorkload string
 
 func TestMeshCommunication(t *testing.T) {
 	t.Run("Access between applications in different namespaces", func(t *testing.T) {
@@ -59,22 +56,7 @@ func TestMeshCommunication(t *testing.T) {
 		err = extauth.CreateHTTPGateway(t)
 		require.NoError(t, err)
 
-		createdVs, err := infrastructure.CreateResourceWithTemplateValues(
-			t,
-			VirtualServiceSourceWorkload,
-			map[string]any{
-				"Name":            "nginx-mesh-communication",
-				"GatewayName":     "kyma-system/kyma-gateway",
-				"HostName":        "nginx-mesh-communication.local.kyma.dev",
-				"DestinationHost": sourceWorkloadUrl,
-				"DestinationPort": 80,
-			},
-			decoder.MutateNamespace("source"),
-		)
-		require.NoError(t, err)
-		require.NotEmpty(t, createdVs)
-
-		err = virtual_service.CreateVirtualService(t, "nginx-mesh-communication", "source", httpbin.Host, []string{httpbin.Host}, []string{"kyma-system/kyma-gateway"})
+		err = virtual_service.CreateVirtualService(t, "nginx-mesh-communication", "source", sourceWorkloadUrl, []string{sourceWorkloadUrl}, []string{"kyma-system/kyma-gateway"})
 		require.NoError(t, err)
 
 		ip, err := load_balancer.GetLoadBalancerIP(t.Context(), c.GetControllerRuntimeClient())
@@ -83,10 +65,10 @@ func TestMeshCommunication(t *testing.T) {
 		httpClient := httphelper.NewHTTPClient(
 			t,
 			httphelper.WithPrefix("mesh-communication-test"),
-			httphelper.WithHost(httpbin.Host),
+			httphelper.WithHost(sourceWorkloadUrl),
 		)
 
-		httpassert.AssertOKResponse(t, httpClient, ip,
+		httpassert.AssertOKResponse(t, httpClient, fmt.Sprintf("http://%s/headers", ip),
 			httpassert.WithExpectedBodyContains("httpbin.target.svc.cluster.local"),
 		)
 
@@ -124,31 +106,16 @@ func TestMeshCommunication(t *testing.T) {
 
 		ip, err := load_balancer.GetLoadBalancerIP(t.Context(), c.GetControllerRuntimeClient())
 
-		createdVs, err := infrastructure.CreateResourceWithTemplateValues(
-			t,
-			VirtualServiceSourceWorkload,
-			map[string]any{
-				"Name":            "nginx-mesh-communication",
-				"GatewayName":     "kyma-system/kyma-gateway",
-				"HostName":        "nginx-mesh-communication.local.kyma.dev",
-				"DestinationHost": sourceWorkloadUrl,
-				"DestinationPort": 80,
-			},
-			decoder.MutateNamespace("source"),
-		)
-		require.NoError(t, err)
-		require.NotEmpty(t, createdVs)
-
-		err = virtual_service.CreateVirtualService(t, "nginx-mesh-communication", "source", httpbin.Host, []string{httpbin.Host}, []string{"kyma-system/kyma-gateway"})
+		err = virtual_service.CreateVirtualService(t, "nginx-mesh-communication", "source", sourceWorkloadUrl, []string{sourceWorkloadUrl}, []string{"kyma-system/kyma-gateway"})
 		require.NoError(t, err)
 
 		httpClient := httphelper.NewHTTPClient(
 			t,
 			httphelper.WithPrefix("mesh-communication-test"),
-			httphelper.WithHost(httpbin.Host),
+			httphelper.WithHost(sourceWorkloadUrl),
 		)
 
-		httpassert.AssertResponse(t, httpClient, ip,
+		httpassert.AssertResponse(t, httpClient, fmt.Sprintf("http://%s/", ip),
 			httpassert.WithExpectedStatusCode(502),
 		)
 	})

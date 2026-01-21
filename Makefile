@@ -278,18 +278,6 @@ istio-upgrade-integration-test: deploy-latest-release generate-integration-test-
 
 ########## Gardener specific ###########
 
-.PHONY: gardener-istio-integration-test
-gardener-istio-integration-test:
-	./hack/ci/gardener-integration.sh
-
-.PHONY: gardener-aws-integration-test
-gardener-aws-integration-test:
-	./hack/ci/gardener-integration-aws-specific.sh
-
-.PHONY: gardener-gcp-integration-test
-gardener-gcp-integration-test:
-	./hack/ci/gardener-integration-gcp-specific.sh
-
 .PHONY: module-version
 module-version:
 	sed 's/VERSION/$(VERSION)/g' config/default/kustomization.template.yaml > config/default/kustomization.yaml

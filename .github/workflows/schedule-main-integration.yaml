@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  image-name: "europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager"
+  IMAGE_NAME: "europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager"
 
 jobs:
   get-image:
@@ -23,20 +23,24 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       image: "${{ steps.get-image.outputs.image }}"
+      operator_version: "${{ steps.get-image.outputs.operator_version }}"
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - id: get-image
-        name: get image
+        name: Get image for tests
         shell: bash
         run: |
-          commit_id=$("${{ github.workspace }}/hack/ci/get-latest-sha.sh" "${{ env.image-name }}")
-          image="${{ env.image-name }}:${commit_id}"
+          commit_id=$("./hack/ci/get-latest-sha.sh" "${IMAGE_NAME}")
+          image="${IMAGE_NAME}:${commit_id}"
+          operator_version="${commit_id}"
           echo "image=${image}"
           echo "image=${image}" >> $GITHUB_OUTPUT
+          echo "operator_version=${operator_version}"
+          echo "operator_version=${operator_version}" >> $GITHUB_OUTPUT
       - id: check-image
-        name: check whether image exists
+        name: Check whether image exists
         shell: bash
         run: docker pull "${{ steps.get-image.outputs.image }}"
 
@@ -108,7 +112,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           operator_image_name: ${{ needs.get-image.outputs.image }}
-          operator_version: ${{ github.ref_name }} # should equal to the image build arg VERSION passed in the post main workflow
+          operator_version: ${{ needs.get-image.outputs.operator_version }}
           test_make_target: ${{ matrix.test_make_target }}
 
   k8s-compatibility-check-aws:
@@ -126,7 +130,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           manager_image: ${{ needs.get-image.outputs.image }}
-          operator_version: ${{ github.ref_name }} # should equal to the image build arg VERSION passed in the post main workflow
+          operator_version: ${{ needs.get-image.outputs.operator_version }}
           test_make_target: ${{ matrix.test_make_target }}
           gardener_secret: ${{ secrets.GARDENER_TOKEN }}
           gardener_project_name: ${{ vars.GARDENER_PROJECT_NAME }}

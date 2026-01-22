@@ -135,20 +135,33 @@ jobs:
     name: Istio E2E tests (evaluation) - k3d
     runs-on: ubuntu-latest
     needs: build-image
-    strategy:
-      fail-fast: false
-      matrix:
-        test-make-target: [ "evaluation-e2e-test" ]
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/load-manager-image
       - uses: ./.github/actions/e2e-test-k3d
         with:
-          test_make_target: ${{ matrix.test-make-target }}
+          test_make_target: "evaluation-e2e-test"
           operator-image-name: "istio-manager:PR-${{github.event.number}}"
           operator-version: "PR-${{github.event.number}}"
           servers-memory: "4"
           agents: 0
+
+  upgrade-tests:
+    name: Istio upgrade tests - k3d
+    runs-on: ubuntu-latest
+    needs: build-image
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/load-manager-image
+      - uses: ./.github/actions/e2e-test-k3d
+        with:
+          test_make_target: "upgrade-test"
+          operator-image-name: "istio-manager:PR-${{github.event.number}}"
+          operator-version: "PR-${{github.event.number}}"
+          servers-memory: "16"
+          agents: 2
 
   verify-pins:
     name: Dispatch verify-commit-pins

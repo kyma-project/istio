@@ -13,6 +13,8 @@ concurrency:
   
 env:
   GITLEAKS_VERSION: 8.21.0
+  IMAGE_NAME: "istio-manager"
+
 jobs:
   gitleaks:
     runs-on: ubuntu-latest
@@ -32,7 +34,6 @@ jobs:
   build-image:
     name: Build manager image
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/build-manager-image
@@ -40,49 +41,117 @@ jobs:
           operator-image-name: "istio-manager:PR-${{github.event.number}}"
           operator-version: "PR-${{github.event.number}}"
 
-  lint-unit-tests:
-    name: Dispatch lint & unit test
+  get-image:
+    name: Get manager image
+    runs-on: ubuntu-latest
+    needs: [ build-image ]
+    outputs:
+      image: "${{ steps.get-image.outputs.image }}"
+      operator_version: "${{ steps.get-image.outputs.operator_version }}"
+    steps:
+      - id: get-image
+        name: Get image for tests
+        shell: bash
+        env:
+          PR_NUMBER: ${{github.event.number}}
+        run: |
+          image="${IMAGE_NAME}:PR-${PR_NUMBER}"
+          operator_version="PR-${PR_NUMBER}"
+          echo "image=${image}"
+          echo "image=${image}" >> $GITHUB_OUTPUT
+          echo "operator_version=${operator_version}"
+          echo "operator_version=${operator_version}" >> $GITHUB_OUTPUT
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/load-manager-image
+      - id: check-image
+        name: Check whether image exists
+        shell: bash
+        env:
+          LOCAL_IMAGE: ${{ steps.get-image.outputs.image }}
+        run: |
+          image_id=$(docker images -q "${LOCAL_IMAGE}")
+          if [ -z "${image_id}" ]; then
+            echo "Image does not exist"
+            exit 1
+          fi
+
+  unit-tests:
+    name: Unit, integration tests & lint
+    needs: [ get-image ]
     uses: ./.github/workflows/call-unit-lint.yaml
-    if: github.event.pull_request.draft == false
     secrets: inherit
 
-  e2e-tests:
-    name: Dispatch E2E tests
-    needs: [build-image]
-    uses: ./.github/workflows/call-pull-e2e.yaml
-    with:
-      operator_version: "PR-${{github.event.number}}"
-    if: github.event.pull_request.draft == false
-    secrets: inherit
+  istio-e2e-test-k3d:
+    name: Istio E2E test K3D
+    runs-on: ubuntu-latest
+    needs: [ get-image ]
+    strategy:
+      fail-fast: false
+      matrix:
+        test_make_target: [ "e2e-test", "configuration-integration-test", "mesh-communication-integration-test", "installation-integration-test", "observability-integration-test" ]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/load-manager-image
+      - uses: ./.github/actions/e2e-test-k3d
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          test_make_target: ${{ matrix.test_make_target }}
+          operator-version: ${{ needs.get-image.outputs.operator_version }}
+          operator-image-name: ${{ needs.get-image.outputs.image }}
+          servers-memory: "16"
+          agents: 2
+
+  istio-e2e-test-evaluation-k3d:
+    name: Istio E2E test (evaluation) - k3d
+    runs-on: ubuntu-latest
+    needs: [ get-image ]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/load-manager-image
+      - uses: ./.github/actions/e2e-test-k3d
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          test_make_target: "evaluation-integration-test"
+          operator-version: ${{ needs.get-image.outputs.operator_version }}
+          operator-image-name: ${{ needs.get-image.outputs.image }}
+          servers-memory: "4"
+          agents: 0
 
   istio-upgrade-test-k3d:
     name: Istio upgrade integration test K3D
     runs-on: ubuntu-latest
-    needs: [build-image]
+    needs: [ get-image ]
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - uses: ./.github/actions/load-manager-image
-      - uses: ./.github/actions/upgrade-integration-test
+      - uses: ./.github/actions/e2e-test-k3d
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_BRANCH: ${{ github.ref_name }}
         with:
-          operator-image-name: "istio-manager:PR-${{github.event.number}}"
-          target_branch: ${{ github.base_ref }}
-          operator-version: "PR-${{github.event.number}}"
+          test_make_target: "istio-upgrade-integration-test"
+          operator-version: ${{ needs.get-image.outputs.operator_version }}
+          operator-image-name: ${{ needs.get-image.outputs.image }}
+          servers-memory: "16"
+          agents: 2
 
   verify-pins:
     name: Dispatch verify-commit-pins
     uses: ./.github/workflows/call-verify-commit-pins.yaml
-    if: github.event.pull_request.draft == false
     secrets: inherit
 
   pull-request-status:
     needs:
       - build-image
-      - lint-unit-tests
-      - e2e-tests
-      - verify-pins
+      - unit-tests
+      - istio-e2e-test-k3d
+      - istio-e2e-test-evaluation-k3d
       - istio-upgrade-test-k3d
+      - verify-pins
     runs-on: ubuntu-latest
     if: always()
     steps:

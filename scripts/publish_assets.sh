@@ -7,40 +7,53 @@ set -E          # needs to be set if we want the ERR trap
 set -o pipefail # prevents errors in a pipeline from being masked
 set -x
 
-RELEASE_TAG=$1
-RELEASE_ID=$2
+image_name=$1
+release_tag=$2
+release_id=$3
 
-REPOSITORY=${REPOSITORY:-kyma-project/istio}
-GITHUB_URL=https://uploads.github.com/repos/${REPOSITORY}
-GITHUB_AUTH_HEADER="Authorization: Bearer ${GITHUB_TOKEN}"
-IMG="europe-docker.pkg.dev/kyma-project/prod/istio/releases/istio-manager:${RELEASE_TAG}"
-VERSION="${RELEASE_TAG}"
+repository="${REPOSITORY:-kyma-project/istio}"
+github_upload_repo_url="https://uploads.github.com/repos/${repository}"
 
-IMG="${IMG}" VERSION="${VERSION}" make generate-manifests
-curl -f -L \
+echo "Publish assets: repository: ${repository}, image name: ${image_name}, release tag: ${release_tag}, release ID: ${release_id}"
+
+echo "Generate manifests"
+IMG="${image_name}:${release_tag}" VERSION="${release_tag}" make generate-manifests
+
+echo "Publish manager deployment"
+manager_yaml_asset_name="istio-manager.yaml"
+manager_yaml_asset_path="istio-manager.yaml"
+curl -s -S -f -L \
   -X POST \
   -H "Accept: application/vnd.github+json" \
-  -H "${GITHUB_AUTH_HEADER}" \
+  -H "Authorization: Bearer ${GITHUB_TOKEN}" \
   -H "X-GitHub-Api-Version: 2022-11-28" \
   -H "Content-Type: application/octet-stream" \
-  --data-binary @"istio-manager.yaml" \
-  ${GITHUB_URL}/releases/${RELEASE_ID}/assets?name=istio-manager.yaml
+  --data-binary @"${manager_yaml_asset_path}" \
+  "${github_upload_repo_url}/releases/${release_id}/assets?name=${manager_yaml_asset_name}"
 
-IMG="${IMG}-experimental" VERSION="${VERSION}-experimental" make generate-manifests
-curl -f -L \
+echo "Generate manifests (experimental)"
+IMG="${image_name}:${release_tag}-experimental" VERSION="${release_tag}-experimental" make generate-manifests
+
+echo "Publish manager deployment (experimental)"
+manager_yaml_asset_name="istio-manager-experimental.yaml"
+manager_yaml_asset_path="istio-manager.yaml"
+curl -s -S -f -L \
   -X POST \
   -H "Accept: application/vnd.github+json" \
-  -H "${GITHUB_AUTH_HEADER}" \
+  -H "Authorization: Bearer ${GITHUB_TOKEN}" \
   -H "X-GitHub-Api-Version: 2022-11-28" \
   -H "Content-Type: application/octet-stream" \
-  --data-binary @"istio-manager.yaml" \
-  ${GITHUB_URL}/releases/${RELEASE_ID}/assets?name=istio-manager-experimental.yaml
+  --data-binary @"${manager_yaml_asset_path}" \
+  "${github_upload_repo_url}/releases/${release_id}/assets?name=${manager_yaml_asset_name}"
 
-curl -f -L \
+echo "Publish default CR"
+default_cr_asset_name="istio-default-cr.yaml"
+default_cr_path="config/samples/operator_v1alpha2_istio.yaml"
+curl -s -S -f -L \
   -X POST \
   -H "Accept: application/vnd.github+json" \
-  -H "${GITHUB_AUTH_HEADER}" \
+  -H "Authorization: Bearer ${GITHUB_TOKEN}" \
   -H "X-GitHub-Api-Version: 2022-11-28" \
   -H "Content-Type: application/octet-stream" \
-  --data-binary @"config/samples/operator_v1alpha2_istio.yaml" \
-  ${GITHUB_URL}/releases/${RELEASE_ID}/assets?name=istio-default-cr.yaml
+  --data-binary @"${default_cr_path}" \
+  "${github_upload_repo_url}/releases/${release_id}/assets?name=${default_cr_asset_name}"

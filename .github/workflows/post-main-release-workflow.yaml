@@ -62,7 +62,7 @@ jobs:
         name: Get image for tests
         shell: bash
         env:
-          COMMIT_ID="${{ github.sha }}"
+          COMMIT_ID: ${{ github.sha }}
         run: |
           image="${IMAGE_NAME}:${COMMIT_ID}"
           operator_version="${COMMIT_ID}"

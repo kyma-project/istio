@@ -7,9 +7,11 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
 	"sigs.k8s.io/e2e-framework/klient/wait"
+	"sigs.k8s.io/e2e-framework/klient/wait/conditions"
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 )
@@ -182,6 +184,7 @@ func AssertWarningStatus(t *testing.T, c *resources.Resources, istioCR *v1alpha2
 	}, opts...)
 	AssertIstioStatus(t, c, istioCR, opts...)
 }
+
 // findCondition finds a condition by type in the conditions list
 func findCondition(conditions []metav1.Condition, condType v1alpha2.ConditionType) *metav1.Condition {
 	for i := range conditions {
@@ -190,4 +193,24 @@ func findCondition(conditions []metav1.Condition, condType v1alpha2.ConditionTyp
 		}
 	}
 	return nil
+}
+
+// AssertIstioNamespaceExists asserts that the istio-system namespace exists
+func AssertIstioNamespaceExists(t *testing.T, c *resources.Resources) error {
+	t.Helper()
+
+	istioNs := &v1.Namespace{}
+	return c.Get(t.Context(), "istio-system", "", istioNs)
+}
+
+// AssertIstioNamespaceDeleted waits for the istio-system namespace to be deleted
+func AssertIstioNamespaceDeleted(t *testing.T, c *resources.Resources, timeout time.Duration) error {
+	t.Helper()
+
+	istioNs := &v1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "istio-system",
+		},
+	}
+	return wait.For(conditions.New(c).ResourceDeleted(istioNs), wait.WithTimeout(timeout))
 }

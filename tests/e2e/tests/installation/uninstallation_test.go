@@ -1,12 +1,10 @@
 package installation
 
 import (
-	"context"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/e2e-framework/klient/wait"
 	"sigs.k8s.io/e2e-framework/klient/wait/conditions"
@@ -48,24 +46,19 @@ func TestUninstall(t *testing.T) {
 		httpbinassert.AssertIstioProxyPresent(t, c, "app=httpbin")
 		httpbinassert.AssertIstioProxyPresent(t, c, "app=httpbin-regular-sidecar")
 
-		istioNs := &v1.Namespace{}
-		err = c.Get(t.Context(), "istio-system", "", istioNs)
+		err = istioassert.AssertIstioNamespaceExists(t, c)
 		require.NoError(t, err)
 
 		err = c.Delete(t.Context(), istioCR)
 		require.NoError(t, err)
 
-		err = wait.For(conditions.New(c).ResourceDeleted(istioCR), wait.WithTimeout(2*time.Minute))
+		err = wait.For(conditions.New(c).ResourceDeleted(istioCR), wait.WithTimeout(1 * time.Minute))
 		require.NoError(t, err)
 
 		err = crds.AssertIstioCRDsNotPresent(t.Context(), c.GetControllerRuntimeClient())
 		require.NoError(t, err)
 
-		err = wait.For(conditions.New(c).ResourceDeleted(&v1.Namespace{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "istio-system",
-			},
-		}), wait.WithTimeout(2*time.Minute))
+		err = istioassert.AssertIstioNamespaceDeleted(t, c, 2*time.Minute)
 		require.NoError(t, err)
 
 		httpbinassert.AssertIstioProxyAbsent(t, c, "app=httpbin")
@@ -85,7 +78,6 @@ func TestUninstall(t *testing.T) {
 		destinationRule, err := destination_rule.CreateDestinationRule(t, "customer-destination-rule", "default", "testing-svc.default.svc.cluster.local")
 		require.NoError(t, err)
 
-
 		err = c.Delete(t.Context(), istioCR)
 		require.NoError(t, err)
 
@@ -104,8 +96,7 @@ func TestUninstall(t *testing.T) {
 		err = crds.AssertIstioCRDsPresent(t.Context(), c.GetControllerRuntimeClient())
 		require.NoError(t, err)
 
-		istioNs := &v1.Namespace{}
-		err = c.Get(t.Context(), "istio-system", "", istioNs)
+		err = istioassert.AssertIstioNamespaceExists(t, c)
 		require.NoError(t, err)
 
 		err = c.Delete(t.Context(), destinationRule)
@@ -117,11 +108,7 @@ func TestUninstall(t *testing.T) {
 		err = crds.AssertIstioCRDsNotPresent(t.Context(), c.GetControllerRuntimeClient())
 		require.NoError(t, err)
 
-		err = wait.For(conditions.New(c).ResourceDeleted(&v1.Namespace{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "istio-system",
-			},
-		}), wait.WithTimeout(2*time.Minute))
+		err = istioassert.AssertIstioNamespaceDeleted(t, c, 2*time.Minute)
 		require.NoError(t, err)
 	})
 
@@ -135,22 +122,17 @@ func TestUninstall(t *testing.T) {
 		istioCR, err := modulehelpers.NewIstioCRBuilder().ApplyAndCleanup(t)
 		require.NoError(t, err)
 
-		istioNs := &v1.Namespace{}
-		err = c.Get(t.Context(), "istio-system", "", istioNs)
+		err = istioassert.AssertIstioNamespaceExists(t, c)
 		require.NoError(t, err)
 
 		err = crds.AssertIstioCRDsPresent(t.Context(), c.GetControllerRuntimeClient())
 		require.NoError(t, err)
 
 		istioClient := istio.NewIstioClient()
-		err = istioClient.Uninstall(context.Background())
+		err = istioClient.Uninstall(t.Context())
 		require.NoError(t, err)
 
-		err = wait.For(conditions.New(c).ResourceDeleted(&v1.Namespace{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "istio-system",
-			},
-		}), wait.WithTimeout(2*time.Minute))
+		err = istioassert.AssertIstioNamespaceDeleted(t, c, 1 * time.Minute)
 		require.NoError(t, err)
 
 		err = crds.AssertIstioCRDsNotPresent(t.Context(), c.GetControllerRuntimeClient())
@@ -159,14 +141,10 @@ func TestUninstall(t *testing.T) {
 		err = c.Delete(t.Context(), istioCR)
 		require.NoError(t, err)
 
-		err = wait.For(conditions.New(c).ResourceDeleted(istioCR), wait.WithTimeout(2*time.Minute))
+		err = wait.For(conditions.New(c).ResourceDeleted(istioCR), wait.WithTimeout(1 * time.Minute))
 		require.NoError(t, err)
 
-		err = wait.For(conditions.New(c).ResourceDeleted(&v1.Namespace{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "istio-system",
-			},
-		}), wait.WithTimeout(2*time.Minute))
+		err = istioassert.AssertIstioNamespaceDeleted(t, c, 2*time.Minute)
 		require.NoError(t, err)
 
 		err = crds.AssertIstioCRDsNotPresent(t.Context(), c.GetControllerRuntimeClient())
@@ -174,4 +152,3 @@ func TestUninstall(t *testing.T) {
 	})
 
 }
-

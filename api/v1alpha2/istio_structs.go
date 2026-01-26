@@ -12,8 +12,9 @@ type Config struct {
 	// +kubebuilder:validation:Maximum=4294967295
 	NumTrustedProxies *int `json:"numTrustedProxies,omitempty"`
 
-	// Defines the strategy of handling the **X-Forwarded-Client-Cert** header.
-	// The default behavior is "SANITIZE_SET".
+	// Defines the strategy of handling the **X-Forwarded-Client-Cert** header only by the gateway proxies.
+	// This setting controls how the client attributes are retrieved from the incoming traffic by the gateway proxy and propagated to the upstream services in the cluster.
+	// The default behavior for gateway proxies is "SANITIZE_SET".
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum=APPEND_FORWARD;SANITIZE_SET;SANITIZE;ALWAYS_FORWARD_ONLY;FORWARD_ONLY
 	ForwardClientCertDetails *XFCCStrategy `json:"forwardClientCertDetails,omitempty"`
@@ -39,14 +40,14 @@ type Config struct {
 	TrustDomain *string `json:"trustDomain,omitempty"`
 }
 
-// Defines how to handle the x-forwarded-client-cert (XFCC) of the HTTP header.
+// Defines how proxy handles the x-forwarded-client-cert (XFCC) of the HTTP header.
 // XFCC is a proxy header that indicates certificate information of part or all of the clients or proxies that a request has passed through on its route from the client to the server.
 type XFCCStrategy string
 
 const (
-	// When the client connection is mutual TLS (mTLS), append the client certificate information to the request’s XFCC header and forward it.
+	// When the client connection is mutual TLS (mTLS), append the client certificate information to the request’s XFCC header and forward it. This is the default value for sidecar proxies.
 	AppendForward XFCCStrategy = "APPEND_FORWARD"
-	// When the client connection is mTLS, reset the XFCC header with the client certificate information and send it to the next hop.
+	// When the client connection is mTLS, reset the XFCC header with the client certificate information and send it to the next hop. This is the default value for gateway proxies.
 	SanitizeSet XFCCStrategy = "SANITIZE_SET"
 	// Do not send the XFCC header to the next hop.
 	Sanitize XFCCStrategy = "SANITIZE"

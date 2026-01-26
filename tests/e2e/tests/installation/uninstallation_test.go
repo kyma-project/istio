@@ -2,7 +2,6 @@ package installation
 
 import (
 	"context"
-	"strings"
 	"testing"
 	"time"
 
@@ -12,7 +11,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/e2e-framework/klient/k8s"
 	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
 	"sigs.k8s.io/e2e-framework/klient/wait"
 	"sigs.k8s.io/e2e-framework/klient/wait/conditions"
@@ -21,6 +19,7 @@ import (
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
+	istioassert "github.com/kyma-project/istio/operator/tests/e2e/pkg/asserts/istio"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/crds"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/httpbin"
@@ -144,30 +143,17 @@ func TestUninstall(t *testing.T) {
 		err = c.Delete(t.Context(), istioCR)
 		require.NoError(t, err)
 
-		err = wait.For(conditions.New(c).ResourceMatch(istioCR, func(object k8s.Object) bool {
-			istioCRObj := object.(*v1alpha2.Istio)
-			if istioCRObj.Status.State != v1alpha2.Warning {
-				return false
-			}
-
-			// Check for the correct condition
-			hasCorrectCondition := false
-			if istioCRObj.Status.Conditions != nil {
-				for _, condition := range *istioCRObj.Status.Conditions {
-					if condition.Type == string(v1alpha2.ConditionTypeReady) &&
-						condition.Reason == string(v1alpha2.ConditionReasonIstioCRsDangling) &&
-						condition.Status == "False" {
-						hasCorrectCondition = true
-						break
-					}
-				}
-			}
-
-			hasCorrectDescription := strings.Contains(istioCRObj.Status.Description, "There are Istio resources that block deletion")
-
-			return hasCorrectCondition && hasCorrectDescription
-		}), wait.WithTimeout(2*time.Minute))
-		require.NoError(t, err)
+		istioassert.AssertWarningStatus(t, c, istioCR,
+			istioassert.WithExpectedCondition(
+				v1alpha2.ConditionTypeReady,
+				metav1.ConditionFalse,
+				v1alpha2.ConditionReasonIstioCRsDangling,
+			),
+			istioassert.WithExpectedDescriptionContaining(
+				"There are Istio resources that block deletion",
+			),
+			istioassert.WithTimeout(2*time.Minute),
+		)
 
 		err = crds.AssertIstioCRDsPresent(t.Context(), c.GetControllerRuntimeClient())
 		require.NoError(t, err)

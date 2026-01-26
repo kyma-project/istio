@@ -13,7 +13,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/e2e-framework/klient/k8s"
 	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
 	"sigs.k8s.io/e2e-framework/klient/wait"
 	"sigs.k8s.io/e2e-framework/klient/wait/conditions"
@@ -22,6 +21,7 @@ import (
 	infrahelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/infrastructure"
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
+	istioassert "github.com/kyma-project/istio/operator/tests/e2e/pkg/asserts/istio"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/crds"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/httpbin"
@@ -260,30 +260,17 @@ func TestInstallation(t *testing.T) {
 		require.NoError(t, err)
 
 		// Wait for the error state since it's in wrong namespace
-		err = wait.For(conditions.New(c).ResourceMatch(istioCR, func(object k8s.Object) bool {
-			istio := object.(*v1alpha2.Istio)
-
-			ensureConditions := func() bool {
-				for _, condition := range *istio.Status.Conditions {
-					if condition.Type == string(v1alpha2.ConditionTypeReady) &&
-						condition.Reason == string(v1alpha2.ConditionReasonReconcileFailed) &&
-						condition.Status == "False" {
-						return true
-					}
-				}
-				return false
-			}
-
-			if istio.Status.State == v1alpha2.Error &&
-				strings.Contains(istio.Status.Description, "Stopped Istio CR reconciliation: istio CR is not in kyma-system namespace") &&
-				strings.Contains(istio.Status.Description, "Will not reconcile automatically") &&
-				ensureConditions() {
-				return true
-			}
-
-			return false
-		}))
-		require.NoError(t, err)
+		istioassert.AssertErrorStatus(t, c, istioCR,
+			istioassert.WithExpectedCondition(
+				v1alpha2.ConditionTypeReady,
+				metav1.ConditionFalse,
+				v1alpha2.ConditionReasonReconcileFailed,
+			),
+			istioassert.WithExpectedDescriptionContaining(
+				"Stopped Istio CR reconciliation: istio CR is not in kyma-system namespace",
+				"Will not reconcile automatically",
+			),
+		)
 	})
 
 	t.Run("Installation of Istio module with a second Istio CR in kyma-system namespace", func(t *testing.T) {
@@ -301,33 +288,20 @@ func TestInstallation(t *testing.T) {
 		secondIstioCR, err := modulehelpers.NewIstioCRBuilder().
 			WithName("second-istio-cr").
 			ApplyAndCleanupWithoutReadinessCheck(t)
+		require.NoError(t, err)
 
 		// Wait for second CR to show warning
-		err = wait.For(conditions.New(c).ResourceMatch(secondIstioCR, func(object k8s.Object) bool {
-			istio := object.(*v1alpha2.Istio)
-			////////
-			ensureConditions := func() bool {
-				for _, condition := range *istio.Status.Conditions {
-					if condition.Type == string(v1alpha2.ConditionTypeReady) &&
-						condition.Reason == string(v1alpha2.ConditionReasonOlderCRExists) &&
-						condition.Status == "False" {
-						return true
-					}
-				}
-				return false
-			}
-			///////
-
-			if istio.Status.State == v1alpha2.Warning &&
-				strings.Contains(istio.Status.Description, "Stopped Istio CR reconciliation: only Istio CR default in kyma-system reconciles the module") &&
-				strings.Contains(istio.Status.Description, "Will not reconcile automatically") &&
-				ensureConditions() {
-				return true
-			}
-
-			return false
-		}))
-		require.NoError(t, err)
+		istioassert.AssertWarningStatus(t, c, secondIstioCR,
+			istioassert.WithExpectedCondition(
+				v1alpha2.ConditionTypeReady,
+				metav1.ConditionFalse,
+				v1alpha2.ConditionReasonOlderCRExists,
+			),
+			istioassert.WithExpectedDescriptionContaining(
+				"Stopped Istio CR reconciliation: only Istio CR default in kyma-system reconciles the module",
+				"Will not reconcile automatically",
+			),
+		)
 	})
 
 	t.Run("Istio module resources are reconciled, when they are deleted manually", func(t *testing.T) {

@@ -17,9 +17,6 @@ import (
 //go:embed manifest.yaml
 var manifest []byte
 
-//go:embed manifest_regular_sidecar.yaml
-var manifest_regular_sidecar []byte
-
 func DeployHttpbin(t *testing.T, namespace string) (svcName string, svcPort int, err error) {
 	t.Helper()
 
@@ -30,18 +27,6 @@ func DeployHttpbin(t *testing.T, namespace string) (svcName string, svcPort int,
 	}
 
 	return "httpbin", 8000, start(t, r, namespace, manifest)
-}
-
-func DeployHttpbinWithRegularSidecar(t *testing.T, namespace string) (svcName string, svcPort int, err error) {
-	t.Helper()
-
-	r, err := client.ResourcesClient(t)
-	if err != nil {
-		t.Logf("Failed to get resources client: %v", err)
-		return "", 0, fmt.Errorf("failed to get resources client: %w", err)
-	}
-
-	return "httpbin-regular-sidecar", 8000, start(t, r, namespace, manifest_regular_sidecar)
 }
 
 func start(t *testing.T, r *resources.Resources, namespace string, manifest []byte) error {

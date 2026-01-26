@@ -76,6 +76,7 @@ func TestInstallation(t *testing.T) {
 		for _, pod := range ingressPodList.Items {
 			proxy := pod.Spec.Containers[0]
 			require.Equal(t, "istio-proxy", proxy.Name)
+
 			err = assertResources(resourceStruct{
 				Cpu:    *proxy.Resources.Requests.Cpu(),
 				Memory: *proxy.Resources.Requests.Memory(),
@@ -304,6 +305,7 @@ func TestInstallation(t *testing.T) {
 		// Wait for second CR to show warning
 		err = wait.For(conditions.New(c).ResourceMatch(secondIstioCR, func(object k8s.Object) bool {
 			istio := object.(*v1alpha2.Istio)
+			////////
 			ensureConditions := func() bool {
 				for _, condition := range *istio.Status.Conditions {
 					if condition.Type == string(v1alpha2.ConditionTypeReady) &&
@@ -314,6 +316,7 @@ func TestInstallation(t *testing.T) {
 				}
 				return false
 			}
+			///////
 
 			if istio.Status.State == v1alpha2.Warning &&
 				strings.Contains(istio.Status.Description, "Stopped Istio CR reconciliation: only Istio CR default in kyma-system reconciles the module") &&

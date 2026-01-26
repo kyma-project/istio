@@ -72,8 +72,8 @@ generate-integration-test-manifest: manifests kustomize module-version
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default -o tests/integration/steps/operator_generated_manifest.yaml
 
-.PHONY: generate-integration-test-manifest-migration
-generate-integration-test-manifest-migration: manifests kustomize module-version
+.PHONY: generate-upgrade-test-manifest
+generate-upgrade-test-manifest: manifests kustomize module-version
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default -o tests/e2e/tests/upgrade/operator_generated_manifest.yaml
 
@@ -259,8 +259,8 @@ egress-e2e-test: gotestsum deploy
 	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/egress/..." --junitfile tests.xml --jsonfile tests.json
 	@echo "E2E tests completed successfully"
 
-.PHONY: upgrade-e2e-test
-upgrade-e2e-test: generate-integration-test-manifest-migration gotestsum deploy
+.PHONY: upgrade-test
+upgrade-test: generate-upgrade-test-manifest deploy-latest-release gotestsum
 	@echo "Running e2e tests"
 	go clean -testcache
 	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/upgrade/..." --junitfile tests.xml --jsonfile tests.json

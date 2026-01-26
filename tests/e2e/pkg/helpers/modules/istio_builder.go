@@ -201,38 +201,6 @@ func (b *IstioCRBuilder) Build() *v1alpha2.Istio {
 	return b.istio
 }
 
-// Apply creates or updates the Istio CR in the cluster and waits for it to be ready
-func (b *IstioCRBuilder) Apply(t *testing.T) (*v1alpha2.Istio, error) {
-	t.Helper()
-	t.Log("Applying Istio custom resource")
-
-	r, err := client.ResourcesClient(t)
-	if err != nil {
-		t.Logf("Failed to get resources client: %v", err)
-		return nil, err
-	}
-
-	icr := b.Build()
-
-	// Log the Istio CR before applying
-	logIstioCR(t, icr)
-
-	err = r.Create(t.Context(), icr)
-	if err != nil {
-		t.Logf("Failed to create Istio custom resource: %v", err)
-		return nil, err
-	}
-
-	err = waitForIstioCRReadiness(t, r, icr)
-	if err != nil {
-		t.Logf("Istio custom resource is not ready: %v", err)
-		return nil, err
-	}
-
-	t.Log("Istio custom resource applied successfully")
-	return icr, nil
-}
-
 // ApplyAndCleanup applies the Istio CR and registers a cleanup function
 func (b *IstioCRBuilder) ApplyAndCleanup(t *testing.T) (*v1alpha2.Istio, error) {
 	t.Helper()

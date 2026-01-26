@@ -19,6 +19,8 @@ import (
 //go:embed manifest_template.yaml
 var manifestTemplate string
 
+const defaultHttpbinPort = 8000
+
 // DeploymentInfo contains information about a deployed httpbin instance
 type DeploymentInfo struct {
 	// Name is the name of the httpbin service
@@ -121,7 +123,7 @@ func (b *Builder) DeployWithCleanup(t *testing.T) (*DeploymentInfo, error) {
 	return &DeploymentInfo{
 		Name:      b.name,
 		Namespace: b.namespace,
-		Port:      8000,
+		Port:      defaultHttpbinPort,
 		Host:      fmt.Sprintf("%s.%s.svc.cluster.local", b.name, b.namespace),
 	}, nil
 }

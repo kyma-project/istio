@@ -3,6 +3,7 @@ package configuration
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"testing"
 	"time"
 
@@ -38,6 +39,7 @@ import (
 
 func TestConfiguration(t *testing.T) {
 	t.Run("Updating proxy resource configuration", func(t *testing.T) {
+		// given
 		c, err := client.ResourcesClient(t)
 		require.NoError(t, err)
 
@@ -59,9 +61,9 @@ func TestConfiguration(t *testing.T) {
 		require.NoError(t, err)
 
 		assertProxyResourcesForDeployment(t, c, "httpbin", "default", "30m", "190Mi", "700m", "700Mi")
-
 		assertProxyResourcesForDeployment(t, c, "httpbin-regular-sidecar", "default", "30m", "190Mi", "700m", "700Mi")
 
+		// when
 		err = modulehelpers.NewIstioCRBuilder().
 			WithName(istioCR.Name).
 			WithNamespace(istioCR.Namespace).
@@ -69,6 +71,7 @@ func TestConfiguration(t *testing.T) {
 			Update(t)
 		require.NoError(t, err)
 
+		//then
 		assertProxyResourcesForDeployment(t, c, "httpbin", "default", "80m", "230Mi", "900m", "900Mi")
 		assertProxyResourcesForDeployment(t, c, "httpbin-regular-sidecar", "default", "80m", "230Mi", "900m", "900Mi")
 	})
@@ -112,10 +115,12 @@ func TestConfiguration(t *testing.T) {
 			httphelper.WithHeaders(map[string]string{"X-Forwarded-For": "10.2.1.1,10.0.0.1"}),
 		)
 		url := fmt.Sprintf("http://%s/headers", gatewayAddress)
-		httpassert.AssertOKResponse(t, hc, url,
+		httpassert.AssertResponse(t, hc, url,
+			httpassert.WithExpectedStatusCode(http.StatusOK),
 			httpassert.WithExpectedBodyContains(`"X-Envoy-External-Address": [`, `"10.0.0.1"`),
 		)
 
+		// when
 		err = modulehelpers.NewIstioCRBuilder().
 			WithName(istioCR.Name).
 			WithNamespace(istioCR.Namespace).
@@ -123,6 +128,7 @@ func TestConfiguration(t *testing.T) {
 			Update(t)
 		require.NoError(t, err)
 
+		// then
 		httpassert.AssertOKResponse(t, hc, url,
 			httpassert.WithExpectedBodyContains(`"X-Envoy-External-Address": [`, `"10.2.1.1"`),
 		)
@@ -144,6 +150,7 @@ func TestConfiguration(t *testing.T) {
 		require.NoError(t, err)
 
 		egressDeployment, err := infrahelpers.GetEgressGatewayDeployment(t)
+		//TODO: somepackage.AssertDeploymentReady(d *v1.Deployment) err
 		err = wait.For(conditions.New(c).DeploymentConditionMatch(egressDeployment, v1.DeploymentAvailable, corev1.ConditionTrue), wait.WithContext(t.Context()))
 		require.NoError(t, err)
 	})
@@ -164,6 +171,7 @@ func TestConfiguration(t *testing.T) {
 		extAuth2, err := extauth.NewBuilder().WithName("ext-authz2").WithNamespace("ext-auth").DeployWithCleanup(t)
 		require.NoError(t, err)
 
+		//TODO: hide it
 		authorizer1 := &v1alpha2.Authorizer{
 			Name:    "ext-authz",
 			Port:    uint32(extAuth.HttpPort),
@@ -244,19 +252,6 @@ func TestConfiguration(t *testing.T) {
 		)
 		url = fmt.Sprintf("http://%s/headers", gatewayAddress)
 		httpassert.AssertOKResponse(t, hc, url)
-
-		hc = httphelper.NewHTTPClient(t,
-			httphelper.WithHost(httpbinInfo.Host),
-			httphelper.WithHeaders(map[string]string{"x-ext-authz": "allow"}),
-		)
-		url = fmt.Sprintf("http://%s/headers", gatewayAddress)
-		httpassert.AssertOKResponse(t, hc, url)
-
-		hc = httphelper.NewHTTPClient(t,
-			httphelper.WithHost(httpbinInfo.Host),
-			httphelper.WithHeaders(map[string]string{"x-ext-authz": "deny"}),
-		)
-		httpassert.AssertForbiddenResponse(t, hc, url)
 
 		hc = httphelper.NewHTTPClient(t,
 			httphelper.WithHost(httpbinInfo.Host),

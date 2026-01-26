@@ -1491,8 +1491,9 @@ spec:
                     type: array
                   forwardClientCertDetails:
                     description: |-
-                      Defines the strategy of handling the **X-Forwarded-Client-Cert** header.
-                      The default behavior is "SANITIZE_SET".
+                      Defines the strategy of handling the **X-Forwarded-Client-Cert** header only by the gateway proxies.
+                      This setting controls how the client attributes are retrieved from the incoming traffic by the gateway proxy and propagated to the upstream services in the cluster.
+                      The default behavior for gateway proxies is "SANITIZE_SET".
                     enum:
                     - APPEND_FORWARD
                     - SANITIZE_SET

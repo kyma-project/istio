@@ -2,9 +2,12 @@ package predicates
 
 import (
 	"fmt"
+	"log"
+
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
-	"log"
+
+	"github.com/kyma-project/istio/operator/internal/images"
 )
 
 const (
@@ -29,7 +32,7 @@ func (r SidecarImage) String() string {
 }
 
 func (r SidecarImage) matchesImageIn(container v1.Container) bool {
-	return container.Image == r.String()
+	return images.RemoveDigestSuffix(container.Image) == r.String()
 }
 
 type ImageResourcesPredicate struct {

@@ -119,6 +119,17 @@ var _ = Describe("Images.GetImageRegistryAndTag", func() {
 			false,
 			nil,
 		),
+		Entry("images with digest suffix",
+			fields{
+				Pilot:      "docker.io/istio/pilot:1.10.0@sha256:90638cf608f9c5dc4b67062a44dc60fa23a21199d6b6214b7703822e04d33910",
+				InstallCNI: "docker.io/istio/cni:1.10.0@sha256:90638cf608f9c5dc4b67062a44dc60fa23a21199d6b6214b7703822e04d33910",
+				ProxyV2:    "docker.io/istio/proxyv2:1.10.0@sha256:90638cf608f9c5dc4b67062a44dc60fa23a21199d6b6214b7703822e04d33910",
+				Ztunnel:    "docker.io/istio/ztunnel:1.10.0@sha256:90638cf608f9c5dc4b67062a44dc60fa23a21199d6b6214b7703822e04d33910",
+			},
+			images.RegistryAndTag{Registry: "docker.io/istio", Tag: "1.10.0"},
+			false,
+			nil,
+		),
 	)
 })
 

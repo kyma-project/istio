@@ -35,7 +35,9 @@ func (i Image) GetTag() (string, error) {
 		return "", fmt.Errorf("image can not be empty")
 	}
 
-	parts := strings.Split(string(i), ":")
+	imageStr := RemoveDigestSuffix(string(i))
+
+	parts := strings.Split(imageStr, ":")
 	if len(parts) != 2 {
 		return "", fmt.Errorf("image %s does not contain a valid tag", i)
 	}
@@ -48,7 +50,9 @@ func (i Image) GetName() (string, error) {
 		return "", fmt.Errorf("image can not be empty")
 	}
 
-	parts := strings.Split(string(i), ":")
+	imageStr := RemoveDigestSuffix(string(i))
+
+	parts := strings.Split(imageStr, ":")
 	if len(parts) != 2 {
 		return "", fmt.Errorf("image %s does not contain a valid image name", i)
 	}
@@ -123,4 +127,12 @@ func (e *Images) GetImageRegistryAndTag() (RegistryAndTag, error) {
 	}
 
 	return RegistryAndTag{Registry: initialHub, Tag: initialTag}, nil
+}
+
+// RemoveDigestSuffix removes the digest suffix if present (format: @sha256:...)
+func RemoveDigestSuffix(image string) string {
+	if idx := strings.Index(image, "@"); idx != -1 {
+		return image[:idx]
+	}
+	return image
 }

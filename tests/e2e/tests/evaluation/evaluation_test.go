@@ -4,17 +4,16 @@ import (
 	_ "embed"
 	"testing"
 
-	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/namespace"
 	"github.com/stretchr/testify/require"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/infrastructure"
-
-	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/httpbin"
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
+	istioassert "github.com/kyma-project/istio/operator/tests/e2e/pkg/asserts/istio"
+	resourceassert "github.com/kyma-project/istio/operator/tests/e2e/pkg/asserts/resources"
 	resourceClient "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/httpbin"
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/infrastructure"
 	modulehelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/modules"
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/namespace"
 )
 
 func TestEvaluationProfile(t *testing.T) {
@@ -28,65 +27,34 @@ func TestEvaluationProfile(t *testing.T) {
 		c, err := resourceClient.ResourcesClient(t)
 		require.NoError(t, err)
 
-		err = c.Get(t.Context(), istioCR.Name, istioCR.Namespace, istioCR)
-		require.NoError(t, err)
-
-		conditions := *istioCR.Status.Conditions
-		require.Equal(t, v1alpha2.Ready, istioCR.Status.State)
-		require.Equal(t, string(v1alpha2.ConditionReasonReconcileSucceeded), conditions[0].Reason)
-		require.Equal(t, string(v1alpha2.ConditionTypeReady), conditions[0].Type)
-		require.Equal(t, metav1.ConditionTrue, conditions[0].Status)
+		istioassert.AssertIstioStatus(t, c, istioCR,
+			istioassert.WithExpectedState(v1alpha2.Ready),
+			istioassert.WithExpectedCondition(v1alpha2.ConditionTypeReady, "True", v1alpha2.ConditionReasonReconcileSucceeded),
+		)
 
 		err = namespace.LabelNamespaceWithIstioInjection(t, "default")
 		require.NoError(t, err)
 
-		_, _, err = httpbin.DeployHttpbin(t, "default")
+		_, err = httpbin.NewBuilder().WithNamespace("default").DeployWithCleanup(t)
 		require.NoError(t, err)
 
-		// istiod
 		istiodPodList, err := infrastructure.GetIstiodPods(t)
 		require.NoError(t, err)
-
 		for _, pod := range istiodPodList.Items {
-			for _, container := range pod.Spec.InitContainers {
-				require.Equal(t, "50m", container.Resources.Requests.Cpu().String())
-				require.Equal(t, "128Mi", container.Resources.Requests.Memory().String())
-				require.Equal(t, "1000m", container.Resources.Limits.Cpu().String())
-				require.Equal(t, "1024Mi", container.Resources.Limits.Memory().String())
-			}
+			resourceassert.AssertIstioProxyResourcesForPod(t, pod, "50m", "128Mi", "1000m", "1024Mi")
 		}
 
-		// istio-ingressgateway
 		igPodList, err := infrastructure.GetIngressGatewayPods(t)
 		require.NoError(t, err)
-
 		for _, pod := range igPodList.Items {
-			for _, container := range pod.Spec.InitContainers {
-				require.Equal(t, "10m", container.Resources.Requests.Cpu().String())
-				require.Equal(t, "32Mi", container.Resources.Requests.Memory().String())
-				require.Equal(t, "1000m", container.Resources.Limits.Cpu().String())
-				require.Equal(t, "1024Mi", container.Resources.Limits.Memory().String())
-			}
+			resourceassert.AssertIstioProxyResourcesForPod(t, pod, "10m", "32Mi", "1000m", "1024Mi")
 		}
 
-		// workload
-		httpbinPodList, err := infrastructure.GetHttpbinPods(t)
+		httpbinPodList, err := httpbin.GetHttpbinPods(t, "app=httpbin")
 		require.NoError(t, err)
-
-		containerFound := false
 		for _, pod := range httpbinPodList.Items {
-			for _, container := range pod.Spec.InitContainers {
-				if container.Name == "istio-proxy" {
-					containerFound = true
-					require.Equal(t, "10m", container.Resources.Requests.Cpu().String())
-					require.Equal(t, "32Mi", container.Resources.Requests.Memory().String())
-					require.Equal(t, "250m", container.Resources.Limits.Cpu().String())
-					require.Equal(t, "254Mi", container.Resources.Limits.Memory().String())
-					break
-				}
-			}
+			resourceassert.AssertIstioProxyResourcesForPod(t, pod, "10m", "32Mi", "250m", "254Mi")
 		}
-		require.True(t, containerFound)
 
 	})
 }

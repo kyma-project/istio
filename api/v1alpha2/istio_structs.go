@@ -13,7 +13,8 @@ type Config struct {
 	NumTrustedProxies *int `json:"numTrustedProxies,omitempty"`
 
 	// Defines the strategy of handling the **X-Forwarded-Client-Cert** header only by the gateway proxies.
-	// This setting controls how the client attributes are retrieved from the incoming traffic by the gateway proxy and propagated to the upstream services in the cluster.
+	// This setting controls how the gateway proxy retrieves client attributes from incoming traffic and propagates them to upstream services in the cluster.
+	// Gateway proxies in Istio module are represented by the Istio Ingress Gateway and Istio Egress Gateway.
 	// The default behavior for gateway proxies is "SANITIZE_SET".
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum=APPEND_FORWARD;SANITIZE_SET;SANITIZE;ALWAYS_FORWARD_ONLY;FORWARD_ONLY
@@ -40,7 +41,7 @@ type Config struct {
 	TrustDomain *string `json:"trustDomain,omitempty"`
 }
 
-// Defines how proxy handles the x-forwarded-client-cert (XFCC) of the HTTP header.
+// Defines how the proxy handles the **X-Forwarded-Client-Cert** (XFCC) of the HTTP header.
 // XFCC is a proxy header that indicates certificate information of part or all of the clients or proxies that a request has passed through on its route from the client to the server.
 type XFCCStrategy string
 

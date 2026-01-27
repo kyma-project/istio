@@ -135,7 +135,7 @@ Appears in:
 | Field | Description | Validation |
 | --- | --- | --- |
 | **numTrustedProxies** <br /> integer | Defines the number of trusted proxies deployed in front of the Istio gateway proxy. | Maximum: 4.294967295e+09 <br />Minimum: 0 <br /> |
-| **forwardClientCertDetails** <br /> [XFCCStrategy](#xfccstrategy) | Defines the strategy of handling the **X-Forwarded-Client-Cert** header only by the gateway proxies.<br />This setting controls how the client attributes are retrieved from the incoming traffic by the gateway proxy and propagated to the upstream services in the cluster.<br />The default behavior for gateway proxies is "SANITIZE_SET". | Enum: [APPEND_FORWARD SANITIZE_SET SANITIZE ALWAYS_FORWARD_ONLY FORWARD_ONLY] <br />Optional <br /> |
+| **forwardClientCertDetails** <br /> [XFCCStrategy](#xfccstrategy) | Defines the strategy of handling the **X-Forwarded-Client-Cert** header only by the gateway proxies.<br />This setting controls how the gateway proxy retrieves client attributes from incoming traffic and propagates them to upstream services in the cluster.<br />Gateway proxies in Istio module are represented by the Istio Ingress Gateway and Istio Egress Gateway.<br />The default behavior for gateway proxies is "SANITIZE_SET". | Enum: [APPEND_FORWARD SANITIZE_SET SANITIZE ALWAYS_FORWARD_ONLY FORWARD_ONLY] <br />Optional <br /> |
 | **authorizers** <br /> [Authorizer](#authorizer) array | Defines a list of external authorization providers. | Optional |
 | **gatewayExternalTrafficPolicy** <br /> string | Defines the external traffic policy for the Istio Ingress Gateway Service. Valid configurations are `"Local"` or `"Cluster"`. The external traffic policy set to `"Local"` preserves the client IP in the request, but also introduces the risk of unbalanced traffic distribution.<br />WARNING: Switching **externalTrafficPolicy** may result in a temporal increase in request delay. Make sure that this is acceptable. | Enum: [Local Cluster] <br />Optional <br /> |
 | **telemetry** <br /> [Telemetry](#telemetry) | Defines the telemetry configuration of Istio. | Optional <br /> |
@@ -420,7 +420,7 @@ Appears in:
 
 ### XFCCStrategy
 
-Defines how proxy handles the x-forwarded-client-cert (XFCC) of the HTTP header.
+Defines how the proxy handles the **X-Forwarded-Client-Cert** (XFCC) of the HTTP header.
 XFCC is a proxy header that indicates certificate information of part or all of the clients or proxies that a request has passed through on its route from the client to the server.
 
 Underlying type: string

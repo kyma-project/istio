@@ -9,7 +9,7 @@ Accepted
 To ensure that the client certificate details can be forwarded to the backend
 services when mTLS is used to secure the Istio ingress gateway, 
 it is essential to extend the Istio CustomResourceDefinitions (CRDs) to include a new field named **forwardClientCertDetails**.
-This field allows to configure the strategy for forwarding client certificate information in the **X-Forwarded-Client-Cert** header for gateway proxies. This setting controls how the client attributes are retrieved from the incoming traffic by the gateway proxy and propagated to the upstream services in the cluster. By default, upstream Istio uses the `SANITIZE_SET` strategy for the gateway proxy, which resets the XFCC header with the client certificate information and sends it to the next hop.
+This field allows to configure the strategy for forwarding client certificate information in the **X-Forwarded-Client-Cert** header for gateway proxies. This setting controls how the gateway proxy retrieves client attributes from incoming traffic and propagates them to upstream services in the cluster. By default, upstream Istio uses the `SANITIZE_SET` strategy for the gateway proxy, which resets the XFCC header with the client certificate information and sends it to the next hop. Gateway proxies in Istio module are represented by the Istio Ingress Gateway and Istio Egress Gateway.
 For more information about the available strategies, see the official [Envoy documentation](https://www.envoyproxy.io/docs/envoy/latest/api-v3/extensions/filters/network/http_connection_manager/v3/http_connection_manager.proto#enum-extensions-filters-network-http-connection-manager-v3-httpconnectionmanager-forwardclientcertdetails) and [Istio documentation](https://istio.io/latest/docs/reference/config/istio.mesh.v1alpha1/#Topology-forward_client_cert_details).
 
 ## Decision
@@ -26,5 +26,5 @@ The field will be of type string and will accept the following values:
 
 The field will not have a default value specified in the CRD schema, allowing users to explicitly set it based on their requirements.
 The default value defined by Istio upstream for this field is `SANITIZE_SET` for gateway proxies, ensuring that, by default,
-the XFCC header is reset and sent to the next hop, unless explicitly configured otherwise in Istio module CR.
+the XFCC header is reset and sent to the next hop, unless explicitly configured otherwise in the Istio module's CR.
 

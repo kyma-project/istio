@@ -11,6 +11,7 @@ import (
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/extauth"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/setup"
 )
 
@@ -552,3 +553,21 @@ func registerIstioCRCleanup(t *testing.T, istioCR *v1alpha2.Istio) {
 		}
 	})
 }
+
+// NewAuthorizerFromExtAuth creates an Authorizer configuration from an external auth deployment.
+func NewAuthorizerFromExtAuth(extAuth *extauth.DeploymentInfo) *v1alpha2.Authorizer {
+	return &v1alpha2.Authorizer{
+		Name:    extAuth.Name,
+		Port:    uint32(extAuth.HttpPort),
+		Service: extAuth.Host,
+		Headers: &v1alpha2.Headers{
+			InCheck: &v1alpha2.InCheck{
+				Include: []string{"X-Ext-Authz"},
+				Add: map[string]string{
+					"X-Add-In-Check": "value",
+				},
+			},
+		},
+	}
+}
+

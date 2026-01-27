@@ -164,33 +164,9 @@ func TestConfiguration(t *testing.T) {
 		extAuth2, err := extauth.NewBuilder().WithName("ext-authz2").WithNamespace(extAuthNamespace).DeployWithCleanup(t)
 		require.NoError(t, err)
 
-		//TODO: hide it
-		authorizer1 := &v1alpha2.Authorizer{
-			Name:    "ext-authz",
-			Port:    uint32(extAuth.HttpPort),
-			Service: extAuth.Host,
-			Headers: &v1alpha2.Headers{
-				InCheck: &v1alpha2.InCheck{
-					Include: []string{"X-Ext-Authz"},
-					Add: map[string]string{
-						"X-Add-In-Check": "value",
-					},
-				},
-			},
-		}
-		authorizer2 := &v1alpha2.Authorizer{
-			Name:    "ext-authz2",
-			Port:    uint32(extAuth2.HttpPort),
-			Service: extAuth2.Host,
-			Headers: &v1alpha2.Headers{
-				InCheck: &v1alpha2.InCheck{
-					Include: []string{"X-Ext-Authz"},
-					Add: map[string]string{
-						"X-Add-In-Check": "value",
-					},
-				},
-			},
-		}
+		authorizer1 := modulehelpers.NewAuthorizerFromExtAuth(extAuth)
+		authorizer2 := modulehelpers.NewAuthorizerFromExtAuth(extAuth2)
+
 		_, err = modulehelpers.NewIstioCRBuilder().
 			WithAuthorizer(authorizer1).
 			WithAuthorizer(authorizer2).

@@ -59,7 +59,7 @@ func TestUpgrade(t *testing.T) {
 			"default",
 			httpbinNativeSidecar.Host,
 			httpbinNativeSidecar.Host,
-			"kyma-system/kyma-gateway",
+			extauth.GatewayReference,
 		)
 		require.NoError(t, err)
 
@@ -69,7 +69,7 @@ func TestUpgrade(t *testing.T) {
 			"default",
 			httpbinRegularSidecar.Host,
 			httpbinRegularSidecar.Host,
-			"kyma-system/kyma-gateway",
+			extauth.GatewayReference,
 		)
 		require.NoError(t, err)
 

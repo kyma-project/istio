@@ -18,6 +18,10 @@ import (
 //go:embed http_gateway.yaml
 var httpGateway []byte
 
+// GatewayReference is the full reference to the kyma-gateway in the format namespace/name
+// This matches the Gateway CR created by CreateHTTPGateway
+const GatewayReference = "kyma-system/kyma-gateway"
+
 // CreateHTTPGateway creates Istio Gateway CR exposing HTTP port 80
 // The Gateway matches all hosts ("*")
 func CreateHTTPGateway(t *testing.T) error {

@@ -150,7 +150,7 @@ func TestObservability(t *testing.T) {
 			"default",
 			httpbin.Host,
 			httpbin.Host,
-			"kyma-system/kyma-gateway",
+			extauth.GatewayReference,
 		)
 		require.NoError(t, err)
 

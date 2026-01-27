@@ -229,7 +229,7 @@ func TestConfiguration(t *testing.T) {
 			"default",
 			httpbin2Info.Host,
 			httpbin2Info.Host,
-			"kyma-system/kyma-gateway",
+			gatewayhelper.GatewayReference,
 		)
 		require.NoError(t, err)
 

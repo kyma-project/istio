@@ -35,11 +35,11 @@ func TestInstallation(t *testing.T) {
 		err = namespace.LabelNamespaceWithIstioInjection(t, "default")
 		require.NoError(t, err)
 
-		_, err = httpbin.NewBuilder().WithNamespace("default").DeployWithCleanup(t)
+		httpbinDeployment, err := httpbin.NewBuilder().WithNamespace("default").DeployWithCleanup(t)
 		require.NoError(t, err)
 
 		// user workload
-		httpbinPodList, err := httpbin.GetHttpbinPods(t, "app=httpbin")
+		httpbinPodList, err := httpbin.GetHttpbinPods(t, httpbinDeployment.WorkloadSelector)
 		require.NoError(t, err)
 
 		for _, pod := range httpbinPodList.Items {

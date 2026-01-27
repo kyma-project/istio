@@ -31,6 +31,8 @@ type DeploymentInfo struct {
 	Port int
 	// Host is the hostname to use for requests (servicename.namespace.svc.cluster.local)
 	Host string
+	// WorkloadSelector is the label selector in "key=value" format used to identify the workload pods
+	WorkloadSelector string
 }
 
 // Builder provides a fluent API for creating httpbin resources
@@ -121,10 +123,11 @@ func (b *Builder) DeployWithCleanup(t *testing.T) (*DeploymentInfo, error) {
 	}
 
 	return &DeploymentInfo{
-		Name:      b.name,
-		Namespace: b.namespace,
-		Port:      defaultHttpbinPort,
-		Host:      fmt.Sprintf("%s.%s.svc.cluster.local", b.name, b.namespace),
+		Name:             b.name,
+		Namespace:        b.namespace,
+		Port:             defaultHttpbinPort,
+		Host:             fmt.Sprintf("%s.%s.svc.cluster.local", b.name, b.namespace),
+		WorkloadSelector: fmt.Sprintf("app=%s", b.name),
 	}, nil
 }
 

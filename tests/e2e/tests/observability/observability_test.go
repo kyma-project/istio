@@ -55,7 +55,6 @@ func TestObservability(t *testing.T) {
 		httpbin, err := httpbin.NewBuilder().DeployWithCleanup(t)
 		require.NoError(t, err)
 
-		// create gateway
 		err = extauth.CreateHTTPGateway(t)
 		require.NoError(t, err)
 
@@ -79,7 +78,7 @@ func TestObservability(t *testing.T) {
 		httpassert.AssertOKResponse(t, httpClient, url)
 
 		httpbinPods := v1.PodList{}
-		err = c.List(t.Context(), &httpbinPods, resources.WithLabelSelector("app=httpbin"))
+		err = c.List(t.Context(), &httpbinPods, resources.WithLabelSelector(httpbin.WorkloadSelector))
 		require.NoError(t, err)
 
 		requiredLogEntries := []string{
@@ -114,6 +113,7 @@ func TestObservability(t *testing.T) {
 		for _, pod := range httpbinPods.Items {
 			logs, err := log.GetLogsFromIstioProxy(t, pod.Name, pod.Namespace)
 			require.NoError(t, err)
+
 			for _, entry := range requiredLogEntries {
 				require.Containsf(t, string(logs), entry, "Log entry %s not found in logs from pod %s", entry, pod.Name)
 			}

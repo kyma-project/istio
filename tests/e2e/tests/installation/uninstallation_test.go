@@ -36,14 +36,14 @@ func TestUninstall(t *testing.T) {
 		err = namespace.LabelNamespaceWithIstioInjection(t, "default")
 		require.NoError(t, err)
 
-		_, err = httpbin.NewBuilder().WithNamespace("default").DeployWithCleanup(t)
+		httpbinDeployment, err := httpbin.NewBuilder().WithNamespace("default").DeployWithCleanup(t)
 		require.NoError(t, err)
 
-		_, err = httpbin.NewBuilder().WithName("httpbin-regular-sidecar").WithNamespace("default").WithRegularSidecar().DeployWithCleanup(t)
+		httpbinRegularSidecarDeployment, err := httpbin.NewBuilder().WithName("httpbin-regular-sidecar").WithNamespace("default").WithRegularSidecar().DeployWithCleanup(t)
 		require.NoError(t, err)
 
-		istioassert.AssertIstioProxyPresent(t, c, "app=httpbin")
-		istioassert.AssertIstioProxyPresent(t, c, "app=httpbin-regular-sidecar")
+		istioassert.AssertIstioProxyPresent(t, c, httpbinDeployment.WorkloadSelector)
+		istioassert.AssertIstioProxyPresent(t, c, httpbinRegularSidecarDeployment.WorkloadSelector)
 
 		err = istioassert.AssertIstioNamespaceExists(t, c)
 		require.NoError(t, err)
@@ -60,8 +60,8 @@ func TestUninstall(t *testing.T) {
 		err = istioassert.AssertIstioNamespaceDeleted(t, c, 2*time.Minute)
 		require.NoError(t, err)
 
-		istioassert.AssertIstioProxyAbsent(t, c, "app=httpbin")
-		istioassert.AssertIstioProxyAbsent(t, c, "app=httpbin-regular-sidecar")
+		istioassert.AssertIstioProxyAbsent(t, c, httpbinDeployment.WorkloadSelector)
+		istioassert.AssertIstioProxyAbsent(t, c, httpbinRegularSidecarDeployment.WorkloadSelector)
 	})
 
 	t.Run("Uninstallation respects the Istio resources created by the user", func(t *testing.T) {

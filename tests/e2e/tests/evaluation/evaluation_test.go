@@ -35,13 +35,13 @@ func TestEvaluationProfile(t *testing.T) {
 		err = namespace.LabelNamespaceWithIstioInjection(t, "default")
 		require.NoError(t, err)
 
-		_, err = httpbin.NewBuilder().WithNamespace("default").DeployWithCleanup(t)
+		httpbinDeployment, err := httpbin.NewBuilder().WithNamespace("default").DeployWithCleanup(t)
 		require.NoError(t, err)
 
 		istioassert.AssertIstiodPodResources(t, c, "50m", "128Mi", "1000m", "1024Mi")
 		istioassert.AssertIngressGatewayPodResources(t, c, "10m", "32Mi", "1000m", "1024Mi")
 
-		httpbinPodList, err := httpbin.GetHttpbinPods(t, "app=httpbin")
+		httpbinPodList, err := httpbin.GetHttpbinPods(t, httpbinDeployment.WorkloadSelector)
 		require.NoError(t, err)
 		for _, pod := range httpbinPodList.Items {
 			resourceassert.AssertIstioProxyResourcesForPod(t, pod, "10m", "32Mi", "250m", "254Mi")

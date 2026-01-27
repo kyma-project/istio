@@ -2,11 +2,11 @@ package configuration
 
 import (
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
+	httpbinassert "github.com/kyma-project/istio/operator/tests/e2e/pkg/asserts/httpbin"
 	istioassert "github.com/kyma-project/istio/operator/tests/e2e/pkg/asserts/istio"
 
 	authzpolicy "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/authorization_policy"
@@ -110,9 +110,8 @@ func TestConfiguration(t *testing.T) {
 			httphelper.WithHeaders(map[string]string{"X-Forwarded-For": "10.2.1.1,10.0.0.1"}),
 		)
 		url := fmt.Sprintf("http://%s/headers", gatewayAddress)
-		httpassert.AssertResponse(t, hc, url,
-			httpassert.WithExpectedStatusCode(http.StatusOK),
-			httpassert.WithExpectedBodyContains(`"X-Envoy-External-Address": [`, `"10.0.0.1"`),
+		httpbinassert.AssertHeaders(t, hc, url,
+			httpbinassert.WithHeaderValue("X-Envoy-External-Address", "10.0.0.1"),
 		)
 
 		// when
@@ -124,8 +123,8 @@ func TestConfiguration(t *testing.T) {
 		require.NoError(t, err)
 
 		// then
-		httpassert.AssertOKResponse(t, hc, url,
-			httpassert.WithExpectedBodyContains(`"X-Envoy-External-Address": [`, `"10.2.1.1"`),
+		httpbinassert.AssertHeaders(t, hc, url,
+			httpbinassert.WithHeaderValue("X-Envoy-External-Address", "10.2.1.1"),
 		)
 	})
 

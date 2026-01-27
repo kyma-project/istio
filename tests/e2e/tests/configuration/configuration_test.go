@@ -1,33 +1,22 @@
 package configuration
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
-	apisecurityv1 "istio.io/api/security/v1"
-	apiv1beta1 "istio.io/api/type/v1beta1"
-	securityv1 "istio.io/client-go/pkg/apis/security/v1"
-	v1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
-	"sigs.k8s.io/e2e-framework/klient/wait"
-	"sigs.k8s.io/e2e-framework/klient/wait/conditions"
 
-	gatewayhelper "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/gateway"
+	istioassert "github.com/kyma-project/istio/operator/tests/e2e/pkg/asserts/istio"
 
+	authzpolicy "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/authorization_policy"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/extauth"
+	gatewayhelper "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/gateway"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/httpbin"
-
-	"github.com/kyma-project/istio/operator/tests/e2e/pkg/setup"
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	httpassert "github.com/kyma-project/istio/operator/tests/e2e/pkg/asserts/http"
+	resourceassert "github.com/kyma-project/istio/operator/tests/e2e/pkg/asserts/resources"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
 	httphelper "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/http"
 	infrahelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/infrastructure"
@@ -35,6 +24,12 @@ import (
 	modulehelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/modules"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/namespace"
 	virtualservice "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/virtual_service"
+)
+
+const (
+	defaultNamespace = "default"
+	extAuthNamespace = "ext-auth"
+	kymaGateway      = "kyma-system/kyma-gateway"
 )
 
 func TestConfiguration(t *testing.T) {
@@ -51,17 +46,17 @@ func TestConfiguration(t *testing.T) {
 			ApplyAndCleanup(t)
 		require.NoError(t, err)
 
-		err = namespace.LabelNamespaceWithIstioInjection(t, "default")
+		err = namespace.LabelNamespaceWithIstioInjection(t, defaultNamespace)
 		require.NoError(t, err)
 
-		_, err = httpbin.NewBuilder().DeployWithCleanup(t)
+		httpbinInfo, err := httpbin.NewBuilder().DeployWithCleanup(t)
 		require.NoError(t, err)
 
-		_, err = httpbin.NewBuilder().WithName("httpbin-regular-sidecar").WithRegularSidecar().DeployWithCleanup(t)
+		httpbinRegularInfo, err := httpbin.NewBuilder().WithName("httpbin-regular-sidecar").WithRegularSidecar().DeployWithCleanup(t)
 		require.NoError(t, err)
 
-		assertProxyResourcesForDeployment(t, c, "httpbin", "default", "30m", "190Mi", "700m", "700Mi")
-		assertProxyResourcesForDeployment(t, c, "httpbin-regular-sidecar", "default", "30m", "190Mi", "700m", "700Mi")
+		resourceassert.AssertIstioProxyResourcesEventually(t, c, httpbinInfo.WorkloadSelector, "30m", "190Mi", "700m", "700Mi")
+		resourceassert.AssertIstioProxyResourcesEventually(t, c, httpbinRegularInfo.WorkloadSelector, "30m", "190Mi", "700m", "700Mi")
 
 		// when
 		err = modulehelpers.NewIstioCRBuilder().
@@ -72,8 +67,8 @@ func TestConfiguration(t *testing.T) {
 		require.NoError(t, err)
 
 		//then
-		assertProxyResourcesForDeployment(t, c, "httpbin", "default", "80m", "230Mi", "900m", "900Mi")
-		assertProxyResourcesForDeployment(t, c, "httpbin-regular-sidecar", "default", "80m", "230Mi", "900m", "900Mi")
+		resourceassert.AssertIstioProxyResourcesEventually(t, c, httpbinInfo.WorkloadSelector, "80m", "230Mi", "900m", "900Mi")
+		resourceassert.AssertIstioProxyResourcesEventually(t, c, httpbinRegularInfo.WorkloadSelector, "80m", "230Mi", "900m", "900Mi")
 	})
 
 	t.Run("Ingress Gateway adds correct X-Envoy-External-Address header after updating numTrustedProxies", func(t *testing.T) {
@@ -88,7 +83,7 @@ func TestConfiguration(t *testing.T) {
 			ApplyAndCleanup(t)
 		require.NoError(t, err)
 
-		err = namespace.LabelNamespaceWithIstioInjection(t, "default")
+		err = namespace.LabelNamespaceWithIstioInjection(t, defaultNamespace)
 		require.NoError(t, err)
 
 		httpbinInfo, err := httpbin.NewBuilder().DeployWithCleanup(t)
@@ -100,10 +95,10 @@ func TestConfiguration(t *testing.T) {
 		err = virtualservice.CreateVirtualService(
 			t,
 			"test-vs",
-			"default",
+			defaultNamespace,
 			httpbinInfo.Host,
 			httpbinInfo.Host,
-			"kyma-system/kyma-gateway",
+			kymaGateway,
 		)
 		require.NoError(t, err)
 
@@ -149,9 +144,7 @@ func TestConfiguration(t *testing.T) {
 			ApplyAndCleanup(t)
 		require.NoError(t, err)
 
-		egressDeployment, err := infrahelpers.GetEgressGatewayDeployment(t)
-		//TODO: somepackage.AssertDeploymentReady(d *v1.Deployment) err
-		err = wait.For(conditions.New(c).DeploymentConditionMatch(egressDeployment, v1.DeploymentAvailable, corev1.ConditionTrue), wait.WithContext(t.Context()))
+		istioassert.AssertEgressGatewayReady(t, c)
 		require.NoError(t, err)
 	})
 
@@ -162,13 +155,13 @@ func TestConfiguration(t *testing.T) {
 		err = infrahelpers.EnsureProductionClusterProfile(t)
 		require.NoError(t, err)
 
-		err = namespace.LabelNamespaceWithIstioInjection(t, "default")
+		err = namespace.LabelNamespaceWithIstioInjection(t, defaultNamespace)
 		require.NoError(t, err)
 
-		extAuth, err := extauth.NewBuilder().WithName("ext-authz").WithNamespace("ext-auth").DeployWithCleanup(t)
+		extAuth, err := extauth.NewBuilder().WithName("ext-authz").WithNamespace(extAuthNamespace).DeployWithCleanup(t)
 		require.NoError(t, err)
 
-		extAuth2, err := extauth.NewBuilder().WithName("ext-authz2").WithNamespace("ext-auth").DeployWithCleanup(t)
+		extAuth2, err := extauth.NewBuilder().WithName("ext-authz2").WithNamespace(extAuthNamespace).DeployWithCleanup(t)
 		require.NoError(t, err)
 
 		//TODO: hide it
@@ -210,14 +203,14 @@ func TestConfiguration(t *testing.T) {
 		err = virtualservice.CreateVirtualService(
 			t,
 			"httpbin-ext-auth",
-			"default",
+			defaultNamespace,
 			httpbinInfo.Host,
 			httpbinInfo.Host,
-			"kyma-system/kyma-gateway",
+			kymaGateway,
 		)
 		require.NoError(t, err)
 
-		err = createAuthorizationPolicyExtAuthz(t, "ext-authz", "default", "httpbin-ext-auth", "ext-authz", "/headers")
+		err = authzpolicy.CreateExtAuthzPolicy(t, "ext-authz", defaultNamespace, httpbinInfo.WorkloadSelector, "ext-authz", "/headers")
 		require.NoError(t, err)
 
 		httpbin2Info, err := httpbin.NewBuilder().WithName("httpbin-ext-auth2").DeployWithCleanup(t)
@@ -226,7 +219,7 @@ func TestConfiguration(t *testing.T) {
 		err = virtualservice.CreateVirtualService(
 			t,
 			"httpbin-ext-auth2",
-			"default",
+			defaultNamespace,
 			httpbin2Info.Host,
 			httpbin2Info.Host,
 			gatewayhelper.GatewayReference,
@@ -236,7 +229,7 @@ func TestConfiguration(t *testing.T) {
 		err = gatewayhelper.CreateHTTPGateway(t)
 		require.NoError(t, err)
 
-		err = createAuthorizationPolicyExtAuthz(t, "ext-authz2", "default", "httpbin-ext-auth2", "ext-authz2", "/headers")
+		err = authzpolicy.CreateExtAuthzPolicy(t, "ext-authz2", defaultNamespace, httpbin2Info.WorkloadSelector, "ext-authz2", "/headers")
 		require.NoError(t, err)
 
 		gatewayAddress, err := load_balancer.GetLoadBalancerIP(t.Context(), c.GetControllerRuntimeClient())
@@ -276,121 +269,4 @@ func TestConfiguration(t *testing.T) {
 		)
 		httpassert.AssertForbiddenResponse(t, hc, url)
 	})
-}
-
-func assertProxyResourcesForDeployment(t *testing.T, c *resources.Resources, deploymentName, _ string, cpuRequest, memRequest, cpuLimit, memLimit string) {
-	t.Helper()
-
-	// Wait for the deployment to be restarted with new resource configurations
-	err := wait.For(func(ctx context.Context) (done bool, err error) {
-		podList := &corev1.PodList{}
-		err = c.List(ctx, podList, resources.WithLabelSelector(fmt.Sprintf("app=%s", deploymentName)))
-		if err != nil {
-			return false, err
-		}
-
-		if len(podList.Items) == 0 {
-			return false, fmt.Errorf("no pods found for deployment %s", deploymentName)
-		}
-
-		for _, pod := range podList.Items {
-			if pod.Status.Phase != corev1.PodRunning {
-				return false, nil
-			}
-
-			for _, container := range pod.Spec.InitContainers {
-				if container.Name == "istio-proxy" {
-					if !checkResourceValues(container.Resources, cpuRequest, memRequest, cpuLimit, memLimit) {
-						return false, nil
-					}
-					return true, nil
-				}
-			}
-
-			for _, container := range pod.Spec.Containers {
-				if container.Name == "istio-proxy" {
-					if !checkResourceValues(container.Resources, cpuRequest, memRequest, cpuLimit, memLimit) {
-						return false, nil
-					}
-					return true, nil
-				}
-			}
-		}
-
-		return false, fmt.Errorf("istio-proxy container not found in pods for deployment %s", deploymentName)
-	}, wait.WithTimeout(1*time.Minute), wait.WithInterval(5*time.Second), wait.WithContext(t.Context()))
-
-	require.NoError(t, err, "Failed to verify proxy resources for deployment %s", deploymentName)
-}
-
-func checkResourceValues(resources corev1.ResourceRequirements, cpuRequest, memRequest, cpuLimit, memLimit string) bool {
-	expectedCPURequest := resource.MustParse(cpuRequest)
-	expectedMemRequest := resource.MustParse(memRequest)
-	expectedCPULimit := resource.MustParse(cpuLimit)
-	expectedMemLimit := resource.MustParse(memLimit)
-
-	actualCPURequest := resources.Requests[corev1.ResourceCPU]
-	actualMemRequest := resources.Requests[corev1.ResourceMemory]
-	actualCPULimit := resources.Limits[corev1.ResourceCPU]
-	actualMemLimit := resources.Limits[corev1.ResourceMemory]
-
-	return actualCPURequest.Equal(expectedCPURequest) &&
-		actualMemRequest.Equal(expectedMemRequest) &&
-		actualCPULimit.Equal(expectedCPULimit) &&
-		actualMemLimit.Equal(expectedMemLimit)
-}
-
-func createAuthorizationPolicyExtAuthz(t *testing.T, name, namespace, selector, provider, operation string) error {
-	t.Helper()
-
-	c, err := client.ResourcesClient(t)
-	if err != nil {
-		t.Logf("Failed to get resources client: %v", err)
-		return err
-	}
-
-	ap := &securityv1.AuthorizationPolicy{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
-		Spec: apisecurityv1.AuthorizationPolicy{
-			Selector: &apiv1beta1.WorkloadSelector{
-				MatchLabels: map[string]string{"app": selector},
-			},
-			Action: apisecurityv1.AuthorizationPolicy_CUSTOM,
-			ActionDetail: &apisecurityv1.AuthorizationPolicy_Provider{
-				Provider: &apisecurityv1.AuthorizationPolicy_ExtensionProvider{
-					Name: provider,
-				},
-			},
-			Rules: []*apisecurityv1.Rule{
-				{
-					To: []*apisecurityv1.Rule_To{
-						{
-							Operation: &apisecurityv1.Operation{
-								Paths: []string{operation},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-
-	setup.DeclareCleanup(t, func() {
-		t.Logf("Cleaning up authorization policy %s in namespace %s", ap.GetName(), ap.GetNamespace())
-		err := c.Delete(setup.GetCleanupContext(), ap)
-		if err != nil {
-			t.Logf("Failed to delete resource %s: %v", ap.GetName(), err)
-			return
-		}
-	})
-
-	err = c.Create(t.Context(), ap)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

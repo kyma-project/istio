@@ -2,6 +2,7 @@ package telemetry
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"testing"
 
@@ -14,12 +15,24 @@ import (
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/setup"
 )
 
-func CreateOtelMockCollector(t *testing.T) error {
+// OtelCollectorInfo contains information about a deployed OTel collector
+type OtelCollectorInfo struct {
+	// Name is the name of the collector pod
+	Name string
+	// Namespace is the namespace where collector is deployed
+	Namespace string
+	// ContainerName is the name of the container to check logs from
+	ContainerName string
+	// WorkloadSelector is the label selector in "key=value" format used to identify the workload pods
+	WorkloadSelector string
+}
+
+func CreateOtelMockCollector(t *testing.T) (*OtelCollectorInfo, error) {
 	t.Helper()
 	rc, err := client.ResourcesClient(t)
 	if err != nil {
 		t.Logf("Failed to create resources client: %v", err)
-		return err
+		return nil, err
 	}
 	exposedPort := 4317
 	namespace := "kyma-system"
@@ -51,7 +64,7 @@ func CreateOtelMockCollector(t *testing.T) error {
 	err = rc.Create(t.Context(), pod)
 	if err != nil {
 		t.Logf("Failed to create Otel Mock Collector container: %v", err)
-		return err
+		return nil, err
 	}
 
 	setup.DeclareCleanup(t, func() {
@@ -78,7 +91,7 @@ func CreateOtelMockCollector(t *testing.T) error {
 	})
 	if err != nil {
 		t.Logf("Otel Mock Collector pod is not running: %v", err)
-		return err
+		return nil, err
 	}
 
 	svc := &corev1.Service{
@@ -104,7 +117,7 @@ func CreateOtelMockCollector(t *testing.T) error {
 	err = rc.Create(t.Context(), svc)
 	if err != nil {
 		t.Logf("Failed to create Otel Mock Collector service: %v", err)
-		return err
+		return nil, err
 	}
 	setup.DeclareCleanup(t, func() {
 		err := rc.Delete(setup.GetCleanupContext(), svc)
@@ -113,5 +126,10 @@ func CreateOtelMockCollector(t *testing.T) error {
 		}
 	})
 
-	return nil
+	return &OtelCollectorInfo{
+		Name:             pod.Name,
+		Namespace:        namespace,
+		ContainerName:    "otel-collector-mock",
+		WorkloadSelector: fmt.Sprintf("app=%s", "otel-collector-mock"),
+	}, nil
 }

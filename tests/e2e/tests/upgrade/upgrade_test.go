@@ -116,8 +116,14 @@ func TestUpgrade(t *testing.T) {
 		istioassert.AssertIstiodReady(t, c)
 		istioassert.AssertIngressGatewayReady(t, c)
 		istioassert.AssertCNINodeReady(t, c)
-		//TODO: add check for required version of
-		// istiod, istio-ingressgateway, istio-cni-node, istio-proxy, istio-discovery(for sure discovery?)
+
+		t.Log("======Verifying component versions after upgrade======")
+		istioassert.AssertIstiodContainerVersion(t, c)
+		istioassert.AssertIngressGatewayContainerVersion(t, c)
+		istioassert.AssertCNINodeContainerVersion(t, c)
+		istioassert.AssertIstioProxyVersion(t, c, httpbinNativeSidecar.WorkloadSelector)
+		istioassert.AssertIstioProxyVersion(t, c, httpbinRegularSidecar.WorkloadSelector)
+		t.Log("======All components have the required version after upgrade======")
 	})
 
 }

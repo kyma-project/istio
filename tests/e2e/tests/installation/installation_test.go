@@ -42,7 +42,6 @@ func TestInstallation(t *testing.T) {
 		httpbinDeployment, err := httpbin.NewBuilder().WithNamespace(defaultNamespace).DeployWithCleanup(t)
 		require.NoError(t, err)
 
-		// user workload
 		httpbinPodList, err := httpbin.GetHttpbinPods(t, httpbinDeployment.WorkloadSelector)
 		require.NoError(t, err)
 
@@ -50,7 +49,6 @@ func TestInstallation(t *testing.T) {
 			resourceassert.AssertIstioProxyResourcesForPod(t, pod, "10m", "192Mi", "1000m", "1024Mi")
 		}
 
-		// istio-ingressgateway
 		ingressPodList, err := infrahelpers.GetIngressGatewayPods(t)
 		require.NoError(t, err)
 

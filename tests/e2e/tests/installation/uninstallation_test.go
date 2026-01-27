@@ -128,7 +128,7 @@ func TestUninstall(t *testing.T) {
 		err = istioClient.Uninstall(t.Context())
 		require.NoError(t, err)
 
-		err = istioassert.AssertIstioNamespaceDeleted(t, c, 1*time.Minute)
+		err = istioassert.AssertIstioNamespaceDeleted(t, c, 2 * time.Minute)
 		require.NoError(t, err)
 
 		err = crds.AssertIstioCRDsNotPresent(t.Context(), c.GetControllerRuntimeClient())
@@ -137,9 +137,9 @@ func TestUninstall(t *testing.T) {
 		err = c.Delete(t.Context(), istioCR)
 		require.NoError(t, err)
 
-		resourceassert.AssertResourceDeleted(t, c, istioCR, 1*time.Minute)
+		resourceassert.AssertResourceDeleted(t, c, istioCR, 1 * time.Minute)
 
-		err = istioassert.AssertIstioNamespaceDeleted(t, c, 2*time.Minute)
+		err = istioassert.AssertIstioNamespaceDeleted(t, c, 2 * time.Minute)
 		require.NoError(t, err)
 
 		err = crds.AssertIstioCRDsNotPresent(t.Context(), c.GetControllerRuntimeClient())

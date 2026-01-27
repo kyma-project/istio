@@ -102,8 +102,8 @@ func TestConfiguration(t *testing.T) {
 			"test-vs",
 			"default",
 			httpbinInfo.Host,
-			[]string{httpbinInfo.Host},
-			[]string{"kyma-system/kyma-gateway"},
+			httpbinInfo.Host,
+			"kyma-system/kyma-gateway",
 		)
 		require.NoError(t, err)
 
@@ -212,8 +212,8 @@ func TestConfiguration(t *testing.T) {
 			"httpbin-ext-auth",
 			"default",
 			httpbinInfo.Host,
-			[]string{httpbinInfo.Host},
-			[]string{"kyma-system/kyma-gateway"},
+			httpbinInfo.Host,
+			"kyma-system/kyma-gateway",
 		)
 		require.NoError(t, err)
 
@@ -228,8 +228,8 @@ func TestConfiguration(t *testing.T) {
 			"httpbin-ext-auth2",
 			"default",
 			httpbin2Info.Host,
-			[]string{httpbin2Info.Host},
-			[]string{"kyma-system/kyma-gateway"},
+			httpbin2Info.Host,
+			"kyma-system/kyma-gateway",
 		)
 		require.NoError(t, err)
 

@@ -8,11 +8,12 @@ import (
 	"testing"
 	"time"
 
-	infrahelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/infrastructure"
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
 	"sigs.k8s.io/e2e-framework/klient/wait"
+
+	infrahelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/infrastructure"
 
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/load_balancer"
 
@@ -33,7 +34,6 @@ import (
 
 	modulehelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/modules"
 )
-
 
 func TestObservability(t *testing.T) {
 	t.Run("Logs from stdout-json envoyFileAccessLog provider are in correct format", func(t *testing.T) {
@@ -63,8 +63,8 @@ func TestObservability(t *testing.T) {
 			"httpbin",
 			"default",
 			httpbin.Host,
-			[]string{httpbin.Host},
-			[]string{"kyma-system/kyma-gateway"},
+			httpbin.Host,
+			"kyma-system/kyma-gateway",
 		)
 		require.NoError(t, err)
 
@@ -149,8 +149,8 @@ func TestObservability(t *testing.T) {
 			"httpbin",
 			"default",
 			httpbin.Host,
-			[]string{httpbin.Host},
-			[]string{"kyma-system/kyma-gateway"},
+			httpbin.Host,
+			"kyma-system/kyma-gateway",
 		)
 		require.NoError(t, err)
 
@@ -163,7 +163,7 @@ func TestObservability(t *testing.T) {
 			t,
 			httphelper.WithPrefix("observability-test"),
 			httphelper.WithHost(httpbin.Host),
-			)
+		)
 		url := fmt.Sprintf("http://%s/headers", ip)
 		httpassert.AssertOKResponse(t, httpClient, url)
 

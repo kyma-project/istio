@@ -16,6 +16,8 @@ import (
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/namespace"
 )
 
+const defaultNamespace = "default"
+
 func TestEvaluationProfile(t *testing.T) {
 	t.Run("Installation of Istio Module with evaluation profile", func(t *testing.T) {
 		err := infrastructure.EnsureEvaluationClusterProfile(t)
@@ -32,10 +34,10 @@ func TestEvaluationProfile(t *testing.T) {
 			istioassert.WithExpectedCondition(v1alpha2.ConditionTypeReady, "True", v1alpha2.ConditionReasonReconcileSucceeded),
 		)
 
-		err = namespace.LabelNamespaceWithIstioInjection(t, "default")
+		err = namespace.LabelNamespaceWithIstioInjection(t, defaultNamespace)
 		require.NoError(t, err)
 
-		httpbinDeployment, err := httpbin.NewBuilder().WithNamespace("default").DeployWithCleanup(t)
+		httpbinDeployment, err := httpbin.NewBuilder().WithNamespace(defaultNamespace).DeployWithCleanup(t)
 		require.NoError(t, err)
 
 		istioassert.AssertIstiodPodResources(t, c, "50m", "128Mi", "1000m", "1024Mi")

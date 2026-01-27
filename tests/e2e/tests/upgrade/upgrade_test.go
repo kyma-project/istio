@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	istioassert "github.com/kyma-project/istio/operator/tests/e2e/pkg/asserts/istio"
 	"github.com/stretchr/testify/require"
+
+	istioassert "github.com/kyma-project/istio/operator/tests/e2e/pkg/asserts/istio"
 
 	httpassert "github.com/kyma-project/istio/operator/tests/e2e/pkg/asserts/http"
 	httphelper "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/http"
@@ -57,8 +58,8 @@ func TestUpgrade(t *testing.T) {
 			"httpbin-vs",
 			"default",
 			httpbinNativeSidecar.Host,
-			[]string{httpbinNativeSidecar.Host},
-			[]string{"kyma-system/kyma-gateway"},
+			httpbinNativeSidecar.Host,
+			"kyma-system/kyma-gateway",
 		)
 		require.NoError(t, err)
 
@@ -67,11 +68,10 @@ func TestUpgrade(t *testing.T) {
 			"httpbin-vs-regular-sidecar",
 			"default",
 			httpbinRegularSidecar.Host,
-			[]string{httpbinRegularSidecar.Host},
-			[]string{"kyma-system/kyma-gateway"},
+			httpbinRegularSidecar.Host,
+			"kyma-system/kyma-gateway",
 		)
 		require.NoError(t, err)
-
 
 		lbIp, err := load_balancer.GetLoadBalancerIP(t.Context(), c.GetControllerRuntimeClient())
 		require.NoError(t, err)
@@ -113,6 +113,11 @@ func TestUpgrade(t *testing.T) {
 		require.NoError(t, err)
 		t.Log("Zero downtime tests completed successfully - no downtime detected during upgrade")
 
+		istioassert.AssertIstiodReady(t, c)
+		istioassert.AssertIngressGatewayReady(t, c)
+		istioassert.AssertCNINodeReady(t, c)
+		//TODO: add check for required version of
+		// istiod, istio-ingressgateway, istio-cni-node, istio-proxy, istio-discovery(for sure discovery?)
 	})
 
 }

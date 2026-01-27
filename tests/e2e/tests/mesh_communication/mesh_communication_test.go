@@ -57,13 +57,18 @@ func TestMeshCommunication(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		sourceWorkloadUrl, err := nginx.CreateForwardRequestNginx(t, "nginx-mesh-communication", sourceNamespace, fmt.Sprintf("%s:%d", httpbinDeployment.Host, httpbinDeployment.Port))
+		sourceWorkloadUrl, err := nginx.CreateForwardRequestNginx(
+			t,
+			"nginx-mesh-communication",
+			sourceNamespace,
+			fmt.Sprintf("%s:%d", httpbinDeployment.Host, httpbinDeployment.Port),
+		)
 		require.NoError(t, err)
 
 		err = extauth.CreateHTTPGateway(t)
 		require.NoError(t, err)
 
-		err = virtual_service.CreateVirtualService(t, "nginx-mesh-communication", sourceNamespace, sourceWorkloadUrl, []string{sourceWorkloadUrl}, []string{"kyma-system/kyma-gateway"})
+		err = virtual_service.CreateVirtualService(t, "nginx-mesh-communication", sourceNamespace, sourceWorkloadUrl, sourceWorkloadUrl, "kyma-system/kyma-gateway")
 		require.NoError(t, err)
 
 		ip, err := load_balancer.GetLoadBalancerIP(t.Context(), c.GetControllerRuntimeClient())
@@ -105,7 +110,12 @@ func TestMeshCommunication(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		sourceWorkloadUrl, err := nginx.CreateForwardRequestNginx(t, "nginx-mesh-communication", sourceNamespace, fmt.Sprintf("%s:%d", httpbinDeployment.Host, httpbinDeployment.Port))
+		sourceWorkloadUrl, err := nginx.CreateForwardRequestNginx(
+			t,
+			"nginx-mesh-communication",
+			sourceNamespace,
+			fmt.Sprintf("%s:%d", httpbinDeployment.Host, httpbinDeployment.Port),
+		)
 		require.NoError(t, err)
 
 		err = extauth.CreateHTTPGateway(t)
@@ -113,7 +123,7 @@ func TestMeshCommunication(t *testing.T) {
 
 		ip, err := load_balancer.GetLoadBalancerIP(t.Context(), c.GetControllerRuntimeClient())
 
-		err = virtual_service.CreateVirtualService(t, "nginx-mesh-communication", sourceNamespace, sourceWorkloadUrl, []string{sourceWorkloadUrl}, []string{"kyma-system/kyma-gateway"})
+		err = virtual_service.CreateVirtualService(t, "nginx-mesh-communication", sourceNamespace, sourceWorkloadUrl, sourceWorkloadUrl, "kyma-system/kyma-gateway")
 		require.NoError(t, err)
 
 		httpClient := httphelper.NewHTTPClient(

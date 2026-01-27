@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	resourceassert "github.com/kyma-project/istio/operator/tests/e2e/pkg/asserts/resources"
@@ -21,6 +20,11 @@ import (
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/namespace"
 )
 
+const (
+	defaultNamespace     = "default"
+	istioSystemNamespace = "istio-system"
+)
+
 func TestInstallation(t *testing.T) {
 	t.Run("Installation of Istio module with default values", func(t *testing.T) {
 		c, err := client.ResourcesClient(t)
@@ -32,10 +36,10 @@ func TestInstallation(t *testing.T) {
 		_, err = modulehelpers.NewIstioCRBuilder().ApplyAndCleanup(t)
 		require.NoError(t, err)
 
-		err = namespace.LabelNamespaceWithIstioInjection(t, "default")
+		err = namespace.LabelNamespaceWithIstioInjection(t, defaultNamespace)
 		require.NoError(t, err)
 
-		httpbinDeployment, err := httpbin.NewBuilder().WithNamespace("default").DeployWithCleanup(t)
+		httpbinDeployment, err := httpbin.NewBuilder().WithNamespace(defaultNamespace).DeployWithCleanup(t)
 		require.NoError(t, err)
 
 		// user workload
@@ -74,19 +78,17 @@ func TestInstallation(t *testing.T) {
 		err = crds.AssertIstioCRDsPresent(t.Context(), c.GetControllerRuntimeClient())
 		require.NoError(t, err)
 
-		istioNs := v1.Namespace{}
-		err = c.Get(t.Context(), "istio-system", "", &istioNs)
-		require.NoError(t, err)
-
 		resourceassert.AssertNamespaceHasAnnotation(
 			t,
-			istioNs,
+			c,
+			istioSystemNamespace,
 			"istios.operator.kyma-project.io/managed-by-disclaimer",
 			"istio-system namespace is not labeled with istios.operator.kyma-project.io/managed-by-disclaimer",
 		)
 		resourceassert.AssertNamespaceHasLabel(
 			t,
-			istioNs,
+			c,
+			istioSystemNamespace,
 			"namespaces.warden.kyma-project.io/validate",
 			"istio-system namespace is not labeled with namespaces.warden.kyma-project.io/validate=true",
 		)
@@ -102,6 +104,10 @@ func TestInstallation(t *testing.T) {
 	})
 
 	t.Run("Managed Istio resources are present", func(t *testing.T) {
+		// we need to get the operator version from config
+		// the default is "dev"
+		// but for the pipeline purpose it can be set to a specific version
+		// by using environment variable OPERATOR_VERSION
 		cfg := config.Get()
 
 		c, err := client.ResourcesClient(t)
@@ -124,10 +130,10 @@ func TestInstallation(t *testing.T) {
 		err = infrahelpers.EnsureProductionClusterProfile(t)
 		require.NoError(t, err)
 
-		// Create Istio CR in default namespace (not kyma-system)
+		// Create Istio CR in default namespace (not kyma-system which is the only allowed namespace)
 		// Use ApplyAndCleanupWithoutReadinessCheck since we expect it to be in Error state
 		istioCR, err := modulehelpers.NewIstioCRBuilder().
-			WithNamespace("default").
+			WithNamespace(defaultNamespace).
 			ApplyAndCleanupWithoutReadinessCheck(t)
 		require.NoError(t, err)
 
@@ -180,7 +186,6 @@ func TestInstallation(t *testing.T) {
 		c, err := client.ResourcesClient(t)
 		require.NoError(t, err)
 
-		// Create Istio CR
 		ib := modulehelpers.NewIstioCRBuilder()
 		_, err = ib.ApplyAndCleanup(t)
 		require.NoError(t, err)
@@ -193,7 +198,7 @@ func TestInstallation(t *testing.T) {
 		err = ib.TriggerReconciliation(t)
 		require.NoError(t, err)
 
-		// check if the resources are recreated by the operator
+		// check if the resources are recreated by the operator after reconciliation is triggered
 		istioassert.AssertIstiodReady(t, c)
 		istioassert.AssertIngressGatewayReady(t, c)
 		istioassert.AssertCNINodeReady(t, c)

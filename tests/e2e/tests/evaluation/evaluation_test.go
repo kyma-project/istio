@@ -38,17 +38,8 @@ func TestEvaluationProfile(t *testing.T) {
 		_, err = httpbin.NewBuilder().WithNamespace("default").DeployWithCleanup(t)
 		require.NoError(t, err)
 
-		istiodPodList, err := infrastructure.GetIstiodPods(t)
-		require.NoError(t, err)
-		for _, pod := range istiodPodList.Items {
-			resourceassert.AssertIstioProxyResourcesForPod(t, pod, "50m", "128Mi", "1000m", "1024Mi")
-		}
-
-		igPodList, err := infrastructure.GetIngressGatewayPods(t)
-		require.NoError(t, err)
-		for _, pod := range igPodList.Items {
-			resourceassert.AssertIstioProxyResourcesForPod(t, pod, "10m", "32Mi", "1000m", "1024Mi")
-		}
+		istioassert.AssertIstiodPodResources(t, c, "50m", "128Mi", "1000m", "1024Mi")
+		istioassert.AssertIngressGatewayPodResources(t, c, "10m", "32Mi", "1000m", "1024Mi")
 
 		httpbinPodList, err := httpbin.GetHttpbinPods(t, "app=httpbin")
 		require.NoError(t, err)

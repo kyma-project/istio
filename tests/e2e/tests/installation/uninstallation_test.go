@@ -13,7 +13,6 @@ import (
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
-	httpbinassert "github.com/kyma-project/istio/operator/tests/e2e/pkg/asserts/httpbin"
 	istioassert "github.com/kyma-project/istio/operator/tests/e2e/pkg/asserts/istio"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/crds"
@@ -43,8 +42,8 @@ func TestUninstall(t *testing.T) {
 		_, err = httpbin.NewBuilder().WithName("httpbin-regular-sidecar").WithNamespace("default").WithRegularSidecar().DeployWithCleanup(t)
 		require.NoError(t, err)
 
-		httpbinassert.AssertIstioProxyPresent(t, c, "app=httpbin")
-		httpbinassert.AssertIstioProxyPresent(t, c, "app=httpbin-regular-sidecar")
+		istioassert.AssertIstioProxyPresent(t, c, "app=httpbin")
+		istioassert.AssertIstioProxyPresent(t, c, "app=httpbin-regular-sidecar")
 
 		err = istioassert.AssertIstioNamespaceExists(t, c)
 		require.NoError(t, err)
@@ -61,8 +60,8 @@ func TestUninstall(t *testing.T) {
 		err = istioassert.AssertIstioNamespaceDeleted(t, c, 2*time.Minute)
 		require.NoError(t, err)
 
-		httpbinassert.AssertIstioProxyAbsent(t, c, "app=httpbin")
-		httpbinassert.AssertIstioProxyAbsent(t, c, "app=httpbin-regular-sidecar")
+		istioassert.AssertIstioProxyAbsent(t, c, "app=httpbin")
+		istioassert.AssertIstioProxyAbsent(t, c, "app=httpbin-regular-sidecar")
 	})
 
 	t.Run("Uninstallation respects the Istio resources created by the user", func(t *testing.T) {

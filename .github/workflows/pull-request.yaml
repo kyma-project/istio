@@ -81,20 +81,48 @@ jobs:
     uses: ./.github/workflows/call-unit-lint.yaml
     secrets: inherit
 
-  e2e-tests:
-    name: Dispatch E2E tests
-    needs: [build-image]
-    uses: ./.github/workflows/call-pull-e2e.yaml
-    with:
-      operator_version: "PR-${{github.event.number}}"
-    if: github.event.pull_request.draft == false
-    secrets: inherit
-
-
-  upgrade-test-k3d-legacy:
-    name: Legacy Istio upgrade integration test - k3d
+  istio-e2e-test-k3d:
+    name: Istio E2E test K3D
     runs-on: ubuntu-latest
-    needs: [build-image]
+    needs: [ get-image ]
+    strategy:
+      fail-fast: false
+      matrix:
+        test_make_target: [ "e2e-test", "configuration-integration-test", "mesh-communication-integration-test", "installation-integration-test", "observability-integration-test" ]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/load-manager-image
+      - uses: ./.github/actions/e2e-test-k3d
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          test_make_target: ${{ matrix.test_make_target }}
+          operator-version: ${{ needs.get-image.outputs.operator_version }}
+          operator-image-name: ${{ needs.get-image.outputs.image }}
+          servers-memory: "16"
+          agents: 2
+
+  istio-e2e-test-evaluation-k3d:
+    name: Istio E2E test (evaluation) - k3d
+    runs-on: ubuntu-latest
+    needs: [ get-image ]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/load-manager-image
+      - uses: ./.github/actions/e2e-test-k3d
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          test_make_target: "evaluation-integration-test"
+          operator-version: ${{ needs.get-image.outputs.operator_version }}
+          operator-image-name: ${{ needs.get-image.outputs.image }}
+          servers-memory: "4"
+          agents: 0
+
+  istio-upgrade-test-k3d:
+    name: Istio upgrade integration test K3D
+    runs-on: ubuntu-latest
+    needs: [ get-image ]
     steps:
       - uses: actions/checkout@v6
         with:
@@ -111,55 +139,61 @@ jobs:
           servers-memory: "16"
           agents: 2
 
-
-  e2e-tests:
-    name: Istio E2E tests - k3d
+  new-istio-e2e-test-k3d:
+    name: New Istio E2E test K3D
     runs-on: ubuntu-latest
-    needs: build-image
+    needs: [ get-image ]
     strategy:
       fail-fast: false
       matrix:
-       test-make-target: [ "installation-e2e-test", "configuration-e2e-test", "mesh-communication-e2e-test", "observability-e2e-test", "ext-auth-e2e-test", "egress-e2e-test" ]
-    steps:
-        - uses: actions/checkout@v6
-        - uses: ./.github/actions/load-manager-image
-        - uses: ./.github/actions/e2e-test-k3d
-          with:
-            test_make_target: ${{ matrix.test-make-target }}
-            operator-image-name: "istio-manager:PR-${{github.event.number}}"
-            operator-version: "PR-${{github.event.number}}"
-            servers-memory: "16"
-            agents: 2
-
-  e2e-tests-evaluation:
-    name: Istio E2E tests (evaluation) - k3d
-    runs-on: ubuntu-latest
-    needs: build-image
+        test-make-target: [ "installation-e2e-test", "configuration-e2e-test", "mesh-communication-e2e-test", "observability-e2e-test", "ext-auth-e2e-test", "egress-e2e-test" ]
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/load-manager-image
       - uses: ./.github/actions/e2e-test-k3d
         with:
-          test_make_target: "evaluation-e2e-test"
-          operator-image-name: "istio-manager:PR-${{github.event.number}}"
-          operator-version: "PR-${{github.event.number}}"
+          test_make_target: ${{ matrix.test-make-target }}
+          operator-image-name: ${{ needs.get-image.outputs.image }}
+          operator-version: ${{ needs.get-image.outputs.operator_version }}
+          servers-memory: "16"
+          agents: 2
+
+  new-istio-e2e-test-evaluation-k3d:
+    name: New Istio E2E test (evaluation) K3D
+    runs-on: ubuntu-latest
+    needs: [ get-image ]
+    strategy:
+      fail-fast: false
+      matrix:
+        test-make-target: [ "evaluation-e2e-test" ]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/load-manager-image
+      - uses: ./.github/actions/e2e-test-k3d
+        with:
+          test_make_target: ${{ matrix.test-make-target }}
+          operator-image-name: ${{ needs.get-image.outputs.image }}
+          operator-version: ${{ needs.get-image.outputs.operator_version }}
           servers-memory: "4"
           agents: 0
 
-  upgrade-tests:
-    name: Istio upgrade tests - k3d
+  new-istio-upgrade-test-k3d:
+    name: New Istio upgrade test K3D
     runs-on: ubuntu-latest
-    needs: build-image
+    needs: [ get-image ]
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - uses: ./.github/actions/load-manager-image
       - uses: ./.github/actions/e2e-test-k3d
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_BRANCH: ${{ github.ref_name }}
         with:
           test_make_target: "upgrade-test"
-          operator-image-name: "istio-manager:PR-${{github.event.number}}"
-          operator-version: "PR-${{github.event.number}}"
+          operator-version: ${{ needs.get-image.outputs.operator_version }}
+          operator-image-name: ${{ needs.get-image.outputs.image }}
           servers-memory: "16"
           agents: 2
 
@@ -175,8 +209,10 @@ jobs:
       - istio-e2e-test-k3d
       - istio-e2e-test-evaluation-k3d
       - istio-upgrade-test-k3d
+      - new-istio-e2e-test-k3d
+      - new-istio-e2e-test-evaluation-k3d
+      - new-istio-upgrade-test-k3d
       - verify-pins
-      - istio-upgrade-test-k3d
     runs-on: ubuntu-latest
     if: always()
     steps:

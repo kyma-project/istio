@@ -206,56 +206,56 @@ $(ENVTEST): $(LOCALBIN)
 evaluation-e2e-test: gotestsum deploy
 	@echo "Running e2e tests"
 	go clean -testcache
-	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/evaluation/..." --junitfile tests.xml --jsonfile tests.json
+	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/evaluation/..." --junitfile "./tests/e2e/tests/evaluation/report.xml" -- -timeout 20m
 	@echo "E2E tests completed successfully"
 
 .PHONY: configuration-e2e-test
 configuration-e2e-test: gotestsum deploy
 	@echo "Running e2e tests"
 	go clean -testcache
-	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/configuration/..." --junitfile tests.xml --jsonfile tests.json -- -timeout 20m
+	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/configuration/..." --junitfile "./tests/e2e/tests/configuration/report.xml" -- -timeout 20m
 	@echo "E2E tests completed successfully"
 
 .PHONY: mesh-communication-e2e-test
 mesh-communication-e2e-test: gotestsum deploy
 	@echo "Running e2e tests"
 	go clean -testcache
-	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/mesh_communication/..." --junitfile tests.xml --jsonfile tests.json
+	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/mesh_communication/..." --junitfile "./tests/e2e/tests/mesh_communication/report.xml" -- -timeout 20m
 	@echo "E2E tests completed successfully"
 
 .PHONY: installation-e2e-test
 installation-e2e-test: gotestsum deploy
 	@echo "Running e2e tests"
 	go clean -testcache
-	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/installation/..." --junitfile tests.xml --jsonfile tests.json
+	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/installation/..." --junitfile "./tests/e2e/tests/installation/report.xml" -- -timeout 20m
 	@echo "E2E tests completed successfully"
 
 .PHONY: observability-e2e-test
 observability-e2e-test: gotestsum deploy
 	@echo "Running e2e tests"
 	go clean -testcache
-	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/observability/..." --junitfile tests.xml --jsonfile tests.json
+	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/observability/..." --junitfile "./tests/e2e/tests/observability/report.xml" -- -timeout 20m
 	@echo "E2E tests completed successfully"
 
 .PHONY: ext-auth-e2e-test
 ext-auth-e2e-test: gotestsum deploy
 	@echo "Running e2e tests"
 	go clean -testcache
-	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/extauth/..." --junitfile tests.xml --jsonfile tests.json
+	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/extauth/..." --junitfile "./tests/e2e/tests/extauth/report.xml" -- -timeout 20m
 	@echo "E2E tests completed successfully"
 
 .PHONY: egress-e2e-test
 egress-e2e-test: gotestsum deploy
 	@echo "Running e2e tests"
 	go clean -testcache
-	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/egress/..." --junitfile tests.xml --jsonfile tests.json
+	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/egress/..." --junitfile "./tests/e2e/tests/egress/report.xml" -- -timeout 20m
 	@echo "E2E tests completed successfully"
 
 .PHONY: upgrade-test
 upgrade-test: generate-upgrade-test-manifest deploy-latest-release gotestsum
 	@echo "Running e2e tests"
 	go clean -testcache
-	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/upgrade/..." --junitfile tests.xml --jsonfile tests.json
+	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/upgrade/..." --junitfile "./tests/e2e/tests/upgrade/report.xml" -- -timeout 20m
 	@echo "E2E tests completed successfully"
 ##@ Module
 

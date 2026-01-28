@@ -1,2 +1,3 @@
 tests/upgrade/operator_generated_manifest.yaml
 **/tests/**/logs
+**/tests/**/report.xml

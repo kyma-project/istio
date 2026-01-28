@@ -2,10 +2,12 @@ package httpbin
 
 import (
 	"bytes"
+	"context"
 	_ "embed"
 	"fmt"
 	"testing"
 	"text/template"
+	"time"
 
 	"sigs.k8s.io/e2e-framework/klient/decoder"
 	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
@@ -19,7 +21,12 @@ import (
 //go:embed manifest_template.yaml
 var manifestTemplate string
 
-const defaultHttpbinPort = 8000
+const (
+	defaultHttpbinPort       = 8000
+	deploymentTimeout        = 2 * time.Minute
+	deploymentCreateTimeout  = 30 * time.Second
+	deploymentCreateInterval = 5 * time.Second
+)
 
 // DeploymentInfo contains information about a deployed httpbin instance
 type DeploymentInfo struct {
@@ -156,14 +163,21 @@ func (b *Builder) generateManifest() ([]byte, error) {
 }
 
 func (b *Builder) deployWithCleanup(t *testing.T, r *resources.Resources, manifest []byte) error {
-	err := decoder.DecodeEach(
-		t.Context(),
-		bytes.NewBuffer(manifest),
-		decoder.CreateHandler(r),
-		decoder.MutateNamespace(b.namespace),
-	)
+	err := wait.For(func(ctx context.Context) (bool, error) {
+		err := decoder.DecodeEach(
+			ctx,
+			bytes.NewBuffer(manifest),
+			decoder.CreateHandler(r),
+			decoder.MutateNamespace(b.namespace),
+		)
+		if err != nil {
+			t.Logf("Failed to deploy httpbin: %v. Retrying...", err)
+			return false, nil
+		}
+		return true, nil
+	}, wait.WithTimeout(deploymentCreateTimeout), wait.WithInterval(deploymentCreateInterval), wait.WithContext(t.Context()))
+
 	if err != nil {
-		t.Logf("Failed to deploy httpbin: %v", err)
 		return err
 	}
 
@@ -182,5 +196,9 @@ func (b *Builder) deployWithCleanup(t *testing.T, r *resources.Resources, manife
 		}
 	})
 
-	return wait.For(conditions.New(r).DeploymentAvailable(b.name, b.namespace))
+	return wait.For(
+		conditions.New(r).DeploymentAvailable(b.name, b.namespace),
+		wait.WithTimeout(deploymentTimeout),
+		wait.WithContext(t.Context()),
+	)
 }

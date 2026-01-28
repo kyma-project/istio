@@ -2,10 +2,12 @@ package extauth
 
 import (
 	"bytes"
+	"context"
 	_ "embed"
 	"fmt"
 	"testing"
 	"text/template"
+	"time"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/e2e-framework/klient/decoder"
@@ -20,6 +22,12 @@ import (
 
 //go:embed manifest_template.yaml
 var manifestTemplate string
+
+const (
+	deploymentTimeout        = 2 * time.Minute
+	deploymentCreateTimeout  = 30 * time.Second
+	deploymentCreateInterval = 5 * time.Second
+)
 
 // DeploymentInfo contains information about a deployed external authorizer instance
 type DeploymentInfo struct {
@@ -136,14 +144,21 @@ func (b *Builder) deployWithCleanup(t *testing.T, r *resources.Resources, manife
 	t.Logf("Creating external authorizer %s in namespace %s", b.name, b.namespace)
 	t.Logf("Applying manifest:\n%s", string(manifest))
 
-	err := decoder.DecodeEach(
-		t.Context(),
-		bytes.NewBuffer(manifest),
-		decoder.CreateHandler(r),
-		decoder.MutateNamespace(b.namespace),
-	)
+	err := wait.For(func(ctx context.Context) (bool, error) {
+		err := decoder.DecodeEach(
+			ctx,
+			bytes.NewBuffer(manifest),
+			decoder.CreateHandler(r),
+			decoder.MutateNamespace(b.namespace),
+		)
+		if err != nil {
+			t.Logf("Failed to deploy external authorizer: %v. Retrying...", err)
+			return false, nil
+		}
+		return true, nil
+	}, wait.WithTimeout(deploymentCreateTimeout), wait.WithInterval(deploymentCreateInterval), wait.WithContext(t.Context()))
+
 	if err != nil {
-		t.Logf("Failed to deploy external authorizer: %v", err)
 		return fmt.Errorf("failed to deploy external authorizer: %w", err)
 	}
 
@@ -162,5 +177,9 @@ func (b *Builder) deployWithCleanup(t *testing.T, r *resources.Resources, manife
 		}
 	})
 
-	return wait.For(conditions.New(r).DeploymentAvailable(b.name, b.namespace))
+	return wait.For(
+		conditions.New(r).DeploymentAvailable(b.name, b.namespace),
+		wait.WithTimeout(deploymentTimeout),
+		wait.WithContext(t.Context()),
+	)
 }

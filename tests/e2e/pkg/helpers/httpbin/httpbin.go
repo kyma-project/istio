@@ -4,13 +4,14 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
+	"testing"
+
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/setup"
 	"sigs.k8s.io/e2e-framework/klient/decoder"
 	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
 	"sigs.k8s.io/e2e-framework/klient/wait"
 	"sigs.k8s.io/e2e-framework/klient/wait/conditions"
-	"testing"
 )
 
 //go:embed manifest.yaml
@@ -25,10 +26,10 @@ func DeployHttpbin(t *testing.T, namespace string) (svcName string, svcPort int,
 		return "", 0, fmt.Errorf("failed to get resources client: %w", err)
 	}
 
-	return "httpbin", 8000, start(t, r, namespace)
+	return "httpbin", 8000, start(t, r, namespace, manifest)
 }
 
-func start(t *testing.T, r *resources.Resources, namespace string) error {
+func start(t *testing.T, r *resources.Resources, namespace string, manifest []byte) error {
 	err := decoder.DecodeEach(
 		t.Context(),
 		bytes.NewBuffer(manifest),

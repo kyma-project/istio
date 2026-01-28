@@ -42,6 +42,15 @@ func WithSidecarInjectionEnabled() NamespaceOption {
 	}
 }
 
+func WithSidecarInjectionDisabled() NamespaceOption {
+	return func(opts *NamespaceOptions) {
+		if opts.Labels == nil {
+			opts.Labels = make(map[string]string)
+		}
+		opts.Labels["istio-injection"] = "disabled"
+	}
+}
+
 type NamespaceOption func(*NamespaceOptions)
 
 func CreateNamespace(t *testing.T, name string, options ...NamespaceOption) error {

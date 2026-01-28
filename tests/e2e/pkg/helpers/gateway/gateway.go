@@ -3,17 +3,24 @@ package extauth
 import (
 	"bytes"
 	_ "embed"
-	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"testing"
 
-	"github.com/kyma-project/istio/operator/tests/e2e/pkg/setup"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
+
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/e2e-framework/klient/decoder"
+
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/setup"
 )
 
 //go:embed http_gateway.yaml
 var httpGateway []byte
+
+// GatewayReference is the full reference to the kyma-gateway in the format namespace/name
+// This matches the Gateway CR created by CreateHTTPGateway
+const GatewayReference = "kyma-system/kyma-gateway"
 
 // CreateHTTPGateway creates Istio Gateway CR exposing HTTP port 80
 // The Gateway matches all hosts ("*")

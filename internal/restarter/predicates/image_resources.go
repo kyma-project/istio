@@ -6,8 +6,6 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
-
-	"github.com/kyma-project/istio/operator/internal/images"
 )
 
 const (
@@ -32,7 +30,7 @@ func (r SidecarImage) String() string {
 }
 
 func (r SidecarImage) matchesImageIn(container v1.Container) bool {
-	return images.RemoveDigestSuffix(container.Image) == r.String()
+	return container.Image == r.String()
 }
 
 type ImageResourcesPredicate struct {

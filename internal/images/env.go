@@ -33,7 +33,7 @@ func (i Image) parseImage() (imageComponents, error) {
 		return imageComponents{}, fmt.Errorf("image can not be empty")
 	}
 
-	imageStr := RemoveDigestSuffix(string(i))
+	imageStr := string(i)
 
 	// Find the last "/" to separate registry from image name
 	lastSlash := strings.LastIndex(imageStr, "/")
@@ -45,7 +45,7 @@ func (i Image) parseImage() (imageComponents, error) {
 	namePart := imageStr[lastSlash+1:]
 
 	// Find the tag separator ":" in the image name portion
-	colonIdx := strings.LastIndex(namePart, ":")
+	colonIdx := strings.Index(namePart, ":")
 	if colonIdx == -1 {
 		return imageComponents{}, fmt.Errorf("image %s does not contain a valid tag", i)
 	}
@@ -124,6 +124,8 @@ func (e *Images) GetImageRegistryAndTag() (RegistryAndTag, error) {
 		return RegistryAndTag{}, fmt.Errorf("failed to get hub for image %s: %w", environments[0], err)
 	}
 	initialTag, err := environments[0].GetTag()
+	tag := removeDigestSuffix(initialTag)
+
 	if err != nil {
 		return RegistryAndTag{}, fmt.Errorf("failed to get tag for image %s: %w", environments[0], err)
 	}
@@ -142,16 +144,16 @@ func (e *Images) GetImageRegistryAndTag() (RegistryAndTag, error) {
 		if err != nil {
 			return RegistryAndTag{}, fmt.Errorf("failed to get tag for image %s: %w", image, err)
 		}
-		if currentTag != initialTag {
+		if removeDigestSuffix(currentTag) != tag {
 			return RegistryAndTag{}, fmt.Errorf("image %s does not have the same tag as %s", image, environments[0])
 		}
 	}
 
-	return RegistryAndTag{Registry: initialHub, Tag: initialTag}, nil
+	return RegistryAndTag{Registry: initialHub, Tag: tag}, nil
 }
 
 // RemoveDigestSuffix removes the digest suffix if present (format: @sha256:...)
-func RemoveDigestSuffix(image string) string {
+func removeDigestSuffix(image string) string {
 	if idx := strings.Index(image, "@"); idx != -1 {
 		return image[:idx]
 	}

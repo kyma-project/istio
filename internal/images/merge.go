@@ -41,7 +41,11 @@ func MergeComponentImages(manifest []byte, images Images) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	pilot["image"] = pilotImage
+	pilotTag, err := images.Pilot.GetTag()
+	if err != nil {
+		return nil, err
+	}
+	pilot["image"] = istioImagesRegistryAndTag.Registry + "/" + pilotImage + ":" + pilotTag
 
 	// Set CNI image: values.cni.image
 	cni := ensureMap(values, "cni")
@@ -49,7 +53,11 @@ func MergeComponentImages(manifest []byte, images Images) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	cni["image"] = installCNI
+	installCNITag, err := images.InstallCNI.GetTag()
+	if err != nil {
+		return nil, err
+	}
+	cni["image"] = istioImagesRegistryAndTag.Registry + "/" + installCNI + ":" + installCNITag
 
 	// Set proxy image: values.global.proxy.image
 	global := ensureMap(values, "global")
@@ -58,7 +66,14 @@ func MergeComponentImages(manifest []byte, images Images) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	proxy["image"] = proxyV2
+	proxyV2Tag, err := images.ProxyV2.GetTag()
+	if err != nil {
+		return nil, err
+	}
+	proxy["image"] = istioImagesRegistryAndTag.Registry + "/" + proxyV2 + ":" + proxyV2Tag
+
+	proxy_init := ensureMap(global, "proxy_init")
+	proxy_init["image"] = istioImagesRegistryAndTag.Registry + "/" + proxyV2 + ":" + proxyV2Tag
 
 	return yaml.Marshal(templateMap)
 }

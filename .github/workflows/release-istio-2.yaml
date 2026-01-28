@@ -272,6 +272,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/e2e-test-k3d
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           test_make_target: ${{ matrix.test-make-target }}
           operator-image-name: ${{ needs.get-image.outputs.image }}
@@ -290,6 +292,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/e2e-test-k3d
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           test_make_target: ${{ matrix.test-make-target }}
           operator-image-name: ${{ needs.get-image.outputs.image }}

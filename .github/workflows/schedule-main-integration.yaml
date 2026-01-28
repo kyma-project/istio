@@ -177,7 +177,7 @@ jobs:
           agents: 0
 
   new-istio-upgrade-test-k3d:
-    name: Istio upgrade integration test K3D
+    name: New Istio upgrade test K3D
     runs-on: ubuntu-latest
     needs: [ get-image ]
     steps:

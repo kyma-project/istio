@@ -202,14 +202,6 @@ envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
 $(ENVTEST): $(LOCALBIN)
 	test -s $(LOCALBIN)/setup-envtest || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
 
-.PHONY: test-e2e-egress
-test-e2e-egress: gotestsum
-	$(LOCALBIN)/gotestsum --rerun-fails --packages="./tests/e2e/egress/..." --format "testname" -- -run '^TestE2E.*' ./tests/e2e/...
-
-.PHONY: e2e-test
-e2e-test: deploy
-	make -C tests/e2e/tests e2e-test
-
 .PHONY: evaluation-e2e-test
 evaluation-e2e-test: gotestsum deploy
 	@echo "Running e2e tests"
@@ -256,7 +248,7 @@ ext-auth-e2e-test: gotestsum deploy
 egress-e2e-test: gotestsum deploy
 	@echo "Running e2e tests"
 	go clean -testcache
-	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/egress/..." --junitfile tests.xml --jsonfile tests.json
+	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/egress/..." --junitfile tests.xml --jsonfile tests.json
 	@echo "E2E tests completed successfully"
 
 .PHONY: upgrade-test

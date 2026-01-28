@@ -153,7 +153,6 @@ jobs:
           operator-version: ${{ needs.get-image.outputs.operator_version }}
           servers-memory: "16"
           agents: 2
-          reports-path: 'tests.xml'
 
   new-istio-e2e-test-evaluation-k3d:
     name: New Istio E2E test (evaluation) K3D
@@ -172,7 +171,6 @@ jobs:
           operator-version: ${{ needs.get-image.outputs.operator_version }}
           servers-memory: "4"
           agents: 0
-          reports-path: 'tests.xml'
 
   new-istio-upgrade-test-k3d:
     name: Istio upgrade integration test K3D
@@ -192,7 +190,6 @@ jobs:
           operator-image-name: ${{ needs.get-image.outputs.image }}
           servers-memory: "16"
           agents: 2
-          reports-path: 'tests.xml'
 
   slack_failed_notification:
     name: Slack Notification

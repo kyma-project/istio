@@ -16,10 +16,7 @@ inputs:
   servers-memory:
     description: 'Amount of memory allocated to k3d cluster'
     required: true
-  reports-path:
-    description: 'Path to test reports directory'
-    required: false
-    default: 'tests/integration/reports/'
+    
 runs:
   using: "composite"
   steps:

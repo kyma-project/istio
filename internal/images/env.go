@@ -28,6 +28,7 @@ type imageComponents struct {
 //   - registry/namespace/image:tag
 //   - registry:port/namespace/image:tag
 //   - registry/namespace/image:tag@sha256:digest
+//   - registry:port/namespace/image:tag@sha256:digest
 func (i Image) parseImage() (imageComponents, error) {
 	if i == "" {
 		return imageComponents{}, fmt.Errorf("image can not be empty")

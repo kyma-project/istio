@@ -106,6 +106,7 @@ func TestConfiguration(t *testing.T) {
 		require.NoError(t, err)
 
 		hc := httphelper.NewHTTPClient(t,
+			httphelper.WithPrefix("configuration-test"),
 			httphelper.WithHost(httpbinInfo.Host),
 			httphelper.WithHeaders(map[string]string{"X-Forwarded-For": "10.2.1.1,10.0.0.1"}),
 		)
@@ -210,11 +211,15 @@ func TestConfiguration(t *testing.T) {
 		gatewayAddress, err := load_balancer.GetLoadBalancerIP(t.Context(), c.GetControllerRuntimeClient())
 		require.NoError(t, err)
 
-		hc := httphelper.NewHTTPClient(t, httphelper.WithHost(httpbinInfo.Host))
+		hc := httphelper.NewHTTPClient(t,
+			httphelper.WithPrefix("configuration-test"),
+			httphelper.WithHost(httpbinInfo.Host),
+		)
 		url := fmt.Sprintf("http://%s/", gatewayAddress)
 		httpassert.AssertOKResponse(t, hc, url)
 
 		hc = httphelper.NewHTTPClient(t,
+			httphelper.WithPrefix("configuration-test"),
 			httphelper.WithHost(httpbinInfo.Host),
 			httphelper.WithHeaders(map[string]string{"x-ext-authz": "allow"}),
 		)
@@ -222,16 +227,21 @@ func TestConfiguration(t *testing.T) {
 		httpassert.AssertOKResponse(t, hc, url)
 
 		hc = httphelper.NewHTTPClient(t,
+			httphelper.WithPrefix("configuration-test"),
 			httphelper.WithHost(httpbinInfo.Host),
 			httphelper.WithHeaders(map[string]string{"x-ext-authz": "deny"}),
 		)
 		httpassert.AssertForbiddenResponse(t, hc, url)
 
-		hc = httphelper.NewHTTPClient(t, httphelper.WithHost(httpbin2Info.Host))
+		hc = httphelper.NewHTTPClient(t,
+			httphelper.WithPrefix("configuration-test"),
+			httphelper.WithHost(httpbin2Info.Host),
+		)
 		url = fmt.Sprintf("http://%s/", gatewayAddress)
 		httpassert.AssertOKResponse(t, hc, url)
 
 		hc = httphelper.NewHTTPClient(t,
+			httphelper.WithPrefix("configuration-test"),
 			httphelper.WithHost(httpbin2Info.Host),
 			httphelper.WithHeaders(map[string]string{"x-ext-authz": "allow"}),
 		)
@@ -239,6 +249,7 @@ func TestConfiguration(t *testing.T) {
 		httpassert.AssertOKResponse(t, hc, url)
 
 		hc = httphelper.NewHTTPClient(t,
+			httphelper.WithPrefix("configuration-test"),
 			httphelper.WithHost(httpbin2Info.Host),
 			httphelper.WithHeaders(map[string]string{"x-ext-authz": "deny"}),
 		)

@@ -81,6 +81,11 @@ generate-upgrade-test-manifest: manifests kustomize module-version
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
+.PHONY: download-gateway-api-crds
+download-gateway-api-crds: ## Download Gateway API CRDs
+	@chmod +x scripts/download_gateway_api_crds.sh
+	@./scripts/download_gateway_api_crds.sh
+
 .PHONY: fmt
 fmt: ## Run go fmt against code.
 	go fmt ./...

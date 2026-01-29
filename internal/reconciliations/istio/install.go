@@ -41,6 +41,15 @@ func installIstio(ctx context.Context, args installArgs) (istiooperator.IstioIma
 
 	ctrl.Log.Info("Starting Istio install", "istio version", istioImageVersion.Version())
 
+	// Install Gateway API CRDs first
+	ctrl.Log.Info("Installing Gateway API CRDs as prerequisite for Istio")
+	gatewayAPICRDInstaller := NewGatewayAPICRDInstaller(k8sClient)
+	if err := gatewayAPICRDInstaller.Install(ctx); err != nil {
+		ctrl.Log.Error(err, "Gateway API CRDs installation failed", "istioVersion", istioImageVersion.Version())
+		return istioImageVersion, describederrors.NewDescribedError(err, "Could not install Gateway API CRDs")
+	}
+	ctrl.Log.Info("Gateway API CRDs are ready, proceeding with Istio installation")
+
 	if _, ok := istioCR.Annotations[labels.LastAppliedConfiguration]; ok {
 		lastAppliedConfig, err := configuration.GetLastAppliedConfiguration(istioCR)
 		if err != nil {

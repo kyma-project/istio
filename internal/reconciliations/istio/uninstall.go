@@ -74,5 +74,21 @@ func uninstallIstio(ctx context.Context, args uninstallArgs) (istiooperator.Isti
 
 	ctrl.Log.Info("Istio uninstall succeeded")
 	statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIstioUninstallSucceeded))
+
+	if err = RemoveInstallationFinalizer(ctx, k8sClient, istioCR); err != nil {
+		ctrl.Log.Error(err, "Error happened during istio installation finalizer removal")
+		return istioImageVersion, describederrors.NewDescribedError(err, "Could not remove finalizer")
+	}
+
+	// Remove Gateway API CRDs after successful uninstallation
+	ctrl.Log.Info("Cleaning up Gateway API CRDs after Istio uninstallation")
+	gatewayAPICRDInstaller := NewGatewayAPICRDInstaller(k8sClient)
+	if err := gatewayAPICRDInstaller.Uninstall(ctx); err != nil {
+		ctrl.Log.Error(err, "Failed to remove Gateway API CRDs, but continuing", "note", "Manual cleanup may be required")
+		// Don't fail the uninstallation if CRD removal fails, just log the error
+	} else {
+		ctrl.Log.Info("Gateway API CRDs cleanup completed successfully")
+	}
+
 	return istioImageVersion, nil
 }

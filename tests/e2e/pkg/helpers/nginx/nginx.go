@@ -127,6 +127,8 @@ func createNginxDeployment(t *testing.T, k8sClient *resources.Resources, name, n
 		},
 	}
 
+	t.Logf("applying nginx deployment: %+v", &dep)
+
 	err := k8sClient.Create(t.Context(), &dep)
 	if err != nil {
 		t.Logf("Failed to create nginx deployment: %v", err)
@@ -157,6 +159,8 @@ func createNginxService(t *testing.T, k8sClient *resources.Resources, name, name
 			},
 		},
 	}
+
+	t.Logf("applying nginx service: %+v", &svc)
 
 	err := k8sClient.Create(t.Context(), &svc)
 	if err != nil {

@@ -43,6 +43,9 @@ func CreateHTTPGateway(t *testing.T) error {
 		t.Logf("Failed to decode HTTP Gateway template: %v", err)
 		return err
 	}
+
+	t.Logf("applying gateway: %+v", gw)
+
 	err = r.Create(t.Context(), gw)
 	if err != nil {
 		if !k8serrors.IsAlreadyExists(err) {

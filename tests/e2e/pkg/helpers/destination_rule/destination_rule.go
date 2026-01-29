@@ -37,6 +37,8 @@ func CreateDestinationRule(t *testing.T, name, namespace, host string) (*network
 		},
 	}
 
+	t.Logf("applying destination rule: %+v", destinationRule)
+
 	err = r.Create(t.Context(), destinationRule)
 	if err != nil {
 		if !k8serrors.IsAlreadyExists(err) {

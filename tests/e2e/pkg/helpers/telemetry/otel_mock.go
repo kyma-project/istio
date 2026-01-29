@@ -114,6 +114,8 @@ func CreateOtelMockCollector(t *testing.T) (*OtelCollectorInfo, error) {
 		},
 	}
 
+	t.Logf("applying otel mock collector service: %+v", svc)
+
 	err = rc.Create(t.Context(), svc)
 	if err != nil {
 		t.Logf("Failed to create Otel Mock Collector service: %v", err)

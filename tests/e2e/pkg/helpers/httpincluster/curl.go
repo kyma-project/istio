@@ -2,10 +2,11 @@ package httpincluster
 
 import (
 	"bytes"
-	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
 	"net/http"
 	"strings"
 	"testing"
+
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
 
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/setup"
 	corev1 "k8s.io/api/core/v1"
@@ -61,7 +62,7 @@ func RunRequestFromInsideCluster(t *testing.T, namespace string, url string, opt
 		},
 	}
 
-	t.Logf("Creating curl pod: %s", curlPodName)
+	t.Logf("applying curl pod: %+v", &pod)
 	err = r.Create(t.Context(), &pod)
 	if err != nil {
 		return "", "", err

@@ -17,43 +17,69 @@ type RegistryAndTag struct {
 	Tag      string
 }
 
-func (i Image) GetHub() (string, error) {
+type imageComponents struct {
+	registry string
+	name     string
+	tag      string
+}
+
+// parseImage parses an OCI image reference into its components: registry, name, and tag.
+// Supports formats like:
+//   - registry/namespace/image:tag
+//   - registry:port/namespace/image:tag
+//   - registry/namespace/image:tag@sha256:digest
+//   - registry:port/namespace/image:tag@sha256:digest
+func (i Image) parseImage() (imageComponents, error) {
 	if i == "" {
-		return "", fmt.Errorf("image can not be empty")
+		return imageComponents{}, fmt.Errorf("image can not be empty")
 	}
 
-	parts := strings.Split(string(i), "/")
-	if len(parts) < 2 {
-		return "", fmt.Errorf("image %s does not contain a valid hub URL", i)
+	imageStr := string(i)
+
+	// Find the last "/" to separate registry from image name
+	lastSlash := strings.LastIndex(imageStr, "/")
+	if lastSlash == -1 {
+		return imageComponents{}, fmt.Errorf("image %s does not contain a valid format", i)
 	}
 
-	return strings.Join(parts[:len(parts)-1], "/"), nil
+	registry := imageStr[:lastSlash]
+	namePart := imageStr[lastSlash+1:]
+
+	// Find the tag separator ":" in the image name portion
+	colonIdx := strings.Index(namePart, ":")
+	if colonIdx == -1 {
+		return imageComponents{}, fmt.Errorf("image %s does not contain a valid tag", i)
+	}
+
+	return imageComponents{
+		registry: registry,
+		name:     namePart[:colonIdx],
+		tag:      namePart[colonIdx+1:],
+	}, nil
+}
+
+func (i Image) GetHub() (string, error) {
+	components, err := i.parseImage()
+	if err != nil {
+		return "", err
+	}
+	return components.registry, nil
 }
 
 func (i Image) GetTag() (string, error) {
-	if i == "" {
-		return "", fmt.Errorf("image can not be empty")
+	components, err := i.parseImage()
+	if err != nil {
+		return "", err
 	}
-
-	parts := strings.Split(string(i), ":")
-	if len(parts) != 2 {
-		return "", fmt.Errorf("image %s does not contain a valid tag", i)
-	}
-
-	return parts[len(parts)-1], nil
+	return components.tag, nil
 }
 
 func (i Image) GetName() (string, error) {
-	if i == "" {
-		return "", fmt.Errorf("image can not be empty")
+	components, err := i.parseImage()
+	if err != nil {
+		return "", err
 	}
-
-	parts := strings.Split(string(i), ":")
-	if len(parts) != 2 {
-		return "", fmt.Errorf("image %s does not contain a valid image name", i)
-	}
-	parts = strings.Split(parts[0], "/")
-	return parts[len(parts)-1], nil
+	return components.name, nil
 }
 
 type Images struct {
@@ -99,6 +125,8 @@ func (e *Images) GetImageRegistryAndTag() (RegistryAndTag, error) {
 		return RegistryAndTag{}, fmt.Errorf("failed to get hub for image %s: %w", environments[0], err)
 	}
 	initialTag, err := environments[0].GetTag()
+	tag := removeDigestSuffix(initialTag)
+
 	if err != nil {
 		return RegistryAndTag{}, fmt.Errorf("failed to get tag for image %s: %w", environments[0], err)
 	}
@@ -117,10 +145,18 @@ func (e *Images) GetImageRegistryAndTag() (RegistryAndTag, error) {
 		if err != nil {
 			return RegistryAndTag{}, fmt.Errorf("failed to get tag for image %s: %w", image, err)
 		}
-		if currentTag != initialTag {
+		if removeDigestSuffix(currentTag) != tag {
 			return RegistryAndTag{}, fmt.Errorf("image %s does not have the same tag as %s", image, environments[0])
 		}
 	}
 
-	return RegistryAndTag{Registry: initialHub, Tag: initialTag}, nil
+	return RegistryAndTag{Registry: initialHub, Tag: tag}, nil
+}
+
+// RemoveDigestSuffix removes the digest suffix if present (format: @sha256:...)
+func removeDigestSuffix(image string) string {
+	if idx := strings.Index(image, "@"); idx != -1 {
+		return image[:idx]
+	}
+	return image
 }

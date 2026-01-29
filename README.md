@@ -11,7 +11,7 @@ The Istio module installs and manages Istio in your Kyma cluster. The version of
 
 ### Prerequisites
 
-- Access to a Kubernetes cluster (v1.24 or higher)
+- Access to a Kubernetes cluster (v1.33 or higher)
 - [kubectl](https://kubernetes.io/docs/tasks/tools/)
 
 ### Procedure

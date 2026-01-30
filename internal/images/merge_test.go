@@ -40,10 +40,12 @@ spec:
   profile: default
 `,
 				images.Images{
-					Pilot:      "my-hub/my-pilot:my-tag",
-					InstallCNI: "my-hub/my-cni:my-tag",
-					ProxyV2:    "my-hub/my-proxy:my-tag",
-					Ztunnel:    "my-hub/my-ztunnel:my-tag",
+					Registry:   "my-hub",
+					Tag:        "my-tag",
+					Pilot:      images.Image{Registry: "my-hub", Name: "my-pilot", Tag: "my-tag"},
+					InstallCNI: images.Image{Registry: "my-hub", Name: "my-cni", Tag: "my-tag"},
+					ProxyV2:    images.Image{Registry: "my-hub", Name: "my-proxy", Tag: "my-tag"},
+					Ztunnel:    images.Image{Registry: "my-hub", Name: "my-ztunnel", Tag: "my-tag"},
 				},
 				"my-hub",
 				"my-tag",
@@ -57,10 +59,12 @@ spec:
   tag: old-tag
 `,
 				images.Images{
-					Pilot:      "new-hub/my-pilot:new-tag",
-					InstallCNI: "new-hub/my-cni:new-tag",
-					ProxyV2:    "new-hub/my-proxy:new-tag",
-					Ztunnel:    "new-hub/my-ztunnel:new-tag",
+					Registry:   "new-hub",
+					Tag:        "new-tag",
+					Pilot:      images.Image{Registry: "new-hub", Name: "my-pilot", Tag: "new-tag"},
+					InstallCNI: images.Image{Registry: "new-hub", Name: "my-cni", Tag: "new-tag"},
+					ProxyV2:    images.Image{Registry: "new-hub", Name: "my-proxy", Tag: "new-tag"},
+					Ztunnel:    images.Image{Registry: "new-hub", Name: "my-ztunnel", Tag: "new-tag"},
 				},
 				"new-hub",
 				"new-tag",
@@ -188,6 +192,9 @@ spec:
 				global := values["global"].(map[string]interface{})
 				proxy := global["proxy"].(map[string]interface{})
 				Expect(proxy["image"]).To(Equal(expectedProxy))
+
+				proxy_init := global["proxy_init"].(map[string]interface{})
+				Expect(proxy_init["image"]).To(Equal(expectedProxy))
 			},
 
 			Entry("sets all component images when values section is empty",
@@ -196,10 +203,12 @@ spec:
   profile: default
 `,
 				images.Images{
-					Pilot:      "my-hub/my-pilot:my-tag",
-					InstallCNI: "my-hub/my-cni:my-tag",
-					ProxyV2:    "my-hub/my-proxy:my-tag",
-					Ztunnel:    "my-hub/my-ztunnel:my-tag",
+					Registry:   "my-hub",
+					Tag:        "my-tag",
+					Pilot:      images.Image{Registry: "my-hub", Name: "my-pilot", Tag: "my-tag"},
+					InstallCNI: images.Image{Registry: "my-hub", Name: "my-cni", Tag: "my-tag"},
+					ProxyV2:    images.Image{Registry: "my-hub", Name: "my-proxy", Tag: "my-tag"},
+					Ztunnel:    images.Image{Registry: "my-hub", Name: "my-ztunnel", Tag: "my-tag"},
 				},
 				"my-hub/my-pilot:my-tag",
 				"my-hub/my-cni:my-tag",
@@ -220,10 +229,12 @@ spec:
         image: old-proxy
 `,
 				images.Images{
-					Pilot:      "new-hub/new-pilot:new-tag",
-					InstallCNI: "new-hub/new-cni:new-tag",
-					ProxyV2:    "new-hub/new-proxy:new-tag",
-					Ztunnel:    "new-hub/new-ztunnel:new-tag",
+					Registry:   "new-hub",
+					Tag:        "new-tag",
+					Pilot:      images.Image{Registry: "new-hub", Name: "new-pilot", Tag: "new-tag"},
+					InstallCNI: images.Image{Registry: "new-hub", Name: "new-cni", Tag: "new-tag"},
+					ProxyV2:    images.Image{Registry: "new-hub", Name: "new-proxy", Tag: "new-tag"},
+					Ztunnel:    images.Image{Registry: "new-hub", Name: "new-ztunnel", Tag: "new-tag"},
 				},
 				"new-hub/new-pilot:new-tag",
 				"new-hub/new-cni:new-tag",
@@ -251,10 +262,12 @@ spec:
             memory: 128Mi
 `,
 				images.Images{
-					Pilot:      "updated-hub/updated-pilot:v1.0",
-					InstallCNI: "updated-hub/updated-cni:v1.0",
-					ProxyV2:    "updated-hub/updated-proxy:v1.0",
-					Ztunnel:    "updated-hub/updated-ztunnel:v1.0",
+					Registry:   "updated-hub",
+					Tag:        "v1.0",
+					Pilot:      images.Image{Registry: "updated-hub", Name: "updated-pilot", Tag: "v1.0"},
+					InstallCNI: images.Image{Registry: "updated-hub", Name: "updated-cni", Tag: "v1.0"},
+					ProxyV2:    images.Image{Registry: "updated-hub", Name: "updated-proxy", Tag: "v1.0"},
+					Ztunnel:    images.Image{Registry: "updated-hub", Name: "updated-ztunnel", Tag: "v1.0"},
 				},
 				"updated-hub/updated-pilot:v1.0",
 				"updated-hub/updated-cni:v1.0",
@@ -268,66 +281,17 @@ spec:
   profile: default
 `,
 				images.Images{
-					Pilot:      "registry.example.com/istio/pilot:1.20.0",
-					InstallCNI: "registry.example.com/istio/install-cni:1.20.0",
-					ProxyV2:    "registry.example.com/istio/proxyv2:1.20.0",
-					Ztunnel:    "registry.example.com/istio/ztunnel:1.20.0",
+					Registry:   "registry.example.com/istio",
+					Tag:        "1.20.0",
+					Pilot:      images.Image{Registry: "registry.example.com/istio", Name: "pilot", Tag: "1.20.0"},
+					InstallCNI: images.Image{Registry: "registry.example.com/istio", Name: "install-cni", Tag: "1.20.0"},
+					ProxyV2:    images.Image{Registry: "registry.example.com/istio", Name: "proxyv2", Tag: "1.20.0"},
+					Ztunnel:    images.Image{Registry: "registry.example.com/istio", Name: "ztunnel", Tag: "1.20.0"},
 				},
 				"registry.example.com/istio/pilot:1.20.0",
 				"registry.example.com/istio/install-cni:1.20.0",
 				"registry.example.com/istio/proxyv2:1.20.0",
 				false,
-			),
-
-			Entry("fails when pilot image is invalid",
-				`
-spec:
-  profile: default
-`,
-				images.Images{
-					Pilot:      "invalid-no-tag",
-					InstallCNI: "my-hub/my-cni:my-tag",
-					ProxyV2:    "my-hub/my-proxy:my-tag",
-					Ztunnel:    "my-hub/my-ztunnel:my-tag",
-				},
-				"",
-				"",
-				"",
-				true,
-			),
-
-			Entry("fails when cni image is invalid",
-				`
-spec:
-  profile: default
-`,
-				images.Images{
-					Pilot:      "my-hub/my-pilot:my-tag",
-					InstallCNI: "invalid-no-tag",
-					ProxyV2:    "my-hub/my-proxy:my-tag",
-					Ztunnel:    "my-hub/my-ztunnel:my-tag",
-				},
-				"",
-				"",
-				"",
-				true,
-			),
-
-			Entry("fails when proxy image is invalid",
-				`
-spec:
-  profile: default
-`,
-				images.Images{
-					Pilot:      "my-hub/my-pilot:my-tag",
-					InstallCNI: "my-hub/my-cni:my-tag",
-					ProxyV2:    "invalid-no-tag",
-					Ztunnel:    "my-hub/my-ztunnel:my-tag",
-				},
-				"",
-				"",
-				"",
-				true,
 			),
 		)
 
@@ -343,10 +307,12 @@ spec:
 `
 
 			img := images.Images{
-				Pilot:      "production.registry.io/istio/pilot:1.21.0",
-				InstallCNI: "production.registry.io/istio/install-cni:1.21.0",
-				ProxyV2:    "production.registry.io/istio/proxyv2:1.21.0",
-				Ztunnel:    "production.registry.io/istio/ztunnel:1.21.0",
+				Registry:   "production.registry.io/istio",
+				Tag:        "1.21.0",
+				Pilot:      images.Image{Registry: "production.registry.io/istio", Name: "pilot", Tag: "1.21.0"},
+				InstallCNI: images.Image{Registry: "production.registry.io/istio", Name: "install-cni", Tag: "1.21.0"},
+				ProxyV2:    images.Image{Registry: "production.registry.io/istio", Name: "proxyv2", Tag: "1.21.0"},
+				Ztunnel:    images.Image{Registry: "production.registry.io/istio", Name: "ztunnel", Tag: "1.21.0"},
 			}
 
 			out, err := images.MergeComponentImages([]byte(input), img)

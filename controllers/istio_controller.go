@@ -66,7 +66,7 @@ const (
 	reconciliationRequeueTimeWarning = 1 * time.Hour
 )
 
-func NewController(mgr manager.Manager, reconciliationInterval time.Duration, crMetrics *istiocrmetrics.IstioCRMetrics) *IstioReconciler {
+func NewController(mgr manager.Manager, reconciliationInterval time.Duration, crMetrics *istiocrmetrics.IstioCRMetrics, istioImages images.Images) *IstioReconciler {
 	merger := istiooperator.NewDefaultIstioMerger()
 
 	statusHandler := status.NewStatusHandler(mgr.GetClient())
@@ -75,7 +75,7 @@ func NewController(mgr manager.Manager, reconciliationInterval time.Duration, cr
 	actionRestarter := restart.NewActionRestarter(mgr.GetClient(), &logger)
 	restarters := []restarter.Restarter{
 		restarter.NewIngressGatewayRestarter(mgr.GetClient(), []predicates.IngressGatewayPredicate{}, statusHandler),
-		restarter.NewSidecarsRestarter(mgr.GetLogger(), mgr.GetClient(), &merger, sidecars.NewProxyRestarter(mgr.GetClient(), podsLister, actionRestarter, &logger), statusHandler),
+		restarter.NewSidecarsRestarter(mgr.GetLogger(), mgr.GetClient(), &merger, sidecars.NewProxyRestarter(mgr.GetClient(), podsLister, actionRestarter, &logger), statusHandler, istioImages),
 	}
 	userResources := resources.NewUserResources(mgr.GetClient())
 

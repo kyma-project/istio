@@ -10,153 +10,141 @@ import (
 
 const kymaFipsModeEnabledEnv = "KYMA_FIPS_MODE_ENABLED"
 
-type Image string
-
 type RegistryAndTag struct {
 	Registry string
 	Tag      string
 }
 
-type imageComponents struct {
-	registry string
-	name     string
-	tag      string
+type images struct {
+	Pilot      string `env:"pilot,notEmpty"`
+	InstallCNI string `env:"install-cni,notEmpty"`
+	ProxyV2    string `env:"proxyv2,notEmpty"`
+	Ztunnel    string `env:"ztunnel"`
 }
 
-// parseImage parses an OCI image reference into its components: registry, name, and tag.
+type imagesFips struct {
+	Pilot      string `env:"pilot-fips,notEmpty"`
+	InstallCNI string `env:"install-cni-fips,notEmpty"`
+	ProxyV2    string `env:"proxyv2-fips,notEmpty"`
+	Ztunnel    string `env:"ztunnel-fips"`
+}
+
+func GetImages() (*Images, error) {
+	envImages, err := parsImagesFromEnvs()
+	if err != nil {
+		return nil, err
+	}
+	i := &Images{}
+
+	parsedImage, err := parseImage(envImages.Pilot)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse pilot image: %w", err)
+	}
+	i.Pilot = parsedImage
+
+	parsedImage, err = parseImage(envImages.InstallCNI)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse install-cni image: %w", err)
+	}
+	i.InstallCNI = parsedImage
+
+	parsedImage, err = parseImage(envImages.ProxyV2)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse proxyv2 image: %w", err)
+	}
+	i.ProxyV2 = parsedImage
+
+	if envImages.Ztunnel != "" {
+		parsedImage, err = parseImage(envImages.Ztunnel)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse ztunnel image: %w", err)
+		}
+		i.Ztunnel = parsedImage
+	}
+
+	if err := i.getImageRegistryAndTag(); err != nil {
+		return nil, err
+	}
+
+	return i, nil
+}
+
+func parsImagesFromEnvs() (*images, error) {
+	var err error
+	var environments images
+	var fipsEnvironments imagesFips
+
+	kymaFipsModeEnabled := os.Getenv(kymaFipsModeEnabledEnv)
+	if kymaFipsModeEnabled == "true" {
+		fipsEnvironments, err = env.ParseAs[imagesFips]()
+		if err != nil {
+			return nil, fmt.Errorf("missing required FIPS environment variables %w", err)
+		}
+		return (*images)(&fipsEnvironments), nil
+	}
+	environments, err = env.ParseAs[images]()
+	if err != nil {
+		return nil, fmt.Errorf("missing required environment variables %w", err)
+	}
+	return &environments, nil
+
+}
+
+// parseImage parses an OCI image reference into Image to have parsed and available to get: registry, name, and tag.
 // Supports formats like:
 //   - registry/namespace/image:tag
 //   - registry:port/namespace/image:tag
 //   - registry/namespace/image:tag@sha256:digest
 //   - registry:port/namespace/image:tag@sha256:digest
-func (i Image) parseImage() (imageComponents, error) {
-	if i == "" {
-		return imageComponents{}, fmt.Errorf("image can not be empty")
+func parseImage(image string) (Image, error) {
+	if image == "" {
+		return Image{}, fmt.Errorf("image can not be empty")
 	}
-
-	imageStr := string(i)
 
 	// Find the last "/" to separate registry from image name
-	lastSlash := strings.LastIndex(imageStr, "/")
+	lastSlash := strings.LastIndex(image, "/")
 	if lastSlash == -1 {
-		return imageComponents{}, fmt.Errorf("image %s does not contain a valid format", i)
+		return Image{}, fmt.Errorf("image %s does not contain a valid format", image)
 	}
 
-	registry := imageStr[:lastSlash]
-	namePart := imageStr[lastSlash+1:]
+	registry := image[:lastSlash]
+	namePart := image[lastSlash+1:]
 
 	// Find the tag separator ":" in the image name portion
 	colonIdx := strings.Index(namePart, ":")
 	if colonIdx == -1 {
-		return imageComponents{}, fmt.Errorf("image %s does not contain a valid tag", i)
+		return Image{}, fmt.Errorf("image %s does not contain a valid tag", image)
 	}
-
-	return imageComponents{
-		registry: registry,
-		name:     namePart[:colonIdx],
-		tag:      namePart[colonIdx+1:],
+	return Image{
+		Registry: registry,
+		Name:     namePart[:colonIdx],
+		Tag:      namePart[colonIdx+1:],
 	}, nil
 }
 
-func (i Image) GetHub() (string, error) {
-	components, err := i.parseImage()
-	if err != nil {
-		return "", err
-	}
-	return components.registry, nil
-}
-
-func (i Image) GetTag() (string, error) {
-	components, err := i.parseImage()
-	if err != nil {
-		return "", err
-	}
-	return components.tag, nil
-}
-
-func (i Image) GetName() (string, error) {
-	components, err := i.parseImage()
-	if err != nil {
-		return "", err
-	}
-	return components.name, nil
-}
-
-type Images struct {
-	Pilot      Image `env:"pilot,notEmpty"`
-	InstallCNI Image `env:"install-cni,notEmpty"`
-	ProxyV2    Image `env:"proxyv2,notEmpty"`
-	Ztunnel    Image `env:"ztunnel"`
-}
-
-type ImagesFips struct {
-	Pilot      Image `env:"pilot-fips,notEmpty"`
-	InstallCNI Image `env:"install-cni-fips,notEmpty"`
-	ProxyV2    Image `env:"proxyv2-fips,notEmpty"`
-	Ztunnel    Image `env:"ztunnel-fips"`
-}
-
-func GetImages() (*Images, error) {
-	kymaFipsModeEnabled := os.Getenv(kymaFipsModeEnabledEnv)
-	if kymaFipsModeEnabled == "true" {
-		environments, err := env.ParseAs[ImagesFips]()
-		if err != nil {
-			return nil, fmt.Errorf("missing required environment variables %w", err)
-		}
-		return (*Images)(&environments), nil
-	}
-
-	environments, err := env.ParseAs[Images]()
-	if err != nil {
-		return nil, fmt.Errorf("missing required environment variables %w", err)
-	}
-
-	return &environments, nil
-}
-
-func (e *Images) GetImageRegistryAndTag() (RegistryAndTag, error) {
+func (e *Images) getImageRegistryAndTag() error {
 	environments := []Image{e.Pilot, e.InstallCNI, e.ProxyV2}
-	if e.Ztunnel != "" {
+	if e.Ztunnel.Name != "" {
 		environments = append(environments, e.Ztunnel)
 	}
 
-	initialHub, err := environments[0].GetHub()
-	if err != nil {
-		return RegistryAndTag{}, fmt.Errorf("failed to get hub for image %s: %w", environments[0], err)
-	}
-	initialTag, err := environments[0].GetTag()
+	initialHub := environments[0].Registry
+	initialTag := environments[0].Tag
 	tag := removeDigestSuffix(initialTag)
-
-	if err != nil {
-		return RegistryAndTag{}, fmt.Errorf("failed to get tag for image %s: %w", environments[0], err)
-	}
 
 	// Ensure that all required images are from the same hub and have the same version tag
 	for _, image := range environments {
-		currentHub, err := image.GetHub()
-		if err != nil {
-			return RegistryAndTag{}, fmt.Errorf("failed to get hub for image %s: %w", image, err)
-		}
+		currentHub := image.Registry
 		if currentHub != initialHub {
-			return RegistryAndTag{}, fmt.Errorf("image %s is not from the same hub as %s", image, environments[0])
+			return fmt.Errorf("image %s is not from the same hub as %s", image, environments[0])
 		}
 
-		currentTag, err := image.GetTag()
-		if err != nil {
-			return RegistryAndTag{}, fmt.Errorf("failed to get tag for image %s: %w", image, err)
-		}
-		if removeDigestSuffix(currentTag) != tag {
-			return RegistryAndTag{}, fmt.Errorf("image %s does not have the same tag as %s", image, environments[0])
+		if removeDigestSuffix(image.Tag) != tag {
+			return fmt.Errorf("image %s does not have the same tag as %s", image, environments[0])
 		}
 	}
 
-	return RegistryAndTag{Registry: initialHub, Tag: tag}, nil
-}
-
-// RemoveDigestSuffix removes the digest suffix if present (format: @sha256:...)
-func removeDigestSuffix(image string) string {
-	if idx := strings.Index(image, "@"); idx != -1 {
-		return image[:idx]
-	}
-	return image
+	e.Registry = initialHub
+	e.Tag = tag
+	return nil
 }

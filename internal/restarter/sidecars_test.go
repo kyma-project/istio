@@ -45,7 +45,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		actionRestarter := restart.NewActionRestarter(fakeClient, &logger)
 		proxyRestarter := sidecars.NewProxyRestarter(fakeClient, podsLister, actionRestarter, &logger)
 		sidecarsRestarter := restarter.NewSidecarsRestarter(logr.Discard(), createFakeClient(istioCr, istiod),
-			&MergerMock{"1.16.1-distroless"}, proxyRestarter, statusHandler)
+			&MergerMock{"1.16.1-distroless"}, proxyRestarter, statusHandler, images.Images{})
 
 		// when
 		err, requeue := sidecarsRestarter.Restart(context.Background(), istioCr)
@@ -97,7 +97,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		fakeClient := createFakeClient(istioCr, istiod)
 		statusHandler := status.NewStatusHandler(fakeClient)
 		sidecarsRestarter := restarter.NewSidecarsRestarter(logr.Discard(), createFakeClient(istioCr, istiod),
-			&MergerMock{"1.16.1-distroless"}, proxyRestarter, statusHandler)
+			&MergerMock{"1.16.1-distroless"}, proxyRestarter, statusHandler, images.Images{})
 
 		// when
 		err, requeue := sidecarsRestarter.Restart(context.Background(), istioCr)
@@ -132,7 +132,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		fakeClient := createFakeClient(istioCr, istiod)
 		statusHandler := status.NewStatusHandler(fakeClient)
 		sidecarsRestarter := restarter.NewSidecarsRestarter(logr.Discard(), createFakeClient(istioCr, istiod),
-			&MergerMock{"1.16.1-distroless"}, proxyRestarter, statusHandler)
+			&MergerMock{"1.16.1-distroless"}, proxyRestarter, statusHandler, images.Images{})
 
 		// when
 		err, requeue := sidecarsRestarter.Restart(context.Background(), istioCr)
@@ -155,7 +155,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		fakeClient := createFakeClient(istioCr, istiod)
 		statusHandler := status.NewStatusHandler(fakeClient)
 		sidecarsRestarter := restarter.NewSidecarsRestarter(logr.Discard(), createFakeClient(istioCr, istiod),
-			&MergerMock{"1.16.1-distroless"}, proxyRestarter, statusHandler)
+			&MergerMock{"1.16.1-distroless"}, proxyRestarter, statusHandler, images.Images{})
 
 		// when
 		err, requeue := sidecarsRestarter.Restart(context.Background(), istioCr)
@@ -177,7 +177,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		fakeClient := createFakeClient(istioCr, istiod)
 		statusHandler := status.NewStatusHandler(fakeClient)
 		sidecarsRestarter := restarter.NewSidecarsRestarter(logr.Discard(), createFakeClient(istioCr, istiod),
-			&MergerMock{"1.16.1-distroless"}, proxyRestarter, statusHandler)
+			&MergerMock{"1.16.1-distroless"}, proxyRestarter, statusHandler, images.Images{})
 
 		// when
 		err, requeue := sidecarsRestarter.Restart(context.Background(), istioCr)
@@ -203,7 +203,7 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		fakeClient := createFakeClient(istioCr, istiod)
 		statusHandler := status.NewStatusHandler(fakeClient)
 		sidecarsRestarter := restarter.NewSidecarsRestarter(logr.Discard(), createFakeClient(istioCr, istiod),
-			&MergerMock{"1.16.1-distroless"}, proxyRestarter, statusHandler)
+			&MergerMock{"1.16.1-distroless"}, proxyRestarter, statusHandler, images.Images{})
 
 		// when
 		err, requeue := sidecarsRestarter.Restart(context.Background(), istioCr)
@@ -297,6 +297,10 @@ func (m MergerMock) GetIstioImageVersion() (istiooperator.IstioImageVersion, err
 	return istiooperator.NewIstioImageVersionFromTag("1.16.1-distroless")
 }
 
+func (m MergerMock) GetProxyImageName(istioImages images.Images) string {
+	return istioImages.ProxyV2.String()
+}
+
 func (m MergerMock) SetIstioInstallFlavor(_ clusterconfig.ClusterSize) {}
 
 type proxyRestarterMock struct {
@@ -305,7 +309,7 @@ type proxyRestarterMock struct {
 	err             error
 }
 
-func (p *proxyRestarterMock) RestartProxies(_ context.Context, _ predicates.SidecarImage, _ corev1.ResourceRequirements, _ *operatorv1alpha2.Istio) ([]restart.Warning, bool, error) {
+func (p *proxyRestarterMock) RestartProxies(_ context.Context, _ images.Image, _ corev1.ResourceRequirements, _ *operatorv1alpha2.Istio) ([]restart.Warning, bool, error) {
 	return p.restartWarnings, p.hasMorePods, p.err
 }
 

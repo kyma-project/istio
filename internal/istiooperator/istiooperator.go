@@ -56,6 +56,7 @@ type Merger interface {
 	Merge(clusterSize clusterconfig.ClusterSize, istioCR *operatorv1alpha2.Istio, overrides clusterconfig.ClusterConfiguration, istioImages images.Images) (string, error)
 	GetIstioOperator(clusterSize clusterconfig.ClusterSize) (iopv1alpha1.IstioOperator, error)
 	GetIstioImageVersion() (IstioImageVersion, error)
+	GetProxyImageName(istioImages images.Images) string
 }
 
 type IstioMerger struct {
@@ -82,6 +83,10 @@ func (m *IstioMerger) GetIstioImageVersion() (IstioImageVersion, error) {
 	}
 
 	return NewIstioImageVersionFromTag(istioTag)
+}
+
+func (m *IstioMerger) GetProxyImageName(istioImages images.Images) string {
+	return istioImages.ProxyV2.Name
 }
 
 func (m *IstioMerger) GetIstioOperator(clusterSize clusterconfig.ClusterSize) (iopv1alpha1.IstioOperator, error) {

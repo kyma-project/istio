@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/kyma-project/istio/operator/internal/images"
 	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
 	"github.com/kyma-project/istio/operator/internal/tests"
 
@@ -38,7 +39,7 @@ var _ = Describe("GetPodsToRestart", func() {
 	logger := logr.Discard()
 
 	When("Image changed", func() {
-		expectedImage := predicates.NewSidecarImage("istio", "1.10.0")
+		expectedImage := images.Image{Registry: "istio", Name: "proxyv2", Tag: "1.10.0"}
 		tests := []struct {
 			name       string
 			c          client.Client
@@ -426,7 +427,7 @@ var _ = Describe("GetPodsToRestart", func() {
 		}
 		for _, tt := range tests {
 			It(tt.name, func() {
-				expectedImage := predicates.NewSidecarImage("istio", "1.10.0")
+				expectedImage := images.Image{Registry: "istio", Name: "proxyv2", Tag: "1.10.0"}
 				podsLister := pods.NewPods(tt.c, &logger)
 				podList, err := podsLister.GetPodsToRestart(ctx, []predicates.SidecarProxyPredicate{predicates.NewImageResourcesPredicate(expectedImage, helpers.DefaultSidecarResources)}, pods.NewPodsRestartLimits(5, 5))
 				Expect(err).NotTo(HaveOccurred())

@@ -18,9 +18,11 @@ package main
 
 import (
 	"flag"
-	istiocrmetrics "github.com/kyma-project/istio/operator/internal/metrics"
 	"os"
 	"time"
+
+	"github.com/kyma-project/istio/operator/internal/images"
+	istiocrmetrics "github.com/kyma-project/istio/operator/internal/metrics"
 
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	v1 "k8s.io/api/apps/v1"
@@ -117,8 +119,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	istioImage, err := images.GetImages()
+	if err != nil {
+		setupLog.Error(err, "Unable to get Istio images")
+		os.Exit(1)
+	}
 	crMetrics := istiocrmetrics.NewMetrics()
-	if err = controllers.NewController(mgr, flagVar.reconciliationInterval, crMetrics).SetupWithManager(mgr, rateLimiter); err != nil {
+	if err = controllers.NewController(mgr, flagVar.reconciliationInterval, crMetrics, *istioImage).SetupWithManager(mgr, rateLimiter); err != nil {
 		setupLog.Error(err, "Unable to create controller", "controller", "Istio")
 		os.Exit(1)
 	}

@@ -31,11 +31,18 @@ var _ = Describe("Merge", func() {
 			},
 		}
 
+		pilot, _ := images.NewImage("docker.io/istio/pilot:1.27.1-distroless")
+		proxy, _ := images.NewImage("docker.io/istio/proxyv2:1.27.1-distroless")
+		cni, _ := images.NewImage("docker.io/istio/cni:1.27.1-distroless")
+		ztunnel, _ := images.NewImage("docker.io/istio/ztunnel:1.27.1-distroless")
+
 		istioImages := images.Images{
-			Pilot:      "docker.io/istio/pilot:1.27.1-distroless",
-			ProxyV2:    "docker.io/istio/proxyv2:1.27.1-distroless",
-			InstallCNI: "docker.io/istio/cni:1.27.1-distroless",
-			Ztunnel:    "docker.io/istio/ztunnel:1.27.1-distroless",
+			Registry:   "docker.io/istio",
+			Tag:        "1.27.1-distroless",
+			Pilot:      pilot,
+			ProxyV2:    proxy,
+			InstallCNI: cni,
+			Ztunnel:    ztunnel,
 		}
 
 		merger := istiooperator.NewDefaultIstioMerger()

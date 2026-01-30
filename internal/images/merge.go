@@ -10,7 +10,8 @@ import (
 const pullSecretEnvVar = "SKR_IMG_PULL_SECRET"
 
 // MergeComponentImages merges component-specific image values into the IstioOperator manifest.
-// This overrides the values.<component>.image fields with the full image references from environment variables.
+// This overrides the values.<component>.image & values.global.proxy.image fields with the full image references from environment variables.
+// The components updated are: pilot, cni, and proxy.
 // It also sets the global hub and tag to match the registry and tag of the provided images.
 func MergeComponentImages(manifest []byte, images Images) ([]byte, error) {
 	var templateMap map[string]interface{}
@@ -18,14 +19,10 @@ func MergeComponentImages(manifest []byte, images Images) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	istioImagesRegistryAndTag, err := images.GetImageRegistryAndTag()
-	if err != nil {
-		return nil, err
-	}
 	err = mergo.Merge(&templateMap, map[string]interface{}{
 		"spec": map[string]interface{}{
-			"hub": istioImagesRegistryAndTag.Registry,
-			"tag": istioImagesRegistryAndTag.Tag,
+			"hub": images.Registry,
+			"tag": images.Tag,
 		},
 	}, mergo.WithOverride)
 	if err != nil {
@@ -37,43 +34,19 @@ func MergeComponentImages(manifest []byte, images Images) ([]byte, error) {
 
 	// Set pilot image: values.pilot.image
 	pilot := ensureMap(values, "pilot")
-	pilotImage, err := images.Pilot.GetName()
-	if err != nil {
-		return nil, err
-	}
-	pilotTag, err := images.Pilot.GetTag()
-	if err != nil {
-		return nil, err
-	}
-	pilot["image"] = istioImagesRegistryAndTag.Registry + "/" + pilotImage + ":" + pilotTag
+	pilot["image"] = images.Pilot.String()
 
 	// Set CNI image: values.cni.image
 	cni := ensureMap(values, "cni")
-	installCNI, err := images.InstallCNI.GetName()
-	if err != nil {
-		return nil, err
-	}
-	installCNITag, err := images.InstallCNI.GetTag()
-	if err != nil {
-		return nil, err
-	}
-	cni["image"] = istioImagesRegistryAndTag.Registry + "/" + installCNI + ":" + installCNITag
+	cni["image"] = images.InstallCNI.String()
 
 	// Set proxy image: values.global.proxy.image
 	global := ensureMap(values, "global")
 	proxy := ensureMap(global, "proxy")
-	proxyV2, err := images.ProxyV2.GetName()
-	if err != nil {
-		return nil, err
-	}
-	proxyV2Tag, err := images.ProxyV2.GetTag()
-	if err != nil {
-		return nil, err
-	}
-	proxy["image"] = istioImagesRegistryAndTag.Registry + "/" + proxyV2 + ":" + proxyV2Tag
+	proxy["image"] = images.ProxyV2.String()
 
 	proxy_init := ensureMap(global, "proxy_init")
-	proxy_init["image"] = istioImagesRegistryAndTag.Registry + "/" + proxyV2 + ":" + proxyV2Tag
+	proxy_init["image"] = images.ProxyV2.String()
 
 	return yaml.Marshal(templateMap)
 }

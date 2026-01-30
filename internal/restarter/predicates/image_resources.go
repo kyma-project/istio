@@ -1,11 +1,12 @@
 package predicates
 
 import (
-	"fmt"
 	"log"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+
+	"github.com/kyma-project/istio/operator/internal/images"
 )
 
 const (
@@ -13,33 +14,13 @@ const (
 	istioSidecarCustomImageAnnotation string = "sidecar.istio.io/proxyImage"
 )
 
-type SidecarImage struct {
-	Repository string
-	Tag        string
-}
-
-func NewSidecarImage(hub, tag string) SidecarImage {
-	return SidecarImage{
-		Repository: fmt.Sprintf("%s/proxyv2", hub),
-		Tag:        tag,
-	}
-}
-
-func (r SidecarImage) String() string {
-	return fmt.Sprintf("%s:%s", r.Repository, r.Tag)
-}
-
-func (r SidecarImage) matchesImageIn(container v1.Container) bool {
-	return container.Image == r.String()
-}
-
 type ImageResourcesPredicate struct {
-	expectedImage     SidecarImage
+	expectedImage     images.Image
 	expectedResources v1.ResourceRequirements
 }
 
 // NewImageResourcesPredicate creates a new ImageResourcesPredicate that checks if a pod needs a restart based on the expected image and resources.
-func NewImageResourcesPredicate(expectedImage SidecarImage, expectedResources v1.ResourceRequirements) *ImageResourcesPredicate {
+func NewImageResourcesPredicate(expectedImage images.Image, expectedResources v1.ResourceRequirements) *ImageResourcesPredicate {
 	return &ImageResourcesPredicate{expectedImage: expectedImage, expectedResources: expectedResources}
 }
 
@@ -55,7 +36,7 @@ func (p ImageResourcesPredicate) Name() string {
 	return "ImageResourcesPredicate"
 }
 
-func needsRestart(pod v1.Pod, expectedImage SidecarImage, expectedResources v1.ResourceRequirements) bool {
+func needsRestart(pod v1.Pod, expectedImage images.Image, expectedResources v1.ResourceRequirements) bool {
 	if hasCustomImageAnnotation(pod) {
 		return false
 	}
@@ -102,11 +83,11 @@ func hasCustomImageAnnotation(pod v1.Pod) bool {
 	return found
 }
 
-func hasSidecarContainerWithWithDifferentImage(pod v1.Pod, expectedImage SidecarImage) bool {
+func hasSidecarContainerWithWithDifferentImage(pod v1.Pod, expectedImage images.Image) bool {
 	c := pod.Spec.Containers
 	c = append(c, pod.Spec.InitContainers...)
 	for _, container := range c {
-		if isContainerIstioSidecar(container) && !expectedImage.matchesImageIn(container) {
+		if isContainerIstioSidecar(container) && !expectedImage.MatchesImageInContainer(container) {
 			return true
 		}
 	}

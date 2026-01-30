@@ -259,7 +259,7 @@ upgrade-test: generate-upgrade-test-manifest deploy-latest-release gotestsum
 	@echo "E2E tests completed successfully"
 
 .PHONY: xff-header-integration-e2e-test
-xff-header-integration-test: gotestsum deploy
+xff-header-integration-e2e-test: gotestsum deploy
 	@echo "Running e2e tests"
 	go clean -testcache
 	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/xff_header/..." --junitfile "./tests/e2e/tests/xff_header/report.xml" -- -timeout 20m

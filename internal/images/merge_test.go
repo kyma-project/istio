@@ -201,9 +201,9 @@ spec:
 					ProxyV2:    "my-hub/my-proxy:my-tag",
 					Ztunnel:    "my-hub/my-ztunnel:my-tag",
 				},
-				"my-pilot",
-				"my-cni",
-				"my-proxy",
+				"my-hub/my-pilot:my-tag",
+				"my-hub/my-cni:my-tag",
+				"my-hub/my-proxy:my-tag",
 				false,
 			),
 
@@ -225,9 +225,9 @@ spec:
 					ProxyV2:    "new-hub/new-proxy:new-tag",
 					Ztunnel:    "new-hub/new-ztunnel:new-tag",
 				},
-				"new-pilot",
-				"new-cni",
-				"new-proxy",
+				"new-hub/new-pilot:new-tag",
+				"new-hub/new-cni:new-tag",
+				"new-hub/new-proxy:new-tag",
 				false,
 			),
 
@@ -256,9 +256,9 @@ spec:
 					ProxyV2:    "updated-hub/updated-proxy:v1.0",
 					Ztunnel:    "updated-hub/updated-ztunnel:v1.0",
 				},
-				"updated-pilot",
-				"updated-cni",
-				"updated-proxy",
+				"updated-hub/updated-pilot:v1.0",
+				"updated-hub/updated-cni:v1.0",
+				"updated-hub/updated-proxy:v1.0",
 				false,
 			),
 
@@ -273,9 +273,9 @@ spec:
 					ProxyV2:    "registry.example.com/istio/proxyv2:1.20.0",
 					Ztunnel:    "registry.example.com/istio/ztunnel:1.20.0",
 				},
-				"pilot",
-				"install-cni",
-				"proxyv2",
+				"registry.example.com/istio/pilot:1.20.0",
+				"registry.example.com/istio/install-cni:1.20.0",
+				"registry.example.com/istio/proxyv2:1.20.0",
 				false,
 			),
 
@@ -364,14 +364,14 @@ spec:
 			// Verify component images are set
 			values := spec["values"].(map[string]interface{})
 			pilot := values["pilot"].(map[string]interface{})
-			Expect(pilot["image"]).To(Equal("pilot"))
+			Expect(pilot["image"]).To(Equal("production.registry.io/istio/pilot:1.21.0"))
 
 			cni := values["cni"].(map[string]interface{})
-			Expect(cni["image"]).To(Equal("install-cni"))
+			Expect(cni["image"]).To(Equal("production.registry.io/istio/install-cni:1.21.0"))
 
 			global := values["global"].(map[string]interface{})
 			proxy := global["proxy"].(map[string]interface{})
-			Expect(proxy["image"]).To(Equal("proxyv2"))
+			Expect(proxy["image"]).To(Equal("production.registry.io/istio/proxyv2:1.21.0"))
 
 			// Verify other settings are preserved
 			pilotResources := pilot["resources"].(map[string]interface{})

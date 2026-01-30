@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	alpha3 "istio.io/api/networking/v1alpha3"
-	"istio.io/client-go/pkg/apis/networking/v1alpha3"
+	"istio.io/client-go/pkg/apis/networking/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -22,7 +22,7 @@ func CreateVirtualService(t *testing.T, name, namespace, dstHost, host, gateway 
 		return err
 	}
 
-	vs := &v1alpha3.VirtualService{
+	vs := &v1.VirtualService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
@@ -52,6 +52,8 @@ func CreateVirtualService(t *testing.T, name, namespace, dstHost, host, gateway 
 			},
 		},
 	}
+
+	t.Logf("applying virtual service: %+v", vs)
 
 	err = r.Create(t.Context(), vs)
 	if err != nil {

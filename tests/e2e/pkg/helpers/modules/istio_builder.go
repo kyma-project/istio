@@ -570,4 +570,3 @@ func NewAuthorizerFromExtAuth(extAuth *extauth.DeploymentInfo) *v1alpha2.Authori
 		},
 	}
 }
-

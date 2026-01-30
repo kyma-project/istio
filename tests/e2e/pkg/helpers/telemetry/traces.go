@@ -36,6 +36,8 @@ func EnableTraces(t *testing.T) error {
 		return err
 	}
 
+	t.Logf("applying telemetry traces resource: %+v", tm)
+
 	err = r.Create(t.Context(), tm)
 	if err != nil {
 		if !k8serrors.IsAlreadyExists(err) {

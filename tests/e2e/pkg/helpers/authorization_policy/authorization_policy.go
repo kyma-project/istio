@@ -64,6 +64,8 @@ func CreateExtAuthzPolicy(t *testing.T, name, namespace, labelSelector, provider
 		},
 	}
 
+	t.Logf("applying authorization policy: %+v", ap)
+
 	err = c.Create(t.Context(), ap)
 	if err != nil {
 		if !k8serrors.IsAlreadyExists(err) {

@@ -66,7 +66,7 @@ const (
 	reconciliationRequeueTimeWarning = 1 * time.Hour
 )
 
-func NewController(mgr manager.Manager, reconciliationInterval time.Duration, crMetrics *istiocrmetrics.IstioCRMetrics) *IstioReconciler {
+func NewController(mgr manager.Manager, reconciliationInterval time.Duration, crMetrics *istiocrmetrics.IstioCRMetrics, istioImages images.Images) *IstioReconciler {
 	merger := istiooperator.NewDefaultIstioMerger()
 
 	statusHandler := status.NewStatusHandler(mgr.GetClient())
@@ -75,7 +75,7 @@ func NewController(mgr manager.Manager, reconciliationInterval time.Duration, cr
 	actionRestarter := restart.NewActionRestarter(mgr.GetClient(), &logger)
 	restarters := []restarter.Restarter{
 		restarter.NewIngressGatewayRestarter(mgr.GetClient(), []predicates.IngressGatewayPredicate{}, statusHandler),
-		restarter.NewSidecarsRestarter(mgr.GetLogger(), mgr.GetClient(), &merger, sidecars.NewProxyRestarter(mgr.GetClient(), podsLister, actionRestarter, &logger), statusHandler),
+		restarter.NewSidecarsRestarter(mgr.GetLogger(), mgr.GetClient(), &merger, sidecars.NewProxyRestarter(mgr.GetClient(), podsLister, actionRestarter, &logger), statusHandler, istioImages),
 	}
 	userResources := resources.NewUserResources(mgr.GetClient())
 
@@ -90,6 +90,7 @@ func NewController(mgr manager.Manager, reconciliationInterval time.Duration, cr
 		statusHandler:          statusHandler,
 		reconciliationInterval: reconciliationInterval,
 		crMetrics:              crMetrics,
+		istioImages:            istioImages,
 	}
 }
 
@@ -116,12 +117,6 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 	if err := r.validate(&istioCR); err != nil {
 		return ctrl.Result{}, r.statusHandler.UpdateToError(ctx, &istioCR, err)
-	}
-
-	istioImages, imgErr := images.GetImages()
-	if imgErr != nil {
-		return r.terminateReconciliation(ctx, &istioCR, describederrors.NewDescribedError(imgErr, "Unable to get Istio images environments"),
-			operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileFailed))
 	}
 
 	err := validation.ValidateAuthorizers(istioCR)
@@ -175,7 +170,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		}
 	}
 
-	istioImageVersion, installationErr := r.istioInstallation.Reconcile(ctx, &istioCR, r.statusHandler, *istioImages)
+	istioImageVersion, installationErr := r.istioInstallation.Reconcile(ctx, &istioCR, r.statusHandler, r.istioImages)
 	if installationErr != nil {
 		return r.requeueReconciliation(ctx, &istioCR, installationErr,
 			operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIstioInstallUninstallFailed),

@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/go-logr/logr"
+	"github.com/kyma-project/istio/operator/internal/images"
 	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
 	"github.com/kyma-project/istio/operator/internal/tests"
 	"github.com/kyma-project/istio/operator/pkg/labels"
@@ -49,7 +50,7 @@ var _ = Describe("RestartProxies", func() {
 
 		// when
 		podsLister := pods.NewPods(c, &logger)
-		expectedImage := predicates.NewSidecarImage("istio", "1.1.0")
+		expectedImage := images.Image{Registry: "istio", Name: "proxyv2", Tag: "1.1.0"}
 		istioCR := helpers.GetIstioCR(expectedImage.Tag)
 		actionRestarter := restart.NewActionRestarter(c, &logger)
 		proxyRestarter := sidecars.NewProxyRestarter(c, podsLister, actionRestarter, &logger)
@@ -73,7 +74,7 @@ var _ = Describe("RestartProxies", func() {
 		failClient := &shouldFailClient{c, false, true}
 
 		podsListerMock := NewPodsMock()
-		expectedImage := predicates.NewSidecarImage("istio", "1.1.0")
+		expectedImage := images.Image{Registry: "istio", Name: "proxyv2", Tag: "1.1.0"}
 		istioCR := helpers.GetIstioCR(expectedImage.Tag)
 		actionRestarter := restart.NewActionRestarter(failClient, &logger)
 		proxyRestarter := sidecars.NewProxyRestarter(failClient, podsListerMock, actionRestarter, &logger)
@@ -118,7 +119,7 @@ var _ = Describe("RestartProxies", func() {
 		// given
 		c := fakeClient()
 		podsListerMock := NewPodsMock()
-		expectedImage := predicates.NewSidecarImage("istio", "1.1.0")
+		expectedImage := images.Image{Registry: "istio", Name: "proxyv2", Tag: "1.1.0"}
 		istioCR := helpers.GetIstioCR(expectedImage.Tag)
 		istioCR.Annotations[labels.LastAppliedConfiguration] = "invalid-last-applied-configuration" // This should cause the compatibility predicate to fail
 		actionRestarter := restart.NewActionRestarter(c, &logger)
@@ -139,7 +140,7 @@ var _ = Describe("RestartProxies", func() {
 		c := fakeClient()
 		podsListerMock := NewPodsMock()
 		podsListerMock.FailOnKymaWorkload = true
-		expectedImage := predicates.NewSidecarImage("istio", "1.1.0")
+		expectedImage := images.Image{Registry: "istio", Name: "proxyv2", Tag: "1.1.0"}
 		istioCR := helpers.GetIstioCR(expectedImage.Tag)
 		actionRestarter := restart.NewActionRestarter(c, &logger)
 		proxyRestarter := sidecars.NewProxyRestarter(c, podsListerMock, actionRestarter, &logger)
@@ -160,7 +161,7 @@ var _ = Describe("RestartProxies", func() {
 
 		podsListerMock := NewPodsMock()
 		podsListerMock.FailOnCustomerWorkload = true
-		expectedImage := predicates.NewSidecarImage("istio", "1.1.0")
+		expectedImage := images.Image{Registry: "istio", Name: "proxyv2", Tag: "1.1.0"}
 		istioCR := helpers.GetIstioCR(expectedImage.Tag)
 		actionRestarter := restart.NewActionRestarter(c, &logger)
 		proxyRestarter := sidecars.NewProxyRestarter(c, podsListerMock, actionRestarter, &logger)
@@ -188,7 +189,7 @@ var _ = Describe("RestartProxies", func() {
 
 		// when
 		podsLister := pods.NewPods(c, &logger)
-		expectedImage := predicates.NewSidecarImage("istio", "1.1.0")
+		expectedImage := images.Image{Registry: "istio", Name: "proxyv2", Tag: "1.1.0"}
 		istioCR := helpers.GetIstioCR(expectedImage.Tag)
 		actionRestarter := NewActionRestartMock([]restart.Warning{{Name: "test-pod", Namespace: "kyma-system", Kind: "Pod", Message: "failed to restart"}}, nil)
 		proxyRestarter := sidecars.NewProxyRestarter(c, podsLister, actionRestarter, &logger)
@@ -214,7 +215,7 @@ var _ = Describe("RestartProxies", func() {
 		failClient := &shouldFailClient{c, false, true}
 
 		podsLister := pods.NewPods(c, &logger)
-		expectedImage := predicates.NewSidecarImage("istio", "1.1.0")
+		expectedImage := images.Image{Registry: "istio", Name: "proxyv2", Tag: "1.1.0"}
 		istioCR := helpers.GetIstioCR(expectedImage.Tag)
 		actionRestarter := restart.NewActionRestarter(failClient, &logger)
 		proxyRestarter := sidecars.NewProxyRestarter(failClient, podsLister, actionRestarter, &logger)
@@ -239,7 +240,7 @@ var _ = Describe("RestartWithPredicates", func() {
 
 		c := fakeClient(pod, rsOwner, rsOwnerRS)
 		preds := []predicates.SidecarProxyPredicate{
-			predicates.NewImageResourcesPredicate(predicates.SidecarImage{Repository: "istio", Tag: "1.1.0"}, helpers.DefaultSidecarResources),
+			predicates.NewImageResourcesPredicate(images.Image{Registry: "istio", Name: "proxyv2", Tag: "1.1.0"}, helpers.DefaultSidecarResources),
 		}
 		limits := pods.NewPodsRestartLimits(10, 10)
 
@@ -265,7 +266,7 @@ var _ = Describe("RestartWithPredicates", func() {
 		c := fakeClient(pod)
 
 		preds := []predicates.SidecarProxyPredicate{
-			predicates.NewImageResourcesPredicate(predicates.SidecarImage{Repository: "istio", Tag: "1.1.0"}, helpers.DefaultSidecarResources),
+			predicates.NewImageResourcesPredicate(images.Image{Registry: "istio", Name: "proxyv2", Tag: "1.1.0"}, helpers.DefaultSidecarResources),
 		}
 		limits := pods.NewPodsRestartLimits(2, 2)
 
@@ -287,7 +288,7 @@ var _ = Describe("RestartWithPredicates", func() {
 	It("should return error if getting pods to restart fails", func() {
 		// given
 		preds := []predicates.SidecarProxyPredicate{
-			predicates.NewImageResourcesPredicate(predicates.SidecarImage{Repository: "istio", Tag: "1.1.0"}, helpers.DefaultSidecarResources),
+			predicates.NewImageResourcesPredicate(images.Image{Registry: "istio", Name: "proxyv2", Tag: "1.1.0"}, helpers.DefaultSidecarResources),
 		}
 		limits := pods.NewPodsRestartLimits(2, 2)
 
@@ -316,7 +317,7 @@ var _ = Describe("RestartWithPredicates", func() {
 		c := fakeClient(pod, rsOwner, rsOwnerRS)
 
 		preds := []predicates.SidecarProxyPredicate{
-			predicates.NewImageResourcesPredicate(predicates.SidecarImage{Repository: "istio", Tag: "1.1.0"}, helpers.DefaultSidecarResources),
+			predicates.NewImageResourcesPredicate(images.Image{Registry: "istio", Name: "proxyv2", Tag: "1.1.0"}, helpers.DefaultSidecarResources),
 		}
 		limits := pods.NewPodsRestartLimits(2, 2)
 
@@ -344,7 +345,7 @@ var _ = Describe("RestartWithPredicates", func() {
 		c := fakeClient(pod, rsOwner, rsOwnerRS)
 
 		preds := []predicates.SidecarProxyPredicate{
-			predicates.NewImageResourcesPredicate(predicates.SidecarImage{Repository: "istio", Tag: "1.1.0"}, helpers.DefaultSidecarResources),
+			predicates.NewImageResourcesPredicate(images.Image{Registry: "istio", Name: "proxyv2", Tag: "1.1.0"}, helpers.DefaultSidecarResources),
 		}
 		limits := pods.NewPodsRestartLimits(2, 2)
 

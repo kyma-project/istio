@@ -49,11 +49,18 @@ var _ = Describe("Merge", func() {
 			},
 		},
 	}
+	pilot, _ := images.NewImage("docker.io/istio/pilot:1.27.1-distroless")
+	proxy, _ := images.NewImage("docker.io/istio/proxyv2:1.27.1-distroless")
+	install, _ := images.NewImage("docker.io/istio/cni:1.27.1-distroless")
+	ztunnel, _ := images.NewImage("docker.io/istio/ztunnel:1.27.1-distroless")
+
 	img := images.Images{
-		Pilot:      "docker.io/istio/pilot:1.27.1-distroless",
-		ProxyV2:    "docker.io/istio/proxyv2:1.27.1-distroless",
-		InstallCNI: "docker.io/istio/cni:1.27.1-distroless",
-		Ztunnel:    "docker.io/istio/ztunnel:1.27.1-distroless",
+		Registry:   "docker.io/istio",
+		Tag:        "1.27.1-distroless",
+		Pilot:      pilot,
+		ProxyV2:    proxy,
+		InstallCNI: install,
+		Ztunnel:    ztunnel,
 	}
 	DescribeTable("Merge for different cluster sizes", func(clusterSize clusterconfig.ClusterSize, shouldError bool, igwMinReplicas int) {
 		// given
@@ -146,11 +153,18 @@ var _ = Describe("Merge", func() {
 
 	It("should return merged istio hub", func() {
 		// given
+		overriddenPilot, _ := images.NewImage("docker.io/overridden/istio-hub/pilot:1.27.1-overridden")
+		overriddenProxy, _ := images.NewImage("docker.io/overridden/istio-hub/proxyv2:1.27.1-overridden")
+		overriddenCni, _ := images.NewImage("docker.io/overridden/istio-hub/cni:1.27.1-overridden")
+		overriddenZtunnel, _ := images.NewImage("docker.io/overridden/istio-hub/ztunnel:1.27.1-overridden")
+
 		imagesWithOveridenHub := images.Images{
-			Pilot:      "docker.io/overridden/istio-hub/pilot:1.27.1-overridden",
-			ProxyV2:    "docker.io/overridden/istio-hub/proxyv2:1.27.1-overridden",
-			InstallCNI: "docker.io/overridden/istio-hub/cni:1.27.1-overridden",
-			Ztunnel:    "docker.io/overridden/istio-hub/ztunnel:1.27.1-overridden",
+			Registry:   "docker.io/overridden/istio-hub",
+			Tag:        "1.27.1-overridden",
+			Pilot:      overriddenPilot,
+			ProxyV2:    overriddenProxy,
+			InstallCNI: overriddenCni,
+			Ztunnel:    overriddenZtunnel,
 		}
 		sut := istiooperator.NewDefaultIstioMerger()
 

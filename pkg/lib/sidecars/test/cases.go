@@ -7,7 +7,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
-	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
+	"github.com/kyma-project/istio/operator/internal/images"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/restart"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/test/helpers"
@@ -29,7 +29,7 @@ func (s *scenario) aRestartHappens(sidecarImage string) error {
 	istioCR := helpers.GetIstioCR(sidecarImage)
 	warnings, hasMorePods, err := pr.RestartProxies(
 		context.Background(),
-		predicates.SidecarImage{Repository: "istio/proxyv2", Tag: sidecarImage},
+		images.Image{Registry: "istio", Name: "proxyv2", Tag: sidecarImage},
 		helpers.DefaultSidecarResources,
 		&istioCR)
 	s.restartWarnings = warnings
@@ -55,7 +55,7 @@ func (s *scenario) aRestartHappensWithUpdatedResources(sidecarImage string, reso
 	pr := sidecars.NewProxyRestarter(s.Client, podsLister, actionRestarter, &s.logger)
 	warnings, hasMorePods, err := pr.RestartProxies(
 		context.Background(),
-		predicates.SidecarImage{Repository: "istio/proxyv2", Tag: sidecarImage},
+		images.Image{Registry: "istio", Name: "proxyv2", Tag: sidecarImage},
 		resources,
 		&istioCR)
 	s.restartWarnings = warnings

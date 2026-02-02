@@ -1,7 +1,6 @@
 package images_test
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
@@ -17,107 +16,158 @@ func TestEnvs(t *testing.T) {
 	RunSpecs(t, "Environment Suite")
 }
 
-var _ = Describe("Images.GetImageRegistryAndTag", func() {
-	type fields struct {
-		Pilot      images.Image
-		InstallCNI images.Image
-		ProxyV2    images.Image
-		Ztunnel    images.Image
-	}
+var _ = Describe("GetImages", func() {
+	BeforeEach(func() {
+		_ = os.Unsetenv("KYMA_FIPS_MODE_ENABLED")
+	})
 
-	DescribeTable("GetImageRegistryAndTag",
-		func(f fields, want images.RegistryAndTag, wantErr bool, expErr error) {
-			e := &images.Images{
-				Pilot:      f.Pilot,
-				InstallCNI: f.InstallCNI,
-				ProxyV2:    f.ProxyV2,
-				Ztunnel:    f.Ztunnel,
+	DescribeTable("parses images from environment variables",
+		func(envVars map[string]string, expectedRegistry string, expectedTag string, wantErr bool, errSubstring string) {
+			// Set up environment variables
+			for key, value := range envVars {
+				if value != "" {
+					_ = os.Setenv(key, value)
+				} else {
+					_ = os.Unsetenv(key)
+				}
 			}
-			got, err := e.GetImageRegistryAndTag()
+
+			// Clean up after test
+			defer func() {
+				for key := range envVars {
+					_ = os.Unsetenv(key)
+				}
+			}()
+
+			e, err := images.GetImages()
 			if wantErr {
 				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(ContainSubstring("image"))
-				Expect(err.Error()).To(ContainSubstring(expErr.Error()))
+				Expect(err.Error()).To(ContainSubstring(errSubstring))
 			} else {
 				Expect(err).NotTo(HaveOccurred())
-				Expect(got).To(Equal(want))
+				Expect(e.Registry).To(Equal(expectedRegistry))
+				Expect(e.Tag).To(Equal(expectedTag))
 			}
 		},
 		Entry("valid images",
-			fields{
-				Pilot:      "docker.io/istio/pilot:1.10.0",
-				InstallCNI: "docker.io/istio/cni:1.10.0",
-				ProxyV2:    "docker.io/istio/proxyv2:1.10.0",
-				Ztunnel:    "docker.io/istio/ztunnel:1.10.0",
+			map[string]string{
+				"pilot":       "docker.io/istio/pilot:1.10.0",
+				"install-cni": "docker.io/istio/cni:1.10.0",
+				"proxyv2":     "docker.io/istio/proxyv2:1.10.0",
+				"ztunnel":     "docker.io/istio/ztunnel:1.10.0",
 			},
-			images.RegistryAndTag{Registry: "docker.io/istio", Tag: "1.10.0"},
+			"docker.io/istio",
+			"1.10.0",
 			false,
-			nil,
+			"",
 		),
 		Entry("invalid image hub",
-			fields{
-				Pilot:      "pilot:1.10.0",
-				InstallCNI: "docker.io/istio/cni:1.10.0",
-				ProxyV2:    "docker.io/istio/proxyv2:1.10.0",
-				Ztunnel:    "docker.io/istio/ztunnel:1.10.0",
+			map[string]string{
+				"pilot":       "pilot:1.10.0",
+				"install-cni": "docker.io/istio/cni:1.10.0",
+				"proxyv2":     "docker.io/istio/proxyv2:1.10.0",
+				"ztunnel":     "docker.io/istio/ztunnel:1.10.0",
 			},
-			images.RegistryAndTag{},
+			"",
+			"",
 			true,
-			fmt.Errorf("image pilot:1.10.0 does not contain a valid hub URL"),
+			"does not contain a valid format",
 		),
 		Entry("missing image tag",
-			fields{
-				Pilot:      "docker.io/istio/pilot1.10.0",
-				InstallCNI: "docker.io/istio/cni:1.10.0",
-				ProxyV2:    "docker.io/istio/proxyv2:1.10.0",
-				Ztunnel:    "docker.io/istio/ztunnel:1.10.0",
+			map[string]string{
+				"pilot":       "docker.io/istio/pilot1.10.0",
+				"install-cni": "docker.io/istio/cni:1.10.0",
+				"proxyv2":     "docker.io/istio/proxyv2:1.10.0",
+				"ztunnel":     "docker.io/istio/ztunnel:1.10.0",
 			},
-			images.RegistryAndTag{},
+			"",
+			"",
 			true,
-			fmt.Errorf("image docker.io/istio/pilot1.10.0 does not contain a valid tag"),
+			"does not contain a valid tag",
 		),
 		Entry("images from different hubs",
-			fields{
-				Pilot:      "docker.io/istio/pilot:1.10.0",
-				InstallCNI: "docker.io/istio/cni:1.10.0",
-				ProxyV2:    "foo.bar/istio/proxyv2:1.10.0",
-				Ztunnel:    "docker.io/istio/ztunnel:1.10.0",
+			map[string]string{
+				"pilot":       "docker.io/istio/pilot:1.10.0",
+				"install-cni": "docker.io/istio/cni:1.10.0",
+				"proxyv2":     "foo.bar/istio/proxyv2:1.10.0",
+				"ztunnel":     "docker.io/istio/ztunnel:1.10.0",
 			},
-			images.RegistryAndTag{},
+			"",
+			"",
 			true,
-			fmt.Errorf("image foo.bar/istio/proxyv2:1.10.0 is not from the same hub as docker.io/istio/pilot:1.10.0"),
+			"is not from the same hub",
 		),
 		Entry("images with different tags",
-			fields{
-				Pilot:      "docker.io/istio/pilot:1.10.0",
-				InstallCNI: "docker.io/istio/cni:1.10.0",
-				ProxyV2:    "docker.io/istio/proxyv2:1.11.0",
-				Ztunnel:    "docker.io/istio/ztunnel:1.10.0",
+			map[string]string{
+				"pilot":       "docker.io/istio/pilot:1.10.0",
+				"install-cni": "docker.io/istio/cni:1.10.0",
+				"proxyv2":     "docker.io/istio/proxyv2:1.11.0",
+				"ztunnel":     "docker.io/istio/ztunnel:1.10.0",
 			},
-			images.RegistryAndTag{},
+			"",
+			"",
 			true,
-			fmt.Errorf("image docker.io/istio/proxyv2:1.11.0 does not have the same tag as docker.io/istio/pilot:1.10.0"),
+			"does not have the same tag",
 		),
-		Entry("empty image",
-			fields{
-				Pilot:      "",
-				InstallCNI: "docker.io/istio/cni:1.10.0",
-				ProxyV2:    "docker.io/istio/proxyv2:1.10.0",
+		Entry("empty pilot image",
+			map[string]string{
+				"pilot":       "",
+				"install-cni": "docker.io/istio/cni:1.10.0",
+				"proxyv2":     "docker.io/istio/proxyv2:1.10.0",
+				"ztunnel":     "docker.io/istio/ztunnel:1.10.0",
 			},
-			images.RegistryAndTag{},
+			"",
+			"",
 			true,
-			fmt.Errorf("image can not be empty"),
+			"pilot",
 		),
 		Entry("ztunnel is empty",
-			fields{
-				Pilot:      "docker.io/istio/pilot:1.10.0",
-				InstallCNI: "docker.io/istio/cni:1.10.0",
-				ProxyV2:    "docker.io/istio/proxyv2:1.10.0",
-				Ztunnel:    "",
+			map[string]string{
+				"pilot":       "docker.io/istio/pilot:1.10.0",
+				"install-cni": "docker.io/istio/cni:1.10.0",
+				"proxyv2":     "docker.io/istio/proxyv2:1.10.0",
+				"ztunnel":     "",
 			},
-			images.RegistryAndTag{Registry: "docker.io/istio", Tag: "1.10.0"},
+			"docker.io/istio",
+			"1.10.0",
 			false,
-			nil,
+			"",
+		),
+		Entry("images with digest suffix",
+			map[string]string{
+				"pilot":       "docker.io/istio/pilot:1.10.0@sha256:90638cf608f9c5dc4b67062a44dc60fa23a21199d6b6214b7703822e04d33910",
+				"install-cni": "docker.io/istio/cni:1.10.0@sha256:90638cf608f9c5dc4b67062a4ssdassa23a21199d6b6214b7703822e04d33910",
+				"proxyv2":     "docker.io/istio/proxyv2:1.10.0@sha256:90638casdsdsdb67062a44dc60fa23a21199d6b6214b7703822e04d33910",
+				"ztunnel":     "docker.io/istio/ztunnel:1.10.0@sha256:90638cf608f9c5dc4b67062a44dcasdasdad3a21199d6b6214b7703822e04d33910",
+			},
+			"docker.io/istio",
+			"1.10.0",
+			false,
+			"",
+		),
+		Entry("registry with port",
+			map[string]string{
+				"pilot":       "localhost:5000/istio/pilot:1.10.0",
+				"install-cni": "localhost:5000/istio/cni:1.10.0",
+				"proxyv2":     "localhost:5000/istio/proxyv2:1.10.0",
+				"ztunnel":     "localhost:5000/istio/ztunnel:1.10.0",
+			},
+			"localhost:5000/istio",
+			"1.10.0",
+			false,
+			"",
+		),
+		Entry("registry with port images with digest suffix",
+			map[string]string{
+				"pilot":       "docker.io:9000/istio/pilot:1.10.0@sha256:90638cf608f9c5dc4b67062a44dc60fa23a21199d6b6214b7703822e04d33910",
+				"install-cni": "docker.io:9000/istio/cni:1.10.0@sha256:90638cf608f9c5dc4b67062a44dc60fa23a21199d6b6214b7703822e04d33910",
+				"proxyv2":     "docker.io:9000/istio/proxyv2:1.10.0@sha256:90638cf608f9c5dc4b67062a44dc60fa23a21199d6b6214b7703822e04d33910",
+				"ztunnel":     "docker.io:9000/istio/ztunnel:1.10.0@sha256:90638cf608f9c5dc4b67062a44dc60fa23a21199d6b6214b7703822e04d33910",
+			},
+			"docker.io:9000/istio",
+			"1.10.0",
+			false,
+			"",
 		),
 	)
 })
@@ -138,10 +188,10 @@ var _ = Describe("Images.GetFipsImages", func() {
 
 			e, err := images.GetImages()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(e.Pilot).To(Equal(images.Image("docker.io/istio/pilot-fips:1.10.0")))
-			Expect(e.InstallCNI).To(Equal(images.Image("docker.io/istio/cni-fips:1.10.0")))
-			Expect(e.ProxyV2).To(Equal(images.Image("docker.io/istio/proxyv2-fips:1.10.0")))
-			Expect(e.Ztunnel).To(Equal(images.Image("docker.io/istio/ztunnel-fips:1.10.0")))
+			Expect(e.Pilot).To(Equal(images.Image{Registry: "docker.io/istio", Name: "pilot-fips", Tag: "1.10.0"}))
+			Expect(e.InstallCNI).To(Equal(images.Image{Registry: "docker.io/istio", Name: "cni-fips", Tag: "1.10.0"}))
+			Expect(e.ProxyV2).To(Equal(images.Image{Registry: "docker.io/istio", Name: "proxyv2-fips", Tag: "1.10.0"}))
+			Expect(e.Ztunnel).To(Equal(images.Image{Registry: "docker.io/istio", Name: "ztunnel-fips", Tag: "1.10.0"}))
 		})
 
 		It("should return an error when FIPS image environment variables are missing", func() {
@@ -163,18 +213,129 @@ var _ = Describe("Images.GetFipsImages", func() {
 	Context("when KYMA_FIPS_MODE_ENABLED is false", func() {
 		It("should use standard images", func() {
 			_ = os.Setenv("KYMA_FIPS_MODE_ENABLED", "false")
+
 			_ = os.Setenv("pilot-fips", "docker.io/istio/pilot-fips:1.10.0")
 			_ = os.Setenv("install-cni-fips", "docker.io/istio/cni-fips:1.10.0")
 			_ = os.Setenv("proxyv2-fips", "docker.io/istio/proxyv2-fips:1.10.0")
 			_ = os.Setenv("ztunnel-fips", "docker.io/istio/ztunnel-fips:1.10.0")
 
+			_ = os.Setenv("pilot", "docker.io/istio/pilot:1.10.0")
+			_ = os.Setenv("install-cni", "docker.io/istio/cni:1.10.0")
+			_ = os.Setenv("proxyv2", "docker.io/istio/proxyv2:1.10.0")
+			_ = os.Setenv("ztunnel", "docker.io/istio/ztunnel:1.10.0")
+
 			e, err := images.GetImages()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(e.Pilot).To(Equal(images.Image("docker.io/istio/pilot:1.10.0")))
-			Expect(e.InstallCNI).To(Equal(images.Image("docker.io/istio/cni:1.10.0")))
-			Expect(e.ProxyV2).To(Equal(images.Image("docker.io/istio/proxyv2:1.10.0")))
-			Expect(e.Ztunnel).To(Equal(images.Image("docker.io/istio/ztunnel:1.10.0")))
+			Expect(e.Pilot).To(Equal(images.Image{Registry: "docker.io/istio", Name: "pilot", Tag: "1.10.0"}))
+			Expect(e.InstallCNI).To(Equal(images.Image{Registry: "docker.io/istio", Name: "cni", Tag: "1.10.0"}))
+			Expect(e.ProxyV2).To(Equal(images.Image{Registry: "docker.io/istio", Name: "proxyv2", Tag: "1.10.0"}))
+			Expect(e.Ztunnel).To(Equal(images.Image{Registry: "docker.io/istio", Name: "ztunnel", Tag: "1.10.0"}))
 
 		})
 	})
+})
+
+var _ = Describe("Images Test", func() {
+	It("should return error when required envs are missing", func() {
+		_ = os.Unsetenv("pilot")
+		_ = os.Unsetenv("install-cni")
+		_ = os.Unsetenv("proxyv2")
+
+		_, err := images.GetImages()
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("environment variable \"pilot\" should not be empty"))
+		Expect(err.Error()).To(ContainSubstring("environment variable \"install-cni\" should not be empty"))
+		Expect(err.Error()).To(ContainSubstring("environment variable \"proxyv2\" should not be empty"))
+	})
+	It("should return images when all required envs are set", func() {
+		_ = os.Setenv("pilot", "docker.io/istio/pilot:1.10.0")
+		_ = os.Setenv("install-cni", "docker.io/istio/cni:1.10.0")
+		_ = os.Setenv("proxyv2", "docker.io/istio/proxyv2:1.10.0")
+
+		e, err := images.GetImages()
+		Expect(err).NotTo(HaveOccurred())
+		Expect(e.Pilot).To(Equal(images.Image{Registry: "docker.io/istio", Name: "pilot", Tag: "1.10.0"}))
+		Expect(e.InstallCNI).To(Equal(images.Image{Registry: "docker.io/istio", Name: "cni", Tag: "1.10.0"}))
+		Expect(e.ProxyV2).To(Equal(images.Image{Registry: "docker.io/istio", Name: "proxyv2", Tag: "1.10.0"}))
+	})
+	It("should return valid registry", func() {
+		_ = os.Setenv("pilot", "docker.io/istio/pilot:1.10.0")
+		_ = os.Setenv("install-cni", "docker.io/istio/cni:1.10.0")
+		_ = os.Setenv("proxyv2", "docker.io/istio/proxyv2:1.10.0")
+
+		e, err := images.GetImages()
+		Expect(err).NotTo(HaveOccurred())
+
+		registry := e.Pilot.GetHub()
+		Expect(registry).To(Equal("docker.io/istio"))
+	})
+	It("should return valid registry with port", func() {
+		_ = os.Setenv("pilot", "docker.io:9000/istio/pilot:1.10.0")
+		_ = os.Setenv("install-cni", "docker.io:9000/istio/cni:1.10.0")
+		_ = os.Setenv("proxyv2", "docker.io:9000/istio/proxyv2:1.10.0")
+		_ = os.Unsetenv("ztunnel")
+
+		e, err := images.GetImages()
+		Expect(err).NotTo(HaveOccurred())
+
+		registry := e.Pilot.GetHub()
+		Expect(registry).To(Equal("docker.io:9000/istio"))
+	})
+	It("should return valid tag", func() {
+		_ = os.Setenv("pilot", "docker.io/istio/pilot:1.10.0")
+		_ = os.Setenv("install-cni", "docker.io/istio/cni:1.10.0")
+		_ = os.Setenv("proxyv2", "docker.io/istio/proxyv2:1.10.0")
+
+		e, err := images.GetImages()
+		Expect(err).NotTo(HaveOccurred())
+
+		tag := e.Pilot.GetTag()
+		Expect(tag).To(Equal("1.10.0"))
+	})
+	It("should return valid tag with sha", func() {
+		_ = os.Setenv("pilot", "docker.io/istio/pilot:1.10.0@sha256:90638cf608f9c5dc4b67062a44dc60fa23a21199d6b6214b7703822e04d33910")
+		_ = os.Setenv("install-cni", "docker.io/istio/cni:1.10.0@sha256:90638cf608f9c5dc4b67062a44dc60fa23a21199d6b6214b7703aaaad33910")
+		_ = os.Setenv("proxyv2", "docker.io/istio/proxyv2:1.10.0@sha256:90638cf608f9c5dc4b67062a44dc60fa23a21199d6b6214b7703fffff04d33910")
+
+		e, err := images.GetImages()
+		Expect(err).NotTo(HaveOccurred())
+
+		tag := e.Pilot.GetTag()
+		Expect(tag).To(Equal("1.10.0@sha256:90638cf608f9c5dc4b67062a44dc60fa23a21199d6b6214b7703822e04d33910"))
+	})
+	It("should return valid image name", func() {
+		_ = os.Setenv("pilot", "docker.io/istio/pilot:1.10.0")
+		_ = os.Setenv("install-cni", "docker.io/istio/cni:1.10.0")
+		_ = os.Setenv("proxyv2", "docker.io/istio/proxyv2:1.10.0")
+
+		e, err := images.GetImages()
+		Expect(err).NotTo(HaveOccurred())
+
+		name := e.Pilot.GetName()
+		Expect(name).To(Equal("pilot"))
+	})
+	It("should return valid image name with registry port", func() {
+		_ = os.Setenv("pilot", "docker.io:9000/istio/pilot:1.10.0")
+		_ = os.Setenv("install-cni", "docker.io:9000/istio/cni:1.10.0")
+		_ = os.Setenv("proxyv2", "docker.io:9000/istio/proxyv2:1.10.0")
+		_ = os.Unsetenv("ztunnel")
+
+		e, err := images.GetImages()
+		Expect(err).NotTo(HaveOccurred())
+
+		name := e.Pilot.GetName()
+		Expect(name).To(Equal("pilot"))
+	})
+	It("should return valid image name with digest", func() {
+		_ = os.Setenv("pilot", "docker.io/istio/pilot:1.10.0@sha256:90638cf608f9c5dc4b67062a44dc60fa23a21199d6b6214b7703822e04d33910")
+		_ = os.Setenv("install-cni", "docker.io/istio/cni:1.10.0@sha256:90638cf608f9c5dc4b67062a44dc60fa23a21199d6b6214b7703aaaad33910")
+		_ = os.Setenv("proxyv2", "docker.io/istio/proxyv2:1.10.0@sha256:90638cf608f9c5dc4b67062a44dc60fa23a21199d6b6214b7703fffff04d33910")
+
+		e, err := images.GetImages()
+		Expect(err).NotTo(HaveOccurred())
+
+		name := e.Pilot.GetName()
+		Expect(name).To(Equal("pilot"))
+	})
+
 })

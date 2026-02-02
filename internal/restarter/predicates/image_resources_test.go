@@ -1,6 +1,7 @@
 package predicates_test
 
 import (
+	"github.com/kyma-project/istio/operator/internal/images"
 	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -13,7 +14,7 @@ var _ = Describe("Matches", func() {
 	It("should should return false when pod has custom image annotation", func() {
 		// given
 		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", map[string]string{"sidecar.istio.io/proxyImage": "istio/proxyv2:1.21.0"}, false)
-		predicate := predicates.NewImageResourcesPredicate(predicates.NewSidecarImage("istio", "1.22.0"), v1.ResourceRequirements{})
+		predicate := predicates.NewImageResourcesPredicate(images.Image{Registry: "istio", Name: "proxyv2", Tag: "1.22.0"}, v1.ResourceRequirements{})
 
 		// when
 		shouldRestart := predicate.Matches(pod)
@@ -25,7 +26,7 @@ var _ = Describe("Matches", func() {
 	It("should return true when pod does not have custom image annotation", func() {
 		// given
 		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", map[string]string{}, false)
-		predicate := predicates.NewImageResourcesPredicate(predicates.NewSidecarImage("istio", "1.22.0"), v1.ResourceRequirements{})
+		predicate := predicates.NewImageResourcesPredicate(images.Image{Registry: "istio", Name: "proxyv2", Tag: "1.22.0"}, v1.ResourceRequirements{})
 
 		// when
 		shouldRestart := predicate.Matches(pod)
@@ -40,7 +41,7 @@ var _ = Describe("handling of image bump of proxy sidecar as container or init c
 	It("should return true when sidecar is a regular container in the Pod", func() {
 		// given
 		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", map[string]string{}, false)
-		predicate := predicates.NewImageResourcesPredicate(predicates.NewSidecarImage("istio", "1.22.0"), v1.ResourceRequirements{})
+		predicate := predicates.NewImageResourcesPredicate(images.Image{Registry: "istio", Name: "proxyv2", Tag: "1.22.0"}, v1.ResourceRequirements{})
 
 		// when
 		shouldRestart := predicate.Matches(pod)
@@ -52,7 +53,7 @@ var _ = Describe("handling of image bump of proxy sidecar as container or init c
 	It("should return true when sidecar is an init container in the Pod", func() {
 		// given
 		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", map[string]string{}, true)
-		predicate := predicates.NewImageResourcesPredicate(predicates.NewSidecarImage("istio", "1.22.0"), v1.ResourceRequirements{})
+		predicate := predicates.NewImageResourcesPredicate(images.Image{Registry: "istio", Name: "proxyv2", Tag: "1.22.0"}, v1.ResourceRequirements{})
 
 		// when
 		shouldRestart := predicate.Matches(pod)
@@ -66,7 +67,7 @@ var _ = Describe("handling of resources change of proxy sidecar as container or 
 	It("should return true when sidecar is a regular container in the Pod", func() {
 		// given
 		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", map[string]string{}, false)
-		predicate := predicates.NewImageResourcesPredicate(predicates.NewSidecarImage("istio", "1.21.0"), v1.ResourceRequirements{
+		predicate := predicates.NewImageResourcesPredicate(images.Image{Registry: "istio", Name: "proxyv2", Tag: "1.21.0"}, v1.ResourceRequirements{
 			Requests: v1.ResourceList{
 				v1.ResourceCPU:    resource.MustParse("100m"),
 				v1.ResourceMemory: resource.MustParse("128Mi"),
@@ -87,7 +88,7 @@ var _ = Describe("handling of resources change of proxy sidecar as container or 
 	It("should return true when sidecar is an init container in the Pod", func() {
 		// given
 		pod := createPodWithProxySidecar("test-pod", "test-namespace", "1.21.0", map[string]string{}, true)
-		predicate := predicates.NewImageResourcesPredicate(predicates.NewSidecarImage("istio", "1.21.0"), v1.ResourceRequirements{
+		predicate := predicates.NewImageResourcesPredicate(images.Image{Registry: "istio", Name: "proxyv2", Tag: "1.21.0"}, v1.ResourceRequirements{
 			Requests: v1.ResourceList{
 				v1.ResourceCPU:    resource.MustParse("100m"),
 				v1.ResourceMemory: resource.MustParse("128Mi"),

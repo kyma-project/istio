@@ -297,10 +297,6 @@ func (m MergerMock) GetIstioImageVersion() (istiooperator.IstioImageVersion, err
 	return istiooperator.NewIstioImageVersionFromTag("1.16.1-distroless")
 }
 
-func (m MergerMock) GetProxyImageName(istioImages images.Images) string {
-	return istioImages.ProxyV2.String()
-}
-
 func (m MergerMock) SetIstioInstallFlavor(_ clusterconfig.ClusterSize) {}
 
 type proxyRestarterMock struct {

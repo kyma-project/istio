@@ -984,10 +984,6 @@ func (m MergerMock) Merge(_ clusterconfig.ClusterSize, _ *operatorv1alpha2.Istio
 	return "mocked istio operator merge result", m.mergeError
 }
 
-func (m MergerMock) GetProxyImageName(istioImages images.Images) string {
-	return istioImages.ProxyV2.String()
-}
-
 func (m MergerMock) GetIstioOperator(_ clusterconfig.ClusterSize) (iopv1alpha1.IstioOperator, error) {
 	iop := iopv1alpha1.IstioOperator{
 		Spec: iopv1alpha1.IstioOperatorSpec{

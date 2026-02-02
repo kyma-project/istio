@@ -124,6 +124,7 @@ func main() {
 		setupLog.Error(err, "Unable to get Istio images")
 		os.Exit(1)
 	}
+
 	crMetrics := istiocrmetrics.NewMetrics()
 	if err = controllers.NewController(mgr, flagVar.reconciliationInterval, crMetrics, *istioImage).SetupWithManager(mgr, rateLimiter); err != nil {
 		setupLog.Error(err, "Unable to create controller", "controller", "Istio")

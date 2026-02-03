@@ -9,7 +9,7 @@ import (
 // FetchPublicIP returns the public IP address of the caller by using the ipify API.
 func FetchPublicIP(t *testing.T) (string, error) {
 	url := "https://api.ipify.org?format=text"
-	t.Logf("Getting IP address of client from  ipify ...")
+	t.Logf("Getting IP address of client from ipify ...")
 	resp, err := http.Get(url)
 	if err != nil {
 		t.Logf("Failed to fetch public IP of client: %v", err)

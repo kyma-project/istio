@@ -77,7 +77,7 @@ func AssertHeaders(t *testing.T, client *http.Client, url string, opts ...Assert
 			return false, err
 		}
 
-		t.Logf("Making HTTP request to endpoint: %s", url)
+		t.Logf("Making HTTP request to httpbin /headers endpoint: %s", url)
 
 		resp, err := client.Do(req)
 		if err != nil {

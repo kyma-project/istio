@@ -63,7 +63,7 @@ func TestConfiguration(t *testing.T) {
 		gatewayAddress, err := load_balancer.GetLoadBalancerIP(t.Context(), c.GetControllerRuntimeClient())
 		require.NoError(t, err)
 
-		url := fmt.Sprintf("http://%s/get?show_env=true", gatewayAddress)
+		url := fmt.Sprintf("http://%s/headers", gatewayAddress)
 
 		httpbinassert.AssertHeaders(t, httpClient, url,
 			httpbinassert.WithHeaderValue("X-Forwarded-For", clientIP))

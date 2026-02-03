@@ -1491,8 +1491,10 @@ spec:
                     type: array
                   forwardClientCertDetails:
                     description: |-
-                      Defines the strategy of handling the **X-Forwarded-Client-Cert** header.
-                      The default behavior is "SANITIZE_SET".
+                      Defines the strategy of handling the **X-Forwarded-Client-Cert** header only by the gateway proxies.
+                      This setting controls how the gateway proxy retrieves client attributes from incoming traffic and propagates them to upstream services in the cluster.
+                      Gateway proxies in Istio module are represented by the Istio Ingress Gateway and Istio Egress Gateway.
+                      The default behavior for gateway proxies is "SANITIZE_SET".
                     enum:
                     - APPEND_FORWARD
                     - SANITIZE_SET

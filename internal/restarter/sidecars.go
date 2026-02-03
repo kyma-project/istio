@@ -7,7 +7,7 @@ import (
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/describederrors"
-	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
+	"github.com/kyma-project/istio/operator/internal/images"
 
 	"github.com/go-logr/logr"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -28,6 +28,7 @@ type SidecarRestarter struct {
 	Merger         istiooperator.Merger
 	ProxyRestarter sidecars.ProxyRestarter
 	StatusHandler  status.Status
+	IstioImages    images.Images
 }
 
 func NewSidecarsRestarter(
@@ -36,6 +37,7 @@ func NewSidecarsRestarter(
 	merger istiooperator.Merger,
 	proxyRestarter sidecars.ProxyRestarter,
 	statusHandler status.Status,
+	istioImages images.Images,
 ) *SidecarRestarter {
 	return &SidecarRestarter{
 		Log:            logger,
@@ -43,6 +45,7 @@ func NewSidecarsRestarter(
 		Merger:         merger,
 		ProxyRestarter: proxyRestarter,
 		StatusHandler:  statusHandler,
+		IstioImages:    istioImages,
 	}
 }
 
@@ -70,14 +73,8 @@ func (s *SidecarRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio)
 		return describederrors.NewDescribedError(err, "Could not get Istio version from istio operator file"), false
 	}
 
-	tag, ok := iop.Spec.Tag.(string)
-	if !ok {
-		ctrl.Log.Error(err, "Error getting Istio tag from istio operator file")
-		s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarRestartFailed))
-		return describederrors.NewDescribedError(err, "Could not get Istio tag from istio operator file"), false
-	}
+	expectedImage := s.IstioImages.ProxyV2
 
-	expectedImage := predicates.NewSidecarImage(iop.Spec.Hub, tag)
 	s.Log.Info("Running proxy sidecar reset", "expected image", expectedImage)
 
 	err = gatherer.VerifyIstioPodsVersion(ctx, s.Client, istioImageVersion.Version())

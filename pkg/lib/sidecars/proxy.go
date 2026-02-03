@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/internal/images"
 	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
 
 	"github.com/go-logr/logr"
@@ -26,7 +27,7 @@ const (
 type ProxyRestarter interface {
 	RestartProxies(
 		ctx context.Context,
-		expectedImage predicates.SidecarImage,
+		expectedImage images.Image,
 		expectedResources v1.ResourceRequirements,
 		istioCR *v1alpha2.Istio,
 	) ([]restart.Warning, bool, error)
@@ -51,7 +52,7 @@ func NewProxyRestarter(c client.Client, podsLister pods.Getter, actionRestarter 
 
 func (p *ProxyRestart) RestartProxies(
 	ctx context.Context,
-	expectedImage predicates.SidecarImage,
+	expectedImage images.Image,
 	expectedResources v1.ResourceRequirements,
 	istioCR *v1alpha2.Istio,
 ) ([]restart.Warning, bool, error) {

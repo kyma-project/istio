@@ -5,6 +5,9 @@ bdba:
   - europe-docker.pkg.dev/kyma-project/prod/external/istio/install-cni:1.28.2-distroless
   - europe-docker.pkg.dev/kyma-project/prod/external/istio/proxyv2:1.28.2-distroless
   - europe-docker.pkg.dev/kyma-project/prod/external/istio/pilot:1.28.2-distroless
+  - europe-docker.pkg.dev/kyma-project/restricted-prod/sap.com/istio-install-cni-fips:1.28.2
+  - europe-docker.pkg.dev/kyma-project/restricted-prod/sap.com/istio-proxy-fips:1.28.2
+  - europe-docker.pkg.dev/kyma-project/restricted-prod/sap.com/istio-pilot-fips:1.28.2
 mend:
   language: golang-mod
   subprojects: false

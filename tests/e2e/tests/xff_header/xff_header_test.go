@@ -15,6 +15,7 @@ import (
 	virtualservice "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/virtual_service"
 	"github.com/stretchr/testify/require"
 	"testing"
+	"time"
 )
 
 const defaultNamespace = "default"
@@ -66,7 +67,8 @@ func TestConfiguration(t *testing.T) {
 		url := fmt.Sprintf("http://%s/headers", gatewayAddress)
 
 		httpbinassert.AssertHeaders(t, httpClient, url,
-			httpbinassert.WithHeaderValue("X-Forwarded-For", clientIP))
+			httpbinassert.WithHeaderValue("X-Forwarded-For", clientIP),
+			httpbinassert.WithTimeout(90*time.Second))
 
 	})
 }

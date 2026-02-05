@@ -10,6 +10,7 @@ assignees: ''
 
 Update the Kyma Istio module to use a new Istio version.
 Update the Istio version and dependencies, adjust tests and documentation if needed.
+Update the Istio version for FIPS images.
 The upgrade needs to have zero downtime for production-ready settings.
 
 ACs:

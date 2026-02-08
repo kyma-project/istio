@@ -36,3 +36,34 @@ func LabelNamespaceWithIstioInjection(t *testing.T, namespace string) error {
 
 	return nil
 }
+
+func LabelNamespaceWithAmbient(t *testing.T, namespace string) error {
+	t.Helper()
+	t.Logf("Labeling namespace %s with ambient dataplane mode label", namespace)
+
+	r, err := client.ResourcesClient(t)
+	if err != nil {
+		t.Logf("Failed to get resources client: %v", err)
+		return err
+	}
+
+	ns := &v1.Namespace{}
+	err = r.Get(t.Context(), namespace, "", ns)
+	if err != nil {
+		t.Logf("Failed to get namespace %s: %v", namespace, err)
+		return err
+	}
+
+	r.Label(ns, map[string]string{
+		"istio.io/dataplane-mode": "ambient",
+	})
+
+	err = r.Update(t.Context(), ns)
+	if err != nil {
+		t.Logf("Failed to update namespace: %v", err)
+		return err
+	}
+
+	return nil
+}
+

@@ -258,6 +258,13 @@ istio-smoke-test: gotestsum deploy
 	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/smoke_test/..." --junitfile "./tests/e2e/tests/smoke_test/report.xml" -- -timeout 20m
 	@echo "Smoke test completed successfully"
 
+.PHONY: ambient-e2e-test
+ambient-e2e-test: gotestsum deploy
+	@echo "Running ambient e2e tests"
+	go clean -testcache
+	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/ambient/..." --junitfile "./tests/e2e/tests/ambient/report.xml" -- -timeout 20m -tags experimental
+	@echo "Ambient E2E tests completed successfully"
+
 .PHONY: upgrade-test
 upgrade-test: generate-upgrade-test-manifest deploy-latest-release gotestsum
 	@echo "Running e2e tests"

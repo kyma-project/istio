@@ -251,6 +251,13 @@ egress-e2e-test: gotestsum deploy
 	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/egress/..." --junitfile "./tests/e2e/tests/egress/report.xml" -- -timeout 20m
 	@echo "E2E tests completed successfully"
 
+.PHONY: istio-smoke-test
+istio-smoke-test: gotestsum deploy
+	@echo "Running smoke test"
+	go clean -testcache
+	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/smoke_test/..." --junitfile "./tests/e2e/tests/smoke_test/report.xml" -- -timeout 20m
+	@echo "Smoke test completed successfully"
+
 .PHONY: upgrade-test
 upgrade-test: generate-upgrade-test-manifest deploy-latest-release gotestsum
 	@echo "Running e2e tests"

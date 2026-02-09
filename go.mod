@@ -26,16 +26,16 @@ require (
 	google.golang.org/protobuf v1.36.11
 	gopkg.in/inf.v0 v0.9.1
 	gopkg.in/yaml.v3 v3.0.1
-	istio.io/api v1.28.2-0.20251205082437-fde1452f70bc
-	istio.io/client-go v1.28.2-0.20251205082736-a6e3a5710bb0
-	istio.io/istio v0.0.0-20251217200826-ab413ac6c1f4
+	istio.io/api v1.28.3
+	istio.io/client-go v1.28.3
+	istio.io/istio v0.0.0-20260114100434-4c1f845d839e
 	k8s.io/api v0.34.2
 	k8s.io/apiextensions-apiserver v0.34.2
 	k8s.io/apimachinery v0.34.2
 	k8s.io/client-go v0.34.2
 	k8s.io/kubectl v0.33.3
 	k8s.io/utils v0.0.0-20250820121507-0af2bda4dd1d
-	sigs.k8s.io/controller-runtime v0.22.4 // Since we are using the Istio library directly, we should also use the controller-runtime version that is used by Istio.
+	sigs.k8s.io/controller-runtime v0.22.1 // Since we are using the Istio library directly, we should also use the controller-runtime version that is used by Istio.
 	sigs.k8s.io/e2e-framework v0.6.0
 	sigs.k8s.io/yaml v1.6.0
 )
@@ -213,7 +213,7 @@ require (
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20250814151709-d7b6acb124c3 // indirect
 	sigs.k8s.io/gateway-api v1.4.0 // indirect
-	sigs.k8s.io/gateway-api-inference-extension v1.2.1 // indirect
+	sigs.k8s.io/gateway-api-inference-extension v1.0.2 // indirect
 	sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730 // indirect
 	sigs.k8s.io/kustomize/api v0.19.0 // indirect
 	sigs.k8s.io/kustomize/kyaml v0.19.0 // indirect

@@ -1,9 +1,0 @@
-apiVersion: networking.istio.io/v1
-kind: DestinationRule
-metadata:
-  name: external-httpbin-mtls
-spec:
-  host: {{ .WORKLOAD_DOMAIN }}
-  trafficPolicy:
-    tls:
-      mode: ISTIO_MUTUAL

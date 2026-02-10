@@ -90,3 +90,57 @@ func RunRequestFromInsideCluster(t *testing.T, namespace string, url string, opt
 
 	return stdOutStr, stdErrStr, err
 }
+
+func TestSSLFromInsideCluster(t *testing.T, namespace string, url string) (string, string, error) {
+	t.Helper()
+	r, err := client.ResourcesClient(t)
+	if err != nil {
+		t.Logf("Could not create resources client: err=%s", err)
+		return "", "", err
+	}
+
+	curlPodName := envconf.RandomName(podName, 16)
+	pod := corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{Name: curlPodName, Namespace: namespace},
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{
+				{
+					Command: []string{"bash", "-c"},
+					Args: []string{"apt-get update\n" +
+						"apt-get install -y openssl\n" +
+						`sleep infinity`},
+					Image: "nginx",
+					Name:  containerName,
+				},
+			},
+		},
+	}
+
+	t.Logf("applying curl pod: %+v", &pod)
+	err = r.Create(t.Context(), &pod)
+	if err != nil {
+		return "", "", err
+	}
+	setup.DeclareCleanup(t, func() {
+		t.Log("Deleting pod: ", pod.Name)
+		err := r.Delete(setup.GetCleanupContext(), &pod)
+		if err != nil {
+			t.Logf("Failed to delete pod %s: %v", pod.Name, err)
+		}
+	})
+	err = wait.For(conditions.New(r).PodRunning(&pod))
+	if err != nil {
+		return "", "", err
+	}
+
+	cmd := []string{"openssl", "s_client", "-connect", url, "-servername", url, "-showcerts"}
+
+	var stdout, stderr bytes.Buffer
+	err = r.ExecInPod(t.Context(), pod.GetNamespace(), pod.GetName(), containerName, cmd, &stdout, &stderr)
+	stdOutStr := strings.TrimSpace(stdout.String())
+	stdErrStr := strings.TrimSpace(stderr.String())
+	t.Logf("[%s] stdout: %v", curlPodName, stdOutStr)
+	t.Logf("[%s] stderr: %v", curlPodName, stdErrStr)
+
+	return stdOutStr, stdErrStr, err
+}

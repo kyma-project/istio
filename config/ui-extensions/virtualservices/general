@@ -7,5 +7,5 @@ category: Istio
 name: Virtual Services
 scope: namespace
 description: >-
-  {{[VirtualService](https://istio.io/latest/docs/reference/config/networking/virtual-service/)}}
-  describes a configuration that affects traffic routing. .
+  {{[Virtual Service](https://istio.io/latest/docs/reference/config/networking/virtual-service/)}}
+  describes a configuration that affects traffic routing.

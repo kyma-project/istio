@@ -8,5 +8,5 @@ name: Telemetries
 scope: namespace
 description: >-
   {{[Telemetry](https://istio.io/latest/docs/reference/config/telemetry)}}
-  defines how the telemetry is generated for workloads within a mesh.
+  defines how telemetry is generated for workloads within a mesh.
 

@@ -30,7 +30,7 @@ func TestTrustDomain(t *testing.T) {
 			require.NoError(t, err)
 
 			require.NoError(t, infrahelpers.CreateNamespace(t, "verifier"))
-			stdOut, stdErr, err := httpincluster.TestSSLFromInsideCluster(t, "verifier",
+			stdOut, stdErr, err := httpincluster.RunOpenSSLSClientFromInsideCluster(t, "verifier",
 				fmt.Sprintf("%s.httpbin.svc.cluster.local:%d", svcName, svcPort))
 			t.Logf("StdOut: %s", stdOut)
 			t.Logf("StdErr: %s", stdErr)

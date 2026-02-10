@@ -91,7 +91,7 @@ func RunRequestFromInsideCluster(t *testing.T, namespace string, url string, opt
 	return stdOutStr, stdErrStr, err
 }
 
-func TestSSLFromInsideCluster(t *testing.T, namespace string, url string) (string, string, error) {
+func RunOpenSSLSClientFromInsideCluster(t *testing.T, namespace string, url string) (string, string, error) {
 	t.Helper()
 	r, err := client.ResourcesClient(t)
 	if err != nil {
@@ -106,11 +106,16 @@ func TestSSLFromInsideCluster(t *testing.T, namespace string, url string) (strin
 			Containers: []corev1.Container{
 				{
 					Command: []string{"bash", "-c"},
-					Args: []string{"apt-get update\n" +
-						"apt-get install -y openssl\n" +
-						`sleep infinity`},
-					Image: "nginx",
-					Name:  containerName,
+					Args:    []string{"apt-get update && apt-get install -y openssl && sleep infinity"},
+					Image:   "nginx",
+					Name:    containerName,
+					ReadinessProbe: &corev1.Probe{
+						ProbeHandler: corev1.ProbeHandler{
+							Exec: &corev1.ExecAction{
+								Command: []string{"openssl", "version"},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -133,7 +138,7 @@ func TestSSLFromInsideCluster(t *testing.T, namespace string, url string) (strin
 		return "", "", err
 	}
 
-	cmd := []string{"openssl", "s_client", "-connect", url, "-servername", url, "-showcerts"}
+	cmd := []string{"openssl", "s_client", "-connect", url, "-showcerts"}
 
 	var stdout, stderr bytes.Buffer
 	err = r.ExecInPod(t.Context(), pod.GetNamespace(), pod.GetName(), containerName, cmd, &stdout, &stderr)

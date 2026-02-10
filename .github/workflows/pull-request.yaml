@@ -88,7 +88,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test_make_target: [ "configuration-integration-test", "mesh-communication-integration-test", "installation-integration-test", "observability-integration-test" ]
+        test_make_target:
+          - "configuration-integration-test"
+          - "mesh-communication-integration-test"
+          - "installation-integration-test"
+          - "observability-integration-test"
+          - "trust-domain-e2e-test"
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/load-manager-image
@@ -146,7 +151,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-make-target: [ "installation-e2e-test", "configuration-e2e-test", "mesh-communication-e2e-test", "observability-e2e-test", "ext-auth-e2e-test", "egress-e2e-test" ]
+        test-make-target:
+          - "installation-e2e-test"
+          - "configuration-e2e-test"
+          - "mesh-communication-e2e-test"
+          - "observability-e2e-test"
+          - "ext-auth-e2e-test"
+          - "egress-e2e-test"
+          - "trust-domain-e2e-test"
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/load-manager-image

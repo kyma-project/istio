@@ -6,6 +6,6 @@ name: Destination Rules
 category: Istio
 urlPath: destinationrules
 scope: namespace
-description:  >-
+description: >-
   {{[DestinationRule](https://istio.io/latest/docs/reference/config/networking/destination-rule/)}}
   defines policies that apply to traffic routed to a service.

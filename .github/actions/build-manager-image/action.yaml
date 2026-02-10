@@ -59,3 +59,24 @@ runs:
       with:
         name: manager-image
         path: /tmp/manager-image.tar
+    - name: Build and Load Experimental
+      if: ${{ inputs.push-image == 'false' }}
+      uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # 6.18.0
+      with:
+        context: .
+        platforms: 'linux/amd64'
+        push: false
+        load: true
+        tags: ${{ inputs.operator-image-name }}-experimental
+        build-args: |
+          VERSION=${{ inputs.operator-version }}
+          GO_BUILD_TAGS=experimental
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        outputs: type=docker,dest=/tmp/manager-image-experimental.tar
+    - name: Upload experimental artifact
+      if: ${{ inputs.push-image == 'false' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: manager-image-experimental
+        path: /tmp/manager-image-experimental.tar

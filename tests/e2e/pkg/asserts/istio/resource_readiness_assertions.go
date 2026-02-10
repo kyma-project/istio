@@ -58,6 +58,17 @@ func AssertCNINodeReady(t *testing.T, c *resources.Resources) {
 	require.NoError(t, err)
 }
 
+// AssertZtunnelReady gets the ztunnel daemonset and asserts it is ready
+func AssertZtunnelReady(t *testing.T, c *resources.Resources) {
+	t.Helper()
+
+	ztunnelDaemonSet := &v2.DaemonSet{}
+	err := c.Get(t.Context(), "ztunnel", "istio-system", ztunnelDaemonSet)
+	require.NoError(t, err)
+	err = wait.For(conditions.New(c).DaemonSetReady(ztunnelDaemonSet), wait.WithContext(t.Context()))
+	require.NoError(t, err)
+}
+
 // AssertIstiodPodResources asserts that all istiod pods have the expected resource requests and limits
 func AssertIstiodPodResources(t *testing.T, c *resources.Resources, expectedRequestCpu, expectedRequestMemory, expectedLimitCpu, expectedLimitMemory string) {
 	t.Helper()

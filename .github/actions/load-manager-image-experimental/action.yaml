@@ -1,0 +1,15 @@
+name: 'Load Istio Manager Experimental Image'
+description: 'Load Istio manager experimental image from a tar archive in the artifacts'
+runs:
+  using: "composite"
+  steps:
+    - name: Download experimental artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: manager-image-experimental
+        path: /tmp
+    - name: Load experimental image
+      shell: bash
+      run: |
+        docker load --input /tmp/manager-image-experimental.tar
+

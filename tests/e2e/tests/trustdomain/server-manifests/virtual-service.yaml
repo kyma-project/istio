@@ -1,0 +1,26 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: httpbin-mtls
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - mtls-gateway
+  http:
+    - match:
+        - uri:
+            prefix: /
+          method:
+            exact: GET
+      headers:
+        request:
+          add:
+            X-CLIENT-SSL-CN: "%DOWNSTREAM_PEER_SUBJECT%"
+            X-CLIENT-SSL-ISSUER: "%DOWNSTREAM_PEER_ISSUER%"
+            X-CLIENT-SSL-SAN: "%DOWNSTREAM_PEER_URI_SAN%"
+      route:
+        - destination:
+            host: {{ .SERVICE_NAME }}
+            port:
+              number: {{ .SERVICE_PORT }}

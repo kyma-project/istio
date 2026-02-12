@@ -122,7 +122,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test_make_target: [ "configuration-integration-test", "mesh-communication-integration-test", "installation-integration-test", "observability-integration-test" ]
+        test_make_target: [ "configuration-integration-test", "mesh-communication-integration-test", "installation-integration-test", "observability-integration-test", "xff-header-e2e-test" ]
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/k8s-compatibility-test-aws

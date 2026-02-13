@@ -135,6 +135,7 @@ spec:
 
 3. Allow the following for `istio-ingressgateway`:
 - Allow egress access to `istiod` on port 15012 (XDS).
+- Allow egress access to DNS.
 - Allow ingress access from external traffic on ports 80/443.
 
 ```yaml
@@ -158,6 +159,11 @@ spec:
     ports:
     - protocol: TCP
       port: 15012
+  - ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
   ingress:
   - ports:
     - protocol: TCP

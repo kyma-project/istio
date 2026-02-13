@@ -28,8 +28,8 @@ When user enables NetworkPolicy support in the Istio CR, apply NetworkPolicies t
 4. Allow external ingress to `istio-ingressgateway` on TCP 80/443 for traffic entering the cluster.
 5. Allow ingress to the `istiod` webhook endpoint on TCP 15017 from the API server for validating and mutating operations.
 6. Allow `istiod` egress to common JWKS endpoint ports (TCP 80/443) for external JWT verification.
-> ![NOTE]
-> Allowing traffic to the 443 and 80 is not necesarilly sufficient for all cases, as some JWKS endpoints might be running on non-standard ports.
+> [!NOTE]
+> Allowing traffic to the 443 and 80 is not necessarily sufficient for all cases, as some JWKS endpoints might be running on non-standard ports.
 > If users have specific requirements for accessing JWKS endpoints on non-standard ports, it might be required to either allow users to create custom NetworkPolicies in
 > the `istio-system` namespace or to provide a way to specify additional allowed ports for `istiod` egress in the Istio CR.
 7. Allow user-enabled egress from `istio-ingressgateway` to backend services by permitting egress to specifically labeled pods in user namespaces.

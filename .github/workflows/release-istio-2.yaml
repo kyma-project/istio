@@ -233,8 +233,6 @@ jobs:
           - "installation-integration-test"
           - "observability-integration-test"
           - "gcp-integration-test"
-          - "xff-header-e2e-test"
-          - "trust-domain-e2e-test"
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/e2e-test-gardener
@@ -261,8 +259,6 @@ jobs:
           - "installation-integration-test"
           - "observability-integration-test"
           - "aws-integration-test"
-          - "xff-header-e2e-test"
-          - "trust-domain-e2e-test"
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/e2e-test-gardener
@@ -355,10 +351,71 @@ jobs:
           servers-memory: "16"
           agents: 2
 
+  new-istio-e2e-test-aws:
+    name: New Istio E2E test AWS
+    runs-on: ubuntu-latest
+    needs: [ get-image ]
+    strategy:
+      fail-fast: false
+      matrix:
+        test_make_target:
+          - "xff-header-e2e-test"
+          - "trust-domain-e2e-test"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/e2e-test-gardener
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          manager_image: ${{ needs.get-image.outputs.image }}
+          gardener_secret: ${{ secrets.GARDENER_TOKEN }}
+          gardener_project_name: ${{ vars.GARDENER_PROJECT_NAME }}
+          gardener_provider: aws
+          test_make_target: ${{ matrix.test_make_target }}
+          operator_version: ${{ needs.get-image.outputs.operator_version }}
+
+  new-istio-e2e-test-gcp:
+    name: New Istio E2E test GCP
+    runs-on: ubuntu-latest
+    needs: [ get-image ]
+    strategy:
+      fail-fast: false
+      matrix:
+        test_make_target:
+          - "xff-header-e2e-test"
+          - "trust-domain-e2e-test"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/e2e-test-gardener
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          manager_image: ${{ needs.get-image.outputs.image }}
+          gardener_secret: ${{ secrets.GARDENER_TOKEN }}
+          gardener_project_name: ${{ vars.GARDENER_PROJECT_NAME }}
+          gardener_provider: gcp
+          test_make_target: ${{ matrix.test_make_target }}
+          operator_version: ${{ needs.get-image.outputs.operator_version }}
+
   create-draft-release:
     name: Create draft release
     runs-on: ubuntu-latest
-    needs: [ check-prerequisites, build-image, build-image-experimental, unit-tests, istio-upgrade-test-aws, istio-upgrade-test-k3d, istio-e2e-test-k3d, istio-e2e-test-gcp, istio-e2e-test-aws, new-istio-e2e-test-k3d, new-istio-e2e-test-evaluation-k3d, new-istio-e2e-test-experimental-k3d, new-istio-upgrade-test-k3d ]
+    needs:
+      - check-prerequisites
+      - build-image
+      - build-image-experimental
+      - unit-tests
+      - istio-upgrade-test-aws
+      - istio-upgrade-test-k3d
+      - istio-e2e-test-k3d
+      - istio-e2e-test-gcp
+      - istio-e2e-test-aws
+      - new-istio-e2e-test-k3d
+      - new-istio-e2e-test-evaluation-k3d
+      - new-istio-e2e-test-experimental-k3d
+      - new-istio-upgrade-test-k3d
+      - new-istio-e2e-test-aws
+      - new-istio-e2e-test-gcp
     outputs:
       release_id: ${{ steps.create-draft-release.outputs.release_id }}
     steps:

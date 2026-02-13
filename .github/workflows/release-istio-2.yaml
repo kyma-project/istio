@@ -261,8 +261,6 @@ jobs:
           - "installation-integration-test"
           - "observability-integration-test"
           - "aws-integration-test"
-          - "xff-header-e2e-test"
-          - "trust-domain-e2e-test"
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/e2e-test-gardener
@@ -354,6 +352,29 @@ jobs:
           operator-image-name: ${{ needs.get-image.outputs.image }}
           servers-memory: "16"
           agents: 2
+
+  new-istio-e2e-test-aws:
+    name: Istio E2E test AWS
+    runs-on: ubuntu-latest
+    needs: [ get-image ]
+    strategy:
+      fail-fast: false
+      matrix:
+        test_make_target:
+          - "xff-header-e2e-test"
+          - "trust-domain-e2e-test"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/e2e-test-gardener
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          manager_image: ${{ needs.get-image.outputs.image }}
+          gardener_secret: ${{ secrets.GARDENER_TOKEN }}
+          gardener_project_name: ${{ vars.GARDENER_PROJECT_NAME }}
+          gardener_provider: aws
+          test_make_target: ${{ matrix.test_make_target }}
+          operator_version: ${{ needs.get-image.outputs.operator_version }}
 
   create-draft-release:
     name: Create draft release

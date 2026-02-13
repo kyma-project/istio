@@ -40,8 +40,8 @@ func NewIngressGatewayRestarter(client client.Client, predicates []predicates.In
 func (r *IngressGatewayRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio) (describederrors.DescribedError, bool) {
 	ctrl.Log.Info("Restarting Istio Ingress Gateway")
 
-	r.predicates = append(r.predicates, predicates.NewIngressGatewayRestartPredicate(istioCR))
-	for _, predicate := range r.predicates {
+	allPredicates := append(r.predicates, predicates.NewIngressGatewayRestartPredicate(istioCR))
+	for _, predicate := range allPredicates {
 		evaluator, err := predicate.NewIngressGatewayEvaluator(ctx)
 		if err != nil {
 			return describederrors.NewDescribedError(err, "Could not create Ingress Gateway restart evaluator"), false

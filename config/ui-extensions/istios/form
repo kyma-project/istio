@@ -26,6 +26,12 @@
     name: compatibilityMode
     value:
       type: bool
+  - path: config.enableDNSProxying
+    simple: true
+    name: config.enableDNSProxying
+    description: description.enableDNSProxying
+    value:
+      type: bool
   - path: config.forwardClientCertDetails
     simple: true
     name: config.forwardClientCertDetails

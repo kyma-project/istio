@@ -879,6 +879,7 @@ var _ = Describe("Merge", func() {
 	Context("DNS Proxying", func() {
 		It("Should set ISTIO_META_DNS_CAPTURE in the mesh Config if DNS Proxying is enabled in the Istio CR", func() {
 			// given
+			enableDNSProxying := true
 			m := mesh.DefaultMeshConfig()
 			meshConfigRaw := convert(m)
 			iop := iopv1alpha1.IstioOperator{
@@ -890,7 +891,7 @@ var _ = Describe("Merge", func() {
 			istioCR := istiov1alpha2.Istio{
 				Spec: istiov1alpha2.IstioSpec{
 					Config: istiov1alpha2.Config{
-						TrustDomain: ptr.To("trusted.com"),
+						EnableDNSProxying: &enableDNSProxying,
 					},
 				},
 			}
@@ -902,13 +903,14 @@ var _ = Describe("Merge", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
 			Expect(err).ShouldNot(HaveOccurred())
-			trustDomain, exists := meshConfig.GetPath("trustDomain")
+			istioMetaDNSCapture, exists := meshConfig.GetPath("defaultConfig.proxyMetadata.ISTIO_META_DNS_CAPTURE")
 			Expect(exists).To(BeTrue())
-			Expect(trustDomain).To(Equal("trusted.com"))
+			Expect(istioMetaDNSCapture).To(Equal("true"))
 		})
 
-		It("Should set IstioOperator TrustDomain, when Istio CR configures it", func() {
+		It("Shouldn't set any ISTIO_META_DNS_CAPTURE in the mesh Config if DNS Proxying is disabled in the Istio CR", func() {
 			// given
+			enableDNSProxying := true
 			m := mesh.DefaultMeshConfig()
 			meshConfigRaw := convert(m)
 			iop := iopv1alpha1.IstioOperator{
@@ -919,7 +921,9 @@ var _ = Describe("Merge", func() {
 
 			istioCR := istiov1alpha2.Istio{
 				Spec: istiov1alpha2.IstioSpec{
-					Config: istiov1alpha2.Config{},
+					Config: istiov1alpha2.Config{
+						EnableDNSProxying: &enableDNSProxying,
+					},
 				},
 			}
 
@@ -930,9 +934,9 @@ var _ = Describe("Merge", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
 			Expect(err).ShouldNot(HaveOccurred())
-			trustDomain, exists := meshConfig.GetPath("trustDomain")
+			istioMetaDNSCapture, exists := meshConfig.GetPath("defaultConfig.proxyMetadata.ISTIO_META_DNS_CAPTURE")
 			Expect(exists).To(BeTrue())
-			Expect(trustDomain).To(Equal("cluster.local"))
+			Expect(istioMetaDNSCapture).To(Equal("true"))
 		})
 	})
 

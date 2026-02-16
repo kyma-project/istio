@@ -242,7 +242,7 @@ func (i *Istio) mergeConfig(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOper
 
 	dualStackEnabled := i.Spec.Experimental != nil && i.Spec.Experimental.EnableDualStack != nil && *i.Spec.Experimental.EnableDualStack
 	ambientEnabled := i.Spec.Experimental != nil && i.Spec.Experimental.EnableAmbient != nil && *i.Spec.Experimental.EnableAmbient == true
-	enabledDNSProxying := i.Spec.Config != nil && i.Spec.Config.EnableDNSProxying != nil && *i.Spec.Config.EnableDNSProxying
+	enabledDNSProxying := i.Spec.Config.EnableDNSProxying != nil && *i.Spec.Config.EnableDNSProxying
 
 	newMeshConfig := mcb.
 		BuildNumTrustedProxies(i.Spec.Config.NumTrustedProxies).

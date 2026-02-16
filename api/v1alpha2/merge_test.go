@@ -877,7 +877,7 @@ var _ = Describe("Merge", func() {
 	})
 
 	Context("DNS Proxying", func() {
-		It("Should set ISTIO_META_DNS_CAPTURE in the mesh Config if DNS Proxying is enabled in the Istio CR", func() {
+		It("Should set ISTIO_META_DNS_CAPTURE to true in the mesh Config if DNS Proxying is enabled in the Istio CR", func() {
 			// given
 			enableDNSProxying := true
 			m := mesh.DefaultMeshConfig()
@@ -908,9 +908,9 @@ var _ = Describe("Merge", func() {
 			Expect(istioMetaDNSCapture).To(Equal("true"))
 		})
 
-		It("Shouldn't set any ISTIO_META_DNS_CAPTURE in the mesh Config if DNS Proxying is disabled in the Istio CR", func() {
+		It("Should set ISTIO_META_DNS_CAPTURE to false in the mesh Config if DNS Proxying is disabled in the Istio CR", func() {
 			// given
-			enableDNSProxying := true
+			enableDNSProxying := false
 			m := mesh.DefaultMeshConfig()
 			meshConfigRaw := convert(m)
 			iop := iopv1alpha1.IstioOperator{
@@ -936,7 +936,36 @@ var _ = Describe("Merge", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			istioMetaDNSCapture, exists := meshConfig.GetPath("defaultConfig.proxyMetadata.ISTIO_META_DNS_CAPTURE")
 			Expect(exists).To(BeTrue())
-			Expect(istioMetaDNSCapture).To(Equal("true"))
+			Expect(istioMetaDNSCapture).To(Equal("false"))
+		})
+
+		It("Should not set ISTIO_META_DNS_CAPTURE in the mesh Config if DNS Proxying is not set in the Istio CR", func() {
+			// given
+			m := mesh.DefaultMeshConfig()
+			meshConfigRaw := convert(m)
+			iop := iopv1alpha1.IstioOperator{
+				Spec: iopv1alpha1.IstioOperatorSpec{
+					MeshConfig: meshConfigRaw,
+				},
+			}
+
+			istioCR := istiov1alpha2.Istio{
+				Spec: istiov1alpha2.IstioSpec{
+					Config: istiov1alpha2.Config{
+						EnableDNSProxying: nil,
+					},
+				},
+			}
+
+			// when
+			out, err := istioCR.MergeInto(iop)
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+			meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
+			Expect(err).ShouldNot(HaveOccurred())
+			_, exists := meshConfig.GetPath("defaultConfig.proxyMetadata.ISTIO_META_DNS_CAPTURE")
+			Expect(exists).To(BeFalse())
 		})
 	})
 

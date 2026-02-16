@@ -68,4 +68,4 @@ Exercising control over the application’s DNS resolution allows Istio to accur
 - Applications can resolve ServiceEntry addresses even if the cluster DNS server doesn't know about them.
 - Istio gains visibility and control over DNS resolution within the mesh.
 - The sidecar/ztunnel proxy takes on DNS resolution duties, adding complexity.
-- Sidecar mode gains possibility to cofigure DNS proxying as in ambient mode (Istio ≥1.25), DNS proxying is always enabled and cannot be disabled by `ISTIO_META_DNS_CAPTURE` setting.
+- Sidecar mode gains possibility to configure DNS proxying as in ambient mode (Istio ≥1.25), DNS proxying is always enabled and cannot be disabled by `ISTIO_META_DNS_CAPTURE` setting.

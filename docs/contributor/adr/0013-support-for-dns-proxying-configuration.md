@@ -37,7 +37,17 @@ Configuration of DNS Proxying behavior by mode:
       - Rationale: DNS proxying is always enabled in ambient mode (Istio ≥1.25)
       - Can only be disabled per-workload via `ambient.istio.io/dns-capture=false` annotation
       - Setting this field does not have any effect and may cause confusion
-    
+
+**Configuration Mapping:**
+
+The following table describes how the `enableDNSProxying` field in the Istio CR maps to the underlying IstioOperator configuration:
+
+| Istio CR Setting | Expected IstioOperator Configuration                          | Description |
+   |------------------|---------------------------------------------------------------|-------------|
+| `enableDNSProxying: true` | `defaultConfig.proxyMetadata.ISTIO_META_DNS_CAPTURE: "true"`  | Explicitly enables DNS proxying for sidecars |
+| `enableDNSProxying: false` | `defaultConfig.proxyMetadata.ISTIO_META_DNS_CAPTURE: "false"` | Explicitly disables DNS proxying for sidecars |
+| `nil` (not set) | `nil` (nothing set)                                           | Uses mode-specific defaults (disabled for Sidecar, enabled for Ambient) |
+
 ### Scope
 
 We will add support for configuring DNS proxying cluster-wide through the Istio custom resource for Sidecar mode. The implementation includes:

@@ -1489,6 +1489,12 @@ spec:
                       - port
                       type: object
                     type: array
+                  enableDNSProxying:
+                    description: |-
+                      Enables or disables cluster-wide DNS proxying in Istio sidecars.
+                      When enabled, DNS requests from application pods are intercepted by the Istio sidecar proxy
+                      instead of being sent directly to upstream DNS servers.
+                    type: boolean
                   forwardClientCertDetails:
                     description: |-
                       Defines the strategy of handling the **X-Forwarded-Client-Cert** header only by the gateway proxies.

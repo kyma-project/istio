@@ -25,7 +25,7 @@ When user enables NetworkPolicy support in the Istio CR, apply NetworkPolicies t
 3. Allow control-plane communication between `istiod` and the `istio-ingressgateway`:
    - Allow egress from `istio-ingressgateway` to `istiod` on port 15012 (TCP, XDS protocol).
    - Allow ingress to `istiod` on port 15012 from sidecars and `istio-ingressgateway`.
-4. Allow external ingress to `istio-ingressgateway` on TCP 80/443 for traffic entering the cluster.
+4. Allow external ingress to `istio-ingressgateway` on TCP 8080/8443 for traffic entering the cluster.
 5. Allow ingress to the `istiod` webhook endpoint on TCP 15017 from the API server for validating and mutating operations.
 6. Allow `istiod` egress to common JWKS endpoint ports (TCP 80/443) for external JWT verification.
 > [!NOTE]
@@ -122,6 +122,7 @@ spec:
     - podSelector:
         matchLabels:
           security.istio.io/tlsMode: istio
+      namespaceSelector: {}
     - podSelector:
         matchLabels:
           istio: ingressgateway
@@ -167,9 +168,9 @@ spec:
   ingress:
   - ports:
     - protocol: TCP
-      port: 80
+      port: 8080
     - protocol: TCP
-      port: 443
+      port: 8443
 ```
 
 4. Allow egress access to DNS and APIServer for `istio-cni-node`:
@@ -238,6 +239,7 @@ spec:
     - podSelector:
         matchLabels:
           networking.kyma-project.io/from-ingressgateway: allowed
+      namespaceSelector: {}
 ```
 
 ### Restart Istio Components to Enforce Policies
@@ -246,3 +248,15 @@ when the user enables the NetworkPolicy support flag in the Istio CR.
 This will terminate any existing TCP connections and allow the new policies to be enforced without delay.
 This means that a restart should happen whenever the value of `enableModuleNetworkPolicies` is changed from `false` to `true` or vice versa,
 to ensure that the correct policies are applied based on the user's choice.
+
+### User impact
+
+To ensure that the connectivity between istio-ingressgateway and user workloads is maintained when NetworkPolicy support is enabled,
+users will need to label the pods in their namespaces that should be accessible from the `istio-ingressgateway`
+with the label `networking.kyma-project.io/from-ingressgateway: allowed`.
+
+### Default-deny policies in user namespaces
+If the user desires to run under a default-deny policy in their namespaces,
+they will need to create appropriate NetworkPolicies to allow traffic from the `istio-ingressgateway` to their workloads. 
+This will not be automatically handled by the Istio module,
+as it is outside the `istio-system` or `kyma-system` namespace, but it will be documented as a requirement for users who want to enable NetworkPolicy support.

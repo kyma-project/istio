@@ -31,6 +31,13 @@ With DNS proxying enabled:
 4. Otherwise, the request is forwarded upstream following the standard `/etc/resolv.conf` configuration
 5. The proxy can auto-allocate non-routable virtual IPs (VIPs) to distinguish between multiple external TCP services on the same port as long as they do not use a wildcard host in `ServiceEntry`
 
+Configuration of DNS Proxying behavior by mode:
+  - Sidecar mode: Field enables or disables DNS proxying for sidecar proxy. 
+  - Ambient mode : Field doesn't affect any configuration of DNS Proxying for ztunnel proxy.
+      - Rationale: DNS proxying is always enabled in ambient mode (Istio ≥1.25)
+      - Can only be disabled per-workload via `ambient.istio.io/dns-capture=false` annotation
+      - Setting this field does not have any effect and may cause confusion
+    
 ### Scope
 
 We will add support for configuring DNS proxying cluster-wide through the Istio custom resource for Sidecar mode. The implementation includes:
@@ -47,17 +54,14 @@ We will add support for configuring DNS proxying cluster-wide through the Istio 
    - User-specified value overrides Sidecar mode defaults
 
 3. **Validation**: 
-   - Sidecar mode: Boolean validation via CRD validation rules
-   - Ambient mode: Field doesn't affect any configuration of DNS Proxying when `enableAmbient=true`
-      - Rationale: DNS proxying is always enabled in ambient mode (Istio ≥1.25)
-      - Can only be disabled per-workload via `ambient.istio.io/dns-capture=false` annotation
-      - Setting this field does not have any effect and may cause confusion
+   - Boolean validation via CRD
 
 4. **Backward compatibility**: 
    - When `enableDNSProxying` is unset:
      - Ambient mode: DNS proxying enabled (default)
      - Sidecar mode: DNS proxying disabled (default)
    - No breaking changes for existing deployments
+
 
 ## Consequences
 <!--What becomes easier or more difficult to do because of this change?-->
@@ -68,4 +72,4 @@ Exercising control over the application’s DNS resolution allows Istio to accur
 - Applications can resolve ServiceEntry addresses even if the cluster DNS server doesn't know about them.
 - Istio gains visibility and control over DNS resolution within the mesh.
 - The sidecar/ztunnel proxy takes on DNS resolution duties, adding complexity.
-- Sidecar mode gains possibility to configure DNS proxying as in ambient mode (Istio ≥1.25), DNS proxying is always enabled and cannot be disabled by `ISTIO_META_DNS_CAPTURE` setting.
+- Sidecar mode gains the ability to configure DNS proxying cluster-wide. In ambient mode (Istio ≥1.25), DNS proxying is always enabled and cannot be disabled via the `ISTIO_META_DNS_CAPTURE` setting.

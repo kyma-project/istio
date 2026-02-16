@@ -16,8 +16,21 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func (i *Istio) MergeInto(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {
-	mergedConfigOp, err := i.mergeConfig(op)
+type MergeOptions struct {
+	EnableDualStack bool
+}
+
+// +kubebuilder:object:generate=false
+type MergeOption func(options *MergeOptions)
+
+func WithDualStackEnabled() MergeOption {
+	return func(options *MergeOptions) {
+		options.EnableDualStack = true
+	}
+}
+
+func (i *Istio) MergeInto(op iopv1alpha1.IstioOperator, options ...MergeOption) (iopv1alpha1.IstioOperator, error) {
+	mergedConfigOp, err := i.mergeConfig(op, options...)
 	if err != nil {
 		return op, err
 	}
@@ -222,20 +235,25 @@ func (m *meshConfigBuilder) BuildForwardClientCertDetails(xfccStrategy *XFCCStra
 	return m
 }
 
-func (i *Istio) mergeConfig(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {
+func (i *Istio) mergeConfig(op iopv1alpha1.IstioOperator, options ...MergeOption) (iopv1alpha1.IstioOperator, error) {
+	opts := &MergeOptions{
+		EnableDualStack: false,
+	}
+	for _, option := range options {
+		option(opts)
+	}
 	mcb, err := newMeshConfigBuilder(op)
 	if err != nil {
 		return op, err
 	}
 
-	dualStackEnabled := i.Spec.Experimental != nil && i.Spec.Experimental.EnableDualStack != nil && *i.Spec.Experimental.EnableDualStack
 	ambientEnabled := i.Spec.Experimental != nil && i.Spec.Experimental.EnableAmbient != nil && *i.Spec.Experimental.EnableAmbient == true
 
 	newMeshConfig := mcb.
 		BuildNumTrustedProxies(i.Spec.Config.NumTrustedProxies).
 		BuildExternalAuthorizerConfiguration(i.Spec.Config.Authorizers).
 		BuildPrometheusMergeConfig(i.Spec.Config.Telemetry.Metrics.PrometheusMerge).
-		BuildDualStackConfig(dualStackEnabled).
+		BuildDualStackConfig(opts.EnableDualStack).
 		BuildForwardClientCertDetails(i.Spec.Config.ForwardClientCertDetails).
 		BuildAmbientConfig(ambientEnabled).
 		BuildTrustDomainConfig(i.Spec.Config.TrustDomain).
@@ -245,9 +263,12 @@ func (i *Istio) mergeConfig(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOper
 
 	op = applyGatewayExternalTrafficPolicy(op, i)
 
-	op, err = applyDualStack(op, i)
-	if err != nil {
-		return op, err
+	if opts.EnableDualStack {
+		operator, err := applyDualStack(op, i)
+		if err != nil {
+			return op, err
+		}
+		op = operator
 	}
 
 	op, err = enableAmbient(op, ambientEnabled)
@@ -291,10 +312,7 @@ func applyGatewayExternalTrafficPolicy(op iopv1alpha1.IstioOperator, i *Istio) i
 }
 
 func applyDualStack(op iopv1alpha1.IstioOperator, i *Istio) (iopv1alpha1.IstioOperator, error) {
-	if i.Spec.Experimental != nil && i.Spec.Experimental.EnableDualStack != nil && *i.Spec.Experimental.EnableDualStack {
-		return enableDualStack(op, i)
-	}
-	return op, nil
+	return enableDualStack(op, i)
 }
 
 func enableDualStack(op iopv1alpha1.IstioOperator, i *Istio) (iopv1alpha1.IstioOperator, error) {

@@ -5,8 +5,8 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
+	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	securityv1 "istio.io/client-go/pkg/apis/security/v1"
 	"istio.io/client-go/pkg/apis/security/v1beta1"
 	telemetryv1 "istio.io/client-go/pkg/apis/telemetry/v1"

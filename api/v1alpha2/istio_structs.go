@@ -39,6 +39,12 @@ type Config struct {
 	// +kubebuilder:validation:MaxLength=255
 	// +kubebuilder:validation:Pattern=`^[a-z0-9]*([a-z0-9-_]*)?(\.[a-z0-9]*([a-z0-9-_]*[a-z0-9]*)?)*$`
 	TrustDomain *string `json:"trustDomain,omitempty"`
+
+	// Enables or disables cluster-wide DNS proxying in Istio sidecars.
+	// When enabled, DNS requests from application pods are intercepted by the Istio sidecar proxy
+	// instead of being sent directly to upstream DNS servers.
+	// +kubebuilder:validation:Optional
+	EnableDNSProxying *bool `json:"enableDNSProxying,omitempty"`
 }
 
 // Defines how the proxy handles the **X-Forwarded-Client-Cert** (XFCC) of the HTTP header.

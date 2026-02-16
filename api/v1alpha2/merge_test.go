@@ -876,6 +876,66 @@ var _ = Describe("Merge", func() {
 		})
 	})
 
+	Context("DNS Proxying", func() {
+		It("Should set ISTIO_META_DNS_CAPTURE in the mesh Config if DNS Proxying is enabled in the Istio CR", func() {
+			// given
+			m := mesh.DefaultMeshConfig()
+			meshConfigRaw := convert(m)
+			iop := iopv1alpha1.IstioOperator{
+				Spec: iopv1alpha1.IstioOperatorSpec{
+					MeshConfig: meshConfigRaw,
+				},
+			}
+
+			istioCR := istiov1alpha2.Istio{
+				Spec: istiov1alpha2.IstioSpec{
+					Config: istiov1alpha2.Config{
+						TrustDomain: ptr.To("trusted.com"),
+					},
+				},
+			}
+
+			// when
+			out, err := istioCR.MergeInto(iop)
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+			meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
+			Expect(err).ShouldNot(HaveOccurred())
+			trustDomain, exists := meshConfig.GetPath("trustDomain")
+			Expect(exists).To(BeTrue())
+			Expect(trustDomain).To(Equal("trusted.com"))
+		})
+
+		It("Should set IstioOperator TrustDomain, when Istio CR configures it", func() {
+			// given
+			m := mesh.DefaultMeshConfig()
+			meshConfigRaw := convert(m)
+			iop := iopv1alpha1.IstioOperator{
+				Spec: iopv1alpha1.IstioOperatorSpec{
+					MeshConfig: meshConfigRaw,
+				},
+			}
+
+			istioCR := istiov1alpha2.Istio{
+				Spec: istiov1alpha2.IstioSpec{
+					Config: istiov1alpha2.Config{},
+				},
+			}
+
+			// when
+			out, err := istioCR.MergeInto(iop)
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+			meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
+			Expect(err).ShouldNot(HaveOccurred())
+			trustDomain, exists := meshConfig.GetPath("trustDomain")
+			Expect(exists).To(BeTrue())
+			Expect(trustDomain).To(Equal("cluster.local"))
+		})
+	})
+
 	Context("Pilot", func() {
 		Context("When Istio CR has 500m configured for CPU limits", func() {
 			It("should set CPU limits to 500m in IOP", func() {
@@ -1435,6 +1495,49 @@ var _ = Describe("Merge", func() {
 				iopMemoryRequests := out.Spec.Components.Cni.Kubernetes.Resources.Requests["memory"]
 				Expect(iopMemoryRequests.String()).To(Equal(memoryRequests))
 			})
+		})
+	})
+
+	Context("Proxy", func() {
+		It("should update Proxy resources configuration if they are present in Istio CR", func() {
+			// given
+			iop := iopv1alpha1.IstioOperator{
+				Spec: iopv1alpha1.IstioOperatorSpec{},
+			}
+
+			cpuRequests := "500m"
+			memoryRequests := "500Mi"
+
+			cpuLimits := "800m"
+			memoryLimits := "800Mi"
+			istioCR := istiov1alpha2.Istio{Spec: istiov1alpha2.IstioSpec{Components: &istiov1alpha2.Components{
+				Proxy: &istiov1alpha2.ProxyComponent{K8S: &istiov1alpha2.ProxyK8sConfig{
+					Resources: &istiov1alpha2.Resources{
+						Requests: &istiov1alpha2.ResourceClaims{
+							CPU:    &cpuRequests,
+							Memory: &memoryRequests,
+						},
+						Limits: &istiov1alpha2.ResourceClaims{
+							CPU:    &cpuLimits,
+							Memory: &memoryLimits,
+						},
+					},
+				}},
+			}}}
+
+			// when
+			out, err := istioCR.MergeInto(iop)
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+
+			valuesMap, err := values.MapFromObject(out.Spec.Values)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			Expect(values.TryGetPathAs[string](valuesMap, "global.proxy.resources.requests.cpu")).To(Equal(cpuRequests))
+			Expect(values.TryGetPathAs[string](valuesMap, "global.proxy.resources.requests.memory")).To(Equal(memoryRequests))
+			Expect(values.TryGetPathAs[string](valuesMap, "global.proxy.resources.limits.cpu")).To(Equal(cpuLimits))
+			Expect(values.TryGetPathAs[string](valuesMap, "global.proxy.resources.limits.memory")).To(Equal(memoryLimits))
 		})
 	})
 

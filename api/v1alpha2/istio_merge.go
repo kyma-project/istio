@@ -222,6 +222,18 @@ func (m *meshConfigBuilder) BuildForwardClientCertDetails(xfccStrategy *XFCCStra
 	return m
 }
 
+func (m *meshConfigBuilder) BuildDNSProxyingConfiguration(enabledDNSProxying bool) *meshConfigBuilder {
+
+	if enabledDNSProxying {
+		err := m.c.SetPath("defaultConfig.proxyMetadata.ISTIO_META_DNS_CAPTURE", "true")
+		if err != nil {
+			return nil
+		}
+	}
+
+	return m
+}
+
 func (i *Istio) mergeConfig(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {
 	mcb, err := newMeshConfigBuilder(op)
 	if err != nil {
@@ -230,6 +242,7 @@ func (i *Istio) mergeConfig(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOper
 
 	dualStackEnabled := i.Spec.Experimental != nil && i.Spec.Experimental.EnableDualStack != nil && *i.Spec.Experimental.EnableDualStack
 	ambientEnabled := i.Spec.Experimental != nil && i.Spec.Experimental.EnableAmbient != nil && *i.Spec.Experimental.EnableAmbient == true
+	enabledDNSProxying := i.Spec.Config != nil && i.Spec.Config.EnableDNSProxying != nil && *i.Spec.Config.EnableDNSProxying
 
 	newMeshConfig := mcb.
 		BuildNumTrustedProxies(i.Spec.Config.NumTrustedProxies).
@@ -239,6 +252,7 @@ func (i *Istio) mergeConfig(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOper
 		BuildForwardClientCertDetails(i.Spec.Config.ForwardClientCertDetails).
 		BuildAmbientConfig(ambientEnabled).
 		BuildTrustDomainConfig(i.Spec.Config.TrustDomain).
+		BuildDNSProxyingConfiguration(enabledDNSProxying).
 		Build()
 
 	op.Spec.MeshConfig = newMeshConfig

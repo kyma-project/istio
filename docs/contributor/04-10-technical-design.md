@@ -73,6 +73,12 @@ Istio InstallationReconciliation adds the `operator.kyma-project.io/lastAppliedC
 updates it after each successful reconciliation. This annotation allows for comparing the current state of the Istio CR with its previous state.
 If the component detects a change to a specific configuration, it performs corresponding actions, such as restarting the Istio Gateway.
 
+To prevent unnecessary restarts when reconciliation requeues early (e.g., due to detected user resources targeting Istio Ingress Gateway), specific configuration fields in the annotation are updated immediately after their corresponding restart actions complete successfully:
+- **Ingress Gateway Config** (`NumTrustedProxies`, `ForwardClientCertDetails`, `TrustDomain`) - Updated after successful Ingress Gateway restart.
+- **CompatibilityMode** - Updated after successful sidecar proxy restart.
+
+This granular update approach ensures that if reconciliation exits early after a successful restart, the restart won't be triggered again on the next reconciliation.
+
 #### Istio Ingress Gateway Restart
 Istio InstallationReconciliation monitors changes in the `numTrustedProxies` configuration and restarts the Istio Ingress Gateway accordingly.
 Whenever the component detects a change in the `numTrustedProxies` configuration, it restarts the Pods within the `istio-system/istio-ingressgateway` Deployment.

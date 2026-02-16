@@ -37,21 +37,21 @@ We will add support for configuring DNS proxying cluster-wide through the Istio 
 
 1. **Add the `enableDNSProxying` field**: 
     - Location: **Config** struct in the Istio CR specification 
-    - Type: `bool` (optional)
+    - Type: `*bool` (optional)
     - Default: none (uses mode-specific defaults when unset; Ambient- enabled by default, Sidecar- disabled by default)
     - UI Integration: Configurable and displayed in Kyma Dashboard
 
 2. **Configuration Merging**
    - User value merges into the IstioOperator `defaultConfig.proxyMetadata.ISTIO_META_DNS_CAPTURE` setting
    - Conversion: `boolean` (Istio CR) → `string` (IstioOperator: "true"/"false") during reconciliation
-   - User-specified value overrides mode defaults
+   - User-specified value overrides Sidecar mode defaults
 
 3. **Validation**: 
    - Sidecar mode: Boolean validation via CRD validation rules
-   - Ambient mode: Field should not be set when `enableAmbient=true`
+   - Ambient mode: Field doesn't affect any configuration of DNS Proxying when `enableAmbient=true`
       - Rationale: DNS proxying is always enabled in ambient mode (Istio ≥1.25)
       - Can only be disabled per-workload via `ambient.istio.io/dns-capture=false` annotation
-      - Setting this field provides no value and may cause confusion
+      - Setting this field does not have any effect and may cause confusion
 
 4. **Backward compatibility**: 
    - When `enableDNSProxying` is unset:

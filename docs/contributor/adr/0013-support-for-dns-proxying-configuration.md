@@ -32,10 +32,6 @@ With DNS proxying enabled:
 5. The proxy can auto-allocate non-routable virtual IPs (VIPs) to distinguish between multiple external TCP services on the same port as long as they do not use a wildcard host in the ServiceEntry.
 
 Configuration of DNS Proxying behavior by mode:
-  - Sidecar mode: Field enables or disables DNS proxying for sidecar proxy. 
-  - Ambient mode : Field doesn't affect any configuration of DNS Proxying for ztunnel proxy.
-      - Rationale: DNS proxying is always enabled in ambient mode (Istio ≥1.25)
-      - Can only be disabled per-workload via `ambient.istio.io/dns-capture=false` annotation
   - Sidecar mode: The **enableDNSProxying** field enables or disables DNS proxying for the sidecar proxy. 
   - Ambient mode: The field doesn't affect any configuration of DNS Proxying for the ztunnel proxy.
       - Rationale: DNS proxying is always enabled in ambient mode (Istio version 1.25 or later).

@@ -264,7 +264,7 @@ func (i *Istio) mergeConfig(op iopv1alpha1.IstioOperator, options ...MergeOption
 	op = applyGatewayExternalTrafficPolicy(op, i)
 
 	if opts.EnableDualStack {
-		operator, err := applyDualStack(op, i)
+		operator, err := enableDualStack(op)
 		if err != nil {
 			return op, err
 		}
@@ -311,11 +311,7 @@ func applyGatewayExternalTrafficPolicy(op iopv1alpha1.IstioOperator, i *Istio) i
 	return op
 }
 
-func applyDualStack(op iopv1alpha1.IstioOperator, i *Istio) (iopv1alpha1.IstioOperator, error) {
-	return enableDualStack(op, i)
-}
-
-func enableDualStack(op iopv1alpha1.IstioOperator, i *Istio) (iopv1alpha1.IstioOperator, error) {
+func enableDualStack(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {
 	valuesMap, err := values.MapFromObject(op.Spec.Values)
 	if err != nil {
 		return op, err

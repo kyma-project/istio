@@ -16,12 +16,6 @@ import (
 
 func (m *IstioMerger) Merge(clusterSize clusterconfig.ClusterSize, istioCR *operatorv1alpha2.Istio,
 	overrides clusterconfig.ClusterConfiguration, istioImages images.Images, options ...operatorv1alpha2.MergeOption) (string, error) {
-	mergeOptions := &operatorv1alpha2.MergeOptions{
-		EnableDualStack: false,
-	}
-	for _, option := range options {
-		option(mergeOptions)
-	}
 	toBeInstalledIop, err := m.GetIstioOperator(clusterSize)
 	if err != nil {
 		return "", err

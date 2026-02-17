@@ -125,20 +125,8 @@ var _ = Describe("Reconciliation", func() {
 		It("should not be created when hyperscaler is AWS, configmap has dualStackEnabled, but controller is not running in experimental mode", func() {
 			//given
 			n := corev1.Node{Spec: corev1.NodeSpec{ProviderID: "aws://asdasdads"}}
-			kymaProvisioningInfoCM := corev1.ConfigMap{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "kyma-provisioning-info",
-					Namespace: "kyma-system",
-				},
-				Data: map[string]string{
-					"details": `
-  networkDetails:
-	dualStackIPEnabled: true
-`,
-				},
-			}
 
-			client := createFakeClient(&n, &kymaProvisioningInfoCM)
+			client := createFakeClient(&n, createKymaRuntimeConfigWithDualStack(true))
 			reconciler := NewReconciler(client)
 
 			//when
@@ -217,4 +205,24 @@ func createFakeClient(objects ...ctrlclient.Object) ctrlclient.Client {
 	Expect(err).ShouldNot(HaveOccurred())
 
 	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build()
+}
+
+func createKymaRuntimeConfigWithDualStack(enabled bool) corev1.ConfigMap {
+	networkDetails := map[string]interface{}{
+		"dualStackIPEnabled": enabled,
+	}
+	details := map[string]interface{}{
+		"networkDetails": networkDetails,
+	}
+	detailsBytes, _ := yaml.Marshal(details)
+
+	return corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "kyma-provisioning-info",
+			Namespace: "kyma-system",
+		},
+		Data: map[string]string{
+			"details": string(detailsBytes),
+		},
+	}
 }

@@ -10,6 +10,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/yaml"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/scheme"
@@ -429,4 +430,24 @@ func createFakeClient(objects ...client.Object) client.Client {
 	err = networkingv1alpha3.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
 	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build()
+}
+
+func createKymaRuntimeConfigWithDualStack(enabled bool) corev1.ConfigMap {
+	networkDetails := map[string]interface{}{
+		"dualStackIPEnabled": enabled,
+	}
+	details := map[string]interface{}{
+		"networkDetails": networkDetails,
+	}
+	detailsBytes, _ := yaml.Marshal(details)
+
+	return corev1.ConfigMap{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      "kyma-provisioning-info",
+			Namespace: "kyma-system",
+		},
+		Data: map[string]string{
+			"details": string(detailsBytes),
+		},
+	}
 }

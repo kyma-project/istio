@@ -15,10 +15,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"sigs.k8s.io/yaml"
 )
 
 var _ = Describe("Reconciliation", func() {
-	numTrustedProxies := 1
 	istioCR := operatorv1alpha2.Istio{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            "default",
@@ -28,7 +28,7 @@ var _ = Describe("Reconciliation", func() {
 		},
 		Spec: operatorv1alpha2.IstioSpec{
 			Config: operatorv1alpha2.Config{
-				NumTrustedProxies: &numTrustedProxies,
+				NumTrustedProxies: new(1),
 			},
 		},
 	}
@@ -37,20 +37,7 @@ var _ = Describe("Reconciliation", func() {
 		//given
 		n := corev1.Node{Spec: corev1.NodeSpec{ProviderID: "aws://asdasdads"}}
 
-		kymaProvisioningInfoCM := corev1.ConfigMap{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "kyma-provisioning-info",
-				Namespace: "kyma-system",
-			},
-			Data: map[string]string{
-				"details": `
-  networkDetails:
-   dualStackIPEnabled: true
-`,
-			},
-		}
-
-		client := createFakeClient(&n, &kymaProvisioningInfoCM)
+		client := createFakeClient(&n, new(createKymaRuntimeConfigWithDualStack(true)))
 		reconciler := NewReconciler(client)
 
 		//when
@@ -64,20 +51,8 @@ var _ = Describe("Reconciliation", func() {
 	It("should not be created when hyperscaler is AWS, even if proxy-protocol is set but the dual stack is not enabled", func() {
 		//given
 		n := corev1.Node{Spec: corev1.NodeSpec{ProviderID: "aws://asdasdads"}}
-		kymaProvisioningInfoCM := corev1.ConfigMap{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "kyma-provisioning-info",
-				Namespace: "kyma-system",
-			},
-			Data: map[string]string{
-				"details": `
-  networkDetails:
-   dualStackIPEnabled: false
-`,
-			},
-		}
 
-		client := createFakeClient(&n, &kymaProvisioningInfoCM)
+		client := createFakeClient(&n, new(createKymaRuntimeConfigWithDualStack(false)))
 		reconciler := NewReconciler(client)
 
 		//when
@@ -103,4 +78,24 @@ func createFakeClient(objects ...ctrlclient.Object) ctrlclient.Client {
 	Expect(err).ShouldNot(HaveOccurred())
 
 	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build()
+}
+
+func createKymaRuntimeConfigWithDualStack(enabled bool) corev1.ConfigMap {
+	networkDetails := map[string]interface{}{
+		"dualStackIPEnabled": enabled,
+	}
+	details := map[string]interface{}{
+		"networkDetails": networkDetails,
+	}
+	detailsBytes, _ := yaml.Marshal(details)
+
+	return corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "kyma-provisioning-info",
+			Namespace: "kyma-system",
+		},
+		Data: map[string]string{
+			"details": string(detailsBytes),
+		},
+	}
 }

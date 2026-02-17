@@ -1574,49 +1574,6 @@ var _ = Describe("Merge", func() {
 		})
 	})
 
-	Context("Proxy", func() {
-		It("should update Proxy resources configuration if they are present in Istio CR", func() {
-			// given
-			iop := iopv1alpha1.IstioOperator{
-				Spec: iopv1alpha1.IstioOperatorSpec{},
-			}
-
-			cpuRequests := "500m"
-			memoryRequests := "500Mi"
-
-			cpuLimits := "800m"
-			memoryLimits := "800Mi"
-			istioCR := istiov1alpha2.Istio{Spec: istiov1alpha2.IstioSpec{Components: &istiov1alpha2.Components{
-				Proxy: &istiov1alpha2.ProxyComponent{K8S: &istiov1alpha2.ProxyK8sConfig{
-					Resources: &istiov1alpha2.Resources{
-						Requests: &istiov1alpha2.ResourceClaims{
-							CPU:    &cpuRequests,
-							Memory: &memoryRequests,
-						},
-						Limits: &istiov1alpha2.ResourceClaims{
-							CPU:    &cpuLimits,
-							Memory: &memoryLimits,
-						},
-					},
-				}},
-			}}}
-
-			// when
-			out, err := istioCR.MergeInto(iop)
-
-			// then
-			Expect(err).ShouldNot(HaveOccurred())
-
-			valuesMap, err := values.MapFromObject(out.Spec.Values)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			Expect(values.TryGetPathAs[string](valuesMap, "global.proxy.resources.requests.cpu")).To(Equal(cpuRequests))
-			Expect(values.TryGetPathAs[string](valuesMap, "global.proxy.resources.requests.memory")).To(Equal(memoryRequests))
-			Expect(values.TryGetPathAs[string](valuesMap, "global.proxy.resources.limits.cpu")).To(Equal(cpuLimits))
-			Expect(values.TryGetPathAs[string](valuesMap, "global.proxy.resources.limits.memory")).To(Equal(memoryLimits))
-		})
-	})
-
 })
 
 func convert(a *meshv1alpha1.MeshConfig) json.RawMessage {

@@ -36,7 +36,11 @@ Configuration of DNS Proxying behavior by mode:
   - Ambient mode : Field doesn't affect any configuration of DNS Proxying for ztunnel proxy.
       - Rationale: DNS proxying is always enabled in ambient mode (Istio ≥1.25)
       - Can only be disabled per-workload via `ambient.istio.io/dns-capture=false` annotation
-      - Setting this field does not have any effect and may cause confusion
+  - Sidecar mode: The **enableDNSProxying** field enables or disables DNS proxying for the sidecar proxy. 
+  - Ambient mode: The field doesn't affect any configuration of DNS Proxying for the ztunnel proxy.
+      - Rationale: DNS proxying is always enabled in ambient mode (Istio version 1.25 or later).
+      - DNS proxying can only be disabled per-workload via the `ambient.istio.io/dns-capture=false` annotation.
+      - Setting this field does not have any effect and may cause confusion.
 
 **Configuration Mapping:**
 

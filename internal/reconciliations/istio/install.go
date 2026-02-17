@@ -77,6 +77,9 @@ func installIstio(ctx context.Context, args installArgs) (istiooperator.IstioIma
 	if err != nil {
 		return istioImageVersion, describederrors.NewDescribedError(err, "Could not evaluate if dual stack is enabled")
 	}
+	if enableDualStack {
+		ctrl.Log.Info("Istio is running with IPDualStack enabled")
+	}
 
 	clusterSize, err := clusterconfig.EvaluateClusterSize(context.Background(), k8sClient)
 	if err != nil {

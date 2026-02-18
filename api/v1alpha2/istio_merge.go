@@ -2,6 +2,7 @@ package v1alpha2
 
 import (
 	"encoding/json"
+	"strconv"
 
 	"github.com/golang/protobuf/ptypes/duration"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -222,6 +223,20 @@ func (m *meshConfigBuilder) BuildForwardClientCertDetails(xfccStrategy *XFCCStra
 	return m
 }
 
+func (m *meshConfigBuilder) BuildDNSProxyingConfiguration(enabledDNSProxying *bool) *meshConfigBuilder {
+
+	if enabledDNSProxying == nil {
+		return m
+	}
+
+	err := m.c.SetPath("defaultConfig.proxyMetadata.ISTIO_META_DNS_CAPTURE", strconv.FormatBool(*enabledDNSProxying))
+	if err != nil {
+		return nil
+	}
+
+	return m
+}
+
 func (i *Istio) mergeConfig(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {
 	mcb, err := newMeshConfigBuilder(op)
 	if err != nil {
@@ -239,6 +254,7 @@ func (i *Istio) mergeConfig(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOper
 		BuildForwardClientCertDetails(i.Spec.Config.ForwardClientCertDetails).
 		BuildAmbientConfig(ambientEnabled).
 		BuildTrustDomainConfig(i.Spec.Config.TrustDomain).
+		BuildDNSProxyingConfiguration(i.Spec.Config.EnableDNSProxying).
 		Build()
 
 	op.Spec.MeshConfig = newMeshConfig

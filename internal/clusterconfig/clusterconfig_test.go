@@ -10,6 +10,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/yaml"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/scheme"
@@ -407,71 +408,18 @@ var _ = Describe("EvaluateClusterSize", func() {
 		Expect(size).To(Equal(clusterconfig.Production))
 	})
 
-	It("should detect dual stack Ingress if an ip-address-type annotation is set to dual stack", func() {
+	It("should not enable dual stack if the controller is not running with experimental build tag", func() {
 		//given
-		ingressSvc := corev1.Service{
-			ObjectMeta: v1.ObjectMeta{
-				Name:      "istio-ingressgateway",
-				Namespace: "istio-system",
-				Annotations: map[string]string{
-					"service.beta.kubernetes.io/aws-load-balancer-ip-address-type": "dualstack",
-				},
-			},
-			Spec: corev1.ServiceSpec{},
-		}
-
-		client := createFakeClient(&ingressSvc)
+		client := createFakeClient()
 
 		//when
-		ds, err := clusterconfig.IsDualStack(context.Background(), client)
-
-		//then
-		Expect(err).To(Not(HaveOccurred()))
-		Expect(ds).To(Equal(true))
-	})
-
-	It("should detect single stack Ingress if an ip-address-type annotation is not set dual stack", func() {
-		//given
-		ingressSvc := corev1.Service{
-			ObjectMeta: v1.ObjectMeta{
-				Name:      "istio-ingressgateway",
-				Namespace: "istio-system",
-				Annotations: map[string]string{
-					"service.beta.kubernetes.io/aws-load-balancer-ip-address-type": "ipv4",
-				},
-			},
-			Spec: corev1.ServiceSpec{},
-		}
-
-		client := createFakeClient(&ingressSvc)
-
-		//when
-		ds, err := clusterconfig.IsDualStack(context.Background(), client)
+		ds, err := clusterconfig.IsDualStackEnabled(context.Background(), client)
 
 		//then
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(ds).To(Equal(false))
 	})
 
-	It("should detect single stack Ingress if an ip-address-type annotation is not set", func() {
-		//given
-		ingressSvc := corev1.Service{
-			ObjectMeta: v1.ObjectMeta{
-				Name:      "istio-ingressgateway",
-				Namespace: "istio-system",
-			},
-			Spec: corev1.ServiceSpec{},
-		}
-
-		client := createFakeClient(&ingressSvc)
-
-		//when
-		ds, err := clusterconfig.IsDualStack(context.Background(), client)
-
-		//then
-		Expect(err).To(Not(HaveOccurred()))
-		Expect(ds).To(Equal(false))
-	})
 })
 
 func createFakeClient(objects ...client.Object) client.Client {
@@ -482,4 +430,24 @@ func createFakeClient(objects ...client.Object) client.Client {
 	err = networkingv1alpha3.AddToScheme(scheme.Scheme)
 	Expect(err).ShouldNot(HaveOccurred())
 	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build()
+}
+
+func createKymaRuntimeConfigWithDualStack(enabled bool) *corev1.ConfigMap {
+	networkDetails := map[string]interface{}{
+		"dualStackIPEnabled": enabled,
+	}
+	details := map[string]interface{}{
+		"networkDetails": networkDetails,
+	}
+	detailsBytes, _ := yaml.Marshal(details)
+
+	return new(corev1.ConfigMap{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      "kyma-provisioning-info",
+			Namespace: "kyma-system",
+		},
+		Data: map[string]string{
+			"details": string(detailsBytes),
+		},
+	})
 }

@@ -53,7 +53,8 @@ func (i *IstioImageVersion) Empty() bool {
 }
 
 type Merger interface {
-	Merge(clusterSize clusterconfig.ClusterSize, istioCR *operatorv1alpha2.Istio, overrides clusterconfig.ClusterConfiguration, istioImages images.Images) (string, error)
+	Merge(clusterSize clusterconfig.ClusterSize, istioCR *operatorv1alpha2.Istio,
+		overrides clusterconfig.ClusterConfiguration, istioImages images.Images, options ...operatorv1alpha2.MergeOption) (string, error)
 	GetIstioOperator(clusterSize clusterconfig.ClusterSize) (iopv1alpha1.IstioOperator, error)
 	GetIstioImageVersion() (IstioImageVersion, error)
 }
@@ -104,8 +105,8 @@ func (m *IstioMerger) GetIstioOperator(clusterSize clusterconfig.ClusterSize) (i
 	return toBeInstalledIop, nil
 }
 
-func applyIstioCR(istioCR *operatorv1alpha2.Istio, toBeInstalledIop iopv1alpha1.IstioOperator) ([]byte, error) {
-	mergedIOP, err := istioCR.MergeInto(toBeInstalledIop)
+func applyIstioCR(istioCR *operatorv1alpha2.Istio, toBeInstalledIop iopv1alpha1.IstioOperator, options ...operatorv1alpha2.MergeOption) ([]byte, error) {
+	mergedIOP, err := istioCR.MergeInto(toBeInstalledIop, options...)
 	if err != nil {
 		return nil, err
 	}

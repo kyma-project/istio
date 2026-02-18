@@ -176,26 +176,6 @@ func ShouldUseNLB(ctx context.Context, k8sClient client.Client) (bool, error) {
 	return false, nil
 }
 
-// IsDualStack checks whether the Ingress service has an IP address type annotation set to 'dualstack'
-// This annotation is set automatically by 'gardener-extension-provider-aws' on the Gardener side
-// if the cluster infrastructure supports IPv6
-func IsDualStack(ctx context.Context, k8sClient client.Client) (bool, error) {
-	var ingressGatewaySvc corev1.Service
-	err := k8sClient.Get(ctx, client.ObjectKey{Namespace: istioIngressNamespace, Name: istioIngressServiceName}, &ingressGatewaySvc)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			return false, nil
-		}
-		return false, err
-	}
-
-	if value, ok := ingressGatewaySvc.Annotations[loadBalancerDualStackAnnotation]; ok && value == loadBalancerDualStack {
-		return true, nil
-	}
-
-	return false, nil
-}
-
 // awsConfig returns config specific to AWS cluster.
 // The function evaluates whether to use NLB or ELB load balancer, based on:
 //
@@ -387,4 +367,41 @@ func MergeOverrides(template []byte, overrides ClusterConfiguration) ([]byte, er
 	}
 
 	return yaml.Marshal(templateMap)
+}
+
+func IsDualStackEnabled(ctx context.Context, sClient client.Client) (bool, error) {
+	if !isExperimentalEnabled() {
+		return false, nil
+	}
+	var kymaProvisioningInfo corev1.ConfigMap
+	err := sClient.Get(ctx, client.ObjectKey{Namespace: "kyma-system", Name: "kyma-provisioning-info"}, &kymaProvisioningInfo)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	if cmDetails, ok := kymaProvisioningInfo.Data["details"]; ok {
+		var detailsMap map[string]interface{}
+		err = yaml.Unmarshal([]byte(cmDetails), &detailsMap)
+		if err != nil {
+			return false, err
+		}
+
+		if networkDetails, ok := detailsMap["networkDetails"]; ok {
+			networkDetailsMap, ok := networkDetails.(map[string]interface{})
+			if !ok {
+				return false, nil
+			}
+
+			dualStackIPEnabled, ok := networkDetailsMap["dualStackIPEnabled"].(bool)
+			if !ok {
+				return false, nil
+			}
+
+			return dualStackIPEnabled, nil
+		}
+	}
+	return false, nil
 }

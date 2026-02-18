@@ -73,6 +73,14 @@ func installIstio(ctx context.Context, args installArgs) (istiooperator.IstioIma
 		return istioImageVersion, describederrors.NewDescribedError(err, "Could not evaluate cluster flavour")
 	}
 
+	enableDualStack, err := clusterconfig.IsDualStackEnabled(ctx, k8sClient)
+	if err != nil {
+		return istioImageVersion, describederrors.NewDescribedError(err, "Could not evaluate if dual stack is enabled")
+	}
+	if enableDualStack {
+		ctrl.Log.Info("Istio is running with IPDualStack enabled")
+	}
+
 	clusterSize, err := clusterconfig.EvaluateClusterSize(context.Background(), k8sClient)
 	if err != nil {
 		ctrl.Log.Error(err, "Error occurred during evaluation of cluster size")
@@ -80,8 +88,11 @@ func installIstio(ctx context.Context, args installArgs) (istiooperator.IstioIma
 	}
 
 	ctrl.Log.Info("Installing Istio with", "profile", clusterSize.String())
-
-	mergedIstioOperatorPath, err := iopMerger.Merge(clusterSize, istioCR, clusterConfiguration, istioImages)
+	var options []operatorv1alpha2.MergeOption
+	if enableDualStack {
+		options = append(options, operatorv1alpha2.WithDualStackEnabled())
+	}
+	mergedIstioOperatorPath, err := iopMerger.Merge(clusterSize, istioCR, clusterConfiguration, istioImages, options...)
 	if err != nil {
 		statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonCustomResourceMisconfigured))
 		return istioImageVersion, describederrors.NewDescribedError(err, "Could not merge Istio operator configuration").SetCondition(false)

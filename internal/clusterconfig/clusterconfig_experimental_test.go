@@ -13,7 +13,7 @@ import (
 var _ = Describe("DualStack", func() {
 	It("should be enabled when the controller is running in experimental mode,"+
 		"and the cluster has kyma-runtime-config CM with dualstack enabled", func() {
-		client := createFakeClient(new(createKymaRuntimeConfigWithDualStack(true)))
+		client := createFakeClient(createKymaRuntimeConfigWithDualStack(true))
 
 		//when
 		ds, err := clusterconfig.IsDualStackEnabled(context.Background(), client)

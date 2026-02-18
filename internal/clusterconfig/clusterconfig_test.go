@@ -432,7 +432,7 @@ func createFakeClient(objects ...client.Object) client.Client {
 	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build()
 }
 
-func createKymaRuntimeConfigWithDualStack(enabled bool) corev1.ConfigMap {
+func createKymaRuntimeConfigWithDualStack(enabled bool) *corev1.ConfigMap {
 	networkDetails := map[string]interface{}{
 		"dualStackIPEnabled": enabled,
 	}
@@ -441,7 +441,7 @@ func createKymaRuntimeConfigWithDualStack(enabled bool) corev1.ConfigMap {
 	}
 	detailsBytes, _ := yaml.Marshal(details)
 
-	return corev1.ConfigMap{
+	return new(corev1.ConfigMap{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      "kyma-provisioning-info",
 			Namespace: "kyma-system",
@@ -449,5 +449,5 @@ func createKymaRuntimeConfigWithDualStack(enabled bool) corev1.ConfigMap {
 		Data: map[string]string{
 			"details": string(detailsBytes),
 		},
-	}
+	})
 }

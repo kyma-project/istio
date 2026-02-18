@@ -17,6 +17,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"sigs.k8s.io/yaml"
 )
 
 var _ = Describe("Reconciliation", func() {
@@ -207,7 +208,7 @@ func createFakeClient(objects ...ctrlclient.Object) ctrlclient.Client {
 	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build()
 }
 
-func createKymaRuntimeConfigWithDualStack(enabled bool) corev1.ConfigMap {
+func createKymaRuntimeConfigWithDualStack(enabled bool) *corev1.ConfigMap {
 	networkDetails := map[string]interface{}{
 		"dualStackIPEnabled": enabled,
 	}
@@ -216,7 +217,7 @@ func createKymaRuntimeConfigWithDualStack(enabled bool) corev1.ConfigMap {
 	}
 	detailsBytes, _ := yaml.Marshal(details)
 
-	return corev1.ConfigMap{
+	return new(corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "kyma-provisioning-info",
 			Namespace: "kyma-system",
@@ -224,5 +225,5 @@ func createKymaRuntimeConfigWithDualStack(enabled bool) corev1.ConfigMap {
 		Data: map[string]string{
 			"details": string(detailsBytes),
 		},
-	}
+	})
 }

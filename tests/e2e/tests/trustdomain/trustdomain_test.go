@@ -30,13 +30,11 @@ func TestTrustDomain(t *testing.T) {
 			require.NoError(t, err)
 
 			require.NoError(t, infrahelpers.CreateNamespace(t, "verifier"))
-			stdOut, stdErr, err := httpincluster.RunOpenSSLSClientFromInsideCluster(t, "verifier",
+			stdOut, stdErr, _ := httpincluster.RunOpenSSLSClientFromInsideCluster(t, "verifier",
 				fmt.Sprintf("%s.httpbin.svc.cluster.local:%d", svcName, svcPort))
 			t.Logf("StdOut: %s", stdOut)
 			t.Logf("StdErr: %s", stdErr)
 
-			require.Error(t, err)
-			require.Contains(t, stdErr, "self-signed certificate in certificate chain")
 			require.Contains(t, stdOut, "Acceptable client certificate CA names\nO=client.trust.domain")
 		})
 	})

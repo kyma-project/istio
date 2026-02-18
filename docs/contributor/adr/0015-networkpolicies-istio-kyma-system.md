@@ -7,48 +7,49 @@ Proposed
 Clusters that enforce a default-deny NetworkPolicy require explicit allow rules for Istio components to install and operate.
 This ADR captures those requirements so they can be consistently applied and maintained.
 
-To ensure that Istio components can function properly under default-deny policies,
-we need to define the necessary NetworkPolicies for both `istio-system` and `kyma-system` namespaces.
+To ensure that Istio components function properly under default-deny policies,
+we must define the necessary NetworkPolicies for both `istio-system` and `kyma-system` namespaces.
 This includes allowing essential egress traffic for DNS and API server access,
 as well as ingress and egress rules for control-plane communication between Istio components.
 
 ## Decision
 Extend Istio Custom Resource (CR) to include a flag for enabling NetworkPolicy support.
 
-When user enables NetworkPolicy support in the Istio CR, apply NetworkPolicies to `istio-system` and `kyma-system` namespaces that allow the following traffic:
+When the user enables NetworkPolicy support in the Istio CR, apply NetworkPolicies to the `istio-system` and `kyma-system` namespaces that allow the following traffic:
 
-1. Allow DNS egress for all module-related pods in both namespaces to the cluster DNS service (TCP/UDP 53).
-2. Allow API server access (TCP 443) for:
+1. Allow DNS egress from all module-related Pods in both namespaces to the cluster DNS service (TCP/UDP `53`).
+2. Allow API server access (TCP `443`) for the following components:
    - `istio-controller-manager` in `kyma-system`
    - `istiod` (`istio: pilot`) in `istio-system`
    - `istio-cni-node` in `istio-system`
-3. Allow control-plane communication between `istiod` and the `istio-ingressgateway`:
-   - Allow egress from `istio-ingressgateway` to `istiod` on port 15012 (TCP, XDS protocol).
-   - Allow ingress to `istiod` on port 15012 from sidecars and `istio-ingressgateway`.
-4. Allow external ingress to `istio-ingressgateway` on TCP 8080/8443 for traffic entering the cluster.
-5. Allow ingress to the `istiod` webhook endpoint on TCP 15017 from the API server for validating and mutating operations.
-6. Allow `istiod` egress to common JWKS endpoint ports (TCP 80/443) for external JWT verification.
-> [!NOTE]
-> Allowing traffic to the 443 and 80 is not necessarily sufficient for all cases, as some JWKS endpoints might be running on non-standard ports.
-> If users have specific requirements for accessing JWKS endpoints on non-standard ports, it might be required to either allow users to create custom NetworkPolicies in
-> the `istio-system` namespace or to provide a way to specify additional allowed ports for `istiod` egress in the Istio CR.
-7. Allow user-enabled egress from `istio-ingressgateway` to backend services by permitting egress to specifically labeled pods in user namespaces.
+3. Allow control-plane communication between `istiod` and `istio-ingressgateway`:
+   - Allow egress from `istio-ingressgateway` to `istiod` on port `15012` (TCP, XDS protocol).
+   - Allow ingress from sidecars and `istio-ingressgateway` to `istiod` on port `15012`.
+4. Allow external ingress to `istio-ingressgateway` on TCP `8080`/`8443` for traffic entering the cluster.
+5. Allow ingress from the API server to the `istiod` webhook endpoint on TCP `15017` for validating and mutating operations.
+6. Allow `istiod` egress to common JWKS endpoint ports (TCP `80`/`443`) for external JWT verification.
+  > [!NOTE]
+  > Allowing traffic to the 443 and 80 is not necessarily sufficient for all cases, as some JWKS endpoints might be running on non-standard ports.
+  > If users have specific requirements for accessing JWKS endpoints on non-standard ports, it might be required to either allow users to create custom NetworkPolicies in
+  > the `istio-system` namespace or to provide a way to specify additional allowed ports for `istiod` egress in the Istio CR.
+- Allow user-enabled egress traffic from `istio-ingressgateway` to backend services by permitting egress to specifically labeled Pods in user namespaces.
 
-To ensure that the policies are enforced as soon as user enables the setting the Istio module components will be restarted (rollout restart)
+To ensure that the policies are enforced as soon as the user enables the setting, the Istio module's components must be restarted (rollout restart)
 to terminate already established TCP connections.
 
 ## Consequences
 
 ### Extend Istio Custom Resource with NetworkPolicy Support Flag
 
-The Istio Custom Resource Definition will be extended to include a new boolean field, `enableModuleNetworkPolicies`,
+Extend the Istio Custom Resource Definition to include a new boolean field, **enableModuleNetworkPolicies**,
 which allows users to enable or disable NetworkPolicy support for the Istio components. When this flag is set to `true`,
-the necessary NetworkPolicies will be applied to the `istio-system` and `kyma-system` namespaces.
-By default, this flag will be set to `false` to avoid applying NetworkPolicies in clusters that do not enforce them,
-ensuring backward compatibility and preventing unintended disruptions in such environments.
+the necessary NetworkPolicies must be applied to the `istio-system` and `kyma-system` namespaces.
+By default, this flag is set to `false` to prevent NetworkPolicies from being applied in clusters where it is not enforced.
+This ensures backward compatibility and prevents unintended disruptions in such environments.
 
-The field will be placed under the `spec` section of the Istio CR, and will be documented to explain its purpose and the implications of enabling it.
-Example:
+Include the field under the **spec** section of the Istio CR, and document its purpose and the implications of enabling it.
+
+See the following example:
 
 ```yaml
 apiVersion: operator.kyma-project.io/v1alpha2

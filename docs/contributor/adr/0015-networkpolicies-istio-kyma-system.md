@@ -89,6 +89,7 @@ Enabling the **enableModuleNetworkPolicies** flag creates the necessary NetworkP
     - ports:
       - protocol: TCP
         port: 443
+  ```
 
 - Allow the following traffic for `istiod`:
   - Allow egress access to DNS and APIServer.
@@ -238,6 +239,7 @@ that allows egress to specifically labeled Pods in user namespaces:
           matchLabels:
             networking.kyma-project.io/from-ingressgateway: allowed
         namespaceSelector: {}
+  ```
 
 ### Restart Istio Components to Enforce Policies
 To ensure that the newly applied NetworkPolicies take effect immediately, all Istio components must be restarted (rollout restart)

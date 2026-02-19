@@ -4,6 +4,7 @@
 Proposed
 
 ## Context
+This ADR addresses requirements defined in [kyma-project/kyma#18818](https://github.com/kyma-project/kyma/issues/18818).
 Clusters that enforce a default-deny NetworkPolicy require explicit allow rules for Istio components to install and operate.
 This ADR captures those requirements so they can be consistently applied and maintained.
 
@@ -49,7 +50,7 @@ to indicate that they are managed by the Istio module and should not be modified
 
 ## Consequences
 
-### Extend Istio Custom Resource with NetworkPolicy Support Flag
+### Istio Custom Resource Extension
 
 Extend the Istio Custom Resource Definition to include a new boolean field, **enableModuleNetworkPolicies**,
 which allows users to enable or disable NetworkPolicy support for the Istio components. When this flag is set to `true`,
@@ -71,7 +72,29 @@ spec:
    enableModuleNetworkPolicies: true
 ```
 
-### Create NetworkPolicies for Istio Components
+### NetworkPolicies Applied by Module
+
+| Component                | Namespace    | Port  | Protocol  | Direction | Purpose                                                                                      |
+|--------------------------|--------------|-------|-----------|-----------|----------------------------------------------------------------------------------------------|
+| istio-controller-manager | kyma-system  | 53    | UDP/TCP   | egress    | DNS resolution                                                                               |
+| istio-controller-manager | kyma-system  | 443   | TCP       | egress    | Kubernetes API server access                                                                 |
+| istiod                   | istio-system | 53    | UDP/TCP   | egress    | DNS resolution                                                                               |
+| istiod                   | istio-system | 80    | TCP       | egress    | Access to external JWKS endpoints for JWT validation (HTTP)                                  |
+| istiod                   | istio-system | 443   | TCP       | egress    | Access  to external JWKS endpoints for JWT validation (HTTPS) / Kubernetes API server access |
+| istiod                   | istio-system | 15012 | TCP/gRPC  | ingress   | XDS config distribution to sidecars and gateways                                             |
+| istiod                   | istio-system | 15014 | TCP/HTTP  | ingress   | Control plane metrics (Prometheus scrape)                                                    |
+| istiod                   | istio-system | 15017 | TCP/HTTPS | ingress   | Webhook endpoint (defaulting/mutation/admission)                                             |
+| istio-ingressgateway     | istio-system | *     | TCP       | egress    | Traffic to labeled user Pods (`networking.kyma-project.io/from-ingressgateway: allowed`)     |
+| istio-ingressgateway     | istio-system | 53    | UDP/TCP   | egress    | DNS resolution                                                                               |
+| istio-ingressgateway     | istio-system | 8080  | TCP       | ingress   | HTTP traffic inbound to cluster                                                              |
+| istio-ingressgateway     | istio-system | 8443  | TCP       | ingress   | HTTPS traffic inbound to cluster                                                             |
+| istio-ingressgateway     | istio-system | 15008 | TCP       | ingress   | HBONE mTLS tunnel (Ambient mode)                                                             |
+| istio-ingressgateway     | istio-system | 15012 | TCP/gRPC  | egress    | Request XDS config from istiod                                                               |
+| istio-ingressgateway     | istio-system | 15020 | TCP/HTTP  | ingress   | Merged Prometheus metrics                                                                    |
+| istio-ingressgateway     | istio-system | 15021 | TCP/HTTP  | ingress   | Health check endpoint                                                                        |
+| istio-ingressgateway     | istio-system | 15090 | TCP/HTTP  | ingress   | Envoy Prometheus telemetry                                                                   |
+| istio-cni-node           | istio-system | 53    | UDP/TCP   | egress    | DNS resolution                                                                               |
+| istio-cni-node           | istio-system | 443   | TCP       | egress    | Kubernetes API server access                                                                 |
 
 Enabling the **enableModuleNetworkPolicies** flag creates the necessary NetworkPolicies to allow traffic for Istio components.
 

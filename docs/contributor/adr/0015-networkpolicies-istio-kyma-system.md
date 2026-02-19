@@ -163,6 +163,8 @@ Enabling the **enableModuleNetworkPolicies** flag creates the necessary NetworkP
         - podSelector:
             matchLabels:
               security.istio.io/tlsMode: istio
+          # The namespaceSelector needs to be set to empty `{}` explicitly.
+          # In case it is not specified, the policy will only allow traffic from the same namespace.
           namespaceSelector: {}
         - podSelector:
             matchLabels:
@@ -303,6 +305,8 @@ that allows egress to specifically labeled Pods in user namespaces:
       - podSelector:
           matchLabels:
             networking.kyma-project.io/from-ingressgateway: allowed
+        # The namespaceSelector needs to be set to empty `{}` explicitly.
+        # In case it is not specified, the policy will only allow traffic from the same namespace.
         namespaceSelector: {}
   ```
 

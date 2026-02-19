@@ -33,9 +33,19 @@ When the user enables NetworkPolicy support in the Istio CR, apply NetworkPolici
   > If users have specific requirements for accessing JWKS endpoints on non-standard ports, it might be required to either allow users to create custom NetworkPolicies in
   > the `istio-system` namespace or to provide a way to specify additional allowed ports for `istiod` egress in the Istio CR.
 - Allow user-enabled egress traffic from `istio-ingressgateway` to backend services by permitting egress to specifically labeled Pods in user namespaces.
+- Allow the following according to https://istio.io/latest/docs/ops/deployment/application-requirements:
+  - Allow ingress to `istiod` on TCP `15014` (Control plane monitoring).
+  - Allow ingress to `istio-ingressgateway` on TCP `15008` (HBONE mTLS tunnel port, Ambient mode).
+  - Allow ingress to `istio-ingressgateway` on TCP `15020` (Merged Prometheus metrics port).
+  - Allow ingress to `istio-ingressgateway` on TCP `15021` (Health checks).
+  - Allow ingress to `istio-ingressgateway` on TCP `15090` (Envoy Prometheus telemetry).
 
 To ensure that the policies are enforced as soon as the user enables the setting, the Istio module's components must be restarted (rollout restart)
 to terminate already established TCP connections.
+
+To increase visibility and user awareness of the applied NetworkPolicies,
+the applied resources should be labeled with `kyma-project.io/module: istio` and `kyma-project.io/managed-by: kyma`
+to indicate that they are managed by the Istio module and should not be modified by users.
 
 ## Consequences
 
@@ -71,6 +81,9 @@ Enabling the **enableModuleNetworkPolicies** flag creates the necessary NetworkP
   apiVersion: networking.k8s.io/v1
   kind: NetworkPolicy
   metadata:
+    labels:
+      kyma-project.io/module: istio
+      kyma-project.io/managed-by: kyma
     name: kyma-project.io--allow-istio-controller-manager
     namespace: kyma-system
   spec:
@@ -94,12 +107,16 @@ Enabling the **enableModuleNetworkPolicies** flag creates the necessary NetworkP
 - Allow the following traffic for `istiod`:
   - Allow egress access to DNS and APIServer.
   - Allow ingress access from sidecars and `istio-ingressgateway` on port `15012` for control-plane communication.
+  - Allow ingress access to the control plane monitoring port `15014`.
   - Allow ingress access to the webhook endpoint on port `15017`.
 
     ```yaml
     apiVersion: networking.k8s.io/v1
     kind: NetworkPolicy
     metadata:
+      labels:
+        kyma-project.io/module: istio
+        kyma-project.io/managed-by: kyma
       name: kyma-project.io--istio-pilot
       namespace: istio-system
     spec:
@@ -132,6 +149,8 @@ Enabling the **enableModuleNetworkPolicies** flag creates the necessary NetworkP
           port: 15012
       - ports:
         - protocol: TCP
+          port: 15014
+        - protocol: TCP
           port: 15017
     ```
 
@@ -139,11 +158,15 @@ Enabling the **enableModuleNetworkPolicies** flag creates the necessary NetworkP
   - Allow egress access to `istiod` on port `15012` (XDS).
   - Allow egress access to DNS.
   - Allow ingress access from external traffic on ports `80`/`443`.
+  - Allow ingress access to the HBONE mTLS tunnel port (`15008`), merged Prometheus metrics port (`15020`), health checks (`15021`), and Envoy Prometheus telemetry (`15090`).
 
     ```yaml
     apiVersion: networking.k8s.io/v1
     kind: NetworkPolicy
     metadata:
+      labels:
+        kyma-project.io/module: istio
+        kyma-project.io/managed-by: kyma
       name: kyma-project.io--istio-ingressgateway
       namespace: istio-system
     spec:
@@ -172,6 +195,14 @@ Enabling the **enableModuleNetworkPolicies** flag creates the necessary NetworkP
           port: 8080
         - protocol: TCP
           port: 8443
+        - protocol: TCP
+          port: 15008
+        - protocol: TCP
+          port: 15020
+        - protocol: TCP
+          port: 15021
+        - protocol: TCP
+          port: 15090
     ```
 
 - Allow egress access to DNS and APIServer for `istio-cni-node`:
@@ -179,6 +210,9 @@ Enabling the **enableModuleNetworkPolicies** flag creates the necessary NetworkP
   apiVersion: networking.k8s.io/v1
   kind: NetworkPolicy
   metadata:
+    labels:
+      kyma-project.io/module: istio
+      kyma-project.io/managed-by: kyma
     name: kyma-project.io--istio-cni-node
     namespace: istio-system
   spec:
@@ -196,6 +230,7 @@ Enabling the **enableModuleNetworkPolicies** flag creates the necessary NetworkP
     - ports:
       - protocol: TCP
         port: 443
+  ```
 
 - Allow access to external (outside of cluster) JWKS endpoints for JWT verification by `istiod`:
 
@@ -203,6 +238,9 @@ Enabling the **enableModuleNetworkPolicies** flag creates the necessary NetworkP
   apiVersion: networking.k8s.io/v1
   kind: NetworkPolicy
   metadata:
+    labels:
+      kyma-project.io/module: istio
+      kyma-project.io/managed-by: kyma
     name: kyma-project.io--istio-pilot-jwks
     namespace: istio-system
   spec:
@@ -217,6 +255,7 @@ Enabling the **enableModuleNetworkPolicies** flag creates the necessary NetworkP
         port: 80
       - protocol: TCP
         port: 443
+  ```
 
 - Allow user-enabled egress traffic from `istio-ingressgateway` to backend services by creating a NetworkPolicy
 that allows egress to specifically labeled Pods in user namespaces:
@@ -225,6 +264,9 @@ that allows egress to specifically labeled Pods in user namespaces:
   apiVersion: networking.k8s.io/v1
   kind: NetworkPolicy
   metadata:
+    labels:
+      kyma-project.io/module: istio
+      kyma-project.io/managed-by: kyma
     name: kyma-project.io--istio-ingressgateway-egress
     namespace: istio-system
   spec:

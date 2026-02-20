@@ -43,17 +43,17 @@ func (np *NetworkPolicy) Restart(ctx context.Context, istioCR *v1alpha2.Istio) (
 func restartControlPlaneComponents(ctx context.Context, client client.Client) (describederrors.DescribedError, bool) {
 	err := restartIngressGateway(ctx, client)
 	if err != nil {
-		return describederrors.NewDescribedError(err, "Failed to restart Ingress Gateway"), false
+		return describederrors.NewDescribedError(err, "Failed to restart Ingress Gateway"), true
 	}
 	err = restartIstiod(ctx, client)
 	if err != nil {
-		return describederrors.NewDescribedError(err, "Failed to restart Istiod"), false
+		return describederrors.NewDescribedError(err, "Failed to restart Istiod"), true
 	}
 	err = restartCNI(ctx, client)
 	if err != nil {
-		return describederrors.NewDescribedError(err, "Failed to restart CNI"), false
+		return describederrors.NewDescribedError(err, "Failed to restart CNI"), true
 	}
-	return nil, true
+	return nil, false
 }
 
 const (

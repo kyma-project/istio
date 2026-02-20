@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  labels:
+    kyma-project.io/module: istio
+    kyma-project.io/managed-by: kyma
+  name: kyma-project.io--istio-pilot-jwks
+  namespace: istio-system
+spec:
+  podSelector:
+    matchLabels:
+      istio: pilot
+  policyTypes:
+    - Egress
+  egress:
+    - ports:
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: 443

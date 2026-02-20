@@ -1,0 +1,42 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  labels:
+    kyma-project.io/module: istio
+    kyma-project.io/managed-by: kyma
+  name: kyma-project.io--istio-ingressgateway
+  namespace: istio-system
+spec:
+  podSelector:
+    matchLabels:
+      istio: ingressgateway
+  policyTypes:
+    - Egress
+    - Ingress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              istio: pilot
+      ports:
+        - protocol: TCP
+          port: 15012
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 8443
+        - protocol: TCP
+          port: 15008
+        - protocol: TCP
+          port: 15020
+        - protocol: TCP
+          port: 15021
+        - protocol: TCP
+          port: 15090

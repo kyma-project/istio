@@ -368,7 +368,7 @@ func (r *IstioReconciler) SetupWithManager(mgr ctrl.Manager, rateLimiter RateLim
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&operatorv1alpha2.Istio{}).
 		Watches(&corev1.ConfigMap{}, ElbConfigMapEventHandler{}).
-		WithEventFilter(predicate.Or[client.Object](predicate.GenerationChangedPredicate{}, predicate.AnnotationChangedPredicate{})).
+		WithEventFilter(predicate.GenerationChangedPredicate{}).
 		WithOptions(controller.Options{
 			RateLimiter: workqueue.NewTypedMaxOfRateLimiter[ctrl.Request](
 				workqueue.NewTypedItemExponentialFailureRateLimiter[ctrl.Request](rateLimiter.BaseDelay,

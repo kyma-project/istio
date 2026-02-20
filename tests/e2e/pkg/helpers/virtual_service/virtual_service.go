@@ -78,3 +78,4 @@ func CreateVirtualService(t *testing.T, name, namespace, dstHost, host, gateway 
 
 	return nil
 }
+

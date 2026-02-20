@@ -223,6 +223,13 @@ mesh-communication-e2e-test: gotestsum deploy
 	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/mesh_communication/..." --junitfile "./tests/e2e/tests/mesh_communication/report.xml" -- -timeout 20m
 	@echo "E2E tests completed successfully"
 
+.PHONY: networkpolicy-e2e-test
+networkpolicy-e2e-test: gotestsum deploy
+	@echo "Running e2e NetworkPolicy tests"
+	go clean -testcache
+	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/networkpolicy/..." --junitfile "./tests/e2e/tests/networkpolicy/report.xml" -- -timeout 30m
+	@echo "E2E tests completed successfully"
+
 .PHONY: installation-e2e-test
 installation-e2e-test: gotestsum deploy
 	@echo "Running e2e installation tests"

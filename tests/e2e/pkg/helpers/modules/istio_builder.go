@@ -146,6 +146,12 @@ func (b *IstioCRBuilder) WithCompatibilityMode(enabled bool) *IstioCRBuilder {
 	return b
 }
 
+// WithEnableModuleNetworkPolicies enables or disables module-managed NetworkPolicies
+func (b *IstioCRBuilder) WithEnableModuleNetworkPolicies(enabled bool) *IstioCRBuilder {
+	b.istio.Spec.NetworkPoliciesEnabled= enabled
+	return b
+}
+
 // WithExperimental sets the experimental configuration
 func (b *IstioCRBuilder) WithExperimental(experimental *v1alpha2.Experimental) *IstioCRBuilder {
 	b.istio.Spec.Experimental = experimental

@@ -76,6 +76,7 @@ func NewController(mgr manager.Manager, reconciliationInterval time.Duration, cr
 	restarters := []restarter.Restarter{
 		restarter.NewIngressGatewayRestarter(mgr.GetClient(), []predicates.IngressGatewayPredicate{}, statusHandler),
 		restarter.NewSidecarsRestarter(mgr.GetLogger(), mgr.GetClient(), &merger, sidecars.NewProxyRestarter(mgr.GetClient(), podsLister, actionRestarter, &logger), statusHandler, istioImages),
+		restarter.NewForNetworkPolicy(mgr.GetClient(), statusHandler),
 	}
 	userResources := resources.NewUserResources(mgr.GetClient())
 
@@ -341,6 +342,7 @@ func (r *IstioReconciler) finishReconcile(ctx context.Context, istioCR *operator
 // +kubebuilder:rbac:groups=networking.k8s.io,resources=ingressclasses,verbs=get;list;watch
 // +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=get;list;watch
 // +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses/status,verbs=*
+// +kubebuilder:rbac:groups=networking.k8s.io,resources=networkpolicies,verbs=create;deletecollection;delete;get;list;patch;update;watch
 // +kubebuilder:rbac:groups=networking.x-k8s.io,resources=gateways,verbs=get;watch;list
 // +kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios,verbs=create;delete;get;list;patch;update;watch
 // +kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios/finalizers,verbs=update

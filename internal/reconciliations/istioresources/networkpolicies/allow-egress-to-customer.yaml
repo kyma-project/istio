@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  labels:
+    kyma-project.io/module: istio
+    kyma-project.io/managed-by: kyma
+  name: kyma-project.io--istio-ingressgateway-egress
+  namespace: istio-system
+spec:
+  podSelector:
+    matchLabels:
+      istio: ingressgateway
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              networking.kyma-project.io/from-ingressgateway: allowed
+          # The namespaceSelector needs to be set to empty `{}` explicitly.
+          # In case it is not specified, the policy will only allow traffic from the same namespace.
+          namespaceSelector: {}

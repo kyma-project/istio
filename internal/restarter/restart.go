@@ -12,7 +12,7 @@ import (
 // If the evaluation returns true, the restarter restarts the component.
 // Additional boolean return parameter indicates if the reconciliation should be requeued.
 type Restarter interface {
-	Restart(ctx context.Context, istioCR *operatorv1alpha2.Istio) (describederrors.DescribedError, bool)
+	Restart(ctx context.Context, istioCR *operatorv1alpha2.Istio) (describedError describederrors.DescribedError, requeue bool)
 }
 
 // Restart invokes the given restarters and returns the most severe error.

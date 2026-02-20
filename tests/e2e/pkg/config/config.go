@@ -4,7 +4,7 @@ import "os"
 
 type Config struct {
 	OperatorVersion string
-	SkipCleanup bool
+	SkipCleanup     bool
 }
 
 func Get() *Config {

@@ -76,25 +76,25 @@ spec:
 
 | Component                | Namespace    | Port  | Protocol  | Direction | Purpose                                                                                      |
 |--------------------------|--------------|-------|-----------|-----------|----------------------------------------------------------------------------------------------|
-| istio-controller-manager | kyma-system  | 53    | UDP/TCP   | egress    | DNS resolution                                                                               |
-| istio-controller-manager | kyma-system  | 443   | TCP       | egress    | Kubernetes API server access                                                                 |
-| istiod                   | istio-system | 53    | UDP/TCP   | egress    | DNS resolution                                                                               |
-| istiod                   | istio-system | 80    | TCP       | egress    | Access to external JWKS endpoints for JWT validation (HTTP)                                  |
-| istiod                   | istio-system | 443   | TCP       | egress    | Access  to external JWKS endpoints for JWT validation (HTTPS) / Kubernetes API server access |
-| istiod                   | istio-system | 15012 | TCP/gRPC  | ingress   | XDS config distribution to sidecars and gateways                                             |
-| istiod                   | istio-system | 15014 | TCP/HTTP  | ingress   | Control plane metrics (Prometheus scrape)                                                    |
-| istiod                   | istio-system | 15017 | TCP/HTTPS | ingress   | Webhook endpoint (defaulting/mutation/admission)                                             |
-| istio-ingressgateway     | istio-system | *     | TCP       | egress    | Traffic to labeled user Pods (`networking.kyma-project.io/from-ingressgateway: allowed`)     |
-| istio-ingressgateway     | istio-system | 53    | UDP/TCP   | egress    | DNS resolution                                                                               |
-| istio-ingressgateway     | istio-system | 8080  | TCP       | ingress   | HTTP traffic inbound to cluster                                                              |
-| istio-ingressgateway     | istio-system | 8443  | TCP       | ingress   | HTTPS traffic inbound to cluster                                                             |
-| istio-ingressgateway     | istio-system | 15008 | TCP       | ingress   | HBONE mTLS tunnel (Ambient mode)                                                             |
-| istio-ingressgateway     | istio-system | 15012 | TCP/gRPC  | egress    | Request XDS config from istiod                                                               |
-| istio-ingressgateway     | istio-system | 15020 | TCP/HTTP  | ingress   | Merged Prometheus metrics                                                                    |
-| istio-ingressgateway     | istio-system | 15021 | TCP/HTTP  | ingress   | Health check endpoint                                                                        |
-| istio-ingressgateway     | istio-system | 15090 | TCP/HTTP  | ingress   | Envoy Prometheus telemetry                                                                   |
-| istio-cni-node           | istio-system | 53    | UDP/TCP   | egress    | DNS resolution                                                                               |
-| istio-cni-node           | istio-system | 443   | TCP       | egress    | Kubernetes API server access                                                                 |
+| `istio-controller-manager` | `kyma-system`  | `53`    | UDP/TCP   | Egress    | DNS resolution                                                                               |
+| `istio-controller-manager` | `kyma-system`  | `443`   | TCP       | Egress    | Kubernetes API server access                                                                 |
+| `istiod`                   | `istio-system` | `53`    | UDP/TCP   | Egress    | DNS resolution                                                                               |
+| `istiod`                   | `istio-system` | `80`    | TCP       | Egress    | Access to external JWKS endpoints for JWT validation (HTTP)                                  |
+| `istiod`                   | `istio-system` | `443`   | TCP       | Egress    | Access to external JWKS endpoints for JWT validation (HTTPS) / Kubernetes API server access |
+| `istiod`                   | `istio-system` | `15012` | TCP/gRPC  | Ingress   | XDS config distribution to sidecars and gateways                                             |
+| `istiod`                   | `istio-system` | `15014` | TCP/HTTP  | Ingress   | Control plane metrics (Prometheus scrape)                                                    |
+| `istiod`                   | `istio-system` | `15017` | TCP/HTTPS | Ingress   | Webhook endpoint (defaulting/mutation/admission)                                             |
+| `istio-ingressgateway`     | `istio-system` | `*`     | TCP       | Egress    | Traffic to labeled user Pods (`networking.kyma-project.io/from-ingressgateway: allowed`)     |
+| `istio-ingressgateway`     | `istio-system` | `53`    | UDP/TCP   | Egress    | DNS resolution                                                                               |
+| `istio-ingressgateway`     | `istio-system` | `8080`  | TCP       | Ingress   | HTTP traffic inbound to cluster                                                              |
+| `istio-ingressgateway`     | `istio-system` | `8443`  | TCP       | Ingress   | HTTPS traffic inbound to cluster                                                             |
+| `istio-ingressgateway`     | `istio-system` | `15008` | TCP       | Ingress   | HBONE mTLS tunnel (Ambient mode)                                                             |
+| `istio-ingressgateway`     | `istio-system` | `15012` | TCP/gRPC  | Egress    | Request XDS config from istiod                                                               |
+| `istio-ingressgateway`     | `istio-system` | `15020` | TCP/HTTP  | Ingress   | Merged Prometheus metrics                                                                    |
+| `istio-ingressgateway`     | `istio-system` | `15021` | TCP/HTTP  | Ingress   | Health check endpoint                                                                        |
+| `istio-ingressgateway`     | `istio-system` | `15090` | TCP/HTTP  | Ingress   | Envoy Prometheus telemetry                                                                   |
+| `istio-cni-node`           | `istio-system` | `53`    | UDP/TCP   | Egress    | DNS resolution                                                                               |
+| `istio-cni-node`           | `istio-system` | `443`   | TCP       | Egress    | Kubernetes API server access                                                                 |
 
 Enabling the **enableModuleNetworkPolicies** flag creates the necessary NetworkPolicies to allow traffic for Istio components.
 

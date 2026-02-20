@@ -52,7 +52,7 @@ var _ = Describe("NetworkPolicies", func() {
 
 	It("should return created if no resources were present", func() {
 		client := createFakeClient()
-		sample := NewNetworkPolicies(client)
+		sample := NewNetworkPolicies(false)
 
 		// when
 		changed, err := sample.reconcile(context.Background(), client, owner, templateValues)
@@ -78,13 +78,13 @@ var _ = Describe("NetworkPolicies", func() {
 
 	It("should return not changed if no change was applied", func() {
 		client := createFakeClient()
-		sample := NewNetworkPolicies(client)
+		sample := NewNetworkPolicies(false)
 
 		changed, err := sample.reconcile(context.Background(), client, owner, templateValues)
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(changed).To(Equal(controllerutil.OperationResultCreated))
 
-		sample = NewNetworkPolicies(client)
+		sample = NewNetworkPolicies(false)
 		changed, err = sample.reconcile(context.Background(), client, owner, templateValues)
 
 		Expect(err).To(Not(HaveOccurred()))
@@ -104,7 +104,7 @@ var _ = Describe("NetworkPolicies", func() {
 
 		policy.Spec.Egress = nil
 		client := createFakeClient(&policy)
-		sample := NewNetworkPolicies(client)
+		sample := NewNetworkPolicies(false)
 
 		// when
 		changed, err := sample.reconcile(context.Background(), client, owner, templateValues)
@@ -116,7 +116,7 @@ var _ = Describe("NetworkPolicies", func() {
 
 	It("should delete existing resources when marked for deletion", func() {
 		client := createFakeClient()
-		sample := NewNetworkPolicies(client)
+		sample := NewNetworkPolicies(false)
 
 		changed, err := sample.reconcile(context.Background(), client, owner, templateValues)
 		Expect(err).To(Not(HaveOccurred()))

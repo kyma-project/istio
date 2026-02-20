@@ -15,12 +15,11 @@ import (
 var proxyProtocolEnvoyFilter []byte
 
 type ProxyProtocolEnvoyFilter struct {
-	k8sClient    client.Client
 	shouldDelete bool
 }
 
-func NewProxyProtocolEnvoyFilter(k8sClient client.Client, shouldDelete bool) ProxyProtocolEnvoyFilter {
-	return ProxyProtocolEnvoyFilter{k8sClient: k8sClient, shouldDelete: shouldDelete}
+func NewProxyProtocolEnvoyFilter(shouldDelete bool) ProxyProtocolEnvoyFilter {
+	return ProxyProtocolEnvoyFilter{shouldDelete: shouldDelete}
 }
 
 func (pp ProxyProtocolEnvoyFilter) reconcile(ctx context.Context, k8sClient client.Client, _ metav1.OwnerReference, _ map[string]string) (controllerutil.OperationResult, error) {

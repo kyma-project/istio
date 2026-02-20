@@ -29,12 +29,13 @@ var allowIstiod []byte
 var allowJwks []byte
 
 type NetworkPolicies struct {
-	k8sClient    client.Client
 	shouldDelete bool
 }
 
-func NewNetworkPolicies(k8sClient client.Client) NetworkPolicies {
-	return NetworkPolicies{k8sClient: k8sClient}
+func NewNetworkPolicies(shouldDelete bool) NetworkPolicies {
+	return NetworkPolicies{
+		shouldDelete: shouldDelete,
+	}
 }
 
 func (NetworkPolicies) Name() string {

@@ -72,7 +72,7 @@ spec:
    enableModuleNetworkPolicies: true
 ```
 
-### NetworkPolicies Applied by Module
+### NetworkPolicies Applied by the Istio Module
 
 | Component                | Namespace    | Port  | Protocol  | Direction | Purpose                                                                                      |
 |--------------------------|--------------|-------|-----------|-----------|----------------------------------------------------------------------------------------------|

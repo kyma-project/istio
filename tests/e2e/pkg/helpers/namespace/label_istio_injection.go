@@ -66,4 +66,3 @@ func LabelNamespaceWithAmbient(t *testing.T, namespace string) error {
 
 	return nil
 }
-

@@ -328,17 +328,6 @@ func (b *IstioCRBuilder) Update(t *testing.T) error {
 	return nil
 }
 
-// TriggerReconciliation triggers reconciliation of the Istio CR by adding a timestamp annotation.
-// This is useful when you need to force the operator to reconcile the Istio CR, for example
-// after manually deleting resources that should be recreated by the operator.
-func (b *IstioCRBuilder) TriggerReconciliation(t *testing.T) error {
-	t.Helper()
-	t.Log("Triggering reconciliation of Istio custom resource")
-
-	// Use a timestamp-based annotation to ensure uniqueness and trigger reconciliation
-	return b.WithAnnotation("operator.kyma-project.io/trigger-reconciliation", metav1.Now().String()).Update(t)
-}
-
 // Delete deletes the Istio CR from the cluster
 func (b *IstioCRBuilder) Delete(t *testing.T, ctx context.Context) error {
 	t.Helper()

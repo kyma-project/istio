@@ -193,7 +193,9 @@ func TestInstallation(t *testing.T) {
 		istiohelpers.DeleteCNINode(t, c)
 		istiohelpers.DeleteDefaultPeerAuthentication(t, c)
 
-		err = ib.TriggerReconciliation(t)
+		err = ib.WithTrustDomain("trust.com").Update(t)
+		// this will trigger the reconciliation loop and the operator should recreate the resources.
+		//It's not meter of what values we set, just trigger an update to the CR to make sure the reconciliation loop is triggered immediately.
 		require.NoError(t, err)
 
 		// check if the resources are recreated by the operator after reconciliation is triggered

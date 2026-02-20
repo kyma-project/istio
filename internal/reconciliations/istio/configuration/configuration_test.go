@@ -114,4 +114,94 @@ var _ = Describe("Istio Configuration", func() {
 		})
 	})
 
+	Context("UpdateLastAppliedIngressGatewayConfig", func() {
+		It("should update ingress gateway config fields when annotation does not exist", func() {
+			// given
+			numTrustedProxies := 2
+			trustDomain := "cluster.local"
+			forwardClientCert := operatorv1alpha2.SanitizeSet
+			istioCR := operatorv1alpha2.Istio{Spec: operatorv1alpha2.IstioSpec{Config: operatorv1alpha2.Config{
+				NumTrustedProxies:        &numTrustedProxies,
+				TrustDomain:              &trustDomain,
+				ForwardClientCertDetails: &forwardClientCert,
+			}}}
+
+			// when
+			err := configuration.UpdateLastAppliedIngressGatewayConfig(&istioCR)
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(istioCR.Annotations).To(Not(BeEmpty()))
+
+			appliedConfig, err := configuration.GetLastAppliedConfiguration(&istioCR)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(*appliedConfig.Config.NumTrustedProxies).To(Equal(2))
+			Expect(*appliedConfig.Config.TrustDomain).To(Equal("cluster.local"))
+			Expect(*appliedConfig.Config.ForwardClientCertDetails).To(Equal(operatorv1alpha2.SanitizeSet))
+		})
+
+		It("should update only ingress gateway config fields preserving other fields", func() {
+			// given
+			numTrustedProxies := 3
+			istioCR := operatorv1alpha2.Istio{Spec: operatorv1alpha2.IstioSpec{Config: operatorv1alpha2.Config{
+				NumTrustedProxies: &numTrustedProxies,
+			}}}
+			istioCR.Annotations = map[string]string{}
+			istioCR.Annotations[lastAppliedConfiguration] = `{"config":{"numTrustedProxies":1,"telemetry":{"metrics":{}}},"IstioTag":"1.16.1-distroless","compatibilityMode":true}`
+
+			// when
+			err := configuration.UpdateLastAppliedIngressGatewayConfig(&istioCR)
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+
+			appliedConfig, err := configuration.GetLastAppliedConfiguration(&istioCR)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(*appliedConfig.Config.NumTrustedProxies).To(Equal(3))
+			Expect(appliedConfig.IstioTag).To(Equal("1.16.1-distroless"))
+			Expect(appliedConfig.CompatibilityMode).To(BeTrue())
+		})
+	})
+
+	Context("UpdateLastAppliedCompatibilityMode", func() {
+		It("should update compatibility mode when annotation does not exist", func() {
+			// given
+			istioCR := operatorv1alpha2.Istio{Spec: operatorv1alpha2.IstioSpec{
+				CompatibilityMode: true,
+			}}
+
+			// when
+			err := configuration.UpdateLastAppliedCompatibilityMode(&istioCR)
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(istioCR.Annotations).To(Not(BeEmpty()))
+
+			appliedConfig, err := configuration.GetLastAppliedConfiguration(&istioCR)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(appliedConfig.CompatibilityMode).To(BeTrue())
+		})
+
+		It("should update only compatibility mode preserving other fields", func() {
+			// given
+			istioCR := operatorv1alpha2.Istio{Spec: operatorv1alpha2.IstioSpec{
+				CompatibilityMode: true,
+			}}
+			istioCR.Annotations = map[string]string{}
+			istioCR.Annotations[lastAppliedConfiguration] = `{"config":{"numTrustedProxies":2,"telemetry":{"metrics":{}}},"IstioTag":"1.16.1-distroless","compatibilityMode":false}`
+
+			// when
+			err := configuration.UpdateLastAppliedCompatibilityMode(&istioCR)
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+
+			appliedConfig, err := configuration.GetLastAppliedConfiguration(&istioCR)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(appliedConfig.CompatibilityMode).To(BeTrue())
+			Expect(*appliedConfig.Config.NumTrustedProxies).To(Equal(2))
+			Expect(appliedConfig.IstioTag).To(Equal("1.16.1-distroless"))
+		})
+	})
+
 })

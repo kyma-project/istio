@@ -15,7 +15,7 @@ import (
 	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/pkg/lib/annotations"
-	libretry "github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
+	sidecarretry "github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
 
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 )
@@ -101,7 +101,7 @@ func restartIngressGateway(ctx context.Context, k8sClient client.Client) error {
 	patch := client.StrategicMergeFrom((&deployment).DeepCopy())
 	deployment.Spec.Template.Annotations = annotations.AddRestartAnnotation(deployment.Spec.Template.Annotations)
 
-	err = libretry.OnError(libretry.DefaultRetry, func() error {
+	err = sidecarretry.OnError(sidecarretry.DefaultRetry, func() error {
 		err = k8sClient.Patch(ctx, &deployment, patch)
 		if err != nil {
 			ctrl.Log.Info("Retrying ingress gateway restart")

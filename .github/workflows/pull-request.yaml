@@ -94,6 +94,7 @@ jobs:
           - "installation-integration-test"
           - "observability-integration-test"
           - "trust-domain-e2e-test"
+          - "dns-proxying-e2e-test"
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/load-manager-image

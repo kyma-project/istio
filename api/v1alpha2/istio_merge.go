@@ -223,13 +223,12 @@ func (m *meshConfigBuilder) BuildForwardClientCertDetails(xfccStrategy *XFCCStra
 	return m
 }
 
-func (m *meshConfigBuilder) BuildDNSProxyingConfiguration(enabledDNSProxying *bool) *meshConfigBuilder {
-
-	if enabledDNSProxying == nil {
+func (m *meshConfigBuilder) BuildDNSProxyingConfiguration(enableDNSProxying *bool) *meshConfigBuilder {
+	if enableDNSProxying == nil {
 		return m
 	}
 
-	err := m.c.SetPath("defaultConfig.proxyMetadata.ISTIO_META_DNS_CAPTURE", strconv.FormatBool(*enabledDNSProxying))
+	err := m.c.SetPath("defaultConfig.proxyMetadata.ISTIO_META_DNS_CAPTURE", strconv.FormatBool(*enableDNSProxying))
 	if err != nil {
 		return nil
 	}

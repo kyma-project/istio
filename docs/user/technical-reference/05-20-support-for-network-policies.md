@@ -63,6 +63,12 @@ This table summarizes the allowed traffic when NetworkPolicy support is enabled:
 | istio-cni-node           | istio-system | 53    | UDP/TCP   | egress    | DNS resolution                                                                               |
 | istio-cni-node           | istio-system | 443   | TCP       | egress    | Kubernetes API server access                                                                 |
 
+## Networking diagram
+
+The following diagram illustrates the allowed traffic flows between Istio components and user workloads when NetworkPolicy support is enabled.
+Requests that are allowed by NetworkPolicies flow through the NetworkPolicy.
+
+![Istio Module NetworkPolicies](../../assets/network-policies-istio.svg)
 
 ## What users must do to keep connectivity
 Because the egress traffic from `istio-ingressgateway` to user workloads is restricted by default, you need to take additional steps to allow traffic to your applications.

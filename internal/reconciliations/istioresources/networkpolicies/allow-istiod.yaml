@@ -33,6 +33,9 @@ spec:
         - podSelector:
             matchLabels:
               istio: ingressgateway
+        - podSelector:
+            matchLabels:
+              istio: egressgateway
       ports:
         - protocol: TCP
           port: 15012

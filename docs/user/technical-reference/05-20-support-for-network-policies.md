@@ -27,6 +27,7 @@ When enabled, the module applies NetworkPolicies in `istio-system` and `kyma-sys
 - DNS egress (TCP/UDP 53) for Istio components.
 - Kubernetes API server access (TCP 443) for `istio-controller-manager`, `istiod`, and `istio-cni-node`.
 - Control-plane communication between `istio-ingressgateway` and `istiod` on TCP 15012.
+- Control-plane communication between `istio-egressgateway` and `istiod` on TCP 15012.
 - Ingress to `istiod` for XDS (15012), metrics (15014), and webhook calls (15017).
 - Ingress to `istio-ingressgateway` for external traffic (8080/8443) and operational ports (15008, 15020, 15021, 15090).
 - Ingress to `istio-egressgateway` from user workloads that are labeled with `networking.kyma-project.io/to-egressgateway: allowed`.
@@ -123,3 +124,6 @@ spec:
         - protocol: TCP
           port: 8080 # The targetPort of the application container
 ```
+
+In case you are also using `egressgateway` (check this tutorial for details: [Sending Requests Using Istio Egress Gateway](../tutorials/01-50-send-requests-using-egress.md))
+and want to allow traffic from your workloads to `egressgateway`, add this label to the Pods: `networking.kyma-project.io/to-egressgateway: allowed`.

@@ -216,6 +216,32 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 		Expect((*istioCr.Status.Conditions)[0].Message).To(Equal(operatorv1alpha2.ConditionReasonProxySidecarRestartPartiallySucceededMessage))
 		Expect((*istioCr.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 	})
+
+	It("should update lastAppliedConfiguration with compatibility mode after sidecar restart", func() {
+		// given
+		istioCr := createIstioCRWithCompatibilityMode()
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.1", "kyma-project.io/module=istio")
+		proxyRestarter := &proxyRestarterMock{}
+		fakeClient := createFakeClient(istioCr, istiod)
+		statusHandler := status.NewStatusHandler(fakeClient)
+		sidecarsRestarter := restarter.NewSidecarsRestarter(logr.Discard(), fakeClient,
+			&MergerMock{"1.16.1-distroless"}, proxyRestarter, statusHandler, images.Images{})
+
+		// when
+		err, requeue := sidecarsRestarter.Restart(context.Background(), istioCr)
+
+		// then
+		Expect(err).Should(Not(HaveOccurred()))
+		Expect(requeue).To(BeFalse())
+
+		// Verify lastAppliedConfiguration was updated with compatibility mode
+		updatedIstioCR := &operatorv1alpha2.Istio{}
+		e := fakeClient.Get(context.Background(), client.ObjectKey{Namespace: "kyma-system", Name: "default"}, updatedIstioCR)
+		Expect(e).Should(Not(HaveOccurred()))
+
+		Expect(updatedIstioCR.Annotations).To(HaveKey("operator.kyma-project.io/lastAppliedConfiguration"))
+		Expect(updatedIstioCR.Annotations["operator.kyma-project.io/lastAppliedConfiguration"]).To(ContainSubstring(`"compatibilityMode":true`))
+	})
 })
 
 func createFakeClient(objects ...client.Object) client.Client {
@@ -275,11 +301,28 @@ func createIstioCR() *operatorv1alpha2.Istio {
 	}
 }
 
+func createIstioCRWithCompatibilityMode() *operatorv1alpha2.Istio {
+	numTrustedProxies := 1
+	return &operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
+		Name:            "default",
+		Namespace:       "kyma-system",
+		ResourceVersion: "1",
+		Annotations:     map[string]string{},
+	},
+		Spec: operatorv1alpha2.IstioSpec{
+			Config: operatorv1alpha2.Config{
+				NumTrustedProxies: &numTrustedProxies,
+			},
+			CompatibilityMode: true,
+		},
+	}
+}
+
 type MergerMock struct {
 	tag string
 }
 
-func (m MergerMock) Merge(_ clusterconfig.ClusterSize, _ *operatorv1alpha2.Istio, _ clusterconfig.ClusterConfiguration, _ images.Images) (string, error) {
+func (m MergerMock) Merge(_ clusterconfig.ClusterSize, _ *operatorv1alpha2.Istio, _ clusterconfig.ClusterConfiguration, _ images.Images, _ ...operatorv1alpha2.MergeOption) (string, error) {
 	return "mocked istio operator merge result", nil
 }
 

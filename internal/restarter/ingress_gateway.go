@@ -5,15 +5,17 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/describederrors"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/configuration"
 	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/pkg/lib/annotations"
-	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
+	sidecarretry "github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
 
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 )
@@ -40,8 +42,8 @@ func NewIngressGatewayRestarter(client client.Client, predicates []predicates.In
 func (r *IngressGatewayRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio) (describederrors.DescribedError, bool) {
 	ctrl.Log.Info("Restarting Istio Ingress Gateway")
 
-	r.predicates = append(r.predicates, predicates.NewIngressGatewayRestartPredicate(istioCR))
-	for _, predicate := range r.predicates {
+	allPredicates := append(r.predicates, predicates.NewIngressGatewayRestartPredicate(istioCR))
+	for _, predicate := range allPredicates {
 		evaluator, err := predicate.NewIngressGatewayEvaluator(ctx)
 		if err != nil {
 			return describederrors.NewDescribedError(err, "Could not create Ingress Gateway restart evaluator"), false
@@ -56,9 +58,30 @@ func (r *IngressGatewayRestarter) Restart(ctx context.Context, istioCR *v1alpha2
 		}
 	}
 
+	// Update lastAppliedConfiguration with ingress gateway config to prevent unnecessary restarts
+	// if reconciliation requeues early
+	if err := r.updateLastAppliedConfiguration(ctx, istioCR); err != nil {
+		ctrl.Log.Error(err, "Failed to update lastAppliedConfiguration after ingress gateway restart")
+		// We don't fail the reconciliation here, as the restart was successful
+		// The worst case is that the restart might be triggered again on next reconciliation
+	}
+
 	r.statusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonIngressGatewayRestartSucceeded))
 	ctrl.Log.Info("Successfully restarted Istio Ingress Gateway")
 	return nil, false
+}
+
+func (r *IngressGatewayRestarter) updateLastAppliedConfiguration(ctx context.Context, istioCR *v1alpha2.Istio) error {
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		currentIstioCR := v1alpha2.Istio{}
+		if err := r.client.Get(ctx, types.NamespacedName{Name: istioCR.Name, Namespace: istioCR.Namespace}, &currentIstioCR); err != nil {
+			return err
+		}
+		if err := configuration.UpdateLastAppliedIngressGatewayConfig(&currentIstioCR); err != nil {
+			return err
+		}
+		return r.client.Update(ctx, &currentIstioCR)
+	})
 }
 
 func restartIngressGateway(ctx context.Context, k8sClient client.Client) error {
@@ -78,7 +101,7 @@ func restartIngressGateway(ctx context.Context, k8sClient client.Client) error {
 	patch := client.StrategicMergeFrom((&deployment).DeepCopy())
 	deployment.Spec.Template.Annotations = annotations.AddRestartAnnotation(deployment.Spec.Template.Annotations)
 
-	err = retry.OnError(retry.DefaultRetry, func() error {
+	err = sidecarretry.OnError(sidecarretry.DefaultRetry, func() error {
 		err = k8sClient.Patch(ctx, &deployment, patch)
 		if err != nil {
 			ctrl.Log.Info("Retrying ingress gateway restart")

@@ -115,6 +115,79 @@ var _ = Describe("Istio Ingress Gateway restart", func() {
 
 	})
 
+	It("should not accumulate predicates across multiple Restart calls", func() {
+		// given
+		istioCR := &operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
+			Name:            "default",
+			ResourceVersion: "1",
+			Annotations:     map[string]string{},
+		},
+			Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{},
+			},
+		}
+
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.1")
+		igDep := createIngressGatewayDep(time.Now().Add(-time.Hour))
+		igPod := createIgPodWithCreationTimestamp("istio-ingressgateway", gatherer.IstioNamespace, "discovery", "1.16.1", time.Now().Add(-time.Hour))
+		fakeClient := createFakeClient(istioCR, istiod, igPod, igDep)
+		statusHandler := status.NewStatusHandler(fakeClient)
+		restartCounter := &countingPredicate{shouldRestart: false, count: 0}
+		igRestarter := restarter.NewIngressGatewayRestarter(fakeClient, []predicates.IngressGatewayPredicate{restartCounter}, statusHandler)
+
+		// when - call Restart multiple times to simulate multiple reconciliations
+		for i := 0; i < 5; i++ {
+			err, _ := igRestarter.Restart(context.Background(), istioCR)
+			Expect(err).Should(Not(HaveOccurred()))
+		}
+
+		// then - the predicate should have been called exactly 5 times (once per Restart call)
+		// If predicates were accumulating, we would see 1+2+3+4+5=15 calls instead
+		Expect(restartCounter.count).To(Equal(5))
+	})
+
+	It("should update lastAppliedConfiguration with ingress gateway config after restart", func() {
+		// given
+		numTrustedProxies := 2
+		trustDomain := "cluster.local"
+		istioCR := &operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
+			Name:            "default",
+			Namespace:       "kyma-system",
+			ResourceVersion: "1",
+			Annotations:     map[string]string{},
+		},
+			Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
+					NumTrustedProxies: &numTrustedProxies,
+					TrustDomain:       &trustDomain,
+				},
+			},
+		}
+
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.1")
+		igDep := createIngressGatewayDep(time.Now().Add(-time.Hour))
+		igPod := createIgPodWithCreationTimestamp("istio-ingressgateway", gatherer.IstioNamespace, "discovery", "1.16.1", time.Now().Add(-time.Hour))
+		fakeClient := createFakeClient(istioCR, istiod, igPod, igDep)
+		statusHandler := status.NewStatusHandler(fakeClient)
+		igRestarter := restarter.NewIngressGatewayRestarter(fakeClient, []predicates.IngressGatewayPredicate{mockIgPredicate{shouldRestart: true}}, statusHandler)
+
+		//when
+		err, requeue := igRestarter.Restart(context.Background(), istioCR)
+
+		//then
+		Expect(err).Should(Not(HaveOccurred()))
+		Expect(requeue).To(BeFalse())
+
+		// Verify lastAppliedConfiguration was updated
+		updatedIstioCR := &operatorv1alpha2.Istio{}
+		e := fakeClient.Get(context.Background(), client.ObjectKey{Namespace: "kyma-system", Name: "default"}, updatedIstioCR)
+		Expect(e).Should(Not(HaveOccurred()))
+
+		Expect(updatedIstioCR.Annotations).To(HaveKey("operator.kyma-project.io/lastAppliedConfiguration"))
+		Expect(updatedIstioCR.Annotations["operator.kyma-project.io/lastAppliedConfiguration"]).To(ContainSubstring(`"numTrustedProxies":2`))
+		Expect(updatedIstioCR.Annotations["operator.kyma-project.io/lastAppliedConfiguration"]).To(ContainSubstring(`"trustDomain":"cluster.local"`))
+	})
+
 })
 
 func createIngressGatewayDep(creationTimestamp time.Time) *appsv1.Deployment {
@@ -155,6 +228,20 @@ func (m mockIgPredicate) RequiresIngressGatewayRestart() bool {
 
 func (m mockIgPredicate) NewIngressGatewayEvaluator(_ context.Context) (predicates.IngressGatewayRestartEvaluator, error) {
 	return m, nil
+}
+
+type countingPredicate struct {
+	shouldRestart bool
+	count         int
+}
+
+func (c *countingPredicate) RequiresIngressGatewayRestart() bool {
+	c.count++
+	return c.shouldRestart
+}
+
+func (c *countingPredicate) NewIngressGatewayEvaluator(_ context.Context) (predicates.IngressGatewayRestartEvaluator, error) {
+	return c, nil
 }
 
 func createIgPodWithCreationTimestamp(name, namespace, containerName, imageVersion string, t time.Time) *v1.Pod {

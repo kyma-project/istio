@@ -4,10 +4,13 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/util/retry"
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/describederrors"
 	"github.com/kyma-project/istio/operator/internal/images"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/configuration"
 
 	"github.com/go-logr/logr"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -107,10 +110,28 @@ func (s *SidecarRestarter) Restart(ctx context.Context, istioCR *v1alpha2.Istio)
 	}
 
 	if !hasMorePods {
+		// Update lastAppliedConfiguration only when all sidecars have been restarted
+		// to prevent unnecessary restarts if reconciliation requeues early
+		if err := s.updateLastAppliedConfiguration(ctx, istioCR); err != nil {
+			s.Log.Error(err, "Failed to update lastAppliedConfiguration after sidecar restart")
+		}
 		s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarRestartSucceeded))
 	} else {
 		s.StatusHandler.SetCondition(istioCR, v1alpha2.NewReasonWithMessage(v1alpha2.ConditionReasonProxySidecarRestartPartiallySucceeded))
 	}
 
 	return nil, hasMorePods
+}
+
+func (s *SidecarRestarter) updateLastAppliedConfiguration(ctx context.Context, istioCR *v1alpha2.Istio) error {
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		currentIstioCR := v1alpha2.Istio{}
+		if err := s.Client.Get(ctx, types.NamespacedName{Name: istioCR.Name, Namespace: istioCR.Namespace}, &currentIstioCR); err != nil {
+			return err
+		}
+		if err := configuration.UpdateLastAppliedCompatibilityMode(&currentIstioCR); err != nil {
+			return err
+		}
+		return s.Client.Update(ctx, &currentIstioCR)
+	})
 }

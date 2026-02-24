@@ -1491,8 +1491,8 @@ spec:
                     type: array
                   enableDNSProxying:
                     description: |-
-                      Enables or disables cluster-wide DNS proxying in Istio sidecars.
-                      When enabled, DNS requests from application pods are intercepted by the Istio sidecar proxy
+                      Enables or disables cluster-wide DNS proxying in Istio sidecar and gateway proxies.
+                      When enabled, DNS requests from application pods are intercepted by the Istio proxies
                       instead of being sent directly to upstream DNS servers.
                     type: boolean
                   forwardClientCertDetails:

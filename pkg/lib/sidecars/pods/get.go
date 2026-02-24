@@ -58,13 +58,13 @@ func (p *Pods) GetPodsToRestart(ctx context.Context, preds []predicates.SidecarP
 			requiredMatched := true
 			for _, predicate := range preds {
 				matched := predicate.Matches(pod)
-				if predicate.MustMatch() { // if predicate must match, all must match
+				if predicate.MustMatch() { // all of MustMatch predicates must evaluate to true
 					p.logger.Info(fmt.Sprintf("Pod %s matches MustMatch predicate %s", pod.Name, predicate.Name()))
 					if !matched {
 						requiredMatched = false
 						break
 					}
-				} else if !optionalMatched && matched { // if predicate is optional, at least one must match
+				} else if !optionalMatched && matched { // at least one optional predicate must evaluate to true
 					p.logger.Info(fmt.Sprintf("Pod %s matches not MustMatch predicate %s", pod.Name, predicate.Name()))
 					optionalMatched = true
 				}

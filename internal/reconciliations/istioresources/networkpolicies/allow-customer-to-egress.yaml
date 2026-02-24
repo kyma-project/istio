@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  labels:
+    kyma-project.io/module: istio
+    kyma-project.io/managed-by: kyma
+  name: kyma-project.io--istio-egressgateway
+  namespace: istio-system
+spec:
+  podSelector:
+    matchLabels:
+      istio: egressgateway
+  policyTypes:
+    - Egress
+    - Ingress
+  ingress:
+    - from:
+      - namespaceSelector: {}
+        podSelector:
+          matchLabels:
+            networking.kyma-project.io/to-egressgateway: allowed
+  egress:
+    - to:
+      - ipBlock:
+          cidr: 0.0.0/0

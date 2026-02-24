@@ -16,6 +16,9 @@ var allowCni []byte
 //go:embed networkpolicies/allow-egress-to-customer.yaml
 var allowEgressToCustomer []byte
 
+//go:embed networkpolicies/allow-customer-to-egress.yaml
+var allowCustomerToEgress []byte
+
 //go:embed networkpolicies/allow-ingressgateway.yaml
 var allowIngressGateway []byte
 
@@ -52,6 +55,10 @@ func (np NetworkPolicies) reconcile(ctx context.Context, k8sClient client.Client
 		if err != nil {
 			return result, err
 		}
+		result, err = resources.DeleteIfPresent(ctx, k8sClient, allowCustomerToEgress)
+		if err != nil {
+			return result, err
+		}
 		result, err = resources.DeleteIfPresent(ctx, k8sClient, allowIngressGateway)
 		if err != nil {
 			return result, err
@@ -71,6 +78,10 @@ func (np NetworkPolicies) reconcile(ctx context.Context, k8sClient client.Client
 		return result, err
 	}
 	result, err = resources.Apply(ctx, k8sClient, allowEgressToCustomer, nil)
+	if err != nil {
+		return result, err
+	}
+	result, err = resources.Apply(ctx, k8sClient, allowCustomerToEgress, nil)
 	if err != nil {
 		return result, err
 	}

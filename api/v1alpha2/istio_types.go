@@ -174,7 +174,7 @@ type IstioSpec struct {
 	// This allows for enforcing a secure-by-default posture in the cluster.
 	// Enabling this option is likely to cause connectivity issues in the cluster if your workloads are not properly set-up beforehand.
 	// +kubebuilder:validation:Optional
-	EnableModuleNetworkPolicies bool `json:"enableModuleNetworkPolicies,omitempty"`
+	NetworkPoliciesEnabled bool `json:"networkPoliciesEnabled,omitempty"`
 }
 
 //+kubebuilder:object:root=true

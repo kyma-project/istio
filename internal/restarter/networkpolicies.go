@@ -34,7 +34,7 @@ func (np *NetworkPolicy) Restart(ctx context.Context, istioCR *v1alpha2.Istio) (
 		return describederrors.NewDescribedError(err, "Could not get last applied configuration"), false
 	}
 
-	if lastAppliedConfig.EnableModuleNetworkPolicies != istioCR.Spec.EnableModuleNetworkPolicies {
+	if lastAppliedConfig.NetworkPoliciesEnabled != istioCR.Spec.NetworkPoliciesEnabled {
 		return restartControlPlaneComponents(ctx, np.client)
 	}
 	return nil, false

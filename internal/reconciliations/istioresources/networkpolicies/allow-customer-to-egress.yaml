@@ -20,6 +20,4 @@ spec:
           matchLabels:
             networking.kyma-project.io/to-egressgateway: allowed
   egress:
-    - to:
-      - ipBlock:
-          cidr: 0.0.0/0
+  - {}

@@ -1537,13 +1537,6 @@ spec:
                     pattern: ^[a-z0-9]*([a-z0-9-_]*)?(\.[a-z0-9]*([a-z0-9-_]*[a-z0-9]*)?)*$
                     type: string
                 type: object
-              enableModuleNetworkPolicies:
-                description: |-
-                  Enables installation of Network Policies that are required for the module to work under deny-all traffic policy in the kyma-system and istio-system namespaces.
-                  The default value is `false`, which means that the Network Policies will not be installed.
-                  This allows for enforcing a secure-by-default posture in the cluster.
-                  Enabling this option is likely to cause connectivity issues in the cluster if your workloads are not properly set-up beforehand.
-                type: boolean
               experimental:
                 description: Defines experimental configuration options.
                 properties:
@@ -1564,6 +1557,13 @@ spec:
                         type: boolean
                     type: object
                 type: object
+              networkPoliciesEnabled:
+                description: |-
+                  Enables installation of Network Policies that are required for the module to work under deny-all traffic policy in the kyma-system and istio-system namespaces.
+                  The default value is `false`, which means that the Network Policies will not be installed.
+                  This allows for enforcing a secure-by-default posture in the cluster.
+                  Enabling this option is likely to cause connectivity issues in the cluster if your workloads are not properly set-up beforehand.
+                type: boolean
             type: object
           status:
             description: Defines the current state of the Istio installation.

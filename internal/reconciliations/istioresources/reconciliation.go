@@ -84,7 +84,7 @@ func getResources(k8sClient client.Client, provider string, istioCR v1alpha2.Ist
 
 	istioResources := []Resource{
 		NewPeerAuthenticationMtls(false),
-		NewNetworkPolicies(!istioCR.Spec.EnableModuleNetworkPolicies),
+		NewNetworkPolicies(!istioCR.Spec.NetworkPoliciesEnabled),
 	}
 
 	switch provider {

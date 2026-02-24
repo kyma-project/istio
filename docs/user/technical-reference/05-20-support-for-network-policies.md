@@ -16,7 +16,7 @@ metadata:
   name: default
   namespace: kyma-system
 spec:
-  enableModuleNetworkPolicies: true
+  networkPoliciesEnabled: true
 ```
 
 When the flag changes, Istio components are restarted so that existing TCP connections are terminated and the policies are enforced immediately.

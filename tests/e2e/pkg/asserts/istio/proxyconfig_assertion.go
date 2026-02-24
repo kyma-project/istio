@@ -41,21 +41,6 @@ func AssertListenerNotFound(t *testing.T, podName, namespace, host string, port 
 	t.Logf("Confirmed no listener exists for %s:%d", host, port)
 }
 
-// AssertListenerExists asserts that a listener exists for the given host and port.
-// Returns the listener data for further assertions if needed.
-func AssertListenerExists(t *testing.T, podName, namespace, host string, port int) *proxy_config.ListenerData {
-	t.Helper()
-
-	listeners, err := proxy_config.GetDynamicListeners(t, podName, namespace)
-	require.NoError(t, err, "Failed to get dynamic listeners from pod %s/%s", namespace, podName)
-
-	listener := proxy_config.FindListenerByHostAndPort(listeners, host, port)
-	require.NotNil(t, listener, "Listener for host %s and port %d not found", host, port)
-
-	t.Logf("Found listener for %s:%d with socket address %s", host, port, listener.SocketAddress)
-	return listener
-}
-
 func getAddressOrEmpty(listener *proxy_config.ListenerData) string {
 	if listener == nil {
 		return ""

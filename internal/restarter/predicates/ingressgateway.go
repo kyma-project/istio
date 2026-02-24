@@ -35,6 +35,10 @@ func (i RestartPredicate) NewIngressGatewayEvaluator(_ context.Context) (Ingress
 				NewTrustDomain: i.istioCR.Spec.Config.TrustDomain,
 				OldTrustDomain: lastAppliedConfig.Config.TrustDomain,
 			},
+			EnableDNSProxyingRestartEvaluator{
+				NewEnableDNSProxying: i.istioCR.Spec.Config.EnableDNSProxying,
+				OldEnableDNSProxying: lastAppliedConfig.Config.EnableDNSProxying,
+			},
 		},
 	}, nil
 }
@@ -96,6 +100,23 @@ func (i XForwardClientCertRestartEvaluator) RequiresIngressGatewayRestart() bool
 	isNewNotNil := i.NewXForwardClientCert != nil
 	isOldNotNil := i.OldXForwardClientCert != nil
 	if isNewNotNil && isOldNotNil && *i.NewXForwardClientCert != *i.OldXForwardClientCert {
+		return true
+	} else if isNewNotNil != isOldNotNil {
+		return true
+	}
+
+	return false
+}
+
+type EnableDNSProxyingRestartEvaluator struct {
+	NewEnableDNSProxying *bool
+	OldEnableDNSProxying *bool
+}
+
+func (i EnableDNSProxyingRestartEvaluator) RequiresIngressGatewayRestart() bool {
+	isNewNotNil := i.NewEnableDNSProxying != nil
+	isOldNotNil := i.OldEnableDNSProxying != nil
+	if isNewNotNil && isOldNotNil && *i.NewEnableDNSProxying != *i.OldEnableDNSProxying {
 		return true
 	} else if isNewNotNil != isOldNotNil {
 		return true

@@ -92,6 +92,38 @@ var _ = Describe("Ingress Gateway Predicate", func() {
 		})
 	})
 
+	Context("EnableDNSProxyingRestartEvaluator", func() {
+		It("should evaluate to false if NewEnableDNSProxying is the same as OldEnableDNSProxying", func() {
+			evaluator := predicates.EnableDNSProxyingRestartEvaluator{
+				NewEnableDNSProxying: ptr.To(true),
+				OldEnableDNSProxying: ptr.To(true),
+			}
+			Expect(evaluator.RequiresIngressGatewayRestart()).To(BeFalse())
+		})
+
+		It("should evaluate to true if NewEnableDNSProxying is different from OldEnableDNSProxying", func() {
+			evaluator := predicates.EnableDNSProxyingRestartEvaluator{
+				NewEnableDNSProxying: ptr.To(true),
+				OldEnableDNSProxying: ptr.To(false),
+			}
+			Expect(evaluator.RequiresIngressGatewayRestart()).To(BeTrue())
+		})
+		It("should evaluate to true if NewEnableDNSProxying is nil and OldEnableDNSProxying is not nil", func() {
+			evaluator := predicates.EnableDNSProxyingRestartEvaluator{
+				NewEnableDNSProxying: nil,
+				OldEnableDNSProxying: ptr.To(true),
+			}
+			Expect(evaluator.RequiresIngressGatewayRestart()).To(BeTrue())
+		})
+		It("should evaluate to true if NewEnableDNSProxying is not nil and OldEnableDNSProxying is nil", func() {
+			evaluator := predicates.EnableDNSProxyingRestartEvaluator{
+				NewEnableDNSProxying: ptr.To(false),
+				OldEnableDNSProxying: nil,
+			}
+			Expect(evaluator.RequiresIngressGatewayRestart()).To(BeTrue())
+		})
+	})
+
 	Context("XForwardClientCertRestartEvaluator", func() {
 		It("should evaluate to true if new is nil and old is not nil", func() {
 			evaluator := predicates.XForwardClientCertRestartEvaluator{

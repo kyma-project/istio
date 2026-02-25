@@ -144,7 +144,6 @@ func GetDynamicListeners(t *testing.T, podName, podNamespace string) ([]Listener
 func FindListenerByHostAndPort(listeners []ListenerData, host string, port int) *ListenerData {
 	for i, l := range listeners {
 		if strings.Contains(l.Cluster, host) && l.SocketPort == port {
-			//TODO: przepisać zawartosć l do zmiennej
 			return &listeners[i]
 		}
 	}

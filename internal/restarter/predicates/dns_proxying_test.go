@@ -45,7 +45,7 @@ var _ = Describe("EnableDNSProxying Predicate", func() {
 			Expect(predicate.Matches(v1.Pod{})).To(BeTrue())
 		})
 	})
-	//todo:
+
 	Context("NewEnableDNSProxyingRestartPredicate", func() {
 		It("should return an error if GetLastAppliedConfiguration fails", func() {
 			_, err := NewEnableDNSProxyingRestartPredicate(&operatorv1alpha2.Istio{

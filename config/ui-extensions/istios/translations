@@ -42,4 +42,4 @@ en:
   description.externalTrafficPolicy: Specifies externalTrafficPolicy for the Istio Ingress Gateway Service
   description.trustDomain: Defines the trust domain for the Istio service mesh. Change the value only if you have a specific requirement. Change of domain reconfiguring mTLS certificates and causes restart of all workloads in the mesh, this can lead to downtime.
   description.compatibilityMode: Sets Istio compatibility version the last minor version.
-  description.enableDNSProxying: Enables or disables cluster-wide DNS proxying in Istio sidecars. When enabled, DNS requests from application pods are intercepted by the Istio sidecar proxy instead of being sent directly to upstream DNS servers.
+  description.enableDNSProxying: Enables or disables cluster-wide DNS proxying in Istio sidecar and gateway proxies. When enabled, DNS requests from application pods are intercepted by the Istio proxies instead of being sent directly to upstream DNS servers.

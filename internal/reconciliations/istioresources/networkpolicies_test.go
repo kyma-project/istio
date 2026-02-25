@@ -48,6 +48,10 @@ var _ = Describe("NetworkPolicies", func() {
 			Namespace: "istio-system",
 			Name:      "kyma-project.io--istio-pilot-jwks",
 		},
+		{
+			Namespace: "istio-system",
+			Name:      "kyma-project.io--istio-egressgateway",
+		},
 	}
 
 	It("should return created if no resources were present", func() {

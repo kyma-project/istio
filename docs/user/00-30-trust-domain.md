@@ -1,6 +1,8 @@
-# **trustDomain**
+# Configuring a Trust Domain
+Configure a custom trust domain to align identities across multiple clusters, enable seamless multi-mesh mTLS communication with shared root CAs, and match organizational naming standards.
 
-A **trustDomain** defines the security boundary of a service mesh.
+## What Is a Trust Domain?
+A trust domain defines the security boundary of a service mesh.
 It becomes part of each proxy identity and is embedded into the Subject Alternative Name (SAN) of workload certificates. 
 Istio uses SPIFFE identities in the following format:
 
@@ -8,11 +10,11 @@ Istio uses SPIFFE identities in the following format:
 spiffe://<trust-domain>/ns/<namespace>/sa/<service-account>
 ```
 
-By default, Istio uses the **trustDomain** `cluster.local`. You can override it to align identities across clusters or to match organizational naming standards.
+By default, Istio uses the trust domain `cluster.local`. You can override it to align identities across clusters or to match organizational naming standards.
 
-## Configure trustDomain in the Istio custom resource
+## Configure a Trust Domain in the Istio Custom Resource
 
-Set the **trustDomain** under `spec.config.trustDomain` in the Istio CR. If omitted, the default value `cluster.local` is used.
+Set the trust domain under **spec.config.trustDomain** in the Istio CR. If omitted, the default value `cluster.local` is used.
 
 ```yaml
 apiVersion: operator.kyma-project.io/v1alpha2
@@ -25,22 +27,21 @@ spec:
     trustDomain: "example.com"
 ```
 
-## Where does the **trustDomain** appear?
+## Where Does the Trust Domain Appear?
 
-Some of the key places where the **trustDomain** is used include:
+The trust domain is used in the following key contexts:
 
-- **Istio proxy identity certificate**: The **trustDomain** is included in the SAN of the certificate issued to every istio proxy in the mesh.
-- **Authorization policies**: When defining AuthorizationPolicies, you can either use the default `cluster.local`
-or your custom **trustDomain** in the SPIFFE IDs to specify which workloads the policy applies to.
+- Istio proxy identity certificate: The trust domain is included in the SAN of the certificate issued to every Istio proxy in the mesh.
+- AuthorizationPolicies: When defining AuthorizationPolicies, you can either use the default value `cluster.local`
+or your custom trust domain in the SPIFFE IDs to specify to which workloads the policy applies.
 
-## Multi-mesh seamless mTLS communication
+## Multi-Mesh Seamless mTLS Communication
 
-When communicating between multiple meshes, in case a [shared Root CA is plugged in](../00-25-plug-in-istio-ca.md) to issue proxy certificates in both meshes,
-Gateway with **tls.mode: ISTIO_MUTUAL** can be used to seamlessly allow mTLS communication between the two meshes without the need to set up `mTLS` on the Gateway manually.
-In this case, the **trustDomain** can be used to differentiate the source of the request in the upstream mesh (from inside the mesh vs from another mesh),
-as the SPIFFE ID in the client certificate will include the **trustDomain** of the originating mesh.
+If a [shared Root CA is plugged in](../00-25-plug-in-istio-ca.md) to issue proxy certificates in multiple meshes, you can use a Gateway with **tls.mode: ISTIO_MUTUAL** to seamlessly allow mTLS communication between them. In this case, you don't need to set up `mTLS` on the Gateway manually.
 
-In this case an example Gateway configuration in the target mesh can be as simple as:
+Additionally, you can use the trust domain to differentiate the source of requests in the upstream mesh (whether they come from within the same mesh or from another mesh). This is possible because the SPIFFE ID in the client certificate includes the trust domain of the originating mesh.
+
+To configure this setup, you can use the following example Gateway configuration in the target mesh:
 
 ```yaml
 apiVersion: networking.istio.io/v1alpha3
@@ -62,7 +63,7 @@ spec:
     - "*.example-target.com"
 ```
 
-And in the source mesh, a ServiceEntry and DestinationRule can be set up to direct traffic to the target mesh with mTLS:
+In the source mesh, you can configure a ServiceEntry and DestinationRule to direct traffic to the target mesh with mTLS:
 
 ```yaml
 apiVersion: networking.istio.io/v1
@@ -91,19 +92,19 @@ spec:
       mode: ISTIO_MUTUAL
 ```
 
-## Migration considerations
+## Migration Considerations
 
-Changing the **trustDomain** is a sensitive operation. Once you update it existing workloads may fail authentication until they receive new certificates.
-The default `cluster.local` value is treated as a special case that is compatible with custom **trustDomains**,
-meaning that setting the **trustDomain** from `cluster.local` to a new, custom value should not cause authentication failures
-for existing workloads until they are restarted and receive new certificates with the updated **trustDomain**.
+Changing the trust domain is a sensitive operation. Once you update it, existing workloads may fail authentication until they receive new certificates.
+The default `cluster.local` value is treated as a special case that is compatible with custom trust domains.
+This means that setting the trust domain from `cluster.local` to a new, custom value doesn't cause authentication failures
+for existing workloads until they are restarted and receive new certificates with the updated trust domain.
 With that said, it is still recommended to plan the change carefully and perform it during a maintenance window to minimize disruption.
-For detailed migration guide, 
+For a detailed migration guide, 
 follow the [Istio trust domain migration guidance](https://istio.io/latest/docs/tasks/security/authorization/authz-td-migration)
 to plan and execute the change with minimal disruption.
 
-## References
+## Related Information
 
-- Istio **trustDomain** migration: https://istio.io/latest/docs/tasks/security/authorization/authz-td-migration/
-- Istio mesh config reference: https://istio.io/latest/docs/reference/config/istio.mesh.v1alpha1/
-- SPIFFE **trustDomain** spec: https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#21-trust-domain
+- [Istio trust domain migration](https://istio.io/latest/docs/tasks/security/authorization/authz-td-migration/)
+- [Istio mesh configuration reference](https://istio.io/latest/docs/reference/config/istio.mesh.v1alpha1/)
+- [SPIFFE **trustDomain** specification](https://github.com/spiffe/spiffe/blob/main/standards/SPIFFE-ID.md#21-trust-domain)

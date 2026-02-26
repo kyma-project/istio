@@ -40,7 +40,7 @@ type Config struct {
 	// +kubebuilder:validation:Pattern=`^[a-z0-9]*([a-z0-9-_]*)?(\.[a-z0-9]*([a-z0-9-_]*[a-z0-9]*)?)*$`
 	TrustDomain *string `json:"trustDomain,omitempty"`
 
-	// Enables or disables cluster-wide DNS proxying in Istio sidecar and gateway proxies.
+	// Enables or disables global DNS proxying in Istio sidecar and gateway proxies across the service mesh.
 	// When enabled, DNS requests from application Pods are intercepted by the Istio proxies
 	// instead of being sent directly to upstream DNS servers.
 	// +kubebuilder:validation:Optional

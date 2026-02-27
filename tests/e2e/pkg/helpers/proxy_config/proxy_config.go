@@ -188,7 +188,7 @@ func saveProxyConfigDump(t *testing.T, podName string, data []byte) {
 	t.Helper()
 
 	testName := sanitizePathComponent(t.Name())
-	dir := filepath.Join(baseArtifactDir, getTestRunTimestamp(), testName, proxyConfigDir)
+	dir := filepath.Join(".", baseArtifactDir, getTestRunTimestamp(), testName, proxyConfigDir)
 
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		t.Logf("Warning: failed to create artifact dir: %v", err)

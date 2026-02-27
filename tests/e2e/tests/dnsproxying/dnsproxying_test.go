@@ -33,7 +33,7 @@ const (
 
 // TestDNSProxying tests the behavior of Istio when DNS proxying is enabled or disabled, by verifying the addresses of listeners created for ServiceEntries with DNS resolution of TCP services.
 // - When DNS proxying is disabled and ServiceEntry exist, listeners should have wildcard address (0.0.0.0).
-// - When DNS proxying is enabled and ServiceEntry exist, listeners should have auto-allocated address IP ( form range 240.240.0.0/16).
+// - When DNS proxying is enabled and ServiceEntry exist, listeners should have auto-allocated address IP (from range 240.240.0.0/16).
 // - When DNS proxying enabled or disabled and no ServiceEntry exist for service, listeners should bind to cluster-IP of service.
 func TestDNSProxying(t *testing.T) {
 	t.Run("DNS Proxying enabled - TCP listeners for ServiceEntries with DNS resolution are created with auto-allocated IPs from range 240.240.0.0/16 for both hosts", func(t *testing.T) {

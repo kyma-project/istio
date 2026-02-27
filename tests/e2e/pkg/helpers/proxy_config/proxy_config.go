@@ -157,7 +157,7 @@ func FindListenerByHostAndPort(listeners []ListenerData, host string, port int) 
 	return nil
 }
 
-// Implementation needed to upload artifactory of proxy ocnfig dump for debugging purposes. It creates a directory structure based on the test name and timestamp, and saves the config dump as a JSON file named after the pod. If any step fails, it logs a warning but does not return an error to avoid disrupting the test flow.
+// The tests uploads an artifact of proxy config dump for debugging purposes. It creates a directory structure based on the test name and timestamp, and saves the config dump as a JSON file named after the pod. If any step fails, it logs a warning but does not return an error to avoid disrupting the test flow.
 const (
 	baseArtifactDir = "test-artifacts"
 	proxyConfigDir  = "proxy_config_dumps"

@@ -22,6 +22,7 @@ type configMetrics struct {
 	compatibilityModeEnabled        prometheus.Gauge
 	forwardClientCertDetailsSetting *prometheus.GaugeVec
 	trustDomainConfigured           prometheus.Gauge
+	networkPoliciesEnabled          prometheus.Gauge
 }
 
 type componentMetrics struct {
@@ -76,6 +77,10 @@ func NewMetrics() *IstioCRMetrics {
 				Name: "istio_trust_domain_configured",
 				Help: "Indicates whether a custom trust domain is configured in the Istio CR (1 for configured, 0 for not configured).",
 			}),
+			networkPoliciesEnabled: prometheus.NewGauge(prometheus.GaugeOpts{
+				Name: "istio_network_policies_enabled",
+				Help: "Indicates whether module network policies are enabled in the Istio CR (1 for enabled, 0 for disabled).",
+			}),
 		},
 		componentMetrics: &componentMetrics{
 			egressGatewayEnabled: prometheus.NewGauge(prometheus.GaugeOpts{
@@ -86,13 +91,15 @@ func NewMetrics() *IstioCRMetrics {
 	}
 
 	ctrlmetrics.Registry.MustRegister(
+		crMetrics.extAuthMetrics.pathPrefixConfiguredNumberTotal,
 		crMetrics.extAuthMetrics.providersTotal,
 		crMetrics.extAuthMetrics.timeoutConfiguredNumberTotal,
-		crMetrics.extAuthMetrics.pathPrefixConfiguredNumberTotal,
-		crMetrics.configMetrics.numTrustedProxiesConfigured,
-		crMetrics.configMetrics.prometheusMergeEnabled,
 		crMetrics.configMetrics.compatibilityModeEnabled,
 		crMetrics.configMetrics.forwardClientCertDetailsSetting,
+		crMetrics.configMetrics.networkPoliciesEnabled,
+		crMetrics.configMetrics.numTrustedProxiesConfigured,
+		crMetrics.configMetrics.prometheusMergeEnabled,
+		crMetrics.configMetrics.trustDomainConfigured,
 		crMetrics.componentMetrics.egressGatewayEnabled,
 	)
 
@@ -165,4 +172,9 @@ func (m *IstioCRMetrics) UpdateIstioCRMetrics(cr *v1alpha2.Istio) {
 		m.componentMetrics.egressGatewayEnabled.Set(0)
 	}
 
+	if cr.Spec.NetworkPoliciesEnabled {
+		m.configMetrics.networkPoliciesEnabled.Set(1)
+	} else {
+		m.configMetrics.networkPoliciesEnabled.Set(0)
+	}
 }

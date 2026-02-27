@@ -1,5 +1,5 @@
 # Istio Trust Domain
-Trust domain is a Istio concept used to align identities across multiple clusters, enable seamless multi-mesh mTLS communication with shared root CAs, and match organizational naming standards.
+Configuring trust domain is used to align identities across multiple clusters, enable seamless multi-mesh mTLS communication with shared root CAs, and match organizational naming standards.
 
 ## What Is a Trust Domain?
 A trust domain defines the security boundary of a service mesh.

@@ -6,8 +6,9 @@ import (
 	"testing"
 	"time"
 
-	gatewayhelper "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/gateway"
 	"github.com/stretchr/testify/require"
+
+	gatewayhelper "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/gateway"
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	httpassert "github.com/kyma-project/istio/operator/tests/e2e/pkg/asserts/http"
@@ -185,9 +186,14 @@ func TestEgressGatewayTraffic(t *testing.T) {
 }
 
 func TestIstiodDNSAccess(t *testing.T) {
-	_, err := modulehelpers.NewIstioCRBuilder().
+	r, err := client.ResourcesClient(t)
+
+	_, err = modulehelpers.NewIstioCRBuilder().
 		WithEnableModuleNetworkPolicies(true).
 		ApplyAndCleanup(t)
+	require.NoError(t, err)
+
+	_, err = nphelper.NewDefaultDenyNetworkPolicy("istio-system").DeployWithCleanup(t, r)
 	require.NoError(t, err)
 
 	// Test DNS access by making a request to a service using its DNS name from istio-system namespace

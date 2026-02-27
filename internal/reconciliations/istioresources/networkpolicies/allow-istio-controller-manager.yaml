@@ -21,4 +21,4 @@ spec:
           port: 53
     - ports:
         - protocol: TCP
-          port: 443
+          port: __API_SERVER_PORT__

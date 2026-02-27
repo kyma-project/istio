@@ -1,10 +1,14 @@
 package istioresources
 
 import (
+	"bytes"
 	"context"
 	_ "embed"
+	"strconv"
 
+	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/resources"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -46,56 +50,59 @@ func (NetworkPolicies) Name() string {
 }
 
 func (np NetworkPolicies) reconcile(ctx context.Context, k8sClient client.Client, _ metav1.OwnerReference, _ map[string]string) (controllerutil.OperationResult, error) {
+	networkPoliciesManifests := [][]byte{
+		allowCni,
+		allowEgressToCustomer,
+		allowCustomerToEgress,
+		allowIngressGateway,
+		allowIstioControllerManager,
+		allowIstiod,
+		allowJwks,
+	}
+
+	flavour, err := clusterconfig.DiscoverClusterFlavour(ctx, k8sClient)
+	apiServerTargetPort := 443
+	if flavour == clusterconfig.K3d && err == nil {
+		kubernetesSvc := &corev1.Service{}
+		err = k8sClient.Get(ctx, client.ObjectKey{Name: "kubernetes", Namespace: "default"}, kubernetesSvc)
+		if err != nil {
+			return controllerutil.OperationResultNone, err
+		}
+		for _, port := range kubernetesSvc.Spec.Ports {
+			if port.Name == "https" {
+				apiServerTargetPort = int(port.TargetPort.IntVal)
+				break
+			}
+		}
+	}
+
 	if np.shouldDelete {
-		result, err := resources.DeleteIfPresent(ctx, k8sClient, allowCni)
+		endResult := controllerutil.OperationResultNone
+		for _, resource := range networkPoliciesManifests {
+			toDelete := replaceApiServerTargetPort(resource, 443)
+			result, err := resources.DeleteIfPresent(ctx, k8sClient, toDelete)
+			if err != nil {
+				return result, err
+			}
+			endResult = result
+		}
+		return endResult, nil
+	}
+
+	endResult := controllerutil.OperationResultNone
+	for _, resource := range networkPoliciesManifests {
+		toApply := replaceApiServerTargetPort(resource, apiServerTargetPort)
+		result, err := resources.Apply(ctx, k8sClient, toApply, nil)
 		if err != nil {
 			return result, err
 		}
-		result, err = resources.DeleteIfPresent(ctx, k8sClient, allowEgressToCustomer)
-		if err != nil {
-			return result, err
-		}
-		result, err = resources.DeleteIfPresent(ctx, k8sClient, allowCustomerToEgress)
-		if err != nil {
-			return result, err
-		}
-		result, err = resources.DeleteIfPresent(ctx, k8sClient, allowIngressGateway)
-		if err != nil {
-			return result, err
-		}
-		result, err = resources.DeleteIfPresent(ctx, k8sClient, allowIstioControllerManager)
-		if err != nil {
-			return result, err
-		}
-		result, err = resources.DeleteIfPresent(ctx, k8sClient, allowIstiod)
-		if err != nil {
-			return result, err
-		}
-		return resources.DeleteIfPresent(ctx, k8sClient, allowJwks)
+		endResult = result
 	}
-	result, err := resources.Apply(ctx, k8sClient, allowCni, nil)
-	if err != nil {
-		return result, err
-	}
-	result, err = resources.Apply(ctx, k8sClient, allowEgressToCustomer, nil)
-	if err != nil {
-		return result, err
-	}
-	result, err = resources.Apply(ctx, k8sClient, allowCustomerToEgress, nil)
-	if err != nil {
-		return result, err
-	}
-	result, err = resources.Apply(ctx, k8sClient, allowIngressGateway, nil)
-	if err != nil {
-		return result, err
-	}
-	result, err = resources.Apply(ctx, k8sClient, allowIstioControllerManager, nil)
-	if err != nil {
-		return result, err
-	}
-	result, err = resources.Apply(ctx, k8sClient, allowIstiod, nil)
-	if err != nil {
-		return result, err
-	}
-	return resources.Apply(ctx, k8sClient, allowJwks, nil)
+	return endResult, nil
+}
+
+const apiServerPortPlaceholder = "__API_SERVER_PORT__"
+
+func replaceApiServerTargetPort(resource []byte, targetPort int) []byte {
+	return bytes.ReplaceAll(resource, []byte(apiServerPortPlaceholder), []byte(strconv.Itoa(targetPort)))
 }

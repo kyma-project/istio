@@ -71,6 +71,13 @@ runs:
         name: e2e-dump-logs-${{ github.job }}-${{ inputs.test_make_target }}
         path: tests/e2e/tests/**/logs/
         if-no-files-found: ignore
+    - name: Upload artifacts - proxy config dumps
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: proxy-config-dumps-${{ github.job }}-${{ inputs.test_make_target }}
+        path: tests/e2e/tests/**/test-artifacts/
+        if-no-files-found: ignore
     - name: Uploads kubectl logs
       uses: actions/upload-artifact@v4
       if: failure()

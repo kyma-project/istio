@@ -66,11 +66,17 @@ func (p *ProxyRestart) RestartProxies(
 		p.logger.Error(err, "Failed to create restart prometheusMerge predicate")
 		return []restart.Warning{}, false, err
 	}
+	enableDNSProxyingPredicate, err := predicates.NewEnableDNSProxyingRestartPredicate(istioCR)
+	if err != nil {
+		p.logger.Error(err, "Failed to create restart enableDNSProxying predicate")
+		return []restart.Warning{}, false, err
+	}
 	predicates := []predicates.SidecarProxyPredicate{
 		compatibiltyPredicate,
 		prometheusMergePredicate,
 		predicates.NewImageResourcesPredicate(expectedImage, expectedResources),
 		predicates.NewNativeSidecarRestartPredicate(istioCR),
+		enableDNSProxyingPredicate,
 	}
 
 	err = p.restartKymaProxies(ctx, predicates)

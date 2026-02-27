@@ -41,8 +41,9 @@ type Config struct {
 	TrustDomain *string `json:"trustDomain,omitempty"`
 
 	// Enables or disables global DNS proxying in Istio sidecar and gateway proxies across the service mesh.
-	// When enabled, DNS requests from application Pods are intercepted by the Istio proxies
+	// When enabled, DNS requests from application Pods are intercepted by Istio proxies
 	// instead of being sent directly to upstream DNS servers.
+	// Enabling this setting allows Istio proxies to distinguish traffic between two different TCP services that are outside the mesh thanks to virtual IP address assignment to each ServiceEntry from reserved IP range 240.240.0.0/16.
 	// +kubebuilder:validation:Optional
 	EnableDNSProxying *bool `json:"enableDNSProxying,omitempty"`
 }

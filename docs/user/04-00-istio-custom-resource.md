@@ -140,7 +140,7 @@ Appears in:
 | **gatewayExternalTrafficPolicy** <br /> string | Defines the external traffic policy for the Istio Ingress Gateway Service. Valid configurations are `"Local"` or `"Cluster"`. The external traffic policy set to `"Local"` preserves the client IP in the request, but also introduces the risk of unbalanced traffic distribution.<br />WARNING: Switching **externalTrafficPolicy** may result in a temporal increase in request delay. Make sure that this is acceptable. | Enum: [Local Cluster] <br />Optional <br /> |
 | **telemetry** <br /> [Telemetry](#telemetry) | Defines the telemetry configuration of Istio. | Optional <br /> |
 | **trustDomain** <br /> string | Defines trust domain configuration of Istio. | MaxLength: 255 <br />MinLength: 1 <br />Optional <br />Pattern: `^[a-z0-9]*([a-z0-9-_]*)?(\.[a-z0-9]*([a-z0-9-_]*[a-z0-9]*)?)*$` <br /> |
-| **enableDNSProxying** <br /> boolean | Enables or disables global DNS proxying in Istio sidecar and gateway proxies across the service mesh.<br />When enabled, DNS requests from application Pods are intercepted by the Istio proxies<br />instead of being sent directly to upstream DNS servers. | Optional <br /> |
+| **enableDNSProxying** <br /> boolean | Enables or disables global DNS proxying in Istio sidecar and gateway proxies across the service mesh.<br />When enabled, DNS requests from application Pods are intercepted by Istio proxies<br />instead of being sent directly to upstream DNS servers.<br />Enabling this setting allows Istio proxies to distinguish traffic between two different TCP services that are outside the mesh thanks to virtual IP address assignment to each ServiceEntry from reserved IP range 240.240.0.0/16. | Optional <br /> |
 
 ### EgressGateway
 

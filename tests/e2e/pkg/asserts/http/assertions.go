@@ -117,3 +117,16 @@ func AssertForbiddenResponse(t *testing.T, client *http.Client, url string, opts
 	opts = append([]AssertOption{WithExpectedStatusCode(http.StatusForbidden)}, opts...)
 	AssertResponse(t, client, url, opts...)
 }
+
+// AssertConnectionError asserts that a request fails with a connection error (e.g., timeout, connection refused).
+// This is useful for testing NetworkPolicy blocking at network level.
+func AssertConnectionError(t *testing.T, client *http.Client, url string) {
+	t.Helper()
+
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	require.NoError(t, err)
+
+	_, err = client.Do(req)
+	require.Error(t, err, "Request should fail due to connection error (e.g., NetworkPolicy blocking traffic)")
+}
+

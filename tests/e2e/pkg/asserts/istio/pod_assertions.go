@@ -58,3 +58,24 @@ func hasIstioProxy(pod v1.Pod) bool {
 	}
 	return false
 }
+
+// AssertIstioProxyPresentInNamespace waits for the pod in a specific namespace to have the istio-proxy sidecar
+func AssertIstioProxyPresentInNamespace(t *testing.T, c *resources.Resources, namespace, labelSelector string) {
+	t.Helper()
+
+	err := wait.For(func(ctx context.Context) (bool, error) {
+		podList := &v1.PodList{}
+		err := c.List(ctx, podList, resources.WithLabelSelector(labelSelector))
+		if err != nil {
+			return false, err
+		}
+		for _, pod := range podList.Items {
+			if pod.Namespace == namespace && hasIstioProxy(pod) {
+				return true, nil
+			}
+		}
+		return false, nil
+	}, wait.WithTimeout(defaultTimeout), wait.WithContext(t.Context()))
+	require.NoError(t, err, "Pod with label %s in namespace %s should have istio-proxy sidecar", labelSelector, namespace)
+}
+

@@ -4,12 +4,14 @@ import (
 	"crypto/tls"
 	"net/http"
 	"testing"
+	"time"
 )
 
 type Options struct {
 	Prefix  string
 	Host    string
 	Headers map[string]string
+	Timeout time.Duration
 }
 
 type Option func(*Options)
@@ -32,6 +34,12 @@ func WithHeaders(headers map[string]string) Option {
 	}
 }
 
+func WithTimeout(timeout time.Duration) Option {
+	return func(o *Options) {
+		o.Timeout = timeout
+	}
+}
+
 func NewHTTPClient(t *testing.T, options ...Option) *http.Client {
 	t.Helper()
 	opts := &Options{
@@ -44,9 +52,13 @@ func NewHTTPClient(t *testing.T, options ...Option) *http.Client {
 	transport := http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
-	return &http.Client{
+	client := &http.Client{
 		Transport: TestLogTransportWrapper(t, opts.Prefix, opts.Host, opts.Headers, &transport),
 	}
+	if opts.Timeout > 0 {
+		client.Timeout = opts.Timeout
+	}
+	return client
 }
 
 type RoundTripFunc func(*http.Request) (*http.Response, error)

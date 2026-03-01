@@ -43,7 +43,7 @@ func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha2.Is
 		return describederrors.NewDescribedError(err, "could not determine cluster provider")
 	}
 
-	resources, err := getResources(r.client, provider)
+	resources, err := getResources(r.client, provider, istioCR)
 	if err != nil {
 		ctrl.Log.Error(err, "Failed to initialise Istio resources")
 		return describederrors.NewDescribedError(err, "Istio controller failed to initialise Istio resources")
@@ -72,8 +72,20 @@ func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha2.Is
 }
 
 // getResources returns all Istio resources required for the reconciliation specific for the given hyperscaler.
-func getResources(k8sClient client.Client, provider string) ([]Resource, error) {
-	istioResources := []Resource{NewPeerAuthenticationMtls(k8sClient)}
+func getResources(k8sClient client.Client, provider string, istioCR v1alpha2.Istio) ([]Resource, error) {
+	if istioCR.DeletionTimestamp != nil && !istioCR.DeletionTimestamp.IsZero() {
+		toDeleteResources := []Resource{
+			NewPeerAuthenticationMtls(true),
+			NewNetworkPolicies(true),
+			NewProxyProtocolEnvoyFilter(true),
+		}
+		return toDeleteResources, nil
+	}
+
+	istioResources := []Resource{
+		NewPeerAuthenticationMtls(false),
+		NewNetworkPolicies(!istioCR.Spec.NetworkPoliciesEnabled),
+	}
 
 	switch provider {
 	case clusterconfig.Aws:
@@ -101,11 +113,11 @@ func getResources(k8sClient client.Client, provider string) ([]Resource, error) 
 			shouldDelete = false
 		}
 
-		istioResources = append(istioResources, NewProxyProtocolEnvoyFilter(k8sClient, shouldDelete))
+		istioResources = append(istioResources, NewProxyProtocolEnvoyFilter(shouldDelete))
 
 	case clusterconfig.Openstack:
 		// NLB is a default only for AWS clusters so for OpenStack we need to set the usage of NLB to false
-		istioResources = append(istioResources, NewProxyProtocolEnvoyFilter(k8sClient, false))
+		istioResources = append(istioResources, NewProxyProtocolEnvoyFilter(false))
 
 	default:
 		return istioResources, nil

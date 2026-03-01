@@ -169,6 +169,12 @@ type IstioSpec struct {
 	// Enables the compatibility mode for the Istio installation.
 	// +kubebuilder:validation:Optional
 	CompatibilityMode bool `json:"compatibilityMode,omitempty"`
+	// Enables installation of Network Policies that are required for the module to work under deny-all traffic policy in the kyma-system and istio-system namespaces.
+	// The default value is `false`, which means that the Network Policies will not be installed.
+	// This allows for enforcing a secure-by-default posture in the cluster.
+	// Enabling this option is likely to cause connectivity issues in the cluster if your workloads are not properly set-up beforehand.
+	// +kubebuilder:validation:Optional
+	NetworkPoliciesEnabled bool `json:"networkPoliciesEnabled,omitempty"`
 }
 
 //+kubebuilder:object:root=true

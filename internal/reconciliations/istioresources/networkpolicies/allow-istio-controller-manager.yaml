@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  labels:
+    kyma-project.io/module: istio
+    kyma-project.io/managed-by: kyma
+  name: kyma-project.io--allow-istio-controller-manager
+  namespace: kyma-system
+spec:
+  podSelector:
+    matchLabels:
+      kyma-project.io/module: istio
+      app.kubernetes.io/name: istio-operator
+  policyTypes:
+    - Egress
+  egress:
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - ports:
+        - protocol: TCP
+          port: __API_SERVER_PORT__

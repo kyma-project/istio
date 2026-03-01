@@ -24,7 +24,7 @@ var _ = Describe("Apply", func() {
 
 	It("should return created if no resource was present", func() {
 		client := createFakeClient()
-		sample := NewPeerAuthenticationMtls(client)
+		sample := NewPeerAuthenticationMtls(true)
 
 		//when
 		changed, err := sample.reconcile(context.Background(), client, owner, templateValues)
@@ -53,7 +53,7 @@ var _ = Describe("Apply", func() {
 
 	It("should return not changed if no change was applied", func() {
 		client := createFakeClient()
-		sample := NewPeerAuthenticationMtls(client)
+		sample := NewPeerAuthenticationMtls(true)
 
 		//when
 		changed, err := sample.reconcile(context.Background(), client, owner, templateValues)
@@ -71,7 +71,7 @@ var _ = Describe("Apply", func() {
 
 		// then
 		// we check in the second reconciliation that nothing changed
-		sample = NewPeerAuthenticationMtls(client)
+		sample = NewPeerAuthenticationMtls(true)
 		changed, err = sample.reconcile(context.Background(), client, owner, templateValues)
 		Expect(err).To(Not(HaveOccurred()))
 		Expect(changed).To(Equal(controllerutil.OperationResultNone))
@@ -91,7 +91,7 @@ var _ = Describe("Apply", func() {
 		p.Spec.Mtls.Mode = 0
 		client := createFakeClient(&p)
 
-		sample := NewPeerAuthenticationMtls(client)
+		sample := NewPeerAuthenticationMtls(true)
 
 		//when
 		changed, err := sample.reconcile(context.Background(), client, owner, templateValues)

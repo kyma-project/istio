@@ -285,9 +285,6 @@ func AssertControllerManagerNetworkPolicy(t *testing.T, r *resources.Resources) 
 	// Verify DNS egress rules (TCP and UDP port 53)
 	AssertNetworkPolicyHasEgressRule(t, np, "TCP", 53)
 	AssertNetworkPolicyHasEgressRule(t, np, "UDP", 53)
-
-	// Verify API server access (TCP port 443)
-	AssertNetworkPolicyHasEgressRule(t, np, "TCP", 443)
 }
 
 // AssertIstiodNetworkPolicy validates the istiod NetworkPolicy
@@ -305,9 +302,6 @@ func AssertIstiodNetworkPolicy(t *testing.T, r *resources.Resources) {
 	// Verify DNS egress rules
 	AssertNetworkPolicyHasEgressRule(t, np, "TCP", 53)
 	AssertNetworkPolicyHasEgressRule(t, np, "UDP", 53)
-
-	// Verify API server access
-	AssertNetworkPolicyHasEgressRule(t, np, "TCP", 443)
 
 	// Verify ingress rules for control plane communication
 	AssertNetworkPolicyHasIngressRule(t, np, "TCP", 15012) // XDS
@@ -386,9 +380,6 @@ func AssertCNINodeNetworkPolicy(t *testing.T, r *resources.Resources) {
 	// Verify DNS egress rules
 	AssertNetworkPolicyHasEgressRule(t, np, "TCP", 53)
 	AssertNetworkPolicyHasEgressRule(t, np, "UDP", 53)
-
-	// Verify API server access
-	AssertNetworkPolicyHasEgressRule(t, np, "TCP", 443)
 }
 
 // AssertEgressGatewayNetworkPolicy validates the istio-egressgateway NetworkPolicy

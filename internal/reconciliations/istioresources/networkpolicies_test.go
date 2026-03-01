@@ -8,8 +8,10 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/yaml"
 )
@@ -136,5 +138,87 @@ var _ = Describe("NetworkPolicies", func() {
 		listErr := client.List(context.Background(), &policies)
 		Expect(listErr).To(Not(HaveOccurred()))
 		Expect(policies.Items).To(BeEmpty())
+	})
+
+	It("should replace api server target port on k3d clusters", func() {
+		k3dNode := corev1.Node{
+			Status: corev1.NodeStatus{
+				NodeInfo: corev1.NodeSystemInfo{KubeletVersion: "v1.26.0+k3s1"},
+			},
+		}
+		kubernetesSvc := corev1.Service{
+			ObjectMeta: metav1.ObjectMeta{Name: "kubernetes", Namespace: "default"},
+			Spec: corev1.ServiceSpec{
+				Ports: []corev1.ServicePort{
+					{Name: "https", TargetPort: intstr.FromInt32(7443)},
+				},
+			},
+		}
+		client := createFakeClient(&k3dNode, &kubernetesSvc)
+		sample := NewNetworkPolicies(false)
+
+		changed, err := sample.reconcile(context.Background(), client, owner, templateValues)
+
+		Expect(err).To(Not(HaveOccurred()))
+		Expect(changed).To(Equal(controllerutil.OperationResultCreated))
+
+		var policy v1.NetworkPolicy
+		getErr := client.Get(context.Background(), types.NamespacedName{Namespace: "istio-system", Name: "kyma-project.io--istio-cni-node"}, &policy)
+		Expect(getErr).To(Not(HaveOccurred()))
+
+		foundPort := false
+		for _, egress := range policy.Spec.Egress {
+			for _, port := range egress.Ports {
+				if port.Port != nil && port.Port.IntVal == 7443 {
+					foundPort = true
+					break
+				}
+			}
+			if foundPort {
+				break
+			}
+		}
+		Expect(foundPort).To(BeTrue())
+	})
+
+	It("should set API server target port to 443 on non-k3d clusters", func() {
+		nonK3dNode := corev1.Node{
+			Status: corev1.NodeStatus{
+				NodeInfo: corev1.NodeSystemInfo{KubeletVersion: "v1.26.0"},
+			},
+		}
+		kubernetesSvc := corev1.Service{
+			ObjectMeta: metav1.ObjectMeta{Name: "kubernetes", Namespace: "default"},
+			Spec: corev1.ServiceSpec{
+				Ports: []corev1.ServicePort{
+					{Name: "https", TargetPort: intstr.FromInt32(7443)},
+				},
+			},
+		}
+		client := createFakeClient(&nonK3dNode, &kubernetesSvc)
+		sample := NewNetworkPolicies(false)
+
+		changed, err := sample.reconcile(context.Background(), client, owner, templateValues)
+
+		Expect(err).To(Not(HaveOccurred()))
+		Expect(changed).To(Equal(controllerutil.OperationResultCreated))
+
+		var policy v1.NetworkPolicy
+		getErr := client.Get(context.Background(), types.NamespacedName{Namespace: "istio-system", Name: "kyma-project.io--istio-cni-node"}, &policy)
+		Expect(getErr).To(Not(HaveOccurred()))
+
+		foundPort := false
+		for _, egress := range policy.Spec.Egress {
+			for _, port := range egress.Ports {
+				if port.Port != nil && port.Port.IntVal == 443 {
+					foundPort = true
+					break
+				}
+			}
+			if foundPort {
+				break
+			}
+		}
+		Expect(foundPort).To(BeTrue())
 	})
 })

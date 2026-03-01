@@ -116,3 +116,59 @@ func UpdateIstioTag(istioCR *v1alpha2.Istio, istioTag string) error {
 	istioCR.Annotations[labels.LastAppliedConfiguration] = string(config)
 	return nil
 }
+
+// UpdateLastAppliedIngressGatewayConfig updates only the ingress gateway restart-related config fields
+// (NumTrustedProxies, ForwardClientCertDetails, TrustDomain) in the lastAppliedConfiguration annotation.
+// This should be called after a successful ingress gateway restart to prevent unnecessary restarts
+// if reconciliation requeues early.
+func UpdateLastAppliedIngressGatewayConfig(istioCR *v1alpha2.Istio) error {
+	if len(istioCR.Annotations) == 0 {
+		istioCR.Annotations = map[string]string{}
+	}
+	appliedConfig := AppliedConfig{}
+	if lastAppliedConfiguration, ok := istioCR.Annotations[labels.LastAppliedConfiguration]; ok {
+		err := json.Unmarshal([]byte(lastAppliedConfiguration), &appliedConfig)
+		if err != nil {
+			return err
+		}
+	}
+
+	appliedConfig.Config.NumTrustedProxies = istioCR.Spec.Config.NumTrustedProxies
+	appliedConfig.Config.ForwardClientCertDetails = istioCR.Spec.Config.ForwardClientCertDetails
+	appliedConfig.Config.TrustDomain = istioCR.Spec.Config.TrustDomain
+
+	config, err := json.Marshal(appliedConfig)
+	if err != nil {
+		return err
+	}
+
+	istioCR.Annotations[labels.LastAppliedConfiguration] = string(config)
+	return nil
+}
+
+// UpdateLastAppliedCompatibilityMode updates only the CompatibilityMode field
+// in the lastAppliedConfiguration annotation.
+// This should be called after a successful sidecar restart to prevent unnecessary restarts
+// if reconciliation requeues early.
+func UpdateLastAppliedCompatibilityMode(istioCR *v1alpha2.Istio) error {
+	if len(istioCR.Annotations) == 0 {
+		istioCR.Annotations = map[string]string{}
+	}
+	appliedConfig := AppliedConfig{}
+	if lastAppliedConfiguration, ok := istioCR.Annotations[labels.LastAppliedConfiguration]; ok {
+		err := json.Unmarshal([]byte(lastAppliedConfiguration), &appliedConfig)
+		if err != nil {
+			return err
+		}
+	}
+
+	appliedConfig.CompatibilityMode = istioCR.Spec.CompatibilityMode
+
+	config, err := json.Marshal(appliedConfig)
+	if err != nil {
+		return err
+	}
+
+	istioCR.Annotations[labels.LastAppliedConfiguration] = string(config)
+	return nil
+}

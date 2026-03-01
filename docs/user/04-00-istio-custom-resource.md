@@ -163,7 +163,6 @@ Appears in:
 | Field | Description | Validation |
 | --- | --- | --- |
 | **pilot** <br /> [PilotFeatures](#pilotfeatures) | Defines experimental features for Istio Pilot. | Optional <br /> |
-| **enableDualStack** <br /> boolean | Enables dual-stack support. | Optional <br /> |
 | **enableAmbient** <br /> boolean | Enables ambient mode support. | Optional <br /> |
 
 ### HPASpec
@@ -271,6 +270,8 @@ Appears in:
 | **hpaSpec** <br /> [HPASpec](#hpaspec) | Configures the [HorizontalPodAutoscaler](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/). | Optional <br /> |
 | **strategy** <br /> [Strategy](#strategy) | Defines the rolling updates strategy. See [Rolling Update Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#rolling-update-deployment). | Optional <br /> |
 | **resources** <br /> [Resources](#resources) | Defines Kubernetes resources' configuration. See [Resource Management for Pods and Containers](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/). | Optional <br /> |
+
+
 
 ### Metrics
 

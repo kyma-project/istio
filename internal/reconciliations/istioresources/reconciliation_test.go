@@ -1,3 +1,5 @@
+//go:build !experimental
+
 package istioresources
 
 import (
@@ -16,6 +18,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"sigs.k8s.io/yaml"
 )
 
 var _ = Describe("Reconciliation", func() {
@@ -121,74 +124,11 @@ var _ = Describe("Reconciliation", func() {
 			Expect(client.Get(context.Background(), ctrlclient.ObjectKey{Name: "proxy-protocol", Namespace: "istio-system"}, &e)).Should(Not(Succeed()))
 		})
 
-		It("should be created when hyperscaler is AWS, and the dual stack is enabled", func() {
+		It("should not be created when hyperscaler is AWS, configmap has dualStackEnabled, but controller is not running in experimental mode", func() {
 			//given
 			n := corev1.Node{Spec: corev1.NodeSpec{ProviderID: "aws://asdasdads"}}
-			ingressSvc := corev1.Service{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "istio-ingressgateway",
-					Namespace: "istio-system",
-					Annotations: map[string]string{
-						"service.beta.kubernetes.io/aws-load-balancer-ip-address-type": "dualstack",
-					},
-				},
-				Spec: corev1.ServiceSpec{},
-			}
 
-			client := createFakeClient(&n, &ingressSvc)
-			reconciler := NewReconciler(client)
-
-			//when
-			err := reconciler.Reconcile(context.Background(), istioCR)
-
-			//then
-			Expect(err).To(Not(HaveOccurred()))
-			Expect(client.Get(context.Background(), ctrlclient.ObjectKey{Name: "proxy-protocol", Namespace: "istio-system"}, &networkingv1alpha3.EnvoyFilter{})).Should(Succeed())
-		})
-
-		It("should not be created when hyperscaler is AWS, but the dual stack is disabled", func() {
-			//given
-			n := corev1.Node{Spec: corev1.NodeSpec{ProviderID: "aws://asdasdads"}}
-			ingressSvc := corev1.Service{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "istio-ingressgateway",
-					Namespace: "istio-system",
-					Annotations: map[string]string{
-						"service.beta.kubernetes.io/aws-load-balancer-ip-address-type": "ipv4",
-					},
-				},
-				Spec: corev1.ServiceSpec{},
-			}
-
-			client := createFakeClient(&n, &ingressSvc)
-			reconciler := NewReconciler(client)
-
-			//when
-			err := reconciler.Reconcile(context.Background(), istioCR)
-
-			//then
-			Expect(err).To(Not(HaveOccurred()))
-
-			var e networkingv1alpha3.EnvoyFilter
-			Expect(client.Get(context.Background(), ctrlclient.ObjectKey{Name: "proxy-protocol", Namespace: "istio-system"}, &e)).Should(Not(Succeed()))
-		})
-
-		It("should not be created when hyperscaler is AWS, even if proxy-protocol is set but the dual stack is not enabled", func() {
-			//given
-			n := corev1.Node{Spec: corev1.NodeSpec{ProviderID: "aws://asdasdads"}}
-			ingressSvc := corev1.Service{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "istio-ingressgateway",
-					Namespace: "istio-system",
-					Annotations: map[string]string{
-						"service.beta.kubernetes.io/aws-load-balancer-ip-address-type": "ipv4",
-						"service.beta.kubernetes.io/aws-load-balancer-proxy-protocol":  "*",
-					},
-				},
-				Spec: corev1.ServiceSpec{},
-			}
-
-			client := createFakeClient(&n, &ingressSvc)
+			client := createFakeClient(&n, createKymaRuntimeConfigWithDualStack(true))
 			reconciler := NewReconciler(client)
 
 			//when
@@ -269,4 +209,24 @@ func createFakeClient(objects ...ctrlclient.Object) ctrlclient.Client {
 	Expect(err).ShouldNot(HaveOccurred())
 
 	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build()
+}
+
+func createKymaRuntimeConfigWithDualStack(enabled bool) *corev1.ConfigMap {
+	networkDetails := map[string]interface{}{
+		"dualStackIPEnabled": enabled,
+	}
+	details := map[string]interface{}{
+		"networkDetails": networkDetails,
+	}
+	detailsBytes, _ := yaml.Marshal(details)
+
+	return new(corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "kyma-provisioning-info",
+			Namespace: "kyma-system",
+		},
+		Data: map[string]string{
+			"details": string(detailsBytes),
+		},
+	})
 }

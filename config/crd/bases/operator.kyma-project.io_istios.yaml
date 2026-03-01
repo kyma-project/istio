@@ -1543,9 +1543,6 @@ spec:
                   enableAmbient:
                     description: Enables ambient mode support.
                     type: boolean
-                  enableDualStack:
-                    description: Enables dual-stack support.
-                    type: boolean
                   pilot:
                     description: Defines experimental features for Istio Pilot.
                     properties:

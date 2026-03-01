@@ -97,7 +97,7 @@ func getResources(k8sClient client.Client, provider string, istioCR v1alpha2.Ist
 		}
 
 		if shouldUseNLB {
-			isDualStack, err := clusterconfig.IsDualStack(context.Background(), k8sClient)
+			isDualStack, err := clusterconfig.IsDualStackEnabled(context.Background(), k8sClient)
 			if err != nil {
 				return nil, err
 			}

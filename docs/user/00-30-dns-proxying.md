@@ -1,36 +1,38 @@
 # DNS Proxying
 
-Learn how DNS proxying in Istio improves DNS performance, enables ServiceEntry resolution, and solves routing issues for external TCP services.
+Learn how DNS proxying in Istio improves DNS resolution performance, enables external (outside of mesh) service resolution with ServiceEntries, and solves routing issues for external TCP services, which share the same port.
 
 ## Overview
 
-DNS proxying intercepts DNS requests from applications and resolves them locally at the Istio sidecar proxy (or ztunnel in ambient mode). The proxy maintains a local mapping of domain names to IP addresses. If a domain can be resolved locally, the proxy responds immediately. Otherwise, it forwards the request upstream following the standard `/etc/resolv.conf` DNS configuration.
+DNS resolution is a vital component of any application infrastructure on Kubernetes. When your application code attempts to access another service in the Kubernetes cluster or even a service on the internet, it has to first lookup the IP address corresponding to the hostname of the service, before initiating a connection to the service.
 
-## Problems DNS Proxying Solves
+DNS proxying intercepts DNS requests from applications and resolves them locally at the Istio proxy level. The proxy maintains a local mapping of host names to IP addresses based on the Kubernetes services and service entries in the cluster. If a host name can be resolved locally within the mesh, the proxy responds immediately. Otherwise, it forwards the request upstream following the standard DNS resolution.
+
+## Improvements DNS Proxying Introduces
 
 ### Reduced Load on Cluster DNS
 
-Without DNS proxying, every DNS query from workloads goes to kube-dns. With DNS proxying enabled, the sidecar resolves known service addresses locally, reducing traffic to the cluster DNS server.
+Without DNS proxying, every DNS query from workloads goes to kube-dns. With DNS proxying enabled, the Istio proxy resolves known service addresses locally in the mesh, reducing traffic to the cluster DNS server.
 
 ### ServiceEntry Resolution
 
-When you define a [ServiceEntry](https://istio.io/latest/docs/reference/config/networking/service-entry/) with a custom hostname (for example, `address.internal`), cluster DNS does not know about it. Without DNS proxying, applications cannot resolve these addresses. DNS proxying allows the sidecar to resolve ServiceEntry hostnames directly.
+When you define a [ServiceEntry](https://istio.io/latest/docs/reference/config/networking/service-entry/) with a custom hostname (for example, `address.internal`) that cluster DNS does not know about. Without DNS proxying, applications cannot resolve these addresses. DNS proxying allows the Istio proxy to resolve ServiceEntry hostnames directly.
 
-### External TCP Services on the Same Port
+### DNS Resolution for External TCP Services on the Same Port
 
-Istio routes TCP traffic based on destination IP and port only. Unlike HTTP traffic, which includes a Host header, TCP has no additional metadata for routing decisions.
+In some cases TCP traffic in Istio is routed based on destination IP and port only. Unlike HTTP traffic, which includes a Host header, TCP has no additional metadata for routing decisions.
 
-When multiple external TCP services share the same port (for example, two databases on port 3306), Istio cannot distinguish between them without unique IP addresses. The sidecar creates a single listener on `0.0.0.0:{port}` and forwards traffic to only one destination.
+For example when multiple external TCP services share the same port (for example, two databases on port 3306) and they don't have stable IP addresses so the specified ServiceEntries has resolution set to `DNS` Istio cannot distinguish between them. The proxy creates a single listener on `0.0.0.0:{port}` and forwards traffic to only one destination (external TCP service).
 
-DNS proxying solves this by auto-allocating virtual IPs (VIPs) from the `240.240.0.0/16` range to each ServiceEntry. This gives each external service a unique address, enabling the sidecar to route traffic correctly.
+DNS proxying solves this by auto-allocating virtual IPs (VIPs) from the `240.240.0.0/16` range to each ServiceEntry. This gives each external TCP service a unique address, enabling the proxy to route traffic correctly even when sharing the same port.
 
 ## How to Enable DNS Proxying
 
 ### Sidecar Mode
 
-DNS proxying is disabled by default in sidecar mode. You can enable it cluster-wide or per workload.
+DNS proxying is disabled by default in sidecar mode. You can enable it globally per mesh or locally per workload.
 
-#### Cluster-Wide Configuration
+#### Global Mesh Configuration
 
 Set **enableDNSProxying** to `true` in the Istio custom resource (CR) configuration:
 
@@ -45,9 +47,9 @@ spec:
     enableDNSProxying: true
 ```
 
-This sets `ISTIO_META_DNS_CAPTURE` to `true` for all sidecar proxies in the mesh.
+This enables DNS proxying globally for all proxies in the mesh.
 
-#### Per-Workload Configuration
+#### Local Per-Workload Configuration
 
 Add the `proxy.istio.io/config` annotation to enable DNS proxying for a specific Deployment:
 
@@ -71,7 +73,7 @@ spec:
 
 ## Auto-Allocation of Virtual IPs
 
-When DNS proxying is enabled and a ServiceEntry does not specify an explicit IP address in the `addresses` field, Istio auto-allocates a virtual IP from the reserved Class E range (`240.240.0.0/16`).
+The DNS proxy additionally supports automatically allocating addresses for ServiceEntrys that do not explicitly define one. The DNS response will include a distinct and automatically assigned address for each ServiceEntry from the reserved Class E range (`240.240.0.0/16`). The proxy is then configured to match requests to this IP address, and forward the request to the corresponding ServiceEntry.
 
 For example, a ServiceEntry like this:
 

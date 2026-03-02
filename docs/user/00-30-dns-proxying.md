@@ -37,7 +37,7 @@ You can enable DNS proxying globally using the Kyma Dashboard or kubectl.
 #### Using Kyma Dashboard
 
 1. Navigate to **Cluster Details** in the Kyma Dashboard
-2. Go to **Istio** section
+2. In the `kyma-system` namespace go to **Istio** section
 3. Click **Edit**
 4. In the configuration, set **Enable global DNS Proxying** to `true`
 5. Save the changes
@@ -107,7 +107,7 @@ kubectl get deployment my-app -o jsonpath='{.spec.template.metadata.annotations.
 
 ## Auto-Allocation of Virtual IPs
 
-The DNS proxy additionally supports automatically allocating addresses for ServiceEntrys that do not explicitly define one. The DNS response will include a distinct and automatically assigned address for each ServiceEntry from the reserved Class E range (`240.240.0.0/16`). The proxy is then configured to match requests to this IP address, and forward the request to the corresponding ServiceEntry.
+The DNS proxy additionally supports automatically allocating addresses for ServiceEntries that do not explicitly define one. The DNS response will include a distinct and automatically assigned address for each ServiceEntry from the reserved Class E range (`240.240.0.0/16`). The proxy is then configured to match requests to this IP address, and forward the request to the corresponding ServiceEntry.
 
 For example, a ServiceEntry like this:
 

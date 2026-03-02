@@ -16,7 +16,11 @@ inputs:
   servers-memory:
     description: 'Amount of memory allocated to k3d cluster'
     required: true
-    
+  calico:
+    description: 'Use Calico CNI instead of flannel'
+    required: false
+    default: 'false'
+
 runs:
   using: "composite"
   steps:
@@ -29,6 +33,7 @@ runs:
         k3s-version: "1.33.5"
         agents: ${{ inputs.agents }}
         servers-memory: ${{ inputs.servers-memory }}
+        calico: ${{ inputs.calico }}
     - name: Run integration tests
       shell: bash
       env:

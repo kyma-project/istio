@@ -21,6 +21,12 @@
     description: description.trustDomain
     value:
       type: string
+  - path: networkPoliciesEnabled
+    name: networkPoliciesEnabled
+    simple: true
+    description: description.networkPoliciesEnabled
+    value:
+      type: bool
   - path: compatibilityMode
     simple: true
     name: compatibilityMode

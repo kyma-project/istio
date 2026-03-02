@@ -11,7 +11,7 @@ export default [
   { text: 'Tutorials', link: './tutorials/README', collapsed: true, items: [
     { text: 'Expose Workloads Using oauth2-proxy', link: './tutorials/01-10-external-authorization-provider' },
     { text: 'Expose Workloads Using Gateway API', link: './tutorials/01-20-expose-httbin-gateway-api' },
-    { text: 'Expose a TCP Service Using Gateway API Aplha Support', link: './tutorials/01-30-expose-tcp-gateway-api' },
+    { text: 'Expose a TCP Service Using Gateway API Alpha Support', link: './tutorials/01-30-expose-tcp-gateway-api' },
     { text: 'Exposing Workloads Using Istio VirtualService', link: './tutorials/01-65-expose-workload-vs' },
     { text: 'Configure Istio Access Logs', link: './tutorials/01-45-enable-istio-access-logs' },
     { text: 'Send Requests Using Istio Egress Gateway', link: './tutorials/01-50-send-requests-using-egress' },

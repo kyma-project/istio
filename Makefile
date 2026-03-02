@@ -286,6 +286,13 @@ trust-domain-e2e-test: gotestsum deploy
 	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/trustdomain/..." --junitfile "./tests/e2e/tests/trustdomain/report.xml" -- -timeout 20m
 	@echo "E2E tests completed successfully"
 
+.PHONY: dns-proxying-e2e-test
+dns-proxying-e2e-test: gotestsum deploy
+	@echo "Running e2e tests for DNS proxying"
+	go clean -testcache
+	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/dnsproxying/..." --junitfile "./tests/e2e/tests/dnsproxying/report.xml" -- -timeout 20m
+	@echo "E2E tests completed successfully"
+
 ##@ Module
 
 .PHONY: module-image

@@ -74,6 +74,13 @@ runs:
       with:
         name: html-reports_${{ github.job }}_${{ github.run_id }}_${{ inputs.test_make_target }}_${{ inputs.gardener_provider }}
         path: tests/integration/reports/
+    - name: Upload artifacts - proxy config dumps
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: proxy-config-dumps-${{ github.job }}-${{ inputs.test_make_target }}
+        path: tests/e2e/tests/**/test-artifacts/
+        if-no-files-found: ignore
     - name: Deprovision cluster
       if: success() || cancelled()
       shell: bash

@@ -37,7 +37,7 @@ or your custom trust domain in the SPIFFE IDs to specify to which workloads the 
 
 ## Multi-Mesh Seamless mTLS Communication
 
-If a [shared Root CA is plugged in](../00-25-plug-in-istio-ca.md) to issue proxy certificates in multiple meshes, you can use a Gateway with **tls.mode: ISTIO_MUTUAL** to seamlessly allow mTLS communication between them. In this case, you don't need to set up `mTLS` on the Gateway manually.
+If a [shared Root CA is plugged in](./00-25-plug-in-istio-ca.md) to issue proxy certificates in multiple meshes, you can use a Gateway with **tls.mode: ISTIO_MUTUAL** to seamlessly allow mTLS communication between them. In this case, you don't need to set up `mTLS` on the Gateway manually.
 
 Additionally, you can use the trust domain to differentiate the source of requests in the upstream mesh (whether they come from within the same mesh or from another mesh). This is possible because the SPIFFE ID in the client certificate includes the trust domain of the originating mesh.
 

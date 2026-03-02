@@ -4,13 +4,14 @@ export default [
     { text: 'Enabling Istio Sidecar Injection', link: './tutorials/01-40-enable-sidecar-injection.md' },
     { text: 'Istio Version', link: './00-10-istio-version.md' },
     { text: 'Istio Proxy as Native Sidecar Container', link: './00-20-istio-proxy-as-native-sidecar.md' },
-    { text: 'Configure Istio CA Certificate', link: './00-25-plug-in-istio-ca.md' }
+    { text: 'Configure Istio CA Certificate', link: './00-25-plug-in-istio-ca.md' },
+    { text: 'DNS Proxying', link: './00-30-istio-dns-proxying.md' },
     ] },
   { text: 'Istio Custom Resource', link: './04-00-istio-custom-resource' },
   { text: 'Tutorials', link: './tutorials/README', collapsed: true, items: [
     { text: 'Expose Workloads Using oauth2-proxy', link: './tutorials/01-10-external-authorization-provider' },
     { text: 'Expose Workloads Using Gateway API', link: './tutorials/01-20-expose-httbin-gateway-api' },
-    { text: 'Expose a TCP Service Using Gateway API Aplha Support', link: './tutorials/01-30-expose-tcp-gateway-api' },
+    { text: 'Expose a TCP Service Using Gateway API Alpha Support', link: './tutorials/01-30-expose-tcp-gateway-api' },
     { text: 'Exposing Workloads Using Istio VirtualService', link: './tutorials/01-65-expose-workload-vs' },
     { text: 'Configure Istio Access Logs', link: './tutorials/01-45-enable-istio-access-logs' },
     { text: 'Send Requests Using Istio Egress Gateway', link: './tutorials/01-50-send-requests-using-egress' },

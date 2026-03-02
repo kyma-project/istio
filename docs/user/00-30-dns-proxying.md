@@ -32,6 +32,18 @@ DNS proxying is disabled by default. You can enable it globally for the entire m
 
 ### Global Mesh Configuration
 
+You can enable DNS proxying globally using the Kyma Dashboard or kubectl.
+
+#### Using Kyma Dashboard
+
+1. Navigate to **Cluster Details** in the Kyma Dashboard
+2. Go to **Istio** section
+3. Click **Edit**
+4. In the configuration, set **enableDNSProxying** to `true`
+5. Save the changes
+
+#### Using kubectl
+
 Set **enableDNSProxying** to `true` in the Istio custom resource (CR):
 
 ```yaml
@@ -45,7 +57,7 @@ spec:
     enableDNSProxying: true
 ```
 
-You can also use `kubectl` to enable DNS proxying:
+You can also use `kubectl patch`:
 
 ```bash
 kubectl patch istio default -n kyma-system --type=merge -p '{"spec":{"config":{"enableDNSProxying":true}}}'

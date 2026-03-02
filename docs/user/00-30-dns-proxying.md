@@ -10,13 +10,13 @@ DNS proxying intercepts DNS requests from applications and resolves them locally
 
 ## Improvements DNS Proxying Introduces
 
-### Reduced Load on Cluster DNS
+### Reduced Load on Upstream DNS
 
-Without DNS proxying, every DNS query from workloads goes to kube-dns. With DNS proxying enabled, the Istio proxy resolves known service addresses locally in the mesh, reducing traffic to the cluster DNS server.
+Without DNS proxying, every DNS query from workloads goes to the upstream DNS server. With DNS proxying enabled, the Istio proxy resolves known service addresses locally in the mesh, reducing traffic to the upstream DNS server.
 
 ### ServiceEntry Resolution
 
-When you define a [ServiceEntry](https://istio.io/latest/docs/reference/config/networking/service-entry/) with a custom hostname (for example, `address.internal`) that cluster DNS does not know about. Without DNS proxying, applications cannot resolve these addresses. DNS proxying allows the Istio proxy to resolve ServiceEntry hostnames directly.
+When you define a [ServiceEntry](https://istio.io/latest/docs/reference/config/networking/service-entry/) with a custom hostname (for example, `address.internal`) that the upstream DNS does not know about, applications cannot resolve these addresses without DNS proxying. DNS proxying allows the Istio proxy to resolve ServiceEntry hostnames directly.
 
 ### DNS Resolution for External TCP Services on the Same Port
 
@@ -28,13 +28,11 @@ DNS proxying solves this by auto-allocating virtual IPs (VIPs) from the `240.240
 
 ## How to Enable DNS Proxying
 
-### Sidecar Mode
+DNS proxying is disabled by default. You can enable it globally for the entire mesh or locally per workload. Local per-workload configuration overrides the global mesh configuration.
 
-DNS proxying is disabled by default in sidecar mode. You can enable it globally per mesh or locally per workload.
+### Global Mesh Configuration
 
-#### Global Mesh Configuration
-
-Set **enableDNSProxying** to `true` in the Istio custom resource (CR) configuration:
+Set **enableDNSProxying** to `true` in the Istio custom resource (CR):
 
 ```yaml
 apiVersion: operator.kyma-project.io/v1alpha2
@@ -47,11 +45,23 @@ spec:
     enableDNSProxying: true
 ```
 
+You can also use `kubectl` to enable DNS proxying:
+
+```bash
+kubectl patch istio default -n kyma-system --type=merge -p '{"spec":{"config":{"enableDNSProxying":true}}}'
+```
+
+To verify the configuration:
+
+```bash
+kubectl get istio default -n kyma-system -o jsonpath='{.spec.config.enableDNSProxying}'
+```
+
 This enables DNS proxying globally for all proxies in the mesh.
 
-#### Local Per-Workload Configuration
+### Local Per-Workload Configuration
 
-Add the `proxy.istio.io/config` annotation to enable DNS proxying for a specific Deployment:
+Add the `proxy.istio.io/config` annotation to enable DNS proxying for a specific workload:
 
 ```yaml
 apiVersion: apps/v1
@@ -69,6 +79,18 @@ spec:
       containers:
       - name: my-app
         image: my-app:latest
+```
+
+You can also use `kubectl` to add the annotation to an existing Deployment:
+
+```bash
+kubectl patch deployment my-app -p '{"spec":{"template":{"metadata":{"annotations":{"proxy.istio.io/config":"proxyMetadata:\n  ISTIO_META_DNS_CAPTURE: \"true\"\n"}}}}}'
+```
+
+To verify the annotation was applied:
+
+```bash
+kubectl get deployment my-app -o jsonpath='{.spec.template.metadata.annotations.proxy\.istio\.io/config}'
 ```
 
 ## Auto-Allocation of Virtual IPs
@@ -92,7 +114,7 @@ spec:
   resolution: DNS
 ```
 
-Results in DNS queries for `db.example.com` returning an auto-allocated IP like `240.240.0.1` instead of the actual external IP. The sidecar then routes traffic for `240.240.0.1:3306` to the resolved backend.
+Results in DNS queries for `db.example.com` returning an auto-allocated IP like `240.240.0.1` instead of the actual external IP. The proxy then routes traffic for `240.240.0.1:3306` to the resolved backend.
 
 To opt out of auto-allocation for a specific ServiceEntry, add the following label:
 
@@ -102,13 +124,19 @@ metadata:
     networking.istio.io/enable-autoallocate-ip: "false"
 ```
 
+You can also use `kubectl` to add this label:
+
+```bash
+kubectl label serviceentry external-db networking.istio.io/enable-autoallocate-ip=false
+```
+
 > **NOTE:** Auto-allocation does not work for wildcard hosts (for example, `*.example.com`).
 
 ## Consequences
 
 ### Benefits
 
-- **Performance**: Reduced DNS query latency and lower load on kube-dns.
+- **Performance**: Reduced DNS query latency and lower load on upstream DNS.
 - **ServiceEntry support**: Applications can resolve hostnames defined in ServiceEntry resources.
 - **TCP routing**: Multiple external TCP services on the same port work correctly with auto-allocated VIPs.
 - **Mesh visibility**: Istio gains visibility and control over DNS resolution.
@@ -116,7 +144,7 @@ metadata:
 ### Considerations
 
 - **Non-routable IPs**: Auto-allocated addresses use the `240.240.0.0/16` range. Applications that validate or log IP addresses may see unexpected values.
-- **Proxy complexity**: The sidecar takes on DNS resolution responsibilities, slightly increasing resource usage.
+- **Proxy complexity**: The proxy takes on DNS resolution responsibilities, slightly increasing resource usage.
 - **No wildcard support**: Auto-allocation does not apply to ServiceEntry resources with wildcard hosts.
 
 ## Related Information

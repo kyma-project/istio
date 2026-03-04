@@ -140,12 +140,7 @@ var _ = Describe("NetworkPolicies", func() {
 		Expect(policies.Items).To(BeEmpty())
 	})
 
-	It("should replace api server target port on k3d clusters", func() {
-		k3dNode := corev1.Node{
-			Status: corev1.NodeStatus{
-				NodeInfo: corev1.NodeSystemInfo{KubeletVersion: "v1.26.0+k3s1"},
-			},
-		}
+	It("should replace api server target port on clusters with kubernetes service existing", func() {
 		kubernetesSvc := corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{Name: "kubernetes", Namespace: "default"},
 			Spec: corev1.ServiceSpec{
@@ -154,7 +149,7 @@ var _ = Describe("NetworkPolicies", func() {
 				},
 			},
 		}
-		client := createFakeClient(&k3dNode, &kubernetesSvc)
+		client := createFakeClient(&kubernetesSvc)
 		sample := NewNetworkPolicies(false)
 
 		changed, err := sample.reconcile(context.Background(), client, owner, templateValues)
@@ -181,21 +176,8 @@ var _ = Describe("NetworkPolicies", func() {
 		Expect(foundPort).To(BeTrue())
 	})
 
-	It("should set API server target port to 443 on non-k3d clusters", func() {
-		nonK3dNode := corev1.Node{
-			Status: corev1.NodeStatus{
-				NodeInfo: corev1.NodeSystemInfo{KubeletVersion: "v1.26.0"},
-			},
-		}
-		kubernetesSvc := corev1.Service{
-			ObjectMeta: metav1.ObjectMeta{Name: "kubernetes", Namespace: "default"},
-			Spec: corev1.ServiceSpec{
-				Ports: []corev1.ServicePort{
-					{Name: "https", TargetPort: intstr.FromInt32(7443)},
-				},
-			},
-		}
-		client := createFakeClient(&nonK3dNode, &kubernetesSvc)
+	It("should set API server target port to 443 on clusters without kubernetes service", func() {
+		client := createFakeClient()
 		sample := NewNetworkPolicies(false)
 
 		changed, err := sample.reconcile(context.Background(), client, owner, templateValues)

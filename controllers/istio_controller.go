@@ -22,7 +22,6 @@ import (
 	"time"
 
 	istiocrmetrics "github.com/kyma-project/istio/operator/internal/metrics"
-
 	"github.com/pkg/errors"
 
 	"github.com/kyma-project/istio/operator/internal/images"

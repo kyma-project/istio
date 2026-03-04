@@ -197,7 +197,7 @@ jobs:
           operator-image-name: ${{ needs.get-image.outputs.image }}
           operator-version: ${{ needs.get-image.outputs.operator_version }}
           servers-memory: "16"
-          agents: 2
+          agents: 0
           calico: "true"
 
   new-istio-e2e-test-experimental-k3d:

@@ -182,7 +182,7 @@ func (m *IstioCRMetrics) UpdateIstioCRMetrics(cr *v1alpha2.Istio) {
 		m.configMetrics.networkPoliciesEnabled.Set(1)
 	} else {
 		m.configMetrics.networkPoliciesEnabled.Set(0)
-  }
+	}
 
 	if cr.Spec.Config.EnableDNSProxying != nil &&
 		*cr.Spec.Config.EnableDNSProxying {

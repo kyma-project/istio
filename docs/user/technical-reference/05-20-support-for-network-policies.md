@@ -23,7 +23,14 @@ spec:
 When the flag changes, Istio components are restarted, terminating existing TCP connections and enforcing the policies immediately.
 
 ## Network Policies Applied by the Istio Module
-When enabled, the module applies network policies in the `istio-system` and `kyma-system` namespaces. This table lists the network policies applied when support is enabled and the traffic they allow:
+When enabled, the module applies network policies in the `istio-system` and `kyma-system` namespaces. All module-managed policies are labeled with:
+
+- `kyma-project.io/module: istio`
+- `kyma-project.io/managed-by: kyma`
+
+Do not modify these resources, as they are automatically updated by the module. Any manual changes are overwritten.
+
+This table lists the network policies applied when support is enabled and the traffic they allow:
 
 | Component                | Namespace    | Port  | Protocol  | Direction | Purpose                                                                                       |
 |--------------------------|--------------|-------|-----------|-----------|-----------------------------------------------------------------------------------------------|
@@ -48,11 +55,6 @@ When enabled, the module applies network policies in the `istio-system` and `kym
 | istio-ingressgateway     | istio-system | 15090 | TCP/HTTP  | ingress   | Envoy Prometheus telemetry                                                                    |
 | istio-cni-node           | istio-system | 53    | UDP/TCP   | egress    | DNS resolution                                                                                |
 | istio-cni-node           | istio-system | 443   | TCP       | egress    | Kubernetes API server access                                                                  |
-
-All module-managed policies are labeled with:
-
-- `kyma-project.io/module: istio`
-- `kyma-project.io/managed-by: kyma`
 
 ## Networking Diagram
 

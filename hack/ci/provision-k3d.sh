@@ -40,6 +40,11 @@ echo "  Servers memory: ${SERVERS_MEMORY}g"
 
 # Function to install k3d
 install_k3d() {
+    if command -v k3d &> /dev/null; then
+        echo "k3d is already installed: $(k3d version | head -1)"
+        return
+    fi
+
     curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
 
     echo "k3d installed successfully: $(k3d version | head -1)"

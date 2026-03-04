@@ -43,39 +43,7 @@ echo "  Servers memory: ${SERVERS_MEMORY}g"
 
 # Function to install k3d
 install_k3d() {
-    if command -v k3d &> /dev/null; then
-        echo "k3d already installed: $(k3d version | head -1)"
-        return 0
-    fi
-
-    echo "k3d not found, installing ${K3D_VERSION}..."
-
-    # Install to local bin directory within the project
-    local install_dir="${PROJECT_ROOT}/bin"
-    mkdir -p "${install_dir}"
-    local install_path="${install_dir}/k3d"
-
-    # Detect OS and architecture
-    local os arch
-    os=$(uname -s | tr '[:upper:]' '[:lower:]')
-    arch=$(uname -m)
-
-    if [[ "${arch}" == "x86_64" ]]; then
-        arch="amd64"
-    elif [[ "${arch}" == "aarch64" || "${arch}" == "arm64" ]]; then
-        arch="arm64"
-    else
-        echo "Unsupported architecture: ${arch}"
-        exit 1
-    fi
-
-    local k3d_url="https://github.com/k3d-io/k3d/releases/download/${K3D_VERSION}/k3d-${os}-${arch}"
-    echo "Downloading k3d from ${k3d_url}..."
-    curl -fsSL "${k3d_url}" -o "${install_path}"
-    chmod +x "${install_path}"
-
-    # Add to PATH for this session
-    export PATH="${install_dir}:${PATH}"
+    curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
 
     echo "k3d installed successfully: $(k3d version | head -1)"
 }

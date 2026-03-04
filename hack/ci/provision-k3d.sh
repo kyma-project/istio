@@ -5,7 +5,6 @@
 #   KUBERNETES_VERSION  - Kubernetes version (default: 1.33.5)
 #   K3D_VERSION         - k3d CLI version (default: v5.7.5)
 #   CALICO_VERSION      - Calico version for --calico mode (default: v3.29.0)
-#   CLUSTER_NAME        - Cluster name (default: kyma)
 #   AGENTS              - Number of k3d agents (default: 0)
 #   SERVERS_MEMORY      - Memory for server nodes in GB (default: 16)
 
@@ -19,7 +18,6 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 KUBERNETES_VERSION="${KUBERNETES_VERSION:-1.34.3}"
 K3D_VERSION="${K3D_VERSION:-v5.8.3}"
 CALICO_VERSION="${CALICO_VERSION:-v3.31.3}"
-CLUSTER_NAME="${CLUSTER_NAME:-kyma}"
 AGENTS="${AGENTS:-0}"
 SERVERS_MEMORY="${SERVERS_MEMORY:-16}"
 
@@ -33,7 +31,6 @@ fi
 K3S_IMAGE="rancher/k3s:v${KUBERNETES_VERSION}-k3s1"
 
 echo "Configuration:"
-echo "  Cluster name: ${CLUSTER_NAME}"
 echo "  Kubernetes version: ${KUBERNETES_VERSION}"
 echo "  K3s image: ${K3S_IMAGE}"
 echo "  Use Calico: ${USE_CALICO}"
@@ -52,7 +49,7 @@ install_k3d() {
 provision_calico_cluster() {
     echo "Provisioning k3d cluster with Calico CNI..."
 
-    k3d cluster create "${CLUSTER_NAME}" \
+    k3d cluster create \
         --agents "${AGENTS}" \
         --servers-memory "${SERVERS_MEMORY}g" \
         --port 80:80@loadbalancer \
@@ -76,7 +73,7 @@ provision_calico_cluster() {
 provision_regular_cluster() {
     echo "Provisioning k3d cluster (regular, without traefik)..."
 
-    k3d cluster create "${CLUSTER_NAME}" \
+    k3d cluster create \
         --agents "${AGENTS}" \
         --servers-memory "${SERVERS_MEMORY}g" \
         --port 80:80@loadbalancer \
@@ -89,38 +86,11 @@ provision_regular_cluster() {
 main() {
     install_k3d
 
-    # Check if cluster already exists
-    if k3d cluster list | grep -q "^${CLUSTER_NAME} "; then
-        echo "Cluster '${CLUSTER_NAME}' already exists."
-        echo "Aborting."
-        exit 0
-    fi
-
     if [ "${USE_CALICO}" = true ]; then
         provision_calico_cluster
     else
         provision_regular_cluster
     fi
-
-    # Set kubeconfig
-    echo "Setting up kubeconfig..."
-    k3d kubeconfig merge "${CLUSTER_NAME}" -d --kubeconfig-switch-context
-
-    # Wait for nodes to be ready
-    echo "Waiting for nodes to be ready..."
-    kubectl wait --for=condition=Ready nodes --all --timeout=300s
-
-    echo ""
-    echo "=========================================="
-    echo "k3d cluster '${CLUSTER_NAME}' provisioned successfully!"
-    echo "Kubernetes version: ${KUBERNETES_VERSION}"
-    if [ "${USE_CALICO}" = true ]; then
-        echo "CNI: Calico ${CALICO_VERSION}"
-    else
-        echo "CNI: Flannel (k3s default)"
-    fi
-    echo "Traefik disabled"
-    echo "=========================================="
 }
 
 main

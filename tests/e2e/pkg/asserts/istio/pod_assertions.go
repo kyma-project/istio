@@ -78,4 +78,3 @@ func AssertIstioProxyPresentInNamespace(t *testing.T, c *resources.Resources, na
 	}, wait.WithTimeout(defaultTimeout), wait.WithContext(t.Context()))
 	require.NoError(t, err, "Pod with label %s in namespace %s should have istio-proxy sidecar", labelSelector, namespace)
 }
-

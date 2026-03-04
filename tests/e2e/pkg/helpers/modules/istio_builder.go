@@ -154,7 +154,7 @@ func (b *IstioCRBuilder) WithCompatibilityMode(enabled bool) *IstioCRBuilder {
 
 // WithEnableModuleNetworkPolicies enables or disables module-managed NetworkPolicies
 func (b *IstioCRBuilder) WithEnableModuleNetworkPolicies(enabled bool) *IstioCRBuilder {
-	b.istio.Spec.NetworkPoliciesEnabled= enabled
+	b.istio.Spec.NetworkPoliciesEnabled = enabled
 	return b
 }
 

@@ -176,9 +176,9 @@ func createEgressVirtualService(t *testing.T, r *resources.Resources, namespace,
 				{
 					Match: []*networkingv1alpha3.TLSMatchAttributes{
 						{
-							Gateways:  []string{"mesh"},
-							Port:      443,
-							SniHosts:  []string{externalHost},
+							Gateways: []string{"mesh"},
+							Port:     443,
+							SniHosts: []string{externalHost},
 						},
 					},
 					Route: []*networkingv1alpha3.RouteDestination{
@@ -196,9 +196,9 @@ func createEgressVirtualService(t *testing.T, r *resources.Resources, namespace,
 				{
 					Match: []*networkingv1alpha3.TLSMatchAttributes{
 						{
-							Gateways:  []string{"istio-egressgateway"},
-							Port:      443,
-							SniHosts:  []string{externalHost},
+							Gateways: []string{"istio-egressgateway"},
+							Port:     443,
+							SniHosts: []string{externalHost},
 						},
 					},
 					Route: []*networkingv1alpha3.RouteDestination{
@@ -231,4 +231,3 @@ func createEgressVirtualService(t *testing.T, r *resources.Resources, namespace,
 
 	return nil
 }
-

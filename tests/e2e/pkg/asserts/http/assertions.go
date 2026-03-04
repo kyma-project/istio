@@ -129,4 +129,3 @@ func AssertConnectionError(t *testing.T, client *http.Client, url string) {
 	_, err = client.Do(req)
 	require.Error(t, err, "Request should fail due to connection error (e.g., NetworkPolicy blocking traffic)")
 }
-

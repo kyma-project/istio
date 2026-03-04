@@ -386,6 +386,7 @@ jobs:
           - "xff-header-e2e-test"
           - "trust-domain-e2e-test"
           - "networkpolicy-e2e-test"
+          - "dns-proxying-e2e-test"
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/e2e-test-gardener
@@ -410,6 +411,7 @@ jobs:
           - "xff-header-e2e-test"
           - "trust-domain-e2e-test"
           - "networkpolicy-e2e-test"
+          - "dns-proxying-e2e-test"
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/e2e-test-gardener

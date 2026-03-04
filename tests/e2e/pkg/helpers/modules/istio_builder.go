@@ -116,6 +116,12 @@ func (b *IstioCRBuilder) WithForwardClientCertDetails(strategy v1alpha2.XFCCStra
 	return b
 }
 
+// WithEnableDNSProxying sets the cluster-wide DNS proxying in Istio sidecars
+func (b *IstioCRBuilder) WithEnableDNSProxying(value bool) *IstioCRBuilder {
+	b.istio.Spec.Config.EnableDNSProxying = &value
+	return b
+}
+
 // WithAuthorizer adds an authorizer to the configuration
 func (b *IstioCRBuilder) WithAuthorizer(authorizer *v1alpha2.Authorizer) *IstioCRBuilder {
 	b.istio.Spec.Config.Authorizers = append(b.istio.Spec.Config.Authorizers, authorizer)

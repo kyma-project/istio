@@ -25,26 +25,6 @@ When the flag changes, Istio components are restarted, terminating existing TCP 
 ## Network Policies Applied by the Istio Module
 When enabled, the module applies network policies in the `istio-system` and `kyma-system` namespaces. The network policies allow the following traffic:
 
-- DNS egress (TCP/UDP 53) for Istio components.
-- Kubernetes API server access (TCP 443) for `istio-controller-manager`, `istiod`, and `istio-cni-node`.
-- Control-plane communication between `istio-ingressgateway` and `istiod` on TCP 15012.
-- Control-plane communication between `istio-egressgateway` and `istiod` on TCP 15012.
-- Ingress to `istiod` for XDS (15012), metrics (15014), and webhook calls (15017).
-- Ingress to `istio-ingressgateway` for external traffic (8080/8443) and operational ports (15008, 15020, 15021, 15090).
-- Ingress to `istio-egressgateway` from user workloads that are labeled with `networking.kyma-project.io/to-egressgateway: allowed`.
-- Egress from `istiod` to JWKS endpoints on TCP 80/443 necessary for JWT validation in context of RequestAuthentication policies.
-- Egress from `istio-ingressgateway` to user workloads that are labeled with `networking.kyma-project.io/from-ingressgateway: allowed`.
-- Egress from `istio-egressgateway` to all destinations, as the egress traffic from `istio-egressgateway` should be controlled by Istio resources.
-
-All module-managed policies are labeled with:
-
-- `kyma-project.io/module: istio`
-- `kyma-project.io/managed-by: kyma`
-
-Do not modify these resources, as they are automatically updated by the module. Any manual changes are overwritten.
-
-This table summarizes the allowed traffic when NetworkPolicy support is enabled:
-
 | Component                | Namespace    | Port  | Protocol  | Direction | Purpose                                                                                       |
 |--------------------------|--------------|-------|-----------|-----------|-----------------------------------------------------------------------------------------------|
 | istio-controller-manager | kyma-system  | 53    | UDP/TCP   | egress    | DNS resolution                                                                                |
@@ -68,6 +48,11 @@ This table summarizes the allowed traffic when NetworkPolicy support is enabled:
 | istio-ingressgateway     | istio-system | 15090 | TCP/HTTP  | ingress   | Envoy Prometheus telemetry                                                                    |
 | istio-cni-node           | istio-system | 53    | UDP/TCP   | egress    | DNS resolution                                                                                |
 | istio-cni-node           | istio-system | 443   | TCP       | egress    | Kubernetes API server access                                                                  |
+
+All module-managed policies are labeled with:
+
+- `kyma-project.io/module: istio`
+- `kyma-project.io/managed-by: kyma`
 
 ## Networking Diagram
 

@@ -23,7 +23,7 @@ spec:
 When the flag changes, Istio components are restarted, terminating existing TCP connections and enforcing the policies immediately.
 
 ## Network Policies Applied by the Istio Module
-When enabled, the module applies network policies in the `istio-system` and `kyma-system` namespaces. The network policies allow the following traffic:
+When enabled, the module applies network policies in the `istio-system` and `kyma-system` namespaces. This table lists the network policies applied when support is enabled and the traffic they allow:
 
 | Component                | Namespace    | Port  | Protocol  | Direction | Purpose                                                                                       |
 |--------------------------|--------------|-------|-----------|-----------|-----------------------------------------------------------------------------------------------|

@@ -56,7 +56,6 @@ All module-managed policies are labeled with:
 
 ## Networking Diagram
 
-The following diagram illustrates the allowed traffic flows between Istio components and user workloads when NetworkPolicy support is enabled.
 The following diagram illustrates the allowed traffic flows between Istio components and user workloads when network policy support is enabled.
 
 In the diagram, network policies are illustrated as the resources through which allowed traffic flows. In reality, a network policy is a custom resource that configures which traffic is allowed or denied, while the actual filtering is performed by the Istio module's components.

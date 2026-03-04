@@ -26,10 +26,10 @@ runs:
         OPERATOR_VERSION: ${{ inputs.operator_version }}
       run: |
         if [ "${{ github.event_name }}" == "pull_request" ]; then
-          k3d image import ${{ inputs.operator_image_name }}
+          k3d image import ${{ inputs.operator_image_name }} -c kyma
         fi
 
-        kubectl config use-context k3d-k3s-default
+        kubectl config use-context kyma
         EXPORT_RESULT=true IMG=${{ inputs.operator_image_name}} make ${{ inputs.test_make_target }}
       shell: bash
     - name: Check deprecations

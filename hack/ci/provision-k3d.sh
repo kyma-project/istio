@@ -52,6 +52,11 @@ install_k3d() {
 
 # Function to provision cluster with Calico
 provision_calico_cluster() {
+    if [ "${AGENTS}" -gt 0 ]; then
+        echo "Error: script does not support calico setup with AGENTS > 0. Please use AGENTS=0."
+        exit 1
+    fi
+
     echo "Provisioning k3d cluster with Calico CNI..."
 
     k3d cluster create \

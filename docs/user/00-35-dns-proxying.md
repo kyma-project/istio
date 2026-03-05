@@ -4,9 +4,9 @@ Learn how DNS proxying in Istio improves DNS resolution performance, enables ext
 
 ## Overview
 
-DNS resolution is a vital component of any application infrastructure on Kubernetes. When your application code attempts to access another service in the Kubernetes cluster or even a service on the internet, it has to first lookup the IP address corresponding to the hostname of the service, before initiating a connection to the service.
+DNS resolution is a vital component of any application infrastructure on Kubernetes. When your application code attempts to access another service in the Kubernetes cluster, or even a service on the internet, it must first look up the IP address corresponding to the service's hostname before initiating a connection to the service.
 
-DNS proxying intercepts DNS requests from applications and resolves them locally at the Istio proxy level. The proxy maintains a local mapping of host names to IP addresses based on the Kubernetes services and service entries in the cluster. If a host name can be resolved locally within the mesh, the proxy responds immediately. Otherwise, it forwards the request upstream following the standard DNS resolution.
+DNS proxying intercepts DNS requests from applications and resolves them locally at the Istio proxy level. The proxy maintains a local mapping of host names to IP addresses based on the Kubernetes services and service entries in the cluster. If a hostname can be resolved locally within the mesh, the proxy responds immediately. Otherwise, it forwards the request upstream following the standard DNS resolution.
 
 ## Improvements DNS Proxying Introduces
 
@@ -20,9 +20,9 @@ When you define a [ServiceEntry](https://istio.io/latest/docs/reference/config/n
 
 ### DNS Resolution for External TCP Services on the Same Port
 
-In some cases TCP traffic in Istio is routed based on destination IP and port only. Unlike HTTP traffic, which includes a Host header, TCP has no additional metadata for routing decisions.
+In some cases, TCP traffic in Istio is routed based on destination IP and port only. Unlike HTTP traffic, which includes a Host header, TCP has no additional metadata for routing decisions.
 
-For example when multiple external TCP services share the same port (for example, two databases on port 3306) and they don't have stable IP addresses so the specified ServiceEntries has resolution set to `DNS` Istio cannot distinguish between them. The proxy creates a single listener on `0.0.0.0:{port}` and forwards traffic to only one destination (external TCP service).
+For example, when multiple external TCP services share the same port (for example, two databases on port `3306`) and they don't have stable IP addresses, the specified ServiceEntries have resolution set to `DNS`, and Istio cannot distinguish between them. The proxy creates a single listener on `0.0.0.0:{port}` and forwards traffic to a single destination (an external TCP service).
 
 DNS proxying solves this by auto-allocating virtual IPs (VIPs) from the `240.240.0.0/16` range to each ServiceEntry. This gives each external TCP service a unique address, enabling the proxy to route traffic correctly even when sharing the same port.
 
@@ -33,16 +33,16 @@ DNS proxying is disabled by default. You can enable it globally for the entire m
 ### Global Mesh Configuration
 
 You can enable DNS proxying globally using the Kyma Dashboard or kubectl.
+<!-- tabs:start -->
+#### **Kyma Dashboard**
 
-#### Using Kyma Dashboard
+1. Go to **Cluster Details** in Kyma dashboard.
+2. In the `kyma-system` namespace, go to the **Istio** section.
+3. Choose **Edit**.
+4. In the configuration, set **Enable global DNS Proxying** to `true`.
+5. Save the changes.
 
-1. Navigate to **Cluster Details** in the Kyma Dashboard
-2. In the `kyma-system` namespace go to **Istio** section
-3. Click **Edit**
-4. In the configuration, set **Enable global DNS Proxying** to `true`
-5. Save the changes
-
-#### Using kubectl
+#### **Using kubectl**
 
 Set **enableDNSProxying** to `true` in the Istio custom resource (CR):
 
@@ -62,8 +62,9 @@ You can also use `kubectl patch`:
 ```bash
 kubectl patch istio default -n kyma-system --type=merge -p '{"spec":{"config":{"enableDNSProxying":true}}}'
 ```
+<!-- tabs:end -->
 
-To verify the configuration:
+To verify the configuration, run:
 
 ```bash
 kubectl get istio default -n kyma-system -o jsonpath='{.spec.config.enableDNSProxying}'
@@ -93,13 +94,13 @@ spec:
         image: my-app:latest
 ```
 
-You can also use `kubectl` to add the annotation to an existing Deployment:
+You can also use kubectl to add the annotation to an existing Deployment:
 
 ```bash
 kubectl patch deployment my-app -p '{"spec":{"template":{"metadata":{"annotations":{"proxy.istio.io/config":"proxyMetadata:\n  ISTIO_META_DNS_CAPTURE: \"true\"\n"}}}}}'
 ```
 
-To verify the annotation was applied:
+To verify the annotation is applied, run:
 
 ```bash
 kubectl get deployment my-app -o jsonpath='{.spec.template.metadata.annotations.proxy\.istio\.io/config}'
@@ -107,9 +108,9 @@ kubectl get deployment my-app -o jsonpath='{.spec.template.metadata.annotations.
 
 ## Auto-Allocation of Virtual IPs
 
-The DNS proxy additionally supports automatically allocating addresses for ServiceEntries that do not explicitly define one. The DNS response will include a distinct and automatically assigned address for each ServiceEntry from the reserved Class E range (`240.240.0.0/16`). The proxy is then configured to match requests to this IP address, and forward the request to the corresponding ServiceEntry.
+The DNS proxy additionally supports automatically allocating addresses for ServiceEntries that do not explicitly define one. When enabled, the DNS response includes a distinct and automatically assigned address for each ServiceEntry from the reserved Class E range (`240.240.0.0/16`). The proxy is then configured to match requests to this IP address and forward the request to the corresponding ServiceEntry.
 
-For example, a ServiceEntry like this:
+See the following example ServiceEntry:
 
 ```yaml
 apiVersion: networking.istio.io/v1
@@ -126,7 +127,7 @@ spec:
   resolution: DNS
 ```
 
-Results in DNS queries for `db.example.com` returning an auto-allocated IP like `240.240.0.1` instead of the actual external IP. The proxy then routes traffic for `240.240.0.1:3306` to the resolved backend.
+Results in DNS queries for `db.example.com` return an auto-allocated IP like `240.240.0.1` instead of the actual external IP. The proxy then routes traffic for `240.240.0.1:3306` to the resolved backend.
 
 To opt out of auto-allocation for a specific ServiceEntry, add the following label:
 
@@ -136,7 +137,7 @@ metadata:
     networking.istio.io/enable-autoallocate-ip: "false"
 ```
 
-You can also use `kubectl` to add this label:
+You can also use kubectl to add this label:
 
 ```bash
 kubectl label serviceentry external-db networking.istio.io/enable-autoallocate-ip=false

@@ -286,6 +286,13 @@ trust-domain-e2e-test: gotestsum deploy
 	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/trustdomain/..." --junitfile "./tests/e2e/tests/trustdomain/report.xml" -- -timeout 20m
 	@echo "E2E tests completed successfully"
 
+.PHONY: dns-proxying-e2e-test
+dns-proxying-e2e-test: gotestsum deploy
+	@echo "Running e2e tests for DNS proxying"
+	go clean -testcache
+	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/dnsproxying/..." --junitfile "./tests/e2e/tests/dnsproxying/report.xml" -- -timeout 20m
+	@echo "E2E tests completed successfully"
+
 ##@ Module
 
 .PHONY: module-image
@@ -388,4 +395,6 @@ generate-crd-docs: bin/crd-ref-docs ## Generate CRD reference docs
 	sed -i'' -e 's/XIntOrString: \\{\\}/XIntOrString/g' docs/user/04-00-istio-custom-resource.md
 	sed -i'' -e '1N;$$!N;/\n.*ReasonWithMessage/!P;D' docs/user/04-00-istio-custom-resource.md
 	sed -i'' -e '/ReasonWithMessage/d' docs/user/04-00-istio-custom-resource.md
+	sed -i'' -e 's/\\}/\}/g' docs/user/04-00-istio-custom-resource.md
+	sed -i'' -e 's/\\{/\{/g' docs/user/04-00-istio-custom-resource.md
 	rm -f docs/user/04-00-istio-custom-resource.md-e

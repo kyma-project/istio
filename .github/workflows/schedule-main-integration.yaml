@@ -225,6 +225,7 @@ jobs:
         test_make_target:
           - "xff-header-e2e-test"
           - "trust-domain-e2e-test"
+          - "dns-proxying-e2e-test"
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/e2e-test-gardener
@@ -248,6 +249,7 @@ jobs:
         test_make_target:
           - "xff-header-e2e-test"
           - "trust-domain-e2e-test"
+          - "dns-proxying-e2e-test"
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/e2e-test-gardener

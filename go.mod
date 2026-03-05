@@ -7,7 +7,7 @@ replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.5
 
 require (
 	github.com/avast/retry-go v3.0.0+incompatible
-	github.com/caarlos0/env/v11 v11.3.1
+	github.com/caarlos0/env/v11 v11.4.0
 	github.com/coreos/go-semver v0.3.1
 	github.com/cucumber/godog v0.15.1
 	github.com/distribution/reference v0.6.0

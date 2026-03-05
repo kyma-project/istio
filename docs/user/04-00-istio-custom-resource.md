@@ -140,6 +140,7 @@ Appears in:
 | **gatewayExternalTrafficPolicy** <br /> string | Defines the external traffic policy for the Istio Ingress Gateway Service. Valid configurations are `"Local"` or `"Cluster"`. The external traffic policy set to `"Local"` preserves the client IP in the request, but also introduces the risk of unbalanced traffic distribution.<br />WARNING: Switching **externalTrafficPolicy** may result in a temporal increase in request delay. Make sure that this is acceptable. | Enum: [Local Cluster] <br />Optional <br /> |
 | **telemetry** <br /> [Telemetry](#telemetry) | Defines the telemetry configuration of Istio. | Optional <br /> |
 | **trustDomain** <br /> string | Defines trust domain configuration of Istio. | MaxLength: 255 <br />MinLength: 1 <br />Optional <br />Pattern: `^[a-z0-9]*([a-z0-9-_]*)?(\.[a-z0-9]*([a-z0-9-_]*[a-z0-9]*)?)*$` <br /> |
+| **enableDNSProxying** <br /> boolean | Enables or disables global DNS proxying in Istio sidecar and gateway proxies across the service mesh.<br />When enabled, DNS requests from application Pods are intercepted by Istio proxies<br />instead of being sent directly to upstream DNS servers.<br />Enabling this setting allows Istio proxies to distinguish traffic between two different TCP services that are outside the mesh thanks to virtual IP address assignment to each ServiceEntry from reserved IP range 240.240.0.0/16. | Optional <br /> |
 
 ### EgressGateway
 
@@ -327,7 +328,7 @@ Appears in:
 
 | Field | Description | Validation |
 | --- | --- | --- |
-| **cpu** <br /> string | Specifies CPU resource allocation (requests or limits) | Pattern: `^([0-9]+m?\|[0-9]\.[0-9]\{1,3\})$` <br /> |
+| **cpu** <br /> string | Specifies CPU resource allocation (requests or limits) | Pattern: `^([0-9]+m?\|[0-9]\.[0-9]{1,3})$` <br /> |
 | **memory** <br /> string | Specifies memory resource allocation (requests or limits). | Pattern: `^[0-9]+(((\.[0-9]+)?(E\|P\|T\|G\|M\|k\|Ei\|Pi\|Ti\|Gi\|Mi\|Ki\|m)?)\|(e[0-9]+))$` <br /> |
 
 ### Resources
@@ -354,7 +355,7 @@ Appears in:
 | Field | Description | Validation |
 | --- | --- | --- |
 | **maxSurge** <br /> [IntOrString](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.33/#intorstring-intstr-util) | Specifies the maximum number of Pods that can be created over the desired number of Pods. See [Max Surge](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-surge). | Optional <br />Pattern: `^[0-9]+%?$` <br />XIntOrString <br /> |
-| **maxUnavailable** <br /> [IntOrString](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.33/#intorstring-intstr-util) | Specifies the maximum number of Pods that can be unavailable during the update process. See [Max Unavailable](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-unavailable) | Optional <br />Pattern: `^((100\|[0-9]\{1,2\})%\|[0-9]+)$` <br />XIntOrString <br /> |
+| **maxUnavailable** <br /> [IntOrString](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.33/#intorstring-intstr-util) | Specifies the maximum number of Pods that can be unavailable during the update process. See [Max Unavailable](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-unavailable) | Optional <br />Pattern: `^((100\|[0-9]{1,2})%\|[0-9]+)$` <br />XIntOrString <br /> |
 
 ### State
 

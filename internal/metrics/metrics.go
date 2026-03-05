@@ -26,6 +26,7 @@ type configMetrics struct {
 
 type componentMetrics struct {
 	egressGatewayEnabled prometheus.Gauge
+	dnsProxyEnabled      prometheus.Gauge
 }
 
 type extAuthMetrics struct {
@@ -82,6 +83,10 @@ func NewMetrics() *IstioCRMetrics {
 				Name: "istio_egress_gateway_used",
 				Help: "Indicates whether the egress gateway is used in the Istio CR (1 for used, 0 for not used).",
 			}),
+			dnsProxyEnabled: prometheus.NewGauge(prometheus.GaugeOpts{
+				Name: "istio_dnsproxy_used",
+				Help: "Indicates whether the dns proxying is used in the Istio CR (1 for used, 0 for not used).",
+			}),
 		},
 	}
 
@@ -94,6 +99,7 @@ func NewMetrics() *IstioCRMetrics {
 		crMetrics.configMetrics.compatibilityModeEnabled,
 		crMetrics.configMetrics.forwardClientCertDetailsSetting,
 		crMetrics.componentMetrics.egressGatewayEnabled,
+		crMetrics.componentMetrics.dnsProxyEnabled,
 	)
 
 	return crMetrics
@@ -165,4 +171,10 @@ func (m *IstioCRMetrics) UpdateIstioCRMetrics(cr *v1alpha2.Istio) {
 		m.componentMetrics.egressGatewayEnabled.Set(0)
 	}
 
+	if cr.Spec.Config.EnableDNSProxying != nil &&
+		*cr.Spec.Config.EnableDNSProxying {
+		m.componentMetrics.dnsProxyEnabled.Set(1)
+	} else {
+		m.componentMetrics.dnsProxyEnabled.Set(0)
+	}
 }

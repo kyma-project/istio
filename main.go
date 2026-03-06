@@ -77,6 +77,7 @@ type FlagVar struct {
 	rateLimiterFrequency   int
 	rateLimiterBurst       int
 	reconciliationInterval time.Duration
+	pprofAddr              string
 }
 
 func init() { //nolint:gochecknoinits // it was scaffolded by controller-gen TODO: remove this init function when possible
@@ -152,7 +153,6 @@ func createManager(flagVar *FlagVar) (manager.Manager, error) {
 	webhookServer := webhook.NewServer(webhook.Options{
 		Port: WebhookServiceDefaultPort,
 	})
-
 	return ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme: scheme,
 		Metrics: metricsserver.Options{
@@ -162,6 +162,7 @@ func createManager(flagVar *FlagVar) (manager.Manager, error) {
 		HealthProbeBindAddress: flagVar.probeAddr,
 		LeaderElection:         flagVar.enableLeaderElection,
 		LeaderElectionID:       "76223278.kyma-project.io",
+		PprofBindAddress:       flagVar.pprofAddr,
 		Client: client.Options{
 			Cache: &client.CacheOptions{
 				// The cache is disabled for these objects to avoid huge memory usage.
@@ -197,5 +198,6 @@ func defineFlagVar() *FlagVar {
 		"Indicates the failure max delay.")
 	flag.DurationVar(&flagVar.reconciliationInterval, "reconciliation-interval", reconciliationIntervalDefault,
 		"Indicates the time based reconciliation interval.")
+	flag.StringVar(&flagVar.pprofAddr, "pprof-bind-address", "", "Enable profiling on specified address. For debugging purposes. Disabled by default.")
 	return flagVar
 }

@@ -125,11 +125,15 @@ func AssertDefaultPeerAuthenticationExists(t *testing.T, c *resources.Resources)
 	return pa
 }
 
-// AssertPodDisruptionBudgetReady asserts that the PodDisruptionBudget exists in the given namespace
-func AssertPodDisruptionBudgetReady(t *testing.T, c *resources.Resources, name, namespace string) {
+// AssertPodDisruptionBudgetReady asserts that the PodDisruptionBudget exists in the given namespace and has the expected minAvailable value
+func AssertPodDisruptionBudgetReady(t *testing.T, c *resources.Resources, name, namespace string, expectedMinAvailable int32) {
 	t.Helper()
 
 	pdb := &policyv1.PodDisruptionBudget{}
 	err := c.Get(t.Context(), name, namespace, pdb)
 	require.NoError(t, err)
+
+	require.NotNil(t, pdb.Spec.MinAvailable, "PDB %s/%s has no MinAvailable", namespace, name)
+	require.Equal(t, expectedMinAvailable, pdb.Spec.MinAvailable.IntVal, "PDB %s/%s MinAvailable mismatch", namespace, name)
+	require.NotNil(t, pdb.Spec.Selector, "PDB %s/%s has no selector", namespace, name)
 }

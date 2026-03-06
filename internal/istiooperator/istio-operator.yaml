@@ -354,6 +354,8 @@ spec:
     global:
       configValidation: true
       defaultNodeSelector: {}
+      defaultPodDisruptionBudget:
+        enabled: true
       defaultResources:
         requests:
           cpu: 10m

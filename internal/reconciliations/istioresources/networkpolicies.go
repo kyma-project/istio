@@ -20,7 +20,7 @@ var allowCni []byte
 //go:embed networkpolicies/allow-egress-to-customer.yaml
 var allowEgressToCustomer []byte
 
-//go:embed networkpolicies/allow-customer-to-egress.yaml
+//go:embed networkpolicies/allow-egressgateway.yaml
 var allowCustomerToEgress []byte
 
 //go:embed networkpolicies/allow-ingressgateway.yaml

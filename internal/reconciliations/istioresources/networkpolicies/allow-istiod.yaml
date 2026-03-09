@@ -39,8 +39,23 @@ spec:
       ports:
         - protocol: TCP
           port: 15012
-    - ports:
+    - from:
+        - podSelector:
+            matchExpressions:
+              - key: kyma-project.io/module
+                operator: Exists
+          namespaceSelector: {}
+        - podSelector:
+            matchLabels:
+              networking.kyma-project.io/istio-metrics: allowed
+          namespaceSelector: {}
+        - podSelector:
+            matchLabels:
+              networking.kyma-project.io/metrics-scraping: allowed
+          namespaceSelector: {}
+      ports:
         - protocol: TCP
           port: 15014
+    - ports:
         - protocol: TCP
           port: 15017

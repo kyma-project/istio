@@ -129,7 +129,7 @@ func (s *SidecarRestarter) updateLastAppliedConfiguration(ctx context.Context, i
 		if err := s.Client.Get(ctx, types.NamespacedName{Name: istioCR.Name, Namespace: istioCR.Namespace}, &currentIstioCR); err != nil {
 			return err
 		}
-		if err := configuration.UpdateLastAppliedCompatibilityMode(&currentIstioCR); err != nil {
+		if err := configuration.UpdateLastAppliedProxyConfig(&currentIstioCR); err != nil {
 			return err
 		}
 		return s.Client.Update(ctx, &currentIstioCR)

@@ -146,11 +146,12 @@ func UpdateLastAppliedIngressGatewayConfig(istioCR *v1alpha2.Istio) error {
 	return nil
 }
 
-// UpdateLastAppliedCompatibilityMode updates only the CompatibilityMode field
+// UpdateLastAppliedProxyConfig updates only the proxy restart-related config fields
+// (CompatibilityMode, EnableDNSProxying - it also restarts the ingressgateway in Istio installation, but proxy restarts is the last one hence update should happen here)
 // in the lastAppliedConfiguration annotation.
 // This should be called after a successful sidecar restart to prevent unnecessary restarts
 // if reconciliation requeues early.
-func UpdateLastAppliedCompatibilityMode(istioCR *v1alpha2.Istio) error {
+func UpdateLastAppliedProxyConfig(istioCR *v1alpha2.Istio) error {
 	if len(istioCR.Annotations) == 0 {
 		istioCR.Annotations = map[string]string{}
 	}
@@ -163,6 +164,7 @@ func UpdateLastAppliedCompatibilityMode(istioCR *v1alpha2.Istio) error {
 	}
 
 	appliedConfig.CompatibilityMode = istioCR.Spec.CompatibilityMode
+	appliedConfig.Config.EnableDNSProxying = istioCR.Spec.Config.EnableDNSProxying
 
 	config, err := json.Marshal(appliedConfig)
 	if err != nil {

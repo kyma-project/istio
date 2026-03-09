@@ -35,11 +35,13 @@ When the user enables NetworkPolicy support in the Istio CR, apply NetworkPolici
   > the `istio-system` namespace or to provide a way to specify additional allowed ports for `istiod` egress in the Istio CR.
 - Allow user-enabled egress traffic from `istio-ingressgateway` to backend services by permitting egress to specifically labeled Pods in user namespaces.
 - Allow the following according to https://istio.io/latest/docs/ops/deployment/application-requirements:
-  - Allow ingress to `istiod` on TCP `15014` (Control plane monitoring).
-  - Allow ingress to `istio-ingressgateway` on TCP `15008` (HBONE mTLS tunnel port, Ambient mode).
-  - Allow ingress to `istio-ingressgateway` on TCP `15020` (Merged Prometheus metrics port).
-  - Allow ingress to `istio-ingressgateway` on TCP `15021` (Health checks).
-  - Allow ingress to `istio-ingressgateway` on TCP `15090` (Envoy Prometheus telemetry).
+  - Allow ingress to `istiod` on TCP `15014` (Control plane monitoring) from Pods labeled with `kyma-project.io/module`, `networking.kyma-project.io/istio-metrics: allowed`, or `networking.kyma-project.io/metrics-scraping: allowed` (any namespace).
+  - Allow ingress to `istio-ingressgateway` on TCP `15020` (Merged Prometheus metrics port) from Pods labeled with `kyma-project.io/module`, `networking.kyma-project.io/istio-metrics: allowed`, or `networking.kyma-project.io/metrics-scraping: allowed` (any namespace).
+  - Allow ingress to `istio-ingressgateway` on TCP `15021` (Health checks) from Pods labeled with `kyma-project.io/module`, `networking.kyma-project.io/istio-metrics: allowed`, or `networking.kyma-project.io/metrics-scraping: allowed` (any namespace).
+  - Allow ingress to `istio-ingressgateway` on TCP `15090` (Envoy Prometheus telemetry) from Pods labeled with `kyma-project.io/module`, `networking.kyma-project.io/istio-metrics: allowed`, or `networking.kyma-project.io/metrics-scraping: allowed` (any namespace).
+  - Allow ingress to `istio-egressgateway` on TCP `15020` (Merged Prometheus metrics port) from Pods labeled with `kyma-project.io/module`, `networking.kyma-project.io/istio-metrics: allowed`, or `networking.kyma-project.io/metrics-scraping: allowed` (any namespace).
+  - Allow ingress to `istio-egressgateway` on TCP `15021` (Health checks) from Pods labeled with `kyma-project.io/module`, `networking.kyma-project.io/istio-metrics: allowed`, or `networking.kyma-project.io/metrics-scraping: allowed` (any namespace).
+  - Allow ingress to `istio-egressgateway` on TCP `15090` (Envoy Prometheus telemetry) from Pods labeled with `kyma-project.io/module`, `networking.kyma-project.io/istio-metrics: allowed`, or `networking.kyma-project.io/metrics-scraping: allowed` (any namespace).
 
 To ensure that the policies are enforced as soon as the user enables the setting, the Istio module's components must be restarted (rollout restart)
 to terminate already established TCP connections.
@@ -52,7 +54,7 @@ to indicate that they are managed by the Istio module and should not be modified
 
 ### Istio Custom Resource Extension
 
-Extend the Istio Custom Resource Definition to include a new boolean field, **enableModuleNetworkPolicies**,
+Extend the Istio Custom Resource Definition to include a new boolean field, **networkPoliciesEnabled**,
 which allows users to enable or disable NetworkPolicy support for the Istio components. When this flag is set to `true`,
 the necessary NetworkPolicies must be applied to the `istio-system` and `kyma-system` namespaces.
 By default, this flag is set to `false` to prevent NetworkPolicies from being applied in clusters where it is not enforced.
@@ -66,37 +68,42 @@ See the following example:
 apiVersion: operator.kyma-project.io/v1alpha2
 kind: Istio
 metadata:
-   name: default
-   namespace: kyma-system
+  name: default
+  namespace: kyma-system
 spec:
-   enableModuleNetworkPolicies: true
+  networkPoliciesEnabled: true
 ```
 
 ### NetworkPolicies Applied by the Istio Module
 
-| Component                  | Namespace      | Port    | Protocol  | Direction | Source/Destination                                                                                               | Purpose                                                                                     |
-|----------------------------|----------------|---------|-----------|-----------|------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------|
-| `istio-controller-manager` | `kyma-system`  | `53`    | UDP/TCP   | Egress    | destination: *                                                                                                   | DNS resolution                                                                              |
-| `istio-controller-manager` | `kyma-system`  | `443`   | TCP       | Egress    | destination: *                                                                                                   | Kubernetes API server access                                                                |
-| `istiod`                   | `istio-system` | `53`    | UDP/TCP   | Egress    | destination: *                                                                                                   | DNS resolution                                                                              |
-| `istiod`                   | `istio-system` | `80`    | TCP       | Egress    | destination: *                                                                                                   | Access to external JWKS endpoints for JWT validation (HTTP)                                 |
-| `istiod`                   | `istio-system` | `443`   | TCP       | Egress    | destination: *                                                                                                   | Access to external JWKS endpoints for JWT validation (HTTPS) / Kubernetes API server access |
-| `istiod`                   | `istio-system` | `15012` | TCP/gRPC  | Ingress   | source: podSelector `security.istio.io/tlsMode: istio` (any namespace) </br> podSelector `istio: ingressgateway` | XDS config distribution to sidecars and gateways                                            |
-| `istiod`                   | `istio-system` | `15014` | TCP/HTTP  | Ingress   | source: *                                                                                                        | Control plane metrics (Prometheus scrape)                                                   |
-| `istiod`                   | `istio-system` | `15017` | TCP/HTTPS | Ingress   | source: *                                                                                                        | Webhook endpoint (defaulting/mutation/admission)                                            |
-| `istio-ingressgateway`     | `istio-system` | `*`     | TCP       | Egress    | destination: podselector `networking.kyma-project.io/from-ingressgateway: allowed` (any namespace)               | Traffic to labeled user Pods (`networking.kyma-project.io/from-ingressgateway: allowed`)    |
-| `istio-ingressgateway`     | `istio-system` | `53`    | UDP/TCP   | Egress    | destination: *                                                                                                   | DNS resolution                                                                              |
-| `istio-ingressgateway`     | `istio-system` | `8080`  | TCP       | Ingress   | source: *                                                                                                        | HTTP traffic inbound to cluster                                                             |
-| `istio-ingressgateway`     | `istio-system` | `8443`  | TCP       | Ingress   | source: *                                                                                                        | HTTPS traffic inbound to cluster                                                            |
-| `istio-ingressgateway`     | `istio-system` | `15008` | TCP       | Ingress   | source: *                                                                                                        | HBONE mTLS tunnel (Ambient mode)                                                            |
-| `istio-ingressgateway`     | `istio-system` | `15012` | TCP/gRPC  | Egress    | destination: podSelector `istio: pilot`                                                                          | Request XDS config from istiod                                                              |
-| `istio-ingressgateway`     | `istio-system` | `15020` | TCP/HTTP  | Ingress   | source: *                                                                                                        | Merged Prometheus metrics                                                                   |
-| `istio-ingressgateway`     | `istio-system` | `15021` | TCP/HTTP  | Ingress   | source: *                                                                                                        | Health check endpoint                                                                       |
-| `istio-ingressgateway`     | `istio-system` | `15090` | TCP/HTTP  | Ingress   | source: *                                                                                                        | Envoy Prometheus telemetry                                                                  |
-| `istio-cni-node`           | `istio-system` | `53`    | UDP/TCP   | Egress    | destination: *                                                                                                   | DNS resolution                                                                              |
-| `istio-cni-node`           | `istio-system` | `443`   | TCP       | Egress    | destination: *                                                                                                   | Kubernetes API server access                                                                |
+| Component                  | Namespace      | Port    | Protocol  | Direction | Source/Destination                                                                                                                                                                                                                                            | Purpose                                                                                                       |
+|----------------------------|----------------|---------|-----------|-----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
+| `istio-controller-manager` | `kyma-system`  | `53`    | UDP/TCP   | Egress    | destination: *                                                                                                                                                                                                                                                | DNS resolution                                                                                                |
+| `istio-controller-manager` | `kyma-system`  | `443`   | TCP       | Egress    | destination: *                                                                                                                                                                                                                                                | Kubernetes API server access                                                                                  |
+| `istiod`                   | `istio-system` | `53`    | UDP/TCP   | Egress    | destination: *                                                                                                                                                                                                                                                | DNS resolution                                                                                                |
+| `istiod`                   | `istio-system` | `80`    | TCP       | Egress    | destination: *                                                                                                                                                                                                                                                | Access to external JWKS endpoints for JWT validation (HTTP)                                                   |
+| `istiod`                   | `istio-system` | `443`   | TCP       | Egress    | destination: *                                                                                                                                                                                                                                                | Access to external JWKS endpoints for JWT validation (HTTPS) / Kubernetes API server access                   |
+| `istiod`                   | `istio-system` | `15012` | TCP/gRPC  | Ingress   | source (any of):</br> - podSelector `security.istio.io/tlsMode: istio` (any namespace) </br> - podSelector `istio: ingressgateway`                                                                                                                            | XDS config distribution to sidecars and gateways                                                              |
+| `istiod`                   | `istio-system` | `15014` | TCP/HTTP  | Ingress   | source (any of):</br> - has label `kyma-project.io/module` (any namespace) </br> - podSelector `networking.kyma-project.io/istio-metrics: allowed` (any namespace) </br> - podSelector `networking.kyma-project.io/metrics-scraping: allowed` (any namespace) | Control plane metrics (Prometheus scrape)                                                                     |
+| `istiod`                   | `istio-system` | `15017` | TCP/HTTPS | Ingress   | source: *                                                                                                                                                                                                                                                     | Webhook endpoint (defaulting/mutation/admission). It is genarally only accessed by the Kubernetes API server. |
+| `istio-egressgateway`      | `istio-system` | `*`     | UDP/TCP   | Egress    |                                                                                                                                                                                                                                                               | All outbound traffic from egress is allowed, as the configuration is done via Istio resources                 |
+| `istio-egressgateway`      | `istio-system` | `*`     | UDP/TCP   | Ingress   | source: podSelector `networking.kyma-project.io/to-egressgateway: allowed` (any namespace)                                                                                                                                                                    | Traffic from labeled user Pods (`networking.kyma-project.io/to-egressgateway: allowed`)                       |
+| `istio-egressgateway`      | `istio-system` | `15020` | TCP/HTTP  | Ingress   | source (any of):</br> - has label `kyma-project.io/module` (any namespace) </br> - podSelector `networking.kyma-project.io/istio-metrics: allowed` (any namespace) </br> - podSelector `networking.kyma-project.io/metrics-scraping: allowed` (any namespace) | Merged Prometheus metrics                                                                                     |
+| `istio-egressgateway`      | `istio-system` | `15021` | TCP/HTTP  | Ingress   | source (any of):</br> - has label `kyma-project.io/module` (any namespace) </br> - podSelector `networking.kyma-project.io/istio-metrics: allowed` (any namespace) </br> - podSelector `networking.kyma-project.io/metrics-scraping: allowed` (any namespace) | Health check endpoint                                                                                         |
+| `istio-egressgateway`      | `istio-system` | `15090` | TCP/HTTP  | Ingress   | source (any of):</br> - has label `kyma-project.io/module` (any namespace) </br> - podSelector `networking.kyma-project.io/istio-metrics: allowed` (any namespace) </br> - podSelector `networking.kyma-project.io/metrics-scraping: allowed` (any namespace) | Envoy Prometheus telemetry                                                                                    |
+| `istio-ingressgateway`     | `istio-system` | `*`     | TCP       | Egress    |                                                                                                                                                                                                                                                               | Traffic to labeled user Pods (`networking.kyma-project.io/from-ingressgateway: allowed`)                      |
+| `istio-ingressgateway`     | `istio-system` | `*`     | TCP       | Egress    | destination: podselector `networking.kyma-project.io/from-ingressgateway: allowed` (any namespace)                                                                                                                                                            | Traffic to labeled user Pods (`networking.kyma-project.io/from-ingressgateway: allowed`)                      |
+| `istio-ingressgateway`     | `istio-system` | `53`    | UDP/TCP   | Egress    | destination: *                                                                                                                                                                                                                                                | DNS resolution                                                                                                |
+| `istio-ingressgateway`     | `istio-system` | `8080`  | TCP       | Ingress   | source: *                                                                                                                                                                                                                                                     | HTTP traffic inbound to cluster                                                                               |
+| `istio-ingressgateway`     | `istio-system` | `8443`  | TCP       | Ingress   | source: *                                                                                                                                                                                                                                                     | HTTPS traffic inbound to cluster                                                                              |
+| `istio-ingressgateway`     | `istio-system` | `15012` | TCP/gRPC  | Egress    | destination: podSelector `istio: pilot`                                                                                                                                                                                                                       | Request XDS config from istiod                                                                                |
+| `istio-ingressgateway`     | `istio-system` | `15020` | TCP/HTTP  | Ingress   | source (any of):</br> - has label `kyma-project.io/module` (any namespace) </br> - podSelector `networking.kyma-project.io/istio-metrics: allowed` (any namespace) </br> - podSelector `networking.kyma-project.io/metrics-scraping: allowed` (any namespace) | Merged Prometheus metrics                                                                                     |
+| `istio-ingressgateway`     | `istio-system` | `15021` | TCP/HTTP  | Ingress   | source (any of):</br> - has label `kyma-project.io/module` (any namespace) </br> - podSelector `networking.kyma-project.io/istio-metrics: allowed` (any namespace) </br> - podSelector `networking.kyma-project.io/metrics-scraping: allowed` (any namespace) | Health check endpoint                                                                                         |
+| `istio-ingressgateway`     | `istio-system` | `15090` | TCP/HTTP  | Ingress   | source (any of):</br> - has label `kyma-project.io/module` (any namespace) </br> - podSelector `networking.kyma-project.io/istio-metrics: allowed` (any namespace) </br> - podSelector `networking.kyma-project.io/metrics-scraping: allowed` (any namespace) | Envoy Prometheus telemetry                                                                                    |
+| `istio-cni-node`           | `istio-system` | `53`    | UDP/TCP   | Egress    | destination: *                                                                                                                                                                                                                                                | DNS resolution                                                                                                |
+| `istio-cni-node`           | `istio-system` | `443`   | TCP       | Egress    | destination: *                                                                                                                                                                                                                                                | Kubernetes API server access                                                                                  |
 
-Enabling the **enableModuleNetworkPolicies** flag creates the necessary NetworkPolicies to allow traffic for Istio components.
+Enabling the **networkPoliciesEnabled** flag creates the necessary NetworkPolicies to allow traffic for Istio components.
 
 - Allow APIServer and DNS access for `istio-controller-manager` in `kyma-system`:
 
@@ -130,7 +137,7 @@ Enabling the **enableModuleNetworkPolicies** flag creates the necessary NetworkP
 - Allow the following traffic for `istiod`:
   - Allow egress access to DNS and APIServer.
   - Allow ingress access from sidecars and `istio-ingressgateway` on port `15012` for control-plane communication.
-  - Allow ingress access to the control plane monitoring port `15014`.
+  - Allow ingress access to the control plane monitoring port `15014` from Pods labeled with `kyma-project.io/module`, `networking.kyma-project.io/istio-metrics: allowed`, or `networking.kyma-project.io/metrics-scraping: allowed` (any namespace).
   - Allow ingress access to the webhook endpoint on port `15017`.
 
     ```yaml
@@ -172,9 +179,24 @@ Enabling the **enableModuleNetworkPolicies** flag creates the necessary NetworkP
         ports:
         - protocol: TCP
           port: 15012
-      - ports:
+      - from:
+        - podSelector:
+            matchExpressions:
+            - key: kyma-project.io/module
+              operator: Exists
+          namespaceSelector: {}
+        - podSelector:
+            matchLabels:
+              networking.kyma-project.io/istio-metrics: allowed
+          namespaceSelector: {}
+        - podSelector:
+            matchLabels:
+              networking.kyma-project.io/metrics-scraping: allowed
+          namespaceSelector: {}
+        ports:
         - protocol: TCP
           port: 15014
+      - ports:
         - protocol: TCP
           port: 15017
     ```
@@ -183,7 +205,7 @@ Enabling the **enableModuleNetworkPolicies** flag creates the necessary NetworkP
   - Allow egress access to `istiod` on port `15012` (XDS).
   - Allow egress access to DNS.
   - Allow ingress access from external traffic on ports `80`/`443`.
-  - Allow ingress access to the HBONE mTLS tunnel port (`15008`), merged Prometheus metrics port (`15020`), health checks (`15021`), and Envoy Prometheus telemetry (`15090`).
+  - Allow ingress access to the metrics and health ports (`15020`, `15021`, `15090`) from Pods labeled with `kyma-project.io/module`, `networking.kyma-project.io/istio-metrics: allowed`, or `networking.kyma-project.io/metrics-scraping: allowed` (any namespace).
 
     ```yaml
     apiVersion: networking.k8s.io/v1
@@ -220,8 +242,77 @@ Enabling the **enableModuleNetworkPolicies** flag creates the necessary NetworkP
           port: 8080
         - protocol: TCP
           port: 8443
+      - from:
+        - podSelector:
+            matchExpressions:
+            - key: kyma-project.io/module
+              operator: Exists
+          namespaceSelector: {}
+        - podSelector:
+            matchLabels:
+              networking.kyma-project.io/istio-metrics: allowed
+          namespaceSelector: {}
+        - podSelector:
+            matchLabels:
+              networking.kyma-project.io/metrics-scraping: allowed
+          namespaceSelector: {}
+        ports:
         - protocol: TCP
-          port: 15008
+          port: 15020
+        - protocol: TCP
+          port: 15021
+        - protocol: TCP
+          port: 15090
+    ```
+
+- Allow the following traffic for `istio-egressgateway`:
+  - Allow egress access to all ports, as the configuration of allowed egress traffic is done via Istio resources.
+  - Allow ingress access from labeled user Pods (`networking.kyma-project.io/to-egressgateway: allowed`) on all ports.
+  - Allow ingress access to the metrics and health ports (`15020`, `15021`, `15090`) from Pods labeled with `kyma-project.io/module`, `networking.kyma-project.io/istio-metrics: allowed`, or `networking.kyma-project.io/metrics-scraping: allowed` (any namespace).
+
+    ```yaml
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    metadata:
+      labels:
+        kyma-project.io/module: istio
+        kyma-project.io/managed-by: kyma
+      name: kyma-project.io--istio-egressgateway
+      namespace: istio-system
+    spec:
+      podSelector:
+        matchLabels:
+          istio: egressgateway
+      policyTypes:
+      - Egress
+      - Ingress
+      egress:
+      - ports:
+        - protocol: UDP
+          port: *
+        - protocol: TCP
+          port: *
+      ingress:
+      - from:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              networking.kyma-project.io/to-egressgateway: allowed
+      - from:
+        - podSelector:
+            matchExpressions:
+            - key: kyma-project.io/module
+              operator: Exists
+          namespaceSelector: {}
+        - podSelector:
+            matchLabels:
+              networking.kyma-project.io/istio-metrics: allowed
+          namespaceSelector: {}
+        - podSelector:
+            matchLabels:
+              networking.kyma-project.io/metrics-scraping: allowed
+          namespaceSelector: {}
+        ports:
         - protocol: TCP
           port: 15020
         - protocol: TCP
@@ -314,7 +405,7 @@ that allows egress to specifically labeled Pods in user namespaces:
 To ensure that the newly applied NetworkPolicies take effect immediately, all Istio components must be restarted (rollout restart)
 when the user enables the NetworkPolicy support flag in the Istio CR.
 Enabling the flag terminates any existing TCP connections and allows the new policies to be enforced without delay.
-This means that a restart should happen whenever the value of **enableModuleNetworkPolicies** is changed from `false` to `true` or vice versa,
+This means that a restart should happen whenever the value of **networkPoliciesEnabled** is changed from `false` to `true` or vice versa,
 to ensure that the correct policies are applied based on the user's choice.
 
 ### User Impact

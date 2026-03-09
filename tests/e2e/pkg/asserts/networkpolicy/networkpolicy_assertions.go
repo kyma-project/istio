@@ -345,7 +345,6 @@ func AssertIngressGatewayNetworkPolicy(t *testing.T, r *resources.Resources) {
 	// Verify ingress rules
 	AssertNetworkPolicyHasIngressRule(t, np, "TCP", 8080)  // HTTP
 	AssertNetworkPolicyHasIngressRule(t, np, "TCP", 8443)  // HTTPS
-	AssertNetworkPolicyHasIngressRule(t, np, "TCP", 15008) // HBONE
 	AssertNetworkPolicyHasIngressRule(t, np, "TCP", 15020) // Metrics
 	AssertNetworkPolicyHasIngressRule(t, np, "TCP", 15021) // Health
 	AssertNetworkPolicyHasIngressRule(t, np, "TCP", 15090) // Telemetry

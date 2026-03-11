@@ -91,6 +91,69 @@ func RunRequestFromInsideCluster(t *testing.T, namespace string, url string, opt
 	return stdOutStr, stdErrStr, err
 }
 
+// RunRequestFromInsideClusterWithLabels runs a request from a pod with specific labels
+func RunRequestFromInsideClusterWithLabels(t *testing.T, namespace string, url string, labels map[string]string, options ...Option) (string, string, error) {
+	t.Helper()
+	opts := &Options{
+		Method: http.MethodGet,
+	}
+	for _, opt := range options {
+		opt(opts)
+	}
+
+	r, err := client.ResourcesClient(t)
+	if err != nil {
+		t.Logf("Could not create resources client: err=%s", err)
+		return "", "", err
+	}
+
+	curlPodName := envconf.RandomName(podName, 16)
+	pod := corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      curlPodName,
+			Namespace: namespace,
+			Labels:    labels,
+		},
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{
+				{
+					Args:  []string{"sleep", "infinity"},
+					Image: "curlimages/curl:8.14.1",
+					Name:  containerName,
+				},
+			},
+		},
+	}
+
+	t.Logf("applying curl pod with labels %v: %+v", labels, &pod)
+	err = r.Create(t.Context(), &pod)
+	if err != nil {
+		return "", "", err
+	}
+	setup.DeclareCleanup(t, func() {
+		t.Log("Deleting pod: ", pod.Name)
+		err := r.Delete(setup.GetCleanupContext(), &pod)
+		if err != nil {
+			t.Logf("Failed to delete pod %s: %v", pod.Name, err)
+		}
+	})
+	err = wait.For(conditions.New(r).PodRunning(&pod))
+	if err != nil {
+		return "", "", err
+	}
+
+	cmd := []string{"curl", "-ik", "-sSL", "-m", "10", "-X", opts.Method, "--fail-with-body", url}
+
+	var stdout, stderr bytes.Buffer
+	err = r.ExecInPod(t.Context(), pod.GetNamespace(), pod.GetName(), containerName, cmd, &stdout, &stderr)
+	stdOutStr := strings.TrimSpace(stdout.String())
+	stdErrStr := strings.TrimSpace(stderr.String())
+	t.Logf("[%s] stdout: %v", curlPodName, stdOutStr)
+	t.Logf("[%s] stderr: %v", curlPodName, stdErrStr)
+
+	return stdOutStr, stdErrStr, err
+}
+
 func RunOpenSSLSClientFromInsideCluster(t *testing.T, namespace string, url string) (string, string, error) {
 	t.Helper()
 	r, err := client.ResourcesClient(t)

@@ -15,11 +15,11 @@ import (
 var paMtls []byte
 
 type PeerAuthenticationMtls struct {
-	k8sClient client.Client
+	shouldDelete bool
 }
 
-func NewPeerAuthenticationMtls(k8sClient client.Client) PeerAuthenticationMtls {
-	return PeerAuthenticationMtls{k8sClient: k8sClient}
+func NewPeerAuthenticationMtls(shouldDelete bool) PeerAuthenticationMtls {
+	return PeerAuthenticationMtls{shouldDelete: shouldDelete}
 }
 
 func (PeerAuthenticationMtls) reconcile(ctx context.Context, k8sClient client.Client, _ metav1.OwnerReference, _ map[string]string) (controllerutil.OperationResult, error) {

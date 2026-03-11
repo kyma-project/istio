@@ -1,0 +1,44 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  labels:
+    kyma-project.io/module: istio
+    kyma-project.io/managed-by: kyma
+  name: kyma-project.io--istio-egressgateway
+  namespace: istio-system
+spec:
+  podSelector:
+    matchLabels:
+      istio: egressgateway
+  policyTypes:
+    - Egress
+    - Ingress
+  egress:
+    - {}
+  ingress:
+    - from:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              networking.kyma-project.io/to-egressgateway: allowed
+    - from:
+        - podSelector:
+            matchExpressions:
+              - key: kyma-project.io/module
+                operator: Exists
+          namespaceSelector: {}
+        - podSelector:
+            matchLabels:
+              networking.kyma-project.io/istio-metrics: allowed
+          namespaceSelector: {}
+        - podSelector:
+            matchLabels:
+              networking.kyma-project.io/metrics-scraping: allowed
+          namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 15020
+        - protocol: TCP
+          port: 15021
+        - protocol: TCP
+          port: 15090

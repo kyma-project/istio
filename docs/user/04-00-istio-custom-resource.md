@@ -243,6 +243,7 @@ Appears in:
 | **components** <br /> [Components](#components) | Configures Istio components. | Optional <br /> |
 | **experimental** <br /> [Experimental](#experimental) | Defines experimental configuration options. | Optional <br /> |
 | **compatibilityMode** <br /> boolean | Enables the compatibility mode for the Istio installation. | Optional <br /> |
+| **networkPoliciesEnabled** <br /> boolean | Enables installation of network policies that are required for the module to work under a deny-all traffic policy in the `kyma-system` and `istio-system` namespaces.<br />The default value is `false`, which means that the network policies aren't installed.<br />This enforces a secure-by-default posture in the cluster.<br />Enabling this option is likely to cause connectivity issues in the cluster if you don't properly set up your workloads first. | Optional <br /> |
 
 ### IstioStatus
 

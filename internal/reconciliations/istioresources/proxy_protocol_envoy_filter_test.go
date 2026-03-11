@@ -24,7 +24,7 @@ var _ = Describe("Apply", func() {
 
 	It("should return created if no resource was present", func() {
 		client := createFakeClient()
-		sample := NewProxyProtocolEnvoyFilter(client, false)
+		sample := NewProxyProtocolEnvoyFilter(false)
 
 		//when
 		changed, err := sample.reconcile(context.Background(), client, owner, templateValues)
@@ -54,7 +54,7 @@ var _ = Describe("Apply", func() {
 	It("should return not changed if no change was applied", func() {
 		//given
 		client := createFakeClient()
-		sample := NewProxyProtocolEnvoyFilter(client, false)
+		sample := NewProxyProtocolEnvoyFilter(false)
 
 		//when
 		changed, err := sample.reconcile(context.Background(), client, owner, templateValues)
@@ -72,7 +72,7 @@ var _ = Describe("Apply", func() {
 
 		// then
 		// we check in the second reconciliation that nothing changed
-		sample = NewProxyProtocolEnvoyFilter(client, false)
+		sample = NewProxyProtocolEnvoyFilter(false)
 		changed, err = sample.reconcile(context.Background(), client, owner, templateValues)
 
 		Expect(err).To(Not(HaveOccurred()))
@@ -95,7 +95,7 @@ var _ = Describe("Apply", func() {
 		p.Spec.Priority = 123
 		client := createFakeClient(&p)
 
-		sample := NewProxyProtocolEnvoyFilter(client, false)
+		sample := NewProxyProtocolEnvoyFilter(false)
 
 		//when
 		changed, err := sample.reconcile(context.Background(), client, owner, templateValues)

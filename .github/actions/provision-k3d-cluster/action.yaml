@@ -7,22 +7,28 @@ inputs:
   agents:
     description: 'Number of nodes in the cluster'
     required: false
-    default: 1
+    default: '1'
   servers-memory:
     description: 'Number of GB for the node'
     required: false
-    default: 16
+    default: '16'
+  calico:
+    description: 'Use Calico CNI instead of flannel'
+    required: false
+    default: 'false'
 
 runs:
   using: "composite"
   steps:
     - name: Provision k3d cluster
       shell: bash
+      env:
+        KUBERNETES_VERSION: ${{ inputs.k3s-version }}
+        AGENTS: ${{ inputs.agents }}
+        SERVERS_MEMORY: ${{ inputs.servers-memory }}
       run: |
-        curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
-        k3d cluster create --agents ${{ inputs.agents }} \
-                           --image docker.io/rancher/k3s:v${{ inputs.k3s-version }}-k3s1 \
-                           --servers-memory=${{ inputs.servers-memory }}g \
-                           --port 80:80@loadbalancer \
-                           --port 443:443@loadbalancer \
-                           --k3s-arg "--disable=traefik@server:0"
+        if [ "${{ inputs.calico }}" == "true" ]; then
+          ./hack/ci/provision-k3d.sh --calico
+        else
+          ./hack/ci/provision-k3d.sh
+        fi

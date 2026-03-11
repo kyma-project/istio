@@ -73,7 +73,7 @@ type ClusterFlavour int
 
 const (
 	Unknown ClusterFlavour = iota
-	k3d
+	K3d
 	GKE
 	Gardener
 	AWS
@@ -81,8 +81,8 @@ const (
 
 func (c ClusterFlavour) String() string {
 	switch c {
-	case k3d:
-		return "k3d"
+	case K3d:
+		return "K3d"
 	case GKE:
 		return "GKE"
 	case Gardener:
@@ -282,7 +282,7 @@ func DiscoverClusterFlavour(ctx context.Context, k8sClient client.Client) (Clust
 		case matcherGKE.MatchString(node.Status.NodeInfo.KubeletVersion):
 			return GKE, nil
 		case matcherk3d.MatchString(node.Status.NodeInfo.KubeletVersion):
-			return k3d, nil
+			return K3d, nil
 		case matcherAws.MatchString(node.Spec.ProviderID):
 			return AWS, nil
 		case matcherGardener.MatchString(node.Status.NodeInfo.OSImage):
@@ -295,7 +295,7 @@ func DiscoverClusterFlavour(ctx context.Context, k8sClient client.Client) (Clust
 
 func (c ClusterFlavour) clusterConfiguration(clusterProvider string) (ClusterConfiguration, error) {
 	switch c {
-	case k3d:
+	case K3d:
 		config := map[string]interface{}{
 			"spec": map[string]interface{}{
 				"values": map[string]interface{}{

@@ -1,6 +1,9 @@
 # Regular and Native Sidecar Containers
 Understand the differences between Istio proxies running as regular containers and as native sidecars, learn about the default settings applied by the Istio module, and find out how to override these settings for specific workloads as needed.
 
+>[!NOTE]
+> You can use native sidecars only with Kubernetes version 1.33 or later.
+
 ## Advantages of Native Sidecars
 
 Every Pod in the Istio mesh gets an additional `istio-proxy` container, which intercepts network traffic to provide Istio features. For Istio proxies, Istio uses two types of containers: regular containers and native sidecars. Native sidecars are init containers that have **restartPolicy** set to `Always`. This approach, introduced with Kubernetes 1.28, allows for controlling the startup and shutdown sequence of containers within a Pod, which is not possible with sidecars deployed as regular containers.

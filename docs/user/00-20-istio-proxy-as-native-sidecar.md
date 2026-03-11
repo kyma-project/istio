@@ -2,7 +2,7 @@
 Understand the differences between Istio proxies running as regular containers and as native sidecars, learn about the default settings applied by the Istio module, and find out how to override these settings for specific workloads as needed.
 
 >[!NOTE]
-> you can use native sidecars only if the Istio module runs on Kubernetes 1.33 or later. Earlier Kubernetes versions are not supported.
+> In Kyma, you can use native sidecars only with Kubernetes 1.33 or later.
 
 ## Advantages of Native Sidecars
 

@@ -25,7 +25,7 @@ Istio module version | Istio version | Default `istio-proxy` Container Type
  1.20 or lower | 1.26 or lower | Regular containers
  1.21 | 1.27 | Regular containers
  1.22, 1.23, 1,24 | 1.27 | Native sidecars, unless you set **compatibilityMode** in the Istio CR to `true`
- 1.25 | 1.28 | Native sidecars
+ 1.25 or later | 1.28 | Native sidecars
 
 ## Configuring Regular Istio Proxy Containers for a Particular Workload
 

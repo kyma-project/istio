@@ -51,7 +51,7 @@ jobs:
     with:
       name: ${{ needs.parse-images.outputs.istio-pilot-fips-name }}
       use-restricted-registry: true
-      dockerfile: docker/pilot-fips.Dockerfile
+      dockerfile: docker/fips.Dockerfile
       build-args: |
         SOURCE_IMAGE=${{ needs.parse-images.outputs.istio-pilot-fips-source }}
       context: .
@@ -64,7 +64,7 @@ jobs:
     with:
       name: ${{ needs.parse-images.outputs.istio-proxy-fips-name }}
       use-restricted-registry: true
-      dockerfile: docker/proxy-fips.Dockerfile
+      dockerfile: docker/fips.Dockerfile
       build-args: |
         SOURCE_IMAGE=${{ needs.parse-images.outputs.istio-proxy-fips-source }}
       context: .
@@ -77,7 +77,7 @@ jobs:
     with:
       name: ${{ needs.parse-images.outputs.istio-install-cni-fips-name }}
       use-restricted-registry: true
-      dockerfile: docker/cni-fips.Dockerfile
+      dockerfile: docker/fips.Dockerfile
       build-args: |
           SOURCE_IMAGE=${{ needs.parse-images.outputs.istio-install-cni-fips-source }}
       context: .
@@ -90,7 +90,7 @@ jobs:
     with:
       name: ${{ needs.parse-images.outputs.ztunnel-fips-name }}
       use-restricted-registry: true
-      dockerfile: docker/ztunnel-fips.Dockerfile
+      dockerfile: docker/fips.Dockerfile
       build-args: |
           SOURCE_IMAGE=${{ needs.parse-images.outputs.ztunnel-fips-source }}
       context: .

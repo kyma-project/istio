@@ -194,7 +194,7 @@ spec:
             kind: Deployment
             name: istiod
           maxReplicas: 5
-          minReplicas: 1
+          minReplicas: 2
         overlays:
         - apiVersion: apps/v1
           kind: Deployment

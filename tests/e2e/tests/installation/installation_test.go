@@ -57,6 +57,7 @@ func TestInstallation(t *testing.T) {
 		}
 
 		istioassert.AssertIstiodPodResources(t, c, "100m", "512Mi", "4000m", "2048Mi")
+		istioassert.AssertPodDisruptionBudgetReady(t, c, "istiod", "istio-system", 1)
 	})
 
 	t.Run("Installation of Istio module with custom values", func(t *testing.T) {
@@ -99,6 +100,8 @@ func TestInstallation(t *testing.T) {
 		istioassert.AssertIstiodPodResources(t, c, "15m", "200Mi", "1200m", "1200Mi")
 		istioassert.AssertIngressGatewayPodResources(t, c, "80m", "200Mi", "1500m", "1200Mi")
 		istioassert.AssertEgressGatewayPodResources(t, c, "70m", "190Mi", "1400m", "1100Mi")
+
+		istioassert.AssertPodDisruptionBudgetReady(t, c, "istiod", "istio-system", 1)
 	})
 
 	t.Run("Managed Istio resources are present", func(t *testing.T) {

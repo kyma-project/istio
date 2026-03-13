@@ -429,7 +429,7 @@ spec:
     pilot:
       autoscaleEnabled: true
       autoscaleMax: 5
-      autoscaleMin: 1
+      autoscaleMin: 2
       configMap: true
       cpu:
         targetAverageUtilization: 80

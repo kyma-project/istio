@@ -300,6 +300,14 @@ dns-proxying-e2e-test: gotestsum deploy
 	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/dnsproxying/..." --junitfile "./tests/e2e/tests/dnsproxying/report.xml" -- -timeout 20m
 	@echo "E2E tests completed successfully"
 
+.PHONY: clusterrole-e2e-test
+clusterrole-e2e-test: gotestsum deploy
+	@echo "Running e2e tests for ClusterRole"
+	go clean -testcache
+	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/clusterrole/..." --junitfile "./tests/e2e/tests/clusterrole/report.xml" -- -timeout 20m
+	@echo "E2E tests completed successfully"
+
+
 ##@ Module
 
 .PHONY: module-image

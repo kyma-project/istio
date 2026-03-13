@@ -207,6 +207,7 @@ jobs:
           - "ext-auth-e2e-test"
           - "egress-e2e-test"
           - "networkpolicy-e2e-test"
+          - "clusterrole-e2e-test"
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/e2e-test-k3d

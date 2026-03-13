@@ -1,0 +1,17 @@
+images:
+  - source: "europe-docker.pkg.dev/kyma-project/restricted-prod/sap.com/istio-pilot-fips:1.28.3@sha256:f12d2542fad3ff4a3a61f1fa92af4d46522dea9f94ed86c2ae0d1038199bdac1"
+    target:
+      name: external/istio/istio-pilot-fips
+      tag: 1.28.3-1
+  - source: "europe-docker.pkg.dev/kyma-project/restricted-prod/sap.com/istio-install-cni-fips:1.28.3@sha256:e34ce031f6bbbfb211ed6220bfdc29967c6f14928461ada1a25258364aa6d12d"
+    target:
+      name: external/istio/istio-install-cni-fips
+      tag: 1.28.3-1
+  - source: "europe-docker.pkg.dev/kyma-project/restricted-prod/sap.com/istio-proxy-fips:1.28.3@sha256:d8e6e60b017f2216d87fb1606c7d53ce045b5139f388ac71f1b7ff9ba056f2c1"
+    target:
+      name: external/istio/istio-proxy-fips
+      tag: 1.28.3-1
+  - source: "europe-docker.pkg.dev/kyma-project/restricted-prod/sap.com/ztunnel-fips:1.28.3@sha256:37b484f28e10002c1df197a80e8e21e833eeb9a5ae2beef953e06c9c0a8acdab"
+    target:
+      name: external/istio/ztunnel-fips
+      tag: 1.28.3-1

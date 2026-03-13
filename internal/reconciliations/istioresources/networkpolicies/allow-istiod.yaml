@@ -1,0 +1,61 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  labels:
+    kyma-project.io/module: istio
+    kyma-project.io/managed-by: kyma
+  name: kyma-project.io--istio-pilot
+  namespace: istio-system
+spec:
+  podSelector:
+    matchLabels:
+      istio: pilot
+  policyTypes:
+    - Egress
+    - Ingress
+  egress:
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - ports:
+        - protocol: TCP
+          port: __API_SERVER_PORT__
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              security.istio.io/tlsMode: istio
+          # The namespaceSelector needs to be set to empty `{}` explicitly.
+          # In case it is not specified, the policy will only allow traffic from the same namespace.
+          namespaceSelector: {}
+        - podSelector:
+            matchLabels:
+              istio: ingressgateway
+        - podSelector:
+            matchLabels:
+              istio: egressgateway
+      ports:
+        - protocol: TCP
+          port: 15012
+    - from:
+        - podSelector:
+            matchExpressions:
+              - key: kyma-project.io/module
+                operator: Exists
+          namespaceSelector: {}
+        - podSelector:
+            matchLabels:
+              networking.kyma-project.io/istio-metrics: allowed
+          namespaceSelector: {}
+        - podSelector:
+            matchLabels:
+              networking.kyma-project.io/metrics-scraping: allowed
+          namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 15014
+    - ports:
+        - protocol: TCP
+          port: 15017

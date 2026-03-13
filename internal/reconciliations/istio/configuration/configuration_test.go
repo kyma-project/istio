@@ -2,6 +2,7 @@ package configuration_test
 
 import (
 	"fmt"
+	"k8s.io/utils/ptr"
 	"testing"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
@@ -163,15 +164,18 @@ var _ = Describe("Istio Configuration", func() {
 		})
 	})
 
-	Context("UpdateLastAppliedCompatibilityMode", func() {
-		It("should update compatibility mode when annotation does not exist", func() {
+	Context("UpdateLastAppliedProxyConfig", func() {
+		It("should update sidecar proxies when annotation does not exist", func() {
 			// given
 			istioCR := operatorv1alpha2.Istio{Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
+					EnableDNSProxying: ptr.To(true),
+				},
 				CompatibilityMode: true,
 			}}
 
 			// when
-			err := configuration.UpdateLastAppliedCompatibilityMode(&istioCR)
+			err := configuration.UpdateLastAppliedProxyConfig(&istioCR)
 
 			// then
 			Expect(err).ShouldNot(HaveOccurred())
@@ -180,18 +184,22 @@ var _ = Describe("Istio Configuration", func() {
 			appliedConfig, err := configuration.GetLastAppliedConfiguration(&istioCR)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(appliedConfig.CompatibilityMode).To(BeTrue())
+			Expect(*appliedConfig.Config.EnableDNSProxying).To(BeTrue())
 		})
 
-		It("should update only compatibility mode preserving other fields", func() {
+		It("should update only compatibility mode and enableDNSProxying preserving other fields", func() {
 			// given
 			istioCR := operatorv1alpha2.Istio{Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
+					EnableDNSProxying: ptr.To(false),
+				},
 				CompatibilityMode: true,
 			}}
 			istioCR.Annotations = map[string]string{}
-			istioCR.Annotations[lastAppliedConfiguration] = `{"config":{"numTrustedProxies":2,"telemetry":{"metrics":{}}},"IstioTag":"1.16.1-distroless","compatibilityMode":false}`
+			istioCR.Annotations[lastAppliedConfiguration] = `{"config":{"enableDNSProxying":true, "numTrustedProxies":2,"telemetry":{"metrics":{}}},"IstioTag":"1.16.1-distroless","compatibilityMode":false}`
 
 			// when
-			err := configuration.UpdateLastAppliedCompatibilityMode(&istioCR)
+			err := configuration.UpdateLastAppliedProxyConfig(&istioCR)
 
 			// then
 			Expect(err).ShouldNot(HaveOccurred())
@@ -199,6 +207,31 @@ var _ = Describe("Istio Configuration", func() {
 			appliedConfig, err := configuration.GetLastAppliedConfiguration(&istioCR)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(appliedConfig.CompatibilityMode).To(BeTrue())
+			Expect(*appliedConfig.Config.EnableDNSProxying).To(BeFalse())
+			Expect(*appliedConfig.Config.NumTrustedProxies).To(Equal(2))
+			Expect(appliedConfig.IstioTag).To(Equal("1.16.1-distroless"))
+		})
+
+		It("should update only enableDNSProxying preserving other fields", func() {
+			// given
+			istioCR := operatorv1alpha2.Istio{Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
+					EnableDNSProxying: ptr.To(false),
+				},
+			}}
+			istioCR.Annotations = map[string]string{}
+			istioCR.Annotations[lastAppliedConfiguration] = `{"config":{"enableDNSProxying":true, "numTrustedProxies":2,"telemetry":{"metrics":{}}},"IstioTag":"1.16.1-distroless","compatibilityMode":false}`
+
+			// when
+			err := configuration.UpdateLastAppliedProxyConfig(&istioCR)
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+
+			appliedConfig, err := configuration.GetLastAppliedConfiguration(&istioCR)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(appliedConfig.CompatibilityMode).To(BeFalse())
+			Expect(*appliedConfig.Config.EnableDNSProxying).To(BeFalse())
 			Expect(*appliedConfig.Config.NumTrustedProxies).To(Equal(2))
 			Expect(appliedConfig.IstioTag).To(Equal("1.16.1-distroless"))
 		})

@@ -1,9 +1,12 @@
 # Regular and Native Sidecar Containers
 Understand the differences between Istio proxies running as regular containers and as native sidecars, learn about the default settings applied by the Istio module, and find out how to override these settings for specific workloads as needed.
 
+>[!NOTE]
+> In Kyma, you can use native sidecars only with Kubernetes 1.33 or later.
+
 ## Advantages of Native Sidecars
 
-Every Pod in the Istio mesh gets an additional `istio-proxy` container, which intercepts network traffic to provide Istio features. For Istio proxies, Istio uses two types of containers: regular containers and native sidecars. Native sidecars are init containers that have **restartPolicy** set to `Always`. This approach, introduced with Kubernetes 1.28, allows for controlling the startup and shutdown sequence of containers within a Pod, which is not possible with sidecars deployed as regular containers.
+Every Pod in the Istio mesh gets an additional `istio-proxy` container, which intercepts network traffic to provide Istio features. For Istio proxies, Istio uses two types of containers: regular containers and native sidecars. Native sidecars are init containers that have **restartPolicy** set to `Always`. This approach allows for controlling the startup and shutdown sequence of containers within a Pod, which is not possible with sidecars deployed as regular containers.
 
 Using native sidecars resolves the following problems that occur when Istio proxies run as regular containers:
 - When an application container starts before the regular `istio-proxy` container is ready, the application doesn't have network access at startup.
@@ -15,14 +18,14 @@ Using native sidecars resolves the following problems that occur when Istio prox
 
 By default, the Istio module 1.22 and later versions use `istio-proxy` native sidecars. This setting is configured globally and applied to all Pods that allow for Istio sidecar proxy injection. However, you can override this default setting for a specific Pod, allowing it to run `istio-proxy` as a regular container instead.
 
-Furthermore, as long as the Istio module deploys Istio version 1.27, you have the option to set the **compatibilityMode** in the Istio Custom Resource (CR) to `true`. This setting makes Istio behave as version 1.26, which uses regular `istio-proxy` containers by default.
+Furthermore, if you use the Istio module that deploys Istio version 1.27, you have the option to set the **compatibilityMode** in the Istio custom resource (CR) to `true`. This setting makes Istio behave as version 1.26, which uses regular `istio-proxy` containers by default.
 
 Istio module version | Istio version | Default `istio-proxy` Container Type
 ---------|----------|---------
  1.20 or lower | 1.26 or lower | Regular containers
  1.21 | 1.27 | Regular containers
- 1.22 | 1.27 | Native sidecars, unless you set **compatibilityMode** in the Istio CR to `true`
- One of the next versions after 1.22 with updated Istio | 1.28 | Native sidecars
+ 1.22, 1.23, 1,24 | 1.27 | Native sidecars, unless you set **compatibilityMode** in the Istio CR to `true`
+ 1.25 or later | 1.28 | Native sidecars
 
 ## Configuring Regular Istio Proxy Containers for a Particular Workload
 

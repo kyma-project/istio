@@ -27,6 +27,7 @@ Consider all the following items. If your contribution violates any of them, or 
 - [ ] You checked if this change should be cherry-picked to active release branches.
 - [ ] The configuration does not introduce any additional latency.
 - [ ] You checked if Busola updates are needed.
+- [ ] If you added a predicate for restarters, check if the **lastAppliedConfiguration** annotation is properly updated after the given restart is executed.
 
 **Related issues**
 <!-- If you refer to a particular issue, provide its number. For example, `Resolves #123`, `Fixes #43`, or `See also #33`. -->

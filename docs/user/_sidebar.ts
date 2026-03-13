@@ -21,7 +21,8 @@ export default [
     ] },
   { text: 'Technical Reference', link: './technical-reference/README', collapsed: true, items: [
     { text: 'Istio Controller Parameters', link: './technical-reference/05-00-istio-controller-parameters' },
-    { text: 'Istio Controller RBAC Configuration', link: './technical-reference/05-10-istio-controller-rbac' }
+    { text: 'Istio Controller RBAC Configuration', link: './technical-reference/05-10-istio-controller-rbac' },
+    { text: 'Support for Network Policies', link: './technical-reference/05-20-support-for-network-policies' }
     ] },
   { text: 'Troubleshooting', link: './troubleshooting/README', collapsed: true, items: [
     { text: 'Network Connectivity - Basic Diagnostics', link: './troubleshooting/03-00-network-connectivity' },

@@ -1,5 +1,5 @@
 images:
-  - source: "europe-docker.pkg.dev/kyma-project/restricted-prod/sap.com/istio-pilot-fips:1.28.3@sha256:600d9f010d84f13289e62fa49c3aef1e61909f43cd497518dab0fcf380546639"
+  - source: "europe-docker.pkg.dev/kyma-project/restricted-prod/sap.com/istio-pilot-fips:1.28.3@sha256:f12d2542fad3ff4a3a61f1fa92af4d46522dea9f94ed86c2ae0d1038199bdac1"
     target:
       name: external/istio/istio-pilot-fips
       tag: 1.28.3-1
@@ -7,7 +7,7 @@ images:
     target:
       name: external/istio/istio-install-cni-fips
       tag: 1.28.3-1
-  - source: "europe-docker.pkg.dev/kyma-project/restricted-prod/sap.com/istio-proxy-fips:1.28.3@sha256:abae0a73c43ba847a96154cf2bb3982091a5662bec0e9f7303e3d270447f9297"
+  - source: "europe-docker.pkg.dev/kyma-project/restricted-prod/sap.com/istio-proxy-fips:1.28.3@sha256:d8e6e60b017f2216d87fb1606c7d53ce045b5139f388ac71f1b7ff9ba056f2c1"
     target:
       name: external/istio/istio-proxy-fips
       tag: 1.28.3-1

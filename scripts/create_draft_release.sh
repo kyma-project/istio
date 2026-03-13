@@ -34,10 +34,7 @@ ${release_notes}
 ${changelog}
 EOF
 )
-
-echo "$body"
-exit
-
+  
 json_payload=$(jq -n \
   --arg tag_name "${release_tag}" \
   --arg name "${release_tag}" \

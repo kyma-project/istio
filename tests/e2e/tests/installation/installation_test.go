@@ -58,6 +58,7 @@ func TestInstallation(t *testing.T) {
 
 		istioassert.AssertIstiodPodResources(t, c, "100m", "512Mi", "4000m", "2048Mi")
 		istioassert.AssertPodDisruptionBudgetReady(t, c, "istiod", "istio-system", 1)
+		istioassert.AssertPodDisruptionBudgetReady(t, c, "istio-ingressgateway", "istio-system", 1)
 	})
 
 	t.Run("Installation of Istio module with custom values", func(t *testing.T) {

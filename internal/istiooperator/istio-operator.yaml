@@ -331,6 +331,7 @@ spec:
         type: ClusterIP
       istio-ingressgateway:
         autoscaleEnabled: true
+        autoscaleMin: 3
         env: {}
         name: istio-ingressgateway
         podAnnotations:
@@ -429,7 +430,7 @@ spec:
     pilot:
       autoscaleEnabled: true
       autoscaleMax: 5
-      autoscaleMin: 1
+      autoscaleMin: 2
       configMap: true
       cpu:
         targetAverageUtilization: 80

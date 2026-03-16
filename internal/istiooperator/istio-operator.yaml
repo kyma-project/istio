@@ -331,6 +331,7 @@ spec:
         type: ClusterIP
       istio-ingressgateway:
         autoscaleEnabled: true
+        autoscaleMin: 2
         env: {}
         name: istio-ingressgateway
         podAnnotations:

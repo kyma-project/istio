@@ -302,7 +302,7 @@ spec:
       configValidation: true
       defaultNodeSelector: {}
       defaultPodDisruptionBudget:
-        enabled: true
+        enabled: false
       defaultResources:
         requests:
           cpu: 10m
@@ -375,8 +375,8 @@ spec:
       injectionURL: ""
     pilot:
       autoscaleEnabled: true
-      autoscaleMax: 2
-      autoscaleMin: 2
+      autoscaleMax: 1
+      autoscaleMin: 1
       configMap: true
       cpu:
         targetAverageUtilization: 80

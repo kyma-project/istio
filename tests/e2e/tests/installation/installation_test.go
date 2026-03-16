@@ -102,6 +102,7 @@ func TestInstallation(t *testing.T) {
 		istioassert.AssertEgressGatewayPodResources(t, c, "70m", "190Mi", "1400m", "1100Mi")
 
 		istioassert.AssertPodDisruptionBudgetReady(t, c, "istiod", "istio-system", 1)
+		istioassert.AssertPodDisruptionBudgetReady(t, c, "istio-ingressgateway", "istio-system", 1)
 	})
 
 	t.Run("Managed Istio resources are present", func(t *testing.T) {

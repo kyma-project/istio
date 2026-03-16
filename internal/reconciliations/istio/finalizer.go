@@ -38,7 +38,7 @@ func addInstallationFinalizer(ctx context.Context, apiClient client.Client, isti
 	})
 }
 
-func removeInstallationFinalizer(ctx context.Context, apiClient client.Client, istioCR *operatorv1alpha2.Istio) error {
+func RemoveInstallationFinalizer(ctx context.Context, apiClient client.Client, istioCR *operatorv1alpha2.Istio) error {
 	ctrl.Log.Info("Removing Istio installation finalizer")
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		finalizerCR := operatorv1alpha2.Istio{}

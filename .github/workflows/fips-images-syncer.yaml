@@ -39,9 +39,11 @@ jobs:
             name=$(yq ".images[$i].target.name" fips-images.yaml)
             tag=$(yq ".images[$i].target.tag" fips-images.yaml)
             source=$(yq ".images[$i].source" fips-images.yaml)
-            echo "${name}-name=${name}" >> "$GITHUB_OUTPUT"
-            echo "${name}-tag=${tag}" >> "$GITHUB_OUTPUT"
-            echo "${name}-source=${source}" >> "$GITHUB_OUTPUT"
+           # Uses basename to convert "external/istio/istio-pilot-fips" -> "istio-pilot-fips"
+            key=$(basename "${name}")
+            echo "${key}-name=${name}" >> "$GITHUB_OUTPUT"
+            echo "${key}-tag=${tag}" >> "$GITHUB_OUTPUT"
+            echo "${key}-source=${source}" >> "$GITHUB_OUTPUT"
           done
 
   build-istiod:

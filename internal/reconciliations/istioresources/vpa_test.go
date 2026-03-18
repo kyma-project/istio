@@ -51,6 +51,12 @@ var _ = Describe("VPA", func() {
 
 			Expect(vpa.GetLabels()).ToNot(BeNil())
 			Expect(vpa.GetLabels()).To(HaveKeyWithValue("app.kubernetes.io/version", "dev"))
+
+			Expect(vpa.GetOwnerReferences()).To(HaveLen(1))
+			Expect(vpa.GetOwnerReferences()[0].APIVersion).To(Equal(owner.APIVersion))
+			Expect(vpa.GetOwnerReferences()[0].Kind).To(Equal(owner.Kind))
+			Expect(vpa.GetOwnerReferences()[0].Name).To(Equal(owner.Name))
+			Expect(vpa.GetOwnerReferences()[0].UID).To(Equal(owner.UID))
 		})
 
 		It("should return none if no change was applied", func() {

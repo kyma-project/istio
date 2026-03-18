@@ -3,6 +3,12 @@ kind: VerticalPodAutoscaler
 metadata:
   name: istio-operator-vpa
   namespace: kyma-system
+  labels:
+    kyma-project.io/module: istio
+    app.kubernetes.io/component: operator
+    app.kubernetes.io/part-of: istio
+    app.kubernetes.io/name: istio-operator
+    app.kubernetes.io/instance: istio-operator-default
 spec:
   resourcePolicy:
     containerPolicies:

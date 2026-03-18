@@ -35,9 +35,15 @@ import (
 	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
+	// Automemlimit is imported to automatically set the memory limit for the operator based on the available memory for the container (cgroups).
+	// This is required as with the controller running under VPA, the memory limit is not static and GOMEMLIMIT cannot be set to a fixed value.
+	// Automemlimit will set GOMEMLIMIT to 90% of the available memory for the container.
+	// TODO: This should be reevaluated after sidecar restart is fixed and memory usage is stable,
+	// as it may be possible to set a fixed GOMEMLIMIT value based on the observed memory usage.
+	_ "github.com/KimMachineGun/automemlimit"
+
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
-
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"k8s.io/apimachinery/pkg/runtime"

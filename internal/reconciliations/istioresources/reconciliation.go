@@ -43,7 +43,7 @@ func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha2.Is
 		return describederrors.NewDescribedError(err, "could not determine cluster provider")
 	}
 
-	resources, err := getResources(r.client, provider)
+	resources, err := getResources(r.client, provider, istioCR)
 	if err != nil {
 		ctrl.Log.Error(err, "Failed to initialise Istio resources")
 		return describederrors.NewDescribedError(err, "Istio controller failed to initialise Istio resources")
@@ -72,8 +72,18 @@ func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha2.Is
 }
 
 // getResources returns all Istio resources required for the reconciliation specific for the given hyperscaler.
-func getResources(k8sClient client.Client, provider string) ([]Resource, error) {
-	istioResources := []Resource{NewPeerAuthenticationMtls(k8sClient)}
+func getResources(k8sClient client.Client, provider string, istioCR v1alpha2.Istio) ([]Resource, error) {
+	if istioCR.DeletionTimestamp != nil && !istioCR.DeletionTimestamp.IsZero() {
+		toDeleteResources := []Resource{
+			NewVPA(true),
+		}
+		return toDeleteResources, nil
+	}
+
+	istioResources := []Resource{
+		NewPeerAuthenticationMtls(k8sClient),
+		NewVPA(false),
+	}
 
 	switch provider {
 	case clusterconfig.Aws:

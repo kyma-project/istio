@@ -1,7 +1,7 @@
 # NetworkPolicies for istio-system and kyma-system
 
 ## Status
-Proposed
+Accepted
 
 ## Context
 This ADR addresses requirements defined in [kyma-project/kyma#18818](https://github.com/kyma-project/kyma/issues/18818).

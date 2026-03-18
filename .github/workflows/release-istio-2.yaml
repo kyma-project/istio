@@ -520,7 +520,7 @@ jobs:
     needs: [ check-prerequisites, publish-release, upload-release-report ]
     steps:
       - name: Notify
-        uses: slackapi/slack-github-action@b0fa283ad8fea605de13dc3f449259339835fc52 # v2.1.0
+        uses: slackapi/slack-github-action@af78098f536edbc4de71162a307590698245be95 # v3.0.1
         with:
           webhook: ${{ secrets.SLACK_RELEASE_WEBHOOK }}
           webhook-type: webhook-trigger

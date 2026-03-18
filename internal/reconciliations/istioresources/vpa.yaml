@@ -1,18 +1,18 @@
 apiVersion: autoscaling.k8s.io/v1
 kind: VerticalPodAutoscaler
 metadata:
-  name: operator-vpa
-  namespace: system
+  name: istio-operator-vpa
+  namespace: kyma-system
 spec:
   resourcePolicy:
     containerPolicies:
       - containerName: manager
-        minAllowed:
-          cpu: 10m
-          memory: 64Mi
         maxAllowed:
           cpu: 10000m
           memory: 16Gi
+        minAllowed:
+          cpu: 10m
+          memory: 64Mi
   targetRef:
     apiVersion: apps/v1
     kind: Deployment

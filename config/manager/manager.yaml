@@ -61,8 +61,6 @@ spec:
         env:
         - name: GODEBUG
           value: "fips140=only,tlsmlkem=0"
-        - name: GOMEMLIMIT
-          value: "4GiB"
         image: controller:latest
         name: manager
         securityContext:

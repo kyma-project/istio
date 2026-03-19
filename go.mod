@@ -41,6 +41,7 @@ require (
 )
 
 require (
+	github.com/KimMachineGun/automemlimit v0.7.5
 	github.com/golang/protobuf v1.5.4
 	github.com/prometheus/client_golang v1.23.2
 )
@@ -147,6 +148,7 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.1 // indirect
 	github.com/openshift/api v0.0.0-20250806102053-6a7223edb2fc // indirect
+	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240409071808-615f978279ca // indirect

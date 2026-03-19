@@ -82,6 +82,7 @@ func getResources(k8sClient client.Client, provider string, istioCR v1alpha2.Ist
 		toDeleteResources := []Resource{
 			NewNetworkPolicies(true),
 			NewClusterRolesReconciler(true),
+			NewVPA(true),
 		}
 		return toDeleteResources, nil
 	}
@@ -89,6 +90,7 @@ func getResources(k8sClient client.Client, provider string, istioCR v1alpha2.Ist
 		NewPeerAuthenticationMtls(false),
 		NewNetworkPolicies(!istioCR.Spec.NetworkPoliciesEnabled),
 		NewClusterRolesReconciler(false),
+		NewVPA(false),
 	}
 
 	switch provider {

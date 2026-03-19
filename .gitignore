@@ -93,6 +93,8 @@ out.txt
 mod
 charts
 istio-manager.yaml
+istio-manager-vpa.yaml
+vpa.gen.yaml
 
 # Binaries for programs and plugins
 *.exe

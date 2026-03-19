@@ -7,6 +7,7 @@ export default [
     { text: 'Configure Istio CA Certificate', link: './00-25-plug-in-istio-ca.md' },
     { text: 'Istio Trust Domain', link: './00-30-trust-domain.md'},
     { text: 'DNS Proxying', link: './00-35-dns-proxying.md' },
+    { text: 'Configure Observability for the Istio Service Mesh', link: './00-40-enable-istio-access-logs.md' },
     ] },
   { text: 'Istio Custom Resource', link: './04-00-istio-custom-resource' },
   { text: 'Tutorials', link: './tutorials/README', collapsed: true, items: [
@@ -14,7 +15,6 @@ export default [
     { text: 'Expose Workloads Using Gateway API', link: './tutorials/01-20-expose-httbin-gateway-api' },
     { text: 'Expose a TCP Service Using Gateway API Alpha Support', link: './tutorials/01-30-expose-tcp-gateway-api' },
     { text: 'Exposing Workloads Using Istio VirtualService', link: './tutorials/01-65-expose-workload-vs' },
-    { text: 'Configure Istio Access Logs', link: './tutorials/01-45-enable-istio-access-logs' },
     { text: 'Send Requests Using Istio Egress Gateway', link: './tutorials/01-50-send-requests-using-egress' },
     { text: 'Send mTLS Requests Using Istio Egress Gateway', link: './tutorials/01-55-send-requests-using-egress-and-mtls' },
     { text: 'Migrate From ELB to NLB', link: './tutorials/01-60-enable-nlb-load-balancer' }

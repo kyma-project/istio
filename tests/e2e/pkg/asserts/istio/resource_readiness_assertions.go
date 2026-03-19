@@ -7,6 +7,7 @@ import (
 	v3 "istio.io/client-go/pkg/apis/security/v1"
 	v2 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	policyv1 "k8s.io/api/policy/v1"
 	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
 	"sigs.k8s.io/e2e-framework/klient/wait"
 	"sigs.k8s.io/e2e-framework/klient/wait/conditions"
@@ -122,4 +123,17 @@ func AssertDefaultPeerAuthenticationExists(t *testing.T, c *resources.Resources)
 	err := c.Get(t.Context(), "default", "istio-system", pa)
 	require.NoError(t, err)
 	return pa
+}
+
+// AssertPodDisruptionBudgetReady asserts that the PodDisruptionBudget exists in the given namespace and has the expected minAvailable value
+func AssertPodDisruptionBudgetReady(t *testing.T, c *resources.Resources, name, namespace string, expectedMinAvailable int32) {
+	t.Helper()
+
+	pdb := &policyv1.PodDisruptionBudget{}
+	err := c.Get(t.Context(), name, namespace, pdb)
+	require.NoError(t, err)
+
+	require.NotNil(t, pdb.Spec.MinAvailable, "PDB %s/%s has no MinAvailable", namespace, name)
+	require.Equal(t, expectedMinAvailable, pdb.Spec.MinAvailable.IntVal, "PDB %s/%s MinAvailable mismatch", namespace, name)
+	require.NotNil(t, pdb.Spec.Selector, "PDB %s/%s has no selector", namespace, name)
 }

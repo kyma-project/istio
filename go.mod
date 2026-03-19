@@ -41,7 +41,7 @@ require (
 )
 
 require (
-	github.com/KimMachineGun/automemlimit v0.7.4
+	github.com/KimMachineGun/automemlimit v0.7.5
 	github.com/golang/protobuf v1.5.4
 	github.com/prometheus/client_golang v1.23.2
 )

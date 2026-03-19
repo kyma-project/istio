@@ -18,6 +18,8 @@ package main
 
 import (
 	"flag"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"time"
 
@@ -40,7 +42,7 @@ import (
 	// Automemlimit will set GOMEMLIMIT to 90% of the available memory for the container.
 	// TODO: This should be reevaluated after sidecar restart is fixed and memory usage is stable,
 	// as it may be possible to set a fixed GOMEMLIMIT value based on the observed memory usage.
-	_ "github.com/KimMachineGun/automemlimit"
+	//_ "github.com/KimMachineGun/automemlimit"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -78,6 +80,7 @@ type FlagVar struct {
 	metricsAddr            string
 	enableLeaderElection   bool
 	probeAddr              string
+	pprofAddr              string
 	failureBaseDelay       time.Duration
 	failureMaxDelay        time.Duration
 	rateLimiterFrequency   int
@@ -111,6 +114,15 @@ func main() {
 	}
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+
+	if flagVar.pprofAddr != "" {
+		go func() {
+			setupLog.Info("starting pprof server", "address", flagVar.pprofAddr)
+			if err := http.ListenAndServe(flagVar.pprofAddr, nil); err != nil {
+				setupLog.Error(err, "pprof server failed")
+			}
+		}()
+	}
 
 	// We configure the Istio logging here to make it visible that global log config is updated instead of hiding it in the scope of istio package.
 	err := istio.ConfigureIstioLogScopes()
@@ -190,6 +202,7 @@ func defineFlagVar() *FlagVar {
 	flagVar := new(FlagVar)
 	flag.StringVar(&flagVar.metricsAddr, "metrics-bind-address", ":8090", "The address the metric endpoint binds to.")
 	flag.StringVar(&flagVar.probeAddr, "health-probe-bind-address", ":8091", "The address the probe endpoint binds to.")
+	flag.StringVar(&flagVar.pprofAddr, "pprof-bind-address", "", "The address the pprof endpoint binds to. Leave empty to disable pprof.")
 	flag.BoolVar(&flagVar.enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")

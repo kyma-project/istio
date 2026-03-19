@@ -3,6 +3,7 @@ package pods
 import (
 	"context"
 	"fmt"
+
 	"github.com/go-logr/logr"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -17,19 +18,17 @@ const (
 )
 
 type RestartLimits struct {
-	PodsToRestartLimit int
-	PodsToListLimit    int
+	PodsPerPage int
 }
 
-func NewPodsRestartLimits(restartLimit, listLimit int) *RestartLimits {
+func NewPodsRestartLimits(podsPerPage int) *RestartLimits {
 	return &RestartLimits{
-		PodsToRestartLimit: restartLimit,
-		PodsToListLimit:    listLimit,
+		PodsPerPage: podsPerPage,
 	}
 }
 
 type Getter interface {
-	GetPodsToRestart(ctx context.Context, preds []predicates.SidecarProxyPredicate, limits *RestartLimits) (*v1.PodList, error)
+	GetPodsToRestart(ctx context.Context, preds []predicates.SidecarProxyPredicate, limits *RestartLimits, restartFn func(context.Context, *v1.PodList) ([]string, error)) error
 	GetAllInjectedPods(context context.Context) (*v1.PodList, error)
 }
 
@@ -46,13 +45,16 @@ func NewPods(k8sClient client.Client, logger *logr.Logger) *Pods {
 }
 
 //nolint:gocognit // cognitive complexity 29 of func `(*Pods).GetPodsToRestart` is high (> 20) TODO refactor
-func (p *Pods) GetPodsToRestart(ctx context.Context, preds []predicates.SidecarProxyPredicate, limits *RestartLimits) (*v1.PodList, error) {
-	podsToRestart := &v1.PodList{}
-	for while := true; while; {
-		podsWithSidecar, err := getSidecarPods(ctx, p.k8sClient, p.logger, limits.PodsToListLimit, podsToRestart.Continue)
+func (p *Pods) GetPodsToRestart(ctx context.Context, preds []predicates.SidecarProxyPredicate, limits *RestartLimits, restartFn func(context.Context, *v1.PodList) ([]string, error)) error {
+	continueToken := ""
+
+	for {
+		podsWithSidecar, err := getSidecarPods(ctx, p.k8sClient, p.logger, limits.PodsPerPage, continueToken)
 		if err != nil {
-			return nil, err
+			return err
 		}
+
+		page := &v1.PodList{}
 		for _, pod := range podsWithSidecar.Items {
 			optionalMatched := false
 			requiredMatched := true
@@ -70,23 +72,24 @@ func (p *Pods) GetPodsToRestart(ctx context.Context, preds []predicates.SidecarP
 				}
 			}
 			if requiredMatched && optionalMatched {
-				podsToRestart.Items = append(podsToRestart.Items, pod)
-			}
-			if len(podsToRestart.Items) >= limits.PodsToRestartLimit {
-				break
+				page.Items = append(page.Items, pod)
 			}
 		}
-		podsToRestart.Continue = podsWithSidecar.Continue
-		while = len(podsToRestart.Items) < limits.PodsToRestartLimit && podsToRestart.Continue != ""
+
+		if len(page.Items) > 0 {
+			p.logger.Info("Pods to restart on this page", "number of pods", len(page.Items))
+			if _, err := restartFn(ctx, page); err != nil {
+				return err
+			}
+		}
+
+		continueToken = podsWithSidecar.Continue
+		if continueToken == "" {
+			break
+		}
 	}
 
-	if len(podsToRestart.Items) > 0 {
-		p.logger.Info("Pods to restart", "number of pods", len(podsToRestart.Items), "has more pods", podsToRestart.Continue != "")
-	} else {
-		p.logger.Info("No pods to restart with matching predicates")
-	}
-
-	return podsToRestart, nil
+	return nil
 }
 
 func (p *Pods) GetAllInjectedPods(ctx context.Context) (*v1.PodList, error) {

@@ -12,21 +12,19 @@ import (
 // If the evaluation returns true, the restarter restarts the component.
 // Additional boolean return parameter indicates if the reconciliation should be requeued.
 type Restarter interface {
-	Restart(ctx context.Context, istioCR *operatorv1alpha2.Istio) (describedError describederrors.DescribedError, requeue bool)
+	Restart(ctx context.Context, istioCR *operatorv1alpha2.Istio) (describedError describederrors.DescribedError)
 }
 
 // Restart invokes the given restarters and returns the most severe error.
-func Restart(ctx context.Context, istioCR *operatorv1alpha2.Istio, restarters []Restarter) (describederrors.DescribedError, bool) {
+func Restart(ctx context.Context, istioCR *operatorv1alpha2.Istio, restarters []Restarter) describederrors.DescribedError {
 	var restarterErrs []describederrors.DescribedError
 
-	needsRequeue := false
 	for _, r := range restarters {
-		err, requeue := r.Restart(ctx, istioCR)
-		needsRequeue = requeue || needsRequeue
+		err := r.Restart(ctx, istioCR)
 		if err != nil {
 			restarterErrs = append(restarterErrs, err)
 		}
 	}
 
-	return describederrors.GetMostSevereErr(restarterErrs), needsRequeue
+	return describederrors.GetMostSevereErr(restarterErrs)
 }

@@ -2,7 +2,11 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: istio-viewer-role
+  name: kyma-istio-view
+  labels:
+    rbac.authorization.k8s.io/aggregate-to-view: "true"
+    kyma-project.io/managed-by: kyma
+    kyma-project.io/module: istio
 rules:
 - apiGroups:
   - operator.kyma-project.io

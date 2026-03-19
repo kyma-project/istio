@@ -161,6 +161,7 @@ jobs:
           - "trust-domain-e2e-test"
           - "networkpolicy-e2e-test"
           - "dns-proxying-e2e-test"
+          - "clusterrole-e2e-test"
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/load-manager-image

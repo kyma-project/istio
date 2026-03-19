@@ -73,19 +73,23 @@ func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha2.Is
 
 // getResources returns all Istio resources required for the reconciliation specific for the given hyperscaler.
 func getResources(k8sClient client.Client, provider string, istioCR v1alpha2.Istio) ([]Resource, error) {
+	// @Ressetkk: this logic needs to be moved to main reconciliation loop.
+	// Remove dynamic assignment of resource reconcilers.
+	// Can't write proper tests if I don't know which resources are reconciled in the loop.
 	if istioCR.DeletionTimestamp != nil && !istioCR.DeletionTimestamp.IsZero() {
+		// NewPeerAuthenticationMtls does not delete resources
+		// NewProxyProtocolEnvoyFilter fails because CRDs are removed before it can delete the EnvoyFilter
 		toDeleteResources := []Resource{
-			NewPeerAuthenticationMtls(true),
 			NewNetworkPolicies(true),
-			NewProxyProtocolEnvoyFilter(true),
+			NewClusterRolesReconciler(true),
 			NewVPA(true),
 		}
 		return toDeleteResources, nil
 	}
-
 	istioResources := []Resource{
 		NewPeerAuthenticationMtls(false),
 		NewNetworkPolicies(!istioCR.Spec.NetworkPoliciesEnabled),
+		NewClusterRolesReconciler(false),
 		NewVPA(false),
 	}
 

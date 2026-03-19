@@ -3,7 +3,6 @@ package sidecars_test
 import (
 	"context"
 	"errors"
-	"math"
 	"testing"
 
 	"github.com/go-logr/logr"
@@ -54,12 +53,11 @@ var _ = Describe("RestartProxies", func() {
 		istioCR := helpers.GetIstioCR(expectedImage.Tag)
 		actionRestarter := restart.NewActionRestarter(c, &logger)
 		proxyRestarter := sidecars.NewProxyRestarter(c, podsLister, actionRestarter, &logger)
-		warnings, hasMorePods, err := proxyRestarter.RestartProxies(ctx, expectedImage, helpers.DefaultSidecarResources, &istioCR)
+		warnings, err := proxyRestarter.RestartProxies(ctx, expectedImage, helpers.DefaultSidecarResources, &istioCR)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
 		Expect(warnings).To(BeEmpty())
-		Expect(hasMorePods).To(BeFalse())
 
 		err = c.Get(ctx, client.ObjectKey{Name: rsOwnerRS.Name, Namespace: rsOwnerRS.Namespace}, rsOwnerRS)
 		Expect(err).NotTo(HaveOccurred())
@@ -78,12 +76,11 @@ var _ = Describe("RestartProxies", func() {
 		istioCR := helpers.GetIstioCR(expectedImage.Tag)
 		actionRestarter := restart.NewActionRestarter(failClient, &logger)
 		proxyRestarter := sidecars.NewProxyRestarter(failClient, podsListerMock, actionRestarter, &logger)
-		warnings, hasMorePods, err := proxyRestarter.RestartProxies(ctx, expectedImage, helpers.DefaultSidecarResources, &istioCR)
+		warnings, err := proxyRestarter.RestartProxies(ctx, expectedImage, helpers.DefaultSidecarResources, &istioCR)
 
 		// then
 		Expect(err).ToNot(HaveOccurred())
 		Expect(warnings).To(BeEmpty())
-		Expect(hasMorePods).To(BeFalse())
 
 		Expect(podsListerMock.Called).To(Equal(2))
 
@@ -94,9 +91,6 @@ var _ = Describe("RestartProxies", func() {
 		Expect(podsListerMock.Predicates[0][2]).To(BeAssignableToTypeOf(&predicates.ImageResourcesPredicate{}))
 		Expect(podsListerMock.Predicates[0][3]).To(BeAssignableToTypeOf(&predicates.NativeSidecarRestartPredicate{}))
 		Expect(podsListerMock.Predicates[0][4]).To(BeAssignableToTypeOf(&predicates.EnableDNSProxyingRestartPredicate{}))
-		// the one predicate bellow might start failing if you add a new predicate at the end of the list that creates all the predicates above
-		// it is because the order has coupling to the implementation
-		// go deeper into the invocation chain, and you will find that there is another place where KymaWorkload or Customer workload is injected
 		Expect(podsListerMock.Predicates[0][5]).To(BeAssignableToTypeOf(&predicates.KymaWorkloadRestartPredicate{}))
 
 		Expect(podsListerMock.Predicates[1]).To(HaveLen(6))
@@ -105,16 +99,11 @@ var _ = Describe("RestartProxies", func() {
 		Expect(podsListerMock.Predicates[1][2]).To(BeAssignableToTypeOf(&predicates.ImageResourcesPredicate{}))
 		Expect(podsListerMock.Predicates[1][3]).To(BeAssignableToTypeOf(&predicates.NativeSidecarRestartPredicate{}))
 		Expect(podsListerMock.Predicates[1][4]).To(BeAssignableToTypeOf(&predicates.EnableDNSProxyingRestartPredicate{}))
-		// the one predicate bellow might start failing if you add a new predicate at the end of the list that creates all the predicates above
-		// it is because the order has coupling to the implementation
-		// go deeper into the invocation chain, and you will find that there is another place where KymaWorkload or Customer workload is injected
 		Expect(podsListerMock.Predicates[1][5]).To(BeAssignableToTypeOf(&predicates.CustomerWorkloadRestartPredicate{}))
 
 		Expect(podsListerMock.Limits).To(HaveLen(2))
-		Expect(podsListerMock.Limits[0].PodsToRestartLimit).To(Equal(math.MaxInt))
-		Expect(podsListerMock.Limits[0].PodsToListLimit).To(Equal(math.MaxInt))
-		Expect(podsListerMock.Limits[1].PodsToRestartLimit).To(Equal(30))
-		Expect(podsListerMock.Limits[1].PodsToListLimit).To(Equal(100))
+		Expect(podsListerMock.Limits[0].PodsPerPage).To(Equal(30))
+		Expect(podsListerMock.Limits[1].PodsPerPage).To(Equal(30))
 	})
 
 	It("should return error if compatibility predicate creation fails", func() {
@@ -128,12 +117,11 @@ var _ = Describe("RestartProxies", func() {
 		proxyRestarter := sidecars.NewProxyRestarter(c, podsListerMock, actionRestarter, &logger)
 
 		// when
-		warnings, hasMorePods, err := proxyRestarter.RestartProxies(ctx, expectedImage, helpers.DefaultSidecarResources, &istioCR)
+		warnings, err := proxyRestarter.RestartProxies(ctx, expectedImage, helpers.DefaultSidecarResources, &istioCR)
 
 		// then
 		Expect(err).To(HaveOccurred())
 		Expect(warnings).To(BeEmpty())
-		Expect(hasMorePods).To(BeFalse())
 		Expect(err.Error()).To(ContainSubstring("invalid character"))
 	})
 
@@ -148,12 +136,11 @@ var _ = Describe("RestartProxies", func() {
 		proxyRestarter := sidecars.NewProxyRestarter(c, podsListerMock, actionRestarter, &logger)
 
 		// when
-		warnings, hasMorePods, err := proxyRestarter.RestartProxies(ctx, expectedImage, helpers.DefaultSidecarResources, &istioCR)
+		warnings, err := proxyRestarter.RestartProxies(ctx, expectedImage, helpers.DefaultSidecarResources, &istioCR)
 
 		// then
 		Expect(err).To(HaveOccurred())
 		Expect(warnings).To(BeEmpty())
-		Expect(hasMorePods).To(BeFalse())
 		Expect(err.Error()).To(ContainSubstring("intentionally failed on Kyma workload predicate"))
 	})
 
@@ -169,7 +156,7 @@ var _ = Describe("RestartProxies", func() {
 		proxyRestarter := sidecars.NewProxyRestarter(c, podsListerMock, actionRestarter, &logger)
 
 		// when
-		warnings, hasMorePods, err := proxyRestarter.RestartProxies(ctx, expectedImage, helpers.DefaultSidecarResources, &istioCR)
+		warnings, err := proxyRestarter.RestartProxies(ctx, expectedImage, helpers.DefaultSidecarResources, &istioCR)
 
 		// then
 		Expect(err).ToNot(HaveOccurred())
@@ -179,7 +166,6 @@ var _ = Describe("RestartProxies", func() {
 			Kind:      "n/a",
 			Message:   "failed to restart Customer proxies",
 		}))
-		Expect(hasMorePods).To(BeFalse())
 	})
 
 	It("should return error if restarting Kyma pods have warnings", func() {
@@ -195,12 +181,11 @@ var _ = Describe("RestartProxies", func() {
 		istioCR := helpers.GetIstioCR(expectedImage.Tag)
 		actionRestarter := NewActionRestartMock([]restart.Warning{{Name: "test-pod", Namespace: "kyma-system", Kind: "Pod", Message: "failed to restart"}}, nil)
 		proxyRestarter := sidecars.NewProxyRestarter(c, podsLister, actionRestarter, &logger)
-		warnings, hasMorePods, err := proxyRestarter.RestartProxies(ctx, expectedImage, helpers.DefaultSidecarResources, &istioCR)
+		warnings, err := proxyRestarter.RestartProxies(ctx, expectedImage, helpers.DefaultSidecarResources, &istioCR)
 
 		// then
 		Expect(err).To(HaveOccurred())
 		Expect(warnings).To(BeEmpty())
-		Expect(hasMorePods).To(BeFalse())
 
 		Expect(err.Error()).To(Equal("The sidecars of the following workloads could not be restarted: kyma-system/test-pod"))
 	})
@@ -221,12 +206,11 @@ var _ = Describe("RestartProxies", func() {
 		istioCR := helpers.GetIstioCR(expectedImage.Tag)
 		actionRestarter := restart.NewActionRestarter(failClient, &logger)
 		proxyRestarter := sidecars.NewProxyRestarter(failClient, podsLister, actionRestarter, &logger)
-		warnings, hasMorePods, err := proxyRestarter.RestartProxies(ctx, expectedImage, helpers.DefaultSidecarResources, &istioCR)
+		warnings, err := proxyRestarter.RestartProxies(ctx, expectedImage, helpers.DefaultSidecarResources, &istioCR)
 
 		// then
 		Expect(err).ToNot(HaveOccurred())
 		Expect(warnings).To(BeEmpty())
-		Expect(hasMorePods).To(BeFalse())
 	})
 })
 
@@ -244,18 +228,17 @@ var _ = Describe("RestartWithPredicates", func() {
 		preds := []predicates.SidecarProxyPredicate{
 			predicates.NewImageResourcesPredicate(images.Image{Registry: "istio", Name: "proxyv2", Tag: "1.1.0"}, helpers.DefaultSidecarResources),
 		}
-		limits := pods.NewPodsRestartLimits(10, 10)
+		limits := pods.NewPodsRestartLimits(10)
 
 		// when
 		podsLister := pods.NewPods(c, &logger)
 		actionRestarter := restart.NewActionRestarter(c, &logger)
 		proxyRestarter := sidecars.NewProxyRestarter(c, podsLister, actionRestarter, &logger)
-		warnings, hasMorePods, err := proxyRestarter.RestartWithPredicates(ctx, preds, limits, true)
+		warnings, err := proxyRestarter.RestartWithPredicates(ctx, preds, limits, true)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
 		Expect(warnings).To(BeEmpty())
-		Expect(hasMorePods).To(BeFalse())
 
 		err = c.Get(ctx, client.ObjectKey{Name: rsOwnerRS.Name, Namespace: rsOwnerRS.Namespace}, rsOwnerRS)
 		Expect(err).NotTo(HaveOccurred())
@@ -270,18 +253,17 @@ var _ = Describe("RestartWithPredicates", func() {
 		preds := []predicates.SidecarProxyPredicate{
 			predicates.NewImageResourcesPredicate(images.Image{Registry: "istio", Name: "proxyv2", Tag: "1.1.0"}, helpers.DefaultSidecarResources),
 		}
-		limits := pods.NewPodsRestartLimits(2, 2)
+		limits := pods.NewPodsRestartLimits(2)
 
 		// when
 		podsLister := pods.NewPods(c, &logger)
 		actionRestarter := restart.NewActionRestarter(c, &logger)
 		proxyRestarter := sidecars.NewProxyRestarter(c, podsLister, actionRestarter, &logger)
-		warnings, hasMorePods, err := proxyRestarter.RestartWithPredicates(ctx, preds, limits, true)
+		warnings, err := proxyRestarter.RestartWithPredicates(ctx, preds, limits, true)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
 		Expect(warnings).ToNot(BeEmpty())
-		Expect(hasMorePods).To(BeFalse())
 
 		Expect(warnings).To(HaveLen(1))
 		Expect(warnings[0].Message).To(Equal("pod sidecar could not be updated because OwnerReferences was not found."))
@@ -292,7 +274,7 @@ var _ = Describe("RestartWithPredicates", func() {
 		preds := []predicates.SidecarProxyPredicate{
 			predicates.NewImageResourcesPredicate(images.Image{Registry: "istio", Name: "proxyv2", Tag: "1.1.0"}, helpers.DefaultSidecarResources),
 		}
-		limits := pods.NewPodsRestartLimits(2, 2)
+		limits := pods.NewPodsRestartLimits(2)
 
 		// when
 		c := fakeClient()
@@ -301,12 +283,11 @@ var _ = Describe("RestartWithPredicates", func() {
 		podsLister := pods.NewPods(failClient, &logger)
 		actionRestarter := restart.NewActionRestarter(failClient, &logger)
 		proxyRestarter := sidecars.NewProxyRestarter(failClient, podsLister, actionRestarter, &logger)
-		warnings, hasMorePods, err := proxyRestarter.RestartWithPredicates(ctx, preds, limits, true)
+		warnings, err := proxyRestarter.RestartWithPredicates(ctx, preds, limits, true)
 
 		// then
 		Expect(err).To(HaveOccurred())
 		Expect(warnings).To(BeEmpty())
-		Expect(hasMorePods).To(BeFalse())
 
 		Expect(err.Error()).To(Equal("intentionally failing client on client.List"))
 	})
@@ -321,7 +302,7 @@ var _ = Describe("RestartWithPredicates", func() {
 		preds := []predicates.SidecarProxyPredicate{
 			predicates.NewImageResourcesPredicate(images.Image{Registry: "istio", Name: "proxyv2", Tag: "1.1.0"}, helpers.DefaultSidecarResources),
 		}
-		limits := pods.NewPodsRestartLimits(2, 2)
+		limits := pods.NewPodsRestartLimits(2)
 
 		// when
 		failClient := &shouldFailClient{c, false, true}
@@ -329,12 +310,11 @@ var _ = Describe("RestartWithPredicates", func() {
 		podsLister := pods.NewPods(failClient, &logger)
 		actionRestarter := restart.NewActionRestarter(failClient, &logger)
 		proxyRestarter := sidecars.NewProxyRestarter(failClient, podsLister, actionRestarter, &logger)
-		warnings, hasMorePods, err := proxyRestarter.RestartWithPredicates(ctx, preds, limits, true)
+		warnings, err := proxyRestarter.RestartWithPredicates(ctx, preds, limits, true)
 
 		// then
 		Expect(err).To(HaveOccurred())
 		Expect(warnings).To(BeEmpty())
-		Expect(hasMorePods).To(BeFalse())
 
 		Expect(err.Error()).To(Equal("running pod restart action failed: intentionally failing client on client.Patch"))
 	})
@@ -349,7 +329,7 @@ var _ = Describe("RestartWithPredicates", func() {
 		preds := []predicates.SidecarProxyPredicate{
 			predicates.NewImageResourcesPredicate(images.Image{Registry: "istio", Name: "proxyv2", Tag: "1.1.0"}, helpers.DefaultSidecarResources),
 		}
-		limits := pods.NewPodsRestartLimits(2, 2)
+		limits := pods.NewPodsRestartLimits(2)
 
 		// when
 		failClient := &shouldFailClient{c, false, true}
@@ -357,12 +337,11 @@ var _ = Describe("RestartWithPredicates", func() {
 		podsLister := pods.NewPods(failClient, &logger)
 		actionRestarter := restart.NewActionRestarter(failClient, &logger)
 		proxyRestarter := sidecars.NewProxyRestarter(failClient, podsLister, actionRestarter, &logger)
-		warnings, hasMorePods, err := proxyRestarter.RestartWithPredicates(ctx, preds, limits, false)
+		warnings, err := proxyRestarter.RestartWithPredicates(ctx, preds, limits, false)
 
 		// then
 		Expect(err).ToNot(HaveOccurred())
-		Expect(warnings).To(Equal([]restart.Warning{}))
-		Expect(hasMorePods).To(BeFalse())
+		Expect(warnings).To(BeEmpty())
 	})
 })
 
@@ -545,23 +524,23 @@ func NewPodsMock() *PodsMock {
 	}
 }
 
-func (p *PodsMock) GetPodsToRestart(_ context.Context, preds []predicates.SidecarProxyPredicate, limits *pods.RestartLimits) (*v1.PodList, error) {
+func (p *PodsMock) GetPodsToRestart(_ context.Context, preds []predicates.SidecarProxyPredicate, limits *pods.RestartLimits, restartFn func(context.Context, *v1.PodList) ([]string, error)) error {
 	if p.FailOnKymaWorkload {
 		_, ok := preds[len(preds)-1].(*predicates.KymaWorkloadRestartPredicate)
 		if ok {
-			return &v1.PodList{}, errors.New("intentionally failed on Kyma workload predicate")
+			return errors.New("intentionally failed on Kyma workload predicate")
 		}
 	}
 	if p.FailOnCustomerWorkload {
 		_, ok := preds[len(preds)-1].(*predicates.CustomerWorkloadRestartPredicate)
 		if ok {
-			return &v1.PodList{}, errors.New("intentionally failed on Customer workload predicate")
+			return errors.New("intentionally failed on Customer workload predicate")
 		}
 	}
 	p.Predicates[p.Called] = preds
 	p.Limits[p.Called] = limits
 	p.Called++
-	return &v1.PodList{}, nil
+	return nil
 }
 
 func (p *PodsMock) GetAllInjectedPods(_ context.Context) (*v1.PodList, error) {

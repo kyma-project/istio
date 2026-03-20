@@ -27,13 +27,12 @@ func (s *scenario) aRestartHappens(sidecarImage string) error {
 	actionRestarter := restart.NewActionRestarter(s.Client, &s.logger)
 	pr := sidecars.NewProxyRestarter(s.Client, podsLister, actionRestarter, &s.logger)
 	istioCR := helpers.GetIstioCR(sidecarImage)
-	warnings, hasMorePods, err := pr.RestartProxies(
+	warnings, err := pr.RestartProxies(
 		context.Background(),
 		images.Image{Registry: "istio", Name: "proxyv2", Tag: sidecarImage},
 		helpers.DefaultSidecarResources,
 		&istioCR)
 	s.restartWarnings = warnings
-	s.hasMorePodsToRestart = hasMorePods
 	return err
 }
 
@@ -53,13 +52,12 @@ func (s *scenario) aRestartHappensWithUpdatedResources(sidecarImage string, reso
 	podsLister := pods.NewPods(s.Client, &s.logger)
 	actionRestarter := restart.NewActionRestarter(s.Client, &s.logger)
 	pr := sidecars.NewProxyRestarter(s.Client, podsLister, actionRestarter, &s.logger)
-	warnings, hasMorePods, err := pr.RestartProxies(
+	warnings, err := pr.RestartProxies(
 		context.Background(),
 		images.Image{Registry: "istio", Name: "proxyv2", Tag: sidecarImage},
 		resources,
 		&istioCR)
 	s.restartWarnings = warnings
-	s.hasMorePodsToRestart = hasMorePods
 	return err
 }
 

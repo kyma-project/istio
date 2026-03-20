@@ -204,8 +204,8 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			reconciliationRequeueTimeError)
 	}
 
-	err, requeue := restarter.Restart(ctx, &istioCR, r.restarters)
 	reconciliationRequeueTime := reconciliationRequeueTimeError
+	err = restarter.Restart(ctx, &istioCR, r.restarters)
 	if err != nil {
 		if err.Level() == describederrors.Warning {
 			reconciliationRequeueTime = reconciliationRequeueTimeWarning
@@ -222,9 +222,6 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		}
 		r.log.Info("Reconcile failed")
 		return ctrl.Result{}, err
-	} else if requeue {
-		r.statusHandler.SetCondition(&istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileRequeued))
-		return r.requeueReconciliationRestartNotFinished(ctx, &istioCR, reconciliationRequeueTime)
 	}
 
 	userResErr := r.userResources.DetectUserCreatedEfOnIngress(ctx)

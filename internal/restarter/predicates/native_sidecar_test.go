@@ -1,39 +1,72 @@
 package predicates
 
 import (
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
+	"testing"
+
+	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var _ = Describe("Native Sidecar Predicate", func() {
-	DescribeTable("Matches",
-		func(isInitContainer bool, annotations map[string]string, expectedResult bool) {
-			predicate := NewNativeSidecarRestartPredicate()
-			pod := createIstioInjectedPod(isInitContainer, annotations)
-			Expect(predicate.Matches(pod)).To(Equal(expectedResult))
-		},
+func TestNativeSidecarPredicateMatches(t *testing.T) {
+	tests := []struct {
+		name            string
+		isInitContainer bool
+		annotations     map[string]string
+		expectedResult  bool
+	}{
 		// container: regular, annotation: not set
-		Entry("should evaluate to true, when proxy is a regular container and nativeSidecar annotation is not set",
-			false, map[string]string{}, true),
+		{
+			name:            "should evaluate to true, when proxy is a regular container and nativeSidecar annotation is not set",
+			isInitContainer: false,
+			annotations:     map[string]string{},
+			expectedResult:  true,
+		},
 		// container: regular, annotation: false
-		Entry("should evaluate to false, when proxy is a regular container and nativeSidecar annotation is set to false",
-			false, map[string]string{nativeSidecarAnnotation: "false"}, false),
+		{
+			name:            "should evaluate to false, when proxy is a regular container and nativeSidecar annotation is set to false",
+			isInitContainer: false,
+			annotations:     map[string]string{nativeSidecarAnnotation: "false"},
+			expectedResult:  false,
+		},
 		// container: regular, annotation: true
-		Entry("should evaluate to true, when proxy is a regular container and nativeSidecar annotation is set to true",
-			false, map[string]string{nativeSidecarAnnotation: "true"}, true),
+		{
+			name:            "should evaluate to true, when proxy is a regular container and nativeSidecar annotation is set to true",
+			isInitContainer: false,
+			annotations:     map[string]string{nativeSidecarAnnotation: "true"},
+			expectedResult:  true,
+		},
 		// container: initContainer, annotation: not set
-		Entry("should evaluate to false, when proxy is an init container and nativeSidecar annotation is not set",
-			true, map[string]string{}, false),
+		{
+			name:            "should evaluate to false, when proxy is an init container and nativeSidecar annotation is not set",
+			isInitContainer: true,
+			annotations:     map[string]string{},
+			expectedResult:  false,
+		},
 		// container: initContainer, annotation: false
-		Entry("should evaluate to true, when proxy is an init container and nativeSidecar annotation is set to false",
-			true, map[string]string{nativeSidecarAnnotation: "false"}, true),
+		{
+			name:            "should evaluate to true, when proxy is an init container and nativeSidecar annotation is set to false",
+			isInitContainer: true,
+			annotations:     map[string]string{nativeSidecarAnnotation: "false"},
+			expectedResult:  true,
+		},
 		// container: initContainer, annotation: true
-		Entry("should evaluate to false, when proxy is an init container and nativeSidecar annotation is set to true",
-			true, map[string]string{nativeSidecarAnnotation: "true"}, false),
-	)
-})
+		{
+			name:            "should evaluate to false, when proxy is an init container and nativeSidecar annotation is set to true",
+			isInitContainer: true,
+			annotations:     map[string]string{nativeSidecarAnnotation: "true"},
+			expectedResult:  false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			predicate := NewNativeSidecarRestartPredicate()
+			pod := createIstioInjectedPod(tt.isInitContainer, tt.annotations)
+			require.Equal(t, tt.expectedResult, predicate.Matches(pod))
+		})
+	}
+}
 
 func createIstioInjectedPod(isInitContainer bool, annotations map[string]string) v1.Pod {
 	if isInitContainer {

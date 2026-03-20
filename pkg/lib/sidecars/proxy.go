@@ -107,14 +107,14 @@ func (p *ProxyRestart) RestartWithPredicates(
 ) ([]restart.Warning, error) {
 	var allWarnings []restart.Warning
 
-	err := p.podsLister.GetPodsToRestart(ctx, preds, limits, func(ctx context.Context, page *v1.PodList) ([]string, error) {
+	err := p.podsLister.GetPodsToRestart(ctx, preds, limits, func(ctx context.Context, page *v1.PodList) error {
 		warnings, err := p.actionRestarter.Restart(ctx, page, failOnError)
 		allWarnings = append(allWarnings, warnings...)
 		if err != nil {
 			p.logger.Error(err, "Restarting pods failed")
-			return nil, err
+			return err
 		}
-		return nil, nil
+		return nil
 	})
 	if err != nil {
 		p.logger.Error(err, "Getting pods to restart failed")

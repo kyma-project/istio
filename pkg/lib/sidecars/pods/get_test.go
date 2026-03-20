@@ -273,9 +273,9 @@ var _ = Describe("GetPodsToRestart", func() {
 				tt.predicates = append(tt.predicates, predicates.NewImageResourcesPredicate(expectedImage, helpers.DefaultSidecarResources))
 				podsLister := pods.NewPods(tt.c, &logger)
 				var collected v1.PodList
-				err := podsLister.GetPodsToRestart(ctx, tt.predicates, tt.limits, func(_ context.Context, page *v1.PodList) ([]string, error) {
+				err := podsLister.GetPodsToRestart(ctx, tt.predicates, tt.limits, func(_ context.Context, page *v1.PodList) error {
 					collected.Items = append(collected.Items, page.Items...)
-					return nil, nil
+					return nil
 				})
 				Expect(err).NotTo(HaveOccurred())
 				tt.assertFunc(&collected)
@@ -429,9 +429,9 @@ var _ = Describe("GetPodsToRestart", func() {
 				expectedImage := images.Image{Registry: "istio", Name: "proxyv2", Tag: "1.10.0"}
 				podsLister := pods.NewPods(tt.c, &logger)
 				var collected v1.PodList
-				err := podsLister.GetPodsToRestart(ctx, []predicates.SidecarProxyPredicate{predicates.NewImageResourcesPredicate(expectedImage, helpers.DefaultSidecarResources)}, pods.NewPodsRestartLimits(5), func(_ context.Context, page *v1.PodList) ([]string, error) {
+				err := podsLister.GetPodsToRestart(ctx, []predicates.SidecarProxyPredicate{predicates.NewImageResourcesPredicate(expectedImage, helpers.DefaultSidecarResources)}, pods.NewPodsRestartLimits(5), func(_ context.Context, page *v1.PodList) error {
 					collected.Items = append(collected.Items, page.Items...)
-					return nil, nil
+					return nil
 				})
 				Expect(err).NotTo(HaveOccurred())
 				tt.assertFunc(&collected)

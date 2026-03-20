@@ -28,7 +28,7 @@ func NewPodsRestartLimits(podsPerPage int) *RestartLimits {
 }
 
 type Getter interface {
-	GetPodsToRestart(ctx context.Context, preds []predicates.SidecarProxyPredicate, limits *RestartLimits, restartFn func(context.Context, *v1.PodList) ([]string, error)) error
+	GetPodsToRestart(ctx context.Context, preds []predicates.SidecarProxyPredicate, limits *RestartLimits, restartFn func(context.Context, *v1.PodList) error) error
 	GetAllInjectedPods(context context.Context) (*v1.PodList, error)
 }
 
@@ -45,7 +45,7 @@ func NewPods(k8sClient client.Client, logger *logr.Logger) *Pods {
 }
 
 //nolint:gocognit // cognitive complexity 29 of func `(*Pods).GetPodsToRestart` is high (> 20) TODO refactor
-func (p *Pods) GetPodsToRestart(ctx context.Context, preds []predicates.SidecarProxyPredicate, limits *RestartLimits, restartFn func(context.Context, *v1.PodList) ([]string, error)) error {
+func (p *Pods) GetPodsToRestart(ctx context.Context, preds []predicates.SidecarProxyPredicate, limits *RestartLimits, restartFn func(context.Context, *v1.PodList) error) error {
 	continueToken := ""
 
 	for {
@@ -61,11 +61,13 @@ func (p *Pods) GetPodsToRestart(ctx context.Context, preds []predicates.SidecarP
 			for _, predicate := range preds {
 				matched := predicate.Matches(pod)
 				if predicate.MustMatch() { // all of MustMatch predicates must evaluate to true
-					p.logger.Info(fmt.Sprintf("Pod %s matches MustMatch predicate %s", pod.Name, predicate.Name()))
 					if !matched {
 						requiredMatched = false
 						break
+					} else {
+						p.logger.Info(fmt.Sprintf("Pod %s matches MustMatch predicate %s", pod.Name, predicate.Name()))
 					}
+
 				} else if !optionalMatched && matched { // at least one optional predicate must evaluate to true
 					p.logger.Info(fmt.Sprintf("Pod %s matches not MustMatch predicate %s", pod.Name, predicate.Name()))
 					optionalMatched = true
@@ -78,7 +80,7 @@ func (p *Pods) GetPodsToRestart(ctx context.Context, preds []predicates.SidecarP
 
 		if len(page.Items) > 0 {
 			p.logger.Info("Pods to restart on this page", "number of pods", len(page.Items))
-			if _, err := restartFn(ctx, page); err != nil {
+			if err := restartFn(ctx, page); err != nil {
 				return err
 			}
 		}

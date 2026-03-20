@@ -524,7 +524,7 @@ func NewPodsMock() *PodsMock {
 	}
 }
 
-func (p *PodsMock) GetPodsToRestart(_ context.Context, preds []predicates.SidecarProxyPredicate, limits *pods.RestartLimits, restartFn func(context.Context, *v1.PodList) ([]string, error)) error {
+func (p *PodsMock) GetPodsToRestart(_ context.Context, preds []predicates.SidecarProxyPredicate, limits *pods.RestartLimits, restartFn func(context.Context, *v1.PodList) error) error {
 	if p.FailOnKymaWorkload {
 		_, ok := preds[len(preds)-1].(*predicates.KymaWorkloadRestartPredicate)
 		if ok {

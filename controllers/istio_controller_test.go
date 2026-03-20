@@ -1060,7 +1060,7 @@ var _ = Describe("Istio Controller", func() {
 				Expect(updatedIstioCR.Status.Description).To(ContainSubstring("Restart Warning description"))
 			})
 
-			It("should requeue reconcile request when a restarter needs to finish work on the next reconcile", func() {
+			It("should finish reconciliation when all restarters succeed", func() {
 				//given
 				istioCR := &operatorv1alpha2.Istio{
 					ObjectMeta: metav1.ObjectMeta{
@@ -1076,7 +1076,7 @@ var _ = Describe("Istio Controller", func() {
 
 				fakeClient := createFakeClient(istioCR)
 				ingressGatewayRestarter := &restarterMock{restarted: false}
-				proxySidecarsRestarter := &restarterMock{restarted: false, requeue: true}
+				proxySidecarsRestarter := &restarterMock{restarted: false}
 				sut := &IstioReconciler{
 					Client:                 fakeClient,
 					Scheme:                 getTestScheme(),
@@ -1095,7 +1095,7 @@ var _ = Describe("Istio Controller", func() {
 				//then
 				Expect(err).ToNot(HaveOccurred())
 				Expect(reconcileResult.Requeue).To(BeFalse())
-				Expect(reconcileResult.RequeueAfter).To(Equal(time.Minute * 1))
+				Expect(reconcileResult.RequeueAfter).To(Equal(testReconciliationInterval))
 
 				Expect(ingressGatewayRestarter.RestartCalled()).To(BeTrue())
 				Expect(proxySidecarsRestarter.RestartCalled()).To(BeTrue())
@@ -1104,15 +1104,7 @@ var _ = Describe("Istio Controller", func() {
 				err = fakeClient.Get(context.Background(), client.ObjectKeyFromObject(istioCR), &updatedIstioCR)
 				Expect(err).To(Not(HaveOccurred()))
 
-				Expect(updatedIstioCR.Status.State).To(Equal(operatorv1alpha2.Processing))
-
-				By("Verifying that Istio CR has Condition Ready status with Requeued reason")
-				Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
-				Expect(*updatedIstioCR.Status.Conditions).To(HaveLen(1))
-				Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
-				Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonReconcileRequeued)))
-				Expect((*updatedIstioCR.Status.Conditions)[0].Message).To(Equal(operatorv1alpha2.ConditionReasonReconcileRequeuedMessage))
-				Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
+				Expect(updatedIstioCR.Status.State).To(Equal(operatorv1alpha2.Ready))
 			})
 		})
 		Context("LastAppliedConfiguration", func() {
@@ -1167,9 +1159,9 @@ func (i *restarterMock) RestartCalled() bool {
 	return i.restarted
 }
 
-func (i *restarterMock) Restart(_ context.Context, _ *operatorv1alpha2.Istio) (describederrors.DescribedError, bool) {
+func (i *restarterMock) Restart(_ context.Context, _ *operatorv1alpha2.Istio) describederrors.DescribedError {
 	i.restarted = true
-	return i.err, i.requeue
+	return i.err
 }
 
 type istioResourcesReconciliationMock struct {

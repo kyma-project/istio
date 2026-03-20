@@ -18,20 +18,18 @@ var _ = Describe("Restart", func() {
 		r2 := &restarterMock{}
 
 		// when
-		err, requeue := restarter.Restart(context.Background(), &operatorv1alpha2.Istio{}, []restarter.Restarter{r1, r2})
+		err := restarter.Restart(context.Background(), &operatorv1alpha2.Istio{}, []restarter.Restarter{r1, r2})
 
 		// then
 		Expect(err).ToNot(HaveOccurred())
-		Expect(requeue).To(BeFalse())
 	})
 
 	It("should return nil if no restarters are provided", func() {
 		// when
-		err, requeue := restarter.Restart(context.Background(), &operatorv1alpha2.Istio{}, nil)
+		err := restarter.Restart(context.Background(), &operatorv1alpha2.Istio{}, nil)
 
 		// then
 		Expect(err).ToNot(HaveOccurred())
-		Expect(requeue).To(BeFalse())
 	})
 
 	It("should invoke Restart", func() {
@@ -39,11 +37,10 @@ var _ = Describe("Restart", func() {
 		r := &restarterMock{}
 
 		// when
-		err, requeue := restarter.Restart(context.Background(), &operatorv1alpha2.Istio{}, []restarter.Restarter{r})
+		err := restarter.Restart(context.Background(), &operatorv1alpha2.Istio{}, []restarter.Restarter{r})
 
 		// then
 		Expect(err).ToNot(HaveOccurred())
-		Expect(requeue).To(BeFalse())
 		Expect(r.RestartCalled()).Should(BeTrue())
 	})
 
@@ -52,11 +49,10 @@ var _ = Describe("Restart", func() {
 		r := &restarterMock{err: describederrors.NewDescribedError(errors.New("restart error"), "")}
 
 		// when
-		err, requeue := restarter.Restart(context.Background(), &operatorv1alpha2.Istio{}, []restarter.Restarter{r})
+		err := restarter.Restart(context.Background(), &operatorv1alpha2.Istio{}, []restarter.Restarter{r})
 
 		// then
 		Expect(err).Should(MatchError("restart error"))
-		Expect(requeue).To(BeFalse())
 	})
 
 	It("should return error with Error level when restarters return Error and Warning level errors", func() {
@@ -65,32 +61,29 @@ var _ = Describe("Restart", func() {
 		r2 := &restarterMock{err: describederrors.NewDescribedError(errors.New("restart warning"), "").SetWarning()}
 
 		// when
-		err, requeue := restarter.Restart(context.Background(), &operatorv1alpha2.Istio{}, []restarter.Restarter{r1, r2})
+		err := restarter.Restart(context.Background(), &operatorv1alpha2.Istio{}, []restarter.Restarter{r1, r2})
 
 		// then
 		Expect(err).Should(MatchError("restart error"))
-		Expect(requeue).To(BeFalse())
 	})
 
-	It("should respect requeue condition if one of the restarters return it", func() {
+	It("should invoke all restarters even if one fails", func() {
 		// given
-		r1 := &restarterMock{requeue: false}
-		r2 := &restarterMock{requeue: true}
+		r1 := &restarterMock{}
+		r2 := &restarterMock{}
 
 		// when
-		err, requeue := restarter.Restart(context.Background(), &operatorv1alpha2.Istio{}, []restarter.Restarter{r1, r2})
+		err := restarter.Restart(context.Background(), &operatorv1alpha2.Istio{}, []restarter.Restarter{r1, r2})
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
 		Expect(r1.RestartCalled()).Should(BeTrue())
 		Expect(r2.RestartCalled()).Should(BeTrue())
-		Expect(requeue).To(BeTrue())
 	})
 })
 
 type restarterMock struct {
 	err       describederrors.DescribedError
-	requeue   bool
 	restarted bool
 }
 
@@ -98,7 +91,7 @@ func (i *restarterMock) RestartCalled() bool {
 	return i.restarted
 }
 
-func (i *restarterMock) Restart(_ context.Context, _ *operatorv1alpha2.Istio) (describederrors.DescribedError, bool) {
+func (i *restarterMock) Restart(_ context.Context, _ *operatorv1alpha2.Istio) describederrors.DescribedError {
 	i.restarted = true
-	return i.err, i.requeue
+	return i.err
 }

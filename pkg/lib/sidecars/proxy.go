@@ -73,7 +73,6 @@ func (p *ProxyRestart) RestartProxies(
 		compatibiltyPredicate,
 		prometheusMergePredicate,
 		predicates.NewImageResourcesPredicate(expectedImage, expectedResources),
-		predicates.NewNativeSidecarRestartPredicate(),
 		enableDNSProxyingPredicate,
 	}
 

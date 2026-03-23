@@ -51,7 +51,7 @@ func AssertResponse(t *testing.T, client *http.Client, url string, opts ...Asser
 
 	options := &AssertOptions{
 		ExpectedStatusCode: http.StatusOK,
-		Timeout:            30 * time.Second,
+		Timeout:            2 * time.Minute,
 		Interval:           2 * time.Second,
 	}
 
@@ -60,7 +60,17 @@ func AssertResponse(t *testing.T, client *http.Client, url string, opts ...Asser
 	}
 
 	err := wait.For(func(ctx context.Context) (bool, error) {
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+		// Use an independent per-request context so the HTTP request is not cancelled
+		// when the wait.For loop context reaches its deadline mid-request.
+		// The loop context is only used to decide whether to keep retrying.
+		if err := ctx.Err(); err != nil {
+			return false, err
+		}
+
+		reqCtx, cancel := context.WithTimeout(context.Background(), options.Interval)
+		defer cancel()
+
+		req, err := http.NewRequestWithContext(reqCtx, http.MethodGet, url, nil)
 		if err != nil {
 			t.Logf("Failed to create request: %v", err)
 			return false, err

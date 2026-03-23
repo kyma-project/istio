@@ -39,11 +39,10 @@ var _ = Describe("Istio Ingress Gateway restart", func() {
 		igRestarter := restarter.NewIngressGatewayRestarter(fakeClient, []predicates.IngressGatewayPredicate{mockIgPredicate{shouldRestart: true}}, statusHandler)
 
 		//when
-		err, requeue := igRestarter.Restart(context.Background(), istioCR)
+		err := igRestarter.Restart(context.Background(), istioCR)
 
 		//then
 		Expect(err).Should(Not(HaveOccurred()))
-		Expect(requeue).To(BeFalse())
 
 		e := fakeClient.Get(context.Background(), client.ObjectKey{Namespace: gatherer.IstioNamespace, Name: "istio-ingressgateway"}, igDep)
 		Expect(e).Should(Not(HaveOccurred()))
@@ -73,11 +72,10 @@ var _ = Describe("Istio Ingress Gateway restart", func() {
 		igRestarter := restarter.NewIngressGatewayRestarter(fakeClient, []predicates.IngressGatewayPredicate{mockIgPredicate{shouldRestart: false}}, statusHandler)
 
 		//when
-		err, requeue := igRestarter.Restart(context.Background(), istioCR)
+		err := igRestarter.Restart(context.Background(), istioCR)
 
 		//then
 		Expect(err).Should(Not(HaveOccurred()))
-		Expect(requeue).To(BeFalse())
 
 		e := fakeClient.Get(context.Background(), client.ObjectKey{Namespace: gatherer.IstioNamespace, Name: "istio-ingressgateway"}, igDep)
 		Expect(e).Should(Not(HaveOccurred()))
@@ -105,11 +103,10 @@ var _ = Describe("Istio Ingress Gateway restart", func() {
 		igRestarter := restarter.NewIngressGatewayRestarter(fakeClient, []predicates.IngressGatewayPredicate{mockIgPredicate{shouldRestart: true}}, statusHandler)
 
 		//when
-		err, requeue := igRestarter.Restart(context.Background(), istioCR)
+		err := igRestarter.Restart(context.Background(), istioCR)
 
 		//then
 		Expect(err).Should(Not(HaveOccurred()))
-		Expect(requeue).To(BeFalse())
 		Expect((*istioCR.Status.Conditions)[0].Reason).Should(Equal(string(operatorv1alpha2.ConditionReasonIngressGatewayRestartSucceeded)))
 		Expect((*istioCR.Status.Conditions)[0].Message).Should(Equal(operatorv1alpha2.ConditionReasonIngressGatewayRestartSucceededMessage))
 
@@ -137,7 +134,7 @@ var _ = Describe("Istio Ingress Gateway restart", func() {
 
 		// when - call Restart multiple times to simulate multiple reconciliations
 		for i := 0; i < 5; i++ {
-			err, _ := igRestarter.Restart(context.Background(), istioCR)
+			err := igRestarter.Restart(context.Background(), istioCR)
 			Expect(err).Should(Not(HaveOccurred()))
 		}
 
@@ -172,11 +169,10 @@ var _ = Describe("Istio Ingress Gateway restart", func() {
 		igRestarter := restarter.NewIngressGatewayRestarter(fakeClient, []predicates.IngressGatewayPredicate{mockIgPredicate{shouldRestart: true}}, statusHandler)
 
 		//when
-		err, requeue := igRestarter.Restart(context.Background(), istioCR)
+		err := igRestarter.Restart(context.Background(), istioCR)
 
 		//then
 		Expect(err).Should(Not(HaveOccurred()))
-		Expect(requeue).To(BeFalse())
 
 		// Verify lastAppliedConfiguration was updated
 		updatedIstioCR := &operatorv1alpha2.Istio{}

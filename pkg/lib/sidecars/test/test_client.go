@@ -40,7 +40,6 @@ type scenario struct {
 	istioVersion               string
 	injectionNamespaceSelector NamespaceSelector
 	restartWarnings            []restart.Warning
-	hasMorePodsToRestart       bool
 }
 
 func newScenario() (*scenario, error) {

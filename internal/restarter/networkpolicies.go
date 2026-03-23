@@ -3,17 +3,18 @@ package restarter
 import (
 	"context"
 
+	appsv1 "k8s.io/api/apps/v1"
+	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/describederrors"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/configuration"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/pkg/lib/annotations"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/retry"
-	appsv1 "k8s.io/api/apps/v1"
-	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/types"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type NetworkPolicy struct {
@@ -28,32 +29,32 @@ func NewForNetworkPolicy(client client.Client, statusHandler status.Status) *Net
 	}
 }
 
-func (np *NetworkPolicy) Restart(ctx context.Context, istioCR *v1alpha2.Istio) (describederrors.DescribedError, bool) {
+func (np *NetworkPolicy) Restart(ctx context.Context, istioCR *v1alpha2.Istio) describederrors.DescribedError {
 	lastAppliedConfig, err := configuration.GetLastAppliedConfiguration(istioCR)
 	if err != nil {
-		return describederrors.NewDescribedError(err, "Could not get last applied configuration"), false
+		return describederrors.NewDescribedError(err, "Could not get last applied configuration")
 	}
 
 	if lastAppliedConfig.NetworkPoliciesEnabled != istioCR.Spec.NetworkPoliciesEnabled {
 		return restartControlPlaneComponents(ctx, np.client)
 	}
-	return nil, false
+	return nil
 }
 
-func restartControlPlaneComponents(ctx context.Context, client client.Client) (describederrors.DescribedError, bool) {
+func restartControlPlaneComponents(ctx context.Context, client client.Client) describederrors.DescribedError {
 	err := restartIngressGateway(ctx, client)
 	if err != nil {
-		return describederrors.NewDescribedError(err, "Failed to restart Ingress Gateway"), true
+		return describederrors.NewDescribedError(err, "Failed to restart Ingress Gateway")
 	}
 	err = restartIstiod(ctx, client)
 	if err != nil {
-		return describederrors.NewDescribedError(err, "Failed to restart Istiod"), true
+		return describederrors.NewDescribedError(err, "Failed to restart Istiod")
 	}
 	err = restartCNI(ctx, client)
 	if err != nil {
-		return describederrors.NewDescribedError(err, "Failed to restart CNI"), true
+		return describederrors.NewDescribedError(err, "Failed to restart CNI")
 	}
-	return nil, false
+	return nil
 }
 
 const (

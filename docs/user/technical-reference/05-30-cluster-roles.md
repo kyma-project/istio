@@ -1,29 +1,32 @@
-# Istio managed Cluster Roles
+# Istio Managed ClusterRoles
 
-Get familiar with the Cluster Roles that are managed by the Istio module and their permissions.
+Learn about the ClusterRoles managed by the Istio module and their permissions.
 
 ## Overview
 
-To further streamline the management of permissions for the Istio module, we've introduced new Cluster Roles that support Kubernetes native role aggregation. 
-These Cluster Roles are designed to provide a more modular and flexible approach to managing permissions for the Istio module and its resources.
+To further streamline the management of permissions for the Istio module,
+we have introduced new ClusterRoles that support Kubernetes native role aggregation.
+These ClusterRoles are designed to provide a more modular and flexible approach
+to managing permissions for the Istio module and its resources.
 
 ## Roles
 
-By default, when you install the Istio module, it creates the following Cluster Roles:
-- `kyma-istio-view` - grants read-only access to Istio module resources (`Istio` Custom Resource).
-- `kyma-istio-edit` - grants read and write access to Istio module resources (`Istio` Custom Resource).
+By default, when you install the Istio module, it creates the following ClusterRoles:
 
-Additionally, when `Istio` Custom Resource is created, the following Cluster Roles are generated and managed by the module:
-- `kyma-istio-resoures-view` - grants read-only access to all resources from all API groups handled by Istio.
-- `kyma-istio-resoures-edit` - grants read and write access to all resources from all API groups handled by Istio.
+- `kyma-istio-view` - Grants read-only access to Istio module resources (the `Istio` custom resource).
+- `kyma-istio-edit` - Grants read and write access to Istio module resources (the `Istio` custom resource).
+- `kyma-istio-resources-view` - Grants read-only access to all resources from all API groups handled by Istio.
+- `kyma-istio-resources-edit` - Grants read and write access to all resources from all API groups handled by Istio.
 
 ## Aggregation
 
-All Cluster Roles implement native Kubernetes role aggregation. This functionality is handled by Kubernetes controller manager. 
-If the user has a binding for any of the general-purpose roles (`viewer` and `edit`), they will automatically get
-permissions defined in the above Cluster Roles without needing to create additional bindings for them.
+All ClusterRoles implement native Kubernetes role aggregation.
+This functionality is handled by the Kubernetes controller manager.
+If you have a binding for any of the default roles (`view` and `edit`),
+you automatically get the permissions defined in these ClusterRoles without
+needing to create additional bindings.
 
-The mapping of the general-purpose roles to the specific Cluster Roles is as follows:
+The mapping of the default roles to the Istio module managed ClusterRoles is as follows:
 
 | General-purpose Role | Istio module managed Cluster Role |
 |----------------------|-----------------------------------|
@@ -34,7 +37,8 @@ The mapping of the general-purpose roles to the specific Cluster Roles is as fol
 
 ## Validation
 
-To check what Cluster Roles have been created by Istio module, you can run the following commands:
+To check what ClusterRoles were created with the Istio module, run the following command:
 
 ```sh
 kubectl get clusterroles -l "kyma-project.io/module=istio"
+```

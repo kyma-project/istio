@@ -1,20 +1,20 @@
 # Istio Managed ClusterRoles
 
-Learn about the ClusterRoles managed by the Istio module and their permissions.
+Learn about the ClusterRoles that the Istio module manages and the permissions they grant.
 
 ## Overview
 
 To further streamline the management of permissions for the Istio module,
 we have introduced new ClusterRoles that support Kubernetes native role aggregation.
-These ClusterRoles are designed to provide a more modular and flexible approach
-to managing permissions for the Istio module and its resources.
+ClusterRoles streamline permission management and support Kubernetes native role aggregation.
+They provide a modular and flexible approach to managing permissions for Istio resources.
 
 ## Roles
 
 By default, when you install the Istio module, it creates the following ClusterRoles:
 
-- `kyma-istio-view` - Grants read-only access to Istio module resources (the `Istio` custom resource).
-- `kyma-istio-edit` - Grants read and write access to Istio module resources (the `Istio` custom resource).
+- `kyma-istio-view` - Grants read-only access to the Istio custom resource (CR).
+- `kyma-istio-edit` - Grants read and write access to the Istio CR.
 - `kyma-istio-resources-view` - Grants read-only access to all resources from all API groups handled by Istio.
 - `kyma-istio-resources-edit` - Grants read and write access to all resources from all API groups handled by Istio.
 
@@ -22,13 +22,13 @@ By default, when you install the Istio module, it creates the following ClusterR
 
 All ClusterRoles implement native Kubernetes role aggregation.
 This functionality is handled by the Kubernetes controller manager.
-If you have a binding for any of the default roles (`view` and `edit`),
-you automatically get the permissions defined in these ClusterRoles without
-needing to create additional bindings.
+When you have a binding for any of the general-purpose roles (`viewer` or `edit`), you automatically get the permissions
+from the corresponding Istio-managed ClusterRoles.
+You don't need to create separate role bindings for Istio resources.
 
-The mapping of the default roles to the Istio module managed ClusterRoles is as follows:
+The following table shows how general-purpose roles map to Istio module ClusterRoles:
 
-| General-purpose Role | Istio module managed Cluster Role |
+| General-purpose Role | Istio module managed ClusterRole |
 |----------------------|-----------------------------------|
 | `viewer`             | `kyma-istio-view`                 |
 | `viewer`             | `kyma-istio-resoures-view`        |
@@ -37,7 +37,7 @@ The mapping of the default roles to the Istio module managed ClusterRoles is as 
 
 ## Validation
 
-To check what ClusterRoles were created with the Istio module, run the following command:
+To check what ClusterRoles have been created by the Istio module, run the following command:
 
 ```sh
 kubectl get clusterroles -l "kyma-project.io/module=istio"

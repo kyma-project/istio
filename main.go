@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/kyma-project/istio/operator/internal/images"
+	"github.com/kyma-project/istio/operator/internal/memlimit"
 	istiocrmetrics "github.com/kyma-project/istio/operator/internal/metrics"
 
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
@@ -34,13 +35,6 @@ import (
 
 	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
-
-	// Automemlimit is imported to automatically set the memory limit for the operator based on the available memory for the container (cgroups).
-	// This is required as with the controller running under VPA, the memory limit is not static and GOMEMLIMIT cannot be set to a fixed value.
-	// Automemlimit will set GOMEMLIMIT to 90% of the available memory for the container.
-	// TODO: This should be reevaluated after sidecar restart is fixed and memory usage is stable,
-	// as it may be possible to set a fixed GOMEMLIMIT value based on the observed memory usage.
-	_ "github.com/KimMachineGun/automemlimit"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -117,6 +111,11 @@ func main() {
 	if err != nil {
 		setupLog.Error(err, "Unable to configure Istio log scopes")
 		os.Exit(1)
+	}
+
+	// Set gomemlimit to 90% of k8s pod limits
+	if err := memlimit.SetGoMemLimitFromCgroup(0.9, setupLog); err != nil {
+		setupLog.Info("Could not set GOMEMLIMIT from cgroup", "error", err)
 	}
 
 	mgr, err := createManager(flagVar)

@@ -16,6 +16,7 @@ rules:
       - install.istio.io
       - security.istio.io
       - telemetry.istio.io
+      - rbac.istio.io
     resources:
       - "*"
     verbs:

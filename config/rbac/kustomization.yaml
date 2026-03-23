@@ -11,6 +11,8 @@ resources:
 - leader_election_role_binding.yaml
 - istio_editor_role.yaml
 - istio_viewer_role.yaml
+- istio_resources_edit.yaml
+- istio_resources_view.yaml
 
 labels:
   - pairs:

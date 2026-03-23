@@ -81,7 +81,6 @@ func getResources(k8sClient client.Client, provider string, istioCR v1alpha2.Ist
 		// NewProxyProtocolEnvoyFilter fails because CRDs are removed before it can delete the EnvoyFilter
 		toDeleteResources := []Resource{
 			NewNetworkPolicies(true),
-			NewClusterRolesReconciler(true),
 			NewVPA(true),
 		}
 		return toDeleteResources, nil
@@ -89,7 +88,6 @@ func getResources(k8sClient client.Client, provider string, istioCR v1alpha2.Ist
 	istioResources := []Resource{
 		NewPeerAuthenticationMtls(false),
 		NewNetworkPolicies(!istioCR.Spec.NetworkPoliciesEnabled),
-		NewClusterRolesReconciler(false),
 		NewVPA(false),
 	}
 

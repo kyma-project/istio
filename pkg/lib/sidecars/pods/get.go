@@ -78,8 +78,8 @@ func (p *Pods) GetPodsToRestart(ctx context.Context, preds []predicates.SidecarP
 			}
 		}
 
+		p.logger.Info("Pods to restart on this page", "number of pods", len(page.Items))
 		if len(page.Items) > 0 {
-			p.logger.Info("Pods to restart on this page", "number of pods", len(page.Items))
 			if err := restartFn(ctx, page); err != nil {
 				return err
 			}

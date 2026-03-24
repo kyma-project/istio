@@ -1,0 +1,31 @@
+# permissions for end users to edit istio native resources.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kyma-istio-resources-edit
+  labels:
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
+    kyma-project.io/managed-by: kyma
+    kyma-project.io/module: istio
+rules:
+  - apiGroups:
+      - networking.istio.io
+      - authentication.istio.io
+      - config.istio.io
+      - extensions.istio.io
+      - install.istio.io
+      - security.istio.io
+      - telemetry.istio.io
+      - rbac.istio.io
+    resources:
+      - "*"
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+      - deletecollection
+

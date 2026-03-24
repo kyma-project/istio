@@ -21,11 +21,10 @@ import (
 	"fmt"
 	"time"
 
-	istiocrmetrics "github.com/kyma-project/istio/operator/internal/metrics"
-	"github.com/pkg/errors"
-
 	"github.com/kyma-project/istio/operator/internal/images"
+	istiocrmetrics "github.com/kyma-project/istio/operator/internal/metrics"
 	"github.com/kyma-project/istio/operator/internal/resources"
+	"github.com/pkg/errors"
 
 	"github.com/kyma-project/istio/operator/internal/restarter"
 	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
@@ -202,6 +201,16 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return r.requeueReconciliation(ctx, &istioCR, resourcesErr,
 			operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonCRsReconcileFailed),
 			reconciliationRequeueTimeError)
+	}
+
+	// Remove installation finalizer only when we are done with resources, and finish reconciliation.
+	if !istioCR.DeletionTimestamp.IsZero() {
+		err := istio.RemoveInstallationFinalizer(ctx, r.Client, &istioCR)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+		r.log.Info("End reconciliation because all finalizers have been removed")
+		return ctrl.Result{}, nil
 	}
 
 	reconciliationRequeueTime := reconciliationRequeueTimeError

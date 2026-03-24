@@ -7,6 +7,7 @@
 #   CALICO_VERSION      - Calico version for --calico mode (default: v3.29.0)
 #   AGENTS              - Number of k3d agents (default: 0)
 #   SERVERS_MEMORY      - Memory for server nodes in GB (default: 16)
+#   CUSTOM_FLAGS        - Additional flags to pass to k3d cluster create (default: "")
 
 set -eo pipefail
 
@@ -20,6 +21,7 @@ K3D_VERSION="${K3D_VERSION:-v5.8.3}"
 CALICO_VERSION="${CALICO_VERSION:-v3.31.3}"
 AGENTS="${AGENTS:-0}"
 SERVERS_MEMORY="${SERVERS_MEMORY:-16}"
+CUSTOM_FLAGS="${CUSTOM_FLAGS:-}"
 
 # Parse --calico flag
 USE_CALICO=false
@@ -37,6 +39,7 @@ echo "  Use Calico: ${USE_CALICO}"
 echo "  k3d version: ${K3D_VERSION}"
 echo "  Agents: ${AGENTS}"
 echo "  Servers memory: ${SERVERS_MEMORY}g"
+echo "  Custom flags: ${CUSTOM_FLAGS}"
 
 # Function to install k3d
 install_k3d() {
@@ -67,7 +70,8 @@ provision_calico_cluster() {
         --k3s-arg "--flannel-backend=none@all" \
         --k3s-arg "--disable=traefik@server:0" \
         --k3s-arg '--tls-san=host.docker.internal@server:*' \
-        --image "${K3S_IMAGE}"
+        --image "${K3S_IMAGE}" \
+        ${CUSTOM_FLAGS}
 
     echo "Installing Calico ${CALICO_VERSION}..."
     kubectl create -f "https://raw.githubusercontent.com/projectcalico/calico/${CALICO_VERSION}/manifests/operator-crds.yaml"
@@ -89,7 +93,8 @@ provision_regular_cluster() {
         --port 80:80@loadbalancer \
         --port 443:443@loadbalancer \
         --k3s-arg '--disable=traefik@server:*' \
-        --image "${K3S_IMAGE}"
+        --image "${K3S_IMAGE}" \
+        ${CUSTOM_FLAGS}
 }
 
 # Main execution

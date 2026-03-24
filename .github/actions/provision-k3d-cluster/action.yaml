@@ -26,6 +26,7 @@ runs:
         KUBERNETES_VERSION: ${{ inputs.k3s-version }}
         AGENTS: ${{ inputs.agents }}
         SERVERS_MEMORY: ${{ inputs.servers-memory }}
+        CUSTOM_FLAGS: ${{ env.CUSTOM_FLAGS }}
       run: |
         if [ "${{ inputs.calico }}" == "true" ]; then
           ./hack/ci/provision-k3d.sh --calico

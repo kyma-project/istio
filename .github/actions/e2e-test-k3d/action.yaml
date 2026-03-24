@@ -20,6 +20,9 @@ inputs:
     description: 'Use Calico CNI instead of flannel'
     required: false
     default: 'false'
+  restricted-registry-sa:
+    description: 'Service Account (base64) with permissions to pull images from the restricted registry'
+    required: false
 
 runs:
   using: "composite"
@@ -27,6 +30,30 @@ runs:
     - uses: actions/setup-go@v5
       with:
         go-version-file: "go.mod"
+    - name: Configure restricted registry access
+      if: ${{ inputs.restricted-registry-sa }}
+      shell: bash
+      env:
+        REGISTRY_SA: ${{ inputs.restricted-registry-sa }}
+      run: |
+        echo "::add-mask::${REGISTRY_SA}"
+
+        REGISTRIES_PATH=$(mktemp -d)/registries.yaml
+
+        cat <<EOF > ${REGISTRIES_PATH}
+        mirrors:
+          europe-docker.pkg.dev:
+            endpoint:
+              - https://europe-docker.pkg.dev/v2
+        configs:
+          europe-docker.pkg.dev:
+            auth:
+              username: _json_key_base64
+              password: |
+                ${REGISTRY_SA}
+        EOF
+
+        echo "CUSTOM_FLAGS=--registry-config ${REGISTRIES_PATH}" >> $GITHUB_ENV
     - name: Create Cluster
       uses: ./.github/actions/provision-k3d-cluster
       with:

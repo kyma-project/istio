@@ -15,6 +15,11 @@ spec:
       enabled: true
       namespace: istio-system
       k8s:
+        tolerations:
+          - key: CriticalAddonsOnly
+            operator: Exists
+          - effect: NoExecute
+            operator: Exists
         affinity:
           podAntiAffinity:
             preferredDuringSchedulingIgnoredDuringExecution:

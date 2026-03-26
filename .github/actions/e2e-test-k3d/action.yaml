@@ -69,6 +69,10 @@ runs:
       env:
         OPERATOR_VERSION: ${{ inputs.operator-version }}
       run: |
+        if [ "${{ github.event_name }}" == "pull_request" ]; then
+          k3d image import ${{ inputs.operator-image-name }}
+        fi
+
         kubectl config use-context k3d-k3s-default
         if [ "${{ inputs.evaluation }}" == "true" ]; then
           TEST_EVALUATION=TRUE EXPORT_RESULT=true IMG=${{ inputs.operator-image-name }} make ${{ inputs.test_make_target }}

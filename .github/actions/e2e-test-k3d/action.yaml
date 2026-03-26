@@ -20,9 +20,10 @@ inputs:
     description: 'Use Calico CNI instead of flannel'
     required: false
     default: 'false'
-  restricted-registry-sa:
-    description: 'Service Account (base64) with permissions to pull images from the restricted registry'
+  fips-registry-sa:
+    description: 'Service account JSON for FIPS registry authentication'
     required: false
+    default: ''
 
 runs:
   using: "composite"
@@ -30,30 +31,6 @@ runs:
     - uses: actions/setup-go@v5
       with:
         go-version-file: "go.mod"
-    - name: Configure restricted registry access
-      if: ${{ inputs.restricted-registry-sa }}
-      shell: bash
-      env:
-        REGISTRY_SA: ${{ inputs.restricted-registry-sa }}
-      run: |
-        echo "::add-mask::${REGISTRY_SA}"
-
-        REGISTRIES_PATH=$(mktemp -d)/registries.yaml
-
-        cat <<EOF > ${REGISTRIES_PATH}
-        mirrors:
-          europe-docker.pkg.dev:
-            endpoint:
-              - https://europe-docker.pkg.dev/v2
-        configs:
-          europe-docker.pkg.dev:
-            auth:
-              username: _json_key_base64
-              password: |
-                ${REGISTRY_SA}
-        EOF
-
-        echo "CUSTOM_FLAGS=--registry-config ${REGISTRIES_PATH}" >> $GITHUB_ENV
     - name: Create Cluster
       uses: ./.github/actions/provision-k3d-cluster
       with:
@@ -61,15 +38,37 @@ runs:
         agents: ${{ inputs.agents }}
         servers-memory: ${{ inputs.servers-memory }}
         calico: ${{ inputs.calico }}
+    - name: Import image
+      shell: bash
+      if: github.event_name == 'pull_request'
+      run: |
+        k3d image import ${{ inputs.operator-image-name }}
+    - name: Configure FIPS mode
+      shell: bash
+      if: env.KYMA_FIPS_MODE_ENABLED == 'true'
+      env:
+        FIPS_REGISTRY_SA: ${{ inputs.fips-registry-sa }}
+        OPERATOR_VERSION: ${{ inputs.operator-version }}
+      run: |
+        kubectl config use-context k3d-k3s-default
+
+        kubectl create namespace istio-system --dry-run=client -o yaml | kubectl apply -f -
+        kubectl -n istio-system create secret docker-registry ${{ env.REGISTRY_SECRET_NAME }} \
+          --docker-server=europe-docker.pkg.dev \
+          --docker-username=_json_key \
+          --docker-password="${FIPS_REGISTRY_SA}" \
+          --dry-run=client -o yaml | kubectl apply -f -
+
+        # Deploy the controller and set environment variables for FIPS mode
+        IMG=${{ inputs.operator-image-name }} make deploy
+        kubectl set env -n kyma-system deployment/istio-controller-manager KYMA_FIPS_MODE_ENABLED=true
+        kubectl set env -n kyma-system deployment/istio-controller-manager SKR_IMG_PULL_SECRET=${{ env.REGISTRY_SECRET_NAME }}
+        kubectl rollout status deployment/istio-controller-manager -n kyma-system --timeout=120s
     - name: Run integration tests
       shell: bash
       env:
         OPERATOR_VERSION: ${{ inputs.operator-version }}
-      run: |    
-        if [ "${{ github.event_name }}" == "pull_request" ]; then
-          k3d image import ${{ inputs.operator-image-name }}
-        fi
-        
+      run: |
         kubectl config use-context k3d-k3s-default
         if [ "${{ inputs.evaluation }}" == "true" ]; then
           TEST_EVALUATION=TRUE EXPORT_RESULT=true IMG=${{ inputs.operator-image-name }} make ${{ inputs.test_make_target }}

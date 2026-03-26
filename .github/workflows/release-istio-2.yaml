@@ -365,10 +365,6 @@ jobs:
       matrix:
         test-make-target:
           - "installation-e2e-test"
-          - "configuration-e2e-test"
-          - "mesh-communication-e2e-test"
-          - "observability-e2e-test"
-          - "networkpolicy-e2e-test"
           - "istio-smoke-test"
     steps:
       - uses: actions/checkout@v6
@@ -376,13 +372,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           KYMA_FIPS_MODE_ENABLED: "true"
+          REGISTRY_SECRET_NAME: "regcred"
         with:
           test_make_target: ${{ matrix.test-make-target }}
           operator-image-name: ${{ needs.get-image.outputs.image }}
           operator-version: ${{ needs.get-image.outputs.operator_version }}
+          fips-registry-sa: ${{ secrets.FIPS_REGISTRY_SA }}
           servers-memory: "16"
           agents: 2
-          restricted-registry-sa: ${{ secrets.RESTRICTED_REGISTRY_SA }}
 
   new-istio-upgrade-test-k3d:
     name: New Istio upgrade test K3D

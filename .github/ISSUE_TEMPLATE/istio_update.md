@@ -10,7 +10,7 @@ assignees: ''
 
 Update the Kyma Istio module to use a new Istio version.
 Update the Istio version and dependencies, adjust tests and documentation if needed.
-Update the Istio version for FIPS images.
+Rebuild FIPS images and update the Istio version for FIPS images.
 The upgrade needs to have zero downtime for production-ready settings.
 
 ACs:
@@ -18,6 +18,7 @@ ACs:
 - [ ] Verify that the new Istio version doesn't introduce features that transition to a new [phase](https://istio.io/latest/docs/releases/feature-stages/) in Istio, potentially affecting Kyma's Istio behavior. If such changes are identified, discuss them with the team to determine the best course of action.
 - [ ] New Istio minor should be bumped on the `main` / New Istio patch should be bumped on the `main` and the latest release branch.
 - [ ] Images of the new Istio version are synced to the Kyma registry by adding them to the [external-images.yaml](https://github.com/kyma-project/istio/blob/main/external-images.yaml).
+- [ ] FIPS images of the new Istio version are synced to the restricted registry.
 - [ ] Prepare Kyma runtime Istio RNs based on open-source Istio RNs.
 - [ ] Istio installs and upgrades to a new version.
 - [ ] Tests and documentation updated if needed.

@@ -48,13 +48,12 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 			&MergerMock{"1.16.1-distroless"}, proxyRestarter, statusHandler, images.Images{})
 
 		// when
-		err, requeue := sidecarsRestarter.Restart(context.Background(), istioCr)
+		err := sidecarsRestarter.Restart(context.Background(), istioCr)
 
 		// then
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Level()).To(Equal(describederrors.Error))
 		Expect(err.Error()).To(ContainSubstring("istio-system Pods version 1.16.0 do not match istio operator version 1.16.1"))
-		Expect(requeue).To(BeFalse())
 		Expect((*istioCr.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeProxySidecarRestartSucceeded)))
 		Expect((*istioCr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonProxySidecarRestartFailed)))
 		Expect((*istioCr.Status.Conditions)[0].Message).To(Equal("Proxy sidecar restart failed"))
@@ -92,7 +91,6 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 					Namespace: "ns6",
 				},
 			},
-			hasMorePods: true,
 		}
 		fakeClient := createFakeClient(istioCr, istiod)
 		statusHandler := status.NewStatusHandler(fakeClient)
@@ -100,12 +98,11 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 			&MergerMock{"1.16.1-distroless"}, proxyRestarter, statusHandler, images.Images{})
 
 		// when
-		err, requeue := sidecarsRestarter.Restart(context.Background(), istioCr)
+		err := sidecarsRestarter.Restart(context.Background(), istioCr)
 
 		// then
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Level()).To(Equal(describederrors.Warning))
-		Expect(requeue).To(BeFalse())
 		Expect((*istioCr.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeProxySidecarRestartSucceeded)))
 		Expect((*istioCr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonProxySidecarManualRestartRequired)))
 		Expect((*istioCr.Status.Conditions)[0].Message).To(ContainSubstring("The sidecars of the following workloads could not be restarted: ns1/name1, ns2/name2, ns3/name3, ns4/name4, ns5/name5 and 1 additional workload(s)"))
@@ -127,7 +124,6 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 					Namespace: "ns2",
 				},
 			},
-			hasMorePods: true,
 		}
 		fakeClient := createFakeClient(istioCr, istiod)
 		statusHandler := status.NewStatusHandler(fakeClient)
@@ -135,12 +131,11 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 			&MergerMock{"1.16.1-distroless"}, proxyRestarter, statusHandler, images.Images{})
 
 		// when
-		err, requeue := sidecarsRestarter.Restart(context.Background(), istioCr)
+		err := sidecarsRestarter.Restart(context.Background(), istioCr)
 
 		// then
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Level()).To(Equal(describederrors.Warning))
-		Expect(requeue).To(BeFalse())
 		Expect((*istioCr.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeProxySidecarRestartSucceeded)))
 		Expect((*istioCr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonProxySidecarManualRestartRequired)))
 		Expect((*istioCr.Status.Conditions)[0].Message).To(Equal("The sidecars of the following workloads could not be restarted: ns1/name1, ns2/name2"))
@@ -158,11 +153,10 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 			&MergerMock{"1.16.1-distroless"}, proxyRestarter, statusHandler, images.Images{})
 
 		// when
-		err, requeue := sidecarsRestarter.Restart(context.Background(), istioCr)
+		err := sidecarsRestarter.Restart(context.Background(), istioCr)
 
 		// then
 		Expect(err).Should(Not(HaveOccurred()))
-		Expect(requeue).To(BeFalse())
 		Expect((*istioCr.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeProxySidecarRestartSucceeded)))
 		Expect((*istioCr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonProxySidecarRestartSucceeded)))
 		Expect((*istioCr.Status.Conditions)[0].Message).To(Equal(operatorv1alpha2.ConditionReasonProxySidecarRestartSucceededMessage))
@@ -180,41 +174,36 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 			&MergerMock{"1.16.1-distroless"}, proxyRestarter, statusHandler, images.Images{})
 
 		// when
-		err, requeue := sidecarsRestarter.Restart(context.Background(), istioCr)
+		err := sidecarsRestarter.Restart(context.Background(), istioCr)
 
 		// then
 		Expect(err).Should(HaveOccurred())
 		Expect(err.Level()).To(Equal(describederrors.Error))
 		Expect(err.Description()).To(Equal("Error occurred during reconciliation of Istio Sidecars: intentional error"))
-		Expect(requeue).To(BeFalse())
 		Expect((*istioCr.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeProxySidecarRestartSucceeded)))
 		Expect((*istioCr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonProxySidecarRestartFailed)))
 		Expect((*istioCr.Status.Conditions)[0].Message).To(Equal(operatorv1alpha2.ConditionReasonProxySidecarRestartFailedMessage))
 		Expect((*istioCr.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
 	})
 
-	It("should succeed proxy reset even if not all proxies are reset and requeue is required", func() {
+	It("should succeed proxy reset even if not all proxies are reset", func() {
 		// given
 		istioCr := createIstioCR()
 		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", "1.16.1", "kyma-project.io/module=istio")
-		proxyRestarter := &proxyRestarterMock{
-			hasMorePods: true,
-		}
+		proxyRestarter := &proxyRestarterMock{}
 		fakeClient := createFakeClient(istioCr, istiod)
 		statusHandler := status.NewStatusHandler(fakeClient)
 		sidecarsRestarter := restarter.NewSidecarsRestarter(logr.Discard(), createFakeClient(istioCr, istiod),
 			&MergerMock{"1.16.1-distroless"}, proxyRestarter, statusHandler, images.Images{})
 
 		// when
-		err, requeue := sidecarsRestarter.Restart(context.Background(), istioCr)
+		err := sidecarsRestarter.Restart(context.Background(), istioCr)
 
 		// then
 		Expect(err).ToNot(HaveOccurred())
-		Expect(requeue).To(BeTrue())
 		Expect((*istioCr.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeProxySidecarRestartSucceeded)))
-		Expect((*istioCr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonProxySidecarRestartPartiallySucceeded)))
-		Expect((*istioCr.Status.Conditions)[0].Message).To(Equal(operatorv1alpha2.ConditionReasonProxySidecarRestartPartiallySucceededMessage))
-		Expect((*istioCr.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
+		Expect((*istioCr.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonProxySidecarRestartSucceeded)))
+		Expect((*istioCr.Status.Conditions)[0].Status).To(Equal(metav1.ConditionTrue))
 	})
 
 	It("should update lastAppliedConfiguration with compatibility mode after sidecar restart", func() {
@@ -228,11 +217,10 @@ var _ = Describe("SidecarsRestarter reconciliation", func() {
 			&MergerMock{"1.16.1-distroless"}, proxyRestarter, statusHandler, images.Images{})
 
 		// when
-		err, requeue := sidecarsRestarter.Restart(context.Background(), istioCr)
+		err := sidecarsRestarter.Restart(context.Background(), istioCr)
 
 		// then
 		Expect(err).Should(Not(HaveOccurred()))
-		Expect(requeue).To(BeFalse())
 
 		// Verify lastAppliedConfiguration was updated with compatibility mode
 		updatedIstioCR := &operatorv1alpha2.Istio{}
@@ -344,14 +332,13 @@ func (m MergerMock) SetIstioInstallFlavor(_ clusterconfig.ClusterSize) {}
 
 type proxyRestarterMock struct {
 	restartWarnings []restart.Warning
-	hasMorePods     bool
 	err             error
 }
 
-func (p *proxyRestarterMock) RestartProxies(_ context.Context, _ images.Image, _ corev1.ResourceRequirements, _ *operatorv1alpha2.Istio) ([]restart.Warning, bool, error) {
-	return p.restartWarnings, p.hasMorePods, p.err
+func (p *proxyRestarterMock) RestartProxies(_ context.Context, _ images.Image, _ corev1.ResourceRequirements, _ *operatorv1alpha2.Istio) ([]restart.Warning, error) {
+	return p.restartWarnings, p.err
 }
 
-func (p *proxyRestarterMock) RestartWithPredicates(_ context.Context, preds []predicates.SidecarProxyPredicate, _ *pods.RestartLimits, _ bool) ([]restart.Warning, bool, error) {
-	return p.restartWarnings, p.hasMorePods, p.err
+func (p *proxyRestarterMock) RestartWithPredicates(_ context.Context, preds []predicates.SidecarProxyPredicate, _ *pods.RestartLimits, _ bool) ([]restart.Warning, error) {
+	return p.restartWarnings, p.err
 }

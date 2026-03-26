@@ -13,18 +13,18 @@ spec:
         - name: manager
           env:
             - name: install-cni
-              value: europe-docker.pkg.dev/kyma-project/prod/external/istio/install-cni:1.28.3-distroless
+              value: europe-docker.pkg.dev/kyma-project/prod/external/istio/install-cni:1.28.5-distroless
             - name: proxyv2
-              value: europe-docker.pkg.dev/kyma-project/prod/external/istio/proxyv2:1.28.3-distroless
+              value: europe-docker.pkg.dev/kyma-project/prod/external/istio/proxyv2:1.28.5-distroless
             - name: pilot
-              value: europe-docker.pkg.dev/kyma-project/prod/external/istio/pilot:1.28.3-distroless
+              value: europe-docker.pkg.dev/kyma-project/prod/external/istio/pilot:1.28.5-distroless
             - name: ztunnel
-              value: europe-docker.pkg.dev/kyma-project/prod/external/istio/ztunnel:1.28.3-distroless
+              value: europe-docker.pkg.dev/kyma-project/prod/external/istio/ztunnel:1.28.5-distroless
             - name: install-cni-fips
-              value: europe-docker.pkg.dev/kyma-project/restricted-prod/external/istio/istio-install-cni-fips:1.28.3-1
+              value: europe-docker.pkg.dev/kyma-project/restricted-prod/external/istio/istio-install-cni-fips:1.28.5-1
             - name: proxyv2-fips
-              value: europe-docker.pkg.dev/kyma-project/restricted-prod/external/istio/istio-proxy-fips:1.28.3-1
+              value: europe-docker.pkg.dev/kyma-project/restricted-prod/external/istio/istio-proxy-fips:1.28.5-1
             - name: pilot-fips
-              value: europe-docker.pkg.dev/kyma-project/restricted-prod/external/istio/istio-pilot-fips:1.28.3-1
+              value: europe-docker.pkg.dev/kyma-project/restricted-prod/external/istio/istio-pilot-fips:1.28.5-1
             - name: ztunnel-fips
-              value: europe-docker.pkg.dev/kyma-project/restricted-prod/external/istio/ztunnel-fips:1.28.3-1
+              value: europe-docker.pkg.dev/kyma-project/restricted-prod/external/istio/ztunnel-fips:1.28.5-1

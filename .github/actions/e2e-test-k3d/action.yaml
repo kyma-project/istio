@@ -52,13 +52,6 @@ runs:
       run: |
         kubectl config use-context k3d-k3s-default
 
-        kubectl create namespace istio-system --dry-run=client -o yaml | kubectl apply -f -
-        kubectl -n istio-system create secret docker-registry ${{ env.REGISTRY_SECRET_NAME }} \
-          --docker-server=europe-docker.pkg.dev \
-          --docker-username=_json_key \
-          --docker-password="${FIPS_REGISTRY_SA}" \
-          --dry-run=client -o yaml | kubectl apply -f -
-
         # Deploy the controller and set environment variables for FIPS mode
         IMG=${{ inputs.operator-image-name }} make deploy
         kubectl set env -n kyma-system deployment/istio-controller-manager KYMA_FIPS_MODE_ENABLED=true
@@ -68,6 +61,8 @@ runs:
       shell: bash
       env:
         OPERATOR_VERSION: ${{ inputs.operator-version }}
+        FIPS_REGISTRY_SA: ${{ inputs.fips-registry-sa }}
+        REGISTRY_SECRET_NAME: ${{ env.REGISTRY_SECRET_NAME }}
       run: |
         if [ "${{ github.event_name }}" == "pull_request" ]; then
           k3d image import ${{ inputs.operator-image-name }}

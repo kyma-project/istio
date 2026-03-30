@@ -371,14 +371,13 @@ jobs:
       - uses: ./.github/actions/e2e-test-k3d
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FIPS_REGISTRY_SA: ${{ secrets.FIPS_REGISTRY_SA }}
           KYMA_FIPS_MODE_ENABLED: "true"
           REGISTRY_SECRET_NAME: "regcred"
-          FIPS_REGISTRY_SA: ${{ secrets.FIPS_REGISTRY_SA }}
         with:
           test_make_target: ${{ matrix.test-make-target }}
           operator-image-name: ${{ needs.get-image.outputs.image }}
           operator-version: ${{ needs.get-image.outputs.operator_version }}
-          fips-registry-sa: ${{ secrets.FIPS_REGISTRY_SA }}
           servers-memory: "16"
           agents: 2
 

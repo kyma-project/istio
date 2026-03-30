@@ -24,6 +24,7 @@ import (
 	"github.com/kyma-project/istio/operator/internal/images"
 	istiocrmetrics "github.com/kyma-project/istio/operator/internal/metrics"
 	"github.com/kyma-project/istio/operator/internal/resources"
+	istioLogger "github.com/kyma-project/istio/operator/pkg/logger"
 	"github.com/pkg/errors"
 
 	"github.com/kyma-project/istio/operator/internal/restarter"
@@ -64,16 +65,24 @@ const (
 	reconciliationRequeueTimeWarning = 1 * time.Hour
 )
 
-func NewController(mgr manager.Manager, reconciliationInterval time.Duration, crMetrics *istiocrmetrics.IstioCRMetrics, istioImages images.Images) *IstioReconciler {
-	merger := istiooperator.NewDefaultIstioMerger()
+type ControllerOptions struct {
+	ReconciliationInterval time.Duration
+	CRMetrics              *istiocrmetrics.IstioCRMetrics
+	IstioImages            images.Images
+	LogLevel               istioLogger.LogLevel
+}
+
+func NewController(mgr manager.Manager, options ControllerOptions) *IstioReconciler {
+	logsink := istioLogger.NewLogger(options.LogLevel)
+	logger := ctrl.Log.WithName("controllers").WithName("Istio").WithSink(logsink)
+	merger := istiooperator.NewDefaultIstioMerger(logger)
 
 	statusHandler := status.NewStatusHandler(mgr.GetClient())
-	logger := mgr.GetLogger()
 	podsLister := pods.NewPods(mgr.GetClient(), &logger)
 	actionRestarter := restart.NewActionRestarter(mgr.GetClient(), &logger)
 	restarters := []restarter.Restarter{
 		restarter.NewIngressGatewayRestarter(mgr.GetClient(), []predicates.IngressGatewayPredicate{}, statusHandler),
-		restarter.NewSidecarsRestarter(mgr.GetLogger(), mgr.GetClient(), &merger, sidecars.NewProxyRestarter(mgr.GetClient(), podsLister, actionRestarter, &logger), statusHandler, istioImages),
+		restarter.NewSidecarsRestarter(mgr.GetLogger(), mgr.GetClient(), &merger, sidecars.NewProxyRestarter(mgr.GetClient(), podsLister, actionRestarter, &logger), statusHandler, options.IstioImages),
 		restarter.NewForNetworkPolicy(mgr.GetClient(), statusHandler),
 	}
 	userResources := resources.NewUserResources(mgr.GetClient())
@@ -87,9 +96,9 @@ func NewController(mgr manager.Manager, reconciliationInterval time.Duration, cr
 		restarters:             restarters,
 		log:                    mgr.GetLogger(),
 		statusHandler:          statusHandler,
-		reconciliationInterval: reconciliationInterval,
-		crMetrics:              crMetrics,
-		istioImages:            istioImages,
+		reconciliationInterval: options.ReconciliationInterval,
+		crMetrics:              options.CRMetrics,
+		istioImages:            options.IstioImages,
 	}
 }
 

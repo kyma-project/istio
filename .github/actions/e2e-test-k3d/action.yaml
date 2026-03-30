@@ -20,10 +20,6 @@ inputs:
     description: 'Use Calico CNI instead of flannel'
     required: false
     default: 'false'
-  fips-registry-sa:
-    description: 'Service account JSON for FIPS registry authentication'
-    required: false
-    default: ''
 
 runs:
   using: "composite"

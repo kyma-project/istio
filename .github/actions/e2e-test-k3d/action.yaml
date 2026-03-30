@@ -20,6 +20,10 @@ inputs:
     description: 'Use Calico CNI instead of flannel'
     required: false
     default: 'false'
+  fips-registry-sa:
+    description: 'Service account JSON for FIPS registry authentication'
+    required: false
+    default: ''
 
 runs:
   using: "composite"
@@ -34,11 +38,32 @@ runs:
         agents: ${{ inputs.agents }}
         servers-memory: ${{ inputs.servers-memory }}
         calico: ${{ inputs.calico }}
+    - name: Import image
+      shell: bash
+      if: github.event_name == 'pull_request'
+      run: |
+        k3d image import ${{ inputs.operator-image-name }}
+    - name: Configure FIPS mode
+      shell: bash
+      if: env.KYMA_FIPS_MODE_ENABLED == 'true'
+      env:
+        FIPS_REGISTRY_SA: ${{ inputs.fips-registry-sa }}
+        OPERATOR_VERSION: ${{ inputs.operator-version }}
+      run: |
+        kubectl config use-context k3d-k3s-default
+
+        # Deploy the controller and set environment variables for FIPS mode
+        IMG=${{ inputs.operator-image-name }} make deploy
+        kubectl set env -n kyma-system deployment/istio-controller-manager KYMA_FIPS_MODE_ENABLED=true
+        kubectl set env -n kyma-system deployment/istio-controller-manager SKR_IMG_PULL_SECRET=${{ env.REGISTRY_SECRET_NAME }}
+        kubectl rollout status deployment/istio-controller-manager -n kyma-system --timeout=120s
     - name: Run integration tests
       shell: bash
       env:
         OPERATOR_VERSION: ${{ inputs.operator-version }}
-      run: |    
+        FIPS_REGISTRY_SA: ${{ inputs.fips-registry-sa }}
+        REGISTRY_SECRET_NAME: ${{ env.REGISTRY_SECRET_NAME }}
+      run: |
         if [ "${{ github.event_name }}" == "pull_request" ]; then
           k3d image import ${{ inputs.operator-image-name }}
         fi

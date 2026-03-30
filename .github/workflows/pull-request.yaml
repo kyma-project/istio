@@ -273,6 +273,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           KYMA_FIPS_MODE_ENABLED: "true"
           REGISTRY_SECRET_NAME: "regcred"
+          FIPS_REGISTRY_SA: ${{ secrets.FIPS_REGISTRY_SA }}
         with:
           test_make_target: ${{ matrix.test-make-target }}
           operator-image-name: ${{ needs.get-image.outputs.image }}

@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/golang/protobuf/ptypes/duration"
+	"github.com/kyma-project/istio/operator/internal/istiofeatures"
 	"google.golang.org/protobuf/types/known/structpb"
 	meshv1alpha1 "istio.io/api/mesh/v1alpha1"
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
@@ -17,12 +18,20 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+// +kubebuilder:object:generate=false
 type MergeOptions struct {
+	Features        istiofeatures.IstioFeatures
 	EnableDualStack bool
 }
 
 // +kubebuilder:object:generate=false
 type MergeOption func(options *MergeOptions)
+
+func WithFeatures(features istiofeatures.IstioFeatures) MergeOption {
+	return func(options *MergeOptions) {
+		options.Features = features
+	}
+}
 
 func WithDualStackEnabled() MergeOption {
 	return func(options *MergeOptions) {
@@ -36,7 +45,7 @@ func (i *Istio) MergeInto(op iopv1alpha1.IstioOperator, options ...MergeOption) 
 		return op, err
 	}
 
-	mergedResourcesOp, err := i.mergeResources(mergedConfigOp)
+	mergedResourcesOp, err := i.mergeResources(mergedConfigOp, options...)
 	if err != nil {
 		return op, err
 	}
@@ -409,8 +418,25 @@ func enableAmbient(op iopv1alpha1.IstioOperator, ambientEnabled bool) (iopv1alph
 	return op, nil
 }
 
+var boolValue = func(b bool) *iopv1alpha1.BoolValue {
+	boolValue := iopv1alpha1.BoolValue{}
+	err := boolValue.UnmarshalJSON([]byte(strconv.FormatBool(b)))
+	if err != nil {
+		panic("failed to unmarshal false into BoolValue")
+	}
+	return &boolValue
+}
+
 //nolint:gocognit,gocyclo,cyclop,funlen // cognitive complexity 189 of func `(*Istio).mergeResources` is high (> 20), cyclomatic complexity 70 of func `(*Istio).mergeResources` is high (> 30), Function 'mergeResources' has too many statements (129 > 50) TODO: refactor this function
-func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {
+func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator, options ...MergeOption) (iopv1alpha1.IstioOperator, error) {
+	opts := &MergeOptions{
+		EnableDualStack: false,
+	}
+
+	for _, option := range options {
+		option(opts)
+	}
+
 	if i.Spec.Components == nil {
 		return op, nil
 	}
@@ -452,25 +478,7 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 			}
 		}
 		if i.Spec.Components.EgressGateway.Enabled != nil {
-			if op.Spec.Components.EgressGateways[0].Enabled == nil {
-				op.Spec.Components.EgressGateways[0].Enabled = &iopv1alpha1.BoolValue{}
-			}
-			boolValue := iopv1alpha1.BoolValue{}
-			// This terrible if statement is necessary, because Istio decided to use a custom type for booleans,
-			// that stores bool as a private field, and does not have a constructor/setter, only an unmarshal method.
-			if *i.Spec.Components.EgressGateway.Enabled {
-				err := boolValue.UnmarshalJSON([]byte("true"))
-				if err != nil {
-					return op, err
-				}
-				op.Spec.Components.EgressGateways[0].Enabled = &boolValue
-			} else {
-				err := boolValue.UnmarshalJSON([]byte("false"))
-				if err != nil {
-					return op, err
-				}
-				op.Spec.Components.EgressGateways[0].Enabled = &boolValue
-			}
+			op.Spec.Components.EgressGateways[0].Enabled = boolValue(*i.Spec.Components.EgressGateway.Enabled)
 		}
 	}
 
@@ -543,7 +551,15 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 	}
 
 	//nolint:nestif // `if i.Spec.Components.Cni != nil` has complex nested blocks (complexity: 63) TODO refactor
-	if i.Spec.Components.Cni != nil {
+	switch {
+	case opts.Features.DisableCni:
+		if op.Spec.Components == nil {
+			op.Spec.Components = &iopv1alpha1.IstioComponentSpec{}
+			op.Spec.Components.Cni = &iopv1alpha1.ComponentSpec{
+				Enabled: boolValue(false),
+			}
+		}
+	case i.Spec.Components.Cni != nil:
 		if op.Spec.Components == nil {
 			op.Spec.Components = &iopv1alpha1.IstioComponentSpec{}
 		}

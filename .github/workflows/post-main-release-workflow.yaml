@@ -345,7 +345,6 @@ jobs:
           test_make_target: ${{ matrix.test_make_target }}
           operator_version: ${{ needs.get-image.outputs.operator_version }}
 
-  # TODO: Remove this job after FIPS tests are verified
   new-istio-e2e-test-fips-k3d:
     name: New Istio E2E test (FIPS) K3D
     runs-on: ubuntu-latest

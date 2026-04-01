@@ -388,6 +388,7 @@ jobs:
       - new-istio-upgrade-test-k3d
       - new-istio-e2e-test-aws
       - new-istio-e2e-test-gcp
+      - new-istio-e2e-test-fips-k3d
     steps:
       - uses: actions/checkout@v6
       - name: Notify

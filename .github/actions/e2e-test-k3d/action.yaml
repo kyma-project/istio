@@ -34,7 +34,7 @@ runs:
         agents: ${{ inputs.agents }}
         servers-memory: ${{ inputs.servers-memory }}
         calico: ${{ inputs.calico }}
-    - name: Import image
+    - name: Import image when it is built locally on pull request
       shell: bash
       if: github.event_name == 'pull_request'
       run: |

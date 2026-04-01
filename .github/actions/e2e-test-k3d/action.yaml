@@ -34,15 +34,30 @@ runs:
         agents: ${{ inputs.agents }}
         servers-memory: ${{ inputs.servers-memory }}
         calico: ${{ inputs.calico }}
+    - name: Import image when it is built locally on pull request
+      shell: bash
+      if: github.event_name == 'pull_request'
+      run: |
+        k3d image import ${{ inputs.operator-image-name }}
+    - name: Configure FIPS mode
+      shell: bash
+      if: env.KYMA_FIPS_MODE_ENABLED == 'true'
+      env:
+        OPERATOR_VERSION: ${{ inputs.operator-version }}
+      run: |
+        kubectl config use-context k3d-k3s-default
+
+        # Deploy the controller and set environment variables for FIPS mode
+        IMG=${{ inputs.operator-image-name }} make deploy
+        kubectl set env -n kyma-system deployment/istio-controller-manager KYMA_FIPS_MODE_ENABLED=true
+        kubectl set env -n kyma-system deployment/istio-controller-manager SKR_IMG_PULL_SECRET=${{ env.REGISTRY_SECRET_NAME }}
+        kubectl rollout status deployment/istio-controller-manager -n kyma-system --timeout=120s
     - name: Run integration tests
       shell: bash
       env:
         OPERATOR_VERSION: ${{ inputs.operator-version }}
-      run: |    
-        if [ "${{ github.event_name }}" == "pull_request" ]; then
-          k3d image import ${{ inputs.operator-image-name }}
-        fi
-        
+        REGISTRY_SECRET_NAME: ${{ env.REGISTRY_SECRET_NAME }}
+      run: |
         kubectl config use-context k3d-k3s-default
         if [ "${{ inputs.evaluation }}" == "true" ]; then
           TEST_EVALUATION=TRUE EXPORT_RESULT=true IMG=${{ inputs.operator-image-name }} make ${{ inputs.test_make_target }}

@@ -295,6 +295,32 @@ jobs:
           servers-memory: "16"
           agents: 2
 
+  new-istio-e2e-test-fips-k3d:
+    name: New Istio E2E test (FIPS) K3D
+    runs-on: ubuntu-latest
+    needs: [ get-image ]
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        test-make-target:
+          - "installation-e2e-test"
+          - "istio-smoke-test"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/e2e-test-k3d
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FIPS_REGISTRY_SA: ${{ secrets.FIPS_REGISTRY_SA }}
+          KYMA_FIPS_MODE_ENABLED: "true"
+          REGISTRY_SECRET_NAME: "regcred"
+        with:
+          test_make_target: ${{ matrix.test-make-target }}
+          operator-image-name: ${{ needs.get-image.outputs.image }}
+          operator-version: ${{ needs.get-image.outputs.operator_version }}
+          servers-memory: "16"
+          agents: 2
+
   new-istio-e2e-test-aws:
     name: New Istio E2E test AWS
     runs-on: ubuntu-latest
@@ -344,33 +370,6 @@ jobs:
           gardener_provider: gcp
           test_make_target: ${{ matrix.test_make_target }}
           operator_version: ${{ needs.get-image.outputs.operator_version }}
-
-  new-istio-e2e-test-fips-k3d:
-    name: New Istio E2E test (FIPS) K3D
-    runs-on: ubuntu-latest
-    needs: [ get-image ]
-    continue-on-error: true
-    strategy:
-      fail-fast: false
-      matrix:
-        test-make-target:
-          - "installation-e2e-test"
-          - "istio-smoke-test"
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/load-manager-image
-      - uses: ./.github/actions/e2e-test-k3d
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          FIPS_REGISTRY_SA: ${{ secrets.FIPS_REGISTRY_SA }}
-          KYMA_FIPS_MODE_ENABLED: "true"
-          REGISTRY_SECRET_NAME: "regcred"
-        with:
-          test_make_target: ${{ matrix.test-make-target }}
-          operator-image-name: ${{ needs.get-image.outputs.image }}
-          operator-version: ${{ needs.get-image.outputs.operator_version }}
-          servers-memory: "16"
-          agents: 2
 
   slack_failed_notification:
     name: Slack Notification

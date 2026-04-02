@@ -8,8 +8,7 @@ Learn how to use the `istio-features` ConfigMap to enable or disable experimenta
 > - **Not recommended due to compliance or security requirements** – some features may reduce the security posture of your cluster or conflict with your organization's policies.
 > - **Subject to removal** – features exposed through this ConfigMap may be changed or removed in any future release without prior notice.
 >
-> Using any feature from this ConfigMap may be considered **opting out of the applicable Service Level Agreement (SLA) and Service Level Objective (SLO)**. Istio module authors cannot guarantee full support where these features are enabled.
->
+> Istio module authors cannot guarantee full support where these features are enabled.
 > Use this ConfigMap only if you fully understand the implications of each feature you enable.
 
 ## Overview

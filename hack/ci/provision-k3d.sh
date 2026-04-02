@@ -68,7 +68,7 @@ provision_calico_cluster() {
         --port 80:80@loadbalancer \
         --port 443:443@loadbalancer \
         --k3s-arg "--flannel-backend=none@all" \
-        --k3s-arg "--disable=traefik@server:0" \
+        --k3s-arg "--disable=traefik@server:*" \
         --k3s-arg '--tls-san=host.docker.internal@server:*' \
         --image "${K3S_IMAGE}"
 

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 
 	corev1 "k8s.io/api/core/v1"
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -22,8 +22,8 @@ type IstioFeatures struct {
 
 func Get(ctx context.Context, k8sClient client.Client) (IstioFeatures, error) {
 	var IstioFeaturesConfigMap corev1.ConfigMap
-	err := k8sClient.Get(ctx, client.ObjectKey{Name: featuresConfigMapName, Namespace: featuresConfigMapNamespace}, &IstioFeaturesConfigMap)
-	if !k8serrors.IsNotFound(err) {
+	err := k8sClient.Get(ctx, types.NamespacedName{Name: featuresConfigMapName, Namespace: featuresConfigMapNamespace}, &IstioFeaturesConfigMap)
+	if err != nil {
 		return IstioFeatures{}, err
 	}
 

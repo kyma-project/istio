@@ -2,6 +2,7 @@ package v1alpha2
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 
 	"github.com/golang/protobuf/ptypes/duration"
@@ -305,9 +306,6 @@ func (i *Istio) mergeConfig(op iopv1alpha1.IstioOperator, options ...MergeOption
 
 func applyGatewayExternalTrafficPolicy(op iopv1alpha1.IstioOperator, i *Istio) iopv1alpha1.IstioOperator {
 	if i.Spec.Config.GatewayExternalTrafficPolicy != nil {
-		if op.Spec.Components == nil {
-			op.Spec.Components = &iopv1alpha1.IstioComponentSpec{}
-		}
 		if len(op.Spec.Components.IngressGateways) == 0 {
 			op.Spec.Components.IngressGateways = append(op.Spec.Components.IngressGateways, iopv1alpha1.GatewayComponentSpec{})
 		}
@@ -418,11 +416,11 @@ func enableAmbient(op iopv1alpha1.IstioOperator, ambientEnabled bool) (iopv1alph
 	return op, nil
 }
 
-var boolValue = func(b bool) *iopv1alpha1.BoolValue {
+func boolValue(b bool) *iopv1alpha1.BoolValue {
 	boolValue := iopv1alpha1.BoolValue{}
 	err := boolValue.UnmarshalJSON([]byte(strconv.FormatBool(b)))
 	if err != nil {
-		panic("failed to unmarshal false into BoolValue")
+		panic(fmt.Sprintf("failed to unmarshal bool value: %v", err))
 	}
 	return &boolValue
 }
@@ -437,15 +435,20 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator, options ...MergeOpt
 		option(opts)
 	}
 
+	if op.Spec.Components == nil {
+		op.Spec.Components = &iopv1alpha1.IstioComponentSpec{}
+	}
+
+	op.Spec.Components.Cni = &iopv1alpha1.ComponentSpec{
+		Enabled: boolValue(!opts.Features.DisableCni),
+	}
+
 	if i.Spec.Components == nil {
 		return op, nil
 	}
 
 	//nolint:nestif // `if i.Spec.Components.IngressGateway != nil` has complex nested blocks (complexity: 6) TODO refactor
 	if i.Spec.Components.IngressGateway != nil {
-		if op.Spec.Components == nil {
-			op.Spec.Components = &iopv1alpha1.IstioComponentSpec{}
-		}
 		if len(op.Spec.Components.IngressGateways) == 0 {
 			op.Spec.Components.IngressGateways = append(op.Spec.Components.IngressGateways, iopv1alpha1.GatewayComponentSpec{})
 		}
@@ -462,9 +465,6 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator, options ...MergeOpt
 
 	//nolint:nestif // `if i.Spec.Components.EgressGateway != nil` has complex nested blocks (complexity: 18) TODO refactor
 	if i.Spec.Components.EgressGateway != nil {
-		if op.Spec.Components == nil {
-			op.Spec.Components = &iopv1alpha1.IstioComponentSpec{}
-		}
 		if len(op.Spec.Components.EgressGateways) == 0 {
 			op.Spec.Components.EgressGateways = append(op.Spec.Components.EgressGateways, iopv1alpha1.GatewayComponentSpec{})
 		}
@@ -484,9 +484,6 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator, options ...MergeOpt
 
 	//nolint:nestif // `if i.Spec.Components.Pilot != nil` has complex nested blocks (complexity: 6) TODO refactor
 	if i.Spec.Components.Pilot != nil {
-		if op.Spec.Components == nil {
-			op.Spec.Components = &iopv1alpha1.IstioComponentSpec{}
-		}
 		if op.Spec.Components.Pilot == nil {
 			op.Spec.Components.Pilot = &iopv1alpha1.ComponentSpec{}
 		}
@@ -551,19 +548,7 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator, options ...MergeOpt
 	}
 
 	//nolint:nestif // `if i.Spec.Components.Cni != nil` has complex nested blocks (complexity: 63) TODO refactor
-	switch {
-	case opts.Features.DisableCni:
-		if op.Spec.Components == nil {
-			op.Spec.Components = &iopv1alpha1.IstioComponentSpec{}
-			op.Spec.Components.Cni = &iopv1alpha1.ComponentSpec{
-				Enabled: boolValue(false),
-			}
-		}
-	case i.Spec.Components.Cni != nil:
-		if op.Spec.Components == nil {
-			op.Spec.Components = &iopv1alpha1.IstioComponentSpec{}
-		}
-
+	if i.Spec.Components.Cni != nil {
 		if op.Spec.Components.Cni == nil {
 			op.Spec.Components.Cni = &iopv1alpha1.ComponentSpec{}
 		}

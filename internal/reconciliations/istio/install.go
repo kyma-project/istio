@@ -90,14 +90,15 @@ func installIstio(ctx context.Context, args installArgs) (istiooperator.IstioIma
 
 	ctrl.Log.Info("Installing Istio with", "profile", clusterSize.String())
 
+	var options []operatorv1alpha2.MergeOption
 	features, err := istiofeatures.Get(ctx, k8sClient)
 	if err != nil {
 		ctrl.Log.Info("Could not get Istio features, proceeding with default configuration", "error", err)
+	} else {
+		ctrl.Log.Info("Running with Istio features", "features", features)
+		options = append(options, operatorv1alpha2.WithFeatures(features))
 	}
 
-	options := []operatorv1alpha2.MergeOption{
-		operatorv1alpha2.WithFeatures(features),
-	}
 	if enableDualStack {
 		options = append(options, operatorv1alpha2.WithDualStackEnabled())
 	}

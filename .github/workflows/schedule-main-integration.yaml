@@ -262,6 +262,7 @@ jobs:
           test_make_target: ${{ matrix.test-make-target }}
           operator-image-name: ${{ needs.get-image.outputs.image }}
           operator-version: ${{ needs.get-image.outputs.operator_version }}
+          servers: 3
           servers-memory: "16"
           agents: 0
           calico: "true"

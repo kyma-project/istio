@@ -8,7 +8,7 @@ Learn how to use the `istio-features` ConfigMap to enable or disable experimenta
 > - **Not recommended due to compliance or security requirements** – some features may reduce the security posture of your cluster or conflict with your organization's policies.
 > - **Subject to removal** – features exposed through this ConfigMap may be changed or removed in any future release without prior notice.
 >
-> Using any feature from this ConfigMap may be considered **opting out of the applicable Service Level Agreement (SLA) and Service Level Objective (SLO)**. SAP cannot guarantee reliability, availability, or support commitments for clusters where these features are enabled.
+> Using any feature from this ConfigMap may be considered **opting out of the applicable Service Level Agreement (SLA) and Service Level Objective (SLO)**. Istio module authors cannot guarantee full support where these features are enabled.
 >
 > Use this ConfigMap only if you fully understand the implications of each feature you enable.
 
@@ -65,7 +65,6 @@ This introduces the following risks:
 
 - **Elevated privileges in application Pods** – The `istio-init` init container requires `NET_ADMIN` and `NET_RAW` capabilities. These capabilities allow the container to modify network configuration within its network namespace and may be prohibited by your cluster's `PodSecurity` admission policy or security scanning tools.
 - **Bypass risk** – Any container in the Pod that runs before `istio-init` completes, or any container that also holds `NET_ADMIN`/`NET_RAW` capabilities, could potentially modify or bypass the `iptables` rules that enforce traffic interception. With Istio CNI, this concern is eliminated because interception is set up by a privileged node-level agent before the Pod's containers start.
-- **Security policy violations** – Many compliance frameworks and Kubernetes hardening guides explicitly prohibit the use of `NET_ADMIN` and `NET_RAW` capabilities in workload containers. Disabling CNI may cause your cluster to fail such audits.
 - **Increased attack surface on nodes** – While the `istio-init` container only affects its own network namespace, having `NET_ADMIN`-capable init containers increases the overall attack surface compared to the CNI-based approach, where privilege escalation is confined to the dedicated CNI DaemonSet.
 
 

@@ -16,6 +16,10 @@ inputs:
   servers-memory:
     description: 'Amount of memory allocated to k3d cluster'
     required: true
+  servers:
+    description: 'Number of k3d servers created'
+    required: false
+    default: '1'
   calico:
     description: 'Use Calico CNI instead of flannel'
     required: false
@@ -33,6 +37,7 @@ runs:
         k3s-version: "1.33.5"
         agents: ${{ inputs.agents }}
         servers-memory: ${{ inputs.servers-memory }}
+        servers: ${{ inputs.servers }}
         calico: ${{ inputs.calico }}
     - name: Import image when it is built locally on pull request
       shell: bash

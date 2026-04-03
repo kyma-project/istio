@@ -299,7 +299,6 @@ jobs:
     name: New Istio E2E test (FIPS) K3D
     runs-on: ubuntu-latest
     needs: [ get-image ]
-    continue-on-error: true
     strategy:
       fail-fast: false
       matrix:

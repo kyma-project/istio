@@ -306,6 +306,9 @@ func (i *Istio) mergeConfig(op iopv1alpha1.IstioOperator, options ...MergeOption
 
 func applyGatewayExternalTrafficPolicy(op iopv1alpha1.IstioOperator, i *Istio) iopv1alpha1.IstioOperator {
 	if i.Spec.Config.GatewayExternalTrafficPolicy != nil {
+		if op.Spec.Components == nil {
+			op.Spec.Components = &iopv1alpha1.IstioComponentSpec{}
+		}
 		if len(op.Spec.Components.IngressGateways) == 0 {
 			op.Spec.Components.IngressGateways = append(op.Spec.Components.IngressGateways, iopv1alpha1.GatewayComponentSpec{})
 		}

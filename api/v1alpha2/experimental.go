@@ -9,6 +9,12 @@ type Experimental struct {
 	// Enables ambient mode support.
 	// +kubebuilder:validation:Optional
 	EnableAmbient *bool `json:"enableAmbient,omitempty"`
+
+	// Enables installation of Gateway API CRDs.
+	// When set to true, the Gateway API CRDs are installed as part of the Istio installation.
+	// When set to false or unset, the Gateway API CRDs are not installed.
+	// +kubebuilder:validation:Optional
+	EnableGatewayAPI *bool `json:"enableGatewayAPI,omitempty"`
 }
 
 // Defines experimental features for Istio Pilot.

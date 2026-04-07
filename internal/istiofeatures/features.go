@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	featuresConfigMapName      = "istio-features"
-	featuresConfigMapNamespace = "kyma-system"
+	ConfigMapName      = "istio-features"
+	ConfigMapNamespace = "kyma-system"
 
 	configMapKey = "features"
 )
@@ -21,13 +21,13 @@ type IstioFeatures struct {
 }
 
 func Get(ctx context.Context, k8sClient client.Client) (IstioFeatures, error) {
-	var IstioFeaturesConfigMap corev1.ConfigMap
-	err := k8sClient.Get(ctx, types.NamespacedName{Name: featuresConfigMapName, Namespace: featuresConfigMapNamespace}, &IstioFeaturesConfigMap)
+	var istioFeaturesConfigMap corev1.ConfigMap
+	err := k8sClient.Get(ctx, types.NamespacedName{Name: ConfigMapName, Namespace: ConfigMapNamespace}, &istioFeaturesConfigMap)
 	if err != nil {
 		return IstioFeatures{}, err
 	}
 
-	featuresData, ok := IstioFeaturesConfigMap.Data[configMapKey]
+	featuresData, ok := istioFeaturesConfigMap.Data[configMapKey]
 	if !ok {
 		return IstioFeatures{}, nil
 	}

@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 
+	"github.com/kyma-project/istio/operator/internal/istiofeatures"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/workqueue"
 	controllerruntime "sigs.k8s.io/controller-runtime"
@@ -10,17 +11,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 )
 
-const (
-	istioFeaturesConfigMapName      = "istio-features"
-	istioFeaturesConfigMapNamespace = "kyma-system"
-)
-
 // IstioFeaturesConfigMapEventHandler is a controller-runtime EventHandler that triggers reconciliation
 // of the Istio CR whenever the istio-features ConfigMap is created, updated, or deleted.
 type IstioFeaturesConfigMapEventHandler struct{}
 
 func (h IstioFeaturesConfigMapEventHandler) isIstioFeaturesConfigMap(obj client.Object) bool {
-	return obj.GetName() == istioFeaturesConfigMapName && obj.GetNamespace() == istioFeaturesConfigMapNamespace
+	return obj.GetName() == istiofeatures.ConfigMapName && obj.GetNamespace() == istiofeatures.ConfigMapNamespace
 }
 
 func (h IstioFeaturesConfigMapEventHandler) enqueue(w workqueue.TypedRateLimitingInterface[controllerruntime.Request]) {

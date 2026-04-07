@@ -1,4 +1,4 @@
-# Istio Features ConfigMap
+# Alpha Istio Features
 Use the `istio-features` ConfigMap to enable or disable alpha Istio features that are not exposed in the Istio custom resource (CR) due to stability, compliance, or security concerns.
 
 >[!WARNING]

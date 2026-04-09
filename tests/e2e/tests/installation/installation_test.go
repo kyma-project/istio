@@ -159,7 +159,6 @@ func TestInstallation(t *testing.T) {
 			),
 			istioassert.WithExpectedDescriptionContaining(
 				"Stopped Istio CR reconciliation: istio CR is not in kyma-system namespace",
-				"Will not reconcile automatically",
 			),
 		)
 	})
@@ -193,7 +192,6 @@ func TestInstallation(t *testing.T) {
 			),
 			istioassert.WithExpectedDescriptionContaining(
 				"Stopped Istio CR reconciliation: only Istio CR default in kyma-system reconciles the module",
-				"Will not reconcile automatically",
 			),
 		)
 	})

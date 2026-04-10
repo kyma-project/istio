@@ -47,7 +47,6 @@ spec:
         # This ensures that deployments meet the highest security requirements for Kubernetes.
         # For more details, see: https://kubernetes.io/docs/concepts/security/pod-security-standards/#restricted
         runAsNonRoot: true
-        # TODO(Hx2): this was uncommented by default with new scaffolding, but I cannot predict if this can be safely enabled
         # seccompProfile:
         #   type: RuntimeDefault
       containers:
@@ -63,7 +62,6 @@ spec:
         image: controller:latest
         name: manager
         securityContext:
-          # TODO(Hx2): this was uncommented by default with new scaffolding, but I cannot predict if this can be safely enabled
           # readOnlyRootFilesystem: true
           allowPrivilegeEscalation: false
           capabilities:

@@ -1,5 +1,5 @@
 /*
-Copyright 2022.
+Copyright 2026.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"crypto/tls"
 	"flag"
 	"os"
 	"time"
@@ -49,8 +50,8 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/controllers"
-	//+kubebuilder:scaffold:imports
+	controllers "github.com/kyma-project/istio/operator/internal/controller"
+	// +kubebuilder:scaffold:imports
 )
 
 const (
@@ -84,7 +85,7 @@ func init() { //nolint:gochecknoinits // it was scaffolded by controller-gen TOD
 	utilruntime.Must(networkingv1alpha3.AddToScheme(scheme))
 	utilruntime.Must(networkingv1.AddToScheme(scheme))
 	utilruntime.Must(operatorv1alpha2.AddToScheme(scheme))
-	//+kubebuilder:scaffold:scheme
+	// +kubebuilder:scaffold:scheme
 }
 
 func main() {
@@ -135,7 +136,7 @@ func main() {
 		setupLog.Error(err, "Unable to create controller", "controller", "Istio")
 		os.Exit(1)
 	}
-	//+kubebuilder:scaffold:builder
+	// +kubebuilder:scaffold:builder
 
 	if err = mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
 		setupLog.Error(err, "Unable to set up health check")
@@ -154,8 +155,20 @@ func main() {
 }
 
 func createManager(flagVar *FlagVar) (manager.Manager, error) {
+	// TODO(hx2): rework this message into something useful, I haven't copied the flag over
+	// if the enable-http2 flag is false (the default), http/2 should be disabled
+	// due to its vulnerabilities. More specifically, disabling http/2 will
+	// prevent from being vulnerable to the HTTP/2 Stream Cancellation and
+	// Rapid Reset CVEs. For more information see:
+	// - https://github.com/advisories/GHSA-qppj-fm5r-hxr3
+	// - https://github.com/advisories/GHSA-4374-p667-p6c8
+	disableHTTP2 := func(c *tls.Config) {
+		c.NextProtos = []string{"http/1.1"}
+	}
+
 	webhookServer := webhook.NewServer(webhook.Options{
-		Port: WebhookServiceDefaultPort,
+		TLSOpts: []func(*tls.Config){disableHTTP2},
+		Port:    WebhookServiceDefaultPort,
 	})
 
 	return ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{

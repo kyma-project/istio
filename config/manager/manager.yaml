@@ -22,7 +22,7 @@ spec:
         app.kubernetes.io/component: istio-operator.kyma-project.io
     spec:
       # TODO(user): Uncomment the following code to configure the nodeAffinity expression
-      # according to the platforms which are supported by your solution. 
+      # according to the platforms which are supported by your solution.
       # It is considered best practice to support multiple architectures. You can
       # build your manager image using the makefile target docker-buildx.
       # affinity:
@@ -43,12 +43,11 @@ spec:
       #               - linux
       priorityClassName: istio-kyma-priority
       securityContext:
+        # Projects are configured by default to adhere to the "restricted" Pod Security Standards.
+        # This ensures that deployments meet the highest security requirements for Kubernetes.
+        # For more details, see: https://kubernetes.io/docs/concepts/security/pod-security-standards/#restricted
         runAsNonRoot: true
-        # TODO(user): For common cases that do not require escalating privileges
-        # it is recommended to ensure that all your Pods/Containers are restrictive.
-        # More info: https://kubernetes.io/docs/concepts/security/pod-security-standards/#restricted
-        # Please uncomment the following code if your project does NOT have to work on old Kubernetes
-        # versions < 1.19 or on vendors versions which do NOT support this field by default (i.e. Openshift < 4.11 ).
+        # TODO(Hx2): this was uncommented by default with new scaffolding, but I cannot predict if this can be safely enabled
         # seccompProfile:
         #   type: RuntimeDefault
       containers:
@@ -64,6 +63,8 @@ spec:
         image: controller:latest
         name: manager
         securityContext:
+          # TODO(Hx2): this was uncommented by default with new scaffolding, but I cannot predict if this can be safely enabled
+          # readOnlyRootFilesystem: true
           allowPrivilegeEscalation: false
           capabilities:
             drop:

@@ -36,6 +36,9 @@ body:
     - source: spec.compatibilityMode
       name: compatibilityMode
       placeholder: 'false'
+    - source: spec.networkPoliciesEnabled
+      name: networkPoliciesEnabled
+      placeholder: 'false'
     - source: spec.config.telemetry.metrics.prometheusMerge
       name: config.prometheusMerge
       placeholder: 'false'
@@ -62,6 +65,12 @@ body:
         - name: config.authorizers.headers.toDownstream.onDeny
           source: headers.toDownstream.onDeny
           widget: JoinedArray
+        - name: config.authorizers.pathPrefix
+          source: pathPrefix
+          visibility: '$exists($value)'
+        - name: config.authorizers.timeout
+          source: timeout
+          visibility: '$exists($value)'
       children:
         - name: config.authorizers.service
           source: service
@@ -165,6 +174,55 @@ body:
       - source: spec.components.proxy.k8s.resources.requests.memory
         name: k8s.resources.requests.memory
         visibility: '$exists($value)'
+
+    - widget: Panel
+      name: Egress Gateway
+      visibility: '$exists(spec.components.egressGateway.enabled) or $exists(spec.components.egressGateway.k8s.hpaSpec.minReplicas) or $exists(spec.components.egressGateway.k8s.hpaSpec.maxReplicas) or $exists(spec.components.egressGateway.k8s.strategy.rollingUpdate.maxSurge) or $exists(spec.components.egressGateway.k8s.strategy.rollingUpdate.maxUnavailable) or $exists(spec.components.egressGateway.k8s.resources.limits.cpu) or $exists(spec.components.egressGateway.k8s.resources.limits.memory) or $exists(spec.components.egressGateway.k8s.resources.requests.cpu) or $exists(spec.components.egressGateway.k8s.resources.requests.memory)'
+      children:
+      - source: spec.components.egressGateway.enabled
+        name: egressGateway.enabled
+        visibility: '$exists($value)'
+      - source: spec.components.egressGateway.k8s.hpaSpec.minReplicas
+        name: k8s.hpaSpec.minReplicas
+        visibility: '$exists($value)'
+      - source: spec.components.egressGateway.k8s.hpaSpec.maxReplicas
+        name: k8s.hpaSpec.maxReplicas
+        visibility: '$exists($value)'
+      - source: spec.components.egressGateway.k8s.strategy.rollingUpdate.maxSurge
+        name: k8s.strategy.rollingUpdate.maxSurge
+        visibility: '$exists($value)'
+      - source: spec.components.egressGateway.k8s.strategy.rollingUpdate.maxUnavailable
+        name: k8s.strategy.rollingUpdate.maxUnavailable
+        visibility: '$exists($value)'
+      - source: spec.components.egressGateway.k8s.resources.limits.cpu
+        name: k8s.resources.limits.cpu
+        visibility: '$exists($value)'
+      - source: spec.components.egressGateway.k8s.resources.limits.memory
+        name: k8s.resources.limits.memory
+        visibility: '$exists($value)'
+      - source: spec.components.egressGateway.k8s.resources.requests.cpu
+        name: k8s.resources.requests.cpu
+        visibility: '$exists($value)'
+      - source: spec.components.egressGateway.k8s.resources.requests.memory
+        name: k8s.resources.requests.memory
+        visibility: '$exists($value)'
+
+- widget: Panel
+  name: Experimental
+  visibility: '$exists(spec.experimental.enableAlphaGatewayAPI) or $exists(spec.experimental.enableMultiNetworkDiscoverGatewayAPI) or $exists(spec.experimental.enableAmbient)'
+  children:
+  - source: spec.experimental.enableAlphaGatewayAPI
+    name: experimental.enableAlphaGatewayAPI
+    placeholder: 'false'
+    visibility: '$exists($value)'
+  - source: spec.experimental.enableMultiNetworkDiscoverGatewayAPI
+    name: experimental.enableMultiNetworkDiscoverGatewayAPI
+    placeholder: 'false'
+    visibility: '$exists($value)'
+  - source: spec.experimental.enableAmbient
+    name: experimental.enableAmbient
+    placeholder: 'false'
+    visibility: '$exists($value)'
 
 - source: status.conditions
   widget: Table

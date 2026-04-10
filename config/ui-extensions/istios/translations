@@ -1,5 +1,6 @@
 en:
   compatibilityMode: Compatibility Mode
+  networkPoliciesEnabled: Network Policies Enabled
   config.numTrustedProxies: Number of trusted proxies
   config.trustDomain: Trust Domain
 
@@ -13,6 +14,8 @@ en:
   config.authorizers.headers.toUpstream.onAllow: Forward To Upstream
   config.authorizers.headers.toDownstream.onAllow: Forward To Downstream On Allow
   config.authorizers.headers.toDownstream.onDeny: Forward To Downstream On Deny
+  config.authorizers.pathPrefix: Path Prefix
+  config.authorizers.timeout: Timeout
   config.gatewayExternalTrafficPolicy: Gateway external traffic policy
   config.prometheusMerge: Enable PrometheusMerge
   config.forwardClientCertDetails: X-Forwarded-Client-Cert header population strategy
@@ -44,3 +47,6 @@ en:
   description.networkPoliciesEnabled: Enables installation of module related Network Policies in the kyma-system and istio-system namespaces.
   description.compatibilityMode: Sets Istio compatibility version the last minor version.
   description.enableDNSProxying: Enables or disables global DNS proxying in Istio sidecar and gateway proxies across the service mesh. When enabled, DNS requests from application pods are intercepted by the Istio proxies instead of being sent directly to upstream DNS servers.
+
+  egressGateway.enabled: Egress Gateway Enabled
+  description.egressGateway.enabled: Enables or disables the Istio Egress Gateway.

@@ -175,7 +175,7 @@ $(LOCALBIN):
 KUSTOMIZE ?= $(LOCALBIN)/kustomize
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
-GOTESTSUM ?= $(GOTESTSUM)
+GOTESTSUM ?= $(LOCALBIN)/gotestsum
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v5.7.1

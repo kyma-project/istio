@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/kyma-project/istio/operator/pkg/labels"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
@@ -16,7 +17,9 @@ import (
 )
 
 const (
-	gatewayAPIVersion = "v1.4.1"
+	gatewayAPIVersion        = "v1.4.1"
+	ModuleLabelKey    string = "kyma-project.io/module"
+	ModuleLabelValue  string = "istio"
 )
 
 //go:embed gateway-api-crds.yaml
@@ -65,6 +68,8 @@ func (g *GatewayAPICRDInstaller) Install(ctx context.Context) error {
 			if apierrors.IsNotFound(err) {
 				// Create new CRD
 				ctrl.Log.Info("Creating Gateway API CRD", "name", crd.Name, "version", gatewayAPIVersion)
+				l := labels.SetModuleLabels(crd.GetLabels())
+				crd.SetLabels(l)
 				if err := g.client.Create(ctx, crd); err != nil {
 					ctrl.Log.Error(err, "Failed to create Gateway API CRD", "name", crd.Name)
 					return fmt.Errorf("failed to create Gateway API CRD %s: %w", crd.Name, err)
@@ -76,7 +81,14 @@ func (g *GatewayAPICRDInstaller) Install(ctx context.Context) error {
 				return fmt.Errorf("failed to get Gateway API CRD %s: %w", crd.Name, err)
 			}
 		} else {
-			// Check if CRD needs updating by comparing version annotations
+			existingLabels := existingCRD.GetLabels()
+			moduleLabelVal, hasModuleLabel := existingLabels[labels.ModuleLabelKey]
+			if !hasModuleLabel || moduleLabelVal != labels.ModuleLabelValue {
+				ctrl.Log.Info("Existing Gateway API CRD is not managed by Kyma, skipping update", "name", crd.Name)
+				unchangedCount++
+				continue
+			}
+
 			existingVersion := "unknown"
 			if val, ok := existingCRD.Annotations["gateway.networking.k8s.io/bundle-version"]; ok {
 				existingVersion = val

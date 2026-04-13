@@ -56,6 +56,28 @@ func uninstallIstio(ctx context.Context, args uninstallArgs) (istiooperator.Isti
 			SetCondition(false)
 	}
 
+	//Check if there exist blocking Gateway API CRs created by client
+	//TODO: is this right approach as even if someone have gateway api crs not connected to istio istio uninstallation will be blocked.
+	if istioCR.Spec.Experimental != nil &&
+		istioCR.Spec.Experimental.EnableGatewayAPI != nil &&
+		*istioCR.Spec.Experimental.EnableGatewayAPI {
+
+		gatewayAPIResources, err := FindUserCreatedGatewayAPIResources(ctx, k8sClient)
+		if err != nil {
+			return istioImageVersion, describederrors.NewDescribedError(err, "Could not check for Gateway API resources")
+		}
+		if len(gatewayAPIResources) > 0 {
+			for _, r := range gatewayAPIResources {
+				ctrl.Log.Info("Gateway API resource is blocking Istio deletion", "resource", r)
+			}
+			statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIstioCRsDangling))
+			return istioImageVersion, describederrors.NewDescribedError(
+				fmt.Errorf("could not delete Istio module since there are %d Gateway API resources present", len(gatewayAPIResources)),
+				"There are Gateway API resources that block deletion. Please remove them first.",
+			).DisableErrorWrap().SetWarning().SetCondition(false)
+		}
+	}
+
 	err = istioClient.Uninstall(ctx)
 	if err != nil {
 		return istioImageVersion, describederrors.NewDescribedError(err, "Could not uninstall istio")

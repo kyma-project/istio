@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/pkg/labels"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -17,13 +19,33 @@ import (
 )
 
 const (
-	gatewayAPIVersion        = "v1.4.1"
-	ModuleLabelKey    string = "kyma-project.io/module"
-	ModuleLabelValue  string = "istio"
+	gatewayAPIVersion = "v1.4.1"
+	gatewayAPIGroup   = "gateway.networking.k8s.io"
+	bundleVersionKey  = "gateway.networking.k8s.io/bundle-version"
 )
 
 //go:embed gateway-api-crds.yaml
 var gatewayAPICRDsYAML string
+
+// GatewayAPICRDInstallResult holds the outcome of a single Install() call.
+type GatewayAPICRDInstallResult struct {
+	// CreatedCRDs lists CRD names that were freshly created and labelled.
+	CreatedCRDs []string
+	// UpdatedCRDs lists CRD names that were updated (version changed) and are managed.
+	UpdatedCRDs []string
+	// UnchangedCRDs lists CRD names that are already up to date and managed.
+	UnchangedCRDs []string
+	// UnmanagedCRDs lists CRD names that exist on the cluster but do NOT carry the
+	// kyma-project.io/module=istio label. These were skipped – the user must add the
+	// label manually for the module to manage them.
+	UnmanagedCRDs []string
+}
+
+// HasUnmanagedCRDs returns true when at least one pre-existing CRD was found
+// without the module-ownership label.
+func (r GatewayAPICRDInstallResult) HasUnmanagedCRDs() bool {
+	return len(r.UnmanagedCRDs) > 0
+}
 
 type GatewayAPICRDInstaller struct {
 	client client.Client
@@ -33,14 +55,15 @@ func NewGatewayAPICRDInstaller(c client.Client) *GatewayAPICRDInstaller {
 	return &GatewayAPICRDInstaller{client: c}
 }
 
-// Install installs or updates Gateway API CRDs
-func (g *GatewayAPICRDInstaller) Install(ctx context.Context) error {
+// Install installs or updates Gateway API CRDs.
+// It returns a GatewayAPICRDInstallResult describing what happened to each CRD.
+// Pre-existing CRDs without the module ownership label are recorded in UnmanagedCRDs
+// and never modified – the caller is responsible for logging the situation to the user.
+func (g *GatewayAPICRDInstaller) Install(ctx context.Context) (GatewayAPICRDInstallResult, error) {
 	ctrl.Log.Info("Starting Gateway API CRDs installation", "version", gatewayAPIVersion)
 
-	// Split the YAML file by document separator
+	result := GatewayAPICRDInstallResult{}
 	documents := strings.Split(gatewayAPICRDsYAML, "---")
-
-	var createdCount, updatedCount, unchangedCount int
 
 	for idx, doc := range documents {
 		doc = strings.TrimSpace(doc)
@@ -51,94 +74,100 @@ func (g *GatewayAPICRDInstaller) Install(ctx context.Context) error {
 		crd := &apiextensionsv1.CustomResourceDefinition{}
 		if err := yaml.Unmarshal([]byte(doc), crd); err != nil {
 			ctrl.Log.Error(err, "Failed to unmarshal Gateway API CRD", "documentIndex", idx)
-			return fmt.Errorf("failed to unmarshal Gateway API CRD at document %d: %w", idx, err)
+			return result, fmt.Errorf("failed to unmarshal Gateway API CRD at document %d: %w", idx, err)
 		}
 
-		// Skip if not a valid CRD or not a Gateway API CRD
-		if crd.Name == "" || !strings.Contains(crd.Name, "gateway.networking.k8s.io") {
+		if crd.Name == "" || !strings.Contains(crd.Name, gatewayAPIGroup) {
 			ctrl.Log.V(1).Info("Skipping non-Gateway API CRD document", "name", crd.Name, "documentIndex", idx)
 			continue
 		}
 
-		// Check if CRD already exists
 		existingCRD := &apiextensionsv1.CustomResourceDefinition{}
 		err := g.client.Get(ctx, client.ObjectKey{Name: crd.Name}, existingCRD)
 
-		if err != nil {
-			if apierrors.IsNotFound(err) {
-				// Create new CRD
-				ctrl.Log.Info("Creating Gateway API CRD", "name", crd.Name, "version", gatewayAPIVersion)
-				l := labels.SetModuleLabels(crd.GetLabels())
-				crd.SetLabels(l)
-				if err := g.client.Create(ctx, crd); err != nil {
-					ctrl.Log.Error(err, "Failed to create Gateway API CRD", "name", crd.Name)
-					return fmt.Errorf("failed to create Gateway API CRD %s: %w", crd.Name, err)
-				}
-				createdCount++
-				ctrl.Log.Info("Successfully created Gateway API CRD", "name", crd.Name)
-			} else {
-				ctrl.Log.Error(err, "Failed to check Gateway API CRD existence", "name", crd.Name)
-				return fmt.Errorf("failed to get Gateway API CRD %s: %w", crd.Name, err)
+		if apierrors.IsNotFound(err) {
+			ctrl.Log.Info("Creating Gateway API CRD", "name", crd.Name, "version", gatewayAPIVersion)
+			crd.SetLabels(labels.SetModuleLabels(crd.GetLabels()))
+			if createErr := g.client.Create(ctx, crd); createErr != nil {
+				ctrl.Log.Error(createErr, "Failed to create Gateway API CRD", "name", crd.Name)
+				return result, fmt.Errorf("failed to create Gateway API CRD %s: %w", crd.Name, createErr)
 			}
-		} else {
-			existingLabels := existingCRD.GetLabels()
-			moduleLabelVal, hasModuleLabel := existingLabels[labels.ModuleLabelKey]
-			if !hasModuleLabel || moduleLabelVal != labels.ModuleLabelValue {
-				ctrl.Log.Info("Existing Gateway API CRD is not managed by Kyma, skipping update", "name", crd.Name)
-				unchangedCount++
-				continue
-			}
-
-			existingVersion := "unknown"
-			if val, ok := existingCRD.Annotations["gateway.networking.k8s.io/bundle-version"]; ok {
-				existingVersion = val
-			}
-
-			targetVersion := gatewayAPIVersion
-			if val, ok := crd.Annotations["gateway.networking.k8s.io/bundle-version"]; ok {
-				targetVersion = val
-			}
-
-			// Only update if versions differ or if we need to ensure annotations are present
-			if existingVersion != "unknown" && existingVersion == targetVersion {
-				ctrl.Log.V(1).Info("Gateway API CRD is already up to date", "name", crd.Name, "version", existingVersion)
-				unchangedCount++
-			} else {
-				// Log appropriately based on situation
-				if existingVersion == "unknown" {
-					ctrl.Log.Info("Ensuring Gateway API CRD is up to date", "name", crd.Name, "targetVersion", targetVersion)
-				} else {
-					ctrl.Log.Info("Updating Gateway API CRD", "name", crd.Name, "currentVersion", existingVersion, "targetVersion", targetVersion)
-				}
-
-				crd.ResourceVersion = existingCRD.ResourceVersion
-				if err := g.client.Update(ctx, crd); err != nil {
-					ctrl.Log.Error(err, "Failed to update Gateway API CRD", "name", crd.Name)
-					return fmt.Errorf("failed to update Gateway API CRD %s: %w", crd.Name, err)
-				}
-				updatedCount++
-				ctrl.Log.V(1).Info("Gateway API CRD update completed", "name", crd.Name, "version", targetVersion)
-			}
+			result.CreatedCRDs = append(result.CreatedCRDs, crd.Name)
+			ctrl.Log.Info("Successfully created Gateway API CRD", "name", crd.Name)
+			continue
 		}
+
+		if err != nil {
+			ctrl.Log.Error(err, "Failed to check Gateway API CRD existence", "name", crd.Name)
+			return result, fmt.Errorf("failed to get Gateway API CRD %s: %w", crd.Name, err)
+		}
+
+		// CRD already exists – check ownership before touching it.
+		if existingCRD.GetLabels()[labels.ModuleLabelKey] != labels.ModuleLabelValue {
+			ctrl.Log.Info("Gateway API CRD exists but is not managed by the Istio module, skipping",
+				"name", crd.Name,
+				"hint", fmt.Sprintf("add label %s=%s to allow the Istio module to manage this CRD", labels.ModuleLabelKey, labels.ModuleLabelValue),
+			)
+			result.UnmanagedCRDs = append(result.UnmanagedCRDs, crd.Name)
+			continue
+		}
+
+		existingVersion := existingCRD.Annotations[bundleVersionKey]
+		targetVersion := crd.Annotations[bundleVersionKey]
+		if targetVersion == "" {
+			targetVersion = gatewayAPIVersion
+		}
+
+		if existingVersion != "" && existingVersion == targetVersion {
+			ctrl.Log.V(1).Info("Gateway API CRD is already up to date", "name", crd.Name, "version", existingVersion)
+			result.UnchangedCRDs = append(result.UnchangedCRDs, crd.Name)
+			continue
+		}
+
+		if existingVersion == "" {
+			ctrl.Log.Info("Ensuring Gateway API CRD is up to date (no bundle-version annotation found)",
+				"name", crd.Name, "targetVersion", targetVersion)
+		} else {
+			ctrl.Log.Info("Updating Gateway API CRD",
+				"name", crd.Name, "currentVersion", existingVersion, "targetVersion", targetVersion)
+		}
+
+		crd.SetLabels(labels.SetModuleLabels(crd.GetLabels()))
+		crd.ResourceVersion = existingCRD.ResourceVersion
+		if updateErr := g.client.Update(ctx, crd); updateErr != nil {
+			ctrl.Log.Error(updateErr, "Failed to update Gateway API CRD", "name", crd.Name)
+			return result, fmt.Errorf("failed to update Gateway API CRD %s: %w", crd.Name, updateErr)
+		}
+		result.UpdatedCRDs = append(result.UpdatedCRDs, crd.Name)
+		ctrl.Log.V(1).Info("Gateway API CRD update completed", "name", crd.Name, "version", targetVersion)
 	}
 
-	ctrl.Log.Info("Gateway API CRDs installation completed successfully",
+	ctrl.Log.Info("Gateway API CRDs installation completed",
 		"version", gatewayAPIVersion,
-		"created", createdCount,
-		"updated", updatedCount,
-		"unchanged", unchangedCount,
+		"created", len(result.CreatedCRDs),
+		"updated", len(result.UpdatedCRDs),
+		"unchanged", len(result.UnchangedCRDs),
+		"unmanaged_skipped", len(result.UnmanagedCRDs),
 	)
-
-	return nil
+	return result, nil
 }
 
-// Uninstall removes Gateway API CRDs (optional - can be used during cleanup)
-func (g *GatewayAPICRDInstaller) Uninstall(ctx context.Context) error {
-	ctrl.Log.Info("Starting Gateway API CRDs removal", "version", gatewayAPIVersion)
+// Uninstall removes only the Gateway API CRDs that carry the module ownership label
+// (kyma-project.io/module=istio). CRDs without that label are left untouched.
+//
+// When statusHandler and istioCR are provided (non-nil), the function checks for
+// existing Gateway API custom resources before deleting each managed CRD. If any are
+// found it sets ConditionReasonGatewayAPICRsDangling on the Istio CR, logs each
+// blocking resource, and returns an error so the caller can halt the uninstallation.
+func (g *GatewayAPICRDInstaller) Uninstall(
+	ctx context.Context,
+	statusHandler status.Status,
+	istioCR *operatorv1alpha2.Istio,
+) error {
+	ctrl.Log.Info("Starting Gateway API CRDs removal (labelled CRDs only)", "version", gatewayAPIVersion)
 
 	documents := strings.Split(gatewayAPICRDsYAML, "---")
-
-	var deletedCount, notFoundCount, failedCount int
+	var deletedCount, notFoundCount, skippedCount int
 
 	for _, doc := range documents {
 		doc = strings.TrimSpace(doc)
@@ -152,20 +181,57 @@ func (g *GatewayAPICRDInstaller) Uninstall(ctx context.Context) error {
 			continue
 		}
 
-		// Skip if not a Gateway API CRD
-		if !strings.Contains(crd.Name, "gateway.networking.k8s.io") {
+		if !strings.Contains(crd.Name, gatewayAPIGroup) {
 			continue
 		}
 
-		ctrl.Log.Info("Deleting Gateway API CRD", "name", crd.Name)
-		if err := g.client.Delete(ctx, crd); err != nil {
-			if apierrors.IsNotFound(err) {
+		// Fetch the live object to check the ownership label before deleting.
+		existingCRD := &apiextensionsv1.CustomResourceDefinition{}
+		if getErr := g.client.Get(ctx, client.ObjectKey{Name: crd.Name}, existingCRD); getErr != nil {
+			if apierrors.IsNotFound(getErr) {
+				ctrl.Log.V(1).Info("Gateway API CRD already absent, nothing to remove", "name", crd.Name)
+				notFoundCount++
+				continue
+			}
+			ctrl.Log.Error(getErr, "Failed to fetch Gateway API CRD during uninstall, skipping", "name", crd.Name)
+			continue
+		}
+
+		if existingCRD.GetLabels()[labels.ModuleLabelKey] != labels.ModuleLabelValue {
+			ctrl.Log.Info("Gateway API CRD is not managed by the Istio module, skipping deletion", "name", crd.Name)
+			skippedCount++
+			continue
+		}
+
+		// CRD is managed – check for blocking CRs before deleting.
+		if statusHandler != nil && istioCR != nil {
+			blocking, err := FindUserCreatedGatewayAPIResources(ctx, g.client)
+			if err != nil {
+				ctrl.Log.Error(err, "Failed to check for blocking Gateway API resources", "crd", crd.Name)
+				return fmt.Errorf("could not check for Gateway API resources before deleting CRD %s: %w", crd.Name, err)
+			}
+			if len(blocking) > 0 {
+				for _, r := range blocking {
+					ctrl.Log.Info("Gateway API resource is blocking CRD deletion", "resource", r, "crd", crd.Name)
+				}
+				msg := fmt.Sprintf(
+					"Gateway API CRD deletion blocked by %d existing Gateway API custom resources. Remove them first.",
+					len(blocking),
+				)
+				statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(
+					operatorv1alpha2.ConditionReasonGatewayAPICRsDangling, msg,
+				))
+				return fmt.Errorf("cannot delete Gateway API CRD %s: %d Gateway API resources are still present on the cluster", crd.Name, len(blocking))
+			}
+		}
+
+		ctrl.Log.Info("Deleting managed Gateway API CRD", "name", crd.Name)
+		if deleteErr := g.client.Delete(ctx, existingCRD); deleteErr != nil {
+			if apierrors.IsNotFound(deleteErr) {
 				ctrl.Log.V(1).Info("Gateway API CRD already removed", "name", crd.Name)
 				notFoundCount++
 			} else {
-				ctrl.Log.Error(err, "Failed to delete Gateway API CRD", "name", crd.Name)
-				failedCount++
-				// Continue with other CRDs even if one fails
+				ctrl.Log.Error(deleteErr, "Failed to delete Gateway API CRD", "name", crd.Name)
 			}
 		} else {
 			ctrl.Log.Info("Successfully deleted Gateway API CRD", "name", crd.Name)
@@ -177,24 +243,21 @@ func (g *GatewayAPICRDInstaller) Uninstall(ctx context.Context) error {
 		"version", gatewayAPIVersion,
 		"deleted", deletedCount,
 		"notFound", notFoundCount,
-		"failed", failedCount)
+		"skipped_unmanaged", skippedCount,
+	)
 	return nil
 }
 
-// IsInstalled checks if Gateway API CRDs are installed
+// IsInstalled checks if the probe Gateway API CRD (gateways.gateway.networking.k8s.io) is present.
 func (g *GatewayAPICRDInstaller) IsInstalled(ctx context.Context) (bool, error) {
-	// Check for a key Gateway API CRD to determine if they are installed
 	crdName := "gateways.gateway.networking.k8s.io"
 	ctrl.Log.V(1).Info("Checking Gateway API CRDs installation status", "probeCRD", crdName)
 
 	crd := &apiextensionsv1.CustomResourceDefinition{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: crdName,
-		},
+		ObjectMeta: metav1.ObjectMeta{Name: crdName},
 	}
 
-	err := g.client.Get(ctx, client.ObjectKey{Name: crd.Name}, crd)
-	if err != nil {
+	if err := g.client.Get(ctx, client.ObjectKey{Name: crdName}, crd); err != nil {
 		if apierrors.IsNotFound(err) {
 			ctrl.Log.Info("Gateway API CRDs not found", "probeCRD", crdName)
 			return false, nil
@@ -203,9 +266,9 @@ func (g *GatewayAPICRDInstaller) IsInstalled(ctx context.Context) (bool, error) 
 		return false, err
 	}
 
-	installedVersion := "unknown"
-	if val, ok := crd.Annotations["gateway.networking.k8s.io/bundle-version"]; ok {
-		installedVersion = val
+	installedVersion := crd.Annotations[bundleVersionKey]
+	if installedVersion == "" {
+		installedVersion = "unknown"
 	}
 	ctrl.Log.Info("Gateway API CRDs are installed", "probeCRD", crdName, "version", installedVersion)
 	return true, nil

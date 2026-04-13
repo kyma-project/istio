@@ -82,6 +82,9 @@ var conditionReasons = map[ConditionReason]conditionMeta{
 		Status:  metav1.ConditionUnknown,
 		Message: ConditionReasonIngressTargetingUserResourceDetectionFailedMessage,
 	},
+
+	// Gateway API CRs blocking deletion (experimental feature)
+	ConditionReasonGatewayAPICRsDangling: {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonGatewayAPICRsDanglingMessage},
 }
 
 type conditionMeta struct {

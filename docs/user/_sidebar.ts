@@ -38,6 +38,7 @@ export default [
     { text: 'Pods Created by Jobs Can\'t Finish', link: './troubleshooting/03-45-jobs-cant-finish' },
     { text: 'Init Containers Can\'t Access the Network', link: './troubleshooting/03-46-init-containers-cant-access-network' },
     { text: 'Modified Istio Resources', link: './troubleshooting/03-70-reconciliation-fails-on-istio-install' },
-    { text: 'Istio Cannot Verify an HTTPS Certificate', link: './troubleshooting/03-90-istio-cert-unknown' }
+    { text: 'Istio Cannot Verify an HTTPS Certificate', link: './troubleshooting/03-90-istio-cert-unknown' },
+    { text: 'Uneven Traffic Distribution with DestinationRules', link: './troubleshooting/03-95-uneven-load-balancing-with-destination-rules' }
     ] }
 ];

@@ -20,6 +20,7 @@ K3D_VERSION="${K3D_VERSION:-v5.8.3}"
 CALICO_VERSION="${CALICO_VERSION:-v3.31.3}"
 AGENTS="${AGENTS:-0}"
 SERVERS_MEMORY="${SERVERS_MEMORY:-16}"
+SERVERS="${SERVERS:-1}"
 
 # Parse --calico flag
 USE_CALICO=false
@@ -36,6 +37,7 @@ echo "  K3s image: ${K3S_IMAGE}"
 echo "  Use Calico: ${USE_CALICO}"
 echo "  k3d version: ${K3D_VERSION}"
 echo "  Agents: ${AGENTS}"
+echo "  Servers: ${SERVERS}"
 echo "  Servers memory: ${SERVERS_MEMORY}g"
 
 # Function to install k3d
@@ -61,11 +63,12 @@ provision_calico_cluster() {
 
     k3d cluster create \
         --agents "${AGENTS}" \
+        --servers "${SERVERS}" \
         --servers-memory "${SERVERS_MEMORY}g" \
         --port 80:80@loadbalancer \
         --port 443:443@loadbalancer \
         --k3s-arg "--flannel-backend=none@all" \
-        --k3s-arg "--disable=traefik@server:0" \
+        --k3s-arg "--disable=traefik@server:*" \
         --k3s-arg '--tls-san=host.docker.internal@server:*' \
         --image "${K3S_IMAGE}"
 

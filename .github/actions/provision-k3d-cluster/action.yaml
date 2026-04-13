@@ -8,6 +8,10 @@ inputs:
     description: 'Number of nodes in the cluster'
     required: false
     default: '1'
+  servers:
+    description: 'Number of server nodes in the cluster'
+    required: false
+    default: '1'
   servers-memory:
     description: 'Number of GB for the node'
     required: false
@@ -25,6 +29,7 @@ runs:
       env:
         KUBERNETES_VERSION: ${{ inputs.k3s-version }}
         AGENTS: ${{ inputs.agents }}
+        SERVERS: ${{ inputs.servers }}
         SERVERS_MEMORY: ${{ inputs.servers-memory }}
       run: |
         if [ "${{ inputs.calico }}" == "true" ]; then

@@ -9,6 +9,7 @@ import (
 	httpassert "github.com/kyma-project/istio/operator/tests/e2e/pkg/asserts/http"
 	istioassert "github.com/kyma-project/istio/operator/tests/e2e/pkg/asserts/istio"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/fips"
 	extauth "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/gateway"
 	httphelper "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/http"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/httpbin"
@@ -26,6 +27,9 @@ func TestSmoke(t *testing.T) {
 	t.Run("Httpbin is accessible through Istio Gateway", func(t *testing.T) {
 		c, err := client.ResourcesClient(t)
 		require.NoError(t, err)
+
+		fips.EnsureFIPSRegistrySecret(t, "istio-system")
+		fips.EnsureFIPSRegistrySecret(t, defaultNamespace)
 
 		_, err = modulehelpers.NewIstioCRBuilder().ApplyAndCleanup(t)
 		require.NoError(t, err)

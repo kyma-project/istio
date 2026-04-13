@@ -15,11 +15,6 @@ spec:
       enabled: true
       namespace: istio-system
       k8s:
-        tolerations:
-          - key: CriticalAddonsOnly
-            operator: Exists
-          - effect: NoExecute
-            operator: Exists
         affinity:
           podAntiAffinity:
             preferredDuringSchedulingIgnoredDuringExecution:
@@ -265,6 +260,7 @@ spec:
             client.address: '%CEL(xds.listener_direction==1?source.address:upstream.local_address)%'
             client.port: '%CEL(xds.listener_direction==1?source.port:nil)%'
             http.direction: '%CEL(xds.listener_direction==1?"inbound":(xds.listener_direction==2?"outbound":nil))%'
+            network.protocol.name: '%CEL(request.protocol)%'
             kyma.module: istio
     trustDomain: cluster.local
   profile: default

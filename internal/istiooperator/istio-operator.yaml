@@ -193,6 +193,12 @@ spec:
         env:
         - name: PILOT_HTTP10
           value: "1"
+        # TODO: remove in late July - workaround for Istio 1.29 breaking change
+        - name: DISABLE_TRACK_REMAINING_CB_METRICS
+          value: "false"
+        # TODO: remove in late July - workaround for Istio 1.29 breaking change
+        - name: ENABLE_DEBUG_ENDPOINT_AUTH
+          value: "false"
         hpaSpec:
           scaleTargetRef:
             apiVersion: apps/v1
@@ -233,6 +239,8 @@ spec:
   meshConfig:
     defaultConfig:
       holdApplicationUntilProxyStarts: true
+      # TODO: remove in late July - workaround for Istio 1.29 breaking change
+      statsCompression: false
       proxyMetadata:
         BOOTSTRAP_XDS_AGENT: "true"
         CITADEL_SELF_SIGNED_CA_RSA_KEY_SIZE: "4096"

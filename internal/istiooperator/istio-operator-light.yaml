@@ -335,6 +335,8 @@ spec:
       pilotCertProvider: istiod
       priorityClassName: istio-kyma-priority
       proxy:
+        seccompProfile:
+          type: RuntimeDefault
         autoInject: enabled
         clusterDomain: cluster.local
         componentLogLevel: misc:error

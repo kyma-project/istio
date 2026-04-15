@@ -15,10 +15,10 @@ import (
 
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
+	// TODO: do we want to hardcode here gatewayAPIversion? cause if new manifest appears then this need to be updated - this can be a single source of true for different CRDs
 	gatewayAPIVersion = "v1.4.1"
 	gatewayAPIGroup   = "gateway.networking.k8s.io"
 	bundleVersionKey  = "gateway.networking.k8s.io/bundle-version"
@@ -85,8 +85,10 @@ func (g *GatewayAPICRDInstaller) Install(ctx context.Context) (GatewayAPICRDInst
 		existingCRD := &apiextensionsv1.CustomResourceDefinition{}
 		err := g.client.Get(ctx, client.ObjectKey{Name: crd.Name}, existingCRD)
 
+		targetVersion := crd.Annotations[bundleVersionKey]
+
 		if apierrors.IsNotFound(err) {
-			ctrl.Log.Info("Creating Gateway API CRD", "name", crd.Name, "version", gatewayAPIVersion)
+			ctrl.Log.Info("Creating Gateway API CRD", "name", crd.Name, "version", targetVersion)
 			crd.SetLabels(labels.SetModuleLabels(crd.GetLabels()))
 			if createErr := g.client.Create(ctx, crd); createErr != nil {
 				ctrl.Log.Error(createErr, "Failed to create Gateway API CRD", "name", crd.Name)
@@ -112,10 +114,13 @@ func (g *GatewayAPICRDInstaller) Install(ctx context.Context) (GatewayAPICRDInst
 			continue
 		}
 
+		// CRD already exists and is managed by Istio module.
+		// Check CRD version
 		existingVersion := existingCRD.Annotations[bundleVersionKey]
-		targetVersion := crd.Annotations[bundleVersionKey]
-		if targetVersion == "" {
-			targetVersion = gatewayAPIVersion
+		// TODO: is it needed? what is the case for that? how to manage that?
+		if targetVersion != gatewayAPIVersion {
+			ctrl.Log.Info("Gateway API CRD",
+				"name", crd.Name, "targetVersion", targetVersion, "is different from expected version", gatewayAPIVersion)
 		}
 
 		if existingVersion != "" && existingVersion == targetVersion {
@@ -124,6 +129,7 @@ func (g *GatewayAPICRDInstaller) Install(ctx context.Context) (GatewayAPICRDInst
 			continue
 		}
 
+		// TODO: look into that
 		if existingVersion == "" {
 			ctrl.Log.Info("Ensuring Gateway API CRD is up to date (no bundle-version annotation found)",
 				"name", crd.Name, "targetVersion", targetVersion)
@@ -133,6 +139,8 @@ func (g *GatewayAPICRDInstaller) Install(ctx context.Context) (GatewayAPICRDInst
 		}
 
 		crd.SetLabels(labels.SetModuleLabels(crd.GetLabels()))
+		// Preventing silent data races. If two actors try to update the same CRD simultaneously,
+		// only the one whose ResourceVersion still matches the cluster wins.
 		crd.ResourceVersion = existingCRD.ResourceVersion
 		if updateErr := g.client.Update(ctx, crd); updateErr != nil {
 			ctrl.Log.Error(updateErr, "Failed to update Gateway API CRD", "name", crd.Name)
@@ -204,25 +212,24 @@ func (g *GatewayAPICRDInstaller) Uninstall(
 		}
 
 		// CRD is managed – check for blocking CRs before deleting.
-		if statusHandler != nil && istioCR != nil {
-			blocking, err := FindUserCreatedGatewayAPIResources(ctx, g.client)
-			if err != nil {
-				ctrl.Log.Error(err, "Failed to check for blocking Gateway API resources", "crd", crd.Name)
-				return fmt.Errorf("could not check for Gateway API resources before deleting CRD %s: %w", crd.Name, err)
+		blocking, err := FindUserCreatedGatewayAPIResources(ctx, g.client)
+		if err != nil {
+			ctrl.Log.Error(err, "Failed to check for blocking Gateway API resources", "crd", crd.Name)
+			return fmt.Errorf("could not check for Gateway API resources before deleting CRD %s: %w", crd.Name, err)
+		}
+		if len(blocking) > 0 {
+			for _, r := range blocking {
+				ctrl.Log.Info("Gateway API resource is blocking CRD deletion", "resource", r, "crd", crd.Name)
 			}
-			if len(blocking) > 0 {
-				for _, r := range blocking {
-					ctrl.Log.Info("Gateway API resource is blocking CRD deletion", "resource", r, "crd", crd.Name)
-				}
-				msg := fmt.Sprintf(
-					"Gateway API CRD deletion blocked by %d existing Gateway API custom resources. Remove them first.",
-					len(blocking),
-				)
-				statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(
-					operatorv1alpha2.ConditionReasonGatewayAPICRsDangling, msg,
-				))
-				return fmt.Errorf("cannot delete Gateway API CRD %s: %d Gateway API resources are still present on the cluster", crd.Name, len(blocking))
-			}
+			msg := fmt.Sprintf(
+				"Gateway API CRD deletion blocked by %d existing Gateway API custom resources. Remove them first.",
+				len(blocking),
+			)
+			// TODO: Check if tatusHandler (interface/value) — if status.Status is an interface backed by a pointer receiver, mutations inside Uninstall will persist. If it's a value type passed by copy, changes inside Uninstall won't be visible outside. You should verify this in status.Status definition.
+			statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(
+				operatorv1alpha2.ConditionReasonGatewayAPICRsDangling, msg,
+			))
+			return fmt.Errorf("cannot delete Gateway API CRD %s: %d Gateway API resources are still present on the cluster", crd.Name, len(blocking))
 		}
 
 		ctrl.Log.Info("Deleting managed Gateway API CRD", "name", crd.Name)
@@ -246,30 +253,4 @@ func (g *GatewayAPICRDInstaller) Uninstall(
 		"skipped_unmanaged", skippedCount,
 	)
 	return nil
-}
-
-// IsInstalled checks if the probe Gateway API CRD (gateways.gateway.networking.k8s.io) is present.
-func (g *GatewayAPICRDInstaller) IsInstalled(ctx context.Context) (bool, error) {
-	crdName := "gateways.gateway.networking.k8s.io"
-	ctrl.Log.V(1).Info("Checking Gateway API CRDs installation status", "probeCRD", crdName)
-
-	crd := &apiextensionsv1.CustomResourceDefinition{
-		ObjectMeta: metav1.ObjectMeta{Name: crdName},
-	}
-
-	if err := g.client.Get(ctx, client.ObjectKey{Name: crdName}, crd); err != nil {
-		if apierrors.IsNotFound(err) {
-			ctrl.Log.Info("Gateway API CRDs not found", "probeCRD", crdName)
-			return false, nil
-		}
-		ctrl.Log.Error(err, "Failed to check Gateway API CRDs installation", "probeCRD", crdName)
-		return false, err
-	}
-
-	installedVersion := crd.Annotations[bundleVersionKey]
-	if installedVersion == "" {
-		installedVersion = "unknown"
-	}
-	ctrl.Log.Info("Gateway API CRDs are installed", "probeCRD", crdName, "version", installedVersion)
-	return true, nil
 }

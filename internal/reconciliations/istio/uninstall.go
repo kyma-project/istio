@@ -56,29 +56,26 @@ func uninstallIstio(ctx context.Context, args uninstallArgs) (istiooperator.Isti
 			SetCondition(false)
 	}
 
-	//Check if there exist blocking Gateway API CRs created by client.
-	// We use IsInstalled() rather than the flag value: the flag may have been set to false
-	// while the CRDs (and their CRs) are still present from a previous enablement. TODO: Look into that
-	gatewayAPICRDInstaller := NewGatewayAPICRDInstaller(k8sClient)
-	crdInstalled, checkErr := gatewayAPICRDInstaller.IsInstalled(ctx)
-	if checkErr != nil {
-		return istioImageVersion, describederrors.NewDescribedError(checkErr, "Could not check for Gateway API CRDs")
-	}
-	if crdInstalled {
-		gatewayAPIResources, err := FindUserCreatedGatewayAPIResources(ctx, k8sClient)
-		if err != nil {
-			return istioImageVersion, describederrors.NewDescribedError(err, "Could not check for Gateway API resources")
+	// Uninstallation process of Gateway API CRD
+	// Explicitly Gateway API CRD management enabled
+	gatewayAPIEnabled := istioCR.Spec.Experimental != nil &&
+		istioCR.Spec.Experimental.EnableGatewayAPI != nil &&
+		*istioCR.Spec.Experimental.EnableGatewayAPI
+
+	// Remove labeled Gateway API CRDs managed by Istio module after successful uninstallation, only if they were enabled
+	if gatewayAPIEnabled {
+		gatewayAPICRDInstaller := NewGatewayAPICRDInstaller(k8sClient)
+		ctrl.Log.Info("Cleaning up Gateway API CRDs before Istio deletion")
+		if err := gatewayAPICRDInstaller.Uninstall(ctx, statusHandler, istioCR); err != nil {
+			ctrl.Log.Error(err, "Failed to remove Gateway API CRDs, but continuing", "note", "Manual cleanup may be required")
+			return istioImageVersion, describederrors.NewDescribedError(err,
+				"Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning").
+				DisableErrorWrap().
+				SetWarning().
+				SetCondition(false)
 		}
-		if len(gatewayAPIResources) > 0 {
-			for _, r := range gatewayAPIResources {
-				ctrl.Log.Info("Gateway API resource is blocking Istio deletion", "resource", r)
-			}
-			statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonGatewayAPICRsDangling))
-			return istioImageVersion, describederrors.NewDescribedError(
-				fmt.Errorf("could not delete Istio module since there are %d Gateway API resources present", len(gatewayAPIResources)),
-				"There are Gateway API resources that block deletion. Please remove them first.",
-			).DisableErrorWrap().SetWarning().SetCondition(false)
-		}
+
+		ctrl.Log.Info("Gateway API CRDs cleanup completed successfully")
 	}
 
 	err = istioClient.Uninstall(ctx)
@@ -99,21 +96,6 @@ func uninstallIstio(ctx context.Context, args uninstallArgs) (istiooperator.Isti
 
 	ctrl.Log.Info("Istio uninstall succeeded")
 	statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIstioUninstallSucceeded))
-
-	if err = RemoveInstallationFinalizer(ctx, k8sClient, istioCR); err != nil {
-		ctrl.Log.Error(err, "Error happened during istio installation finalizer removal")
-		return istioImageVersion, describederrors.NewDescribedError(err, "Could not remove finalizer")
-	}
-
-	// Remove Gateway API CRDs after successful uninstallation, only if they were enabled
-	if istioCR.Spec.Experimental != nil && istioCR.Spec.Experimental.EnableGatewayAPI != nil && *istioCR.Spec.Experimental.EnableGatewayAPI {
-		ctrl.Log.Info("Cleaning up Gateway API CRDs after Istio uninstallation")
-		if err := gatewayAPICRDInstaller.Uninstall(ctx, statusHandler, istioCR); err != nil {
-			ctrl.Log.Error(err, "Failed to remove Gateway API CRDs, but continuing", "note", "Manual cleanup may be required")
-		} else {
-			ctrl.Log.Info("Gateway API CRDs cleanup completed successfully")
-		}
-	}
 
 	return istioImageVersion, nil
 }

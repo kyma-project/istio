@@ -42,50 +42,10 @@ func installIstio(ctx context.Context, args installArgs) (istiooperator.IstioIma
 
 	ctrl.Log.Info("Starting Istio install", "istio version", istioImageVersion.Version())
 
-	gatewayAPIEnabled := istioCR.Spec.Experimental != nil &&
-		istioCR.Spec.Experimental.EnableGatewayAPI != nil &&
-		*istioCR.Spec.Experimental.EnableGatewayAPI
-
-	if gatewayAPIEnabled {
-		ctrl.Log.Info("Installing Gateway API CRDs (enabled via spec.experimental.enableGatewayAPI)")
-		gatewayAPICRDInstaller := NewGatewayAPICRDInstaller(k8sClient)
-		result, err := gatewayAPICRDInstaller.Install(ctx)
-		if err != nil {
-			ctrl.Log.Error(err, "Gateway API CRDs installation failed", "istioVersion", istioImageVersion.Version())
-			return istioImageVersion, describederrors.NewDescribedError(err, "Could not install Gateway API CRDs")
-		}
-		if result.HasUnmanagedCRDs() {
-			ctrl.Log.Info("Some Gateway API CRDs exist on the cluster but are not managed by the Istio module – they were skipped",
-				"unmanagedCRDs", result.UnmanagedCRDs,
-				"action", fmt.Sprintf("add label %s=%s to each listed CRD to allow the Istio module to manage it", labels.ModuleLabelKey, labels.ModuleLabelValue),
-			)
-		}
-		ctrl.Log.Info("Gateway API CRDs reconciled, proceeding with Istio installation",
-			"created", len(result.CreatedCRDs),
-			"updated", len(result.UpdatedCRDs),
-			"unchanged", len(result.UnchangedCRDs),
-			"unmanagedSkipped", len(result.UnmanagedCRDs),
-		)
-	} else if istioCR.Spec.Experimental != nil && istioCR.Spec.Experimental.EnableGatewayAPI != nil {
-		// Reconciliation of enableGatewayAPI if it is explicitly set to false (not just omitted).
-		// Clean up any module-owned CRDs that remain from a previous enablement.
-		// Pass nil for statusHandler/istioCR: the CR blocking check is only needed on the
-		// deletion path (handled in uninstallIstio via Uninstall with real arguments).
-		ctrl.Log.Info("Gateway API CRD feature explicitly disabled – removing labelled CRDs if present")
-		gatewayAPICRDInstaller := NewGatewayAPICRDInstaller(k8sClient)
-		installed, err := gatewayAPICRDInstaller.IsInstalled(ctx)
-		if err != nil {
-			ctrl.Log.Error(err, "Failed to check Gateway API CRDs during disable reconciliation, continuing")
-		} else if installed {
-			//TODO: here we also need to pass statusHandler and istioCR as we don't want to delete CRD if CR exist
-			if removeErr := gatewayAPICRDInstaller.Uninstall(ctx, nil, nil); removeErr != nil {
-				ctrl.Log.Error(removeErr, "Failed to remove Gateway API CRDs during disable reconciliation, continuing")
-			}
-		}
-	}
-
+	lastAppliedConfig := configuration.AppliedConfig{}
 	if _, ok := istioCR.Annotations[labels.LastAppliedConfiguration]; ok {
-		lastAppliedConfig, err := configuration.GetLastAppliedConfiguration(istioCR)
+		var err error
+		lastAppliedConfig, err = configuration.GetLastAppliedConfiguration(istioCR)
 		if err != nil {
 			ctrl.Log.Error(err, "Error evaluating Istio CR changes")
 			return istioImageVersion, describederrors.NewDescribedError(err, "Istio install check failed")
@@ -128,6 +88,59 @@ func installIstio(ctx context.Context, args installArgs) (istiooperator.IstioIma
 	if err != nil {
 		ctrl.Log.Error(err, "Error occurred during evaluation of cluster size")
 		return istioImageVersion, describederrors.NewDescribedError(err, "Could not evaluate cluster size")
+	}
+
+	// Gateway API CRD reconciliation process
+
+	// Short-circuit evaluation
+	// Istio CR - enableGatewayAPI: true
+	// Explicitly Gateway API CRD management enabled
+	gatewayAPIEnabled := istioCR.Spec.Experimental != nil &&
+		istioCR.Spec.Experimental.EnableGatewayAPI != nil &&
+		*istioCR.Spec.Experimental.EnableGatewayAPI
+
+	// Istio CR - enableGatewayAPI: false or lack of this field
+	// Explicitly Gateway API CRD management disabled when previously enabled, so Gateway API CRDs exist in the cluster
+	gatewayAPIDisabled := lastAppliedConfig.Experimental != nil &&
+		lastAppliedConfig.Experimental.EnableAlphaGatewayAPI == true &&
+		istioCR.Spec.Experimental != nil && (istioCR.Spec.Experimental.EnableGatewayAPI == nil ||
+		!*istioCR.Spec.Experimental.EnableGatewayAPI)
+
+	gatewayAPICRDInstaller := NewGatewayAPICRDInstaller(k8sClient)
+	if gatewayAPIEnabled {
+		ctrl.Log.Info("Installing Gateway API CRDs (enabled via spec.experimental.enableGatewayAPI)")
+		result, err := gatewayAPICRDInstaller.Install(ctx)
+		if err != nil {
+			ctrl.Log.Error(err, "Gateway API CRDs installation failed", "istioVersion", istioImageVersion.Version())
+			return istioImageVersion, describederrors.NewDescribedError(err, "Could not install Gateway API CRDs")
+		}
+		if result.HasUnmanagedCRDs() {
+			ctrl.Log.Info("Some Gateway API CRDs exist on the cluster but are not managed by the Istio module – they were skipped",
+				"unmanagedCRDs", result.UnmanagedCRDs,
+				"action", fmt.Sprintf("add label %s=%s to each listed CRD to allow the Istio module to manage it", labels.ModuleLabelKey, labels.ModuleLabelValue),
+			)
+		}
+		ctrl.Log.Info("Gateway API CRDs reconciled, proceeding with Istio installation",
+			"created", len(result.CreatedCRDs),
+			"updated", len(result.UpdatedCRDs),
+			"unchanged", len(result.UnchangedCRDs),
+			"unmanagedSkipped", len(result.UnmanagedCRDs),
+		)
+	} else if gatewayAPIDisabled {
+		// Reconciliation: enableGatewayAPI is explicitly set to false or lacks this field in Istio CR, when previously explicitly enabled.
+		// Clean up any module-owned CRDs that remain from a previous enablement.
+		// Check for the blocking Gateway API CRs
+		ctrl.Log.Info("Gateway API CRD feature explicitly disabled – removing labeled CRDs if present")
+		if err := gatewayAPICRDInstaller.Uninstall(ctx, statusHandler, istioCR); err != nil {
+			ctrl.Log.Error(err, "Failed to remove Gateway API CRDs, but continuing", "note", "Manual cleanup may be required")
+			return istioImageVersion, describederrors.NewDescribedError(err,
+				"Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning").
+				DisableErrorWrap().
+				SetWarning().
+				SetCondition(false)
+		}
+
+		ctrl.Log.Info("Gateway API CRDs cleanup completed successfully")
 	}
 
 	ctrl.Log.Info("Installing Istio with", "profile", clusterSize.String())

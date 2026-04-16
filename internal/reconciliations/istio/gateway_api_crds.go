@@ -172,6 +172,27 @@ func (g *GatewayAPICRDManager) Uninstall(
 ) error {
 	ctrl.Log.Info("Starting Gateway API CRDs removal (labeled CRDs only)", "version", gatewayAPIVersion)
 
+	// Check for blocking Gateway API CRs once, before touching any CRD.
+	// Only CRs belonging to module-managed CRDs are considered blocking.
+	blocking, err := FindBlockingGatewayAPIResources(ctx, g.client)
+	if err != nil {
+		ctrl.Log.Error(err, "Failed to check for blocking Gateway API resources")
+		return fmt.Errorf("could not check for Gateway API resources before removing CRDs: %w", err)
+	}
+	if len(blocking) > 0 {
+		for _, r := range blocking {
+			ctrl.Log.Info("Gateway API resource is blocking CRD deletion", "resource", r)
+		}
+		msg := fmt.Sprintf(
+			"Gateway API CRD deletion blocked by %d existing Gateway API custom resources. Remove them first.",
+			len(blocking),
+		)
+		statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(
+			operatorv1alpha2.ConditionReasonGatewayAPICRsDangling, msg,
+		))
+		return fmt.Errorf("cannot remove Gateway API CRDs: %d Gateway API resources are still present on the cluster", len(blocking))
+	}
+
 	documents := strings.Split(gatewayAPICRDsYAML, "---")
 	var deletedCount, notFoundCount, skippedCount int
 
@@ -209,27 +230,6 @@ func (g *GatewayAPICRDManager) Uninstall(
 			continue
 		}
 
-		// CRD is managed – check for blocking CRs before deleting.
-		// TODO: will not manaaged CRs block the deletion? - yes
-		blocking, err := FindUserCreatedGatewayAPIResources(ctx, g.client)
-		if err != nil {
-			ctrl.Log.Error(err, "Failed to check for blocking Gateway API resources", "crd", crd.Name)
-			return fmt.Errorf("could not check for Gateway API resources before deleting CRD %s: %w", crd.Name, err)
-		}
-		if len(blocking) > 0 {
-			for _, r := range blocking {
-				ctrl.Log.Info("Gateway API resource is blocking CRD deletion", "resource", r, "crd", crd.Name)
-			}
-			msg := fmt.Sprintf(
-				"Gateway API CRD deletion blocked by %d existing Gateway API custom resources. Remove them first.",
-				len(blocking),
-			)
-
-			statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(
-				operatorv1alpha2.ConditionReasonGatewayAPICRsDangling, msg,
-			))
-			return fmt.Errorf("cannot delete Gateway API CRD %s: %d Gateway API resources are still present on the cluster", crd.Name, len(blocking))
-		}
 
 		ctrl.Log.Info("Deleting managed Gateway API CRD", "name", crd.Name)
 		if deleteErr := g.client.Delete(ctx, existingCRD); deleteErr != nil {

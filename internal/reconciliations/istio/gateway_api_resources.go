@@ -18,7 +18,6 @@ var gatewayAPIKinds = []schema.GroupVersionKind{
 	{Group: "gateway.networking.k8s.io", Version: "v1", Kind: "GatewayClass"},
 	{Group: "gateway.networking.k8s.io", Version: "v1", Kind: "HTTPRoute"},
 	{Group: "gateway.networking.k8s.io", Version: "v1", Kind: "GRPCRoute"},
-	//TODO: reference grant is used? is needed?
 	{Group: "gateway.networking.k8s.io", Version: "v1beta1", Kind: "ReferenceGrant"},
 	{Group: "gateway.networking.k8s.io", Version: "v1alpha3", Kind: "BackendTLSPolicy"},
 }

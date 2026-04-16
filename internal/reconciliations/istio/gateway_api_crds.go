@@ -115,12 +115,11 @@ func (g *GatewayAPICRDManager) Install(ctx context.Context) (GatewayAPICRDInstal
 		}
 
 		// CRD already exists and is managed by Istio module.
-		// Check CRD version
+		// Check specific CRD target version with expected gatewayAPI CRD version
 		existingVersion := existingCRD.Annotations[bundleVersionKey]
-		// TODO: is it needed? what is the case for that? how to manage that?
 		if targetVersion != gatewayAPIVersion {
 			ctrl.Log.Info("Gateway API CRD",
-				"name", crd.Name, "targetVersion", targetVersion, "is different from expected version", gatewayAPIVersion)
+				"name", crd.Name, "targetVersion", targetVersion, "is different from expected by Istio module version", gatewayAPIVersion)
 		}
 
 		if existingVersion != "" && existingVersion == targetVersion {
@@ -129,7 +128,6 @@ func (g *GatewayAPICRDManager) Install(ctx context.Context) (GatewayAPICRDInstal
 			continue
 		}
 
-		// TODO: look into that
 		if existingVersion == "" {
 			ctrl.Log.Info("Ensuring Gateway API CRD is up to date (no bundle-version annotation found)",
 				"name", crd.Name, "targetVersion", targetVersion)
@@ -172,7 +170,7 @@ func (g *GatewayAPICRDManager) Uninstall(
 	statusHandler status.Status,
 	istioCR *operatorv1alpha2.Istio,
 ) error {
-	ctrl.Log.Info("Starting Gateway API CRDs removal (labelled CRDs only)", "version", gatewayAPIVersion)
+	ctrl.Log.Info("Starting Gateway API CRDs removal (labeled CRDs only)", "version", gatewayAPIVersion)
 
 	documents := strings.Split(gatewayAPICRDsYAML, "---")
 	var deletedCount, notFoundCount, skippedCount int
@@ -212,6 +210,7 @@ func (g *GatewayAPICRDManager) Uninstall(
 		}
 
 		// CRD is managed – check for blocking CRs before deleting.
+		// TODO: will not manaaged CRs block the deletion? - yes
 		blocking, err := FindUserCreatedGatewayAPIResources(ctx, g.client)
 		if err != nil {
 			ctrl.Log.Error(err, "Failed to check for blocking Gateway API resources", "crd", crd.Name)
@@ -225,7 +224,7 @@ func (g *GatewayAPICRDManager) Uninstall(
 				"Gateway API CRD deletion blocked by %d existing Gateway API custom resources. Remove them first.",
 				len(blocking),
 			)
-			// TODO: Check if tatusHandler (interface/value) — if status.Status is an interface backed by a pointer receiver, mutations inside Uninstall will persist. If it's a value type passed by copy, changes inside Uninstall won't be visible outside. You should verify this in status.Status definition.
+
 			statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(
 				operatorv1alpha2.ConditionReasonGatewayAPICRsDangling, msg,
 			))

@@ -75,12 +75,12 @@ next reconciliation cycle. The cleanup checks:
 
 1. Only CRDs carrying the module ownership label are candidates for deletion.
 2. Before deleting any CRD, the module scans the cluster for existing Gateway API
-   custom resources.
+   custom resources that's CRDs are managed by Istio module.
 3. If **any** such resources are found, deletion is **blocked**. The module sets the
    proper condition on the Istio CR, logs each blocking resource by
    name and namespace, and returns an error. The reconciler will retry on the next
    cycle.
-4. Only when the cluster is free of Gateway API custom resources will the module
+4. Only when the cluster is free of Gateway API custom resources which parents CRDs are managed will the module
    proceed to delete the labeled CRDs.
 
 > **Note:** Unmanaged CRDs (no module label) are never deleted, even when the feature
@@ -94,7 +94,7 @@ next reconciliation cycle. The cleanup checks:
 ### Uninstallation – Istio CR Deleted
 
 When the Istio CR itself is deleted, the same uninstall Gateway API CRDs logic
-applies: only module-labeled CRDs are removed, and only if no Gateway API custom
+applies: only module-labeled CRDs are removed, and only if no corresponding Gateway API custom
 resources are present on the cluster. If blocking resources exist, the
 proper condition is set and the finalizer is **not** removed, keeping
 the Istio CR in a terminating state until the user cleans up the Gateway API resources.

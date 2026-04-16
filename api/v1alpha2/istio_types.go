@@ -148,9 +148,9 @@ const (
 
 	// Gateway API CRs blocking deletion (experimental feature)
 
-	// Gateway API custom resources are blocking Istio CR deletion or Gateway API CRD uninstallation. TODO: Chnage description
+	// Gateway API custom resources are blocking Istio CR deletion or Gateway API CRD uninstallation.
 	ConditionReasonGatewayAPICRsDangling        ConditionReason = "GatewayAPICustomResourcesDangling"
-	ConditionReasonGatewayAPICRsDanglingMessage                 = "Istio deletion blocked because of existing Gateway API custom resources"
+	ConditionReasonGatewayAPICRsDanglingMessage                 = "Deletion blocked because of existing Gateway API custom resources"
 )
 
 // Couples a condition's reason with its message.

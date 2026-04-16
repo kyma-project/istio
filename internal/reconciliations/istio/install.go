@@ -106,10 +106,10 @@ func installIstio(ctx context.Context, args installArgs) (istiooperator.IstioIma
 		istioCR.Spec.Experimental != nil && (istioCR.Spec.Experimental.EnableGatewayAPI == nil ||
 		!*istioCR.Spec.Experimental.EnableGatewayAPI)
 
-	gatewayAPICRDInstaller := NewGatewayAPICRDInstaller(k8sClient)
+	gatewayAPICRDManager := NewGatewayAPICRDManager(k8sClient)
 	if gatewayAPIEnabled {
 		ctrl.Log.Info("Installing Gateway API CRDs (enabled via spec.experimental.enableGatewayAPI)")
-		result, err := gatewayAPICRDInstaller.Install(ctx)
+		result, err := gatewayAPICRDManager.Install(ctx)
 		if err != nil {
 			ctrl.Log.Error(err, "Gateway API CRDs installation failed", "istioVersion", istioImageVersion.Version())
 			return istioImageVersion, describederrors.NewDescribedError(err, "Could not install Gateway API CRDs")
@@ -131,7 +131,7 @@ func installIstio(ctx context.Context, args installArgs) (istiooperator.IstioIma
 		// Clean up any module-owned CRDs that remain from a previous enablement.
 		// Check for the blocking Gateway API CRs
 		ctrl.Log.Info("Gateway API CRD feature explicitly disabled – removing labeled CRDs if present")
-		if err := gatewayAPICRDInstaller.Uninstall(ctx, statusHandler, istioCR); err != nil {
+		if err := gatewayAPICRDManager.Uninstall(ctx, statusHandler, istioCR); err != nil {
 			ctrl.Log.Error(err, "Failed to remove Gateway API CRDs, but continuing", "note", "Manual cleanup may be required")
 			return istioImageVersion, describederrors.NewDescribedError(err,
 				"Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning").

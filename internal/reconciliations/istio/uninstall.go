@@ -64,9 +64,9 @@ func uninstallIstio(ctx context.Context, args uninstallArgs) (istiooperator.Isti
 
 	// Remove labeled Gateway API CRDs managed by Istio module after successful uninstallation, only if they were enabled
 	if gatewayAPIEnabled {
-		gatewayAPICRDInstaller := NewGatewayAPICRDInstaller(k8sClient)
+		gatewayAPICRDManager := NewGatewayAPICRDManager(k8sClient)
 		ctrl.Log.Info("Cleaning up Gateway API CRDs before Istio deletion")
-		if err := gatewayAPICRDInstaller.Uninstall(ctx, statusHandler, istioCR); err != nil {
+		if err := gatewayAPICRDManager.Uninstall(ctx, statusHandler, istioCR); err != nil {
 			ctrl.Log.Error(err, "Failed to remove Gateway API CRDs, but continuing", "note", "Manual cleanup may be required")
 			return istioImageVersion, describederrors.NewDescribedError(err,
 				"Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning").

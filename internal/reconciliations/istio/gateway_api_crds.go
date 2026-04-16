@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	// TODO: do we want to hardcode here gatewayAPIversion? cause if new manifest appears then this need to be updated - this can be a single source of true for different CRDs
+	// Expected Gateway API CRDs version managed by Istio module. Single source of true for different CRDs.
 	gatewayAPIVersion = "v1.4.1"
 	gatewayAPIGroup   = "gateway.networking.k8s.io"
 	bundleVersionKey  = "gateway.networking.k8s.io/bundle-version"
@@ -47,19 +47,19 @@ func (r GatewayAPICRDInstallResult) HasUnmanagedCRDs() bool {
 	return len(r.UnmanagedCRDs) > 0
 }
 
-type GatewayAPICRDInstaller struct {
+type GatewayAPICRDManager struct {
 	client client.Client
 }
 
-func NewGatewayAPICRDInstaller(c client.Client) *GatewayAPICRDInstaller {
-	return &GatewayAPICRDInstaller{client: c}
+func NewGatewayAPICRDManager(c client.Client) *GatewayAPICRDManager {
+	return &GatewayAPICRDManager{client: c}
 }
 
 // Install installs or updates Gateway API CRDs.
 // It returns a GatewayAPICRDInstallResult describing what happened to each CRD.
 // Pre-existing CRDs without the module ownership label are recorded in UnmanagedCRDs
 // and never modified – the caller is responsible for logging the situation to the user.
-func (g *GatewayAPICRDInstaller) Install(ctx context.Context) (GatewayAPICRDInstallResult, error) {
+func (g *GatewayAPICRDManager) Install(ctx context.Context) (GatewayAPICRDInstallResult, error) {
 	ctrl.Log.Info("Starting Gateway API CRDs installation", "version", gatewayAPIVersion)
 
 	result := GatewayAPICRDInstallResult{}
@@ -167,7 +167,7 @@ func (g *GatewayAPICRDInstaller) Install(ctx context.Context) (GatewayAPICRDInst
 // existing Gateway API custom resources before deleting each managed CRD. If any are
 // found it sets ConditionReasonGatewayAPICRsDangling on the Istio CR, logs each
 // blocking resource, and returns an error so the caller can halt the uninstallation.
-func (g *GatewayAPICRDInstaller) Uninstall(
+func (g *GatewayAPICRDManager) Uninstall(
 	ctx context.Context,
 	statusHandler status.Status,
 	istioCR *operatorv1alpha2.Istio,

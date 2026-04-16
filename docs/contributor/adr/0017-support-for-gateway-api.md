@@ -17,7 +17,8 @@ In Istio to fully utilize the capabilities of Ambient mode, especially waypoint 
 
 We will add support for Gateway API CRD installation and uninstallation in Istio CR. 
 Feature will be experimental only for now. In the future it will be promoted outside the experimental. 
-Istio controller will manage the lifecycle of the Gateway API CRD, which are properly labeled and hence managed by Istio module. 
+Istio controller will manage the lifecycle of the Gateway API CRD, which are properly labeled and hence managed by Istio module. The module never installs or removes Gateway API
+CRDs unless explicitly instructed to do so through this field.
 
 
 ### Istio Custom Resource configuration:
@@ -29,25 +30,95 @@ Istio controller will manage the lifecycle of the Gateway API CRD, which are pro
 2. Validation:
     - Boolean validation via Istio CRD
 
-### Controller logic:
+### Controller logic
 
+#### Ownership Model
 
-1. **Installation:** When **enableGatewayAPI** transitions to `true`, check for existing Gateway API CRDs. If found, and they were not applied by Istio controller (check for Istio module label), log and warn user that there already exist Gateway API CRD on cluster. 
-2. Gateway API CRD lifecycle management in Istio controller:
-    - **Labeling strategy**: Add management labels to distinguish Istio-managed Gateway API CRDs, for example label `kyma-project.io/module=istio`
-    - **Deletion protection**: Add warning to Istio CR status and log it in istio controller manager if active CRs of Gateway API exist and **enableGatewayAPI** would be set to false. Add to Istio finalizers to prevent accidental deletion of Gateway API CRDs with active Gateway API CRs on cluster. 
-    - **Reconciliation**: Reconcile Gateway API CRD presence and version during Istio CR reconciliation. If **enableGatewayAPI** is `true` but CRD is missing, attempt to reinstall it. If CRD version is incompatible with current Istio version, log warning and attempt to update to supported version if possible.
+The module uses the label `kyma-project.io/module=istio` to mark CRDs it owns.
+**Only labeled CRDs are ever modified or deleted by the module.** This is the central
+invariant of the entire lifecycle:
+
+- CRDs created by the module are always labeled at creation time.
+- CRDs found on the cluster without this label are treated as user-managed and are
+  never touched — neither updated nor deleted.
+- The user can hand over ownership of an existing CRD to the module by manually adding
+  the label. From the next reconciliation cycle onward, the module will manage it.
+
+#### Installation and Reconciliation (`enableGatewayAPI: true`)
+
+On every reconciliation cycle before proceeding with the Istio installation the
+installer processes each Gateway API CRD from the embedded bundle and takes one of the following actions:
+
+| CRD state on cluster       | Action |
+|----------------------------------------|---|
+| Not present                            | Created and labeled as module-owned |
+| Present, module-owned, version matches | No change (idempotent) |
+| Present, module-owned, version differs | Updated to bundle version |
+| Present, **not** module-owned          | Skipped – label hint logged |
+
+> **Note:** When some CRDs already exist on the cluster without the module label
+> (e.g. installed manually by the user or by another tool), the module logs a warning
+> listing each unmanaged CRD and the exact `kubectl label` action required to transfer
+> ownership. Istio installation continues regardless — unmanaged CRDs do not block the
+> reconciliation.
+
+> **Important:** A partial state is possible — some CRDs managed by the module, some
+> not. The module handles each CRD independently, so partial ownership is a valid and
+> stable runtime state. The user is responsible for deciding whether to transfer
+> ownership of unmanaged CRDs.
+
+### Uninstallation – Feature Disabled (`enableGatewayAPI: false` after previously `true`)
+
+When `enableGatewayAPI` is explicitly set to `false` (or removed) after having been
+previously enabled, the module uninstalls Gateway API CRDs as part of the
+next reconciliation cycle. The cleanup checks:
+
+1. Only CRDs carrying the module ownership label are candidates for deletion.
+2. Before deleting any CRD, the module scans the cluster for existing Gateway API
+   custom resources.
+3. If **any** such resources are found, deletion is **blocked**. The module sets the
+   proper condition on the Istio CR, logs each blocking resource by
+   name and namespace, and returns an error. The reconciler will retry on the next
+   cycle.
+4. Only when the cluster is free of Gateway API custom resources will the module
+   proceed to delete the labeled CRDs.
+
+> **Note:** Unmanaged CRDs (no module label) are never deleted, even when the feature
+> is disabled. They remain on the cluster as the user left them.
+
+> **Note:** The cleanup path is only triggered when the feature was **previously
+> explicitly enabled** — tracked via the last-applied configuration annotation. Setting
+> `enableGatewayAPI: false` on a fresh Istio CR that never had it enabled is a
+> complete no-op. This prevents accidental cleanup.
+
+### Uninstallation – Istio CR Deleted
+
+When the Istio CR itself is deleted, the same uninstall Gateway API CRDs logic
+applies: only module-labeled CRDs are removed, and only if no Gateway API custom
+resources are present on the cluster. If blocking resources exist, the
+proper condition is set and the finalizer is **not** removed, keeping
+the Istio CR in a terminating state until the user cleans up the Gateway API resources.
 
 ## Consequences
 <!--- Discuss the impact of this change, including what becomes easier or more complicated as a result. -->
 <!--What becomes easier or more difficult to do because of this change?-->
 
 ### Benefits:
-- Ambient mode fully leverages Gateway API capabilities, especially for Waypoint proxies.
-- Improved user experience with automated Gateway API CRD installation management through the Istio controller.
-- Gateway API enables customers to create additional Istio Ingress Gateways.
+
+- **No silent side effects.** The module never touches resources it does not own. Users
+  who manage Gateway API CRDs independently are not affected.
+- **Partial installation is stable.** The module does not require all-or-nothing
+  ownership. Mixed states (some CRDs owned, some not) are handled gracefully on every
+  reconciliation.
+- **Version is pinned to the bundle.** The module does not attempt to detect or
+  reconcile arbitrary versions already on the cluster. It only applies the version
+  embedded in the controller binary. Version upgrades happen automatically on the next
+  reconciliation after a controller update.
+- **Improved user experience.** Gateway API CRD lifecycle is fully automated through the Istio controller, removing the need for manual installation and enabling users to leverage the full potential of Ambient mode and waypoint proxies as also Gateway API CRs.
+
 
 ### Trade-offs:
-- Maintenance of Gateway API versioning and compatibility with Istio versions. Istio documentation does not specify which Gateway API CRD versions are supported, requiring us to track and update them as needed. During Istio upgrades, we must plan for and communicate potential breaking changes to users.
-- Potential user confusion if existing Gateway API CRDs are present when enabling the feature. //TODO: to think about it 
-- Additional complexity in controller logic for managing CRD lifecycle.
+- **Ownership transfer is manual and opt-in.** There is no automatic adoption of
+  pre-existing CRDs. The user must explicitly add the module label to signal intent.
+- **Gateway API version maintenance.** The module pins Gateway API CRDs to the version embedded in the controller binary. Compatibility with Istio versions must be tracked and communicated, and potential breaking changes must be planned during Istio upgrades.
+- **Increased controller complexity.** Managing the full CRD lifecycle — installation, updates, ownership tracking, and safe deletion — adds non-trivial logic to the controller reconciliation flow.

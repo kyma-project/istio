@@ -34,6 +34,14 @@ Istio Controller manages Istio and its resources as defined in the Istio custom 
 
 The `istios.operator.kyma-project.io` CustomResourceDefinition (CRD) describes the Istio CR that Istio Controller uses to manage the installation of Istio. See [Istio Custom Resource](https://kyma-project.io/#/istio/user/04-00-istio-custom-resource?id=istio-custom-resource).
 
+## Authorization
+To assign access permissions to the Istio module resources, use the following [aggregated ClusterRoles](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#aggregated-clusterroles):
+
+- `kyma-istio-view` - Grants read-only access to the Istio CR.
+- `kyma-istio-edit` - Grants read and write access to the Istio CR.
+- `kyma-istio-resources-view` - Grants read-only access to all resources from all API groups managed by Istio.
+- `kyma-istio-resources-edit` - Grants read and write access to all resources from all API groups managed by Istio.
+
 ## Resource Consumption
 
 To learn more about the resources used by the Istio module, see [Kyma's Modules Sizing](https://help.sap.com/docs/btp/sap-business-technology-platform/kyma-modules-sizing?version=Cloud#istio).

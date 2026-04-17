@@ -23,7 +23,6 @@ export default [
     { text: 'Istio Controller Parameters', link: './technical-reference/05-00-istio-controller-parameters' },
     { text: 'Istio Controller RBAC Configuration', link: './technical-reference/05-10-istio-controller-rbac' },
     { text: 'Support for Network Policies', link: './technical-reference/05-20-support-for-network-policies' },
-    { text: 'Aggregated Cluster Roles overview', link: './technical-reference/05-30-cluster-roles' },
     { text: 'Alpha Istio Features', link: './00-45-istio-features-configmap.md' }
     ] },
   { text: 'Troubleshooting', link: './troubleshooting/README', collapsed: true, items: [

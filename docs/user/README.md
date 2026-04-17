@@ -38,9 +38,9 @@ The `istios.operator.kyma-project.io` CustomResourceDefinition (CRD) describes t
 To assign access permissions to the Istio module resources, use the following [aggregated ClusterRoles](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#aggregated-clusterroles):
 
 - `kyma-istio-view` - Grants read-only access to the Istio CR.
-- `kyma-istio-edit` - Grants read and write access to the Istio CR.
-- `kyma-istio-resources-view` - Grants read-only access to all resources from all API groups managed by Istio.
-- `kyma-istio-resources-edit` - Grants read and write access to all resources from all API groups managed by Istio.
+- `kyma-istio-edit` - Grants full access to the Istio CR.
+- `kyma-istio-resources-view` - Grants read-only access to resources from all API groups managed by Istio.
+- `kyma-istio-resources-edit` - Grants full access to resources from all API groups managed by Istio.
 
 ## Resource Consumption
 

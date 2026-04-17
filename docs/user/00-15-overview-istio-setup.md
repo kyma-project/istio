@@ -12,7 +12,7 @@ See the major differences in the configuration of Istio Operator compared to ups
 - Egress traffic is not controlled. All applications deployed in the Kyma cluster can access outside resources without limitations.
 - The CNI component, used for the installation of an Istio sidecar, is provided as a DaemonSet. This means that one replica is present on every node of the target cluster.
 - The self-signed CA certificate's bit length is set to `4096` instead of the default `2048`.
-- The proxy sidecar container is configured with `seccompProfile` type `RuntimeDefault` to restrict the syscalls available to the container and reduce the attack surface.
+- The Istio proxy sidecar container is now configured with **seccompProfile** of type `RuntimeDefault`, restricting the system calls available to the container and reducing the attack surface.
 
 ## Configuration Based on the Cluster Size
 

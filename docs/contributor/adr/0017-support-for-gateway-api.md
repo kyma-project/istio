@@ -22,7 +22,7 @@ CRDs unless explicitly instructed to do so through this field.
 
 
 ### Istio Custom Resource Configuration
-1. Add the **GatewayAPI** struct with the field **enableCRD**:
+1. Add the **gatewayAPI** struct with the field **enableCRD**:
     - Location: **Experimental** struct in the Istio CR specification 
     - Type: `*bool` (optional)
     - Default: none (when unset disabled)
@@ -39,6 +39,8 @@ spec:
     gatewayAPI:
       enableCRD: true
 ```
+
+This gives space for future expansion of the **gatewayAPI** struct with more settings related to Gateway API support, such as configuration of specific versions, release channels, or other related features.
 
 ### Controller Logic
 

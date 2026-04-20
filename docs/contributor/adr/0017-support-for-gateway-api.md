@@ -15,20 +15,30 @@ In Istio, to fully utilize Ambient mode's capabilities, especially waypoint prox
 <!--- Explain the proposed change or action and the reason behind it. -->
 <!--What is the change that we're proposing and/or doing?-->
 
-We will add support for Gateway API CRD installation and uninstallation in Istio CR. 
-The feature will be experimental only for now. In the future, it will be promoted outside the experimental. 
+We will add new feature wrapper for settings regarding Gateway API support in Istio CR. Initial field of this feature setting will be responsible for Gateway API CRD installation and uninstallation in Istio CR. 
+The feature will be experimental only for now. In the future it will be promoted outside the experimental. 
 Istio controller will manage the lifecycle of the Gateway API CRD, which are properly labeled and hence managed by the Istio module. The module never installs or removes the Gateway API
 CRDs unless explicitly instructed to do so through this field.
 
 
 ### Istio Custom Resource Configuration
-1. Add the **enableGatewayAPI** field: 
+1. Add the **GatewayAPI** struct with the field **enableCRD**:
     - Location: **Experimental** struct in the Istio CR specification 
     - Type: `*bool` (optional)
     - Default: none (when unset disabled)
     - UI Integration: For now, not configurable and not displayed in Kyma dashboard as it is an experimental feature only. When promoted outside experimental, it will be configurable and displayed in Kyma dashboard.
+    - Metrics added to track the usage of the feature.
 2. Validation:
     - Boolean validation via Istio CRD
+
+Sample Istio CR with the feature enabled:
+```yaml
+...
+spec:
+  experimental:
+    gatewayAPI:
+      enableCRD: true
+```
 
 ### Controller Logic
 
@@ -44,7 +54,7 @@ invariant of the entire lifecycle:
 - The user can hand over ownership of an existing CRD to the module by manually adding
   the label. From the next reconciliation cycle onward, the module will manage it.
 
-#### Installation and Reconciliation (`enableGatewayAPI: true`)
+#### Installation and Reconciliation (`gatewayAPI.enableCRD: true`)
 
 On every reconciliation cycle, before proceeding with the Istio installation, the
 installer processes each Gateway API CRD from the embedded bundle and takes one of the following actions:
@@ -69,9 +79,9 @@ installer processes each Gateway API CRD from the embedded bundle and takes one 
 > stable runtime state. The user is responsible for deciding whether to transfer
 > ownership of unmanaged CRDs.
 
-### Uninstallation – Feature Disabled (`enableGatewayAPI: false` after previously `true`)
+### Uninstallation – Feature Disabled (`gatewayAPI.enableCRD: false` after previously `true`)
 
-When **enableGatewayAPI** is explicitly set to `false` (or removed) after having been
+When **gatewayAPI.enableCRD** is explicitly set to `false` (or removed) after having been
 previously enabled, the module uninstalls Gateway API CRDs as part of the
 next reconciliation cycle. The cleanup checks:
 
@@ -90,7 +100,7 @@ next reconciliation cycle. The cleanup checks:
 > [!NOTE]
 > The cleanup path is only triggered when the feature was previously
 > explicitly enabled — tracked via the last-applied configuration annotation. Setting
-> `enableGatewayAPI: false` in a new Istio CR that never had it enabled is a
+> `gatewayAPI.enableCRD: false` in a new Istio CR that never had it enabled is a
 > complete no-op. This prevents accidental cleanup.
 
 ### Uninstallation – Istio CR Deleted
@@ -124,3 +134,4 @@ the Istio CR in a terminating state until the user cleans up the Gateway API res
   pre-existing CRDs. The user must explicitly add the module label to signal intent.
 - **Gateway API version maintenance.** The module pins Gateway API CRDs to the version embedded in the controller binary. Compatibility with Istio versions must be tracked and communicated, and potential breaking changes must be planned during Istio upgrades.
 - **Increased controller complexity.** Managing the full CRD lifecycle — installation, updates, ownership tracking, and safe deletion — adds non-trivial logic to the controller reconciliation flow.
+- **Once managed by module no easy way back.** Once user gives the ownership of a CRD to the module, it won't be an easy way back to manage it by user. This means that even if the user later decides to manage the CRD independently, they must first remove the module setting - manually delete CRs, module will delete CRDs.

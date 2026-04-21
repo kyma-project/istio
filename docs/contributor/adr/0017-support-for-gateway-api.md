@@ -15,7 +15,7 @@ In Istio, to fully utilize Ambient mode's capabilities, especially waypoint prox
 <!--- Explain the proposed change or action and the reason behind it. -->
 <!--What is the change that we're proposing and/or doing?-->
 
-We will add new feature wrapper for settings regarding Gateway API support in Istio CR. Initial field of this feature setting will be responsible for Gateway API CRD installation and uninstallation in Istio CR. 
+We will add a new feature wrapper for settings regarding Gateway API support in the Istio CR. The initial field of this feature setting will be responsible for Gateway API CRD installation and uninstallation in the Istio CR. 
 The feature will be experimental only for now. In the future it will be promoted outside the experimental. 
 Istio controller will manage the lifecycle of the Gateway API CRD, which are properly labeled and hence managed by the Istio module. The module never installs or removes the Gateway API
 CRDs unless explicitly instructed to do so through this field.

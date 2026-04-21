@@ -29,14 +29,14 @@ require (
 	istio.io/api v1.29.1
 	istio.io/client-go v1.29.1
 	istio.io/istio v0.0.0-20260306174214-6991a379e1fc
-	k8s.io/api v0.35.0
+	k8s.io/api v0.35.3
 	k8s.io/apiextensions-apiserver v0.35.0
-	k8s.io/apimachinery v0.35.0
-	k8s.io/client-go v0.35.0
+	k8s.io/apimachinery v0.35.3
+	k8s.io/client-go v0.35.3
 	k8s.io/kubectl v0.35.0
 	k8s.io/utils v0.0.0-20251219084037-98d557b7f1e7
-	sigs.k8s.io/controller-runtime v0.22.1 // Since we are using the Istio library directly, we should also use the controller-runtime version that is used by Istio.
-	sigs.k8s.io/e2e-framework v0.6.0
+	sigs.k8s.io/controller-runtime v0.23.3 // Since we are using the Istio library directly, we should also use the controller-runtime version that is used by Istio.
+	sigs.k8s.io/e2e-framework v0.7.0
 	sigs.k8s.io/yaml v1.6.0
 )
 
@@ -181,6 +181,7 @@ require (
 	github.com/tdewolff/minify/v2 v2.10.0 // indirect
 	github.com/tdewolff/parse/v2 v2.5.27 // indirect
 	github.com/vbatts/tar-split v0.12.1 // indirect
+	github.com/vladimirvivien/gexe v0.5.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xlab/treeprint v1.2.0 // indirect
 	github.com/yl2chen/cidranger v1.0.2 // indirect
@@ -215,9 +216,9 @@ require (
 	helm.sh/helm/v3 v3.18.6 // indirect
 	k8s.io/apiserver v0.35.0 // indirect
 	k8s.io/cli-runtime v0.35.0 // indirect
-	k8s.io/component-base v0.35.0 // indirect
+	k8s.io/component-base v0.35.3 // indirect
 	k8s.io/component-helpers v0.35.0 // indirect
-	k8s.io/klog/v2 v2.130.1 // indirect
+	k8s.io/klog/v2 v2.140.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20251125145642-4e65d59e963e // indirect
 	sigs.k8s.io/gateway-api v1.4.0 // indirect
 	sigs.k8s.io/gateway-api-inference-extension v1.0.2 // indirect
@@ -226,5 +227,5 @@ require (
 	sigs.k8s.io/kustomize/kyaml v0.20.1 // indirect
 	sigs.k8s.io/mcs-api v0.2.0 // indirect
 	sigs.k8s.io/randfill v1.0.0 // indirect
-	sigs.k8s.io/structured-merge-diff/v6 v6.3.1 // indirect
+	sigs.k8s.io/structured-merge-diff/v6 v6.3.2-0.20260122202528-d9cc6641c482 // indirect
 )

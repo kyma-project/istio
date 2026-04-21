@@ -141,4 +141,3 @@ the Istio CR in a terminating state until the user cleans up the Gateway API res
   pre-existing CRDs. The user must explicitly add the module label to signal intent.
 - **Gateway API version maintenance.** The module pins Gateway API CRDs to the version embedded in the controller binary. Compatibility with Istio versions must be tracked and communicated, and potential breaking changes must be planned during Istio upgrades.
 - **Increased controller complexity.** Managing the full CRD lifecycle — installation, updates, ownership tracking, and safe deletion — adds non-trivial logic to the controller reconciliation flow.
-- **Once managed by module no easy way back.** Once user gives the ownership of a CRD to the module, it won't be an easy way back to manage it by user. This means that even if the user later decides to manage the CRD independently, they must first remove the module setting - manually delete CRs, module will delete CRDs.

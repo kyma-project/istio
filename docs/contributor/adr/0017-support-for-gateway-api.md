@@ -22,9 +22,14 @@ CRDs unless explicitly instructed to do so through this field.
 
 
 ### Istio Custom Resource Configuration
-1. Add the **gatewayAPI** struct with the field **enableCRD**:
-    - Location: **Experimental** struct in the Istio CR specification 
-    - Type: `*bool` (optional)
+1. Add the new **gatewayAPI** struct:
+   - Location: **experimental** struct in the Istio CR specification
+   - Type: pointer (optional, omitempty - absent from the object when unset)
+
+
+1. Add the field **enableCRD**:
+    - Location: **gatewayAPI** struct in the Istio CR specification 
+    - Type: `*bool` (optional, omitempty - absent from the object when unset)
     - Default: none (when unset disabled)
     - UI Integration: For now, not configurable and not displayed in Kyma dashboard as it is an experimental feature only. When promoted outside experimental, it will be configurable and displayed in Kyma dashboard.
     - Metrics added to track the usage of the feature.
@@ -137,3 +142,7 @@ the Istio CR in a terminating state until the user cleans up the Gateway API res
 - **Gateway API version maintenance.** The module pins Gateway API CRDs to the version embedded in the controller binary. Compatibility with Istio versions must be tracked and communicated, and potential breaking changes must be planned during Istio upgrades.
 - **Increased controller complexity.** Managing the full CRD lifecycle — installation, updates, ownership tracking, and safe deletion — adds non-trivial logic to the controller reconciliation flow.
 - **Once managed by module no easy way back.** Once user gives the ownership of a CRD to the module, it won't be an easy way back to manage it by user. This means that even if the user later decides to manage the CRD independently, they must first remove the module setting - manually delete CRs, module will delete CRDs.
+
+
+TODO:
+ - version check s conformance test neede to check !!!

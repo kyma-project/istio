@@ -337,7 +337,7 @@
           pattern: ^\d+%?$
       - path: 'maxUnavailable'
         name: k8s.strategy.rollingUpdate.maxUnavailable
-        description: description.rollingUpdate.maxUnvailable
+        description: description.rollingUpdate.maxUnavailable
         value:
           type: string
           pattern: ^\d+%?$

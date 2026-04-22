@@ -11,6 +11,7 @@ import (
 	"istio.io/client-go/pkg/apis/security/v1beta1"
 	telemetryv1 "istio.io/client-go/pkg/apis/telemetry/v1"
 	"k8s.io/client-go/kubernetes"
+	gatewayv1 "sigs.k8s.io/gateway-api/apis/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/e2e-framework/klient/conf"
 	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
@@ -78,6 +79,12 @@ func ResourcesClient(t *testing.T) (*resources.Resources, error) {
 		err = networkingv1.AddToScheme(r.GetScheme())
 		if err != nil {
 			t.Logf("Failed to add Istio networking v1 scheme: %v", err)
+			return nil, err
+		}
+
+		err = gatewayv1.Install(r.GetScheme())
+		if err != nil {
+			t.Logf("Failed to add Gateway API v1 scheme: %v", err)
 			return nil, err
 		}
 

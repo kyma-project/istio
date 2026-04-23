@@ -83,6 +83,14 @@
         widget: SimpleList
         children:
             - path: '[]'
+    - path: '[].pathPrefix'
+      name: config.authorizers.pathPrefix
+      value:
+        type: string
+    - path: '[].timeout'
+      name: config.authorizers.timeout
+      value:
+        type: string
 
 - path: spec.components
   name: Components
@@ -261,6 +269,78 @@
     widget: FormGroup
     defaultExpanded: false
     children:
+    - path: 'k8s.resources.limits'
+      name: Resource Limits
+      widget: FormGroup
+      defaultExpanded: false
+      children:
+      - path: 'cpu'
+        name: k8s.resources.cpu
+        description: description.limits.cpu
+      - path: 'memory'
+        name: k8s.resources.memory
+        description: description.limits.memory
+    - path: 'k8s.resources.requests'
+      name: Resource Requests
+      widget: FormGroup
+      defaultExpanded: false
+      children:
+      - path: 'cpu'
+        name: k8s.resources.cpu
+        description: description.requests.cpu
+      - path: 'memory'
+        name: k8s.resources.memory
+        description: description.requests.memory
+  - path: 'egressGateway'
+    required: false
+    name: Egress Gateway
+    widget: FormGroup
+    defaultExpanded: false
+    children:
+    - path: 'enabled'
+      name: egressGateway.enabled
+      description: description.egressGateway.enabled
+      value:
+        type: bool
+    - path: 'k8s.hpaSpec'
+      name: k8s.hpaSpec
+      widget: FormGroup
+      defaultExpanded: false
+      children:
+      - path: 'minReplicas'
+        name: k8s.hpaSpec.minReplicas
+        description: description.hpaSpec.minReplicas
+        value:
+          type: number
+      - path: 'maxReplicas'
+        name: k8s.hpaSpec.maxReplicas
+        description: description.hpaSpec.maxReplicas
+        value:
+          type: number
+    - path: 'k8s.strategy.rollingUpdate'
+      required: false
+      name: k8s.strategy.rollingUpdate
+      widget: FormGroup
+      defaultExpanded: false
+      type: object
+      properties:
+        maxSurge:
+          type: string
+        maxUnavailable:
+          type: string
+      children:
+      - path: 'maxSurge'
+        name: k8s.strategy.rollingUpdate.maxSurge
+        description: description.rollingUpdate.maxSurge
+        value:
+          type: string
+          pattern: ^\d+%?$
+      - path: 'maxUnavailable'
+        name: k8s.strategy.rollingUpdate.maxUnavailable
+        description: description.rollingUpdate.maxUnavailable
+        value:
+          type: string
+          pattern: ^\d+%?$
     - path: 'k8s.resources.limits'
       name: Resource Limits
       widget: FormGroup

@@ -114,6 +114,10 @@ func (g *GatewayAPICRDManager) Install(ctx context.Context) (GatewayAPICRDInstal
 			continue
 		}
 
+		// TODO(gateway-api-parked): This feature was parked in April 2026.
+		// The paragraph below with version checking should be extended,
+		// so that only conformant with Istio upstream version Gateway API CRDs versions are being installed.
+
 		// CRD already exists and is managed by Istio module.
 		// Check specific CRD target version with expected gatewayAPI CRD version
 		existingVersion := existingCRD.Annotations[bundleVersionKey]
@@ -172,6 +176,12 @@ func (g *GatewayAPICRDManager) Uninstall(
 ) error {
 	ctrl.Log.Info("Starting Gateway API CRDs removal (labeled CRDs only)", "version", gatewayAPIVersion)
 
+	// TODO(gateway-api-parked): This feature was parked in April 2026.
+	// Need to be checked why:
+	// If there exist Gateway API CR managed by Istio and it is blocking the uninstallation
+	// the uninstallation won't happen - probably because of modified latAppliedConfig annotation
+	// or some issue in the condition logic below.
+
 	// Check for blocking Gateway API CRs once, before touching any CRD.
 	// Only CRs belonging to module-managed CRDs are considered blocking.
 	blocking, err := FindBlockingGatewayAPIResources(ctx, g.client)
@@ -229,7 +239,6 @@ func (g *GatewayAPICRDManager) Uninstall(
 			skippedCount++
 			continue
 		}
-
 
 		ctrl.Log.Info("Deleting managed Gateway API CRD", "name", crd.Name)
 		if deleteErr := g.client.Delete(ctx, existingCRD); deleteErr != nil {

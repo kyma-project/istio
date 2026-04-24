@@ -14,6 +14,9 @@ import (
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 )
 
+// TODO(gateway-api-parked): This feature was parked in April 2026.
+// This test file needs full rewrite of test cases based on new gateway_api_crds.go implementation.
+
 var _ = Describe("Gateway API CRDs", func() {
 	var (
 		ctx                    context.Context

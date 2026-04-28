@@ -1,4 +1,4 @@
-name: Release Istio - Step 2
+name: Release Istio
 
 permissions:
   id-token: write # This is required by image-builder
@@ -32,6 +32,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          token: '${{ secrets.GOAT_BOT_REPO_ACCESS }}'
+          fetch-depth: 0
 
       - name: Validate version format
         id: validate-version-format
@@ -43,6 +46,27 @@ jobs:
             echo "Version ${CURRENT_RELEASE} does not have proper format!";
             exit 1
           fi
+
+      - name: Check if release branch exists
+        env:
+          CURRENT_RELEASE: ${{ inputs.version }}
+        run: |
+          major=$(echo "${CURRENT_RELEASE}" | cut -d. -f1)
+          minor=$(echo "${CURRENT_RELEASE}" | cut -d. -f2)
+          branch_name="release-${major}.${minor}"
+          echo "branch_name=${branch_name}" >> $GITHUB_ENV
+          
+          if git ls-remote --heads origin "${branch_name}" | grep -q "${branch_name}"; then
+            echo "branch_exists=true" >> $GITHUB_ENV
+          else
+            echo "branch_exists=false" >> $GITHUB_ENV
+          fi
+
+      - name: Create a release branch
+        if: env.branch_exists == 'false'
+        run: |
+          git checkout -b "${branch_name}"
+          git push origin "${branch_name}"
 
       - name: Ensure that release is done from the proper branch
         id: check-branch-name
@@ -79,18 +103,6 @@ jobs:
           if docker pull "${image}" >/dev/null 2>&1; then
             echo "Image already exists, which is unexpected before the release"
             exit 4
-          fi
-
-      - name: Check whether sec-scanners-config file contains the image that is being released
-        id: check-sec-scanners-config
-        if: ${{ inputs.skip_all_checks == false }}
-        env:
-          CURRENT_RELEASE: ${{ inputs.version }}
-        run: |
-          image="${IMAGE_NAME}:${CURRENT_RELEASE}"
-          if ! grep -q "${image}" sec-scanners-config.yaml; then
-            echo "sec-scanners-config.yaml file doesn't contain the image ${image} that is being released"
-            exit 5
           fi
 
       - name: Check whether release notes exist

@@ -21,10 +21,10 @@ spec:
             - name: ztunnel
               value: europe-docker.pkg.dev/kyma-project/prod/external/istio/ztunnel:1.29.1-distroless
             - name: install-cni-fips
-              value: europe-docker.pkg.dev/kyma-project/restricted-prod/external/istio/istio-install-cni-fips:1.29.1-1
+              value: europe-docker.pkg.dev/kyma-project/restricted-prod/external/istio/istio-install-cni-fips:1.29.1-2
             - name: proxyv2-fips
-              value: europe-docker.pkg.dev/kyma-project/restricted-prod/external/istio/istio-proxy-fips:1.29.1-1
+              value: europe-docker.pkg.dev/kyma-project/restricted-prod/external/istio/istio-proxy-fips:1.29.1-2
             - name: pilot-fips
-              value: europe-docker.pkg.dev/kyma-project/restricted-prod/external/istio/istio-pilot-fips:1.29.1-1
+              value: europe-docker.pkg.dev/kyma-project/restricted-prod/external/istio/istio-pilot-fips:1.29.1-2
             - name: ztunnel-fips
-              value: europe-docker.pkg.dev/kyma-project/restricted-prod/external/istio/ztunnel-fips:1.29.1-1
+              value: europe-docker.pkg.dev/kyma-project/restricted-prod/external/istio/ztunnel-fips:1.29.1-2

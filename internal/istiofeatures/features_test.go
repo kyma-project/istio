@@ -74,6 +74,24 @@ func TestGetIstioFeatures_ConfigMapExists(t *testing.T) {
 			want:    istiofeatures.IstioFeatures{},
 			wantErr: true,
 		},
+		{
+			name:    "enableControlPlaneVPA set to true",
+			cmData:  map[string]string{"features": `{"enableControlPlaneVPA": true}`},
+			want:    istiofeatures.IstioFeatures{EnableControlPlaneVPA: true},
+			wantErr: false,
+		},
+		{
+			name:    "enableControlPlaneVPA set to false",
+			cmData:  map[string]string{"features": `{"enableControlPlaneVPA": false}`},
+			want:    istiofeatures.IstioFeatures{EnableControlPlaneVPA: false},
+			wantErr: false,
+		},
+		{
+			name:    "both features set",
+			cmData:  map[string]string{"features": `{"disableCni": true, "enableControlPlaneVPA": true}`},
+			want:    istiofeatures.IstioFeatures{DisableCni: true, EnableControlPlaneVPA: true},
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {

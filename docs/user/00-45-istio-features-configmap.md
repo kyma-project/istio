@@ -63,9 +63,30 @@ This introduces the following risks:
 - **Bypass risk** – Any container in the Pod that runs before `istio-init` completes, or any container that also holds `NET_ADMIN`/`NET_RAW` capabilities, could potentially modify or bypass the `iptables` rules that enforce traffic interception. With Istio CNI, this concern is eliminated because interception is set up by a privileged node-level agent before the Pod's containers start.
 - **Increased attack surface on nodes** – While the `istio-init` container only affects its own network namespace, having `NET_ADMIN`-capable init containers increases the overall attack surface compared to the CNI-based approach, where privilege escalation is confined to the dedicated CNI DaemonSet.
 
+### **enableControlPlaneVPA**
+
+**Type:** `boolean`
+**Default:** `false`
+
+When set to `true`, the Istio module creates [Vertical Pod Autoscaler (VPA)](https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler) resources for Istio control plane components: istiod, ingress gateway, egress gateway, and CNI DaemonSet.
+
+The VPA manages **memory** resources only, allowing it to coexist safely with the existing Horizontal Pod Autoscaler (HPA) that scales based on CPU utilization. This enables automatic memory optimization for large-scale mesh deployments.
+
+#### Prerequisites
+
+- The cluster must have the VPA Custom Resource Definition (`verticalpodautoscalers.autoscaling.k8s.io`) installed. If the CRD is not present, the VPA resources are silently skipped.
+
+#### Behavior
+
+When enabled:
+- VPA resources are created in the `istio-system` namespace targeting istiod, istio-ingressgateway, istio-egressgateway, and istio-cni-node
+- Each VPA uses `updateMode: InPlaceOrRecreate` for non-disruptive scaling where supported
+- Only memory requests and limits are managed (`controlledResources: [memory]`)
+- Any memory-based metrics in the HPA are automatically removed to prevent autoscaler conflicts
 
 ## Feature Flags
 
 | Flag         | Type      | Default | Description                                                                                                                                                                                     |
 |--------------|-----------|---------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **disableCni** | `boolean` | `false` | When `true`, disables the Istio CNI node agent and falls back to the `istio-init` init container approach. See [Security Risks of Disabling Istio CNI](#security-risks-of-disabling-istio-cni). |
+| **enableControlPlaneVPA** | `boolean` | `false` | When `true`, creates VPA resources for Istio control plane components (istiod, gateways, CNI) managing memory only. Requires VPA CRD in the cluster. See [enableControlPlaneVPA](#enablecontrolplanevpa). |

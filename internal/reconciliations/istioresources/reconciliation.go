@@ -13,6 +13,7 @@ import (
 
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/describederrors"
+	"github.com/kyma-project/istio/operator/internal/istiofeatures"
 )
 
 type ResourcesReconciliation interface {
@@ -43,7 +44,12 @@ func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha2.Is
 		return describederrors.NewDescribedError(err, "could not determine cluster provider")
 	}
 
-	resources, err := getResources(r.client, provider, istioCR)
+	features, featErr := istiofeatures.Get(ctx, r.client)
+	if featErr != nil {
+		ctrl.Log.V(1).Info("Could not get Istio features for resource reconciliation, proceeding with defaults", "error", featErr)
+	}
+
+	resources, err := getResources(r.client, provider, istioCR, features)
 	if err != nil {
 		ctrl.Log.Error(err, "Failed to initialise Istio resources")
 		return describederrors.NewDescribedError(err, "Istio controller failed to initialise Istio resources")
@@ -72,13 +78,14 @@ func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha2.Is
 }
 
 // getResources returns all Istio resources required for the reconciliation specific for the given hyperscaler.
-func getResources(k8sClient client.Client, provider string, istioCR v1alpha2.Istio) ([]Resource, error) {
+func getResources(k8sClient client.Client, provider string, istioCR v1alpha2.Istio, features istiofeatures.IstioFeatures) ([]Resource, error) {
 	if istioCR.DeletionTimestamp != nil && !istioCR.DeletionTimestamp.IsZero() {
 		toDeleteResources := []Resource{
 			NewPeerAuthenticationMtls(true),
 			NewNetworkPolicies(true),
 			NewProxyProtocolEnvoyFilter(true),
 			NewVPA(true),
+			NewControlPlaneVPA(true),
 		}
 		return toDeleteResources, nil
 	}
@@ -87,6 +94,7 @@ func getResources(k8sClient client.Client, provider string, istioCR v1alpha2.Ist
 		NewPeerAuthenticationMtls(false),
 		NewNetworkPolicies(!istioCR.Spec.NetworkPoliciesEnabled),
 		NewVPA(false),
+		NewControlPlaneVPA(!features.EnableControlPlaneVPA),
 	}
 
 	switch provider {

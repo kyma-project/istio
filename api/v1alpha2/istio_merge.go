@@ -447,6 +447,21 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator, options ...MergeOpt
 	}
 
 	if i.Spec.Components == nil {
+		if opts.Features.EnableControlPlaneVPA {
+			if op.Spec.Components.Pilot != nil && op.Spec.Components.Pilot.Kubernetes != nil {
+				removeMemoryMetricsFromHPA(op.Spec.Components.Pilot.Kubernetes.HpaSpec)
+			}
+			for idx := range op.Spec.Components.IngressGateways {
+				if op.Spec.Components.IngressGateways[idx].Kubernetes != nil {
+					removeMemoryMetricsFromHPA(op.Spec.Components.IngressGateways[idx].Kubernetes.HpaSpec)
+				}
+			}
+			for idx := range op.Spec.Components.EgressGateways {
+				if op.Spec.Components.EgressGateways[idx].Kubernetes != nil {
+					removeMemoryMetricsFromHPA(op.Spec.Components.EgressGateways[idx].Kubernetes.HpaSpec)
+				}
+			}
+		}
 		return op, nil
 	}
 
@@ -643,6 +658,22 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator, options ...MergeOpt
 		}
 	}
 
+	if opts.Features.EnableControlPlaneVPA {
+		if op.Spec.Components.Pilot != nil && op.Spec.Components.Pilot.Kubernetes != nil {
+			removeMemoryMetricsFromHPA(op.Spec.Components.Pilot.Kubernetes.HpaSpec)
+		}
+		for idx := range op.Spec.Components.IngressGateways {
+			if op.Spec.Components.IngressGateways[idx].Kubernetes != nil {
+				removeMemoryMetricsFromHPA(op.Spec.Components.IngressGateways[idx].Kubernetes.HpaSpec)
+			}
+		}
+		for idx := range op.Spec.Components.EgressGateways {
+			if op.Spec.Components.EgressGateways[idx].Kubernetes != nil {
+				removeMemoryMetricsFromHPA(op.Spec.Components.EgressGateways[idx].Kubernetes.HpaSpec)
+			}
+		}
+	}
+
 	return op, nil
 }
 
@@ -751,4 +782,20 @@ func mergeK8sConfig(base *iopv1alpha1.KubernetesResources, newConfig KubernetesR
 		}
 	}
 	return nil
+}
+
+func removeMemoryMetricsFromHPA(hpaSpec *autoscalingv2.HorizontalPodAutoscalerSpec) {
+	if hpaSpec == nil || len(hpaSpec.Metrics) == 0 {
+		return
+	}
+	filtered := make([]autoscalingv2.MetricSpec, 0, len(hpaSpec.Metrics))
+	for _, metric := range hpaSpec.Metrics {
+		if metric.Type == autoscalingv2.ResourceMetricSourceType &&
+			metric.Resource != nil &&
+			metric.Resource.Name == corev1.ResourceMemory {
+			continue
+		}
+		filtered = append(filtered, metric)
+	}
+	hpaSpec.Metrics = filtered
 }

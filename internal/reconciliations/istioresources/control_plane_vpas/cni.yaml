@@ -1,0 +1,29 @@
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: istio-cni-node-vpa
+  namespace: istio-system
+  labels:
+    kyma-project.io/module: istio
+    app.kubernetes.io/component: cni
+    app.kubernetes.io/part-of: istio
+    app.kubernetes.io/name: istio-cni-node
+    app.kubernetes.io/instance: istio-cni-node-default
+spec:
+  resourcePolicy:
+    containerPolicies:
+      - containerName: install-cni
+        controlledResources:
+          - memory
+        controlledValues: RequestsAndLimits
+        maxAllowed:
+          memory: 16Gi
+        minAllowed:
+          memory: 512Mi
+  targetRef:
+    apiVersion: apps/v1
+    kind: DaemonSet
+    name: istio-cni-node
+  updatePolicy:
+    minReplicas: 1
+    updateMode: InPlaceOrRecreate

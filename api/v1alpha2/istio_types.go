@@ -145,6 +145,12 @@ const (
 	// Resource targeting Istio Ingress Gateway detection failed.
 	ConditionReasonIngressTargetingUserResourceDetectionFailed        ConditionReason = "IngressTargetingUserResourceDetectionFailed"
 	ConditionReasonIngressTargetingUserResourceDetectionFailedMessage                 = "Resource targeting Istio Ingress Gateway detection failed"
+
+	// Gateway API CRs blocking deletion (experimental feature)
+
+	// Gateway API custom resources are blocking Istio CR deletion or Gateway API CRD uninstallation.
+	ConditionReasonGatewayAPICRsDangling        ConditionReason = "GatewayAPICustomResourcesDangling"
+	ConditionReasonGatewayAPICRsDanglingMessage                 = "Deletion blocked because of existing Gateway API custom resources"
 )
 
 // Couples a condition's reason with its message.

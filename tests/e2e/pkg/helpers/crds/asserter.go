@@ -28,6 +28,18 @@ func AssertIstioCRDsPresent(ctx context.Context, c client.Client) error {
 	return nil
 }
 
+func AssertGatewayAPICRDsPresent(ctx context.Context, c client.Client) error {
+	_, filename, _, _ := runtime.Caller(0)
+	packageDir := filepath.Dir(filename)
+
+	l, err := NewCRDListerFromFile(c, packageDir+"/gateway_api_crd_list.yaml")
+	if err != nil {
+		return err
+	}
+
+	return l.checkCrdsExist(ctx)
+}
+
 func AssertIstioCRDsNotPresent(ctx context.Context, c client.Client) error {
 	_, filename, _, _ := runtime.Caller(0)
 	packageDir := filepath.Dir(filename)

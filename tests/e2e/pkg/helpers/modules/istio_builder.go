@@ -539,6 +539,15 @@ func (b *IstioCRBuilder) WithEnableAmbient(enabled bool) *IstioCRBuilder {
 	return b
 }
 
+// WithEnableGatewayAPI is a convenience method to enable or disable Gateway API CRD installation
+func (b *IstioCRBuilder) WithEnableGatewayAPI(enabled bool) *IstioCRBuilder {
+	if b.istio.Spec.Experimental == nil {
+		b.istio.Spec.Experimental = &v1alpha2.Experimental{}
+	}
+	b.istio.Spec.Experimental.EnableGatewayAPI = &enabled
+	return b
+}
+
 // logIstioCR logs the Istio CR as JSON for debugging purposes
 func logIstioCR(t *testing.T, icr *v1alpha2.Istio) {
 	t.Helper()

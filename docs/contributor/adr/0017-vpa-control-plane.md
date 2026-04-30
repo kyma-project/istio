@@ -5,13 +5,13 @@ Proposed
 
 ## Context
 This ADR addresses [kyma-project/istio#2011](https://github.com/kyma-project/istio/issues/2011).
-The goal is to conditionally enable Vertical Pod Autoscaler (VPA) for Istio control plane components to support mesh scaling on large clusters. The VPA must coexist with the existing HPA without conflicts — HPA handles CPU-based horizontal scaling, while VPA optimizes memory resource allocation.
+The goal is to conditionally enable VerticalPodAutoscaler (VPA) for Istio control plane components to support mesh scaling on large clusters. The VPA must coexist with the existing HPA without conflicts — HPA handles CPU-based horizontal scaling, while VPA optimizes memory resource allocation.
 
 ## Decision
 
 ### Feature Flag
 
-A new boolean field `enableControlPlaneVPA` is added to the `IstioFeatures` struct in `internal/istiofeatures/features.go`:
+A new boolean field **enableControlPlaneVPA** is added to the **IstioFeatures** struct in `internal/istiofeatures/features.go`:
 
 ```go
 type IstioFeatures struct {
@@ -37,14 +37,14 @@ data:
 
 ### VPA Resources
 
-When enabled, the operator creates VPA resources in `istio-system` for:
+When enabled, the operator creates VPA resources in `istio-system` for the following components:
 
 | Target               | Kind       | Container   | minAllowed memory | maxAllowed memory |
 |----------------------|------------|-------------|-------------------|-------------------|
-| istiod               | Deployment | discovery   | 512Mi             | 16Gi              |
-| istio-ingressgateway | Deployment | istio-proxy | 128Mi             | 16Gi              |
-| istio-egressgateway  | Deployment | istio-proxy | 128Mi             | 16Gi              |
-| istio-cni-node       | DaemonSet  | install-cni | 512Mi             | 16Gi              |
+| istiod               | Deployment | discovery   | 512 Mi             | 16 Gi              |
+| istio-ingressgateway | Deployment | istio-proxy | 128 Mi             | 16 Gi              |
+| istio-egressgateway  | Deployment | istio-proxy | 128 Mi             | 16 Gi              |
+| istio-cni-node       | DaemonSet  | install-cni | 512 Mi             | 16 Gi              |
 
 All VPAs share these settings:
 - `controlledResources: [memory]`
@@ -54,7 +54,7 @@ All VPAs share these settings:
 
 ### HPA Memory Metric Prevention
 
-When `enableControlPlaneVPA` is true, the operator must ensure that no memory-based metric is present in the HPA for pilot or gateways. The upstream Istio chart template (`autoscale.yaml`) conditionally adds a memory metric if `values.pilot.memory.targetAverageUtilization` is set:
+When **enableControlPlaneVPA** is true, the operator must ensure that no memory-based metric is present in the HPA for pilot or gateways. The upstream Istio chart template (`autoscale.yaml`) conditionally adds a memory metric if **values.pilot.memory.targetAverageUtilization** is set:
 
 ```yaml
 {{- if .Values.memory.targetAverageUtilization }}
@@ -65,10 +65,10 @@ When `enableControlPlaneVPA` is true, the operator must ensure that no memory-ba
 {{- end }}
 ```
 
-To be defensive against future changes, during the IstioOperator merge step (`mergeResources` in `api/v1alpha2/istio_merge.go`), when `Features.EnableControlPlaneVPA` is true:
+To be defensive against future changes, during the Istio Operator merge step (`mergeResources` in `api/v1alpha2/istio_merge.go`), when **Features.EnableControlPlaneVPA** is true:
 
-1. Remove any `memory` metric from `hpaSpec.metrics` for pilot, ingress gateway, and egress gateway components if present.
-2. Ensure `values.pilot.memory` is not set (or explicitly set to empty) in the rendered IstioOperator values.
+1. Remove any `memory` metric from **hpaSpec.metrics** for pilot, ingress gateway, and egress gateway components if present.
+2. Ensure **values.pilot.memory** is not set (or explicitly set to empty) in the rendered Istio Operator values.
 
 This guarantees HPA only scales on CPU while VPA manages memory.
 

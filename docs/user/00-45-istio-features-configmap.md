@@ -68,9 +68,9 @@ This introduces the following risks:
 **Type:** `boolean`
 **Default:** `false`
 
-When set to `true`, the Istio module creates [Vertical Pod Autoscaler (VPA)](https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler) resources for Istio control plane components: istiod, ingress gateway, egress gateway, and CNI DaemonSet.
+When set to `true`, the Istio module creates [VerticalPodAutoscaler (VPA)](https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler) resources for Istio control plane components: istiod, ingress gateway, egress gateway, and CNI DaemonSet.
 
-The VPA manages **memory** resources only, allowing it to coexist safely with the existing Horizontal Pod Autoscaler (HPA) that scales based on CPU utilization. This enables automatic memory optimization for large-scale mesh deployments.
+The VPA manages **memory** resources only, allowing it to coexist safely with the existing HorizontalPodAutoscaler (HPA) that scales based on CPU utilization. This enables automatic memory optimization for large-scale mesh deployments.
 
 #### Prerequisites
 
@@ -79,10 +79,10 @@ The VPA manages **memory** resources only, allowing it to coexist safely with th
 #### Behavior
 
 When enabled:
-- VPA resources are created in the `istio-system` namespace targeting istiod, istio-ingressgateway, istio-egressgateway, and istio-cni-node
-- Each VPA uses `updateMode: InPlaceOrRecreate` for non-disruptive scaling where supported
-- Only memory requests and limits are managed (`controlledResources: [memory]`)
-- Any memory-based metrics in the HPA are automatically removed to prevent autoscaler conflicts
+- VPA resources are created in the `istio-system` namespace targeting istiod, istio-ingressgateway, istio-egressgateway, and istio-cni-node.
+- Each VPA uses `updateMode: InPlaceOrRecreate` for non-disruptive scaling where supported.
+- Only memory requests and limits are managed (`controlledResources: [memory]`).
+- Any memory-based metrics in the HPA are automatically removed to prevent autoscaler conflicts.
 
 ## Feature Flags
 

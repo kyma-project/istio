@@ -6,6 +6,7 @@ import (
 	"time"
 
 	istiov1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
+	istiofeatures "github.com/kyma-project/istio/operator/internal/istiofeatures"
 
 	"github.com/onsi/ginkgo/v2/types"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -15,6 +16,7 @@ import (
 	"istio.io/istio/operator/pkg/values"
 	"istio.io/istio/pkg/config/mesh"
 	"istio.io/istio/pkg/util/protomarshal"
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -1260,6 +1262,111 @@ var _ = Describe("Merge", func() {
 
 			replicas = *out.Spec.Components.IngressGateways[0].Kubernetes.HpaSpec.MinReplicas
 			Expect(replicas).To(Equal(minReplicas))
+		})
+	})
+
+	Context("control plane VPA and HPA interaction", func() {
+		It("should remove memory metrics from HPA when enableControlPlaneVPA is true", func() {
+			// given
+			iop := iopv1alpha1.IstioOperator{
+				Spec: iopv1alpha1.IstioOperatorSpec{
+					Components: &iopv1alpha1.IstioComponentSpec{
+						Pilot: &iopv1alpha1.ComponentSpec{
+							Kubernetes: &iopv1alpha1.KubernetesResources{
+								HpaSpec: &autoscalingv2.HorizontalPodAutoscalerSpec{
+									Metrics: []autoscalingv2.MetricSpec{
+										{
+											Type: autoscalingv2.ResourceMetricSourceType,
+											Resource: &autoscalingv2.ResourceMetricSource{
+												Name: corev1.ResourceCPU,
+												Target: autoscalingv2.MetricTarget{
+													Type:               autoscalingv2.UtilizationMetricType,
+													AverageUtilization: ptr.To(int32(80)),
+												},
+											},
+										},
+										{
+											Type: autoscalingv2.ResourceMetricSourceType,
+											Resource: &autoscalingv2.ResourceMetricSource{
+												Name: corev1.ResourceMemory,
+												Target: autoscalingv2.MetricTarget{
+													Type:               autoscalingv2.UtilizationMetricType,
+													AverageUtilization: ptr.To(int32(70)),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			}
+
+			istioCR := istiov1alpha2.Istio{
+				Spec: istiov1alpha2.IstioSpec{},
+			}
+
+			features := istiofeatures.IstioFeatures{EnableControlPlaneVPA: true}
+
+			// when
+			result, err := istioCR.MergeInto(iop, istiov1alpha2.WithFeatures(features))
+
+			// then
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(result.Spec.Components.Pilot.Kubernetes.HpaSpec.Metrics).To(HaveLen(1))
+			Expect(result.Spec.Components.Pilot.Kubernetes.HpaSpec.Metrics[0].Resource.Name).To(Equal(corev1.ResourceCPU))
+		})
+
+		It("should keep memory metrics in HPA when enableControlPlaneVPA is false", func() {
+			// given
+			iop := iopv1alpha1.IstioOperator{
+				Spec: iopv1alpha1.IstioOperatorSpec{
+					Components: &iopv1alpha1.IstioComponentSpec{
+						Pilot: &iopv1alpha1.ComponentSpec{
+							Kubernetes: &iopv1alpha1.KubernetesResources{
+								HpaSpec: &autoscalingv2.HorizontalPodAutoscalerSpec{
+									Metrics: []autoscalingv2.MetricSpec{
+										{
+											Type: autoscalingv2.ResourceMetricSourceType,
+											Resource: &autoscalingv2.ResourceMetricSource{
+												Name: corev1.ResourceCPU,
+												Target: autoscalingv2.MetricTarget{
+													Type:               autoscalingv2.UtilizationMetricType,
+													AverageUtilization: ptr.To(int32(80)),
+												},
+											},
+										},
+										{
+											Type: autoscalingv2.ResourceMetricSourceType,
+											Resource: &autoscalingv2.ResourceMetricSource{
+												Name: corev1.ResourceMemory,
+												Target: autoscalingv2.MetricTarget{
+													Type:               autoscalingv2.UtilizationMetricType,
+													AverageUtilization: ptr.To(int32(70)),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			}
+
+			istioCR := istiov1alpha2.Istio{
+				Spec: istiov1alpha2.IstioSpec{},
+			}
+
+			features := istiofeatures.IstioFeatures{EnableControlPlaneVPA: false}
+
+			// when
+			result, err := istioCR.MergeInto(iop, istiov1alpha2.WithFeatures(features))
+
+			// then
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(result.Spec.Components.Pilot.Kubernetes.HpaSpec.Metrics).To(HaveLen(2))
 		})
 	})
 

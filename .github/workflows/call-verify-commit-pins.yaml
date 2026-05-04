@@ -21,6 +21,7 @@ jobs:
             actions/upload-artifact
             actions/download-artifact
             actions/github-script
+            actions/upload-pages-artifact
             actions/configure-pages
             actions/deploy-pages
             kyma-project/test-infra

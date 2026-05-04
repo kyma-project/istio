@@ -1,5 +1,5 @@
 # Network Policies
-Learn about the network policies for the Istio module, enable the network policy support, and allow egress traffic to your workloads.
+Network policy support in the Istio module is disabled by default. Learn how to enable it, allow traffic to your workloads, and apply a deny-by-default policy without interrupting Istio traffic.
 
 ## Context
 To support secure-by-default configurations, the Istio module can create network policies in the `istio-system` and `kyma-system` namespaces. These policies restrict traffic to and from Istio components so that only the required baseline communication is allowed.
@@ -12,7 +12,7 @@ All module-managed policies use the following labels:
 
 Do not modify these resources manually. The module updates them automatically and overwrites any manual changes.
 
-## Networking Diagram
+### Networking Diagram
 
 The following diagram illustrates the allowed traffic flows between Istio components and user workloads when network policy support is enabled.
 
@@ -20,9 +20,9 @@ In the diagram, network policies are shown as the resources that traffic passes 
 
 ![Istio Module NetworkPolicies](../assets/network-policies-istio.svg)
 
-## List of Network Policies
+### List of Network Policies
 
-Review the network policies that the Istio module creates when network policy support is enabled.
+See the list of network policies that the Istio module creates when network policy support is enabled.
 
 <details>
 <summary>Show table</summary>
@@ -59,9 +59,7 @@ Review the network policies that the Istio module creates when network policy su
 
 ## Procedure
 
-1. Enable network policy support.
-
-    To enable support for network policies, set the flag `networkPoliciesEnabled: true` in the Istio custom resource. This setting is disabled by default.
+1. To enable support for network policies, set the flag `networkPoliciesEnabled: true` in the Istio custom resource. This setting is disabled by default.
 
     ```yaml
     apiVersion: operator.kyma-project.io/v1alpha2
@@ -75,7 +73,7 @@ Review the network policies that the Istio module creates when network policy su
 
     When the flag changes, Istio components are restarted, terminating existing TCP connections and enforcing the policies immediately.
 
-2. Enable egress from `istio-ingressgateway` to your workloads
+2. Enable egress from `istio-ingressgateway` to your workloads.
 
     Because the egress traffic from `istio-ingressgateway` to user workloads is restricted by default, you must take additional steps to allow traffic to your applications.
 
@@ -92,7 +90,7 @@ Review the network policies that the Istio module creates when network policy su
             networking.kyma-project.io/from-ingressgateway: allowed
     ```
 
-3. Enable egress traffic from your workloads to `istio-egressgateway`
+3. Enable egress traffic from your workloads to `istio-egressgateway`.
 
     In case you have `egressgateway` enabled and want to allow traffic from your workloads to `egressgateway`, add this label to the Pods: `networking.kyma-project.io/to-egressgateway: allowed`.
 
@@ -124,7 +122,7 @@ Review the network policies that the Istio module creates when network policy su
             networking.kyma-project.io/metrics-scraping: allowed
     ```
 
-5. [Optional] Apply a deny-by-default policy.
+5. Apply a deny-by-default policy.
 
     To isolate a workload's namespace with a deny-by-default policy, make sure to allow ingress from `istio-ingressgateway` in that policy.
     See an example NetworkPolicy resource allowing ingress from `istio-ingressgateway` to the workload:

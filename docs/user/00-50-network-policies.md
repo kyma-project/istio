@@ -1,5 +1,5 @@
 # Network Policies
-Network policy support in the Istio module is disabled by default. Learn how to enable it, allow traffic to your workloads, and apply a deny-by-default policy without interrupting Istio traffic.
+Network policy support in the Istio module is disabled by default. Learn how to enable the network policy support and allow egress traffic to your workloads.
 
 ## Context
 To support secure-by-default configurations, the Istio module can create network policies in the `istio-system` and `kyma-system` namespaces. These policies restrict traffic to and from Istio components so that only the required baseline communication is allowed.

@@ -10,6 +10,7 @@ export default [
     { text: 'Configure Observability for the Istio Service Mesh', link: './00-40-enable-istio-access-logs.md' },
     ] },
   { text: 'Istio Custom Resource', link: './04-00-istio-custom-resource' },
+  { text: 'Network Policies', link: './00-50-network-policies.md' },
   { text: 'Tutorials', link: './tutorials/README', collapsed: true, items: [
     { text: 'Expose Workloads Using oauth2-proxy', link: './tutorials/01-10-external-authorization-provider' },
     { text: 'Expose Workloads Using Gateway API', link: './tutorials/01-20-expose-httbin-gateway-api' },
@@ -22,7 +23,6 @@ export default [
   { text: 'Technical Reference', link: './technical-reference/README', collapsed: true, items: [
     { text: 'Istio Controller Parameters', link: './technical-reference/05-00-istio-controller-parameters' },
     { text: 'Istio Controller RBAC Configuration', link: './technical-reference/05-10-istio-controller-rbac' },
-    { text: 'Support for Network Policies', link: './technical-reference/05-20-support-for-network-policies' },
     { text: 'Alpha Istio Features', link: './00-45-istio-features-configmap.md' }
     ] },
   { text: 'Troubleshooting', link: './troubleshooting/README', collapsed: true, items: [

@@ -20,7 +20,7 @@ The following diagram illustrates the allowed traffic flows between Istio compon
 
 In the diagram, network policies are illustrated as the resources through which allowed traffic flows. In reality, a network policy is a custom resource that configures which traffic is allowed or denied, while the actual filtering is performed by the Istio module's components.
 
-![Istio Module NetworkPolicies](../../assets/network-policies-istio.svg)
+![Istio Module NetworkPolicies](../assets/network-policies-istio.svg)
 
 </details>
 

@@ -2,33 +2,31 @@
 Learn about the network policies for the Istio module, enable the network policy support, and allow egress traffic to your workloads.
 
 ## Context
-To enable secure-by-default practices, the Istio module allows creation of network policies in the `istio-system` and `kyma-system` namespaces. All module-managed policies are labeled with:
+To support secure-by-default configurations, the Istio module can create network policies in the `istio-system` and `kyma-system` namespaces. These policies restrict traffic to and from Istio components so that only the required baseline communication is allowed.
+This helps ensure that the Istio module's components continue to function even when a deny-by-default policy is applied at the cluster or namespace level.
+
+All module-managed policies use the following labels:
 
 - `kyma-project.io/module: istio`
 - `kyma-project.io/managed-by: kyma`
 
-Do not modify these resources, as they are automatically updated by the module. Any manual changes are overwritten.
+Do not modify these resources manually. The module updates them automatically and overwrites any manual changes.
 
-These policies restrict traffic to and from Istio components, ensuring that only necessary baseline communication is allowed.
-The policies make sure that in case a deny-by-default policy is applied at the cluster or namespace level,
-the Istio module's components still function properly.
-
-<details>
-<summary>Networking Diagram</summary>
+## Networking Diagram
 
 The following diagram illustrates the allowed traffic flows between Istio components and user workloads when network policy support is enabled.
 
-In the diagram, network policies are illustrated as the resources through which allowed traffic flows. In reality, a network policy is a custom resource that configures which traffic is allowed or denied, while the actual filtering is performed by the Istio module's components.
+In the diagram, network policies are shown as the resources that traffic passes through. In practice, a network policy is a custom resource that defines which traffic is allowed or denied, while the Istio module's components perform the actual filtering.
 
 ![Istio Module NetworkPolicies](../assets/network-policies-istio.svg)
 
-</details>
+## List of Network Policies
+
+Review the network policies that the Istio module creates when network policy support is enabled.
 
 <details>
-<summary>List of Network Policies</summary>
+<summary>Show table</summary>
 
-
-This table lists the network policies applied when support is enabled and the traffic they allow:
 
 | Component                  | Namespace      | Port    | Protocol  | Direction | Source/Destination                                                                                                                                                                                                                                            | Purpose                                                                                                       |
 |----------------------------|----------------|---------|-----------|-----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------|

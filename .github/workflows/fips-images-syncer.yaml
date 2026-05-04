@@ -98,3 +98,18 @@ jobs:
       context: .
       tags: ${{ needs.parse-images.outputs.ztunnel-fips-tag }}
 
+  slack_failed_notification:
+    name: Slack Notification
+    runs-on: ubuntu-latest
+    if: ${{ failure() }}
+    needs:
+      - build-istiod
+      - build-proxy
+      - build-cni
+      - build-ztunnel
+    steps:
+      - uses: actions/checkout@v6
+      - name: Notify
+        uses: ./.github/actions/slack-notification-failed-workflow
+        with:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

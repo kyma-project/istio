@@ -1,0 +1,115 @@
+name: FIPS Images Syncer
+
+permissions:
+  id-token: write # This is required by image-builder
+  contents: read # This is required by image-builder
+
+on:
+  push:
+    branches:
+      - main
+      - 'release-**'
+    paths:
+      - 'fips-images.yaml'
+
+jobs:
+  parse-images:
+    name: Parse images
+    runs-on: ubuntu-latest
+    outputs:
+      istio-pilot-fips-name: ${{ steps.parse.outputs.istio-pilot-fips-name }}
+      istio-pilot-fips-tag: ${{ steps.parse.outputs.istio-pilot-fips-tag }}
+      istio-pilot-fips-source: ${{ steps.parse.outputs.istio-pilot-fips-source }}
+      istio-install-cni-fips-name: ${{ steps.parse.outputs.istio-install-cni-fips-name }}
+      istio-install-cni-fips-tag: ${{ steps.parse.outputs.istio-install-cni-fips-tag }}
+      istio-install-cni-fips-source: ${{ steps.parse.outputs.istio-install-cni-fips-source }}
+      istio-proxy-fips-name: ${{ steps.parse.outputs.istio-proxy-fips-name }}
+      istio-proxy-fips-tag: ${{ steps.parse.outputs.istio-proxy-fips-tag }}
+      istio-proxy-fips-source: ${{ steps.parse.outputs.istio-proxy-fips-source }}
+      ztunnel-fips-name: ${{ steps.parse.outputs.ztunnel-fips-name }}
+      ztunnel-fips-tag: ${{ steps.parse.outputs.ztunnel-fips-tag }}
+      ztunnel-fips-source: ${{ steps.parse.outputs.ztunnel-fips-source }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Parse images
+        id: parse
+        shell: bash
+        run: |
+          for i in $(seq 0 $(( $(yq '.images | length' fips-images.yaml) - 1 ))); do
+            name=$(yq ".images[$i].target.name" fips-images.yaml)
+            tag=$(yq ".images[$i].target.tag" fips-images.yaml)
+            source=$(yq ".images[$i].source" fips-images.yaml)
+           # Uses basename to convert "external/istio/istio-pilot-fips" -> "istio-pilot-fips"
+            key=$(basename "${name}")
+            echo "${key}-name=${name}" >> "$GITHUB_OUTPUT"
+            echo "${key}-tag=${tag}" >> "$GITHUB_OUTPUT"
+            echo "${key}-source=${source}" >> "$GITHUB_OUTPUT"
+          done
+
+  build-istiod:
+    name: Build istiod image
+    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main
+    needs: parse-images
+    with:
+      name: ${{ needs.parse-images.outputs.istio-pilot-fips-name }}
+      use-restricted-registry: true
+      dockerfile: docker/fips.Dockerfile
+      build-args: |
+        SOURCE_IMAGE=${{ needs.parse-images.outputs.istio-pilot-fips-source }}
+      context: .
+      tags: ${{ needs.parse-images.outputs.istio-pilot-fips-tag }}
+
+  build-proxy:
+    name: Build proxy image
+    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main
+    needs: parse-images
+    with:
+      name: ${{ needs.parse-images.outputs.istio-proxy-fips-name }}
+      use-restricted-registry: true
+      dockerfile: docker/fips.Dockerfile
+      build-args: |
+        SOURCE_IMAGE=${{ needs.parse-images.outputs.istio-proxy-fips-source }}
+      context: .
+      tags: ${{ needs.parse-images.outputs.istio-proxy-fips-tag }}
+
+  build-cni:
+    name: Build CNI image
+    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main
+    needs: parse-images
+    with:
+      name: ${{ needs.parse-images.outputs.istio-install-cni-fips-name }}
+      use-restricted-registry: true
+      dockerfile: docker/fips.Dockerfile
+      build-args: |
+          SOURCE_IMAGE=${{ needs.parse-images.outputs.istio-install-cni-fips-source }}
+      context: .
+      tags: ${{ needs.parse-images.outputs.istio-install-cni-fips-tag }}
+
+  build-ztunnel:
+    name: Build ztunnel image
+    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main
+    needs: parse-images
+    with:
+      name: ${{ needs.parse-images.outputs.ztunnel-fips-name }}
+      use-restricted-registry: true
+      dockerfile: docker/fips.Dockerfile
+      build-args: |
+          SOURCE_IMAGE=${{ needs.parse-images.outputs.ztunnel-fips-source }}
+      context: .
+      tags: ${{ needs.parse-images.outputs.ztunnel-fips-tag }}
+
+  slack_failed_notification:
+    name: Slack Notification
+    runs-on: ubuntu-latest
+    if: ${{ failure() }}
+    needs:
+      - build-istiod
+      - build-proxy
+      - build-cni
+      - build-ztunnel
+    steps:
+      - uses: actions/checkout@v6
+      - name: Notify
+        uses: ./.github/actions/slack-notification-failed-workflow
+        with:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

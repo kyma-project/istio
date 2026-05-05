@@ -15,3 +15,4 @@ images:
     target:
       name: external/istio/ztunnel-fips
       tag: 1.28.6-1
+

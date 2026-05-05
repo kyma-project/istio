@@ -1,0 +1,17 @@
+images:
+  - source: "europe-docker.pkg.dev/kyma-project/restricted-prod/sap.com/istio-pilot-fips:1.28.6"
+    target:
+      name: external/istio/istio-pilot-fips
+      tag: 1.28.6-1
+  - source: "europe-docker.pkg.dev/kyma-project/restricted-prod/sap.com/istio-install-cni-fips:1.28.6"
+    target:
+      name: external/istio/istio-install-cni-fips
+      tag: 1.28.6-1
+  - source: "europe-docker.pkg.dev/kyma-project/restricted-prod/sap.com/istio-proxy-fips:1.28.6"
+    target:
+      name: external/istio/istio-proxy-fips
+      tag: 1.28.6-1
+  - source: "europe-docker.pkg.dev/kyma-project/restricted-prod/sap.com/ztunnel-fips:1.28.6"
+    target:
+      name: external/istio/ztunnel-fips
+      tag: 1.28.6-1

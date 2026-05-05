@@ -12,9 +12,6 @@ OS_TYPE ?= $(shell uname)
 
 VERSION ?= dev
 
-# ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
-ENVTEST_K8S_VERSION = 1.31.0
-
 # Istio install binary path for running the installation in separate process
 ISTIO_INSTALL_BIN_PATH = ./bin/istio_install
 
@@ -47,7 +44,7 @@ TARGET_BRANCH ?= ""
 
 # The help target prints out all targets with their descriptions organized
 # beneath their categories. The categories are represented by '##@' and the
-# target descriptions by '##'. The awk commands is responsible for reading the
+# target descriptions by '##'. The awk command is responsible for reading the
 # entire set of makefiles included in this invocation, looking for lines of the
 # file as xyz: ## something, and then pretty-format the target and help. Then,
 # if there's a line with ##@ something, that gets pretty-printed as a category.
@@ -59,7 +56,6 @@ TARGET_BRANCH ?= ""
 .PHONY: help
 help: ## Display this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
-
 
 ##@ Development
 
@@ -90,23 +86,23 @@ vet: ## Run go vet against code.
 	go vet ./...
 
 .PHONY: test
-test: manifests generate fmt vet envtest ## Run tests.
-	KUBEBUILDER_CONTROLPLANE_START_TIMEOUT=2m KUBEBUILDER_CONTROLPLANE_STOP_TIMEOUT=2m KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test $(shell go list ./... | grep -v /tests/integration | grep -v /tests/performance-grpc | grep -v /tests/e2e) -coverprofile cover.out
+test: manifests generate fmt vet setup-envtest ## Run tests.
+	KUBEBUILDER_CONTROLPLANE_START_TIMEOUT=2m KUBEBUILDER_CONTROLPLANE_STOP_TIMEOUT=2m KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test $$(go list ./... | grep -v /tests/integration | grep -v /tests/performance-grpc | grep -v /tests/e2e) -coverprofile cover.out
 
 .PHONY: test-experimental-tag
-test-experimental-tag: manifests generate fmt vet envtest ## Run tests.
-	KUBEBUILDER_CONTROLPLANE_START_TIMEOUT=2m KUBEBUILDER_CONTROLPLANE_STOP_TIMEOUT=2m KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test -tags experimental $(shell go list ./... | grep -v /tests/integration | grep -v /tests/performance-grpc | grep -v /tests/e2e) -coverprofile cover.out
+test-experimental-tag: manifests generate fmt vet setup-envtest ## Run tests.
+	KUBEBUILDER_CONTROLPLANE_START_TIMEOUT=2m KUBEBUILDER_CONTROLPLANE_STOP_TIMEOUT=2m KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test -tags experimental $$(go list ./... | grep -v /tests/integration | grep -v /tests/performance-grpc | grep -v /tests/e2e) -coverprofile cover.out
 
 ##@ Build
 
 .PHONY: build
 build: generate fmt vet ## Build manager binary.
-	go build -o bin/manager main.go
+	go build -o bin/manager cmd/main.go
 	go build -o $(ISTIO_INSTALL_BIN_PATH) cmd/istio-install/main.go
 
 .PHONY: run
 run: manifests install build create-kyma-system-ns ## Run a controller from your host.
-	ISTIO_INSTALL_BIN_PATH=$(ISTIO_INSTALL_BIN_PATH) go run ./main.go
+	ISTIO_INSTALL_BIN_PATH=$(ISTIO_INSTALL_BIN_PATH) go run ./cmd/main.go
 
 TARGET_OS ?= linux
 TARGET_ARCH ?= amd64
@@ -146,11 +142,13 @@ create-kyma-system-ns:
 
 .PHONY: install
 install: manifests kustomize module-version ## Install CRDs into the K8s cluster specified in ~/.kube/config.
-	$(KUSTOMIZE) build config/crd | kubectl apply -f -
+	@out="$$( $(KUSTOMIZE) build config/crd 2>/dev/null || true )"; \
+	if [ -n "$$out" ]; then echo "$$out" | kubectl apply -f -; else echo "No CRDs to install; skipping."; fi
 
 .PHONY: uninstall
 uninstall: manifests kustomize module-version ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
-	$(KUSTOMIZE) build config/crd | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
+	@out="$$( $(KUSTOMIZE) build config/crd 2>/dev/null || true )"; \
+	if [ -n "$$out" ]; then echo "$$out" | kubectl delete --ignore-not-found=$(ignore-not-found) -f -; else echo "No CRDs to delete; skipping."; fi
 
 .PHONY: deploy
 deploy: create-kyma-system-ns manifests kustomize module-version ## Deploy controller to the K8s cluster specified in ~/.kube/config.
@@ -163,10 +161,10 @@ endif
 
 
 .PHONY: undeploy
-undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
+undeploy: kustomize ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
 	$(KUSTOMIZE) build config/default | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
 
-##@ Build Dependencies
+##@ Dependencies
 
 ## Location to install dependencies to
 LOCALBIN ?= $(shell pwd)/bin
@@ -177,127 +175,156 @@ $(LOCALBIN):
 KUSTOMIZE ?= $(LOCALBIN)/kustomize
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
+GOTESTSUM ?= $(LOCALBIN)/gotestsum
 
 ## Tool Versions
-KUSTOMIZE_VERSION ?= v5.5.0
+KUSTOMIZE_VERSION ?= v5.7.1
 CONTROLLER_TOOLS_VERSION ?= v0.19.0
+ENVTEST_VERSION ?= latest
+#ENVTEST_K8S_VERSION is the version of Kubernetes to use for setting up ENVTEST binaries (i.e. 1.31)
+ENVTEST_K8S_VERSION ?= $(shell go list -m -f "{{ .Version }}" k8s.io/api | awk -F'[v.]' '{printf "1.%d", $$3}')
 
-KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
 $(KUSTOMIZE): $(LOCALBIN)
-	test -s $(LOCALBIN)/kustomize || { curl -s $(KUSTOMIZE_INSTALL_SCRIPT) | bash -s -- $(subst v,,$(KUSTOMIZE_VERSION)) $(LOCALBIN); }
+	$(call go-install-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v5,$(KUSTOMIZE_VERSION))
 
 .PHONY: controller-gen
 controller-gen: $(CONTROLLER_GEN) ## Download controller-gen locally if necessary.
 $(CONTROLLER_GEN): $(LOCALBIN)
-	test -s $(LOCALBIN)/controller-gen || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_TOOLS_VERSION)
+	$(call go-install-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen,$(CONTROLLER_TOOLS_VERSION))
 
 .PHONY: gotestsum
 gotestsum:
-	test -s $(LOCALBIN)/gotestsum || GOBIN=$(LOCALBIN) go install gotest.tools/gotestsum@latest
-  
+	$(call go-install-tool,$(GOTESTSUM),gotest.tools/gotestsum,latest)  
+
+.PHONY: setup-envtest
+setup-envtest: envtest ## Download the binaries required for ENVTEST in the local bin directory.
+	@echo "Setting up envtest binaries for Kubernetes version $(ENVTEST_K8S_VERSION)..."
+	@$(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path || { \
+		echo "Error: Failed to set up envtest binaries for version $(ENVTEST_K8S_VERSION)."; \
+		exit 1; \
+	}
+
 .PHONY: envtest
-envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
+envtest: $(ENVTEST) ## Download setup-envtest locally if necessary.
 $(ENVTEST): $(LOCALBIN)
-	test -s $(LOCALBIN)/setup-envtest || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+	$(call go-install-tool,$(ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest,$(ENVTEST_VERSION))
+
+# go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
+# $1 - target path with name of binary
+# $2 - package url which can be installed
+# $3 - specific version of package
+define go-install-tool
+@[ -f "$(1)-$(3)" ] && [ "$$(readlink -- "$(1)" 2>/dev/null)" = "$(1)-$(3)" ] || { \
+set -e; \
+package=$(2)@$(3) ;\
+echo "Downloading $${package}" ;\
+rm -f $(1) ;\
+GOBIN=$(LOCALBIN) go install $${package} ;\
+mv $(1) $(1)-$(3) ;\
+} ;\
+ln -sf $$(realpath $(1)-$(3)) $(1)
+endef
+
+##@ E2E Tests
 
 .PHONY: evaluation-e2e-test
 evaluation-e2e-test: gotestsum deploy
 	@echo "Running e2e evaluation settings tests"
 	go clean -testcache
-	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/evaluation/..." --junitfile "./tests/e2e/tests/evaluation/report.xml" -- -timeout 20m
+	$(GOTESTSUM) --format testname --rerun-fails --packages="./tests/e2e/tests/evaluation/..." --junitfile "./tests/e2e/tests/evaluation/report.xml" -- -timeout 20m
 	@echo "E2E tests completed successfully"
 
 .PHONY: configuration-e2e-test
 configuration-e2e-test: gotestsum deploy
 	@echo "Running e2e configuration tests"
 	go clean -testcache
-	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/configuration/..." --junitfile "./tests/e2e/tests/configuration/report.xml" -- -timeout 20m
+	$(GOTESTSUM) --format testname --rerun-fails --packages="./tests/e2e/tests/configuration/..." --junitfile "./tests/e2e/tests/configuration/report.xml" -- -timeout 20m
 	@echo "E2E tests completed successfully"
 
 .PHONY: mesh-communication-e2e-test
 mesh-communication-e2e-test: gotestsum deploy
 	@echo "Running e2e mesh communication tests"
 	go clean -testcache
-	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/mesh_communication/..." --junitfile "./tests/e2e/tests/mesh_communication/report.xml" -- -timeout 20m
+	$(GOTESTSUM) --format testname --rerun-fails --packages="./tests/e2e/tests/mesh_communication/..." --junitfile "./tests/e2e/tests/mesh_communication/report.xml" -- -timeout 20m
 	@echo "E2E tests completed successfully"
 
 .PHONY: networkpolicy-e2e-test
 networkpolicy-e2e-test: gotestsum deploy
 	@echo "Running e2e NetworkPolicy tests"
 	go clean -testcache
-	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/networkpolicy/..." --junitfile "./tests/e2e/tests/networkpolicy/report.xml" -- -timeout 30m
+	$(GOTESTSUM) --format testname --rerun-fails --packages="./tests/e2e/tests/networkpolicy/..." --junitfile "./tests/e2e/tests/networkpolicy/report.xml" -- -timeout 30m
 	@echo "E2E tests completed successfully"
 
 .PHONY: installation-e2e-test
 installation-e2e-test: gotestsum deploy
 	@echo "Running e2e installation tests"
 	go clean -testcache
-	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/installation/..." --junitfile "./tests/e2e/tests/installation/report.xml" -- -timeout 20m
+	$(GOTESTSUM) --format testname --rerun-fails --packages="./tests/e2e/tests/installation/..." --junitfile "./tests/e2e/tests/installation/report.xml" -- -timeout 20m
 	@echo "E2E tests completed successfully"
 
 .PHONY: observability-e2e-test
 observability-e2e-test: gotestsum deploy
 	@echo "Running e2e tests for observability"
 	go clean -testcache
-	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/observability/..." --junitfile "./tests/e2e/tests/observability/report.xml" -- -timeout 20m
+	$(GOTESTSUM) --format testname --rerun-fails --packages="./tests/e2e/tests/observability/..." --junitfile "./tests/e2e/tests/observability/report.xml" -- -timeout 20m
 	@echo "E2E tests completed successfully"
 
 .PHONY: ext-auth-e2e-test
 ext-auth-e2e-test: gotestsum deploy
 	@echo "Running e2e tests for ext auth"
 	go clean -testcache
-	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/extauth/..." --junitfile "./tests/e2e/tests/extauth/report.xml" -- -timeout 20m
+	$(GOTESTSUM) --format testname --rerun-fails --packages="./tests/e2e/tests/extauth/..." --junitfile "./tests/e2e/tests/extauth/report.xml" -- -timeout 20m
 	@echo "E2E tests completed successfully"
 
 .PHONY: egress-e2e-test
 egress-e2e-test: gotestsum deploy
 	@echo "Running e2e tests for egress"
 	go clean -testcache
-	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/egress/..." --junitfile "./tests/e2e/tests/egress/report.xml" -- -timeout 20m
+	$(GOTESTSUM) --format testname --rerun-fails --packages="./tests/e2e/tests/egress/..." --junitfile "./tests/e2e/tests/egress/report.xml" -- -timeout 20m
 	@echo "E2E tests completed successfully"
 
 .PHONY: istio-smoke-test
 istio-smoke-test: gotestsum deploy
 	@echo "Running smoke test"
 	go clean -testcache
-	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/smoke_test/..." --junitfile "./tests/e2e/tests/smoke_test/report.xml" -- -timeout 20m
+	$(GOTESTSUM) --format testname --rerun-fails --packages="./tests/e2e/tests/smoke_test/..." --junitfile "./tests/e2e/tests/smoke_test/report.xml" -- -timeout 20m
 	@echo "Smoke test completed successfully"
 
 .PHONY: ambient-e2e-test
 ambient-e2e-test: gotestsum deploy
 	@echo "Running ambient e2e tests"
 	go clean -testcache
-	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/ambient/..." --junitfile "./tests/e2e/tests/ambient/report.xml" -- -timeout 20m
+	$(GOTESTSUM) --format testname --rerun-fails --packages="./tests/e2e/tests/ambient/..." --junitfile "./tests/e2e/tests/ambient/report.xml" -- -timeout 20m
 	@echo "Ambient E2E tests completed successfully"
 
 .PHONY: upgrade-test
 upgrade-test: generate-upgrade-test-manifest deploy-latest-release gotestsum
 	@echo "Running e2e controller upgrade tests"
 	go clean -testcache
-	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/upgrade/..." --junitfile "./tests/e2e/tests/upgrade/report.xml" -- -timeout 20m
+	$(GOTESTSUM) --format testname --rerun-fails --packages="./tests/e2e/tests/upgrade/..." --junitfile "./tests/e2e/tests/upgrade/report.xml" -- -timeout 20m
 	@echo "E2E tests completed successfully"
 
 .PHONY: xff-header-e2e-test
 xff-header-e2e-test: gotestsum deploy
 	@echo "Running e2e tests for XFF header"
 	go clean -testcache
-	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/xff_header/..." --junitfile "./tests/e2e/tests/xff_header/report.xml" -- -timeout 20m
+	$(GOTESTSUM) --format testname --rerun-fails --packages="./tests/e2e/tests/xff_header/..." --junitfile "./tests/e2e/tests/xff_header/report.xml" -- -timeout 20m
 	@echo "E2E tests completed successfully"
 
 .PHONY: trust-domain-e2e-test
 trust-domain-e2e-test: gotestsum deploy
 	@echo "Running e2e tests for trust domain"
 	go clean -testcache
-	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/trustdomain/..." --junitfile "./tests/e2e/tests/trustdomain/report.xml" -- -timeout 20m
+	$(GOTESTSUM) --format testname --rerun-fails --packages="./tests/e2e/tests/trustdomain/..." --junitfile "./tests/e2e/tests/trustdomain/report.xml" -- -timeout 20m
 	@echo "E2E tests completed successfully"
 
 .PHONY: dns-proxying-e2e-test
 dns-proxying-e2e-test: gotestsum deploy
 	@echo "Running e2e tests for DNS proxying"
 	go clean -testcache
-	$(LOCALBIN)/gotestsum --format testname --rerun-fails --packages="./tests/e2e/tests/dnsproxying/..." --junitfile "./tests/e2e/tests/dnsproxying/report.xml" -- -timeout 20m
+	$(GOTESTSUM) --format testname --rerun-fails --packages="./tests/e2e/tests/dnsproxying/..." --junitfile "./tests/e2e/tests/dnsproxying/report.xml" -- -timeout 20m
 	@echo "E2E tests completed successfully"
 
 ##@ Module

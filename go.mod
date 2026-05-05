@@ -26,9 +26,9 @@ require (
 	google.golang.org/protobuf v1.36.11
 	gopkg.in/inf.v0 v0.9.1
 	gopkg.in/yaml.v3 v3.0.1
-	istio.io/api v1.28.5
-	istio.io/client-go v1.28.5
-	istio.io/istio v0.0.0-20260306174229-7da666217518
+	istio.io/api v1.28.6-0.20260409143200-2af9c4a3d7d9
+	istio.io/client-go v1.28.6-0.20260409143900-aad2ddc68535
+	istio.io/istio v0.0.0-20260410103559-db606cedf03c
 	k8s.io/api v0.34.2
 	k8s.io/apiextensions-apiserver v0.34.2
 	k8s.io/apimachinery v0.34.2

@@ -24,6 +24,7 @@ import (
 	"github.com/kyma-project/istio/operator/internal/images"
 	"github.com/kyma-project/istio/operator/internal/memlimit"
 	istiocrmetrics "github.com/kyma-project/istio/operator/internal/metrics"
+	istioLogger "github.com/kyma-project/istio/operator/pkg/logger"
 
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	v1 "k8s.io/api/apps/v1"
@@ -59,6 +60,7 @@ const (
 	failureBaseDelayDefault       = 1 * time.Second
 	failureMaxDelayDefault        = 1000 * time.Second
 	reconciliationIntervalDefault = 10 * time.Hour
+	logLevelDefault               = "info"
 
 	WebhookServiceDefaultPort = 9443
 )
@@ -69,13 +71,14 @@ var (
 )
 
 type FlagVar struct {
-	metricsAddr            string
 	enableLeaderElection   bool
-	probeAddr              string
 	failureBaseDelay       time.Duration
 	failureMaxDelay        time.Duration
-	rateLimiterFrequency   int
+	logLevel               string
+	metricsAddr            string
+	probeAddr              string
 	rateLimiterBurst       int
+	rateLimiterFrequency   int
 	reconciliationInterval time.Duration
 }
 
@@ -131,7 +134,12 @@ func main() {
 	}
 
 	crMetrics := istiocrmetrics.NewMetrics()
-	if err = controllers.NewController(mgr, flagVar.reconciliationInterval, crMetrics, *istioImage).SetupWithManager(mgr, rateLimiter); err != nil {
+	if err = controllers.NewController(mgr, controllers.ControllerOptions{
+		ReconciliationInterval: flagVar.reconciliationInterval,
+		CRMetrics:              crMetrics,
+		IstioImages:            *istioImage,
+		LogLevel:               istioLogger.NewLogLevel(flagVar.logLevel),
+	}).SetupWithManager(mgr, rateLimiter); err != nil {
 		setupLog.Error(err, "Unable to create controller", "controller", "Istio")
 		os.Exit(1)
 	}
@@ -202,5 +210,7 @@ func defineFlagVar() *FlagVar {
 		"Indicates the failure max delay.")
 	flag.DurationVar(&flagVar.reconciliationInterval, "reconciliation-interval", reconciliationIntervalDefault,
 		"Indicates the time based reconciliation interval.")
+	flag.StringVar(&flagVar.logLevel, "log-level", logLevelDefault,
+		"Indicates the log level for the controller. Supported values are: debug, info, and trace.")
 	return flagVar
 }

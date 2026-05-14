@@ -1,4 +1,4 @@
-# Network Policies
+# Manage Network Policies
 Network policy support in the Istio module is disabled by default. Learn how to enable the network policy support and allow egress traffic to your workloads.
 
 ## Context

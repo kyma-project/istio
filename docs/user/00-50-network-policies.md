@@ -89,7 +89,7 @@ See the list of network policies that the Istio module creates when network poli
 
 3. Enable egress traffic from your workloads to `istio-egressgateway`.
 
-    If you have `egressgateway` enabled and want to allow traffic from your workloads to `egressgateway`, add the label to the Pods: `networking.kyma-project.io/to-egressgateway: allowed`. For details, see [Sending Requests Using Istio Egress Gateway](../tutorials/01-50-send-requests-using-egress.md)
+    If you have `egressgateway` enabled and want to allow traffic from your workloads to `egressgateway`, add the label to the Pods: `networking.kyma-project.io/to-egressgateway: allowed`. For details, see [Sending Requests Using Istio Egress Gateway](tutorials/01-50-send-requests-using-egress.md)
 
 
     See the following example workload template snippet:

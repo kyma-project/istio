@@ -1,5 +1,5 @@
 /*
-Copyright 2022.
+Copyright 2026.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -177,11 +177,11 @@ type IstioSpec struct {
 	NetworkPoliciesEnabled bool `json:"networkPoliciesEnabled,omitempty"`
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:resource:categories={kyma-modules,kyma-istio}
-//+kubebuilder:subresource:status
-//+kubebuilder:printcolumn:JSONPath=".status.state",name="State",type="string"
-//+kubebuilder:storageversion
+// +kubebuilder:object:root=true
+// +kubebuilder:resource:categories={kyma-modules,kyma-istio}
+// +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:JSONPath=".status.state",name="State",type="string"
+// +kubebuilder:storageversion
 
 // Contains the Istio custom resource's specification and its current status.
 type Istio struct {
@@ -194,9 +194,9 @@ type Istio struct {
 	Status IstioStatus `json:"status,omitempty"`
 }
 
-//+kubebuilder:object:root=true
+// +kubebuilder:object:root=true
 
-// Contains a list of Istios.
+// IstioList contains a list of Istios.
 type IstioList struct {
 	metav1.TypeMeta `        json:",inline"`
 	metav1.ListMeta `        json:"metadata,omitempty"`

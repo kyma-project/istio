@@ -1,4 +1,4 @@
-package controllers
+package controller
 
 import (
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"

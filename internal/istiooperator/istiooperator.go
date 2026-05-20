@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/coreos/go-semver/semver"
+	"github.com/go-logr/logr"
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
 	"sigs.k8s.io/yaml"
 
@@ -61,11 +62,13 @@ type Merger interface {
 
 type IstioMerger struct {
 	workingDir string
+	log        logr.Logger
 }
 
-func NewDefaultIstioMerger() IstioMerger {
+func NewDefaultIstioMerger(l logr.Logger) IstioMerger {
 	return IstioMerger{
 		workingDir: "/tmp",
+		log:        l,
 	}
 }
 

@@ -1,6 +1,6 @@
 //go:build !experimental
 
-package controllers
+package controller
 
 import (
 	"github.com/pkg/errors"

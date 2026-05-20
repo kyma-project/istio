@@ -150,6 +150,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ needs.compute-version.outputs.tag }}
         run: |
+          cp config/samples/operator_v1alpha2_istio.yaml config/samples/istio-default-cr.yaml 
           IMG="${IMAGE_NAME}:${TAG}" VERSION="${TAG}" make generate-manifests
           gh release upload "${TAG}" istio-manager.yaml
-          gh release upload "${TAG}" config/samples/operator_v1alpha2_istio.yaml#istio-default-cr.yaml
+          gh release upload "${TAG}" config/samples/istio-default-cr.yaml

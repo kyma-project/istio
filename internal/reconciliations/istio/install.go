@@ -68,6 +68,7 @@ func installIstio(ctx context.Context, args installArgs) (istiooperator.IstioIma
 	if err != nil {
 		return istioImageVersion, describederrors.NewDescribedError(err, "Could not determine cluster provider")
 	}
+	ctrl.Log.Info("Detected cluster provider", "provider", clusterProvider)
 
 	clusterConfiguration, err := clusterconfig.EvaluateClusterConfiguration(ctx, k8sClient, clusterProvider)
 	if err != nil {

@@ -199,6 +199,8 @@ func awsConfig(ctx context.Context, k8sClient client.Client) (ClusterConfigurati
 
 func EvaluateClusterConfiguration(ctx context.Context, k8sClient client.Client, clusterProvider string) (ClusterConfiguration, error) {
 	flavour, err := DiscoverClusterFlavour(ctx, k8sClient)
+	ctrl.Log.Info("Discovered cluster flavour", "flavour", flavour)
+
 	if err != nil {
 		return ClusterConfiguration{}, err
 	}
@@ -262,7 +264,7 @@ func DiscoverClusterFlavour(ctx context.Context, k8sClient client.Client) (Clust
 	if err != nil {
 		return Unknown, err
 	}
-	matcherGardener, err := regexp.Compile(`^Garden Linux \d+.\d+$`)
+	matcherGardener, err := regexp.Compile(`^Garden\s+Linux.*`)
 	if err != nil {
 		return Unknown, err
 	}

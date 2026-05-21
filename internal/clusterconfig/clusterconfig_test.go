@@ -19,9 +19,11 @@ import (
 )
 
 const (
-	k3sMockKubeletVersion string = "v1.26.6+k3s1"
-	gkeMockKubeletVersion string = "v1.30.6-gke.1125000"
-	gardenerMockOSImage   string = "Garden Linux 12.04"
+	k3sMockKubeletVersion             string = "v1.26.6+k3s1"
+	gkeMockKubeletVersion             string = "v1.30.6-gke.1125000"
+	gardenerMockOSImageOldScheme      string = "Garden Linux 1877.10"
+	gardenerMockOSImageNewScheme      string = "Garden Linux 2150.2.0"
+	gardenerMockOSImageWithoutVersion string = "Garden Linux"
 )
 
 var _ = Describe("GetClusterProvider", func() {
@@ -248,16 +250,70 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 	})
 
 	Context("Gardener OpenStack", func() {
-		It("should set istio-ingressgateway LoadBalancer service annotation value to Gardener OpenStack configuration", func() {
+		It("should set istio-ingressgateway LoadBalancer service annotation value to Gardener OpenStack configuration with old Gardener versioning scheme", func() {
 			//given
 			gardenerNode := corev1.Node{
 				ObjectMeta: v1.ObjectMeta{
-					Name: "Garden Linux 1.23",
+					Name: "shoot--kyma-test--abcd1234-cpu-worker-0-z1-abcde-12345",
 				},
-				Spec: corev1.NodeSpec{ProviderID: "openstack://example"},
+				Spec: corev1.NodeSpec{ProviderID: "openstack:///abcd1234-ab12-cd34-ef56-abcdef123456"},
 				Status: corev1.NodeStatus{
 					NodeInfo: corev1.NodeSystemInfo{
-						OSImage: gardenerMockOSImage,
+						OSImage: gardenerMockOSImageOldScheme,
+					},
+				},
+			}
+
+			client := createFakeClient(&gardenerNode)
+			provider, _ := clusterconfig.GetClusterProvider(context.Background(), client)
+
+			//when
+			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client, provider)
+
+			//then
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(config).To(Equal(clusterconfig.OpenStackLBProxyProtocolConfig))
+		})
+	})
+
+	Context("Gardener OpenStack", func() {
+		It("should set istio-ingressgateway LoadBalancer service annotation value to Gardener OpenStack configuration with new Gardener versioning scheme", func() {
+			//given
+			gardenerNode := corev1.Node{
+				ObjectMeta: v1.ObjectMeta{
+					Name: "shoot--kyma-test--abcd1234-cpu-worker-0-z1-abcde-12345",
+				},
+				Spec: corev1.NodeSpec{ProviderID: "openstack:///abcd1234-ab12-cd34-ef56-abcdef123456"},
+				Status: corev1.NodeStatus{
+					NodeInfo: corev1.NodeSystemInfo{
+						OSImage: gardenerMockOSImageNewScheme,
+					},
+				},
+			}
+
+			client := createFakeClient(&gardenerNode)
+			provider, _ := clusterconfig.GetClusterProvider(context.Background(), client)
+
+			//when
+			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client, provider)
+
+			//then
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(config).To(Equal(clusterconfig.OpenStackLBProxyProtocolConfig))
+		})
+	})
+
+	Context("Gardener OpenStack", func() {
+		It("should set istio-ingressgateway LoadBalancer service annotation value to Gardener OpenStack configuration without Garden Linux version", func() {
+			//given
+			gardenerNode := corev1.Node{
+				ObjectMeta: v1.ObjectMeta{
+					Name: "shoot--kyma-test--abcd1234-cpu-worker-0-z1-abcde-12345",
+				},
+				Spec: corev1.NodeSpec{ProviderID: "openstack:///abcd1234-ab12-cd34-ef56-abcdef123456"},
+				Status: corev1.NodeStatus{
+					NodeInfo: corev1.NodeSystemInfo{
+						OSImage: gardenerMockOSImageWithoutVersion,
 					},
 				},
 			}
@@ -279,12 +335,12 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			//given
 			gardenerNode := corev1.Node{
 				ObjectMeta: v1.ObjectMeta{
-					Name: "Garden Linux 1.23",
+					Name: "shoot--kyma-test--abcd1234-cpu-worker-0-z1-abcde-12345",
 				},
 				Spec: corev1.NodeSpec{ProviderID: "aws://example"},
 				Status: corev1.NodeStatus{
 					NodeInfo: corev1.NodeSystemInfo{
-						OSImage: gardenerMockOSImage,
+						OSImage: gardenerMockOSImageNewScheme,
 					},
 				},
 			}
@@ -441,7 +497,7 @@ func createKymaRuntimeConfigWithDualStack(enabled bool) *corev1.ConfigMap {
 	}
 	detailsBytes, _ := yaml.Marshal(details)
 
-	return new(corev1.ConfigMap{
+	return &corev1.ConfigMap{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      "kyma-provisioning-info",
 			Namespace: "kyma-system",
@@ -449,5 +505,5 @@ func createKymaRuntimeConfigWithDualStack(enabled bool) *corev1.ConfigMap {
 		Data: map[string]string{
 			"details": string(detailsBytes),
 		},
-	})
+	}
 }

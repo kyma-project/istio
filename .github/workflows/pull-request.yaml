@@ -136,7 +136,7 @@ jobs:
       - uses: ./.github/actions/e2e-test-k3d
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TARGET_BRANCH: ${{ github.ref_name }}
+          TARGET_BRANCH: ${{ github.base_ref }}
         with:
           test_make_target: "istio-upgrade-integration-test"
           operator-version: ${{ needs.get-image.outputs.operator_version }}
@@ -246,7 +246,7 @@ jobs:
       - uses: ./.github/actions/e2e-test-k3d
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TARGET_BRANCH: ${{ github.ref_name }}
+          TARGET_BRANCH: ${{ github.base_ref }}
         with:
           test_make_target: "upgrade-test"
           operator-version: ${{ needs.get-image.outputs.operator_version }}

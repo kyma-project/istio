@@ -1,6 +1,6 @@
 images:
   - source: "istio/pilot:1.28.7-distroless"
-  - source: "istio/proxyv2:1.28.37-distroless"
+  - source: "istio/proxyv2:1.28.7-distroless"
   - source: "istio/install-cni:1.28.7-distroless"
   - source: "istio/ztunnel:1.28.7-distroless"
   - source: "kennethreitz/httpbin:latest"

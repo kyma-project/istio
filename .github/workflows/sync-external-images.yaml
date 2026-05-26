@@ -3,12 +3,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - "external-images.yaml"
-  pull_request_target:
-    types: [ opened, edited, synchronize, reopened, ready_for_review ]
-    branches:
-      - main
       - 'release-**'
     paths:
       - "external-images.yaml"

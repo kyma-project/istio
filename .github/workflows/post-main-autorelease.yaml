@@ -1,0 +1,39 @@
+name: Post Main Autorelease
+
+permissions:
+  id-token: write
+  contents: write
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  build-image:
+    name: Build manager image
+    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main
+    with:
+      name: istio/main/istio-manager
+      dockerfile: Dockerfile
+      context: .
+      build-args: |
+        VERSION=main
+      tags: main
+
+  build-image-experimental:
+    name: Build manager image - experimental
+    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main
+    with:
+      name: istio/main/istio-manager
+      dockerfile: Dockerfile
+      context: .
+      build-args: |
+        VERSION=main-experimental
+        GO_BUILD_TAGS=experimental
+      tags: main-experimental

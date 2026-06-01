@@ -4,11 +4,12 @@ import (
 	"context"
 	"testing"
 
-	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 )
 
 // Load Balancer Annotation Tests
@@ -157,6 +158,7 @@ func TestEnvoyFilterDecision_AWS_NLB_IPv4(t *testing.T) {
 	require.NoError(t, err)
 
 	// Then: EnvoyFilter should be DELETED (NLB IPv4-only uses DSR, no proxy protocol needed)
+	// TODO: here should be implemented method which will return clear decision if EnvoyFilter should be created
 	shouldDeleteEnvoyFilter := shouldUseNLB && !isDualStack
 	assert.True(t, shouldDeleteEnvoyFilter, "NLB IPv4-only should DELETE EnvoyFilter (no proxy protocol needed)")
 }
@@ -175,6 +177,7 @@ func TestEnvoyFilterDecision_AWS_NLB_DualStack(t *testing.T) {
 	isDualStack := true
 
 	// Then: EnvoyFilter should be CREATED (NLB dual-stack needs proxy protocol)
+	// TODO: here should be implemented method which will return clear decision if EnvoyFilter should be created
 	shouldDeleteEnvoyFilter := shouldUseNLB && !isDualStack
 	assert.False(t, shouldDeleteEnvoyFilter, "NLB dual-stack should CREATE EnvoyFilter (proxy protocol needed)")
 }
@@ -198,6 +201,7 @@ func TestEnvoyFilterDecision_AWS_LegacyELB(t *testing.T) {
 	require.NoError(t, err)
 
 	// Then: EnvoyFilter should be CREATED (ELB always needs proxy protocol)
+	// TODO: here should be implemented method which will return clear decision if EnvoyFilter should be created
 	shouldDeleteEnvoyFilter := shouldUseNLB && !isDualStack
 	assert.False(t, shouldDeleteEnvoyFilter, "Legacy ELB should CREATE EnvoyFilter (proxy protocol needed)")
 }
@@ -212,6 +216,7 @@ func TestEnvoyFilterDecision_OpenStack(t *testing.T) {
 	require.NoError(t, err)
 
 	// Then: EnvoyFilter should be CREATED for OpenStack
+	// TODO: here should be implemented method which will return clear decision if EnvoyFilter should be created
 	shouldDeleteEnvoyFilter := false // OpenStack always creates EnvoyFilter
 	assert.False(t, shouldDeleteEnvoyFilter, "OpenStack should CREATE EnvoyFilter (proxy protocol v1 needed)")
 	assert.Equal(t, clusterconfig.Openstack, provider)
@@ -226,6 +231,7 @@ func TestEnvoyFilterDecision_GKE(t *testing.T) {
 	provider, err := clusterconfig.GetClusterProvider(context.Background(), testClient)
 	require.NoError(t, err)
 
+	// TODO: here should be implemented method which will return clear decision if EnvoyFilter should be created
 	// Then: No EnvoyFilter logic for GKE (returns "other" provider)
 	assert.Equal(t, clusterconfig.Other, provider, "GKE returns 'other' provider")
 	// Logic: getResources returns early for non-AWS/non-OpenStack, no EnvoyFilter added
@@ -240,6 +246,7 @@ func TestEnvoyFilterDecision_K3d(t *testing.T) {
 	provider, err := clusterconfig.GetClusterProvider(context.Background(), testClient)
 	require.NoError(t, err)
 
+	// TODO: here should be implemented method which will return clear decision if EnvoyFilter should be created
 	// Then: No EnvoyFilter logic for K3d (returns "other" provider)
 	assert.Equal(t, clusterconfig.Other, provider, "K3d returns 'other' provider")
 	// Logic: getResources returns early for non-AWS/non-OpenStack, no EnvoyFilter added

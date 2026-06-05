@@ -65,7 +65,7 @@ jobs:
 
       - name: Commit updated dependabot config
         env:
-          GH_TOKEN: ${{ secrets.GOAT_BOT_REPO_ACCESS }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           USERNAME: ${{ vars.ACTIONS_BOT_NAME }}
           EMAIL: ${{ vars.ACTIONS_BOT_EMAIL }}
           BRANCH_NAME: ${{ github.ref_name }}

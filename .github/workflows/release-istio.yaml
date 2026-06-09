@@ -550,7 +550,7 @@ jobs:
   notify:
     name: Notify
     environment:
-      name: internal
+      name: notifications
       deployment: false
     runs-on: ubuntu-latest
     needs: [ check-prerequisites, publish-release, upload-release-report ]

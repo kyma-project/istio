@@ -70,17 +70,17 @@ func installIstio(ctx context.Context, args installArgs) (istiooperator.IstioIma
 	}
 	ctrl.Log.Info("Detected cluster provider", "provider", clusterProvider)
 
-	clusterConfiguration, err := clusterconfig.EvaluateClusterConfiguration(ctx, k8sClient, clusterProvider)
-	if err != nil {
-		return istioImageVersion, describederrors.NewDescribedError(err, "Could not evaluate cluster flavour")
-	}
-
 	enableDualStack, err := clusterconfig.IsDualStackEnabled(ctx, k8sClient)
 	if err != nil {
 		return istioImageVersion, describederrors.NewDescribedError(err, "Could not evaluate if dual stack is enabled")
 	}
 	if enableDualStack {
 		ctrl.Log.Info("Istio is running with IPDualStack enabled")
+	}
+
+	clusterConfiguration, err := clusterconfig.EvaluateClusterConfiguration(ctx, k8sClient, enableDualStack)
+	if err != nil {
+		return istioImageVersion, describederrors.NewDescribedError(err, "Could not evaluate cluster flavour")
 	}
 
 	clusterSize, err := clusterconfig.EvaluateClusterSize(context.Background(), k8sClient)

@@ -5,6 +5,11 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/kyma-project/istio/operator/internal/clusterconfig/strategy"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig/strategy/aws"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig/strategy/gke"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig/strategy/k3d"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig/strategy/openstack"
 	"k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 
@@ -69,24 +74,22 @@ func EvaluateClusterSize(ctx context.Context, k8sClient client.Client) (ClusterS
 	return Production, nil
 }
 
-type ClusterFlavour int
+type ClusterProvider int
 
 const (
-	Unknown ClusterFlavour = iota
+	Unknown ClusterProvider = iota
 	K3d
 	GKE
-	Gardener
 	AWS
+	Openstack
 )
 
-func (c ClusterFlavour) String() string {
+func (c ClusterProvider) String() string {
 	switch c {
 	case K3d:
 		return "K3d"
 	case GKE:
 		return "GKE"
-	case Gardener:
-		return "Gardener"
 	case AWS:
 		return "AWS"
 	case Unknown:
@@ -98,262 +101,114 @@ func (c ClusterFlavour) String() string {
 
 type ClusterConfiguration map[string]interface{}
 
-//nolint:gochecknoglobals // global variables are used to store cluster configurations TODO: refactor to avoid globals
-var (
-	AWSNLBConfig = ClusterConfiguration{
-		"spec": map[string]interface{}{
-			"values": map[string]interface{}{
-				"gateways": map[string]interface{}{
-					"istio-ingressgateway": map[string]interface{}{
-						"serviceAnnotations": map[string]string{
-							loadBalancerTypeAnnotation:          loadBalancerType,
-							loadBalancerSchemeAnnotation:        loadBalancerScheme,
-							loadBalancerNlbTargetTypeAnnotation: loadBalancerNlbTargetType,
-						},
-					},
-				},
-			},
-		},
-	}
-	OpenStackLBProxyProtocolConfig = ClusterConfiguration{
-		"spec": map[string]interface{}{
-			"values": map[string]interface{}{
-				"gateways": map[string]interface{}{
-					"istio-ingressgateway": map[string]interface{}{
-						"serviceAnnotations": map[string]string{
-							loadBalancerProxyProtocolOpenStackAnnotation: loadBalancerProxyProtocolOpenStack,
-						},
-					},
-				},
-			},
-		},
-	}
-)
+func EvaluateClusterConfiguration(ctx context.Context, k8sClient client.Client) (ClusterConfiguration, error) {
+	provider, err := DiscoverClusterProvider(ctx, k8sClient)
+	ctrl.Log.Info("Discovered cluster provider", "provider", provider)
 
-const (
-	elbCmName      = "elb-deprecated"
-	elbCmNamespace = "istio-system"
-
-	loadBalancerSchemeAnnotation        = "service.beta.kubernetes.io/aws-load-balancer-scheme"
-	loadBalancerScheme                  = "internet-facing"
-	loadBalancerNlbTargetTypeAnnotation = "service.beta.kubernetes.io/aws-load-balancer-nlb-target-type"
-	loadBalancerNlbTargetType           = "instance"
-	loadBalancerTypeAnnotation          = "service.beta.kubernetes.io/aws-load-balancer-type"
-	loadBalancerType                    = "nlb"
-	loadBalancerDualStackAnnotation     = "service.beta.kubernetes.io/aws-load-balancer-ip-address-type"
-	loadBalancerDualStack               = "dualstack"
-
-	loadBalancerProxyProtocolOpenStackAnnotation = "loadbalancer.openstack.org/proxy-protocol"
-	loadBalancerProxyProtocolOpenStack           = "v1"
-
-	istioIngressServiceName = "istio-ingressgateway"
-	istioIngressNamespace   = "istio-system"
-)
-
-func ShouldUseNLB(ctx context.Context, k8sClient client.Client) (bool, error) {
-	var elbDeprecated corev1.ConfigMap
-	err := k8sClient.Get(ctx, client.ObjectKey{Namespace: elbCmNamespace, Name: elbCmName}, &elbDeprecated)
 	if err != nil {
-		if errors.IsNotFound(err) {
+		return ClusterConfiguration{}, err
+	}
+
+	usesGardenOS, err := hasGardenOS(ctx, k8sClient)
+	if err != nil {
+		return ClusterConfiguration{}, err
+	}
+
+	dualStackEnabled, err := IsDualStackEnabled(ctx, k8sClient)
+	if err != nil {
+		return ClusterConfiguration{}, err
+	}
+
+	var str *strategy.Strategy
+	switch provider {
+	case AWS:
+		s, err := aws.NewStrategy(ctx, k8sClient, dualStackEnabled)
+		if err != nil {
+			return ClusterConfiguration{}, err
+		}
+		str = s
+	case K3d:
+		str = k3d.NewStrategy()
+	case GKE:
+		str = gke.NewStrategy()
+	case Openstack:
+		str = openstack.NewStrategy(usesGardenOS)
+	default:
+		str = &strategy.Strategy{}
+	}
+
+	return clusterConfiguration(str), nil
+}
+
+func hasGardenOS(ctx context.Context, k8sClient client.Client) (bool, error) {
+	nodeList := corev1.NodeList{}
+	err := k8sClient.List(ctx, &nodeList)
+	if err != nil {
+		return false, err
+	}
+
+	for _, node := range nodeList.Items {
+		if strings.Contains(node.Status.NodeInfo.OSImage, "Garden") {
 			return true, nil
 		}
-		return false, err
 	}
-
-	var ingressGatewaySvc corev1.Service
-	err = k8sClient.Get(ctx, client.ObjectKey{Namespace: istioIngressNamespace, Name: istioIngressServiceName}, &ingressGatewaySvc)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			return false, nil
-		}
-		return false, err
-	}
-
-	if value, ok := ingressGatewaySvc.Annotations[loadBalancerTypeAnnotation]; ok && value == loadBalancerType {
-		return true, nil
-	}
-
 	return false, nil
 }
 
-// awsConfig returns config specific to AWS cluster.
-// The function evaluates whether to use NLB or ELB load balancer, based on:
-//
-// 1. Presence of "elb-deprecated" ConfigMap
-//
-// 2. If the ConfigMap is present, it checks the loadBalancerTypeAnnotation,
-// to check if it was not already set to "nlb".
-// This safeguards against switching back to ELB.
-func awsConfig(ctx context.Context, k8sClient client.Client) (ClusterConfiguration, error) {
-	useNLB, err := ShouldUseNLB(ctx, k8sClient)
-	if err != nil {
-		return ClusterConfiguration{}, err
-	}
-
-	if useNLB {
-		return AWSNLBConfig, nil
-	}
-
-	return ClusterConfiguration{}, err
-}
-
-func EvaluateClusterConfiguration(ctx context.Context, k8sClient client.Client, clusterProvider string) (ClusterConfiguration, error) {
-	flavour, err := DiscoverClusterFlavour(ctx, k8sClient)
-	ctrl.Log.Info("Discovered cluster flavour", "flavour", flavour)
-
-	if err != nil {
-		return ClusterConfiguration{}, err
-	}
-
-	if flavour == AWS {
-		return awsConfig(ctx, k8sClient)
-	}
-
-	return flavour.clusterConfiguration(clusterProvider)
-}
-
-// Used to return determined hyperscaler provider.
-const (
-	Aws       = "aws"
-	Openstack = "openstack"
-	Other     = "other"
+var (
+	regexpMatchK3D = regexp.MustCompile(`^v\d+\.\d+\.\d+\+k3s\d+$`)
+	regexpMatchGKE = regexp.MustCompile(`^v\d+\.\d+\.\d+-gke\.\d+$`)
 )
 
-// GetClusterProvider is a small hack that tries to determine the
-// hyperscaler based on the first provider node.
-func GetClusterProvider(ctx context.Context, k8sclient client.Client) (string, error) {
-	nodes := corev1.NodeList{}
-	err := k8sclient.List(ctx, &nodes)
-	if err != nil {
-		return "", err
-	}
-	// if we got OK response and node list is empty, we can't guess cloud provider
-	// treat as "other" provider
-	// in standard execution this should never be reached because if cluster
-	// doesn't have any nodes, nothing can be run on it
-	// this catches rare case where cluster doesn't have any nodes, but
-	// client-go also doesn't return any error
-	if len(nodes.Items) == 0 {
-		ctrl.Log.Info("unable to determine cloud provider due to empty node list, using 'other' as provider")
-		return Other, nil
-	}
-
-	// get 1st node since all nodes usually are backed by the same provider
-	n := nodes.Items[0]
-	provider := n.Spec.ProviderID
-	provider = strings.ToLower(provider)
-	switch {
-	case strings.HasPrefix(provider, "aws://"):
-
-		return Aws, nil
-	case strings.HasPrefix(provider, "openstack://"):
-
-		return Openstack, nil
-	default:
-		return Other, nil
-	}
-}
-
-//nolint:gocritic // regexp matches should be compiled only once for constant patterns. TODO: refactor to use MustCompile
-func DiscoverClusterFlavour(ctx context.Context, k8sClient client.Client) (ClusterFlavour, error) {
-	matcherGKE, err := regexp.Compile(`^v\d+\.\d+\.\d+-gke\.\d+$`)
-	if err != nil {
-		return Unknown, err
-	}
-	matcherk3d, err := regexp.Compile(`^v\d+\.\d+\.\d+\+k3s\d+$`)
-	if err != nil {
-		return Unknown, err
-	}
-	matcherGardener, err := regexp.Compile(`^Garden\s+Linux.*`)
-	if err != nil {
-		return Unknown, err
-	}
-	matcherAws, err := regexp.Compile(`^aws://`)
-	if err != nil {
-		return Unknown, err
-	}
-
+func DiscoverClusterProvider(ctx context.Context, k8sClient client.Client) (ClusterProvider, error) {
 	nodeList := corev1.NodeList{}
-	err = k8sClient.List(ctx, &nodeList)
+	err := k8sClient.List(ctx, &nodeList)
 	if err != nil {
 		return Unknown, err
 	}
 
 	for _, node := range nodeList.Items {
 		switch {
-		case matcherGKE.MatchString(node.Status.NodeInfo.KubeletVersion):
+		case regexpMatchGKE.MatchString(node.Status.NodeInfo.KubeletVersion):
 			return GKE, nil
-		case matcherk3d.MatchString(node.Status.NodeInfo.KubeletVersion):
+		case regexpMatchK3D.MatchString(node.Status.NodeInfo.KubeletVersion):
 			return K3d, nil
-		case matcherAws.MatchString(node.Spec.ProviderID):
+		case strings.HasPrefix(node.Spec.ProviderID, "aws://"):
 			return AWS, nil
-		case matcherGardener.MatchString(node.Status.NodeInfo.OSImage):
-			return Gardener, nil
+		case strings.HasPrefix(node.Spec.ProviderID, "openstack://"):
+			return Openstack, nil
 		}
 	}
 
 	return Unknown, nil
 }
 
-func (c ClusterFlavour) clusterConfiguration(clusterProvider string) (ClusterConfiguration, error) {
-	switch c {
-	case K3d:
-		config := map[string]interface{}{
-			"spec": map[string]interface{}{
-				"values": map[string]interface{}{
-					"cni": map[string]string{
-						"cniBinDir":  "/var/lib/rancher/k3s/data/cni",
-						"cniConfDir": "/var/lib/rancher/k3s/agent/etc/cni/net.d",
-					},
-				},
-			},
-		}
-		return config, nil
-	case GKE:
-		config := map[string]interface{}{
-			"spec": map[string]interface{}{
-				"values": map[string]interface{}{
-					"cni": map[string]interface{}{
-						"cniBinDir": "/home/kubernetes/bin",
-						"resourceQuotas": map[string]bool{
-							"enabled": true,
-						},
-					},
-				},
-			},
-		}
-		return config, nil
-	case AWS:
-		config := map[string]interface{}{
-			"spec": map[string]interface{}{
-				"values": map[string]interface{}{
-					"gateways": map[string]interface{}{
-						"istio-ingressgateway": map[string]interface{}{
-							"serviceAnnotations": map[string]string{
-								"service.beta.kubernetes.io/aws-load-balancer-type": "nlb",
-							},
-						},
-					},
-				},
-			},
-		}
-		return config, nil
-	case Gardener:
-		return generateIstioIngressGatewayAnnotations(clusterProvider)
-	case Unknown:
-		return ClusterConfiguration{}, nil
-	}
-	return ClusterConfiguration{}, nil
-}
+func clusterConfiguration(s *strategy.Strategy) ClusterConfiguration {
+	values := map[string]interface{}{}
 
-// generateIstioIngressGatewayAnnotations adds an annotation to a service LoadBalancer istio-ingressgateway
-// only if cluster provider is openstack to pass an XFF header to the request.
-func generateIstioIngressGatewayAnnotations(clusterProvider string) (ClusterConfiguration, error) {
-	if clusterProvider == Openstack {
-		return OpenStackLBProxyProtocolConfig, nil
+	if s.CNI != nil {
+		if cni, ok := s.GetCNIValues(); ok {
+			values["cni"] = cni
+		}
 	}
 
-	return ClusterConfiguration{}, nil
+	if s.LB != nil {
+		if ann, ok := s.GetLBAnnotations(); ok {
+			values["global"] = map[string]interface{}{
+				"gateway": map[string]interface{}{
+					"istio-ingressgateway": map[string]interface{}{
+						"serviceAnnotations": ann,
+					},
+				},
+			}
+		}
+	}
+
+	return ClusterConfiguration{
+		"spec": map[string]interface{}{
+			"values": values,
+		},
+	}
 }
 
 func MergeOverrides(template []byte, overrides ClusterConfiguration) ([]byte, error) {

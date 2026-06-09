@@ -26,58 +26,38 @@ const (
 	gardenerMockOSImageWithoutVersion string = "Garden Linux"
 )
 
-var _ = Describe("GetClusterProvider", func() {
-	It("should return other when cluster provider is unknown", func() {
-		//given
-		node := corev1.Node{
-			ObjectMeta: v1.ObjectMeta{
-				Name: "node-1",
-			},
-			Spec: corev1.NodeSpec{ProviderID: "kubernetes://asdadsads"},
-			Status: corev1.NodeStatus{
-				NodeInfo: corev1.NodeSystemInfo{
-					KubeletVersion: k3sMockKubeletVersion,
+var AWSNLBConfig = clusterconfig.ClusterConfiguration(map[string]interface{}{
+	"spec": map[string]interface{}{
+		"values": map[string]interface{}{
+			"global": map[string]interface{}{
+				"gateway": map[string]interface{}{
+					"istio-ingressgateway": map[string]interface{}{
+						"serviceAnnotations": map[string]string{
+							"service.beta.kubernetes.io/aws-load-balancer-scheme":          "internet-facing",
+							"service.beta.kubernetes.io/aws-load-balancer-nlb-target-type": "instance",
+							"service.beta.kubernetes.io/aws-load-balancer-type":            "nlb",
+						},
+					},
 				},
 			},
-		}
-		client := createFakeClient(&node)
-		p, err := clusterconfig.GetClusterProvider(context.Background(), client)
-		Expect(err).To(BeNil())
-		Expect(p).To(Equal(clusterconfig.Other))
-	})
-	It("should return 'openstack' for clusters provisioned on OpenStack nodes", func() {
-		//given
-		node := corev1.Node{
-			ObjectMeta: v1.ObjectMeta{
-				Name: "node-1",
+		},
+	},
+})
+
+var OpenStackLBProxyProtocolConfig = clusterconfig.ClusterConfiguration(map[string]interface{}{
+	"spec": map[string]interface{}{
+		"values": map[string]interface{}{
+			"global": map[string]interface{}{
+				"gateway": map[string]interface{}{
+					"istio-ingressgateway": map[string]interface{}{
+						"serviceAnnotations": map[string]string{
+							"loadbalancer.openstack.org/proxy-protocol": "v1",
+						},
+					},
+				},
 			},
-			Spec: corev1.NodeSpec{ProviderID: "openstack://example"},
-		}
-		client := createFakeClient(&node)
-		p, err := clusterconfig.GetClusterProvider(context.Background(), client)
-		Expect(err).To(BeNil())
-		Expect(p).To(Equal(clusterconfig.Openstack))
-	})
-	It("should return 'aws' for clusters provisioned on AWS nodes", func() {
-		//given
-		node := corev1.Node{
-			ObjectMeta: v1.ObjectMeta{
-				Name: "node-1",
-			},
-			Spec: corev1.NodeSpec{ProviderID: "aws://asdadsads"},
-		}
-		client := createFakeClient(&node)
-		p, err := clusterconfig.GetClusterProvider(context.Background(), client)
-		Expect(err).To(BeNil())
-		Expect(p).To(Equal(clusterconfig.Aws))
-	})
-	It("should return 'other' for clusters without nodes", func() {
-		//given
-		client := createFakeClient()
-		p, err := clusterconfig.GetClusterProvider(context.Background(), client)
-		Expect(err).To(BeNil())
-		Expect(p).To(Equal(clusterconfig.Other))
-	})
+		},
+	},
 })
 
 var _ = Describe("EvaluateClusterConfiguration", func() {
@@ -96,17 +76,16 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			}
 
 			client := createFakeClient(&k3dNode)
-			provider, _ := clusterconfig.GetClusterProvider(context.Background(), client)
 
 			//when
-			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client, provider)
+			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(config).To(Equal(clusterconfig.ClusterConfiguration(map[string]interface{}{
 				"spec": map[string]interface{}{
 					"values": map[string]interface{}{
-						"cni": map[string]string{
+						"cni": map[string]interface{}{
 							"cniBinDir":  "/var/lib/rancher/k3s/data/cni",
 							"cniConfDir": "/var/lib/rancher/k3s/agent/etc/cni/net.d",
 						},
@@ -130,14 +109,12 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			}
 
 			client := createFakeClient(&awsNode)
-			provider, _ := clusterconfig.GetClusterProvider(context.Background(), client)
-
 			//when
-			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client, provider)
+			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))
-			Expect(config).To(Equal(clusterconfig.AWSNLBConfig))
+			Expect(config).To(Equal(AWSNLBConfig))
 		})
 
 		It("should use NLB load balancer on AWS if the elb-deprecated ConfigMap is present,"+
@@ -172,14 +149,13 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			}
 
 			client := createFakeClient(&awsNode, &elbDeprecatedConfigMap, &ingressGatewayService)
-			provider, _ := clusterconfig.GetClusterProvider(context.Background(), client)
 
 			//when
-			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client, provider)
+			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))
-			Expect(config).To(Equal(clusterconfig.AWSNLBConfig))
+			Expect(config).To(Equal(AWSNLBConfig))
 		})
 
 		It("should use ELB load balancer on AWS if elb-deprecated ConfigMap is present", func() {
@@ -201,14 +177,17 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			}
 
 			client := createFakeClient(&awsNode, &elbDeprecatedConfigMap)
-			provider, _ := clusterconfig.GetClusterProvider(context.Background(), client)
 
 			//when
-			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client, provider)
+			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))
-			Expect(config).To(Equal(clusterconfig.ClusterConfiguration{}))
+			Expect(config).To(Equal(clusterconfig.ClusterConfiguration{
+				"spec": map[string]interface{}{
+					"values": map[string]interface{}{},
+				},
+			}))
 		})
 	})
 
@@ -227,10 +206,9 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			}
 
 			client := createFakeClient(&gkeNode)
-			provider, _ := clusterconfig.GetClusterProvider(context.Background(), client)
 
 			//when
-			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client, provider)
+			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))
@@ -265,14 +243,13 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			}
 
 			client := createFakeClient(&gardenerNode)
-			provider, _ := clusterconfig.GetClusterProvider(context.Background(), client)
 
 			//when
-			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client, provider)
+			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))
-			Expect(config).To(Equal(clusterconfig.OpenStackLBProxyProtocolConfig))
+			Expect(config).To(Equal(OpenStackLBProxyProtocolConfig))
 		})
 	})
 
@@ -292,14 +269,13 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			}
 
 			client := createFakeClient(&gardenerNode)
-			provider, _ := clusterconfig.GetClusterProvider(context.Background(), client)
 
 			//when
-			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client, provider)
+			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))
-			Expect(config).To(Equal(clusterconfig.OpenStackLBProxyProtocolConfig))
+			Expect(config).To(Equal(OpenStackLBProxyProtocolConfig))
 		})
 	})
 
@@ -319,14 +295,13 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			}
 
 			client := createFakeClient(&gardenerNode)
-			provider, _ := clusterconfig.GetClusterProvider(context.Background(), client)
 
 			//when
-			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client, provider)
+			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))
-			Expect(config).To(Equal(clusterconfig.OpenStackLBProxyProtocolConfig))
+			Expect(config).To(Equal(OpenStackLBProxyProtocolConfig))
 		})
 	})
 
@@ -346,14 +321,13 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			}
 
 			client := createFakeClient(&gardenerNode)
-			provider, _ := clusterconfig.GetClusterProvider(context.Background(), client)
 
 			//when
-			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client, provider)
+			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))
-			Expect(config).To(Equal(clusterconfig.AWSNLBConfig))
+			Expect(config).To(Equal(AWSNLBConfig))
 		})
 	})
 
@@ -367,14 +341,17 @@ var _ = Describe("EvaluateClusterConfiguration", func() {
 			}
 
 			client := createFakeClient(&unkownNode)
-			provider, _ := clusterconfig.GetClusterProvider(context.Background(), client)
 
 			//when
-			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client, provider)
+			config, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), client)
 
 			//then
 			Expect(err).To(Not(HaveOccurred()))
-			Expect(config).To(Equal(clusterconfig.ClusterConfiguration{}))
+			Expect(config).To(Equal(clusterconfig.ClusterConfiguration{
+				"spec": map[string]interface{}{
+					"values": map[string]interface{}{},
+				},
+			}))
 		})
 	})
 })

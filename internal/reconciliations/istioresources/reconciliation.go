@@ -90,7 +90,8 @@ func getResources(clusterStrategy *strategy.Hyperscaler, istioCR v1alpha2.Istio,
 	}
 
 	if clusterStrategy != nil && clusterStrategy.LB != nil {
-		istioResources = append(istioResources, NewProxyProtocolEnvoyFilter(!clusterStrategy.LB.RequiresProxyProtocolEnvoyFilter()))
+		shouldDeleteEnvoyFilter := !clusterStrategy.LB.RequiresProxyProtocolEnvoyFilter()
+		istioResources = append(istioResources, NewProxyProtocolEnvoyFilter(shouldDeleteEnvoyFilter))
 	}
 
 	return istioResources

@@ -16,9 +16,6 @@ if [ -z "$PULL_BASE_SHA" ]; then
   exit 1
 fi
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" || exit; pwd)"
-cd "${SCRIPT_DIR}/../../../" || exit 1
-
 echo -e "Code Coverage Guard - Ensures PRs do not lower code coverage\\n"
 echo -e "Running tests on: PR-${PULL_NUMBER} (${PULL_PULL_SHA})\\n"
 

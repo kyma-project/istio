@@ -203,14 +203,12 @@ const (
 var awsNLBConfig = clusterconfig.ClusterConfiguration(map[string]interface{}{
 	"spec": map[string]interface{}{
 		"values": map[string]interface{}{
-			"global": map[string]interface{}{
-				"gateway": map[string]interface{}{
-					"istio-ingressgateway": map[string]interface{}{
-						"serviceAnnotations": map[string]string{
-							"service.beta.kubernetes.io/aws-load-balancer-scheme":          "internet-facing",
-							"service.beta.kubernetes.io/aws-load-balancer-nlb-target-type": "instance",
-							"service.beta.kubernetes.io/aws-load-balancer-type":            "nlb",
-						},
+			"gateways": map[string]interface{}{
+				"istio-ingressgateway": map[string]interface{}{
+					"serviceAnnotations": map[string]string{
+						"service.beta.kubernetes.io/aws-load-balancer-scheme":          "internet-facing",
+						"service.beta.kubernetes.io/aws-load-balancer-nlb-target-type": "instance",
+						"service.beta.kubernetes.io/aws-load-balancer-type":            "nlb",
 					},
 				},
 			},
@@ -221,12 +219,10 @@ var awsNLBConfig = clusterconfig.ClusterConfiguration(map[string]interface{}{
 var openstackLBProxyProtocolConfig = clusterconfig.ClusterConfiguration(map[string]interface{}{
 	"spec": map[string]interface{}{
 		"values": map[string]interface{}{
-			"global": map[string]interface{}{
-				"gateway": map[string]interface{}{
-					"istio-ingressgateway": map[string]interface{}{
-						"serviceAnnotations": map[string]string{
-							"loadbalancer.openstack.org/proxy-protocol": "v1",
-						},
+			"gateways": map[string]interface{}{
+				"istio-ingressgateway": map[string]interface{}{
+					"serviceAnnotations": map[string]string{
+						"loadbalancer.openstack.org/proxy-protocol": "v1",
 					},
 				},
 			},

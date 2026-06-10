@@ -205,11 +205,9 @@ func clusterConfiguration(s *strategy.Hyperscaler) ClusterConfiguration {
 
 	if s.LB != nil {
 		if ann := s.GetLBAnnotations(); ann != nil {
-			values["global"] = map[string]interface{}{
-				"gateway": map[string]interface{}{
-					"istio-ingressgateway": map[string]interface{}{
-						"serviceAnnotations": ann,
-					},
+			values["gateways"] = map[string]interface{}{
+				"istio-ingressgateway": map[string]interface{}{
+					"serviceAnnotations": ann,
 				},
 			}
 		}

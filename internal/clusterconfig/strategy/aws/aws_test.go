@@ -45,7 +45,7 @@ func TestNewStrategy_LBSelection(t *testing.T) {
 		wantAnnots       map[string]string
 	}{
 		{
-			name:             "no elb-deprecated CM -> NLB IPv4",
+			name:             "no elb-deprecated CM -> NLB",
 			objs:             nil,
 			dualStackEnabled: false,
 			wantAnnots: map[string]string{
@@ -55,7 +55,7 @@ func TestNewStrategy_LBSelection(t *testing.T) {
 			},
 		},
 		{
-			name:             "no elb-deprecated CM + dualStack -> NLB (static annotation set; dualstack not yet wired)",
+			name:             "no elb-deprecated CM + dualStack -> NLB",
 			objs:             nil,
 			dualStackEnabled: true,
 			wantAnnots: map[string]string{
@@ -71,7 +71,7 @@ func TestNewStrategy_LBSelection(t *testing.T) {
 			wantAnnots:       nil,
 		},
 		{
-			name: "elb-deprecated CM present + service already NLB -> NLB IPv4",
+			name: "elb-deprecated CM present + service already NLB -> NLB",
 			objs: []client.Object{
 				elbDeprecatedCM(),
 				ingressGatewaySvc(map[string]string{

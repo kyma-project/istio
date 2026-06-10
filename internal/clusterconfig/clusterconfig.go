@@ -184,6 +184,9 @@ func DiscoverClusterProvider(ctx context.Context, k8sClient client.Client) (Clus
 	for _, node := range nodeList.Items {
 		providerID := strings.ToLower(node.Spec.ProviderID)
 		switch {
+		// For GKE and K3D matching on providerID should be considered.
+		// k3d -> providerID: "k3s://"
+		// GKE -> providerID: "gce://"
 		case regexpMatchGKE.MatchString(node.Status.NodeInfo.KubeletVersion):
 			return GKE, nil
 		case regexpMatchK3D.MatchString(node.Status.NodeInfo.KubeletVersion):

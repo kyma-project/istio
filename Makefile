@@ -362,7 +362,7 @@ grpc-performance-test:
 
 .PHONY: deploy-latest-release
 deploy-latest-release: create-kyma-system-ns
-	cd tests/integration && ./scripts/deploy-latest-release-to-cluster.sh $(TARGET_BRANCH)
+	./hack/ci/deploy-latest-release-to-cluster.sh $(TARGET_BRANCH)
 
 ########## Gardener specific ###########
 

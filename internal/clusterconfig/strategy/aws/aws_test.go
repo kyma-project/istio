@@ -42,14 +42,12 @@ func TestNewStrategy_LBSelection(t *testing.T) {
 		name             string
 		objs             []client.Object
 		dualStackEnabled bool
-		wantAnnotsNeeded bool
 		wantAnnots       map[string]string
 	}{
 		{
 			name:             "no elb-deprecated CM -> NLB IPv4",
 			objs:             nil,
 			dualStackEnabled: false,
-			wantAnnotsNeeded: true,
 			wantAnnots: map[string]string{
 				aws.LBTypeAnnotation:        aws.NLBType,
 				aws.SchemeAnnotation:        aws.InternetFacingScheme,
@@ -60,7 +58,6 @@ func TestNewStrategy_LBSelection(t *testing.T) {
 			name:             "no elb-deprecated CM + dualStack -> NLB DualStack",
 			objs:             nil,
 			dualStackEnabled: true,
-			wantAnnotsNeeded: true,
 			wantAnnots: map[string]string{
 				aws.LBTypeAnnotation:        aws.ExternalType,
 				aws.SchemeAnnotation:        aws.InternetFacingScheme,
@@ -72,7 +69,6 @@ func TestNewStrategy_LBSelection(t *testing.T) {
 			name:             "elb-deprecated CM present, no service -> ELB (no annotations)",
 			objs:             []client.Object{elbDeprecatedCM()},
 			dualStackEnabled: false,
-			wantAnnotsNeeded: false,
 			wantAnnots:       nil,
 		},
 		{
@@ -84,7 +80,6 @@ func TestNewStrategy_LBSelection(t *testing.T) {
 				}),
 			},
 			dualStackEnabled: false,
-			wantAnnotsNeeded: true,
 			wantAnnots: map[string]string{
 				aws.LBTypeAnnotation:        aws.NLBType,
 				aws.SchemeAnnotation:        aws.InternetFacingScheme,
@@ -100,7 +95,6 @@ func TestNewStrategy_LBSelection(t *testing.T) {
 				}),
 			},
 			dualStackEnabled: false,
-			wantAnnotsNeeded: false,
 			wantAnnots:       nil,
 		},
 		{
@@ -110,7 +104,6 @@ func TestNewStrategy_LBSelection(t *testing.T) {
 				ingressGatewaySvc(nil),
 			},
 			dualStackEnabled: false,
-			wantAnnotsNeeded: false,
 			wantAnnots:       nil,
 		},
 	}
@@ -124,8 +117,7 @@ func TestNewStrategy_LBSelection(t *testing.T) {
 			require.NotNil(t, s)
 			require.NotNil(t, s.LB)
 
-			annots, needed := s.GetLBAnnotations()
-			assert.Equal(t, tt.wantAnnotsNeeded, needed)
+			annots := s.GetLBAnnotations()
 			assert.Equal(t, tt.wantAnnots, annots)
 		})
 	}

@@ -72,9 +72,9 @@ func NewStrategy(ctx context.Context, k8sClient client.Client, dualStackEnabled 
 	}, nil
 }
 
-func (s *LB) GetLBAnnotations() (map[string]string, bool) {
+func (s *LB) GetLBAnnotations() map[string]string {
 	if s.lbType == ELB {
-		return nil, false
+		return nil
 	}
 	switch s.stackType {
 	case IPv4:
@@ -82,20 +82,20 @@ func (s *LB) GetLBAnnotations() (map[string]string, bool) {
 			LBTypeAnnotation:        NLBType,
 			SchemeAnnotation:        InternetFacingScheme,
 			NlbTargetTypeAnnotation: NlbTargetTypeInstance,
-		}, true
+		}
 	case DualStack:
 		return map[string]string{
 			LBTypeAnnotation:        ExternalType,
 			SchemeAnnotation:        InternetFacingScheme,
 			NlbTargetTypeAnnotation: NlbTargetTypeInstance,
 			IpAddressTypeAnnotation: IpAddressTypeDualStack,
-		}, true
+		}
 	default:
 		return map[string]string{
 			LBTypeAnnotation:        NLBType,
 			SchemeAnnotation:        InternetFacingScheme,
 			NlbTargetTypeAnnotation: NlbTargetTypeInstance,
-		}, true
+		}
 	}
 }
 

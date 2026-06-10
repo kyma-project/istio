@@ -1,12 +1,12 @@
 package strategy
 
 type LB interface {
-	GetLBAnnotations() (annotations map[string]string, needed bool)
+	GetLBAnnotations() map[string]string
 	RequiresProxyProtocolEnvoyFilter() bool
 }
 
 type CNI interface {
-	GetCNIValues() (values map[string]interface{}, needed bool)
+	GetCNIValues() map[string]interface{}
 }
 
 type Hyperscaler struct {

@@ -11,13 +11,13 @@ type Strategy struct {
 	isGardener bool
 }
 
-func (s Strategy) GetLBAnnotations() (map[string]string, bool) {
+func (s Strategy) GetLBAnnotations() map[string]string {
 	if s.isGardener {
 		return map[string]string{
 			proxyProtocolAnnotation: proxyProtocolVersion,
-		}, true
+		}
 	}
-	return nil, false
+	return nil
 }
 
 func (s Strategy) RequiresProxyProtocolEnvoyFilter() bool {

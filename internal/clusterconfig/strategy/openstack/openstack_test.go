@@ -10,15 +10,13 @@ import (
 
 func TestStrategy_GetLBAnnotations(t *testing.T) {
 	tests := []struct {
-		name        string
-		isGardener  bool
-		wantNeeded  bool
-		wantAnnots  map[string]string
+		name       string
+		isGardener bool
+		wantAnnots map[string]string
 	}{
 		{
 			name:       "gardener returns proxy-protocol annotation",
 			isGardener: true,
-			wantNeeded: true,
 			wantAnnots: map[string]string{
 				"loadbalancer.openstack.org/proxy-protocol": "v1",
 			},
@@ -26,7 +24,6 @@ func TestStrategy_GetLBAnnotations(t *testing.T) {
 		{
 			name:       "non-gardener returns no annotations",
 			isGardener: false,
-			wantNeeded: false,
 			wantAnnots: nil,
 		},
 	}
@@ -37,8 +34,7 @@ func TestStrategy_GetLBAnnotations(t *testing.T) {
 			require.NotNil(t, s)
 			require.NotNil(t, s.LB)
 
-			annots, needed := s.GetLBAnnotations()
-			assert.Equal(t, tt.wantNeeded, needed)
+			annots := s.GetLBAnnotations()
 			assert.Equal(t, tt.wantAnnots, annots)
 		})
 	}

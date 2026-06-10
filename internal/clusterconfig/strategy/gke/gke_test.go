@@ -11,9 +11,8 @@ import (
 func TestCNI_GetCNIValues(t *testing.T) {
 	c := gke.CNI{}
 
-	values, needed := c.GetCNIValues()
+	values := c.GetCNIValues()
 
-	assert.True(t, needed)
 	assert.Equal(t, map[string]interface{}{
 		"cniBinDir": "/home/kubernetes/bin",
 		"resourceQuotas": map[string]bool{
@@ -29,7 +28,6 @@ func TestNewStrategy(t *testing.T) {
 	require.NotNil(t, s.CNI)
 	assert.Nil(t, s.LB)
 
-	values, needed := s.GetCNIValues()
-	assert.True(t, needed)
+	values := s.GetCNIValues()
 	assert.NotEmpty(t, values)
 }

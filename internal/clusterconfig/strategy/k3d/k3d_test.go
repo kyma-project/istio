@@ -11,9 +11,8 @@ import (
 func TestK3D_GetCNIValues(t *testing.T) {
 	s := k3d.K3D{}
 
-	values, needed := s.GetCNIValues()
+	values := s.GetCNIValues()
 
-	assert.True(t, needed)
 	assert.Equal(t, map[string]interface{}{
 		"cniBinDir":  "/var/lib/rancher/k3s/data/cni",
 		"cniConfDir": "/var/lib/rancher/k3s/agent/etc/cni/net.d",
@@ -27,7 +26,6 @@ func TestNewStrategy(t *testing.T) {
 	require.NotNil(t, s.CNI)
 	assert.Nil(t, s.LB)
 
-	values, needed := s.GetCNIValues()
-	assert.True(t, needed)
+	values := s.GetCNIValues()
 	assert.NotEmpty(t, values)
 }

@@ -6,11 +6,11 @@ import (
 
 type K3D struct{}
 
-func (s K3D) GetCNIValues() (map[string]interface{}, bool) {
+func (s K3D) GetCNIValues() map[string]interface{} {
 	return map[string]interface{}{
 		"cniBinDir":  "/var/lib/rancher/k3s/data/cni",
 		"cniConfDir": "/var/lib/rancher/k3s/agent/etc/cni/net.d",
-	}, true
+	}
 }
 
 func NewStrategy() *strategy.Hyperscaler {

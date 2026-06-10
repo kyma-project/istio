@@ -189,13 +189,13 @@ func clusterConfiguration(s *strategy.Hyperscaler) ClusterConfiguration {
 	values := map[string]interface{}{}
 
 	if s.CNI != nil {
-		if cni, ok := s.GetCNIValues(); ok {
+		if cni := s.GetCNIValues(); cni != nil {
 			values["cni"] = cni
 		}
 	}
 
 	if s.LB != nil {
-		if ann, ok := s.GetLBAnnotations(); ok {
+		if ann := s.GetLBAnnotations(); ann != nil {
 			values["global"] = map[string]interface{}{
 				"gateway": map[string]interface{}{
 					"istio-ingressgateway": map[string]interface{}{

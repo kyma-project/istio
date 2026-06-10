@@ -429,9 +429,10 @@ func TestEvaluateClusterConfiguration(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := createFakeClient(t, tt.objects...)
 
-			got, err := clusterconfig.EvaluateClusterConfiguration(context.Background(), c)
-
+			str, err := clusterconfig.BuildStrategy(context.Background(), c)
 			require.NoError(t, err)
+			got := clusterconfig.ClusterConfigurationFromStrategy(str)
+
 			assert.Equal(t, tt.want, got)
 		})
 	}

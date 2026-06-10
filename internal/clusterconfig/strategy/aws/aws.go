@@ -114,6 +114,10 @@ func (s *LB) RequiresProxyProtocolEnvoyFilter() bool {
 	}
 }
 
+func (s *LB) IsDualStackEnabled() bool {
+	return s.stackType == DualStack
+}
+
 func shouldUseNLB(ctx context.Context, k8sClient client.Client) (bool, error) {
 	var elbDeprecated corev1.ConfigMap
 	err := k8sClient.Get(ctx, client.ObjectKey{Namespace: elbCmNamespace, Name: elbCmName}, &elbDeprecated)

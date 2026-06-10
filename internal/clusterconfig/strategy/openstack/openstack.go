@@ -24,6 +24,10 @@ func (s Strategy) RequiresProxyProtocolEnvoyFilter() bool {
 	return true
 }
 
+func (s Strategy) IsDualStackEnabled() bool {
+	return false
+}
+
 func NewStrategy(isGardener bool) *strategy.Hyperscaler {
 	return &strategy.Hyperscaler{
 		LB: Strategy{

@@ -103,43 +103,44 @@ func (c ClusterProvider) String() string {
 
 type ClusterConfiguration map[string]interface{}
 
-func EvaluateClusterConfiguration(ctx context.Context, k8sClient client.Client) (ClusterConfiguration, error) {
+// BuildStrategy discovers the cluster provider and dual-stack/Garden flags,
+// then constructs the matching Hyperscaler strategy. This is the single
+// place where LB/CNI strategy selection happens for a reconcile loop.
+func BuildStrategy(ctx context.Context, k8sClient client.Client) (*strategy.Hyperscaler, error) {
 	provider, err := DiscoverClusterProvider(ctx, k8sClient)
-	ctrl.Log.Info("Discovered cluster provider", "provider", provider)
-
 	if err != nil {
-		return ClusterConfiguration{}, err
+		return nil, err
 	}
+	ctrl.Log.Info("Discovered cluster provider", "provider", provider)
 
 	usesGardenOS, err := hasGardenOS(ctx, k8sClient)
 	if err != nil {
-		return ClusterConfiguration{}, err
+		return nil, err
 	}
 
 	dualStackEnabled, err := IsDualStackEnabled(ctx, k8sClient)
 	if err != nil {
-		return ClusterConfiguration{}, err
+		return nil, err
 	}
 
-	var str *strategy.Hyperscaler
 	switch provider {
 	case AWS:
-		s, err := aws.NewStrategy(ctx, k8sClient, dualStackEnabled)
-		if err != nil {
-			return ClusterConfiguration{}, err
-		}
-		str = s
+		return aws.NewStrategy(ctx, k8sClient, dualStackEnabled)
 	case K3d:
-		str = k3d.NewStrategy()
+		return k3d.NewStrategy(), nil
 	case GKE:
-		str = gke.NewStrategy()
+		return gke.NewStrategy(), nil
 	case Openstack:
-		str = openstack.NewStrategy(usesGardenOS)
+		return openstack.NewStrategy(usesGardenOS), nil
 	default:
-		str = &strategy.Hyperscaler{}
+		return &strategy.Hyperscaler{}, nil
 	}
+}
 
-	return clusterConfiguration(str), nil
+// ClusterConfigurationFromStrategy renders the Istio operator overrides
+// from a pre-built strategy. Pure: no I/O.
+func ClusterConfigurationFromStrategy(s *strategy.Hyperscaler) ClusterConfiguration {
+	return clusterConfiguration(s)
 }
 
 func hasGardenOS(ctx context.Context, k8sClient client.Client) (bool, error) {
@@ -187,6 +188,14 @@ func DiscoverClusterProvider(ctx context.Context, k8sClient client.Client) (Clus
 
 func clusterConfiguration(s *strategy.Hyperscaler) ClusterConfiguration {
 	values := map[string]interface{}{}
+
+	if s == nil {
+		return ClusterConfiguration{
+			"spec": map[string]interface{}{
+				"values": values,
+			},
+		}
+	}
 
 	if s.CNI != nil {
 		if cni := s.GetCNIValues(); cni != nil {

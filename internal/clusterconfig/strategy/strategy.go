@@ -9,7 +9,7 @@ type CNI interface {
 	GetCNIValues() (values map[string]interface{}, needed bool)
 }
 
-type Strategy struct {
+type Hyperscaler struct {
 	LB
 	CNI
 }

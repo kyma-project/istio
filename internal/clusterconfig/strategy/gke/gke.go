@@ -13,8 +13,8 @@ func (CNI) GetCNIValues() (map[string]interface{}, bool) {
 	}, true
 }
 
-func NewStrategy() *strategy.Strategy {
-	return &strategy.Strategy{
+func NewStrategy() *strategy.Hyperscaler {
+	return &strategy.Hyperscaler{
 		CNI: &CNI{},
 	}
 }

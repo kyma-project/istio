@@ -13,8 +13,8 @@ func (s K3D) GetCNIValues() (map[string]interface{}, bool) {
 	}, true
 }
 
-func NewStrategy() *strategy.Strategy {
-	return &strategy.Strategy{
+func NewStrategy() *strategy.Hyperscaler {
+	return &strategy.Hyperscaler{
 		CNI: K3D{},
 	}
 }

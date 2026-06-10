@@ -45,17 +45,12 @@ const (
 type LB struct {
 	stackType IPStackType
 	lbType    Type
-	k8sClient client.Client
-	ctx       context.Context
 }
 
-func NewStrategy(ctx context.Context, k8sClient client.Client, dualStackEnabled bool) (*strategy.Strategy, error) {
-	lb := &LB{
-		ctx:       ctx,
-		k8sClient: k8sClient,
-	}
+func NewStrategy(ctx context.Context, k8sClient client.Client, dualStackEnabled bool) (*strategy.Hyperscaler, error) {
+	lb := &LB{}
 
-	useNLB, err := lb.shouldUseNLB()
+	useNLB, err := shouldUseNLB(ctx, k8sClient)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +67,7 @@ func NewStrategy(ctx context.Context, k8sClient client.Client, dualStackEnabled 
 		lb.stackType = IPv4
 	}
 
-	return &strategy.Strategy{
+	return &strategy.Hyperscaler{
 		LB: lb,
 	}, nil
 }
@@ -119,9 +114,9 @@ func (s *LB) RequiresProxyProtocolEnvoyFilter() bool {
 	}
 }
 
-func (s *LB) shouldUseNLB() (bool, error) {
+func shouldUseNLB(ctx context.Context, k8sClient client.Client) (bool, error) {
 	var elbDeprecated corev1.ConfigMap
-	err := s.k8sClient.Get(s.ctx, client.ObjectKey{Namespace: elbCmNamespace, Name: elbCmName}, &elbDeprecated)
+	err := k8sClient.Get(ctx, client.ObjectKey{Namespace: elbCmNamespace, Name: elbCmName}, &elbDeprecated)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return true, nil
@@ -130,7 +125,7 @@ func (s *LB) shouldUseNLB() (bool, error) {
 	}
 
 	var ingressGatewaySvc corev1.Service
-	err = s.k8sClient.Get(s.ctx, client.ObjectKey{Namespace: istioIngressNamespace, Name: istioIngressServiceName}, &ingressGatewaySvc)
+	err = k8sClient.Get(ctx, client.ObjectKey{Namespace: istioIngressNamespace, Name: istioIngressServiceName}, &ingressGatewaySvc)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return false, nil

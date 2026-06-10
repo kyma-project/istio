@@ -24,8 +24,8 @@ func (s Strategy) RequiresProxyProtocolEnvoyFilter() bool {
 	return true
 }
 
-func NewStrategy(isGardener bool) *strategy.Strategy {
-	return &strategy.Strategy{
+func NewStrategy(isGardener bool) *strategy.Hyperscaler {
+	return &strategy.Hyperscaler{
 		LB: Strategy{
 			isGardener: isGardener,
 		},

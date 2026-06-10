@@ -92,6 +92,8 @@ func (c ClusterProvider) String() string {
 		return "GKE"
 	case AWS:
 		return "AWS"
+	case Openstack:
+		return "Openstack"
 	case Unknown:
 		fallthrough
 	default:
@@ -119,7 +121,7 @@ func EvaluateClusterConfiguration(ctx context.Context, k8sClient client.Client) 
 		return ClusterConfiguration{}, err
 	}
 
-	var str *strategy.Strategy
+	var str *strategy.Hyperscaler
 	switch provider {
 	case AWS:
 		s, err := aws.NewStrategy(ctx, k8sClient, dualStackEnabled)
@@ -134,7 +136,7 @@ func EvaluateClusterConfiguration(ctx context.Context, k8sClient client.Client) 
 	case Openstack:
 		str = openstack.NewStrategy(usesGardenOS)
 	default:
-		str = &strategy.Strategy{}
+		str = &strategy.Hyperscaler{}
 	}
 
 	return clusterConfiguration(str), nil
@@ -183,7 +185,7 @@ func DiscoverClusterProvider(ctx context.Context, k8sClient client.Client) (Clus
 	return Unknown, nil
 }
 
-func clusterConfiguration(s *strategy.Strategy) ClusterConfiguration {
+func clusterConfiguration(s *strategy.Hyperscaler) ClusterConfiguration {
 	values := map[string]interface{}{}
 
 	if s.CNI != nil {

@@ -10,10 +10,7 @@ import (
 )
 
 const (
-	IpAddressTypeAnnotation = "service.beta.kubernetes.io/aws-load-balancer-ip-address-type"
-	IpAddressTypeDualStack  = "dualstack"
 	LBTypeAnnotation        = "service.beta.kubernetes.io/aws-load-balancer-type"
-	ExternalType            = "external"
 	NLBType                 = "nlb"
 	NlbTargetTypeAnnotation = "service.beta.kubernetes.io/aws-load-balancer-nlb-target-type"
 	NlbTargetTypeInstance   = "instance"

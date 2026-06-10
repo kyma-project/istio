@@ -8,12 +8,11 @@ import (
 	"sync"
 
 	"github.com/cucumber/godog"
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/ip"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	"github.com/kyma-project/istio/operator/tests/integration/pkg/ip"
 
 	"log"
 	"net/http"

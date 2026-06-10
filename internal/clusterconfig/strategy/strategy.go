@@ -3,7 +3,6 @@ package strategy
 type LB interface {
 	GetLBAnnotations() map[string]string
 	RequiresProxyProtocolEnvoyFilter() bool
-	IsDualStackEnabled() bool
 }
 
 type CNI interface {
@@ -13,4 +12,7 @@ type CNI interface {
 type Hyperscaler struct {
 	LB
 	CNI
+	// DualStackEnabled mirrors the cluster-wide kyma-provisioning-info dualStackIPEnabled flag.
+	// It is independent of the LB strategy.
+	DualStackEnabled bool
 }

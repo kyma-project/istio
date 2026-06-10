@@ -55,14 +55,13 @@ func TestNewStrategy_LBSelection(t *testing.T) {
 			},
 		},
 		{
-			name:             "no elb-deprecated CM + dualStack -> NLB DualStack",
+			name:             "no elb-deprecated CM + dualStack -> NLB (static annotation set; dualstack not yet wired)",
 			objs:             nil,
 			dualStackEnabled: true,
 			wantAnnots: map[string]string{
-				aws.LBTypeAnnotation:        aws.ExternalType,
+				aws.LBTypeAnnotation:        aws.NLBType,
 				aws.SchemeAnnotation:        aws.InternetFacingScheme,
 				aws.NlbTargetTypeAnnotation: aws.NlbTargetTypeInstance,
-				aws.IpAddressTypeAnnotation: aws.IpAddressTypeDualStack,
 			},
 		},
 		{

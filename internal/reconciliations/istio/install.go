@@ -66,7 +66,7 @@ func installIstio(ctx context.Context, args installArgs) (istiooperator.IstioIma
 		}
 	}
 
-	enableDualStack := clusterStrategy != nil && clusterStrategy.LB != nil && clusterStrategy.LB.IsDualStackEnabled()
+	enableDualStack := clusterStrategy != nil && clusterStrategy.DualStackEnabled
 	if enableDualStack {
 		ctrl.Log.Info("Istio is running with IPDualStack enabled")
 	}

@@ -76,26 +76,17 @@ func (s *LB) GetLBAnnotations() map[string]string {
 	if s.lbType == ELB {
 		return nil
 	}
-	switch s.stackType {
-	case IPv4:
-		return map[string]string{
-			LBTypeAnnotation:        NLBType,
-			SchemeAnnotation:        InternetFacingScheme,
-			NlbTargetTypeAnnotation: NlbTargetTypeInstance,
-		}
-	case DualStack:
-		return map[string]string{
-			LBTypeAnnotation:        ExternalType,
-			SchemeAnnotation:        InternetFacingScheme,
-			NlbTargetTypeAnnotation: NlbTargetTypeInstance,
-			IpAddressTypeAnnotation: IpAddressTypeDualStack,
-		}
-	default:
-		return map[string]string{
-			LBTypeAnnotation:        NLBType,
-			SchemeAnnotation:        InternetFacingScheme,
-			NlbTargetTypeAnnotation: NlbTargetTypeInstance,
-		}
+	// In case of running with DualStack IP family,
+	// The annotation "service.beta.kubernetes.io/aws-load-balancer-ip-address-type=dualstack" is required.
+	// AWS LB Controller-style annotations (type=external, ip-address-type=dualstack)
+	// are intentionally NOT emitted here. On Gardener IPv6/dual-stack clusters those
+	// are added by Gardener's shoot-service mutating webhook. See:
+	// https://github.com/gardener/gardener-extension-provider-aws/blob/master/pkg/webhook/shootservice/mutator.go
+	// Switching IPv4 clusters to LB type=external is a potential follow up.
+	return map[string]string{
+		LBTypeAnnotation:        NLBType,
+		SchemeAnnotation:        InternetFacingScheme,
+		NlbTargetTypeAnnotation: NlbTargetTypeInstance,
 	}
 }
 
@@ -112,10 +103,6 @@ func (s *LB) RequiresProxyProtocolEnvoyFilter() bool {
 	default:
 		return false
 	}
-}
-
-func (s *LB) IsDualStackEnabled() bool {
-	return s.stackType == DualStack
 }
 
 func shouldUseNLB(ctx context.Context, k8sClient client.Client) (bool, error) {

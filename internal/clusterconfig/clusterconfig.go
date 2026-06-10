@@ -125,20 +125,31 @@ func BuildStrategy(ctx context.Context, k8sClient client.Client) (*strategy.Hype
 
 	switch provider {
 	case AWS:
-		return aws.NewStrategy(ctx, k8sClient, dualStackEnabled)
+		s, err := aws.NewStrategy(ctx, k8sClient, dualStackEnabled)
+		if err != nil {
+			return nil, err
+		}
+		s.DualStackEnabled = dualStackEnabled
+		return s, nil
 	case K3d:
-		return k3d.NewStrategy(), nil
+		s := k3d.NewStrategy()
+		s.DualStackEnabled = dualStackEnabled
+		return s, nil
 	case GKE:
-		return gke.NewStrategy(), nil
+		s := gke.NewStrategy()
+		s.DualStackEnabled = dualStackEnabled
+		return s, nil
 	case Openstack:
-		return openstack.NewStrategy(usesGardenOS), nil
+		s := openstack.NewStrategy(usesGardenOS)
+		s.DualStackEnabled = dualStackEnabled
+		return s, nil
 	default:
-		return &strategy.Hyperscaler{}, nil
+		return &strategy.Hyperscaler{DualStackEnabled: dualStackEnabled}, nil
 	}
 }
 
 // ClusterConfigurationFromStrategy renders the Istio operator overrides
-// from a pre-built strategy. Pure: no I/O.
+// from a pre-built strategy.
 func ClusterConfigurationFromStrategy(s *strategy.Hyperscaler) ClusterConfiguration {
 	return clusterConfiguration(s)
 }
@@ -171,14 +182,15 @@ func DiscoverClusterProvider(ctx context.Context, k8sClient client.Client) (Clus
 	}
 
 	for _, node := range nodeList.Items {
+		providerID := strings.ToLower(node.Spec.ProviderID)
 		switch {
 		case regexpMatchGKE.MatchString(node.Status.NodeInfo.KubeletVersion):
 			return GKE, nil
 		case regexpMatchK3D.MatchString(node.Status.NodeInfo.KubeletVersion):
 			return K3d, nil
-		case strings.HasPrefix(node.Spec.ProviderID, "aws://"):
+		case strings.HasPrefix(providerID, "aws://"):
 			return AWS, nil
-		case strings.HasPrefix(node.Spec.ProviderID, "openstack://"):
+		case strings.HasPrefix(providerID, "openstack://"):
 			return Openstack, nil
 		}
 	}

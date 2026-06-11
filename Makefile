@@ -354,50 +354,15 @@ grafana-dashboard: ## Generating Grafana manifests to visualize controller statu
 PULL_IMAGE_VERSION=PR-${PULL_NUMBER}
 POST_IMAGE_VERSION=v$(shell date '+%Y%m%d')-$(shell printf %.8s ${PULL_BASE_SHA})
 
-.PHONY: istio-integration-test
-istio-integration-test: configuration-integration-test mesh-communication-integration-test installation-integration-test observability-integration-test
-
 .PHONY: grpc-performance-test
 grpc-performance-test:
 	make -c tests/performance-grpc deploy-helm
 	make -c tests/performance-grpc grpc-load-test
 	make -c tests/performance-grpc export-results
 
-.PHONY: configuration-integration-test
-configuration-integration-test: install deploy
-	cd tests/integration && TEST_REQUEST_TIMEOUT=600s && EXPORT_RESULT=true go test -v -timeout 35m -run TestConfiguration
-
-.PHONY: mesh-communication-integration-test
-mesh-communication-integration-test: install deploy
-	cd tests/integration && TEST_REQUEST_TIMEOUT=600s && EXPORT_RESULT=true go test -v -timeout 35m -run TestMeshCommunication
-
-.PHONY: installation-integration-test
-installation-integration-test: install deploy
-	cd tests/integration && TEST_REQUEST_TIMEOUT=600s && EXPORT_RESULT=true go test -v -timeout 35m -run TestInstallation
-
-.PHONY: observability-integration-test
-observability-integration-test: install deploy
-	cd tests/integration && TEST_REQUEST_TIMEOUT=600s && EXPORT_RESULT=true go test -v -timeout 35m -run TestObservability
-
-.PHONY: aws-integration-test
-aws-integration-test: install deploy
-	cd tests/integration && TEST_REQUEST_TIMEOUT=600s && EXPORT_RESULT=true go test -v -timeout 35m -run TestAws
-.PHONY: gcp-integration-test
-gcp-integration-test: install deploy
-	cd tests/integration && TEST_REQUEST_TIMEOUT=600s && EXPORT_RESULT=true go test -v -timeout 35m -run TestGcp
-
-.PHONY: evaluation-integration-test
-evaluation-integration-test: install deploy
-	cd tests/integration && TEST_REQUEST_TIMEOUT=600s && EXPORT_RESULT=true go test -v -timeout 35m -run TestEvaluation
-
 .PHONY: deploy-latest-release
 deploy-latest-release: create-kyma-system-ns
-	cd tests/integration && ./scripts/deploy-latest-release-to-cluster.sh $(TARGET_BRANCH)
-
-# Latest release deployed on cluster is a prerequisite, it is handled by deploy-latest-release target
-.PHONY: istio-upgrade-integration-test
-istio-upgrade-integration-test: deploy-latest-release generate-integration-test-manifest
-	cd tests/integration && TEST_REQUEST_TIMEOUT=300s && EXPORT_RESULT=true go test -v -race -timeout 15m -run TestUpgrade
+	./hack/ci/deploy-latest-release-to-cluster.sh $(TARGET_BRANCH)
 
 ########## Gardener specific ###########
 

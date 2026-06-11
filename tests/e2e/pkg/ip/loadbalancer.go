@@ -2,8 +2,9 @@ package ip
 
 import (
 	"fmt"
-	v1 "k8s.io/api/core/v1"
 	"net"
+
+	v1 "k8s.io/api/core/v1"
 )
 
 // GetLoadBalancerIp returns the IP of the load balancer from the load balancer ingress object

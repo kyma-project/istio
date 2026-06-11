@@ -36,7 +36,7 @@ spec:
     spec:
       serviceAccountName: {{ .Release.Name }}
       containers:
-      - image: europe-central2-docker.pkg.dev/sap-se-cx-kyma-goat/networking-dev-tools/grpcbin:latest
+      - image: ghcr.io/kyma-project/networking-dev-tools/grpcbin:latest
         imagePullPolicy: IfNotPresent
         name: grpcbin
         ports:

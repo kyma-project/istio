@@ -91,9 +91,9 @@ jobs:
         test-make-target:
           - "installation-e2e-test"
           - "configuration-e2e-test"
-          - "mesh-communication-e2e-test"
+          - "mesh_communication-e2e-test"
           - "observability-e2e-test"
-          - "ext-auth-e2e-test"
+          - "extauth-e2e-test"
           - "egress-e2e-test"
           - "networkpolicy-e2e-test"
     steps:
@@ -178,7 +178,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TARGET_BRANCH: ${{ github.ref_name }}
         with:
-          test_make_target: "upgrade-test"
+          test_make_target: "upgrade-e2e-test"
           operator-version: ${{ needs.get-image.outputs.operator_version }}
           operator-image-name: ${{ needs.get-image.outputs.image }}
           servers-memory: "16"
@@ -196,7 +196,7 @@ jobs:
       matrix:
         test-make-target:
           - "installation-e2e-test"
-          - "istio-smoke-test"
+          - "smoke_test-e2e-test"
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/e2e-test-k3d
@@ -225,10 +225,10 @@ jobs:
       fail-fast: false
       matrix:
         test_make_target:
-          - "xff-header-e2e-test"
-          - "trust-domain-e2e-test"
+          - "xff_header-e2e-test"
+          - "trustdomain-e2e-test"
           - "networkpolicy-e2e-test"
-          - "dns-proxying-e2e-test"
+          - "dnsproxying-e2e-test"
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/e2e-test-gardener
@@ -254,9 +254,9 @@ jobs:
       matrix:
         test_make_target:
           - "xff-header-e2e-test"
-          - "trust-domain-e2e-test"
+          - "trustdomain-e2e-test"
           - "networkpolicy-e2e-test"
-          - "dns-proxying-e2e-test"
+          - "dnsproxying-e2e-test"
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/e2e-test-gardener

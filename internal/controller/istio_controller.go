@@ -36,6 +36,7 @@ import (
 
 	"k8s.io/client-go/util/retry"
 
+	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/describederrors"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/configuration"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istioresources"
@@ -170,7 +171,15 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		}
 	}
 
-	istioImageVersion, installationErr := r.istioInstallation.Reconcile(ctx, &istioCR, r.statusHandler, r.istioImages)
+	clusterStrategy, buildStrategyErr := clusterconfig.BuildFactory(ctx, r.Client)
+	if buildStrategyErr != nil {
+		return r.requeueReconciliation(ctx, &istioCR,
+			describederrors.NewDescribedError(buildStrategyErr, "Could not build cluster strategy"),
+			operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileFailed),
+			reconciliationRequeueTimeError)
+	}
+
+	istioImageVersion, installationErr := r.istioInstallation.Reconcile(ctx, &istioCR, r.statusHandler, r.istioImages, clusterStrategy)
 	if installationErr != nil {
 		return r.requeueReconciliation(ctx, &istioCR, installationErr,
 			operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIstioInstallUninstallFailed),
@@ -197,7 +206,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		}
 	}
 
-	resourcesErr := r.istioResources.Reconcile(ctx, istioCR)
+	resourcesErr := r.istioResources.Reconcile(ctx, istioCR, clusterStrategy)
 	if resourcesErr != nil {
 		return r.requeueReconciliation(ctx, &istioCR, resourcesErr,
 			operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonCRsReconcileFailed),

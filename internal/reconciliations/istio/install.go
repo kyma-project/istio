@@ -12,6 +12,7 @@ import (
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig/factory"
 	"github.com/kyma-project/istio/operator/internal/describederrors"
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/configuration"
@@ -28,6 +29,7 @@ type installArgs struct {
 	istioImageVersion   istiooperator.IstioImageVersion
 	istioClient         libraryClient
 	istioImages         images.Images
+	clusterStrategy     factory.Factory
 }
 
 //nolint:funlen // Function 'installIstio' has too many statements (51 > 50) TODO: refactor.
@@ -39,6 +41,7 @@ func installIstio(ctx context.Context, args installArgs) (istiooperator.IstioIma
 	iopMerger := args.istioOperatorMerger
 	istioClient := args.istioClient
 	istioImages := args.istioImages
+	clusterStrategy := args.clusterStrategy
 
 	ctrl.Log.Info("Starting Istio install", "istio version", istioImageVersion.Version())
 
@@ -63,25 +66,12 @@ func installIstio(ctx context.Context, args installArgs) (istiooperator.IstioIma
 		}
 	}
 
-	// Check the cluster provider for the cluster configuration annotation purposes
-	clusterProvider, err := clusterconfig.GetClusterProvider(ctx, k8sClient)
-	if err != nil {
-		return istioImageVersion, describederrors.NewDescribedError(err, "Could not determine cluster provider")
-	}
-	ctrl.Log.Info("Detected cluster provider", "provider", clusterProvider)
-
-	clusterConfiguration, err := clusterconfig.EvaluateClusterConfiguration(ctx, k8sClient, clusterProvider)
-	if err != nil {
-		return istioImageVersion, describederrors.NewDescribedError(err, "Could not evaluate cluster flavour")
-	}
-
-	enableDualStack, err := clusterconfig.IsDualStackEnabled(ctx, k8sClient)
-	if err != nil {
-		return istioImageVersion, describederrors.NewDescribedError(err, "Could not evaluate if dual stack is enabled")
-	}
+	enableDualStack := clusterStrategy != nil && clusterStrategy.DualStackEnabled()
 	if enableDualStack {
 		ctrl.Log.Info("Istio is running with IPDualStack enabled")
 	}
+
+	clusterConfiguration := clusterconfig.ClusterConfigurationFromFactory(clusterStrategy)
 
 	clusterSize, err := clusterconfig.EvaluateClusterSize(context.Background(), k8sClient)
 	if err != nil {

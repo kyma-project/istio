@@ -7,6 +7,7 @@ import (
 	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	securityv1 "istio.io/client-go/pkg/apis/security/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -37,6 +38,7 @@ func getTestScheme() *runtime.Scheme {
 	Expect(networkingv1.AddToScheme(scheme)).Should(Succeed())
 	Expect(securityv1.AddToScheme(scheme)).Should(Succeed())
 	Expect(networkingv1alpha3.AddToScheme(scheme)).Should(Succeed())
+	Expect(corev1.AddToScheme(scheme)).Should(Succeed())
 
 	return scheme
 }

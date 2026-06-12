@@ -4,7 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/kyma-project/istio/operator/internal/clusterconfig/strategy/aws"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig/factory"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig/factory/aws"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
@@ -37,7 +38,7 @@ func ingressGatewaySvc(annotations map[string]string) *corev1.Service {
 	}
 }
 
-func TestNewStrategy_LBSelection(t *testing.T) {
+func TestFactory_MakeLB(t *testing.T) {
 	tests := []struct {
 		name             string
 		objs             []client.Object
@@ -74,9 +75,7 @@ func TestNewStrategy_LBSelection(t *testing.T) {
 			name: "elb-deprecated CM present + service already NLB -> NLB",
 			objs: []client.Object{
 				elbDeprecatedCM(),
-				ingressGatewaySvc(map[string]string{
-					aws.LBTypeAnnotation: aws.NLBType,
-				}),
+				ingressGatewaySvc(map[string]string{aws.LBTypeAnnotation: aws.NLBType}),
 			},
 			dualStackEnabled: false,
 			wantAnnots: map[string]string{
@@ -89,9 +88,7 @@ func TestNewStrategy_LBSelection(t *testing.T) {
 			name: "elb-deprecated CM present + service with non-NLB annotation -> ELB",
 			objs: []client.Object{
 				elbDeprecatedCM(),
-				ingressGatewaySvc(map[string]string{
-					aws.LBTypeAnnotation: "classic",
-				}),
+				ingressGatewaySvc(map[string]string{aws.LBTypeAnnotation: "classic"}),
 			},
 			dualStackEnabled: false,
 			wantAnnots:       nil,
@@ -111,18 +108,18 @@ func TestNewStrategy_LBSelection(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := newFakeClient(t, tt.objs...)
 
-			s, err := aws.NewStrategy(context.Background(), c, tt.dualStackEnabled)
+			f, err := aws.NewFactory(context.Background(), c, factory.Inputs{DualStackEnabled: tt.dualStackEnabled})
 			require.NoError(t, err)
-			require.NotNil(t, s)
-			require.NotNil(t, s.LB)
+			require.NotNil(t, f)
 
-			annots := s.GetLBAnnotations()
-			assert.Equal(t, tt.wantAnnots, annots)
+			lb := f.LB()
+			require.NotNil(t, lb)
+			assert.Equal(t, tt.wantAnnots, lb.GetLBAnnotations())
 		})
 	}
 }
 
-func TestLB_RequiresProxyProtocolEnvoyFilter(t *testing.T) {
+func TestFactory_MakeNeedsProxyProtocol(t *testing.T) {
 	tests := []struct {
 		name             string
 		objs             []client.Object
@@ -152,16 +149,28 @@ func TestLB_RequiresProxyProtocolEnvoyFilter(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := newFakeClient(t, tt.objs...)
-			s, err := aws.NewStrategy(context.Background(), c, tt.dualStackEnabled)
+			f, err := aws.NewFactory(context.Background(), c, factory.Inputs{DualStackEnabled: tt.dualStackEnabled})
 			require.NoError(t, err)
-			assert.Equal(t, tt.want, s.RequiresProxyProtocolEnvoyFilter())
+			assert.Equal(t, tt.want, f.NeedsProxyProtocol())
 		})
 	}
 }
 
-func TestNewStrategy_NoCNI(t *testing.T) {
+func TestFactory_MakeCNI_AlwaysNil(t *testing.T) {
 	c := newFakeClient(t)
-	s, err := aws.NewStrategy(context.Background(), c, false)
+	f, err := aws.NewFactory(context.Background(), c, factory.Inputs{})
 	require.NoError(t, err)
-	assert.Nil(t, s.CNI)
+	assert.Nil(t, f.CNI())
+}
+
+func TestFactory_DualStackEnabled(t *testing.T) {
+	c := newFakeClient(t)
+
+	f1, err := aws.NewFactory(context.Background(), c, factory.Inputs{DualStackEnabled: true})
+	require.NoError(t, err)
+	assert.True(t, f1.DualStackEnabled())
+
+	f2, err := aws.NewFactory(context.Background(), c, factory.Inputs{DualStackEnabled: false})
+	require.NoError(t, err)
+	assert.False(t, f2.DualStackEnabled())
 }

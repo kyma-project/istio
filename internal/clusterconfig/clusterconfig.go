@@ -5,11 +5,11 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/kyma-project/istio/operator/internal/clusterconfig/strategy"
-	"github.com/kyma-project/istio/operator/internal/clusterconfig/strategy/aws"
-	"github.com/kyma-project/istio/operator/internal/clusterconfig/strategy/gke"
-	"github.com/kyma-project/istio/operator/internal/clusterconfig/strategy/k3d"
-	"github.com/kyma-project/istio/operator/internal/clusterconfig/strategy/openstack"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig/factory"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig/factory/aws"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig/factory/gke"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig/factory/k3d"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig/factory/openstack"
 	"k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 
@@ -103,10 +103,10 @@ func (c ClusterProvider) String() string {
 
 type ClusterConfiguration map[string]interface{}
 
-// BuildStrategy discovers the cluster provider and dual-stack/Garden flags,
-// then constructs the matching Hyperscaler strategy. This is the single
-// place where LB/CNI strategy selection happens for a reconcile loop.
-func BuildStrategy(ctx context.Context, k8sClient client.Client) (*strategy.Hyperscaler, error) {
+// BuildFactory discovers the cluster provider and dual-stack/Garden flags,
+// then constructs the matching Factory. This is the single place where
+// LB/CNI strategy selection happens for a reconcile loop.
+func BuildFactory(ctx context.Context, k8sClient client.Client) (factory.Factory, error) {
 	provider, err := DiscoverClusterProvider(ctx, k8sClient)
 	if err != nil {
 		return nil, err
@@ -123,34 +123,25 @@ func BuildStrategy(ctx context.Context, k8sClient client.Client) (*strategy.Hype
 		return nil, err
 	}
 
+	in := factory.Inputs{DualStackEnabled: dualStackEnabled, UsesGardenOS: usesGardenOS}
+
 	switch provider {
 	case AWS:
-		s, err := aws.NewStrategy(ctx, k8sClient, dualStackEnabled)
-		if err != nil {
-			return nil, err
-		}
-		s.DualStackEnabled = dualStackEnabled
-		return s, nil
+		return aws.NewFactory(ctx, k8sClient, in)
 	case K3d:
-		s := k3d.NewStrategy()
-		s.DualStackEnabled = dualStackEnabled
-		return s, nil
+		return k3d.NewFactory(in), nil
 	case GKE:
-		s := gke.NewStrategy()
-		s.DualStackEnabled = dualStackEnabled
-		return s, nil
+		return gke.NewFactory(in), nil
 	case Openstack:
-		s := openstack.NewStrategy(usesGardenOS)
-		s.DualStackEnabled = dualStackEnabled
-		return s, nil
+		return openstack.NewFactory(in), nil
 	default:
-		return &strategy.Hyperscaler{DualStackEnabled: dualStackEnabled}, nil
+		return factory.DefaultFactory(in), nil
 	}
 }
 
-// ClusterConfigurationFromStrategy renders the Istio operator overrides
-// from a pre-built strategy.
-func ClusterConfigurationFromStrategy(s *strategy.Hyperscaler) ClusterConfiguration {
+// ClusterConfigurationFromFactory renders the Istio operator overrides
+// from a pre-built Factory.
+func ClusterConfigurationFromFactory(s factory.Factory) ClusterConfiguration {
 	return clusterConfiguration(s)
 }
 
@@ -201,7 +192,7 @@ func DiscoverClusterProvider(ctx context.Context, k8sClient client.Client) (Clus
 	return Unknown, nil
 }
 
-func clusterConfiguration(s *strategy.Hyperscaler) ClusterConfiguration {
+func clusterConfiguration(s factory.Factory) ClusterConfiguration {
 	values := map[string]interface{}{}
 
 	if s == nil {
@@ -212,14 +203,14 @@ func clusterConfiguration(s *strategy.Hyperscaler) ClusterConfiguration {
 		}
 	}
 
-	if s.CNI != nil {
-		if cni := s.GetCNIValues(); cni != nil {
-			values["cni"] = cni
+	if cni := s.CNI(); cni != nil {
+		if v := cni.GetCNIValues(); v != nil {
+			values["cni"] = v
 		}
 	}
 
-	if s.LB != nil {
-		if ann := s.GetLBAnnotations(); ann != nil {
+	if lb := s.LB(); lb != nil {
+		if ann := lb.GetLBAnnotations(); ann != nil {
 			values["gateways"] = map[string]interface{}{
 				"istio-ingressgateway": map[string]interface{}{
 					"serviceAnnotations": ann,

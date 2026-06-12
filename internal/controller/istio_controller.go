@@ -171,7 +171,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		}
 	}
 
-	clusterStrategy, buildStrategyErr := clusterconfig.BuildStrategy(ctx, r.Client)
+	clusterStrategy, buildStrategyErr := clusterconfig.BuildFactory(ctx, r.Client)
 	if buildStrategyErr != nil {
 		return r.requeueReconciliation(ctx, &istioCR,
 			describederrors.NewDescribedError(buildStrategyErr, "Could not build cluster strategy"),

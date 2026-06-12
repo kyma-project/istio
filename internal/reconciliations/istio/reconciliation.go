@@ -6,7 +6,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/kyma-project/istio/operator/internal/clusterconfig/strategy"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig/factory"
 	"github.com/kyma-project/istio/operator/internal/images"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
@@ -16,7 +16,7 @@ import (
 )
 
 type InstallationReconciliation interface {
-	Reconcile(ctx context.Context, istioCR *operatorv1alpha2.Istio, statusHandler status.Status, istioImageHub images.Images, clusterStrategy *strategy.Hyperscaler) (istiooperator.IstioImageVersion, describederrors.DescribedError)
+	Reconcile(ctx context.Context, istioCR *operatorv1alpha2.Istio, statusHandler status.Status, istioImageHub images.Images, clusterStrategy factory.Factory) (istiooperator.IstioImageVersion, describederrors.DescribedError)
 }
 
 type Installation struct {
@@ -31,7 +31,7 @@ func (i *Installation) Reconcile(
 	istioCR *operatorv1alpha2.Istio,
 	statusHandler status.Status,
 	images images.Images,
-	clusterStrategy *strategy.Hyperscaler,
+	clusterStrategy factory.Factory,
 ) (istiooperator.IstioImageVersion, describederrors.DescribedError) {
 	istioImageVersion, err := i.Merger.GetIstioImageVersion()
 	if err != nil {

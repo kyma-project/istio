@@ -8,7 +8,7 @@ import (
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
-	"github.com/kyma-project/istio/operator/internal/clusterconfig/strategy"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig/factory"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
@@ -198,8 +198,8 @@ var _ = Describe("Reconciliation", func() {
 
 })
 
-func mustBuildStrategy(c ctrlclient.Client) *strategy.Hyperscaler {
-	s, err := clusterconfig.BuildStrategy(context.Background(), c)
+func mustBuildStrategy(c ctrlclient.Client) factory.Factory {
+	s, err := clusterconfig.BuildFactory(context.Background(), c)
 	Expect(err).ShouldNot(HaveOccurred())
 	return s
 }

@@ -3,7 +3,7 @@ package aws
 import (
 	"context"
 
-	"github.com/kyma-project/istio/operator/internal/clusterconfig/strategy"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig/factory"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -44,31 +44,6 @@ type LB struct {
 	lbType    Type
 }
 
-func NewStrategy(ctx context.Context, k8sClient client.Client, dualStackEnabled bool) (*strategy.Hyperscaler, error) {
-	lb := &LB{}
-
-	useNLB, err := shouldUseNLB(ctx, k8sClient)
-	if err != nil {
-		return nil, err
-	}
-
-	if useNLB {
-		lb.lbType = NLB
-	} else {
-		lb.lbType = ELB
-	}
-
-	if dualStackEnabled {
-		lb.stackType = DualStack
-	} else {
-		lb.stackType = IPv4
-	}
-
-	return &strategy.Hyperscaler{
-		LB: lb,
-	}, nil
-}
-
 func (s *LB) GetLBAnnotations() map[string]string {
 	if s.lbType == ELB {
 		return nil
@@ -87,12 +62,47 @@ func (s *LB) GetLBAnnotations() map[string]string {
 	}
 }
 
-func (s *LB) RequiresProxyProtocolEnvoyFilter() bool {
-	if s.lbType == ELB {
-		return true
+type Factory struct {
+	inputs factory.Inputs
+	lb     *LB
+}
+
+// NewFactory builds an AWS Factory. The cluster reads needed to decide
+// between NLB and ELB happen here so that Make* methods stay pure.
+func NewFactory(ctx context.Context, k8sClient client.Client, in factory.Inputs) (*Factory, error) {
+	lb := &LB{}
+
+	useNLB, err := shouldUseNLB(ctx, k8sClient)
+	if err != nil {
+		return nil, err
 	}
 
-	switch s.stackType {
+	if useNLB {
+		lb.lbType = NLB
+	} else {
+		lb.lbType = ELB
+	}
+
+	if in.DualStackEnabled {
+		lb.stackType = DualStack
+	} else {
+		lb.stackType = IPv4
+	}
+
+	return &Factory{inputs: in, lb: lb}, nil
+}
+
+func (f *Factory) LB() factory.LB {
+	return f.lb
+}
+
+func (f *Factory) CNI() factory.CNI { return nil }
+
+func (f *Factory) NeedsProxyProtocol() bool {
+	if f.lb.lbType == ELB {
+		return true
+	}
+	switch f.lb.stackType {
 	case IPv4:
 		return false
 	case DualStack:
@@ -101,6 +111,8 @@ func (s *LB) RequiresProxyProtocolEnvoyFilter() bool {
 		return false
 	}
 }
+
+func (f *Factory) DualStackEnabled() bool { return f.inputs.DualStackEnabled }
 
 func shouldUseNLB(ctx context.Context, k8sClient client.Client) (bool, error) {
 	var elbDeprecated corev1.ConfigMap

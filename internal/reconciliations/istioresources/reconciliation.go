@@ -11,13 +11,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	"github.com/kyma-project/istio/operator/internal/clusterconfig/strategy"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig/factory"
 	"github.com/kyma-project/istio/operator/internal/describederrors"
 	"github.com/kyma-project/istio/operator/internal/istiofeatures"
 )
 
 type ResourcesReconciliation interface {
-	Reconcile(ctx context.Context, istioCR v1alpha2.Istio, clusterStrategy *strategy.Hyperscaler) describederrors.DescribedError
+	Reconcile(ctx context.Context, istioCR v1alpha2.Istio, clusterStrategy factory.Factory) describederrors.DescribedError
 }
 
 type ResourcesReconciler struct {
@@ -36,7 +36,7 @@ type Resource interface {
 	reconcile(ctx context.Context, k8sClient client.Client, owner metav1.OwnerReference, templateValues map[string]string) (controllerutil.OperationResult, error)
 }
 
-func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha2.Istio, clusterStrategy *strategy.Hyperscaler) describederrors.DescribedError {
+func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha2.Istio, clusterStrategy factory.Factory) describederrors.DescribedError {
 	ctrl.Log.Info("Reconciling Istio resources")
 
 	features, featErr := istiofeatures.Get(ctx, r.client)
@@ -69,7 +69,7 @@ func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha2.Is
 }
 
 // getResources returns all Istio resources required for the reconciliation specific for the given hyperscaler strategy.
-func getResources(clusterStrategy *strategy.Hyperscaler, istioCR v1alpha2.Istio, features istiofeatures.IstioFeatures) []Resource {
+func getResources(clusterStrategy factory.Factory, istioCR v1alpha2.Istio, features istiofeatures.IstioFeatures) []Resource {
 	// @Ressetkk: this logic needs to be moved to main reconciliation loop.
 	// Remove dynamic assignment of resource reconcilers.
 	// Can't write proper tests if I don't know which resources are reconciled in the loop.
@@ -89,8 +89,8 @@ func getResources(clusterStrategy *strategy.Hyperscaler, istioCR v1alpha2.Istio,
 		NewControlPlaneVPA(!features.EnableControlPlaneVPA),
 	}
 
-	if clusterStrategy != nil && clusterStrategy.LB != nil {
-		shouldDeleteEnvoyFilter := !clusterStrategy.LB.RequiresProxyProtocolEnvoyFilter()
+	if clusterStrategy != nil {
+		shouldDeleteEnvoyFilter := !clusterStrategy.NeedsProxyProtocol()
 		istioResources = append(istioResources, NewProxyProtocolEnvoyFilter(shouldDeleteEnvoyFilter))
 	}
 

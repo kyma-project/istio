@@ -170,6 +170,9 @@ jobs:
 
   istio-upgrade-test-aws:
     name: Istio upgrade integration test AWS
+    environment:
+      name: e2e
+      deployment: false
     runs-on: ubuntu-latest
     needs: [ get-image ]
     steps:
@@ -210,6 +213,9 @@ jobs:
 
   istio-e2e-test-gcp:
     name: Istio E2E test GCP
+    environment:
+      name: e2e
+      deployment: false
     runs-on: ubuntu-latest
     needs: [ get-image ]
     strategy:
@@ -236,6 +242,9 @@ jobs:
 
   istio-e2e-test-aws:
     name: Istio E2E test AWS
+    environment:
+      name: e2e
+      deployment: false
     runs-on: ubuntu-latest
     needs: [ get-image ]
     strategy:
@@ -346,6 +355,9 @@ jobs:
 
   new-istio-e2e-test-fips-k3d:
     name: New Istio E2E test (FIPS) K3D
+    environment:
+      name: e2e
+      deployment: false
     runs-on: ubuntu-latest
     needs: [ get-image ]
     strategy:
@@ -392,6 +404,9 @@ jobs:
 
   new-istio-e2e-test-aws:
     name: New Istio E2E test AWS
+    environment:
+      name: e2e
+      deployment: false
     runs-on: ubuntu-latest
     needs: [ get-image ]
     strategy:
@@ -417,6 +432,9 @@ jobs:
 
   new-istio-e2e-test-gcp:
     name: New Istio E2E test GCP
+    environment:
+      name: e2e
+      deployment: false
     runs-on: ubuntu-latest
     needs: [ get-image ]
     strategy:
@@ -531,6 +549,9 @@ jobs:
 
   notify:
     name: Notify
+    environment:
+      name: notifications
+      deployment: false
     runs-on: ubuntu-latest
     needs: [ check-prerequisites, publish-release, upload-release-report ]
     steps:

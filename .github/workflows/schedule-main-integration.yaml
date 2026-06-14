@@ -107,7 +107,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test_make_target: [ "configuration-integration-test", "mesh-communication-integration-test", "installation-integration-test", "observability-integration-test" ]
+        test-make-target:
+          - "installation-e2e-test"
+          - "configuration-e2e-test"
+          - "mesh-communication-e2e-test"
+          - "observability-e2e-test"
+          - "ext-auth-e2e-test"
+          - "egress-e2e-test"
+          - "networkpolicy-e2e-test"
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/k8s-compatibility-test
@@ -128,7 +135,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test_make_target: [ "configuration-integration-test", "mesh-communication-integration-test", "installation-integration-test", "observability-integration-test" ]
+        test-make-target:
+          - "installation-e2e-test"
+          - "configuration-e2e-test"
+          - "mesh-communication-e2e-test"
+          - "observability-e2e-test"
+          - "ext-auth-e2e-test"
+          - "egress-e2e-test"
+          - "networkpolicy-e2e-test"
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/k8s-compatibility-test-aws

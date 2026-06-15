@@ -107,7 +107,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-make-target:
+        test_make_target:
           - "installation-e2e-test"
           - "configuration-e2e-test"
           - "mesh-communication-e2e-test"
@@ -135,7 +135,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-make-target:
+        test_make_target:
           - "installation-e2e-test"
           - "configuration-e2e-test"
           - "mesh-communication-e2e-test"

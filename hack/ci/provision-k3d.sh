@@ -22,11 +22,29 @@ AGENTS="${AGENTS:-0}"
 SERVERS_MEMORY="${SERVERS_MEMORY:-16}"
 SERVERS="${SERVERS:-1}"
 
-# Parse --calico flag
+# Parse flags
 USE_CALICO=false
-if [[ "${1:-}" == "--calico" ]]; then
-    USE_CALICO=true
-fi
+USE_KWOK=false
+KWOK_NODES="${10:-0}"
+while [[ $# -gt 0 ]]; do
+    case "${1}" in
+        --calico)
+            USE_CALICO=true
+            ;;
+        --kwok)
+            USE_KWOK=true
+            ;;
+        --kwok-nodes)
+            KWOK_NODES="${2}"
+            shift
+            ;;
+        *)
+            echo "Unknown argument: ${1}"
+            exit 1
+            ;;
+    esac
+    shift
+done
 
 # Construct the k3s image tag
 K3S_IMAGE="rancher/k3s:v${KUBERNETES_VERSION}-k3s1"
@@ -95,6 +113,65 @@ provision_regular_cluster() {
         --image "${K3S_IMAGE}"
 }
 
+setup_kwok() {
+# KWOK repository
+KWOK_REPO=kubernetes-sigs/kwok
+# Get latest
+KWOK_RELEASE="v0.7.0"
+kubectl apply -f "https://github.com/${KWOK_REPO}/releases/download/${KWOK_RELEASE}/kwok.yaml"
+kubectl apply -f "https://github.com/${KWOK_REPO}/releases/download/${KWOK_RELEASE}/stage-fast.yaml"
+
+if [[ "${KWOK_NODES}" -gt 0 ]]; then
+    echo "Creating ${KWOK_NODES} fake Nodes..."
+    for i in $(seq 1 "${KWOK_NODES}"); do
+kubectl apply -f - <<EOF
+  apiVersion: v1
+  kind: Node
+  metadata:
+    annotations:
+      node.alpha.kubernetes.io/ttl: "0"
+      kwok.x-k8s.io/node: fake
+    labels:
+      beta.kubernetes.io/arch: amd64
+      beta.kubernetes.io/os: linux
+      kubernetes.io/arch: amd64
+      kubernetes.io/hostname: kwok-node-$i
+      kubernetes.io/os: linux
+      kubernetes.io/role: agent
+      node-role.kubernetes.io/agent: ""
+      type: kwok
+    name: kwok-node-$i
+  spec:
+    taints: # Avoid scheduling actual running pods to fake Node
+    - effect: NoSchedule
+      key: kwok.x-k8s.io/node
+      value: fake
+  status:
+    allocatable:
+      cpu: 32
+      memory: 250Gi
+      pods: 110
+    capacity:
+      cpu: 32
+      memory: 256Gi
+      pods: 110
+    nodeInfo:
+      architecture: amd64
+      bootID: ""
+      containerRuntimeVersion: ""
+      kernelVersion: ""
+      kubeProxyVersion: "fake"
+      kubeletVersion: v1.35.0
+      machineID: ""
+      operatingSystem: linux
+      osImage: "Debian GNU/Linux 12 (trixie)"
+      systemUUID: ""
+    phase: Running
+EOF
+  done
+  fi
+}
+
 # Main execution
 main() {
     install_k3d
@@ -103,6 +180,10 @@ main() {
         provision_calico_cluster
     else
         provision_regular_cluster
+    fi
+
+    if [ "${USE_KWOK}" = true ]; then
+        setup_kwok
     fi
 }
 

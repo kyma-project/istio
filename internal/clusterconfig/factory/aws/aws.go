@@ -44,7 +44,7 @@ type LB struct {
 	lbType    Type
 }
 
-func (s *LB) GetLBAnnotations() map[string]string {
+func (s *LB) Annotations() map[string]string {
 	if s.lbType == ELB {
 		return nil
 	}

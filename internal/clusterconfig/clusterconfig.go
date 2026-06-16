@@ -105,7 +105,7 @@ type ClusterConfiguration map[string]interface{}
 
 // BuildFactory discovers the cluster provider and dual-stack/Garden flags,
 // then constructs the matching Factory. This is the single place where
-// LB/CNI strategy selection happens for a reconcile loop.
+// LB/CNI configuration set up happens for a reconcile loop.
 func BuildFactory(ctx context.Context, k8sClient client.Client) (factory.Factory, error) {
 	provider, err := DiscoverClusterProvider(ctx, k8sClient)
 	if err != nil {
@@ -204,13 +204,13 @@ func clusterConfiguration(s factory.Factory) ClusterConfiguration {
 	}
 
 	if cni := s.CNI(); cni != nil {
-		if v := cni.GetCNIValues(); v != nil {
+		if v := cni.CNIValues(); v != nil {
 			values["cni"] = v
 		}
 	}
 
 	if lb := s.LB(); lb != nil {
-		if ann := lb.GetLBAnnotations(); ann != nil {
+		if ann := lb.Annotations(); ann != nil {
 			values["gateways"] = map[string]interface{}{
 				"istio-ingressgateway": map[string]interface{}{
 					"serviceAnnotations": ann,

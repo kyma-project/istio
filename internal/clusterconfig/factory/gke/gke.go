@@ -6,7 +6,7 @@ import (
 
 type CNI struct{}
 
-func (CNI) GetCNIValues() map[string]interface{} {
+func (CNI) CNIValues() map[string]interface{} {
 	return map[string]interface{}{
 		"cniBinDir": "/home/kubernetes/bin",
 		"resourceQuotas": map[string]bool{

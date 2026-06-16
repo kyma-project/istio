@@ -12,7 +12,7 @@ import (
 func TestCNI_GetCNIValues(t *testing.T) {
 	c := gke.CNI{}
 
-	values := c.GetCNIValues()
+	values := c.CNIValues()
 
 	assert.Equal(t, map[string]interface{}{
 		"cniBinDir": "/home/kubernetes/bin",
@@ -40,7 +40,7 @@ func TestFactory(t *testing.T) {
 			assert.Nil(t, f.LB())
 			cni := f.CNI()
 			require.NotNil(t, cni)
-			assert.NotEmpty(t, cni.GetCNIValues())
+			assert.NotEmpty(t, cni.CNIValues())
 			assert.False(t, f.NeedsProxyProtocol())
 			assert.Equal(t, tt.wantDualStack, f.DualStackEnabled())
 		})

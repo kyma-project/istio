@@ -11,7 +11,7 @@ type LB struct {
 	isGardener bool
 }
 
-func (s LB) GetLBAnnotations() map[string]string {
+func (s LB) Annotations() map[string]string {
 	if s.isGardener {
 		return map[string]string{
 			proxyProtocolAnnotation: proxyProtocolVersion,

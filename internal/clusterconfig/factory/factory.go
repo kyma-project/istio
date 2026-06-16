@@ -1,11 +1,11 @@
 package factory
 
 type LB interface {
-	GetLBAnnotations() map[string]string
+	Annotations() map[string]string
 }
 
 type CNI interface {
-	GetCNIValues() map[string]interface{}
+	CNIValues() map[string]interface{}
 }
 
 type Inputs struct {

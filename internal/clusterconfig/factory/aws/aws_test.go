@@ -114,7 +114,7 @@ func TestFactory_MakeLB(t *testing.T) {
 
 			lb := f.LB()
 			require.NotNil(t, lb)
-			assert.Equal(t, tt.wantAnnots, lb.GetLBAnnotations())
+			assert.Equal(t, tt.wantAnnots, lb.Annotations())
 		})
 	}
 }

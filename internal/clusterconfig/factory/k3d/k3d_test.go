@@ -12,7 +12,7 @@ import (
 func TestK3D_GetCNIValues(t *testing.T) {
 	s := k3d.CNI{}
 
-	values := s.GetCNIValues()
+	values := s.CNIValues()
 
 	assert.Equal(t, map[string]interface{}{
 		"cniBinDir":  "/var/lib/rancher/k3s/data/cni",
@@ -38,7 +38,7 @@ func TestFactory(t *testing.T) {
 			assert.Nil(t, f.LB())
 			cni := f.CNI()
 			require.NotNil(t, cni)
-			assert.NotEmpty(t, cni.GetCNIValues())
+			assert.NotEmpty(t, cni.CNIValues())
 			assert.False(t, f.NeedsProxyProtocol())
 			assert.Equal(t, tt.wantDualStack, f.DualStackEnabled())
 		})

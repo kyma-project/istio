@@ -34,7 +34,7 @@ func TestFactory_MakeLB(t *testing.T) {
 			f := openstack.NewFactory(factory.Inputs{UsesGardenOS: tt.isGardener})
 			lb := f.LB()
 			require.NotNil(t, lb)
-			assert.Equal(t, tt.wantAnnots, lb.GetLBAnnotations())
+			assert.Equal(t, tt.wantAnnots, lb.Annotations())
 		})
 	}
 }

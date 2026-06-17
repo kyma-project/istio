@@ -11,13 +11,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	"github.com/kyma-project/istio/operator/internal/clusterconfig"
+	"github.com/kyma-project/istio/operator/internal/clusterconfig/factory"
 	"github.com/kyma-project/istio/operator/internal/describederrors"
 	"github.com/kyma-project/istio/operator/internal/istiofeatures"
 )
 
 type ResourcesReconciliation interface {
-	Reconcile(ctx context.Context, istioCR v1alpha2.Istio) describederrors.DescribedError
+	Reconcile(ctx context.Context, istioCR v1alpha2.Istio, clusterStrategy factory.Factory) describederrors.DescribedError
 }
 
 type ResourcesReconciler struct {
@@ -36,24 +36,15 @@ type Resource interface {
 	reconcile(ctx context.Context, k8sClient client.Client, owner metav1.OwnerReference, templateValues map[string]string) (controllerutil.OperationResult, error)
 }
 
-func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha2.Istio) describederrors.DescribedError {
+func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha2.Istio, clusterStrategy factory.Factory) describederrors.DescribedError {
 	ctrl.Log.Info("Reconciling Istio resources")
-
-	provider, err := clusterconfig.GetClusterProvider(ctx, r.client)
-	if err != nil {
-		return describederrors.NewDescribedError(err, "could not determine cluster provider")
-	}
 
 	features, featErr := istiofeatures.Get(ctx, r.client)
 	if featErr != nil {
 		ctrl.Log.V(1).Info("Could not get Istio features for resource reconciliation, proceeding with defaults", "error", featErr)
 	}
 
-	resources, err := getResources(r.client, provider, istioCR, features)
-	if err != nil {
-		ctrl.Log.Error(err, "Failed to initialise Istio resources")
-		return describederrors.NewDescribedError(err, "Istio controller failed to initialise Istio resources")
-	}
+	resources := getResources(clusterStrategy, istioCR, features)
 
 	owner := metav1.OwnerReference{
 		APIVersion: istioCR.APIVersion,
@@ -77,20 +68,19 @@ func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha2.Is
 	return nil
 }
 
-// getResources returns all Istio resources required for the reconciliation specific for the given hyperscaler.
-func getResources(k8sClient client.Client, provider string, istioCR v1alpha2.Istio, features istiofeatures.IstioFeatures) ([]Resource, error) {
+// getResources returns all Istio resources required for the reconciliation specific for the given hyperscaler strategy.
+func getResources(clusterStrategy factory.Factory, istioCR v1alpha2.Istio, features istiofeatures.IstioFeatures) []Resource {
 	// @Ressetkk: this logic needs to be moved to main reconciliation loop.
 	// Remove dynamic assignment of resource reconcilers.
 	// Can't write proper tests if I don't know which resources are reconciled in the loop.
 	if istioCR.DeletionTimestamp != nil && !istioCR.DeletionTimestamp.IsZero() {
 		// NewPeerAuthenticationMtls does not delete resources
 		// NewProxyProtocolEnvoyFilter fails because CRDs are removed before it can delete the EnvoyFilter
-		toDeleteResources := []Resource{
+		return []Resource{
 			NewNetworkPolicies(true),
 			NewVPA(true),
 			NewControlPlaneVPA(true),
 		}
-		return toDeleteResources, nil
 	}
 	istioResources := []Resource{
 		NewPeerAuthenticationMtls(false),
@@ -99,41 +89,10 @@ func getResources(k8sClient client.Client, provider string, istioCR v1alpha2.Ist
 		NewControlPlaneVPA(!features.EnableControlPlaneVPA),
 	}
 
-	switch provider {
-	case clusterconfig.Aws:
-
-		var shouldDelete bool
-		shouldUseNLB, err := clusterconfig.ShouldUseNLB(context.Background(), k8sClient)
-		if err != nil {
-			return nil, err
-		}
-
-		if shouldUseNLB {
-			isDualStack, err := clusterconfig.IsDualStackEnabled(context.Background(), k8sClient)
-			if err != nil {
-				return nil, err
-			}
-			if isDualStack {
-				// NLB with DualStack, so Proxy Protocol enabled
-				shouldDelete = false
-			} else {
-				// NLB without DualStack, so Proxy Protocol disabled
-				shouldDelete = true
-			}
-		} else {
-			// ELB, so Proxy Protocol enabled
-			shouldDelete = false
-		}
-
-		istioResources = append(istioResources, NewProxyProtocolEnvoyFilter(shouldDelete))
-
-	case clusterconfig.Openstack:
-		// NLB is a default only for AWS clusters so for OpenStack we need to set the usage of NLB to false
-		istioResources = append(istioResources, NewProxyProtocolEnvoyFilter(false))
-
-	default:
-		return istioResources, nil
+	if clusterStrategy != nil {
+		shouldDeleteEnvoyFilter := !clusterStrategy.NeedsProxyProtocol()
+		istioResources = append(istioResources, NewProxyProtocolEnvoyFilter(shouldDeleteEnvoyFilter))
 	}
 
-	return istioResources, nil
+	return istioResources
 }

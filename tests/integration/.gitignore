@@ -1,9 +1,0 @@
-# Created by .ignore support plugin (hsz.mobi)
-## File-based project format
-cucumber-report.json
-junit-report.xml
-junit-main-report.xml
-junit-upgrade-report.xml
-reports
-steps/operator_generated_manifest.yaml
-

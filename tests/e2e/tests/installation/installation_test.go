@@ -8,6 +8,7 @@ import (
 
 	resourceassert "github.com/kyma-project/istio/operator/tests/e2e/pkg/asserts/resources"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/config"
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/fips"
 	infrahelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/infrastructure"
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
@@ -32,6 +33,9 @@ func TestInstallation(t *testing.T) {
 
 		err = infrahelpers.EnsureProductionClusterProfile(t)
 		require.NoError(t, err)
+
+		fips.EnsureFIPSRegistrySecret(t, istioSystemNamespace)
+		fips.EnsureFIPSRegistrySecret(t, defaultNamespace)
 
 		_, err = modulehelpers.NewIstioCRBuilder().ApplyAndCleanup(t)
 		require.NoError(t, err)
@@ -67,6 +71,9 @@ func TestInstallation(t *testing.T) {
 
 		err = infrahelpers.EnsureProductionClusterProfile(t)
 		require.NoError(t, err)
+
+		fips.EnsureFIPSRegistrySecret(t, istioSystemNamespace)
+		fips.EnsureFIPSRegistrySecret(t, defaultNamespace)
 
 		_, err = modulehelpers.NewIstioCRBuilder().
 			WithPilotResources("15m", "200Mi", "1200m", "1200Mi").
@@ -119,6 +126,9 @@ func TestInstallation(t *testing.T) {
 		err = infrahelpers.EnsureProductionClusterProfile(t)
 		require.NoError(t, err)
 
+		fips.EnsureFIPSRegistrySecret(t, istioSystemNamespace)
+		fips.EnsureFIPSRegistrySecret(t, defaultNamespace)
+
 		_, err = modulehelpers.NewIstioCRBuilder().ApplyAndCleanup(t)
 		require.NoError(t, err)
 
@@ -149,7 +159,6 @@ func TestInstallation(t *testing.T) {
 			),
 			istioassert.WithExpectedDescriptionContaining(
 				"Stopped Istio CR reconciliation: istio CR is not in kyma-system namespace",
-				"Will not reconcile automatically",
 			),
 		)
 	})
@@ -160,6 +169,9 @@ func TestInstallation(t *testing.T) {
 
 		err = infrahelpers.EnsureProductionClusterProfile(t)
 		require.NoError(t, err)
+
+		fips.EnsureFIPSRegistrySecret(t, istioSystemNamespace)
+		fips.EnsureFIPSRegistrySecret(t, defaultNamespace)
 
 		// Create first Istio CR with default name
 		_, err = modulehelpers.NewIstioCRBuilder().ApplyAndCleanup(t)
@@ -180,7 +192,6 @@ func TestInstallation(t *testing.T) {
 			),
 			istioassert.WithExpectedDescriptionContaining(
 				"Stopped Istio CR reconciliation: only Istio CR default in kyma-system reconciles the module",
-				"Will not reconcile automatically",
 			),
 		)
 	})
@@ -190,6 +201,10 @@ func TestInstallation(t *testing.T) {
 		require.NoError(t, err)
 
 		ib := modulehelpers.NewIstioCRBuilder()
+
+		fips.EnsureFIPSRegistrySecret(t, istioSystemNamespace)
+		fips.EnsureFIPSRegistrySecret(t, defaultNamespace)
+
 		_, err = ib.ApplyAndCleanup(t)
 		require.NoError(t, err)
 

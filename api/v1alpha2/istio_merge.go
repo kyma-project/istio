@@ -2,9 +2,11 @@ package v1alpha2
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 
 	"github.com/golang/protobuf/ptypes/duration"
+	"github.com/kyma-project/istio/operator/internal/istiofeatures"
 	"google.golang.org/protobuf/types/known/structpb"
 	meshv1alpha1 "istio.io/api/mesh/v1alpha1"
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
@@ -17,12 +19,20 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+// +kubebuilder:object:generate=false
 type MergeOptions struct {
+	Features        istiofeatures.IstioFeatures
 	EnableDualStack bool
 }
 
 // +kubebuilder:object:generate=false
 type MergeOption func(options *MergeOptions)
+
+func WithFeatures(features istiofeatures.IstioFeatures) MergeOption {
+	return func(options *MergeOptions) {
+		options.Features = features
+	}
+}
 
 func WithDualStackEnabled() MergeOption {
 	return func(options *MergeOptions) {
@@ -36,7 +46,7 @@ func (i *Istio) MergeInto(op iopv1alpha1.IstioOperator, options ...MergeOption) 
 		return op, err
 	}
 
-	mergedResourcesOp, err := i.mergeResources(mergedConfigOp)
+	mergedResourcesOp, err := i.mergeResources(mergedConfigOp, options...)
 	if err != nil {
 		return op, err
 	}
@@ -409,17 +419,54 @@ func enableAmbient(op iopv1alpha1.IstioOperator, ambientEnabled bool) (iopv1alph
 	return op, nil
 }
 
+func boolValue(b bool) *iopv1alpha1.BoolValue {
+	boolValue := iopv1alpha1.BoolValue{}
+	err := boolValue.UnmarshalJSON([]byte(strconv.FormatBool(b)))
+	if err != nil {
+		panic(fmt.Sprintf("failed to unmarshal bool value: %v", err))
+	}
+	return &boolValue
+}
+
 //nolint:gocognit,gocyclo,cyclop,funlen // cognitive complexity 189 of func `(*Istio).mergeResources` is high (> 20), cyclomatic complexity 70 of func `(*Istio).mergeResources` is high (> 30), Function 'mergeResources' has too many statements (129 > 50) TODO: refactor this function
-func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, error) {
+func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator, options ...MergeOption) (iopv1alpha1.IstioOperator, error) {
+	opts := &MergeOptions{
+		EnableDualStack: false,
+	}
+
+	for _, option := range options {
+		option(opts)
+	}
+
+	if op.Spec.Components == nil {
+		op.Spec.Components = &iopv1alpha1.IstioComponentSpec{}
+	}
+
+	op.Spec.Components.Cni = &iopv1alpha1.ComponentSpec{
+		Enabled: boolValue(!opts.Features.DisableCni),
+	}
+
 	if i.Spec.Components == nil {
+		if opts.Features.EnableControlPlaneVPA {
+			if op.Spec.Components.Pilot != nil && op.Spec.Components.Pilot.Kubernetes != nil {
+				removeMemoryMetricsFromHPA(op.Spec.Components.Pilot.Kubernetes.HpaSpec)
+			}
+			for idx := range op.Spec.Components.IngressGateways {
+				if op.Spec.Components.IngressGateways[idx].Kubernetes != nil {
+					removeMemoryMetricsFromHPA(op.Spec.Components.IngressGateways[idx].Kubernetes.HpaSpec)
+				}
+			}
+			for idx := range op.Spec.Components.EgressGateways {
+				if op.Spec.Components.EgressGateways[idx].Kubernetes != nil {
+					removeMemoryMetricsFromHPA(op.Spec.Components.EgressGateways[idx].Kubernetes.HpaSpec)
+				}
+			}
+		}
 		return op, nil
 	}
 
 	//nolint:nestif // `if i.Spec.Components.IngressGateway != nil` has complex nested blocks (complexity: 6) TODO refactor
 	if i.Spec.Components.IngressGateway != nil {
-		if op.Spec.Components == nil {
-			op.Spec.Components = &iopv1alpha1.IstioComponentSpec{}
-		}
 		if len(op.Spec.Components.IngressGateways) == 0 {
 			op.Spec.Components.IngressGateways = append(op.Spec.Components.IngressGateways, iopv1alpha1.GatewayComponentSpec{})
 		}
@@ -436,9 +483,6 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 
 	//nolint:nestif // `if i.Spec.Components.EgressGateway != nil` has complex nested blocks (complexity: 18) TODO refactor
 	if i.Spec.Components.EgressGateway != nil {
-		if op.Spec.Components == nil {
-			op.Spec.Components = &iopv1alpha1.IstioComponentSpec{}
-		}
 		if len(op.Spec.Components.EgressGateways) == 0 {
 			op.Spec.Components.EgressGateways = append(op.Spec.Components.EgressGateways, iopv1alpha1.GatewayComponentSpec{})
 		}
@@ -452,33 +496,12 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 			}
 		}
 		if i.Spec.Components.EgressGateway.Enabled != nil {
-			if op.Spec.Components.EgressGateways[0].Enabled == nil {
-				op.Spec.Components.EgressGateways[0].Enabled = &iopv1alpha1.BoolValue{}
-			}
-			boolValue := iopv1alpha1.BoolValue{}
-			// This terrible if statement is necessary, because Istio decided to use a custom type for booleans,
-			// that stores bool as a private field, and does not have a constructor/setter, only an unmarshal method.
-			if *i.Spec.Components.EgressGateway.Enabled {
-				err := boolValue.UnmarshalJSON([]byte("true"))
-				if err != nil {
-					return op, err
-				}
-				op.Spec.Components.EgressGateways[0].Enabled = &boolValue
-			} else {
-				err := boolValue.UnmarshalJSON([]byte("false"))
-				if err != nil {
-					return op, err
-				}
-				op.Spec.Components.EgressGateways[0].Enabled = &boolValue
-			}
+			op.Spec.Components.EgressGateways[0].Enabled = boolValue(*i.Spec.Components.EgressGateway.Enabled)
 		}
 	}
 
 	//nolint:nestif // `if i.Spec.Components.Pilot != nil` has complex nested blocks (complexity: 6) TODO refactor
 	if i.Spec.Components.Pilot != nil {
-		if op.Spec.Components == nil {
-			op.Spec.Components = &iopv1alpha1.IstioComponentSpec{}
-		}
 		if op.Spec.Components.Pilot == nil {
 			op.Spec.Components.Pilot = &iopv1alpha1.ComponentSpec{}
 		}
@@ -544,10 +567,6 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 
 	//nolint:nestif // `if i.Spec.Components.Cni != nil` has complex nested blocks (complexity: 63) TODO refactor
 	if i.Spec.Components.Cni != nil {
-		if op.Spec.Components == nil {
-			op.Spec.Components = &iopv1alpha1.IstioComponentSpec{}
-		}
-
 		if op.Spec.Components.Cni == nil {
 			op.Spec.Components.Cni = &iopv1alpha1.ComponentSpec{}
 		}
@@ -635,6 +654,22 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioO
 					}
 					op.Spec.Components.Cni.Kubernetes.Resources.Requests[corev1.ResourceMemory] = quantity
 				}
+			}
+		}
+	}
+
+	if opts.Features.EnableControlPlaneVPA {
+		if op.Spec.Components.Pilot != nil && op.Spec.Components.Pilot.Kubernetes != nil {
+			removeMemoryMetricsFromHPA(op.Spec.Components.Pilot.Kubernetes.HpaSpec)
+		}
+		for idx := range op.Spec.Components.IngressGateways {
+			if op.Spec.Components.IngressGateways[idx].Kubernetes != nil {
+				removeMemoryMetricsFromHPA(op.Spec.Components.IngressGateways[idx].Kubernetes.HpaSpec)
+			}
+		}
+		for idx := range op.Spec.Components.EgressGateways {
+			if op.Spec.Components.EgressGateways[idx].Kubernetes != nil {
+				removeMemoryMetricsFromHPA(op.Spec.Components.EgressGateways[idx].Kubernetes.HpaSpec)
 			}
 		}
 	}
@@ -747,4 +782,20 @@ func mergeK8sConfig(base *iopv1alpha1.KubernetesResources, newConfig KubernetesR
 		}
 	}
 	return nil
+}
+
+func removeMemoryMetricsFromHPA(hpaSpec *autoscalingv2.HorizontalPodAutoscalerSpec) {
+	if hpaSpec == nil || len(hpaSpec.Metrics) == 0 {
+		return
+	}
+	filtered := make([]autoscalingv2.MetricSpec, 0, len(hpaSpec.Metrics))
+	for _, metric := range hpaSpec.Metrics {
+		if metric.Type == autoscalingv2.ResourceMetricSourceType &&
+			metric.Resource != nil &&
+			metric.Resource.Name == corev1.ResourceMemory {
+			continue
+		}
+		filtered = append(filtered, metric)
+	}
+	hpaSpec.Metrics = filtered
 }

@@ -1,0 +1,22 @@
+//go:build !experimental
+
+package controller
+
+import (
+	"github.com/pkg/errors"
+
+	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/internal/describederrors"
+)
+
+func (r *IstioReconciler) validate(istioCR *operatorv1alpha2.Istio) describederrors.DescribedError {
+	if istioCR.Spec.Experimental != nil {
+		// user has experimental field applied in their CR
+		// return error with description
+		err := errors.New("istio CR contains experimental feature")
+		r.log.Error(err, "Experimental features are not supported in this image flavour")
+		return describederrors.NewDescribedError(err, "Experimental features are not supported in this image flavour").
+			SetCondition(false)
+	}
+	return nil
+}

@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/fips"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/infrastructure"
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
@@ -28,6 +29,9 @@ func TestUninstall(t *testing.T) {
 
 		err = infrastructure.EnsureProductionClusterProfile(t)
 		require.NoError(t, err)
+
+		fips.EnsureFIPSRegistrySecret(t, "istio-system")
+		fips.EnsureFIPSRegistrySecret(t, defaultNamespace)
 
 		istioCR, err := modulehelpers.NewIstioCRBuilder().ApplyAndCleanup(t)
 		require.NoError(t, err)
@@ -68,6 +72,9 @@ func TestUninstall(t *testing.T) {
 
 		err = infrastructure.EnsureProductionClusterProfile(t)
 		require.NoError(t, err)
+
+		fips.EnsureFIPSRegistrySecret(t, "istio-system")
+		fips.EnsureFIPSRegistrySecret(t, defaultNamespace)
 
 		istioCR, err := modulehelpers.NewIstioCRBuilder().ApplyAndCleanup(t)
 		require.NoError(t, err)
@@ -114,6 +121,9 @@ func TestUninstall(t *testing.T) {
 
 		err = infrastructure.EnsureProductionClusterProfile(t)
 		require.NoError(t, err)
+
+		fips.EnsureFIPSRegistrySecret(t, "istio-system")
+		fips.EnsureFIPSRegistrySecret(t, defaultNamespace)
 
 		istioCR, err := modulehelpers.NewIstioCRBuilder().ApplyAndCleanup(t)
 		require.NoError(t, err)

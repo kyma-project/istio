@@ -10,6 +10,7 @@ export default [
     { text: 'Configure Observability for the Istio Service Mesh', link: './00-40-enable-istio-access-logs.md' },
     ] },
   { text: 'Istio Custom Resource', link: './04-00-istio-custom-resource' },
+  { text: 'Network Policies', link: './00-50-network-policies.md' },
   { text: 'Tutorials', link: './tutorials/README', collapsed: true, items: [
     { text: 'Expose Workloads Using oauth2-proxy', link: './tutorials/01-10-external-authorization-provider' },
     { text: 'Expose Workloads Using Gateway API', link: './tutorials/01-20-expose-httbin-gateway-api' },
@@ -22,8 +23,7 @@ export default [
   { text: 'Technical Reference', link: './technical-reference/README', collapsed: true, items: [
     { text: 'Istio Controller Parameters', link: './technical-reference/05-00-istio-controller-parameters' },
     { text: 'Istio Controller RBAC Configuration', link: './technical-reference/05-10-istio-controller-rbac' },
-    { text: 'Support for Network Policies', link: './technical-reference/05-20-support-for-network-policies' },
-    { text: 'Aggregated Cluster Roles overview', link: './technical-reference/05-30-cluster-roles' }
+    { text: 'Alpha Istio Features', link: './00-45-istio-features-configmap.md' }
     ] },
   { text: 'Troubleshooting', link: './troubleshooting/README', collapsed: true, items: [
     { text: 'Network Connectivity - Basic Diagnostics', link: './troubleshooting/03-00-network-connectivity' },
@@ -37,6 +37,7 @@ export default [
     { text: 'Pods Created by Jobs Can\'t Finish', link: './troubleshooting/03-45-jobs-cant-finish' },
     { text: 'Init Containers Can\'t Access the Network', link: './troubleshooting/03-46-init-containers-cant-access-network' },
     { text: 'Modified Istio Resources', link: './troubleshooting/03-70-reconciliation-fails-on-istio-install' },
-    { text: 'Istio Cannot Verify an HTTPS Certificate', link: './troubleshooting/03-90-istio-cert-unknown' }
+    { text: 'Istio Cannot Verify an HTTPS Certificate', link: './troubleshooting/03-90-istio-cert-unknown' },
+    { text: 'Uneven Traffic Distribution with DestinationRules', link: './troubleshooting/03-95-uneven-load-balancing-with-destination-rules' }
     ] }
 ];

@@ -11,7 +11,8 @@ See the major differences in the configuration of Istio Operator compared to ups
 - [Mutual TLS (mTLS)](https://istio.io/docs/concepts/security/#mutual-tls-authentication) is enabled in the STRICT mode for workloads in the Istio service mesh.
 - Egress traffic is not controlled. All applications deployed in the Kyma cluster can access outside resources without limitations.
 - The CNI component, used for the installation of an Istio sidecar, is provided as a DaemonSet. This means that one replica is present on every node of the target cluster.
-- The self-signed CA certificate’s bit length is set to `4096` instead of the default `2048`.
+- The self-signed CA certificate's bit length is set to `4096` instead of the default `2048`.
+- The Istio proxy sidecar container is now configured with **seccompProfile** of type `RuntimeDefault`, restricting the system calls available to the container and reducing the attack surface.
 
 ## Configuration Based on the Cluster Size
 

@@ -3,7 +3,6 @@ package status
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -75,12 +74,6 @@ func (d Handler) UpdateToError(ctx context.Context, istioCR *operatorv1alpha2.Is
 		istioCR.Status.State = operatorv1alpha2.Error
 	}
 	istioCR.Status.Description = err.Description()
-	if len(requeueAfter) > 0 {
-		istioCR.Status.Description += fmt.Sprintf("\nWill reconcile next at %s", time.Now().
-			Add(requeueAfter[0]).Format(time.RFC1123))
-	} else {
-		istioCR.Status.Description += "\nWill not reconcile automatically"
-	}
 	return d.update(ctx, istioCR)
 }
 

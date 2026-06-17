@@ -8,7 +8,7 @@ spec:
     spec:
       containers:
       - name: loadtest
-        image: "europe-central2-docker.pkg.dev/sap-se-cx-kyma-goat/networking-dev-tools/grpc-loadtest:latest"
+        image: "ghcr.io/kyma-project/networking-dev-tools/grpc-loadtest:latest"
         args:
         - --service={{ or .Service "HelloService.SayHello" }}
         - --address={{ or .Address "grpcbin:50051" }}

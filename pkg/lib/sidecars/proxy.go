@@ -8,10 +8,12 @@ import (
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/images"
+	"github.com/kyma-project/istio/operator/internal/istiofeatures"
 	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
 
 	"github.com/go-logr/logr"
 	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars/pods"
@@ -69,11 +71,17 @@ func (p *ProxyRestart) RestartProxies(
 		p.logger.Error(err, "Failed to create restart enableDNSProxying predicate")
 		return []restart.Warning{}, err
 	}
+	istioFeatures, err := istiofeatures.Get(ctx, p.k8sClient)
+	if err != nil && !apierrors.IsNotFound(err) {
+		p.logger.Error(err, "Failed to get Istio features")
+		return []restart.Warning{}, err
+	}
 	predicates := []predicates.SidecarProxyPredicate{
 		compatibiltyPredicate,
 		prometheusMergePredicate,
 		predicates.NewImageResourcesPredicate(expectedImage, expectedResources),
 		enableDNSProxyingPredicate,
+		predicates.NewCniRestartPredicate(istioFeatures.DisableCni),
 	}
 
 	err = p.restartKymaProxies(ctx, predicates)

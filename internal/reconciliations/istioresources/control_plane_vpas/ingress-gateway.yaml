@@ -1,0 +1,29 @@
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: istio-ingressgateway-vpa
+  namespace: istio-system
+  labels:
+    kyma-project.io/module: istio
+    app.kubernetes.io/component: ingressgateway
+    app.kubernetes.io/part-of: istio
+    app.kubernetes.io/name: istio-ingressgateway
+    app.kubernetes.io/instance: istio-ingressgateway-default
+spec:
+  resourcePolicy:
+    containerPolicies:
+      - containerName: istio-proxy
+        controlledResources:
+          - memory
+        controlledValues: RequestsAndLimits
+        maxAllowed:
+          memory: 16Gi
+        minAllowed:
+          memory: 128Mi
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: istio-ingressgateway
+  updatePolicy:
+    minReplicas: 1
+    updateMode: InPlaceOrRecreate

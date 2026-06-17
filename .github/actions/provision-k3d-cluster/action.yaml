@@ -8,6 +8,10 @@ inputs:
     description: 'Number of nodes in the cluster'
     required: false
     default: '1'
+  servers:
+    description: 'Number of server nodes in the cluster'
+    required: false
+    default: '1'
   servers-memory:
     description: 'Number of GB for the node'
     required: false
@@ -16,6 +20,14 @@ inputs:
     description: 'Use Calico CNI instead of flannel'
     required: false
     default: 'false'
+  kwok:
+    description: 'Install KWOK for fake node support'
+    required: false
+    default: 'false'
+  kwok-nodes:
+    description: 'Number of fake KWOK nodes to create'
+    required: false
+    default: '0'
 
 runs:
   using: "composite"
@@ -25,10 +37,11 @@ runs:
       env:
         KUBERNETES_VERSION: ${{ inputs.k3s-version }}
         AGENTS: ${{ inputs.agents }}
+        SERVERS: ${{ inputs.servers }}
         SERVERS_MEMORY: ${{ inputs.servers-memory }}
       run: |
-        if [ "${{ inputs.calico }}" == "true" ]; then
-          ./hack/ci/provision-k3d.sh --calico
-        else
-          ./hack/ci/provision-k3d.sh
-        fi
+        ARGS=()
+        [ "${{ inputs.calico }}"     == "true" ] && ARGS+=(--calico)
+        [ "${{ inputs.kwok }}"       == "true" ] && ARGS+=(--kwok)
+        [ "${{ inputs.kwok-nodes }}" != "0"    ] && ARGS+=(--kwok-nodes "${{ inputs.kwok-nodes }}")
+        ./hack/ci/provision-k3d.sh "${ARGS[@]}"

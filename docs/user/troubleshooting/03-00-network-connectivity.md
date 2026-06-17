@@ -46,7 +46,8 @@ Misconfigured AuthorizationPolicy resources are a common cause of access issues,
   ```
 
 What to look for:
-- **Deny policies:** Deny policies are powerful and may block more traffic than intended. A deny rule without the **ports** field on an HTTP-based **hosts** rule can block all TCP traffic, not just HTTP.
+- **Deny policies:** Deny policies may block more traffic than intended. A deny rule without the **ports** field on an HTTP-based **hosts** rule can block all TCP traffic, not just HTTP.
+- **Allow policies:** Allow policies can also be dangerous. As soon as a single allow policy exists in a namespace, all traffic that does not match it is denied. Make sure that all intended traffic is covered by allow rules.
 - **Scope:** Check the **selector** to see which workloads the policy applies to. An empty selector applies the policy to all workloads in the namespace.
 - **Rules:** Look at the **to**, **from**, and **when** clauses to understand what traffic is being allowed or denied.
 

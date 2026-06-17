@@ -64,9 +64,9 @@ RequestAuthentication defines how JSON Web Tokens (JWTs) are validated. Misconfi
   ```
 
 What to look for:
-- **jwksUri or jwks:** Ensure the JSON Web Key Set (JWKS) endpoint is correct and reachable from the Istio ingress gateway.
+- **jwksUri** Ensure the JSON Web Key Set (JWKS) endpoint is correct and reachable from Istiod.
 - **issuer:** The `iss` claim in the JWT must match this value.
-- **audiences:** The `aud` claim in the JWT must match one of the values here.
+- **audiences:** In case those are set, the `aud` claim in the JWT must match one of the values here.
 
 ## 4. EnvoyFilters
 EnvoyFilter resources modify the Envoy configuration and can easily cause problems if misconfigured. They are often used for complex use cases.
@@ -97,25 +97,4 @@ If the previous steps don't reveal the issue, inspect the live Envoy configurati
   istioctl proxy-config routes <pod-name>.<namespace> -o json
   ```
 
-What to look for:
-- **Listeners:** Check if your Pod is listening on the expected port.
-- **Routes:** Verify that the host and paths are routed to the correct cluster (service). Check for route-level configurations like timeouts or retries.
-- **Clusters:** Ensure the upstream service endpoints are correctly identified.
 
-## 6. Sidecar Logs
-
-The Istio sidecar (`istio-proxy`) logs can provide direct clues about why a request is failing.
-
-- Get logs from the `istio-proxy` container:
-  ```bash
-  kubectl logs <pod-name> -n <namespace> -c istio-proxy
-  ```
-- Filter logs by response code or other keywords:
-  ```bash
-  kubectl logs <pod-name> -n <namespace> -c istio-proxy | grep "RBAC"
-  ```
-
-What to look for:
-- **Access denied messages:** Search for `RBAC: access denied`. This is a clear sign that an AuthorizationPolicy is blocking the request. The log entry often includes details about the matched policy.
-- **Upstream connection failures:** Look for messages indicating connection errors to upstream services.
-- **JWT errors:** Errors related to JWT validation suggest issues with RequestAuthentication.

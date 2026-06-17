@@ -24,7 +24,6 @@ import (
 	"github.com/kyma-project/istio/operator/internal/images"
 	istiocrmetrics "github.com/kyma-project/istio/operator/internal/metrics"
 	"github.com/kyma-project/istio/operator/internal/resources"
-	istioLogger "github.com/kyma-project/istio/operator/pkg/logger"
 	"github.com/pkg/errors"
 
 	"github.com/kyma-project/istio/operator/internal/restarter"
@@ -71,12 +70,10 @@ type ControllerOptions struct {
 	ReconciliationInterval time.Duration
 	CRMetrics              *istiocrmetrics.IstioCRMetrics
 	IstioImages            images.Images
-	LogLevel               istioLogger.LogLevel
 }
 
 func NewController(mgr manager.Manager, options ControllerOptions) *IstioReconciler {
-	logsink := istioLogger.NewLogger(options.LogLevel)
-	logger := ctrl.Log.WithName("controllers").WithName("Istio").WithSink(logsink)
+	logger := mgr.GetLogger().WithName("controllers").WithName("Istio")
 	merger := istiooperator.NewDefaultIstioMerger(logger)
 
 	statusHandler := status.NewStatusHandler(mgr.GetClient())
@@ -96,7 +93,7 @@ func NewController(mgr manager.Manager, options ControllerOptions) *IstioReconci
 		istioResources:         istioresources.NewReconciler(mgr.GetClient()),
 		userResources:          userResources,
 		restarters:             restarters,
-		log:                    mgr.GetLogger(),
+		log:                    logger,
 		statusHandler:          statusHandler,
 		reconciliationInterval: options.ReconciliationInterval,
 		crMetrics:              options.CRMetrics,

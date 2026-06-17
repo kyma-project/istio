@@ -56,6 +56,7 @@ spec:
         - --leader-elect
         - "--health-probe-bind-address=:8081"
         - "--metrics-bind-address=:8080"
+        - "--zap-log-level=info"
         env:
         - name: GODEBUG
           value: "fips140=only,tlsmlkem=0"

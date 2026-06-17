@@ -5,7 +5,6 @@ import (
 	"path"
 
 	"github.com/imdario/mergo"
-	istioLogger "github.com/kyma-project/istio/operator/pkg/logger"
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/errors"
@@ -50,7 +49,7 @@ func (m *IstioMerger) Merge(clusterSize clusterconfig.ClusterSize, istioCR *oper
 	if err != nil {
 		return "", err
 	}
-	m.log.V(istioLogger.Trace).Info("Deploying IstioOperator", "operator", string(iopWithOverrides))
+	m.log.V(2).Info("Deploying IstioOperator", "operator", string(iopWithOverrides))
 	return mergedIstioOperatorPath, nil
 }
 

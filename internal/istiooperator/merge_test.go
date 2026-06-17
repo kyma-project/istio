@@ -5,6 +5,7 @@ package istiooperator_test
 import (
 	"reflect"
 
+	"github.com/go-logr/logr"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	istiov1alpha1 "istio.io/istio/operator/pkg/apis"
@@ -45,7 +46,7 @@ var _ = Describe("Merge", func() {
 			Ztunnel:    ztunnel,
 		}
 
-		merger := istiooperator.NewDefaultIstioMerger()
+		merger := istiooperator.NewDefaultIstioMerger(logr.Discard())
 
 		p, err := merger.Merge(clusterconfig.Evaluation, &istioCR, clusterconfig.ClusterConfiguration{}, istioImages)
 		Expect(err).ShouldNot(HaveOccurred())

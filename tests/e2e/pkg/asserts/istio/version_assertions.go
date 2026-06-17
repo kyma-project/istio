@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/distribution/reference"
+	"github.com/go-logr/logr"
 	"github.com/masterminds/semver"
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/apps/v1"
@@ -23,7 +24,7 @@ const versionCheckTimeout = 3 * time.Minute
 func AssertIstiodContainerVersion(t *testing.T, c *resources.Resources) {
 	t.Helper()
 
-	merger := istiooperator.NewDefaultIstioMerger()
+	merger := istiooperator.NewDefaultIstioMerger(logr.Discard())
 	istioImageVersion, err := merger.GetIstioImageVersion()
 	require.NoError(t, err)
 
@@ -41,7 +42,7 @@ func AssertIstiodContainerVersion(t *testing.T, c *resources.Resources) {
 func AssertIngressGatewayContainerVersion(t *testing.T, c *resources.Resources) {
 	t.Helper()
 
-	merger := istiooperator.NewDefaultIstioMerger()
+	merger := istiooperator.NewDefaultIstioMerger(logr.Discard())
 	istioImageVersion, err := merger.GetIstioImageVersion()
 	require.NoError(t, err)
 
@@ -59,7 +60,7 @@ func AssertIngressGatewayContainerVersion(t *testing.T, c *resources.Resources) 
 func AssertCNINodeContainerVersion(t *testing.T, c *resources.Resources) {
 	t.Helper()
 
-	merger := istiooperator.NewDefaultIstioMerger()
+	merger := istiooperator.NewDefaultIstioMerger(logr.Discard())
 	istioImageVersion, err := merger.GetIstioImageVersion()
 	require.NoError(t, err)
 
@@ -77,7 +78,7 @@ func AssertCNINodeContainerVersion(t *testing.T, c *resources.Resources) {
 func AssertIstioProxyVersion(t *testing.T, c *resources.Resources, labelSelector string) {
 	t.Helper()
 
-	merger := istiooperator.NewDefaultIstioMerger()
+	merger := istiooperator.NewDefaultIstioMerger(logr.Discard())
 	istioImageVersion, err := merger.GetIstioImageVersion()
 	require.NoError(t, err)
 

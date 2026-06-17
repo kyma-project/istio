@@ -5,6 +5,7 @@ import (
 	"path"
 	"testing"
 
+	"github.com/go-logr/logr"
 	meshv1alpha1 "istio.io/api/mesh/v1alpha1"
 	"istio.io/istio/operator/pkg/values"
 	"istio.io/istio/pkg/util/protomarshal"
@@ -64,7 +65,7 @@ var _ = Describe("Merge", func() {
 	}
 	DescribeTable("Merge for different cluster sizes", func(clusterSize clusterconfig.ClusterSize, shouldError bool, igwMinReplicas int) {
 		// given
-		sut := istiooperator.NewDefaultIstioMerger()
+		sut := istiooperator.NewDefaultIstioMerger(logr.Discard())
 
 		// when
 		mergedIstioOperatorPath, err := sut.Merge(clusterSize, istioCR, clusterconfig.ClusterConfiguration{}, img)
@@ -118,7 +119,7 @@ var _ = Describe("Merge", func() {
 			},
 		}
 
-		sut := istiooperator.NewDefaultIstioMerger()
+		sut := istiooperator.NewDefaultIstioMerger(logr.Discard())
 
 		// when
 		mergedIstioOperatorPath, err := sut.Merge(clusterconfig.Production, istioCR, clusterConfig, img)
@@ -166,7 +167,7 @@ var _ = Describe("Merge", func() {
 			InstallCNI: overriddenCni,
 			Ztunnel:    overriddenZtunnel,
 		}
-		sut := istiooperator.NewDefaultIstioMerger()
+		sut := istiooperator.NewDefaultIstioMerger(logr.Discard())
 
 		clusterConfig := map[string]interface{}{
 			"spec": map[string]interface{}{
@@ -219,7 +220,7 @@ var _ = Describe("NewIstioImageVersionFromTag", func() {
 var _ = Describe("GetIstioImageVersion", func() {
 	It("should return Istio version and verify production and evaluation istio operator files have same hub and tag", func() {
 		// given
-		merger := istiooperator.NewDefaultIstioMerger()
+		merger := istiooperator.NewDefaultIstioMerger(logr.Discard())
 
 		// when
 		imageVersion, err := merger.GetIstioImageVersion()

@@ -10,8 +10,6 @@ If you're having trouble with network connectivity and don't know where to begin
     - [`Gateway`](https://istio.io/latest/docs/reference/config/networking/gateway/)
     - [`AuthorizationPolicy`](https://istio.io/latest/docs/reference/config/security/authorization-policy/)
     - [`RequestAuthentication`](https://istio.io/latest/docs/reference/config/security/request_authentication/)
-- Use the command `istioctl analyze -A` to check for potential issues in the Istio configuration and see suggestions on how to fix them.
-- To enable the access logs of the Envoy proxy, follow the guide [Envoy Access Logs](https://istio.io/latest/docs/tasks/observability/logs/access-log/). In the access logs, you can find the field **response_flags**. The response flags DC (Downstream client terminated connection) and UC (Upstream terminated connection) are not within the scope of the Istio module, as they relate to the behavior of the client (DC) or the workload application (UC).
 
 ## 1. Global Analysis
 

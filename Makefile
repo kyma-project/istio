@@ -228,104 +228,19 @@ ln -sf $$(realpath $(1)-$(3)) $(1)
 endef
 
 ##@ E2E Tests
-
-.PHONY: evaluation-e2e-test
-evaluation-e2e-test: gotestsum deploy
-	@echo "Running e2e evaluation settings tests"
+.PHONY: %-e2e-test
+%-e2e-test: gotestsum deploy
+	@echo "Running E2E test: $*"
 	go clean -testcache
-	$(GOTESTSUM) --format testname --rerun-fails --packages="./tests/e2e/tests/evaluation/..." --junitfile "./tests/e2e/tests/evaluation/report.xml" -- -timeout 20m
-	@echo "E2E tests completed successfully"
-
-.PHONY: configuration-e2e-test
-configuration-e2e-test: gotestsum deploy
-	@echo "Running e2e configuration tests"
-	go clean -testcache
-	$(GOTESTSUM) --format testname --rerun-fails --packages="./tests/e2e/tests/configuration/..." --junitfile "./tests/e2e/tests/configuration/report.xml" -- -timeout 20m
-	@echo "E2E tests completed successfully"
-
-.PHONY: mesh-communication-e2e-test
-mesh-communication-e2e-test: gotestsum deploy
-	@echo "Running e2e mesh communication tests"
-	go clean -testcache
-	$(GOTESTSUM) --format testname --rerun-fails --packages="./tests/e2e/tests/mesh_communication/..." --junitfile "./tests/e2e/tests/mesh_communication/report.xml" -- -timeout 20m
-	@echo "E2E tests completed successfully"
-
-.PHONY: networkpolicy-e2e-test
-networkpolicy-e2e-test: gotestsum deploy
-	@echo "Running e2e NetworkPolicy tests"
-	go clean -testcache
-	$(GOTESTSUM) --format testname --rerun-fails --packages="./tests/e2e/tests/networkpolicy/..." --junitfile "./tests/e2e/tests/networkpolicy/report.xml" -- -timeout 30m
-	@echo "E2E tests completed successfully"
-
-.PHONY: installation-e2e-test
-installation-e2e-test: gotestsum deploy
-	@echo "Running e2e installation tests"
-	go clean -testcache
-	$(GOTESTSUM) --format testname --rerun-fails --packages="./tests/e2e/tests/installation/..." --junitfile "./tests/e2e/tests/installation/report.xml" -- -timeout 20m
-	@echo "E2E tests completed successfully"
-
-.PHONY: observability-e2e-test
-observability-e2e-test: gotestsum deploy
-	@echo "Running e2e tests for observability"
-	go clean -testcache
-	$(GOTESTSUM) --format testname --rerun-fails --packages="./tests/e2e/tests/observability/..." --junitfile "./tests/e2e/tests/observability/report.xml" -- -timeout 20m
-	@echo "E2E tests completed successfully"
-
-.PHONY: ext-auth-e2e-test
-ext-auth-e2e-test: gotestsum deploy
-	@echo "Running e2e tests for ext auth"
-	go clean -testcache
-	$(GOTESTSUM) --format testname --rerun-fails --packages="./tests/e2e/tests/extauth/..." --junitfile "./tests/e2e/tests/extauth/report.xml" -- -timeout 20m
-	@echo "E2E tests completed successfully"
-
-.PHONY: egress-e2e-test
-egress-e2e-test: gotestsum deploy
-	@echo "Running e2e tests for egress"
-	go clean -testcache
-	$(GOTESTSUM) --format testname --rerun-fails --packages="./tests/e2e/tests/egress/..." --junitfile "./tests/e2e/tests/egress/report.xml" -- -timeout 20m
-	@echo "E2E tests completed successfully"
-
-.PHONY: istio-smoke-test
-istio-smoke-test: gotestsum deploy
-	@echo "Running smoke test"
-	go clean -testcache
-	$(GOTESTSUM) --format testname --rerun-fails --packages="./tests/e2e/tests/smoke_test/..." --junitfile "./tests/e2e/tests/smoke_test/report.xml" -- -timeout 20m
-	@echo "Smoke test completed successfully"
-
-.PHONY: ambient-e2e-test
-ambient-e2e-test: gotestsum deploy
-	@echo "Running ambient e2e tests"
-	go clean -testcache
-	$(GOTESTSUM) --format testname --rerun-fails --packages="./tests/e2e/tests/ambient/..." --junitfile "./tests/e2e/tests/ambient/report.xml" -- -timeout 20m
-	@echo "Ambient E2E tests completed successfully"
+	$(GOTESTSUM) --format testname --rerun-fails --packages="./tests/e2e/tests/$*/..." --junitfile "./tests/e2e/tests/$*/report.xml" -- -timeout 20m
+	@echo "Finished E2E test: $*"
 
 .PHONY: upgrade-test
 upgrade-test: generate-upgrade-test-manifest deploy-latest-release gotestsum
-	@echo "Running e2e controller upgrade tests"
+	@echo "Running Upgrade test"
 	go clean -testcache
 	$(GOTESTSUM) --format testname --rerun-fails --packages="./tests/e2e/tests/upgrade/..." --junitfile "./tests/e2e/tests/upgrade/report.xml" -- -timeout 20m
-	@echo "E2E tests completed successfully"
-
-.PHONY: xff-header-e2e-test
-xff-header-e2e-test: gotestsum deploy
-	@echo "Running e2e tests for XFF header"
-	go clean -testcache
-	$(GOTESTSUM) --format testname --rerun-fails --packages="./tests/e2e/tests/xff_header/..." --junitfile "./tests/e2e/tests/xff_header/report.xml" -- -timeout 20m
-	@echo "E2E tests completed successfully"
-
-.PHONY: trust-domain-e2e-test
-trust-domain-e2e-test: gotestsum deploy
-	@echo "Running e2e tests for trust domain"
-	go clean -testcache
-	$(GOTESTSUM) --format testname --rerun-fails --packages="./tests/e2e/tests/trustdomain/..." --junitfile "./tests/e2e/tests/trustdomain/report.xml" -- -timeout 20m
-	@echo "E2E tests completed successfully"
-
-.PHONY: dns-proxying-e2e-test
-dns-proxying-e2e-test: gotestsum deploy
-	@echo "Running e2e tests for DNS proxying"
-	go clean -testcache
-	$(GOTESTSUM) --format testname --rerun-fails --packages="./tests/e2e/tests/dnsproxying/..." --junitfile "./tests/e2e/tests/dnsproxying/report.xml" -- -timeout 20m
-	@echo "E2E tests completed successfully"
+	@echo "Finished upgrade test"
 
 ##@ Module
 

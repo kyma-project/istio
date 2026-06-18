@@ -49,6 +49,7 @@ func (m *IstioMerger) Merge(clusterSize clusterconfig.ClusterSize, istioCR *oper
 	if err != nil {
 		return "", err
 	}
+	m.log.V(2).Info("Deploying IstioOperator", "operator", string(iopWithOverrides))
 	return mergedIstioOperatorPath, nil
 }
 

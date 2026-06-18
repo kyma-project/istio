@@ -36,6 +36,7 @@ import (
 
 	"k8s.io/client-go/util/retry"
 
+	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/describederrors"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/configuration"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istioresources"
@@ -65,16 +66,22 @@ const (
 	reconciliationRequeueTimeWarning = 1 * time.Hour
 )
 
-func NewController(mgr manager.Manager, reconciliationInterval time.Duration, crMetrics *istiocrmetrics.IstioCRMetrics, istioImages images.Images) *IstioReconciler {
-	merger := istiooperator.NewDefaultIstioMerger()
+type ControllerOptions struct {
+	ReconciliationInterval time.Duration
+	CRMetrics              *istiocrmetrics.IstioCRMetrics
+	IstioImages            images.Images
+}
+
+func NewController(mgr manager.Manager, options ControllerOptions) *IstioReconciler {
+	logger := mgr.GetLogger().WithName("controllers").WithName("Istio")
+	merger := istiooperator.NewDefaultIstioMerger(logger)
 
 	statusHandler := status.NewStatusHandler(mgr.GetClient())
-	logger := mgr.GetLogger()
 	podsLister := pods.NewPods(mgr.GetClient(), &logger)
 	actionRestarter := restart.NewActionRestarter(mgr.GetClient(), &logger)
 	restarters := []restarter.Restarter{
 		restarter.NewIngressGatewayRestarter(mgr.GetClient(), []predicates.IngressGatewayPredicate{}, statusHandler),
-		restarter.NewSidecarsRestarter(mgr.GetLogger(), mgr.GetClient(), &merger, sidecars.NewProxyRestarter(mgr.GetClient(), podsLister, actionRestarter, &logger), statusHandler, istioImages),
+		restarter.NewSidecarsRestarter(mgr.GetLogger(), mgr.GetClient(), &merger, sidecars.NewProxyRestarter(mgr.GetClient(), podsLister, actionRestarter, &logger), statusHandler, options.IstioImages),
 		restarter.NewForNetworkPolicy(mgr.GetClient(), statusHandler),
 	}
 	userResources := resources.NewUserResources(mgr.GetClient())
@@ -86,11 +93,11 @@ func NewController(mgr manager.Manager, reconciliationInterval time.Duration, cr
 		istioResources:         istioresources.NewReconciler(mgr.GetClient()),
 		userResources:          userResources,
 		restarters:             restarters,
-		log:                    mgr.GetLogger(),
+		log:                    logger,
 		statusHandler:          statusHandler,
-		reconciliationInterval: reconciliationInterval,
-		crMetrics:              crMetrics,
-		istioImages:            istioImages,
+		reconciliationInterval: options.ReconciliationInterval,
+		crMetrics:              options.CRMetrics,
+		istioImages:            options.IstioImages,
 	}
 }
 
@@ -170,7 +177,15 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		}
 	}
 
-	istioImageVersion, installationErr := r.istioInstallation.Reconcile(ctx, &istioCR, r.statusHandler, r.istioImages)
+	clusterStrategy, buildStrategyErr := clusterconfig.BuildFactory(ctx, r.Client)
+	if buildStrategyErr != nil {
+		return r.requeueReconciliation(ctx, &istioCR,
+			describederrors.NewDescribedError(buildStrategyErr, "Could not build cluster strategy"),
+			operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileFailed),
+			reconciliationRequeueTimeError)
+	}
+
+	istioImageVersion, installationErr := r.istioInstallation.Reconcile(ctx, &istioCR, r.statusHandler, r.istioImages, clusterStrategy)
 	if installationErr != nil {
 		return r.requeueReconciliation(ctx, &istioCR, installationErr,
 			operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIstioInstallUninstallFailed),
@@ -197,7 +212,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		}
 	}
 
-	resourcesErr := r.istioResources.Reconcile(ctx, istioCR)
+	resourcesErr := r.istioResources.Reconcile(ctx, istioCR, clusterStrategy)
 	if resourcesErr != nil {
 		return r.requeueReconciliation(ctx, &istioCR, resourcesErr,
 			operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonCRsReconcileFailed),

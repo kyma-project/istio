@@ -4,22 +4,18 @@ package clusterconfig_test
 
 import (
 	"context"
+	"testing"
 
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-var _ = Describe("DualStack", func() {
-	It("should be enabled when the controller is running in experimental mode,"+
-		"and the cluster has kyma-runtime-config CM with dualstack enabled", func() {
-		client := createFakeClient(createKymaRuntimeConfigWithDualStack(true))
+func TestIsDualStackEnabled_Experimental(t *testing.T) {
+	c := createFakeClient(t, createKymaRuntimeConfigWithDualStack(t, true))
 
-		//when
-		ds, err := clusterconfig.IsDualStackEnabled(context.Background(), client)
+	ds, err := clusterconfig.IsDualStackEnabled(context.Background(), c)
 
-		//then
-		Expect(err).To(Not(HaveOccurred()))
-		Expect(ds).To(Equal(true))
-	})
-})
+	require.NoError(t, err)
+	assert.True(t, ds)
+}

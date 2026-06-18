@@ -70,13 +70,13 @@ var (
 )
 
 type FlagVar struct {
-	metricsAddr            string
 	enableLeaderElection   bool
-	probeAddr              string
 	failureBaseDelay       time.Duration
 	failureMaxDelay        time.Duration
-	rateLimiterFrequency   int
+	metricsAddr            string
+	probeAddr              string
 	rateLimiterBurst       int
+	rateLimiterFrequency   int
 	reconciliationInterval time.Duration
 }
 
@@ -132,7 +132,11 @@ func main() {
 	}
 
 	crMetrics := istiocrmetrics.NewMetrics()
-	if err = controllers.NewController(mgr, flagVar.reconciliationInterval, crMetrics, *istioImage).SetupWithManager(mgr, rateLimiter); err != nil {
+	if err = controllers.NewController(mgr, controllers.ControllerOptions{
+		ReconciliationInterval: flagVar.reconciliationInterval,
+		CRMetrics:              crMetrics,
+		IstioImages:            *istioImage,
+	}).SetupWithManager(mgr, rateLimiter); err != nil {
 		setupLog.Error(err, "Unable to create controller", "controller", "Istio")
 		os.Exit(1)
 	}

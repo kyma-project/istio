@@ -120,6 +120,7 @@ KWOK_REPO=kubernetes-sigs/kwok
 KWOK_RELEASE="v0.7.0"
 kubectl apply -f "https://github.com/${KWOK_REPO}/releases/download/${KWOK_RELEASE}/kwok.yaml"
 kubectl apply -f "https://github.com/${KWOK_REPO}/releases/download/${KWOK_RELEASE}/stage-fast.yaml"
+kubectl apply -f "hack/manifests/chaos/job-pod-running.yaml"
 
 if [[ "${KWOK_NODES}" -gt 0 ]]; then
     echo "Creating ${KWOK_NODES} fake Nodes..."

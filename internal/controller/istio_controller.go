@@ -279,7 +279,15 @@ func (r *IstioReconciler) requeueReconciliation(ctx context.Context,
 	if err.ShouldSetCondition() {
 		r.setConditionForError(istioCR, reason)
 	}
-	statusUpdateErr := r.statusHandler.UpdateToError(ctx, istioCR, err, requeueAfter)
+	if err.Level() == describederrors.Warning {
+		statusUpdateErr := r.statusHandler.UpdateToError(ctx, istioCR, err, requeueAfter)
+		if statusUpdateErr != nil {
+			r.log.Error(statusUpdateErr, "Error during updating status to error")
+		}
+		r.log.Info("Reconcile requeued")
+		return ctrl.Result{RequeueAfter: requeueAfter}, nil
+	}
+	statusUpdateErr := r.statusHandler.UpdateToError(ctx, istioCR, err)
 	if statusUpdateErr != nil {
 		r.log.Error(statusUpdateErr, "Error during updating status to error")
 	}

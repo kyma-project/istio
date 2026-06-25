@@ -176,10 +176,10 @@ func TestEgressGatewayTraffic(t *testing.T) {
 		"networking.kyma-project.io/to-egressgateway": "allowed",
 	}
 
-	err = egressgateway.SetupEgressGatewayResources(t, r, testNs, "httpbin.org")
+	err = egressgateway.SetupEgressGatewayResources(t, r, testNs, "httpbin.io")
 	require.NoError(t, err)
 
-	externalURL := "https://httpbin.org/headers"
+	externalURL := "https://httpbin.io/headers"
 	stdout, _, err := httpincluster.RunRequestFromInsideClusterWithLabels(t, testNs, externalURL, curlLabels)
 	require.NoError(t, err)
 	require.Contains(t, stdout, "Host", "Request through egress gateway should succeed")

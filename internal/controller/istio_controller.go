@@ -292,7 +292,7 @@ func (r *IstioReconciler) requeueReconciliation(ctx context.Context,
 		if statusUpdateErr != nil {
 			r.log.Error(statusUpdateErr, "Error during updating status to error")
 		}
-		r.log.Info("Reconcile warning:", "error", err)
+		r.log.Info("Reconcile warning:", "warning", err)
 		r.log.Info("Reconcile requeued with a warning", "requeueAfter", requeueAfter)
 		return ctrl.Result{RequeueAfter: requeueAfter}, nil
 	}

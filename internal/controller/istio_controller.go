@@ -21,10 +21,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/kyma-project/istio/operator/internal/images"
 	istiocrmetrics "github.com/kyma-project/istio/operator/internal/metrics"
 	"github.com/kyma-project/istio/operator/internal/resources"
-	"github.com/pkg/errors"
 
 	"github.com/kyma-project/istio/operator/internal/restarter"
 	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
@@ -81,7 +82,14 @@ func NewController(mgr manager.Manager, options ControllerOptions) *IstioReconci
 	actionRestarter := restart.NewActionRestarter(mgr.GetClient(), &logger)
 	restarters := []restarter.Restarter{
 		restarter.NewIngressGatewayRestarter(mgr.GetClient(), []predicates.IngressGatewayPredicate{}, statusHandler),
-		restarter.NewSidecarsRestarter(mgr.GetLogger(), mgr.GetClient(), &merger, sidecars.NewProxyRestarter(mgr.GetClient(), podsLister, actionRestarter, &logger), statusHandler, options.IstioImages),
+		restarter.NewSidecarsRestarter(
+			mgr.GetLogger(),
+			mgr.GetClient(),
+			&merger,
+			sidecars.NewProxyRestarter(mgr.GetClient(), podsLister, actionRestarter, &logger),
+			statusHandler,
+			options.IstioImages,
+		),
 		restarter.NewForNetworkPolicy(mgr.GetClient(), statusHandler),
 	}
 	userResources := resources.NewUserResources(mgr.GetClient())
@@ -284,7 +292,8 @@ func (r *IstioReconciler) requeueReconciliation(ctx context.Context,
 		if statusUpdateErr != nil {
 			r.log.Error(statusUpdateErr, "Error during updating status to error")
 		}
-		r.log.Info("Reconcile requeued")
+		r.log.Info("Reconcile warning:", "error", err)
+		r.log.Info("Reconcile requeued with a warning", "requeueAfter", requeueAfter)
 		return ctrl.Result{RequeueAfter: requeueAfter}, nil
 	}
 	statusUpdateErr := r.statusHandler.UpdateToError(ctx, istioCR, err)

@@ -24,6 +24,14 @@ inputs:
     description: 'Use Calico CNI instead of flannel'
     required: false
     default: 'false'
+  kwok:
+    description: 'Install KWOK for fake node support'
+    required: false
+    default: 'false'
+  kwok-nodes:
+    description: 'Number of fake KWOK nodes to create'
+    required: false
+    default: '0'
 
 runs:
   using: "composite"
@@ -39,6 +47,8 @@ runs:
         servers-memory: ${{ inputs.servers-memory }}
         servers: ${{ inputs.servers }}
         calico: ${{ inputs.calico }}
+        kwok: ${{ inputs.kwok }}
+        kwok-nodes: ${{ inputs.kwok-nodes }}
     - name: Import image when it is built locally on pull request
       shell: bash
       if: github.event_name == 'pull_request'

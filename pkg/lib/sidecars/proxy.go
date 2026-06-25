@@ -76,7 +76,7 @@ func (p *ProxyRestart) RestartProxies(
 		p.logger.Error(err, "Failed to get Istio features")
 		return []restart.Warning{}, err
 	}
-	predicates := []predicates.SidecarProxyPredicate{
+	preds := []predicates.SidecarProxyPredicate{
 		compatibiltyPredicate,
 		prometheusMergePredicate,
 		predicates.NewImageResourcesPredicate(expectedImage, expectedResources),
@@ -84,13 +84,13 @@ func (p *ProxyRestart) RestartProxies(
 		predicates.NewCniRestartPredicate(istioFeatures.DisableCni),
 	}
 
-	err = p.restartKymaProxies(ctx, predicates)
+	err = p.restartKymaProxies(ctx, preds)
 	if err != nil {
 		p.logger.Error(err, "Failed to restart Kyma proxies")
 		return []restart.Warning{}, err
 	}
 
-	warnings, err := p.restartCustomerProxies(ctx, predicates)
+	warnings, err := p.restartCustomerProxies(ctx, preds)
 	if err != nil {
 		p.logger.Error(err, "failed to restart Customer proxies")
 		warnings = []restart.Warning{ // errors on Customer proxies are considered as a warning

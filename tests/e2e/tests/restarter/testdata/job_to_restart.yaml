@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: fake-job-to-restart-
+  labels:
+    app: fake-job-to-restart
+spec:
+  template:
+    metadata:
+      labels:
+        app: fake-job-to-restart
+        job-pod-running.stage.kwok.x-k8s.io: "true"
+    spec:
+      restartPolicy: Never
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: type
+                    operator: In
+                    values:
+                      - kwok
+      tolerations:
+        - key: "kwok.x-k8s.io/node"
+          operator: "Exists"
+          effect: "NoSchedule"
+      containers:
+        - name: fake-container
+          image: fake-image

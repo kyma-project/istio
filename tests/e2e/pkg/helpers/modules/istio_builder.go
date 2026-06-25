@@ -86,6 +86,11 @@ func (b *IstioCRBuilder) WithNamespace(namespace string) *IstioCRBuilder {
 	return b
 }
 
+func (b *IstioCRBuilder) WithPrometheusMerge(enabled bool) *IstioCRBuilder {
+	b.istio.Spec.Config.Telemetry.Metrics.PrometheusMerge = enabled
+	return b
+}
+
 // WithLabel adds a label to the Istio CR
 func (b *IstioCRBuilder) WithLabel(key, value string) *IstioCRBuilder {
 	if b.istio.ObjectMeta.Labels == nil {

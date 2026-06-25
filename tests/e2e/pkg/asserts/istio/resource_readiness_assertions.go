@@ -4,10 +4,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	v3 "istio.io/client-go/pkg/apis/security/v1"
-	v2 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	istiosecurityv1 "istio.io/client-go/pkg/apis/security/v1"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	policyv1 "k8s.io/api/policy/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
 	"sigs.k8s.io/e2e-framework/klient/wait"
 	"sigs.k8s.io/e2e-framework/klient/wait/conditions"
@@ -18,63 +19,40 @@ import (
 // AssertIstiodReady gets the istiod deployment and asserts it is available
 func AssertIstiodReady(t *testing.T, c *resources.Resources) {
 	t.Helper()
-
-	istiodDeployment := &v2.Deployment{}
-	err := c.Get(t.Context(), "istiod", "istio-system", istiodDeployment)
-	require.NoError(t, err)
-	err = wait.For(conditions.New(c).DeploymentConditionMatch(istiodDeployment, v2.DeploymentAvailable, v1.ConditionTrue), wait.WithContext(t.Context()))
-	require.NoError(t, err)
+	require.NoError(t, wait.For(conditions.New(c).DeploymentAvailable("istiod", "istio-system"), wait.WithContext(t.Context())))
 }
 
 // AssertIngressGatewayReady gets the istio-ingressgateway deployment and asserts it is available
 func AssertIngressGatewayReady(t *testing.T, c *resources.Resources) {
 	t.Helper()
-
-	ingressDeployment := &v2.Deployment{}
-	err := c.Get(t.Context(), "istio-ingressgateway", "istio-system", ingressDeployment)
-	require.NoError(t, err)
-	err = wait.For(conditions.New(c).DeploymentConditionMatch(ingressDeployment, v2.DeploymentAvailable, v1.ConditionTrue), wait.WithContext(t.Context()))
-	require.NoError(t, err)
+	require.NoError(t, wait.For(conditions.New(c).DeploymentAvailable("istio-ingressgateway", "istio-system"), wait.WithContext(t.Context())))
 }
 
 // AssertEgressGatewayReady gets the istio-egressgateway deployment and asserts it is available
 func AssertEgressGatewayReady(t *testing.T, c *resources.Resources) {
 	t.Helper()
-
-	egressDeployment := &v2.Deployment{}
-	err := c.Get(t.Context(), "istio-egressgateway", "istio-system", egressDeployment)
-	require.NoError(t, err)
-	err = wait.For(conditions.New(c).DeploymentConditionMatch(egressDeployment, v2.DeploymentAvailable, v1.ConditionTrue), wait.WithContext(t.Context()))
-	require.NoError(t, err)
+	require.NoError(t, wait.For(conditions.New(c).DeploymentAvailable("istio-egressgateway", "istio-system"), wait.WithContext(t.Context())))
 }
 
 // AssertCNINodeReady gets the istio-cni-node daemonset and asserts it is ready
 func AssertCNINodeReady(t *testing.T, c *resources.Resources) {
 	t.Helper()
-
-	cniDaemonSet := &v2.DaemonSet{}
-	err := c.Get(t.Context(), "istio-cni-node", "istio-system", cniDaemonSet)
-	require.NoError(t, err)
-	err = wait.For(conditions.New(c).DaemonSetReady(cniDaemonSet), wait.WithContext(t.Context()))
-	require.NoError(t, err)
+	ds := appsv1.DaemonSet{ObjectMeta: metav1.ObjectMeta{Name: "istio-cni-node", Namespace: "istio-system"}}
+	require.NoError(t, wait.For(conditions.New(c).DaemonSetReady(&ds), wait.WithContext(t.Context())))
 }
 
 // AssertZtunnelReady gets the ztunnel daemonset and asserts it is ready
 func AssertZtunnelReady(t *testing.T, c *resources.Resources) {
 	t.Helper()
-
-	ztunnelDaemonSet := &v2.DaemonSet{}
-	err := c.Get(t.Context(), "ztunnel", "istio-system", ztunnelDaemonSet)
-	require.NoError(t, err)
-	err = wait.For(conditions.New(c).DaemonSetReady(ztunnelDaemonSet), wait.WithContext(t.Context()))
-	require.NoError(t, err)
+	ds := appsv1.DaemonSet{ObjectMeta: metav1.ObjectMeta{Name: "ztunnel", Namespace: "istio-system"}}
+	require.NoError(t, wait.For(conditions.New(c).DaemonSetReady(&ds), wait.WithContext(t.Context())))
 }
 
 // AssertIstiodPodResources asserts that all istiod pods have the expected resource requests and limits
 func AssertIstiodPodResources(t *testing.T, c *resources.Resources, expectedRequestCpu, expectedRequestMemory, expectedLimitCpu, expectedLimitMemory string) {
 	t.Helper()
 
-	istiodPodList := &v1.PodList{}
+	istiodPodList := &corev1.PodList{}
 	err := c.List(t.Context(), istiodPodList, resources.WithLabelSelector("app=istiod"))
 	require.NoError(t, err)
 
@@ -89,7 +67,7 @@ func AssertIstiodPodResources(t *testing.T, c *resources.Resources, expectedRequ
 func AssertIngressGatewayPodResources(t *testing.T, c *resources.Resources, expectedRequestCpu, expectedRequestMemory, expectedLimitCpu, expectedLimitMemory string) {
 	t.Helper()
 
-	ingressPodList := &v1.PodList{}
+	ingressPodList := &corev1.PodList{}
 	err := c.List(t.Context(), ingressPodList, resources.WithLabelSelector("app=istio-ingressgateway"))
 	require.NoError(t, err)
 
@@ -104,7 +82,7 @@ func AssertIngressGatewayPodResources(t *testing.T, c *resources.Resources, expe
 func AssertEgressGatewayPodResources(t *testing.T, c *resources.Resources, expectedRequestCpu, expectedRequestMemory, expectedLimitCpu, expectedLimitMemory string) {
 	t.Helper()
 
-	egressPodList := &v1.PodList{}
+	egressPodList := &corev1.PodList{}
 	err := c.List(t.Context(), egressPodList, resources.WithLabelSelector("app=istio-egressgateway"))
 	require.NoError(t, err)
 
@@ -116,10 +94,10 @@ func AssertEgressGatewayPodResources(t *testing.T, c *resources.Resources, expec
 }
 
 // AssertDefaultPeerAuthenticationExists asserts that the default PeerAuthentication exists in istio-system namespace
-func AssertDefaultPeerAuthenticationExists(t *testing.T, c *resources.Resources) *v3.PeerAuthentication {
+func AssertDefaultPeerAuthenticationExists(t *testing.T, c *resources.Resources) *istiosecurityv1.PeerAuthentication {
 	t.Helper()
 
-	pa := &v3.PeerAuthentication{}
+	pa := &istiosecurityv1.PeerAuthentication{}
 	err := c.Get(t.Context(), "default", "istio-system", pa)
 	require.NoError(t, err)
 	return pa

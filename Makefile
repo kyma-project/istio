@@ -232,7 +232,7 @@ endef
 %-e2e-test: gotestsum deploy
 	@echo "Running E2E test: $*"
 	go clean -testcache
-	$(GOTESTSUM) --format testname --rerun-fails --packages="./tests/e2e/tests/$*/..." --junitfile "./tests/e2e/tests/$*/report.xml" -- -timeout 20m
+	$(GOTESTSUM) --format testname --rerun-fails --packages="./tests/e2e/tests/$*/..." --junitfile "./tests/e2e/tests/$*/report.xml" -- -timeout 40m
 	@echo "Finished E2E test: $*"
 
 .PHONY: upgrade-test

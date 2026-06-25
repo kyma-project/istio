@@ -1,0 +1,25 @@
+# for this test do not use kwok, idk how to simulate this properly
+# TODO: setup kwok simulation for failed deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  generateName: failed-to-restart-
+  labels:
+    app: failed-to-restart
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: failed-to-restart
+  template:
+    metadata:
+      labels:
+        app: failed-to-restart
+    spec:
+      containers:
+        - name: container
+          image: busybox:latest
+          command:
+            - "sh"
+            - "-c"
+            - "echo 'This container will fail'; exit 1"

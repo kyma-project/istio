@@ -189,7 +189,6 @@ jobs:
     needs: [ get-image ]
     steps:
       - uses: actions/checkout@v6
-      - uses: ./.github/actions/load-manager-image
       - uses: ./.github/actions/e2e-test-k3d
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -347,7 +346,7 @@ jobs:
       fail-fast: false
       matrix:
         test_make_target:
-          - "xff-header-e2e-test"
+          - "xff_header-e2e-test"
           - "trustdomain-e2e-test"
           - "networkpolicy-e2e-test"
           - "dnsproxying-e2e-test"

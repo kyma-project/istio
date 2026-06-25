@@ -224,6 +224,7 @@ jobs:
       - istio-e2e-test-calico-k3d
       - istio-e2e-test-experimental-k3d
       - istio-upgrade-test-k3d
+      - istio-restarter-e2e-test-k3d
       - verify-pins
     runs-on: ubuntu-latest
     if: always()

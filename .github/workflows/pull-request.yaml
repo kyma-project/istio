@@ -19,7 +19,7 @@ jobs:
   gitleaks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Fetch gitleaks ${{ env.GITLEAKS_VERSION }}
@@ -35,7 +35,7 @@ jobs:
     name: Build manager image
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/build-manager-image
         with:
           operator-image-name: "istio-manager:PR-${{github.event.number}}"
@@ -61,7 +61,7 @@ jobs:
           echo "image=${image}" >> $GITHUB_OUTPUT
           echo "operator_version=${operator_version}"
           echo "operator_version=${operator_version}" >> $GITHUB_OUTPUT
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/load-manager-image
       - id: check-image
         name: Check whether image exists
@@ -99,7 +99,7 @@ jobs:
           - "networkpolicy-e2e-test"
           - "dnsproxying-e2e-test"
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/load-manager-image
       - uses: ./.github/actions/e2e-test-k3d
         env:
@@ -116,7 +116,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ get-image ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/load-manager-image
       - uses: ./.github/actions/e2e-test-k3d
         env:
@@ -139,7 +139,7 @@ jobs:
       matrix:
         test-make-target: [ "evaluation-e2e-test" ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/load-manager-image
       - uses: ./.github/actions/e2e-test-k3d
         env:
@@ -156,7 +156,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ get-image ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/load-manager-image
       - uses: ./.github/actions/e2e-test-k3d
         env:
@@ -178,7 +178,7 @@ jobs:
       matrix:
         test-make-target: [ "ambient-e2e-test" ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/load-manager-image-experimental
       - uses: ./.github/actions/e2e-test-k3d
         env:
@@ -195,7 +195,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ get-image ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - uses: ./.github/actions/load-manager-image

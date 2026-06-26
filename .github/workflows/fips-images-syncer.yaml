@@ -30,7 +30,7 @@ jobs:
       ztunnel-fips-tag: ${{ steps.parse.outputs.ztunnel-fips-tag }}
       ztunnel-fips-source: ${{ steps.parse.outputs.ztunnel-fips-source }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Parse images
         id: parse
         shell: bash
@@ -111,7 +111,7 @@ jobs:
       - build-cni
       - build-ztunnel
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Notify
         uses: ./.github/actions/slack-notification-failed-workflow
         with:

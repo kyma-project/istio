@@ -141,6 +141,8 @@ spec:
         # TODO: remove in late July - workaround for Istio 1.29 breaking change
         - name: ENABLE_DEBUG_ENDPOINT_AUTH
           value: "false"
+        - name: PILOT_SIDECAR_PICK_BEST_SERVICE_NAMESPACE
+          value: "false"
         hpaSpec:
           scaleTargetRef:
             apiVersion: apps/v1

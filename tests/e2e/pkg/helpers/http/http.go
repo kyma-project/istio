@@ -73,22 +73,22 @@ func TestLogTransportWrapper(t *testing.T, prefix string, host string, headers m
 		if host != "" {
 			req.Host = host
 		}
-		//t.Logf("[%s] request Host header set to: %s", prefix, req.Host)
+		t.Logf("[%s] request Host header set to: %s", prefix, req.Host)
 
 		// Set custom headers if specified
 		for key, value := range headers {
 			req.Header.Set(key, value)
 		}
 
-		//t.Logf("[%s] request method: %s, url: %s, host: %s", prefix, req.Method, req.URL, req.Host)
-		//t.Logf("[%s] request headers: %v", prefix, req.Header)
+		t.Logf("[%s] request method: %s, url: %s, host: %s", prefix, req.Method, req.URL, req.Host)
+		t.Logf("[%s] request headers: %v", prefix, req.Header)
 
 		resp, err := rt.RoundTrip(req)
 		if err != nil {
-			//t.Logf("[%s] request error: method: %s, url: %s, err: %v", prefix, req.Method, req.URL, err)
+			t.Logf("[%s] request error: method: %s, url: %s, err: %v", prefix, req.Method, req.URL, err)
 			return nil, err
 		}
-		//t.Logf("[%s] response: %d %s", prefix, resp.StatusCode, http.StatusText(resp.StatusCode))
+		t.Logf("[%s] response: %d %s", prefix, resp.StatusCode, http.StatusText(resp.StatusCode))
 		return resp, nil
 	}
 }

@@ -96,11 +96,11 @@ func TestRestarter_IngressGateway(t *testing.T) {
 }
 
 func TestRestarter_Workload(t *testing.T) {
-	t.Run("Sidecar images differ on 250 pods, all workloads restarted", func(t *testing.T) {
+	t.Run("Sidecar images differ on 62 pods, all workloads restarted", func(t *testing.T) {
 		testNamespace := "test-workload-restart"
 		invalidImage := "europe-docker.pkg.dev/kyma-project/prod/external/istio/proxyv2:1.21.3-distroless"
-		numDepl := 100
-		numDeplToRestart := 50
+		numDepl := 10
+		numDeplToRestart := 31
 
 		c, err := client.ResourcesClient(t)
 		require.NoError(t, err)

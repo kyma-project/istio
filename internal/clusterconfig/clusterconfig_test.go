@@ -206,9 +206,23 @@ var awsNLBConfig = clusterconfig.ClusterConfiguration(map[string]interface{}{
 			"gateways": map[string]interface{}{
 				"istio-ingressgateway": map[string]interface{}{
 					"serviceAnnotations": map[string]string{
-						"service.beta.kubernetes.io/aws-load-balancer-scheme":          "internet-facing",
-						"service.beta.kubernetes.io/aws-load-balancer-nlb-target-type": "instance",
-						"service.beta.kubernetes.io/aws-load-balancer-type":            "nlb",
+						"service.beta.kubernetes.io/aws-load-balancer-scheme": "internet-facing",
+						"service.beta.kubernetes.io/aws-load-balancer-type":   "nlb",
+					},
+				},
+			},
+		},
+	},
+})
+
+var awsELBConfig = clusterconfig.ClusterConfiguration(map[string]interface{}{
+	"spec": map[string]interface{}{
+		"values": map[string]interface{}{
+			"gateways": map[string]interface{}{
+				"istio-ingressgateway": map[string]interface{}{
+					"serviceAnnotations": map[string]string{
+						"service.beta.kubernetes.io/aws-load-balancer-proxy-protocol":          "*",
+						"service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout": "4000",
 					},
 				},
 			},
@@ -314,9 +328,8 @@ func TestEvaluateClusterConfiguration(t *testing.T) {
 						Name:      "istio-ingressgateway",
 						Namespace: "istio-system",
 						Annotations: map[string]string{
-							"service.beta.kubernetes.io/aws-load-balancer-scheme":          "internet-facing",
-							"service.beta.kubernetes.io/aws-load-balancer-nlb-target-type": "instance",
-							"service.beta.kubernetes.io/aws-load-balancer-type":            "nlb",
+							"service.beta.kubernetes.io/aws-load-balancer-scheme": "internet-facing",
+							"service.beta.kubernetes.io/aws-load-balancer-type":   "nlb",
 						},
 					},
 				},
@@ -334,7 +347,7 @@ func TestEvaluateClusterConfiguration(t *testing.T) {
 					ObjectMeta: v1.ObjectMeta{Name: "elb-deprecated", Namespace: "istio-system"},
 				},
 			},
-			want: emptyValuesConfig,
+			want: awsELBConfig,
 		},
 		{
 			name: "GKE sets cni values",

@@ -27,8 +27,10 @@ export default [
     ] },
   { text: 'Troubleshooting', link: './troubleshooting/README', collapsed: true, items: [
     { text: 'Network Connectivity - Basic Diagnostics', link: './troubleshooting/03-00-network-connectivity' },
+    { text: 'Increase Verbosity of the Ingress Logs', link: './troubleshooting/03-05-increase-verbosity-of-ingress-logs' },
     { text: 'Connection Refused Errors', link: './troubleshooting/03-20-connection-refused' },
     { text: 'No Access Error', link: './troubleshooting/03-10-503-no-access' },
+    { text: 'Forbidden Error when the Host Header Contains a Port', like: './troubleshooting/03-65-403-if-host-header-contains-port'},
     { text: 'Istio Sidecar Injection Issues', link: './troubleshooting/03-30-istio-no-sidecar' },
     { text: 'Reverting the Istio module\'s deletion', link: './troubleshooting/03-50-recovering-from-unintentional-istio-removal' },
     { text: 'SAP HANA Database Connection Issues', link: './troubleshooting/03-80-cannot-connect-to-hana-db' },

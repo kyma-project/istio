@@ -2,11 +2,11 @@
 
 ## Symptom
 
-When you try to access a Kyma endpoint protected by AuthorizationPolicy allowing given host name, but it reports a 403 Forbidden error.
+When you try to access a Kyma endpoint protected by an AuthorizationPolicy allowing a given hostname, it reports a 403 Forbidden error.
 
 ## Cause
 
-The error might be caused by the unnecessary port number in the Host header. The Istio checks the host as-is, so if the Host header contains a port number, and AuthorizationPolicy defines only a host name then the request is denied.
+The error might be caused by the unnecessary port number in the Host header. Istio checks the host as-is, so if the Host header contains a port number and the AuthorizationPolicy defines only a hostname, the request is denied.
 
 Example:
 
@@ -39,9 +39,9 @@ RBAC: access denied
 
 ## Solution
 
-[RFC 9110](https://datatracker.ietf.org/doc/html/rfc9110#section-4.2.3) and [RFC 3986](https://datatracker.ietf.org/doc/html/rfc3986#section-3.2.3) documents define that HTTP clients should remove port if it is a default port for a given protocol. So the general recommendation is to fix the client implementation.
+The [RFC 9110](https://datatracker.ietf.org/doc/html/rfc9110#section-4.2.3) and [RFC 3986](https://datatracker.ietf.org/doc/html/rfc3986#section-3.2.3) documents define that HTTP clients should remove the port if it is the default port for a given protocol. So the general recommendation is to fix the client implementation.
 
-If above is not possible then the workaround is to adapt the AuthorizationPolicy to contain also the port number.
+If this solution cannot be implemented, the workaround is to modify the AuthorizationPolicy to also include the port number.
 
 ```yaml
 apiVersion: security.istio.io/v1

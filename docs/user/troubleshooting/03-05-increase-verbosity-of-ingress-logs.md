@@ -1,14 +1,13 @@
 # Increase Verbosity of the Istio Ingress Logs
 
 In order to diagnose connection issues you may need more verbose logs in the Istio Ingress container.
-
-Such logs may help to understand whether the request comes to the Ingress and what happens to it.
+Such logs may help determine whether the request comes to the Ingress and what happens to it.
 
 ## Enable Access Logs
 
-An Access Log is a main observability feature. It contains a detailed log entry for every request that is processed.
+An access log is the main observability feature. It contains a detailed log entry for every request that is processed.
 
-Istio allows to enable access logging by the Telemetry Custom Resource. For the Istio Ingress Gateway it can be easily done in the following way:
+With Istio, you can enable access logging by the Telemetry custom resource (CR). To enable access logging for the Istio Ingress Gateway, run:
 
 ```bash
 cat <<EOF | kubectl apply -f -
@@ -26,21 +25,25 @@ spec:
       - name: envoy
 ```
 
-Once it is applied, the Ingress log contain access logs.
+As a result, the Ingress log contains access logs.
 
 Example:
+
+When you run the following command:
+
 ```bash
 curl -k --tls-max 1.0 https://httpbin.local.kyma.dev/headers
 ```
 
-The Ingress log contains the following entry for the above request:
+The Ingress log contains the following entry:
+
 ```
 {"authority":"httpbin.local.kyma.dev","bytes_received":0,"bytes_sent":442,"connection_termination_details":null,"downstream_local_address":"10.42.0.9:8443","downstream_remote_address":"10.42.0.1:22564","duration":15,"method":"GET","path":"/headers","protocol":"HTTP/2","request_id":"b947e4b6-2965-4cca-af90-51e3a1f4673f","requested_server_name":"httpbin.local.kyma.dev","response_code":200,"response_code_details":"via_upstream","response_flags":"-","route_name":null,"start_time":"2026-06-30T09:09:58.374Z","upstream_cluster":"outbound|8000||httpbin.test.svc.cluster.local","upstream_host":"10.42.0.13:80","upstream_local_address":"10.42.0.9:35226","upstream_service_time":"13","upstream_transport_failure_reason":null,"user_agent":"curl/8.7.1","x_forwarded_for":"10.42.0.1"}
 ```
 
 ## Enable Trace Logs
 
-If the Access Log is not enough then you may increase the log level of the Istio Ingress. It can be done at runtime, so it doesn't require redeployment.
+If the access log is insufficient, increase the log level of the Istio Ingress. You can do it at runtime, so it doesn't require redeployment.
 
 ```bash
 for ingress_pod in $(kubectl get pod -n istio-system --no-headers --output=name -l app=istio-ingressgateway); do
@@ -48,16 +51,18 @@ for ingress_pod in $(kubectl get pod -n istio-system --no-headers --output=name 
 done
 ```
 
-The effect is immediate and the Ingress log show a lot of information for every single connection.
-It is very useful in diagnosing problems in lower layers, like the (m)TLS.
+The effect is immediate, and the Ingress log provides detailed information for every connection.
+It is very useful for diagnosing problems in lower layers, such as (m)TLS.
 
 Example:
+The following request fails because the TLS version is too old:
+
 ```bash
 curl -k --tls-max 1.0 https://httpbin.local.kyma.dev/headers
 ```
 
-The above request fails, because the TLS version is too old. Such request is not visible in the access log, because the connection is not established, and the HTTP protocol is not involved yet.
-The Ingress log show the 'UNSUPPORTED_PROTOCOL' error.
+Such a request is not visible in the access log because the connection has not been established, and the HTTP protocol has not been involved yet.
+The Ingress log shows the 'UNSUPPORTED_PROTOCOL' error.
 
 ```
 2026-07-01T06:17:13.289504Z	trace	envoy filter external/envoy/source/extensions/filters/listener/tls_inspector/tls_inspector.cc:107	tls inspector: new connection accepted	thread=20
@@ -82,5 +87,6 @@ The Ingress log show the 'UNSUPPORTED_PROTOCOL' error.
 2026-07-01T06:17:13.290068Z	trace	envoy connection external/envoy/source/common/network/connection_impl.cc:517	[Tags: "ConnectionId":"388"] raising connection event 0	thread=20```
 ```
 
-Note that such verbose logs may influence the Ingress performance, so you should switch it back to a lower level after diagnosis is completed.
-By default, the Ingress uses a 'warn' level.
+> ### Note:
+> Such verbose logs may influence the Ingress performance, so switch it back to a lower level after diagnosis is completed.
+> By default, the Ingress uses a 'warn' level.

@@ -10,12 +10,16 @@ import (
 )
 
 const (
-	LBTypeAnnotation        = "service.beta.kubernetes.io/aws-load-balancer-type"
-	NLBType                 = "nlb"
-	NlbTargetTypeAnnotation = "service.beta.kubernetes.io/aws-load-balancer-nlb-target-type"
-	NlbTargetTypeInstance   = "instance"
-	SchemeAnnotation        = "service.beta.kubernetes.io/aws-load-balancer-scheme"
-	InternetFacingScheme    = "internet-facing"
+	ProxyProtocolAnnotation   = "service.beta.kubernetes.io/aws-load-balancer-proxy-protocol"
+	ProxyProtocolValue        = "*"
+	ConnIdleTimeoutAnnotation = "service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout"
+	ConnIdleTimeoutValue      = "4000"
+	LBTypeAnnotation          = "service.beta.kubernetes.io/aws-load-balancer-type"
+	NLBType                   = "nlb"
+	NlbTargetTypeAnnotation   = "service.beta.kubernetes.io/aws-load-balancer-nlb-target-type"
+	NlbTargetTypeInstance     = "instance"
+	SchemeAnnotation          = "service.beta.kubernetes.io/aws-load-balancer-scheme"
+	InternetFacingScheme      = "internet-facing"
 
 	istioIngressNamespace   = "istio-system"
 	istioIngressServiceName = "istio-ingressgateway"
@@ -45,20 +49,36 @@ type LB struct {
 }
 
 func (s *LB) Annotations() map[string]string {
-	if s.lbType == ELB {
-		return nil
+	if s.lbType == NLB {
+		// AWS LBC
+		// In case of running with DualStack IP family,
+		// The annotation "service.beta.kubernetes.io/aws-load-balancer-ip-address-type=dualstack" is required.
+		// AWS LB Controller-style annotations (type=external, ip-address-type=dualstack)
+		// are intentionally NOT emitted here. On Gardener IPv6/dual-stack clusters those
+		// are added by Gardener's shoot-service mutating webhook. See:
+		// https://github.com/gardener/gardener-extension-provider-aws/blob/master/pkg/webhook/shootservice/mutator.go
+		// Switching IPv4 clusters to LB type=external is a potential follow up.
+		if s.stackType == DualStack {
+			return map[string]string{
+				LBTypeAnnotation:        NLBType,
+				SchemeAnnotation:        InternetFacingScheme,
+				NlbTargetTypeAnnotation: NlbTargetTypeInstance,
+				ProxyProtocolAnnotation: ProxyProtocolValue,
+			}
+		}
+		// in-tree AWS CCM
+		if s.stackType == IPv4 {
+			return map[string]string{
+				LBTypeAnnotation: NLBType,
+				SchemeAnnotation: InternetFacingScheme,
+			}
+		}
 	}
-	// In case of running with DualStack IP family,
-	// The annotation "service.beta.kubernetes.io/aws-load-balancer-ip-address-type=dualstack" is required.
-	// AWS LB Controller-style annotations (type=external, ip-address-type=dualstack)
-	// are intentionally NOT emitted here. On Gardener IPv6/dual-stack clusters those
-	// are added by Gardener's shoot-service mutating webhook. See:
-	// https://github.com/gardener/gardener-extension-provider-aws/blob/master/pkg/webhook/shootservice/mutator.go
-	// Switching IPv4 clusters to LB type=external is a potential follow up.
+
+	// ELB
 	return map[string]string{
-		LBTypeAnnotation:        NLBType,
-		SchemeAnnotation:        InternetFacingScheme,
-		NlbTargetTypeAnnotation: NlbTargetTypeInstance,
+		ProxyProtocolAnnotation:   ProxyProtocolValue,
+		ConnIdleTimeoutAnnotation: ConnIdleTimeoutValue,
 	}
 }
 

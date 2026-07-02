@@ -7,14 +7,14 @@ spec:
     - egress-gateway
     - mesh
   hosts:
-    - httpbin.io
+    - httpbin-test.goat.build.kyma-project.io
   tls:
     - match:
         - gateways:
             - mesh
           port: 443
           sniHosts:
-            - httpbin.io
+            - httpbin-test.goat.build.kyma-project.io
       route:
         - destination:
             host: istio-egressgateway.istio-system.svc.cluster.local
@@ -26,10 +26,10 @@ spec:
             - egress-gateway
           port: 443
           sniHosts:
-            - httpbin.io
+            - httpbin-test.goat.build.kyma-project.io
       route:
         - destination:
-            host: httpbin.io
+            host: httpbin-test.goat.build.kyma-project.io
             port:
               number: 443
           weight: 100
@@ -43,7 +43,7 @@ spec:
     istio: egressgateway
   servers:
     - hosts:
-        - httpbin.io
+        - httpbin-test.goat.build.kyma-project.io
       port:
         name: tls
         number: 443
@@ -56,7 +56,7 @@ metadata:
   name: e2e-service-entry
 spec:
   hosts:
-    - httpbin.io
+    - httpbin-test.goat.build.kyma-project.io
   ports:
     - name: tls
       number: 443

@@ -32,8 +32,6 @@ func TestE2EEgressConnectivity(t *testing.T) {
 	require.NoError(t, modulehelpers.CreateIstioOperatorCR(t, modulehelpers.WithIstioOperatorTemplate(string(istioCRWithEgress))))
 
 	// initialize testcases
-	// note: test might fail randomly from random downtime to httpbin.org with error Connection reset by peer.
-	// This is a flake, and we need to think how to resolve that eventually.
 	tc := []struct {
 		name                 string
 		url                  string
@@ -44,13 +42,13 @@ func TestE2EEgressConnectivity(t *testing.T) {
 	}{
 		{
 			name:              "connection to httpbin service is OK when egress is deployed",
-			url:               "https://httpbin.io/headers",
+			url:               "https://httpbin-test.goat.build.kyma-project.io/headers",
 			applyEgressConfig: true,
 			expectError:       false,
 		},
 		{
 			name:               "connection to httpbin service is refused when NetworkPolicy is applied",
-			url:                "https://httpbin.io/headers",
+			url:                "https://httpbin-test.goat.build.kyma-project.io/headers",
 			applyNetworkPolicy: true,
 			// sidecar init fails when NP is applied. When uncommented, the test will pass despite confirming manually
 			// that connection is refused with NP
@@ -58,7 +56,7 @@ func TestE2EEgressConnectivity(t *testing.T) {
 		},
 		{
 			name:               "connection to httpbin service is OK when NetworkPolicy is applied and egress is configured",
-			url:                "https://httpbin.io/headers",
+			url:                "https://httpbin-test.goat.build.kyma-project.io/headers",
 			applyEgressConfig:  true,
 			applyNetworkPolicy: true,
 			expectError:        false,

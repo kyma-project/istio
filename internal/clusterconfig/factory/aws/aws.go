@@ -49,6 +49,7 @@ type LB struct {
 }
 
 func (s *LB) Annotations() map[string]string {
+
 	if s.lbType == NLB {
 		// AWS LBC
 		// In case of running with DualStack IP family,
@@ -69,8 +70,9 @@ func (s *LB) Annotations() map[string]string {
 		// in-tree AWS CCM
 		if s.stackType == IPv4 {
 			return map[string]string{
-				LBTypeAnnotation: NLBType,
-				SchemeAnnotation: InternetFacingScheme,
+				LBTypeAnnotation:        NLBType,
+				SchemeAnnotation:        InternetFacingScheme,
+				NlbTargetTypeAnnotation: NlbTargetTypeInstance,
 			}
 		}
 	}

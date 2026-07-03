@@ -50,8 +50,9 @@ func TestFactory_MakeLB(t *testing.T) {
 			objs:             nil,
 			dualStackEnabled: false,
 			wantAnnots: map[string]string{
-				aws.LBTypeAnnotation: aws.NLBType,
-				aws.SchemeAnnotation: aws.InternetFacingScheme,
+				aws.LBTypeAnnotation:        aws.NLBType,
+				aws.SchemeAnnotation:        aws.InternetFacingScheme,
+				aws.NlbTargetTypeAnnotation: aws.NlbTargetTypeInstance,
 			},
 		},
 		{
@@ -73,8 +74,9 @@ func TestFactory_MakeLB(t *testing.T) {
 			},
 			dualStackEnabled: false,
 			wantAnnots: map[string]string{
-				aws.LBTypeAnnotation: aws.NLBType,
-				aws.SchemeAnnotation: aws.InternetFacingScheme,
+				aws.LBTypeAnnotation:        aws.NLBType,
+				aws.SchemeAnnotation:        aws.InternetFacingScheme,
+				aws.NlbTargetTypeAnnotation: aws.NlbTargetTypeInstance,
 			},
 		},
 		{

@@ -31,7 +31,7 @@ var awsNLBDualStackConfig = clusterconfig.ClusterConfiguration(map[string]interf
 				"istio-ingressgateway": map[string]interface{}{
 					"serviceAnnotations": map[string]string{
 						"service.beta.kubernetes.io/aws-load-balancer-scheme":          "internet-facing",
-						"service.beta.kubernetes.io/aws-load-balancer-type":            "nlb",
+						"service.beta.kubernetes.io/aws-load-balancer-type":            "external",
 						"service.beta.kubernetes.io/aws-load-balancer-nlb-target-type": "instance",
 						"service.beta.kubernetes.io/aws-load-balancer-proxy-protocol":  "*",
 					},

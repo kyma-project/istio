@@ -16,6 +16,7 @@ const (
 	ConnIdleTimeoutValue      = "4000"
 	LBTypeAnnotation          = "service.beta.kubernetes.io/aws-load-balancer-type"
 	NLBType                   = "nlb"
+	ExternalType              = "external"
 	NlbTargetTypeAnnotation   = "service.beta.kubernetes.io/aws-load-balancer-nlb-target-type"
 	NlbTargetTypeInstance     = "instance"
 	SchemeAnnotation          = "service.beta.kubernetes.io/aws-load-balancer-scheme"
@@ -61,7 +62,7 @@ func (s *LB) Annotations() map[string]string {
 		// Switching IPv4 clusters to LB type=external is a potential follow up.
 		if s.stackType == DualStack {
 			return map[string]string{
-				LBTypeAnnotation:        NLBType,
+				LBTypeAnnotation:        ExternalType,
 				SchemeAnnotation:        InternetFacingScheme,
 				NlbTargetTypeAnnotation: NlbTargetTypeInstance,
 				ProxyProtocolAnnotation: ProxyProtocolValue,

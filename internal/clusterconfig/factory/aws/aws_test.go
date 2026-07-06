@@ -60,7 +60,7 @@ func TestFactory_MakeLB(t *testing.T) {
 			objs:             nil,
 			dualStackEnabled: true,
 			wantAnnots: map[string]string{
-				aws.LBTypeAnnotation:        aws.NLBType,
+				aws.LBTypeAnnotation:        aws.ExternalType,
 				aws.SchemeAnnotation:        aws.InternetFacingScheme,
 				aws.NlbTargetTypeAnnotation: aws.NlbTargetTypeInstance,
 				aws.ProxyProtocolAnnotation: aws.ProxyProtocolValue,

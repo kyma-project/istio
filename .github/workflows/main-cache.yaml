@@ -2,7 +2,7 @@ name: Main cache
 
 permissions:
   contents: read
-  
+
 on:
   push:
     branches:
@@ -22,3 +22,13 @@ jobs:
           go-version-file: "go.mod"
       - name: build
         run: make build
+
+  warm-image-cache:
+    name: Warm image cache
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/build-manager-image
+        with:
+          operator-image-name: "istio-manager:main-cache"
+          operator-version: "main"

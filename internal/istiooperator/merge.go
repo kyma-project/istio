@@ -1,17 +1,17 @@
 package istiooperator
 
 import (
+	"fmt"
 	"os"
 	"path"
 
 	"github.com/imdario/mergo"
-	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/errors"
-
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/images"
+	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/errors"
 )
 
 func (m *IstioMerger) Merge(clusterSize clusterconfig.ClusterSize, istioCR *operatorv1alpha2.Istio,
@@ -49,7 +49,7 @@ func (m *IstioMerger) Merge(clusterSize clusterconfig.ClusterSize, istioCR *oper
 	if err != nil {
 		return "", err
 	}
-	m.log.V(2).Info("Deploying IstioOperator", "operator", string(iopWithOverrides))
+	m.log.V(2).Info(fmt.Sprintf("Deploying IstioOperator from %s:\n%s", mergedIstioOperatorPath, iopWithOverrides))
 	return mergedIstioOperatorPath, nil
 }
 

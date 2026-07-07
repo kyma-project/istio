@@ -74,21 +74,22 @@ func (fn RoundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 type TestLogTransportWrapperOptions struct {
-	DisableTLog       bool
-	AdditionalOutputs io.Writer
+	SuppressTestLog bool
+	Output          io.Writer
+	outputMu        sync.Mutex
 }
 
 type TestLogTransportOption func(*TestLogTransportWrapperOptions)
 
-func DisableTLog() TestLogTransportOption {
+func SuppressTestLog() TestLogTransportOption {
 	return func(o *TestLogTransportWrapperOptions) {
-		o.DisableTLog = true
+		o.SuppressTestLog = true
 	}
 }
 
-func WithAdditionalOutputs(outputs io.Writer) TestLogTransportOption {
+func WithOutput(output io.Writer) TestLogTransportOption {
 	return func(o *TestLogTransportWrapperOptions) {
-		o.AdditionalOutputs = outputs
+		o.Output = output
 	}
 }
 
@@ -98,12 +99,15 @@ func logfWithOptions(t *testing.T, prefix string, opts *TestLogTransportWrapperO
 	sbuilder.WriteString(fmt.Sprintf(format, args...))
 	toLog := sbuilder.String()
 
-	if !opts.DisableTLog {
+	if !opts.SuppressTestLog {
 		t.Log(toLog)
 	}
-	if opts.AdditionalOutputs != nil {
-		if _, err := io.WriteString(opts.AdditionalOutputs, toLog+"\n"); err != nil {
-			t.Logf("Warning: failed to write to additional output: %v", err)
+	if opts.Output != nil {
+		opts.outputMu.Lock()
+		_, err := io.WriteString(opts.Output, toLog+"\n")
+		opts.outputMu.Unlock()
+		if err != nil {
+			t.Logf("Warning: failed to write to output: %v", err)
 		}
 	}
 }

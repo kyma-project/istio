@@ -1,7 +1,7 @@
-//go:build !experimental
+//go:build experimental
 
 package clusterconfig
 
 func isExperimentalEnabled() bool {
-	return false
+	return true
 }

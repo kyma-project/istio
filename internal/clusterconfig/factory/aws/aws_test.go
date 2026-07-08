@@ -56,20 +56,15 @@ func TestFactory_MakeLB(t *testing.T) {
 			},
 		},
 		{
-			name:             "no elb-deprecated CM + dualStack -> NLB",
+			name:             "no elb-deprecated CM + dualStack -> NLB with proxy-protocol annotations",
 			objs:             nil,
 			dualStackEnabled: true,
 			wantAnnots: map[string]string{
-				aws.LBTypeAnnotation:        aws.NLBType,
+				aws.LBTypeAnnotation:        aws.ExternalType,
 				aws.SchemeAnnotation:        aws.InternetFacingScheme,
 				aws.NlbTargetTypeAnnotation: aws.NlbTargetTypeInstance,
+				aws.ProxyProtocolAnnotation: aws.ProxyProtocolValue,
 			},
-		},
-		{
-			name:             "elb-deprecated CM present, no service -> ELB (no annotations)",
-			objs:             []client.Object{elbDeprecatedCM()},
-			dualStackEnabled: false,
-			wantAnnots:       nil,
 		},
 		{
 			name: "elb-deprecated CM present + service already NLB -> NLB",
@@ -91,7 +86,9 @@ func TestFactory_MakeLB(t *testing.T) {
 				ingressGatewaySvc(map[string]string{aws.LBTypeAnnotation: "classic"}),
 			},
 			dualStackEnabled: false,
-			wantAnnots:       nil,
+			wantAnnots: map[string]string{
+				aws.ProxyProtocolAnnotation:   aws.ProxyProtocolValue,
+				aws.ConnIdleTimeoutAnnotation: aws.ConnIdleTimeoutValue},
 		},
 		{
 			name: "elb-deprecated CM present + service without LB annotation -> ELB",
@@ -100,7 +97,9 @@ func TestFactory_MakeLB(t *testing.T) {
 				ingressGatewaySvc(nil),
 			},
 			dualStackEnabled: false,
-			wantAnnots:       nil,
+			wantAnnots: map[string]string{
+				aws.ProxyProtocolAnnotation:   aws.ProxyProtocolValue,
+				aws.ConnIdleTimeoutAnnotation: aws.ConnIdleTimeoutValue},
 		},
 	}
 

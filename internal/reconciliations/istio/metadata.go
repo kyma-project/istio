@@ -9,6 +9,7 @@ import (
 	k8slabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/kyma-project/istio/operator/pkg/labels"
@@ -19,16 +20,36 @@ func patchModuleResourcesWithModuleLabel(ctx context.Context, c client.Client) e
 	// we can't statically modify istio metadata easily without directly reconciling istio resources
 	// this function goes through all resources created and labeled by istio installer to set additional label with module name
 	// oh boy...
-	s, err := k8slabels.Parse("operator.istio.io/component")
+	operatorSelector, err := k8slabels.Parse("operator.istio.io/component")
 	if err != nil {
 		return err
 	}
+	istioConfigSelector, err := k8slabels.Parse("istio.io/config=true")
+	if err != nil {
+		return err
+	}
+
+	// additional resources that should be labeled regardless of their labels. might need to be extended
+	additionalResources := map[string][]types.NamespacedName{
+		"ConfigMap": {
+			// deprecated since Istio v1.27 https://github.com/istio/istio/pull/55715
+			{Namespace: "istio-system", Name: "istio-gateway-status-leader"},
+			{Namespace: "istio-system", Name: "istio-ip-autoallocate"},
+			{Namespace: "istio-system", Name: "istio-leader"},
+			{Namespace: "istio-system", Name: "istio-namespace-controller-election"},
+		},
+		"Secret": {
+			{Namespace: "istio-system", Name: "istio-ca-secret"},
+		},
+	}
+
 	kinds := []schema.GroupVersionKind{
 		// core
 		{Group: "", Version: "v1", Kind: "Pod"},
 		{Group: "", Version: "v1", Kind: "Secret"},
 		{Group: "", Version: "v1", Kind: "ConfigMap"},
 		{Group: "", Version: "v1", Kind: "ServiceAccount"},
+		{Group: "", Version: "v1", Kind: "Service"},
 		// apiextensions
 		{Group: "apiextensions.k8s.io", Version: "v1", Kind: "CustomResourceDefinition"},
 		// apps
@@ -50,13 +71,42 @@ func patchModuleResourcesWithModuleLabel(ctx context.Context, c client.Client) e
 		{Group: "networking.istio.io", Version: "v1alpha3", Kind: "EnvoyFilter"},
 	}
 
+	shouldLabel := func(obj unstructured.Unstructured) bool {
+		labelSet := k8slabels.Set(obj.GetLabels())
+
+		//primary selector
+		if operatorSelector.Matches(labelSet) {
+			return true
+		}
+
+		//ConfigMaps marked as "istio.io/config=true" are also labeled
+		if obj.GetKind() == "ConfigMap" && istioConfigSelector.Matches(labelSet) {
+			return true
+		}
+		for _, nn := range additionalResources[obj.GetKind()] {
+			if obj.GetName() == nn.Name && obj.GetNamespace() == nn.Namespace {
+				return true
+			}
+		}
+
+		return false
+	}
+
 	for _, gvk := range kinds {
 		list := unstructured.UnstructuredList{}
 		list.SetGroupVersionKind(gvk)
-		apiErr := c.List(ctx, &list, &client.ListOptions{LabelSelector: s})
+		apiErr := c.List(ctx, &list, &client.ListOptions{})
 		if client.IgnoreNotFound(apiErr) != nil {
 			return apiErr
 		}
+
+		filtered := make([]unstructured.Unstructured, 0, len(list.Items))
+		for _, obj := range list.Items {
+			if shouldLabel(obj) {
+				filtered = append(filtered, obj)
+			}
+		}
+		list.Items = filtered
 		var obj client.Object
 		for _, r := range list.Items {
 			u := r.DeepCopy()

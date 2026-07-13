@@ -25,12 +25,29 @@ func TestPatchModuleResourcesWithModuleLabel(t *testing.T) {
 		&appsv1.DaemonSet{
 			ObjectMeta: metadataObjectMeta("istio-system", "istio-cni-node", map[string]string{"operator.istio.io/component": "any_component"}),
 		},
+		&corev1.ServiceAccount{
+			ObjectMeta: metadataObjectMeta("istio-system", "istiod", map[string]string{"operator.istio.io/component": "Pilot"}),
+		},
+		&corev1.Service{
+			ObjectMeta: metadataObjectMeta("istio-system", "istiod", map[string]string{"operator.istio.io/component": "Pilot"}),
+		},
+		// istio.io/config=true: should receive module label
 		&corev1.ConfigMap{
 			ObjectMeta: metadataObjectMeta("istio-system", "istio", map[string]string{"istio.io/config": "true"}),
 		},
+		// additional resource: no label, but in the hardcoded list — should still receive module label
 		&corev1.Secret{
 			ObjectMeta: metadataObjectMeta("istio-system", "istio-ca-secret", nil),
 		},
+		// additional resource that also has istio.io/config=true: should not get a duplicate module label
+		&corev1.ConfigMap{
+			ObjectMeta: metadataObjectMeta("istio-system", "istio-gateway-status-leader", map[string]string{"istio.io/config": "true"}),
+		},
+		// additional resource that already has a custom label: custom label must be preserved
+		&corev1.ConfigMap{
+			ObjectMeta: metadataObjectMeta("istio-system", "istio-leader", map[string]string{"custom": "keep"}),
+		},
+		// unrelated resources must not receive module label
 		&appsv1.Deployment{
 			ObjectMeta: metadataObjectMeta("istio-system", "custom-deployment", nil),
 		},
@@ -41,13 +58,24 @@ func TestPatchModuleResourcesWithModuleLabel(t *testing.T) {
 			ObjectMeta: metadataObjectMeta("istio-system", "custom-secret", nil),
 		},
 	)
+
 	if err := patchModuleResourcesWithModuleLabel(ctx, c); err != nil {
 		t.Fatalf("patchModuleResourcesWithModuleLabel() error = %v", err)
 	}
+
+	// operator-labeled resources
 	assertMetadataLabelOnDeployment(t, ctx, c, "istio-system", "istio-ingressgateway")
 	assertMetadataLabelOnDaemonSet(t, ctx, c, "istio-system", "istio-cni-node")
+	assertMetadataLabelOnServiceAccount(t, ctx, c, "istio-system", "istiod")
+	assertMetadataLabelOnService(t, ctx, c, "istio-system", "istiod")
+	// config-labeled resources
 	assertMetadataLabelOnConfigMap(t, ctx, c, "istio-system", "istio")
+	//additional hardcoded resources
 	assertMetadataLabelOnSecret(t, ctx, c, "istio-system", "istio-ca-secret")
+	// additional resource also selected by istio.io/config- exactly 2 labels (no duplicate module label)
+	assertNoDuplicateLabelsOnAdditionalWithLabel(t, ctx, c, "istio-system", "istio-gateway-status-leader")
+	// additional resource with a pre-existing custom label- custom label preserved
+	assertMetadataLabelOnConfigMapWithPreservedLabel(t, ctx, c, "istio-system", "istio-leader", "custom", "keep")
 	assertNoMetadataLabelOnDeployment(t, ctx, c, "istio-system", "custom-deployment")
 	assertNoMetadataLabelOnConfigMap(t, ctx, c, "istio-system", "custom-config")
 	assertNoMetadataLabelOnSecret(t, ctx, c, "istio-system", "custom-secret")
@@ -166,5 +194,59 @@ func assertNoModuleLabel(t *testing.T, labels map[string]string) {
 
 	if got := labels["kyma-project.io/module"]; got != "" {
 		t.Fatalf("expected kyma-project.io/module to be absent, got %q (labels=%v)", got, labels)
+	}
+}
+
+func assertMetadataLabelOnServiceAccount(t *testing.T, ctx context.Context, c client.Client, namespace, name string) {
+	t.Helper()
+
+	var sa corev1.ServiceAccount
+	if err := c.Get(ctx, types.NamespacedName{Namespace: namespace, Name: name}, &sa); err != nil {
+		t.Fatalf("get serviceaccount %s/%s: %v", namespace, name, err)
+	}
+
+	assertModuleLabel(t, sa.Labels)
+}
+
+func assertMetadataLabelOnService(t *testing.T, ctx context.Context, c client.Client, namespace, name string) {
+	t.Helper()
+
+	var svc corev1.Service
+	if err := c.Get(ctx, types.NamespacedName{Namespace: namespace, Name: name}, &svc); err != nil {
+		t.Fatalf("get service %s/%s: %v", namespace, name, err)
+	}
+
+	assertModuleLabel(t, svc.Labels)
+}
+
+func assertMetadataLabelOnConfigMapWithPreservedLabel(t *testing.T, ctx context.Context, c client.Client, namespace, name, key, value string) {
+	t.Helper()
+
+	var configMap corev1.ConfigMap
+	if err := c.Get(ctx, types.NamespacedName{Namespace: namespace, Name: name}, &configMap); err != nil {
+		t.Fatalf("get configmap %s/%s: %v", namespace, name, err)
+	}
+
+	assertModuleLabel(t, configMap.Labels)
+	if got := configMap.Labels[key]; got != value {
+		t.Fatalf("expected %s=%s to be preserved, got %q (labels=%v)", key, value, got, configMap.Labels)
+	}
+}
+
+func assertNoDuplicateLabelsOnAdditionalWithLabel(t *testing.T, ctx context.Context, c client.Client, namespace, name string) {
+	t.Helper()
+
+	var configMap corev1.ConfigMap
+	if err := c.Get(ctx, types.NamespacedName{Namespace: namespace, Name: name}, &configMap); err != nil {
+		t.Fatalf("get configmap %s/%s: %v", namespace, name, err)
+	}
+	//checking if it has both the config label and the module label
+	assertModuleLabel(t, configMap.Labels)
+	if got := configMap.Labels["istio.io/config"]; got != "true" {
+		t.Fatalf("expected istio.io/config=true, got %q (labels=%v)", got, configMap.Labels)
+	}
+
+	if len(configMap.Labels) != 2 {
+		t.Fatalf("expected exactly 2 labels after patching, got %d (labels=%v)", len(configMap.Labels), configMap.Labels)
 	}
 }

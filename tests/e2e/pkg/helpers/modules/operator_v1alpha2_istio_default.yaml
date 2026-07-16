@@ -5,3 +5,4 @@ metadata:
   namespace: kyma-system
   labels:
     app.kubernetes.io/name: default
+    kyma-project.io/module: istio

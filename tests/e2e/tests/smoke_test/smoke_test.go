@@ -17,6 +17,7 @@ import (
 	modulehelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/modules"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/namespace"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/virtual_service"
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/setup/ipfamily"
 )
 
 const (
@@ -48,14 +49,23 @@ func TestSmoke(t *testing.T) {
 		err = virtual_service.CreateVirtualService(t, "httpbin", defaultNamespace, httpbinDeployment.Host, httpbinDeployment.Host, extauth.GatewayReference)
 		require.NoError(t, err)
 
-		ip, err := load_balancer.GetLoadBalancerIP(t.Context(), c.GetControllerRuntimeClient())
+		addr, err := load_balancer.GetLoadBalancerAddress(t.Context(), c.GetControllerRuntimeClient())
 		require.NoError(t, err)
 
-		httpClient := httphelper.NewHTTPClient(t,
-			httphelper.WithPrefix("smoke-test"),
-			httphelper.WithHost(httpbinDeployment.Host),
-		)
+		// Iterate the configured IP families. In dualstack mode both v4 and
+		// v6 must succeed; in single-family modes only that family runs.
+		// The dialer resolves the LB hostname and pins the socket family;
+		// we never bypass DNS or SNI.
+		for _, network := range ipfamily.From().DialNetworks() {
+			t.Run(network, func(t *testing.T) {
+				httpClient := httphelper.NewHTTPClient(t,
+					httphelper.WithPrefix("smoke-test-"+network),
+					httphelper.WithHost(httpbinDeployment.Host),
+					httphelper.WithNetwork(network),
+				)
 
-		httpassert.AssertOKResponse(t, httpClient, fmt.Sprintf("http://%s/status/200", ip))
+				httpassert.AssertOKResponse(t, httpClient, fmt.Sprintf("http://%s/status/200", addr))
+			})
+		}
 	})
 }

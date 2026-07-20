@@ -9,6 +9,7 @@ import (
 	"text/template"
 	"time"
 
+	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/e2e-framework/klient/decoder"
 	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
 	"sigs.k8s.io/e2e-framework/klient/wait"
@@ -16,6 +17,7 @@ import (
 
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/setup"
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/setup/ipfamily"
 )
 
 //go:embed manifest_template.yaml
@@ -144,14 +146,19 @@ func (b *Builder) generateManifest() ([]byte, error) {
 		return nil, fmt.Errorf("failed to parse template: %w", err)
 	}
 
+	fam := ipfamily.From()
 	data := struct {
-		Name        string
-		Annotations map[string]string
-		Labels      map[string]string
+		Name           string
+		Annotations    map[string]string
+		Labels         map[string]string
+		IPFamilyPolicy corev1.IPFamilyPolicy
+		IPFamilies     []corev1.IPFamily
 	}{
-		Name:        b.name,
-		Annotations: b.annotations,
-		Labels:      b.labels,
+		Name:           b.name,
+		Annotations:    b.annotations,
+		Labels:         b.labels,
+		IPFamilyPolicy: fam.Policy(),
+		IPFamilies:     fam.Families(),
 	}
 
 	var buf bytes.Buffer

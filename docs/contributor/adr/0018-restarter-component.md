@@ -53,7 +53,14 @@ Restarts are handled in one big bang due to the fact that component works within
 Restarting everything in single run can cause massive downtimes which customer does not expect.
 We have also identified that the current implementation causes the Istio module to have exponential memory growth on
 large clusters. The root cause was number of API calls to fetch the list of workloads that are running in the Istio
-service mesh.
+service mesh. To admit a workload to restart, be it a Deployment, StatefulSet or DaemonSet, restarter works on the list
+of uncorrelated pods.
+In single reconciliation loop, restarter fetches the list of all pods in a cluster in paginated chunks of 100. In each
+chunk restarter admits the pods to the predicates, which usually requires additional API calls to retrieve the parent of
+admitted pod during restart. Listing all pods in a cluster in a single reconcile loop, even with pagination, costs a lot
+of memory. And with larger clusters we might end up with stale cache which can cause unwanted API errors and another run
+of restart.
+
 Due to the fact that restarter and Istio CR reconcile loop work as a single binary, the API calls caused the controller
 cache to grow uncontrollably, reaching gigabytes of allocated memory by the controller.
 We had several reports from customers that they have been surprised by the restarts, and it has caused downtime for
@@ -65,10 +72,16 @@ addressed.
 We have decided to implement a new restarter component that will address the limitations stated above. The new component
 will be designed to be more efficient, reliable, and customizable, while also improving code quality and
 maintainability.
-The new restarter component will be implemented as a separate application that will run independently of the Istio
-reconciliation loop, but the lifecycle of the component will be managed by the Istio module.
+The new restarter component will be implemented as a separate deployment that will run independently of the Istio
+reconciliation loop, but the lifecycle of it will be managed by the Istio module.
 The component will be responsible for monitoring the workloads in the Istio service mesh and restarting them as needed,
 based on the default configuration and overrides provided by the user.
+
+Because the new restarter will work on the asynchronous event-driven model, it will fetch the list of Pods from
+"top-to-bottom". This updated behavior starts from the parent workload (Deployment, StatefulSet, DaemonSet) and then
+uses selectors to retrieve all child Pods to admit.
+This will greatly reduce the number of API calls and sizes of the objects to admit in single loop. It will also ensure
+that admitted workload is up-to-date with the current cache state.
 
 ### Lifecycle of the component
 
@@ -128,7 +141,7 @@ spec:
 
 Changing the lifecycle of the component also requires to adjust the decisions made
 in [ADR-0002](./0002-istio-cr-status-improvements.md) regarding the restart conditions.
-Introducing this change will drop usage of `ProxySidecarRestartSucceeded` condition, and instead introduce a new
+Introducing this change will **drop** usage of `ProxySidecarRestartSucceeded` condition, and instead introduce a new
 condition `RestarterComponentReady` that will reflect the state of the restarter component. The new condition will be
 set to `True` when the component is installed and running successfully, and `False` when it is not.
 The Istio module will not attempt to restart workloads if the restarter component is not ready, and will log Processing
@@ -177,25 +190,18 @@ restarts are allowed.
 This will help to avoid unexpected restarts during critical business hours. The maintenance window will be defined as an
 optional annotation added by the user on the workload.
 For easier configuration, we introduce a new annotation
-`restarter.alpha.istio-operator.kyma-project.io/maintenance-window` that supports a syntax of `Day-of-week HH:MM-HH:MM`
+`restarter.istio-operator.kyma-project.io/maintenance-window` that supports a syntax of `Day-of-week HH:MM-HH:MM`
 in UTC.
 
-Parsed as three parts: <day-range> <time-range>. Day range supports:
+Parsed as two parts: <day-range> <time-range>. Day range supports:
 
 - Single day: Sat
 - Range: Sat-Sun
 - Comma list: Sat,Sun (if you want non-contiguous days later)
 
 This stays human-readable, requires no cron knowledge, and covers the vast majority of real maintenance window patterns.
-Validation is a single regex:
 
-```go
-// "Sat-Sun 00:00-04:00"
-var windowPattern = regexp.MustCompile(
-`^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)(?:-(Mon|Tue|Wed|Thu|Fri|Sat|Sun))? ([01]\d|2[0-3]):[0-5]\d-([01]\d|2[0-3]):[0-5]\d$`,
-)
-```
-
+Validation parses annotation and rejects invalid syntax by emitting appropriate Event.
 The check at reconcile time becomes:
 
 1. Parse day range → is time.Now().Weekday() within it?
@@ -207,11 +213,11 @@ The check at reconcile time becomes:
 The component must support a configuration that allows the user to specify workloads that should be excluded from
 restarts.
 This will help to avoid restarts of critical workloads that cannot tolerate downtime. We introduce a new annotation
-`restarter.alpha.istio-operator.kyma-project.io/exclude` that supports a boolean value of `true` or `false`. If the
+`restarter.istio-operator.kyma-project.io/exclude` that supports a boolean value of `true` or `false`. If the
 annotation is set to `true`, the workload will be excluded from restarts.
 If the annotation is not present, the workload will be included in restarts by default.
 
-This mode excludes workload from **all restarts**, including Istio critical CVE proxy updated.
+This mode excludes workload from **all restarts**, including Istio updates that mitigate a CVE in the proxy.
 Using this annotation also implies that the user is aware of the risks of not restarting the workload and take a
 responsibility to keep it updated.
 
@@ -271,11 +277,9 @@ should read as an assertion of that drift. Two forms are used:
   "the subject changed, so the workload is stale". Examples: `CniModeChanged`, `ProxyConfigChanged`,
   `CompatibilityModeChanged`.
 
-Both forms make the predicate list readable top-to-bottom as a set of restart triggers, and both keep the name focused
-on
-the *why* rather than the *what*. A predicate name should not describe the restart itself (for example, `RestartOnCni`
-or
-`DoProxyRestart` are discouraged) — the restart is implied by any predicate matching.
+The form makes the predicate list readable top-to-bottom as a set of restart triggers, and both keep the name focused
+on *why* rather than *what*. A predicate name should not describe the restart itself (for example, `RestartOnCni`
+or `DoProxyRestart` are discouraged) — the restart is implied by any predicate matching.
 
 #### Logical operations of predicates
 

@@ -1,0 +1,111 @@
+name: E2E dualstack
+
+# Two entry points:
+#   1. workflow_dispatch — pick make target from the Actions UI.
+#   2. pull_request labeled 'dualstack' — smoke_test on the dualstack
+#      shoot. IPv4 is already covered by the standard PR gate, so this
+#      workflow is dualstack-only; the label is opt-in per PR because
+#      provisioning still costs ~10-15 min.
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_make_target:
+        description: 'e2e make target to run (e.g. smoke_test-e2e-test)'
+        required: true
+        default: 'smoke_test-e2e-test'
+        type: string
+  pull_request:
+    types: [ labeled, synchronize, reopened ]
+
+concurrency:
+  # One in-flight run per ref keeps a re-push from stacking shoots.
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  IMAGE_NAME: "istio-manager"
+  LABEL_NAME: "dualstack"
+  # Fixed for this workflow — IPv4 is exercised by the standard PR gate,
+  # so there is no reason to run this pipeline in any other mode.
+  TEST_IP_FAMILY: "dualstack"
+
+jobs:
+  # PR events fire on every synchronize regardless of labels; gate the
+  # actual work on the label being present, so unlabeled PRs pay only a
+  # cheap no-op job.
+  check-label:
+    name: Check label
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.check.outputs.run }}
+    steps:
+      - id: check
+        env:
+          EVENT_NAME: ${{ github.event.name }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "${{ contains(github.event.pull_request.labels.*.name, 'dualstack') }}" = "true" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  build-image:
+    name: Build manager image
+    needs: [ check-label ]
+    if: needs.check-label.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/build-manager-image
+        with:
+          # PR path tags with PR-N so the image lines up with the rest of
+          # the PR gate; dispatch path falls back to the run id.
+          operator-image-name: "istio-manager:PR-${{ github.event.number || github.run_id }}"
+          operator-version: "PR-${{ github.event.number || github.run_id }}"
+
+  get-image:
+    name: Get manager image
+    runs-on: ubuntu-latest
+    needs: [ build-image ]
+    outputs:
+      image: "${{ steps.get-image.outputs.image }}"
+      operator_version: "${{ steps.get-image.outputs.operator_version }}"
+    steps:
+      - id: get-image
+        name: Get image for tests
+        shell: bash
+        env:
+          TAG: "PR-${{ github.event.number || github.run_id }}"
+        run: |
+          echo "image=${IMAGE_NAME}:${TAG}" >> "$GITHUB_OUTPUT"
+          echo "operator_version=${TAG}" >> "$GITHUB_OUTPUT"
+
+  istio-e2e-dualstack:
+    name: Istio E2E test (dualstack)
+    environment:
+      name: e2e
+      deployment: false
+    runs-on: ubuntu-latest
+    needs: [ get-image ]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/e2e-test-gardener-dualstack
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          manager_image: ${{ needs.get-image.outputs.image }}
+          gardener_secret: ${{ secrets.GARDENER_TOKEN }}
+          gardener_project_name: ${{ vars.GARDENER_PROJECT_NAME }}
+          # PR path locks the target to smoke_test until the breakage
+          # catalogue is closed; dispatch path lets the user pick.
+          test_make_target: ${{ inputs.test_make_target || 'smoke_test-e2e-test' }}
+          test_ip_family: ${{ env.TEST_IP_FAMILY }}
+          operator_version: ${{ needs.get-image.outputs.operator_version }}

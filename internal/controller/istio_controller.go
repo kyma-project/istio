@@ -380,7 +380,7 @@ func (r *IstioReconciler) finishReconcile(ctx context.Context, istioCR *operator
 // +kubebuilder:rbac:groups=networking.istio.io,resources=*,verbs=create;deletecollection;delete;get;list;patch;update;watch
 // +kubebuilder:rbac:groups=networking.k8s.io,resources=ingressclasses,verbs=get;list;watch
 // +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=get;list;watch
-// +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses/status,verbs=*
+// +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses/status,verbs=create;deletecollection;delete;get;list;patch;update;watch
 // +kubebuilder:rbac:groups=networking.k8s.io,resources=networkpolicies,verbs=create;deletecollection;delete;get;list;patch;update;watch
 // +kubebuilder:rbac:groups=networking.x-k8s.io,resources=gateways,verbs=get;watch;list
 // +kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios,verbs=create;delete;get;list;patch;update;watch

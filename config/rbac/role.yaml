@@ -272,11 +272,6 @@ rules:
   - networking.k8s.io
   resources:
   - ingresses/status
-  verbs:
-  - '*'
-- apiGroups:
-  - networking.k8s.io
-  resources:
   - networkpolicies
   verbs:
   - create

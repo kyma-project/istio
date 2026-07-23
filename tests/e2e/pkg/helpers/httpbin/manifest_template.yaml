@@ -22,6 +22,11 @@ metadata:
 {{- end }}
 {{- end }}
 spec:
+  ipFamilyPolicy: {{ .IPFamilyPolicy }}
+  ipFamilies:
+{{- range .IPFamilies }}
+    - {{ . }}
+{{- end }}
   ports:
     - name: http
       port: 8000

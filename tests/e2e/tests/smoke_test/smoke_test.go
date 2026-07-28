@@ -2,6 +2,7 @@ package smoke_test
 
 import (
 	"fmt"
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -54,18 +55,12 @@ func TestSmoke(t *testing.T) {
 
 		// Iterate the configured IP families. In dualstack mode both v4 and
 		// v6 must succeed; in single-family modes only that family runs.
-		// The dialer resolves the LB hostname and pins the socket family;
-		// we never bypass DNS or SNI.
-		for _, network := range ipfamily.From().DialNetworks() {
-			t.Run(network, func(t *testing.T) {
-				httpClient := httphelper.NewHTTPClient(t,
-					httphelper.WithPrefix("smoke-test-"+network),
-					httphelper.WithHost(httpbinDeployment.Host),
-					httphelper.WithNetwork(network),
-				)
-
+		// The helper pins the socket family and prefixes log lines per
+		// network; we never bypass DNS or SNI.
+		ipfamily.ForEachDialNetwork(t, "smoke-test",
+			[]httphelper.Option{httphelper.WithHost(httpbinDeployment.Host)},
+			func(t *testing.T, _ string, httpClient *http.Client) {
 				httpassert.AssertOKResponse(t, httpClient, fmt.Sprintf("http://%s/status/200", addr))
 			})
-		}
 	})
 }

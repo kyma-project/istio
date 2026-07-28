@@ -113,13 +113,6 @@ func GetLoadBalancerAddress(ctx context.Context, c client.Client) (string, error
 	return fmt.Sprintf("%s:%d", ingressHost, ingressPort), nil
 }
 
-// GetLoadBalancerIP returns the same value as GetLoadBalancerAddress. Kept
-// as a name-only alias for the many existing call sites; new code should
-// use GetLoadBalancerAddress.
-func GetLoadBalancerIP(ctx context.Context, c client.Client) (string, error) {
-	return GetLoadBalancerAddress(ctx, c)
-}
-
 // waitForDNS polls the host resolver until every dial network in `networks`
 // (values from ipfamily.DialNetworks, e.g. "tcp4"/"tcp6") returns a STABLE
 // non-empty address set. Stability means two consecutive polls returned the

@@ -107,7 +107,7 @@ func TestWorkloadWithDefaultDenyPolicy(t *testing.T) {
 	err = virtual_service.CreateVirtualService(t, "httpbin-vs", testNs, deployment.Host, deployment.Host, gatewayhelper.GatewayReference)
 	require.NoError(t, err)
 
-	ingressAddr, err := load_balancer.GetLoadBalancerIP(t.Context(), r.GetControllerRuntimeClient())
+	ingressAddr, err := load_balancer.GetLoadBalancerAddress(t.Context(), r.GetControllerRuntimeClient())
 	require.NoError(t, err)
 
 	url := fmt.Sprintf("http://%s/headers", ingressAddr)
@@ -146,7 +146,7 @@ func TestIngressGatewayEgressBlockedWithoutLabel(t *testing.T) {
 	err = virtual_service.CreateVirtualService(t, "httpbin-vs", testNs, deployment.Host, deployment.Host, gatewayhelper.GatewayReference)
 	require.NoError(t, err)
 
-	ingressAddr, err := load_balancer.GetLoadBalancerIP(t.Context(), r.GetControllerRuntimeClient())
+	ingressAddr, err := load_balancer.GetLoadBalancerAddress(t.Context(), r.GetControllerRuntimeClient())
 	require.NoError(t, err)
 
 	url := fmt.Sprintf("http://%s/headers", ingressAddr)

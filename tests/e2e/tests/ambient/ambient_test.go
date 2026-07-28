@@ -66,7 +66,7 @@ func TestAmbientMode(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		gatewayAddress, err := load_balancer.GetLoadBalancerIP(t.Context(), c.GetControllerRuntimeClient())
+		gatewayAddress, err := load_balancer.GetLoadBalancerAddress(t.Context(), c.GetControllerRuntimeClient())
 		require.NoError(t, err)
 
 		hc := httphelper.NewHTTPClient(t,

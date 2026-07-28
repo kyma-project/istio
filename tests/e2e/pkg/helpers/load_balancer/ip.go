@@ -120,7 +120,7 @@ func GetLoadBalancerAddress(t *testing.T, c client.Client) (string, error) {
 		ingressPort = 80
 	}
 
-	return fmt.Sprintf("%s:%d", ingressHost, ingressPort), nil
+	return net.JoinHostPort(ingressHost, strconv.Itoa(int(ingressPort))), nil
 }
 
 // waitForDNS polls the host resolver until every dial network in `networks`

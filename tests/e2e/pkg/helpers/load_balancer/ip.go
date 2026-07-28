@@ -138,8 +138,7 @@ func waitForDNS(t *testing.T, host string, networks []string) error {
 	for _, n := range networks {
 		ipNet, ok := ipNetworkFor[n]
 		if !ok {
-			// Unknown network — trust the caller and skip.
-			continue
+			return fmt.Errorf("waitForDNS: unsupported network %q (want tcp4 or tcp6)", n)
 		}
 		if err := waitFamilyDNS(t, ipNet, host); err != nil {
 			return err
@@ -206,7 +205,7 @@ func waitForTCPReady(t *testing.T, host string, port int32, networks []string) e
 	addr := net.JoinHostPort(host, strconv.Itoa(int(port)))
 	for _, network := range networks {
 		if network != "tcp4" && network != "tcp6" {
-			continue
+			return fmt.Errorf("waitForTCPReady: unsupported network %q (want tcp4 or tcp6)", network)
 		}
 		lastErr := fmt.Errorf("no dial attempted")
 		attempt := 0

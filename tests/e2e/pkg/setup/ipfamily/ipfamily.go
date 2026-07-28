@@ -8,9 +8,13 @@ package ipfamily
 
 import (
 	"fmt"
+	"net/http"
 	"os"
+	"testing"
 
 	corev1 "k8s.io/api/core/v1"
+
+	httphelper "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/http"
 )
 
 type Family string
@@ -20,13 +24,13 @@ const (
 	IPv6Only  Family = "ipv6"
 	DualStack Family = "dualstack"
 
-	EnvVar = "TEST_IP_FAMILY"
+	envVar = "TEST_IP_FAMILY"
 )
 
 // From reads TEST_IP_FAMILY and returns the selected Family. Empty defaults
 // to IPv4Only; anything unrecognised panics.
 func From() Family {
-	v := os.Getenv(EnvVar)
+	v := os.Getenv(envVar)
 	switch v {
 	case "", string(IPv4Only):
 		return IPv4Only
@@ -35,7 +39,21 @@ func From() Family {
 	case string(DualStack):
 		return DualStack
 	default:
-		panic(fmt.Sprintf("ipfamily: unrecognised %s=%q (want ipv4|ipv6|dualstack)", EnvVar, v))
+		panic(fmt.Sprintf("ipfamily: unrecognised %s=%q (want ipv4|ipv6|dualstack)", envVar, v))
+	}
+}
+
+// Validate returns an error if TEST_IP_FAMILY is set to something outside
+// {"", ipv4, ipv6, dualstack}. Call this from TestMain (or the first
+// fixture-building helper) so a typo in a CI workflow fails before a
+// Gardener shoot is provisioned rather than mid-run with a panic.
+func Validate() error {
+	v := os.Getenv(envVar)
+	switch v {
+	case "", string(IPv4Only), string(IPv6Only), string(DualStack):
+		return nil
+	default:
+		return fmt.Errorf("ipfamily: unrecognised %s=%q (want ipv4|ipv6|dualstack)", envVar, v)
 	}
 }
 
@@ -80,4 +98,34 @@ func (f Family) DialNetworks() []string {
 		return []string{"tcp4", "tcp6"}
 	}
 	return nil
+}
+
+// ForEachDialNetwork runs fn once per dial network configured by
+// TEST_IP_FAMILY. Each invocation lives in a t.Run(network, ...) sub-test
+// and receives a pre-built http.Client whose transport is pinned to that
+// TCP family via httphelper.WithNetwork; the caller-supplied `label` is
+// used as the httphelper log prefix suffixed with "-<network>", so
+// per-family log lines are self-labelling (e.g. `[xff-header-tcp6]`).
+// The httphelper.Option slice is shared across families — put per-family
+// state inside fn.
+//
+// This is the canonical way to exercise LB dials against dualstack shoots:
+// single-family modes run one sub-test, DualStack runs both v4 and v6 and
+// asserts each independently. Missing WithNetwork on a raw t.Run loop
+// makes the test silently use resolver-luck on dualstack; the helper
+// removes that failure mode by construction.
+func ForEachDialNetwork(t *testing.T, label string, opts []httphelper.Option, fn func(t *testing.T, network string, client *http.Client)) {
+	t.Helper()
+	for _, network := range From().DialNetworks() {
+		t.Run(network, func(t *testing.T) {
+			// Prepend the invariants so caller-supplied opts can override
+			// them if a suite ever legitimately needs to (functional
+			// options are last-write-wins).
+			all := append([]httphelper.Option{
+				httphelper.WithPrefix(label + "-" + network),
+				httphelper.WithNetwork(network),
+			}, opts...)
+			fn(t, network, httphelper.NewHTTPClient(t, all...))
+		})
+	}
 }

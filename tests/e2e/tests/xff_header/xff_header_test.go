@@ -13,7 +13,9 @@ import (
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/namespace"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/public_ip"
 	virtualservice "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/virtual_service"
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/setup/ipfamily"
 	"github.com/stretchr/testify/require"
+	"net/http"
 	"testing"
 	"time"
 )
@@ -53,22 +55,27 @@ func TestConfiguration(t *testing.T) {
 		require.NoError(t, err)
 
 		//when
-		httpClient := httphelper.NewHTTPClient(t,
-			httphelper.WithHost(httpbinDeployment.Host),
-		)
-
-		//then
-		clientIP, err := public_ip.FetchPublicIP(t)
-		require.NoError(t, err)
-
 		gatewayAddress, err := load_balancer.GetLoadBalancerIP(t.Context(), c.GetControllerRuntimeClient())
 		require.NoError(t, err)
 
 		url := fmt.Sprintf("http://%s/headers", gatewayAddress)
 
-		httpbinassert.AssertHeaders(t, httpClient, url,
-			httpbinassert.WithHeaderValue("X-Forwarded-For", clientIP),
-			httpbinassert.WithTimeout(90*time.Second))
+		// Iterate the configured IP families. In dualstack mode both v4 and
+		// v6 must succeed; in single-family modes only that family runs.
+		// FetchPublicIP is family-scoped: it hits ipify's api4/api6 endpoint
+		// over the same TCP family the test dial will use, so the returned
+		// public IP matches whichever address Envoy will see as the remote
+		// peer for this iteration.
+		ipfamily.ForEachDialNetwork(t, "xff-header",
+			[]httphelper.Option{httphelper.WithHost(httpbinDeployment.Host)},
+			func(t *testing.T, network string, httpClient *http.Client) {
+				clientIP, err := public_ip.FetchPublicIP(t, network)
+				require.NoError(t, err)
+
+				httpbinassert.AssertHeaders(t, httpClient, url,
+					httpbinassert.WithHeaderValue("X-Forwarded-For", clientIP),
+					httpbinassert.WithTimeout(90*time.Second))
+			})
 
 	})
 }

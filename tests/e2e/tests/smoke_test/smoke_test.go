@@ -50,7 +50,7 @@ func TestSmoke(t *testing.T) {
 		err = virtual_service.CreateVirtualService(t, "httpbin", defaultNamespace, httpbinDeployment.Host, httpbinDeployment.Host, extauth.GatewayReference)
 		require.NoError(t, err)
 
-		addr, err := load_balancer.GetLoadBalancerAddress(t.Context(), c.GetControllerRuntimeClient())
+		addr, err := load_balancer.GetLoadBalancerAddress(t, c.GetControllerRuntimeClient())
 		require.NoError(t, err)
 
 		// Iterate the configured IP families. In dualstack mode both v4 and

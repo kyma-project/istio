@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"net"
 	"sort"
 	"strconv"
+	"testing"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -29,7 +29,9 @@ const dnsWaitTimeout = 3 * time.Minute
 // http.Client whose transport picks the IP family; DNS resolution happens
 // there. Returning the resolved IP would strip SNI, break cert validation,
 // and pin us to whichever family the resolver happened to return first.
-func GetLoadBalancerAddress(ctx context.Context, c client.Client) (string, error) {
+func GetLoadBalancerAddress(t *testing.T, c client.Client) (string, error) {
+	t.Helper()
+	ctx := t.Context()
 	istioIngressGatewayNamespaceName := types.NamespacedName{
 		Name:      "istio-ingressgateway",
 		Namespace: "istio-system",
@@ -91,7 +93,7 @@ func GetLoadBalancerAddress(ctx context.Context, c client.Client) (string, error
 		// LB is IP-based — LookupIP on a raw literal in the wrong family
 		// returns an empty slice and would burn the full timeout.
 		if net.ParseIP(ingressHost) == nil {
-			if err := waitForDNS(ctx, ingressHost, ipfamily.From().DialNetworks()); err != nil {
+			if err := waitForDNS(t, ingressHost, ipfamily.From().DialNetworks()); err != nil {
 				return "", err
 			}
 			// DNS records exist and are stable, but AWS NLB target-group
@@ -100,7 +102,7 @@ func GetLoadBalancerAddress(ctx context.Context, c client.Client) (string, error
 			// registered ENIs have no healthy backend yet. Probe TCP once
 			// per family to gate on actual reachability, not resolver
 			// state.
-			if err := waitForTCPReady(ctx, ingressHost, ingressPort, ipfamily.From().DialNetworks()); err != nil {
+			if err := waitForTCPReady(t, ingressHost, ingressPort, ipfamily.From().DialNetworks()); err != nil {
 				return "", err
 			}
 		}
@@ -128,7 +130,8 @@ func GetLoadBalancerAddress(ctx context.Context, c client.Client) (string, error
 // `hostname X: no ip4 addresses` instead of a generic per-request NXDOMAIN
 // retry loop. Parent-context cancellation is surfaced unwrapped so callers
 // can errors.Is-check it.
-func waitForDNS(ctx context.Context, host string, networks []string) error {
+func waitForDNS(t *testing.T, host string, networks []string) error {
+	t.Helper()
 	// Resolver "ip4" / "ip6" mirror the socket-family filter Go's dialer
 	// applies for "tcp4" / "tcp6".
 	ipNetworkFor := map[string]string{"tcp4": "ip4", "tcp6": "ip6"}
@@ -138,7 +141,7 @@ func waitForDNS(ctx context.Context, host string, networks []string) error {
 			// Unknown network — trust the caller and skip.
 			continue
 		}
-		if err := waitFamilyDNS(ctx, ipNet, host); err != nil {
+		if err := waitFamilyDNS(t, ipNet, host); err != nil {
 			return err
 		}
 	}
@@ -149,7 +152,9 @@ func waitForDNS(ctx context.Context, host string, networks []string) error {
 // loop for one address family, returning nil once the returned set has
 // been stable across two consecutive polls or a wrapped error naming the
 // family on timeout.
-func waitFamilyDNS(ctx context.Context, ipNet, host string) error {
+func waitFamilyDNS(t *testing.T, ipNet, host string) error {
+	t.Helper()
+	ctx := t.Context()
 	var previous []string
 	lastErr := fmt.Errorf("no lookup attempted")
 	err := wait.PollUntilContextTimeout(ctx, 5*time.Second, dnsWaitTimeout, true, func(ctx context.Context) (bool, error) {
@@ -171,7 +176,7 @@ func waitFamilyDNS(ctx context.Context, ipNet, host string) error {
 			lastErr = fmt.Errorf("%s address set not yet stable: %v", ipNet, current)
 			previous = current
 		}
-		log.Printf("waitForDNS %s %q: %v", ipNet, host, lastErr)
+		t.Logf("waitForDNS %s %q: %v", ipNet, host, lastErr)
 		return false, nil
 	})
 	if err == nil {
@@ -195,7 +200,9 @@ func waitFamilyDNS(ctx context.Context, ipNet, host string) error {
 // records before its target-group health checks pass; dialling in that
 // window returns `dial tcpX <ip>:port: i/o timeout`. Parent-context
 // cancellation is surfaced unwrapped so callers can errors.Is-check it.
-func waitForTCPReady(ctx context.Context, host string, port int32, networks []string) error {
+func waitForTCPReady(t *testing.T, host string, port int32, networks []string) error {
+	t.Helper()
+	ctx := t.Context()
 	addr := net.JoinHostPort(host, strconv.Itoa(int(port)))
 	for _, network := range networks {
 		if network != "tcp4" && network != "tcp6" {
@@ -209,11 +216,11 @@ func waitForTCPReady(ctx context.Context, host string, port int32, networks []st
 			conn, err := d.DialContext(ctx, network, addr)
 			if err != nil {
 				lastErr = err
-				log.Printf("waitForTCPReady: %s dial to %q attempt %d failed: %v", network, addr, attempt, err)
+				t.Logf("waitForTCPReady: %s dial to %q attempt %d failed: %v", network, addr, attempt, err)
 				return false, nil
 			}
 			_ = conn.Close()
-			log.Printf("waitForTCPReady: %s dial to %q attempt %d succeeded", network, addr, attempt)
+			t.Logf("waitForTCPReady: %s dial to %q attempt %d succeeded", network, addr, attempt)
 			return true, nil
 		})
 		if err != nil {

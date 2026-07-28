@@ -55,7 +55,7 @@ func TestConfiguration(t *testing.T) {
 		require.NoError(t, err)
 
 		//when
-		gatewayAddress, err := load_balancer.GetLoadBalancerAddress(t.Context(), c.GetControllerRuntimeClient())
+		gatewayAddress, err := load_balancer.GetLoadBalancerAddress(t, c.GetControllerRuntimeClient())
 		require.NoError(t, err)
 
 		url := fmt.Sprintf("http://%s/headers", gatewayAddress)

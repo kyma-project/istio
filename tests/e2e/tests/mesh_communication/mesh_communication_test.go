@@ -71,7 +71,7 @@ func TestMeshCommunication(t *testing.T) {
 		err = virtual_service.CreateVirtualService(t, "nginx-mesh-communication", sourceNamespace, sourceWorkloadUrl, sourceWorkloadUrl, "kyma-system/kyma-gateway")
 		require.NoError(t, err)
 
-		ip, err := load_balancer.GetLoadBalancerAddress(t.Context(), c.GetControllerRuntimeClient())
+		ip, err := load_balancer.GetLoadBalancerAddress(t, c.GetControllerRuntimeClient())
 		require.NoError(t, err)
 
 		httpClient := httphelper.NewHTTPClient(
@@ -121,7 +121,7 @@ func TestMeshCommunication(t *testing.T) {
 		err = extauth.CreateHTTPGateway(t)
 		require.NoError(t, err)
 
-		ip, err := load_balancer.GetLoadBalancerAddress(t.Context(), c.GetControllerRuntimeClient())
+		ip, err := load_balancer.GetLoadBalancerAddress(t, c.GetControllerRuntimeClient())
 
 		err = virtual_service.CreateVirtualService(t, "nginx-mesh-communication", sourceNamespace, sourceWorkloadUrl, sourceWorkloadUrl, extauth.GatewayReference)
 		require.NoError(t, err)

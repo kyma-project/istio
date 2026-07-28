@@ -58,7 +58,7 @@ func TestObservability(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		ip, err := load_balancer.GetLoadBalancerAddress(t.Context(), c.GetControllerRuntimeClient())
+		ip, err := load_balancer.GetLoadBalancerAddress(t, c.GetControllerRuntimeClient())
 		require.NoError(t, err)
 
 		// when
@@ -111,7 +111,7 @@ func TestObservability(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		ip, err := load_balancer.GetLoadBalancerAddress(t.Context(), c.GetControllerRuntimeClient())
+		ip, err := load_balancer.GetLoadBalancerAddress(t, c.GetControllerRuntimeClient())
 		require.NoError(t, err)
 
 		// when

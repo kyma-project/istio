@@ -97,6 +97,8 @@ spec:
     ingressGateways:
     - enabled: true
       k8s:
+        podDisruptionBudget:
+          maxUnavailable: 1
         podAnnotations:
           sidecar.istio.io/statsEvictionInterval: "6h"
         affinity:
@@ -158,6 +160,20 @@ spec:
           patches:
             - path: spec.template.metadata.labels.kyma-project\.io/module
               value: istio
+            - path: spec.template.spec.topologySpreadConstraints
+              value:
+                - maxSkew: 1
+                  topologyKey: kubernetes.io/hostname
+                  whenUnsatisfiable: DoNotSchedule
+                  labelSelector:
+                    matchLabels:
+                      app: istio-ingressgateway
+                - maxSkew: 1
+                  topologyKey: topology.kubernetes.io/zone
+                  whenUnsatisfiable: ScheduleAnyway
+                  labelSelector:
+                    matchLabels:
+                      app: istio-ingressgateway
       name: istio-ingressgateway
     istiodRemote:
       enabled: false

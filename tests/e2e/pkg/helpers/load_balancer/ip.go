@@ -29,6 +29,11 @@ const dnsWaitTimeout = 3 * time.Minute
 // http.Client whose transport picks the IP family; DNS resolution happens
 // there. Returning the resolved IP would strip SNI, break cert validation,
 // and pin us to whichever family the resolver happened to return first.
+//
+// The port is looked up by name — specifically the port named "http2" on
+// the istio-ingressgateway Service. Returns an error if that port is
+// missing, so a future rename fails loudly here instead of surfacing as a
+// dial to `host:0` further down the call chain.
 func GetLoadBalancerAddress(t *testing.T, c client.Client) (string, error) {
 	t.Helper()
 	ctx := t.Context()
@@ -81,6 +86,9 @@ func GetLoadBalancerAddress(t *testing.T, c client.Client) (string, error) {
 			if port.Name == "http2" {
 				ingressPort = port.Port
 			}
+		}
+		if ingressPort == 0 {
+			return "", fmt.Errorf("istio-ingressgateway Service has no port named %q", "http2")
 		}
 
 		// AWS NLBs surface their hostname in Service status before Route 53

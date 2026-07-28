@@ -68,8 +68,11 @@ func (f Family) Policy() corev1.IPFamilyPolicy {
 }
 
 // Families returns the ordered list to set on Service.spec.ipFamilies.
-// DualStack lists IPv6 first so pods and Services report a v6 primary
-// address; tests that read podIPs[0] observe the v6 side.
+// Order matters to Kubernetes: the first entry becomes the Service's
+// primary IP family (ClusterIP is allocated from that family's range, and
+// pods report it first in status.podIPs). DualStack uses IPv6-first so a
+// dualstack run exercises the v6 primary path; single-family modes have
+// only one entry so the choice is moot.
 func (f Family) Families() []corev1.IPFamily {
 	switch f {
 	case IPv4Only:

@@ -120,8 +120,17 @@ jobs:
             --limit 100 \
             --json id,number,title,author,url > bot_prs.json || echo "[]" > bot_prs.json
 
+          # Get istio-images-updater PRs
+          echo "Fetching istio-images-updater PRs..."
+          gh pr list \
+            --repo "$REPO" \
+            --state open \
+            --author "github-actions[bot]" \
+            --limit 100 \
+            --json id,number,title,author,url > istio_updater_prs.json || echo "[]" > istio_updater_prs.json
+
           # Combine and deduplicate
-          jq -s 'add | unique_by(.id)' dependabot_prs.json bot_prs.json > all_bot_prs.json
+          jq -s 'add | unique_by(.id)' dependabot_prs.json bot_prs.json istio_updater_prs.json > all_bot_prs.json
 
           total_prs=$(jq 'length' all_bot_prs.json)
           echo "Found $total_prs bot PRs"

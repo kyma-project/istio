@@ -55,17 +55,22 @@ We have also identified that the current implementation causes the Istio module 
 large clusters. The root cause was number of API calls to fetch the list of workloads that are running in the Istio
 service mesh. To admit a workload to restart, be it a Deployment, StatefulSet or DaemonSet, restarter works on the list
 of uncorrelated pods.
-In single reconciliation loop, restarter fetches the list of all pods in a cluster in paginated chunks of 100. In each
-chunk restarter admits the pods to the predicates, which usually requires additional API calls to retrieve the parent of
-admitted pod during restart. Listing all pods in a cluster in a single reconcile loop, even with pagination, costs a lot
-of memory. And with larger clusters we might end up with stale cache which can cause unwanted API errors and another run
-of restart.
+In single reconciliation loop, restarter fetches the list of all pods in a cluster in paginated chunks of 100.
+In each chunk restarter admits the pods to the predicates, which usually requires additional API calls to retrieve the
+parent of admitted pod during restart. Listing all pods in a cluster in a single reconcile loop, even with pagination,
+costs a lot of memory. And with larger clusters we might end up with stale cache which can cause unwanted API errors and
+another run of restart. With regular errors, the Istio module can end up in a loop of restarts, which can cause a lot of
+downtime for the customer.
 
-Due to the fact that restarter and Istio CR reconcile loop work as a single binary, the API calls caused the controller
-cache to grow uncontrollably, reaching gigabytes of allocated memory by the controller.
+This pagination was introduced to not overload the API server with excessive number of calls. That introduced a new
+problem - the paginated chunks use a cursor with the TTL of 5 minutes. If the restart takes longer than 5 minutes, for
+example on large clusters, the cursor expires and entire operation must be started over.
+
 We had several reports from customers that they have been surprised by the restarts, and it has caused downtime for
-them. There is no way for customer to control the behavior of restarts. This is a major concern and needs to be
-addressed.
+them. There is no way for customer to control the behavior of restarts.
+
+Due to the code quality issues there are a lot of problem with code testability and maintenance. Current implementation
+contains a lot of imperative code, which mutate uncontrollably and cannot be properly unit tested.
 
 ## Decision
 
@@ -77,13 +82,16 @@ reconciliation loop, but the lifecycle of it will be managed by the Istio module
 The component will be responsible for monitoring the workloads in the Istio service mesh and restarting them as needed,
 based on the default configuration and overrides provided by the user.
 
-Because the new restarter will work on the asynchronous event-driven model, it will fetch the list of Pods from
-"top-to-bottom". This updated behavior starts from the parent workload (Deployment, StatefulSet, DaemonSet) and then
-uses selectors to retrieve all child Pods to admit.
+Because the new restarter will work on the asynchronous event-driven model. That means restarter watches workloads,
+react on changes and reconcile them asynchronously, implementing kubernetes controller pattern. Additionally, it uses
+time-based reconciliation to regularly ensure that workloads are up-to-date with current state.
+
+It will fetch the list of Pods from "top-to-bottom". This updated behavior starts from the parent workload (Deployment,
+StatefulSet, DaemonSet) and then uses selectors to retrieve all child Pods to admit.
 This will greatly reduce the number of API calls and sizes of the objects to admit in single loop. It will also ensure
 that admitted workload is up-to-date with the current cache state.
 
-### Lifecycle of the component
+### Lifecycle of the restarter component
 
 To address the memory and performance issues, the new restarter component must be installed as a separate application.
 The component installation and removal will still be managed by the Istio module.
@@ -97,7 +105,8 @@ via embedded helm charts.
 The Helm chart will be embedded at compile time using Go's `embed.FS`. The installation of a component will be
 integrated into the Istio CR reconciliation loop, and will implement the helm lifecycle:
 
-1. **Install/Upgrade**: When the Istio CR is present and reconciled successfully, the reconciler renders the Helm
+1. **Install/Upgrade**: When the Istio CR is present and Istio mesh is installed successfully, the reconciler renders
+   the Helm
    chart (using `helm/pkg/action.NewInstall` / `action.NewUpgrade`) and applies the resulting manifests via server-side
    apply.
 2. **Uninstall**: When the Istio CR is deleted (detected via finalizer), the reconciler calls `action.NewUninstall` to
@@ -110,7 +119,7 @@ labels. This allows standard `helm list` introspection for debugging.
 
 Since Istio version is tightly coupled to the module version, the restarter component version will also be coupled to
 the Istio module version. This means that when the Istio module is updated, the restarter component will also be
-updated, causing subsequent requeue of all workloads by default.
+updated.
 
 Configuration of the restarter component will be provided via a `.spec.restarter` field in the Istio CR. The reconciler
 will render the Helm chart with values derived from this field, and any changes to it will trigger a Helm upgrade.
@@ -126,10 +135,6 @@ spec:
     logLevel: info
     reconcileInterval: 15m
     deployment:
-      autoscaling:
-        enabled: true
-        minReplicas: 1
-        maxReplicas: 3
       resources:
         requests:
           cpu: 100m
@@ -146,8 +151,10 @@ condition `RestarterComponentReady` that will reflect the state of the restarter
 set to `True` when the component is installed and running successfully, and `False` when it is not.
 The Istio module will not attempt to restart workloads if the restarter component is not ready, and will log Processing
 message instead.
+
 If the restarter component failed to start after a certain time, or after a number of restarts, the Istio module will
-set the `RestarterComponentReady` condition to `False`, and will log an Error message.
+set the `RestarterComponentReady` condition to `False`, apply proper Condition description and log an error.
+
 From now on, the Istio module will not change the CR status based on the restart status of workloads, but will only
 reflect the state of the restarter component.
 
@@ -159,7 +166,6 @@ reflect the state of the restarter component.
 | ~~Warning~~    | ~~ProxySidecarRestartSucceeded~~ | ~~False~~ | ~~ProxySidecarManualRestartRequired~~ | ~~Proxy sidecar manual restart is required for some workloads~~ |
 | Ready          | RestarterComponentReady          | True      | RestarterComponentReady               | Restarter component is installed and running successfully       |
 | Processing     | RestarterComponentReady          | False     | RestarterComponentNotReady            | Restarter component is not ready                                |
-| Error          | RestarterComponentReady          | False     | RestarterComponentFailed              | Restarter component failed to start                             |
 
 ### Features and capabilities of the component
 
@@ -169,19 +175,30 @@ We have identified the following features and capabilities that the new restarte
 
 After the analysis of current implementation it's been identified that support for Pods and Jobs was not implemented.
 Instead, the restarter was returning a Warning.
-With ReplicaSet not owned by anything, we delete pod and hope replica controller would heal it.
 This behavior is misleading, as it gives the impression that restarting these workloads is supported, while in reality
 they are not.
 
 To further simplify the decision, the component will support restart only for workloads that are managed by a
-Deployment, StatefulSet or DaemonSet - that means workloads that support rolling restarts.
+Deployment, StatefulSet, DaemonSet or ReplicaSet - that means workloads that support rolling restarts or self-healing.
 To restart workload we will use the similar behavior as `kubectl rollout restart` command, which is to update the pod
 template spec with a new annotation that will trigger a rolling restart of the workload.
 Every time the restart decision is made, the component will update the pod template spec with a new annotation
 `restarter.istio-operator.kyma-project.io/restartedAt`.
 
+ReplicaSets however do not support rolling restarts. To restart workloads covered by a ReplicaSet, the restarter will
+delete the pods that belong to ReplicaSet and rely on the ReplicaSet controller to create new ones.
+This special feature only supports ReplicaSets that are **not** managed by a parent Object.
+This is a fragile approach, as it can cause downtime if the ReplicaSet does not have enough replicas to maintain
+availability or is not covered by a PodDisruptionBudget. User must be aware of this and take responsibility for the
+risks of downtime.
+
+As mentioned in the Decision section, the component will go from top-to-bottom. Controller first admits the parent
+object (Deployment, StatefulSet, DaemonSet, ReplicaSet) and then uses selectors to retrieve all child Pods to admit in a
+single reconcile loop. That implies that some predicates will only be evaluated with the parent object, and some will be
+evaluated only on the child Pods and separate list of predicates must be updated for each type.
+
 If the demand for support of other workload types arises, we can implement it in the future. However, we will not
-support workloads that do not support rolling restarts for now.
+support other types of workloads in the first implementation.
 
 #### Maintenance window support
 
@@ -206,7 +223,8 @@ The check at reconcile time becomes:
 
 1. Parse day range → is time.Now().Weekday() within it?
 2. Parse time range → is current time-of-day within it?
-3. Both true → proceed with restart; otherwise skip and requeue with `reconcileInterval` until window opens.
+3. If maintenance window is smaller than `reconcileInterval`, emit `RestartConfigInvalid` event and skip.
+4. Both true → proceed with restart; otherwise skip and requeue with `reconcileInterval` until window opens.
 
 #### Restart exclusions
 
@@ -220,6 +238,36 @@ If the annotation is not present, the workload will be included in restarts by d
 This mode excludes workload from **all restarts**, including Istio updates that mitigate a CVE in the proxy.
 Using this annotation also implies that the user is aware of the risks of not restarting the workload and take a
 responsibility to keep it updated.
+
+The module will emit a `RestartRequired` event for excluded workloads that must be restarted, so the user can
+take action to restart them manually.
+
+#### Watching namespace and workload-level istio injection changes
+
+A workload must restart when its own sidecar-relevant state drifts **or** when the `istio-injection` label on its
+namespace changes — enabling injection on a namespace must roll the workloads inside it. A controller watching only its
+own kind sees the first case but not the second, since a namespace edit produces no event on the workload object.
+
+controller-runtime handles this with a secondary watch that maps the changed object back to the workloads it affects.
+Alongside the primary `For(&appsv1.Deployment{})` watch, the controller adds a `Watches` on `&corev1.Namespace{}` with
+an `EnqueueRequestsFromMapFunc` that lists the workloads in the changed namespace and enqueues a reconcile request for
+each. A `predicate` narrows namespace events to those where the injection label actually changed, so unrelated namespace
+edits do not trigger churn.
+
+```go
+ctrl.NewControllerManagedBy(mgr).
+For(&appsv1.Deployment{}).
+Watches(
+&corev1.Namespace{},
+handler.EnqueueRequestsFromMapFunc(deploymentsInNamespace),
+builder.WithPredicates(injectionLabelChanged()),
+).
+Complete(r)
+```
+
+The reconcile logic itself is unchanged: whether triggered by a workload event, a namespace event, or the time-based
+requeue, it re-evaluates the same rule chain against the current workload state. The namespace watch only controls
+*when* a reconcile is enqueued, not *how* the decision is made.
 
 #### Extending the configuration and future-proofing
 
@@ -237,79 +285,114 @@ predicates in the future without changing the existing code.
 However, current implementation suffers from the unnecessary code complexity and bugs. To address this, a new, static
 approach will be implemented.
 
-Each predicate implements a single `Matcher` interface with a single method `Match()`.
-Workload is a Kubernetes object that implements the `Object` interface. This interface shadows the `client.Object`
-interface from controller-runtime.
-The `Match()` method returns a boolean value indicating whether the workload matches the predicate.
+Each reconciliation loop initializes a static list of predicates. The list must be immutable and cannot be changed at
+runtime.
 
-`Match()` returns `true` when the state of the workload is different from the desired state, and the workload should be
-restarted.
+Each predicate implements a single `Rule` interface with a single method `Evaluate()`.
+Workload is a Kubernetes object that implements the `Object` interface.
+Instead of returning a boolean, `Evaluate()` returns a tri-state `Decision`. A boolean can only express "restart" or
+"don't care", which forces conditions that *forbid* a restart (such as a maintenance window or an exclusion annotation)
+to be handled outside the predicate list. A third state lets a predicate veto the restart from within the same chain,
+short-circuiting evaluation.
+
+The three possible decisions are:
+
+- **`Admit`** — the workload has drifted from its desired state and, unless vetoed, should be restarted.
+- **`Continue`** — this predicate is indifferent; the decision is deferred to the remaining predicates. This is the
+  neutral element of the default OR evaluation.
+- **`Stop`** — this predicate forbids the restart. Evaluation stops immediately and the workload is **not** restarted,
+  regardless of what any other predicate would decide.
 
 ```go
-type Object interface {
-client.Object
-}
+type Decision int
 
-type Matcher interface {
-Match(obj Object) bool
+const (
+Continue Decision = iota
+Admit
+Stop
+)
+
+type Rule interface {
+Evaluate(ctx context.Context, obj Object) Decision
 }
 ```
 
 Predicates only evaluate the workload based on its current state, and should not have any side effects, like fetching
 resource from API.
-Any additional information required for the evaluation should be passed to the predicate via its constructor **before**
+Any static information required for the evaluation should be passed to the predicate via its constructor **before**
 triggering workload evaluation.
 
+Request-scoped values that are only known at evaluation time — such as the reference clock used to test a maintenance
+window — are passed through the `context.Context` argument of `Evaluate()`. This keeps time-dependent rules
+deterministic and testable without giving them the ability to reach out to the API.
+
+Maintenance windows and exclusion annotations are modeled as ordinary rules that return `Stop`. Placing them at the
+front of the predicate list means a workload inside a maintenance window or explicitly excluded is never restarted, no
+matter how many drift predicates would otherwise match.
+
 The predicates should be extensible in a way that each predicate can be used in different reconciliation loops.
-The list of available predicates must be defined in a single place within a reconcile loop, as a list of `Matcher`
+The list of available predicates must be defined in a single place within a reconcile loop, as a list of `Rule`
 implementations.
 This list cannot mutate, that means predicates cannot be added or removed at runtime. This is to ensure that the
 predicates are evaluated in a consistent order and that the behavior of the component is predictable.
 
 #### Naming scheme
 
-Predicate names must describe *the condition that makes a restart necessary*, not the action taken — the action is
-always the same (a restart). A predicate returns `true` when the workload has drifted from its desired state, so the
-name
-should read as an assertion of that drift. Two forms are used:
+Rule names must describe *the condition being asserted*, not the action taken. The name states the condition that the
+rule detects as **true**; the `Decision` it returns (`Admit` or `Stop`) determines the direction. A developer must be
+able to understand what the rule checks from its name alone, without knowing which decision it maps to.
 
-- **`<Subject>Changed`** — for predicates that detect a change relative to what the workload currently reflects. Read as
+- **`<Subject>Changed`** — for rules that return `Admit` when the workload has drifted from its desired state. Read as
   "the subject changed, so the workload is stale". Examples: `CniModeChanged`, `ProxyConfigChanged`,
   `CompatibilityModeChanged`.
 
-The form makes the predicate list readable top-to-bottom as a set of restart triggers, and both keep the name focused
-on *why* rather than *what*. A predicate name should not describe the restart itself (for example, `RestartOnCni`
-or `DoProxyRestart` are discouraged) — the restart is implied by any predicate matching.
+- Veto rules that return `Stop` follow the same principle: name the active condition that causes the veto, not the veto
+  itself. Examples: `MaintenanceWindowActive` (a window is currently open) and `WorkloadExcluded` (the workload carries
+  an exclusion annotation).
+
+The forms keep the name focused on *why* rather than *what*. A rule name should not describe the restart itself (for
+example, `RestartOnCni` or `DoProxyRestart` are discouraged) — the restart is implied by an `Admit` decision, and the
+veto by a `Stop`.
 
 #### Logical operations of predicates
 
-Each predicate is a self-contained unit that evaluates a single aspect of the workload.
-Predicates can be combined using logical operations to create more complex matching criteria.
+Each rule is a self-contained unit that evaluates a single aspect of the workload.
+Rules can be combined using logical operations to create more complex matching criteria.
 
-By default, evaluation of predicates iterates over a list of defined predicates. This implies the logical OR operation.
-That means if any of the predicates returns `true`, the workload will be restarted.
+By default, evaluation iterates over the list of defined rules and applies the following rules. This implies a logical
+OR over `Admit`, with `Stop` acting as a short-circuiting veto:
 
-When a workload must meet 2 or more conditions, `Matcher` implementation can be combined using helper function `And()`.
+- a `Stop` from any rule stops evaluation immediately — the workload is **not** restarted;
+- otherwise the first `Admit` marks the workload for restart, but evaluation continues so that a later `Stop` can still
+  veto it;
+- if every rule returns `Continue`, the workload is left untouched.
 
-This function takes a list of `Matcher` implementations and returns a new `Matcher` that evaluates to `true` only if
-all provided `Matcher` implementations evaluate to `true`.
+When a workload must meet 2 or more conditions before it is admitted, `Rule` implementations can be combined using the
+helper function `And()`.
+
+This function takes a list of `Rule` implementations and returns a new `Rule` that returns `Admit` only if all provided
+rules return `Admit`. If any of them returns `Continue`, the combined rule returns `Continue`. A `Stop` from any rule
+is propagated unchanged, preserving the veto semantics.
 
 ```go
-type andMatcher struct {
-matchers []Matcher
+type andRule struct {
+rules []Rule
 }
 
-func (a *andMatcher) Match(obj Object) bool {
-for _, matcher := range a.matchers {
-if !matcher.Match(obj) {
-return false
+func (a *andRule) Evaluate(ctx context.Context, obj Object) Decision {
+for _, rule := range a.rules {
+switch rule.Evaluate(ctx, obj) {
+case Stop:
+return Stop
+case Continue:
+return Continue
 }
 }
-return true
+return Admit
 }
 
-func And(matchers ...Matcher) Matcher {
-return &andMatcher{matchers: matchers}
+func And(rules ...Rule) Rule {
+return &andRule{rules: rules}
 }
 ```
 
@@ -322,6 +405,25 @@ For better stability of a restarter, the implementation would follow the standar
 Each supported workload kind (Deployment, StatefulSet, DaemonSet) has its own dedicated controller-runtime controller.
 All controllers are registered in a single `manager.Manager` instance, sharing the same client, cache, and metrics
 server.
+
+The restarter component will watch for events on the supported workload types (Deployment, StatefulSet, DaemonSet,
+ReplicaSet). Each workload type is covered by a controller. Controllers define watches for the supported workloads. When
+an event is received, the controller will enqueue a reconcile request for the workload. The events are asynchronous,
+which ensures that workloads are not admitted at the same time. Additionally, the restarter will also implement a
+time-based requeue mechanism to ensure that workloads are regularly checked for drift, even if no events are received.
+This is done by setting a `reconcileInterval` in the configuration, which will trigger a reconcile request for each
+workload.
+
+For mesh configuration changes e.g. trusted proxies, prometheus merge change, to ensure that customers get the workload
+updates as fast as possible, controllers watches for changes to the Istio CR and enqueue a reconcile request for all
+workloads when the CR is updated.
+
+To protect the API server from bursts of restart patches, each controller's workqueue is configured with a rate
+limiter. controller-runtime requeues reconcile requests through a rate limiter; the piece relevant here is its
+token-bucket limiter, which caps the queue's aggregate throughput. A token-bucket limiter takes a sustained rate `r`
+(tokens per second) and a burst size `b` (bucket capacity), refilling the bucket at `r` tokens per second so the
+sustained average never exceeds `r`. This ceiling applies per controller; a single shared limiter can be passed to all
+controllers if a global cap across workload kinds is required.
 
 To tackle memory issues, the manager will configure a cache transform on the watched workload types.
 controller-runtime's cache supports a `TransformFunc` that is applied to every object before it is stored in the
@@ -372,44 +474,33 @@ invalid annotation does not spam the Events API.
 | `RestartRequired`      | Warning | Workload requires manual restart                 |
 | `RestartConfigInvalid` | Warning | Workload has a malformed restarter configuration |
 
-#### Reconciliation decision diagram
+#### Testability chart
 
-```
-Workload event (create / update / requeue)
-           │
-           ▼
-    Fetch workload
-    (NotFound → ignore)
-           │
-           ▼
-  ┌──────────────────┐
-  │ preflight check  │──deny──► skip + requeue, bump skipped_total{reason}
-  │ (maint. window)  │          (RestartConfigInvalid event if malformed)
-  └────────┬─────────┘
-           │ allow
-           ▼
-  ┌──────────────────┐
-  │ any Matcher      │──no──► no-op, no event
-  │ returns true?    │
-  └────────┬─────────┘
-           │ yes (restart warranted)
-           ▼
-  ┌──────────────────┐         set restart_pending, bump skipped_total{reason=excluded},
-  │ excluded?        │──yes──► emit RestartRequired event, do NOT restart
-  └────────┬─────────┘
-           │ no
-           ▼
-      do Restart()
-           │
-      ┌────┴────┐
-      │ error?  │
-      └────┬────┘
-     yes   │    no
-      ▼    │    ▼
-  Warning  │  Normal Event
-  Event    │  "Restarted"
-  requeue  │  return OK
-```
+The new design is testable because each layer is a pure, stateless unit with dependencies injected at construction. The
+table below maps each unit to how it is tested and the property that makes that possible.
+
+| Unit                  | Test strategy                                                     | What makes it testable                                     |
+|-----------------------|-------------------------------------------------------------------|------------------------------------------------------------|
+| Individual `Rule`     | Table-driven unit test: given an `Object`, assert the `Decision`  | Pure function of its input; no API calls or side effects   |
+| `And()` combinator    | Unit test with fake rules returning fixed decisions               | Composition logic is independent of any concrete rule      |
+| Time-dependent rule   | Inject a fixed clock via `context.Context`; assert `Admit`/`Stop` | Reference time is passed in, not read from the wall clock  |
+| Rule chain evaluation | Unit test asserting short-circuit and OR semantics                | Deterministic over an immutable, ordered rule list         |
+| Reconciler            | envtest against a real API server; assert restart patch / events  | Controller-runtime pattern; no bespoke pod-listing to mock |
+
+The unit tier above covers the decision logic in isolation. Two higher tiers verify the wired-up component against real
+infrastructure.
+
+**Integration tests** run the full manager (controllers, watches, workqueue, cache transforms) against an `envtest`
+control plane — a real `kube-apiserver` and `etcd`, no kubelet. They assert the reconciliation path end-to-end at the
+controller level: mutate a watched field, then check the reconciler enqueues, evaluates the rule chain, and issues the
+expected restart patch. They also cover what unit tests cannot reach — event emission, requeue/rate-limiting, and that
+the cache transform retains every field the rules read. With no kubelet, pods are simulated, so this tier validates
+control flow rather than real rollouts.
+
+**E2E tests** deploy the restarter on a live cluster alongside a real Istio installation and validate the
+customer-observed outcome: apply a config change, then assert targeted workloads are rolled and become ready while
+excluded and maintenance-window workloads are untouched. This is the only tier that verifies real pod rollouts and the
+full module lifecycle (install, upgrade, uninstall). Being slow and brittle, it covers critical customer journeys only.
 
 ### Metrics and observability
 
@@ -427,57 +518,51 @@ identity (namespace/name) is intentionally *not* a label — on a large cluster 
 and reintroduce the memory problem this ADR set out to solve. Per-workload restart facts are surfaced through Kubernetes
 Events instead (filterable by `reportingComponent=istio-restarter`).
 
-| Metric                                                  | Type      | Labels                                                        | Description                                                                                                                                                                                                                                                               |
-|---------------------------------------------------------|-----------|---------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `istio_restarter_restarts_total`                        | Counter   | `kind`, `result` (`success` / `error`)                        | Restart attempts, split by outcome. Restart throughput and failure rate derive from this single metric.                                                                                                                                                                   |
-| `istio_restarter_skipped_total`                         | Counter   | `reason` (`excluded`, `maintenance_window`, `invalid_window`) | Workloads skipped by the preflight check or exclusion. Mirrors the skip reasons one-to-one.                                                                                                                                                                               |
-| `istio_restarter_restart_pending`                       | Gauge     | `kind`                                                        | Workloads a predicate matched but the exclusion check suppressed (a restart is *required* but not performed). Should trend to zero after a maintenance window opens; a stuck non-zero value means restarts are being blocked. Corresponds to the `RestartRequired` event. |
-| `istio_restarter_predicate_evaluation_duration_seconds` | Histogram | `kind`                                                        | Time to evaluate the preflight check and predicate chain for one workload. Detects predicates that became expensive.                                                                                                                                                      |
-| `istio_restarter_maintenance_window_active`             | Gauge     | —                                                             | `1` while *any* configured maintenance window is currently open, else `0`. A cluster-wide debugging signal for "why did nothing restart" — deliberately unlabeled to stay bounded-cardinality.                                                                            |
-| `istio_restarter_component_info`                        | Gauge     | `version`, `istio_version`                                    | Constant `1`; carries the restarter build version and the target Istio version as labels. Lets dashboards correlate restart activity with a specific Istio upgrade.                                                                                                       |
+| Metric                                             | Type      | Labels                                                        | Description                                                                                                                                                                                                                                                                       |
+|----------------------------------------------------|-----------|---------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `istio_restarter_restarts_total`                   | Counter   | `kind`, `result` (`success` / `error`)                        | Restart attempts, split by outcome. Restart throughput and failure rate derive from this single metric.                                                                                                                                                                           |
+| `istio_restarter_skipped_total`                    | Counter   | `reason` (`excluded`, `maintenance_window`, `invalid_window`) | Workloads skipped by the preflight check or exclusion. Mirrors the skip reasons one-to-one.                                                                                                                                                                                       |
+| `istio_restarter_restart_pending`                  | Gauge     | `kind`                                                        | Workloads a rule returned `Admit` for but a `Stop` rule (exclusion or maintenance window) suppressed — a restart is *required* but not performed. Should trend to zero after a maintenance window opens; nonzero-stuck means blocked. Corresponds to the `RestartRequired` event. |
+| `istio_restarter_rule_evaluation_duration_seconds` | Histogram | `kind`                                                        | Time to evaluate the rule chain for one workload. Detects rules that became expensive.                                                                                                                                                                                            |
+| `istio_restarter_maintenance_window_active`        | Gauge     | —                                                             | `1` while *any* configured maintenance window is currently open, else `0`. A cluster-wide debugging signal for "why did nothing restart" — deliberately unlabeled to stay bounded-cardinality.                                                                                    |
+| `istio_restarter_component_info`                   | Gauge     | `version`, `istio_version`                                    | Constant `1`; carries the restarter build version and the target Istio version as labels. Lets dashboards correlate restart activity with a specific Istio upgrade.                                                                                                               |
 
 ## Consequences
 
 Accepting this decision resolves the core problems identified in the current implementation and introduces a set of
 improvements that make the restarter component more reliable, maintainable, and customer-friendly.
 
-- **Memory and performance**: The current implementation executes entirely within the Istio CR reconciliation loop.
-  Every reconcile cycle issues direct API calls to list all Pods across the cluster, bypassing the controller cache and
-  causing the cache to grow uncontrollably — reaching gigabytes on large clusters. The new component runs as a separate
-  process with its own informer cache and a `TransformFunc` that strips unused fields before objects are stored. This
-  bounds memory usage to the minimum fields required for predicate evaluation and eliminates the impact on the main
-  controller's memory footprint entirely.
-- **Restart behavior**: The current implementation restarts all matching workloads in a single reconcile pass — a "big
-  bang" approach that has caused customer-visible downtime during Istio upgrades. The new component replaces this with a
-  controller-runtime reconcile loop per workload kind, where each workload is processed individually as an event
-  arrives. Restarts are performed via annotation patches, which delegate the actual
-  rollout to the Deployment/StatefulSet/DaemonSet controller and respect PodDisruptionBudgets. This eliminates the
-  mass-eviction risk entirely.
-- **Customer control**: The current implementation provides no mechanism for customers to influence when or whether
-  their workloads are restarted. The new component introduces a per-workload exclude annotation and a maintenance window
-  annotation, giving customers explicit control over both opt-out and scheduling of restarts. These are intentionally
-  designed to require no Istio or cron expertise — a plain `Sat-Sun 00:00-04:00` string is sufficient.
-- **Supported workload types**: The current restarter nominally handles Pods and Jobs but returns only a Warning for
-  them, silently skipping restarts. Bare ReplicaSets are handled by deleting the pod and relying on the replication
-  controller to heal, which is fragile and non-obvious. The new component explicitly restricts support to Deployment,
-  StatefulSet, and DaemonSet — the only kinds that support rolling restarts — and rejects the ambiguity by design. This
-  simplifies the predicate evaluation surface and removes a class of silent failures.
-- **Predicate system**: The existing predicate system carries two interface types (`SidecarProxyPredicate` for pod-level
-  evaluation and `IngressGatewayPredicate` for gateway evaluation) with inconsistent contracts and known bugs. The new
-  implementation replaces both with a single `Matcher` interface that operates on a `client.Object`, is stateless, and
-  receives all required context via its constructor. Predicates can be shared across all workload-kind controllers
-  without modification, and the immutable matcher list prevents runtime state mutations that were a source of bugs in
-  the prior implementation.
-- **Observability**: The current implementation surfaces restart outcomes only through Istio CR status conditions (
-  `ProxySidecarRestartSucceeded` and its variants), which provide a single aggregate view and are reset on every
-  reconcile. The new component replaces these with a `RestarterComponentReady` condition that reflects the health of the
-  component itself, and complements it with per-workload Kubernetes Events (filterable by
-  `reportingComponent=istio-restarter`) and a set of Prometheus metrics covering throughput, errors, queue depth, and
-  maintenance window state. This gives both operators and customers multiple independent signals to diagnose restart
-  behavior without accessing controller logs.
-- **Operational complexity**: The separation into a standalone application introduces new concerns: a second binary and
-  Helm chart to build, publish, and version; Helm release state that must be cleaned up on uninstall via the Istio CR
-  finalizer; and a separate informer cache that watches some of the same resource types as the main controller. These
-  are real costs, but they are bounded and predictable. The Helm-based lifecycle provides a standard inventory of all
-  owned resources, making installation and removal auditable. The trade-off is judged acceptable given that the memory
-  and reliability problems it solves have directly caused production incidents.
+- **Memory and performance**: The current implementation runs inside the Istio CR reconcile loop and lists all Pods
+  cluster-wide on every cycle, bypassing the cache and growing it to gigabytes on large clusters. The new component runs
+  as a separate process with its own informer cache and a `TransformFunc` that strips unused fields, bounding memory to
+  the fields predicates actually read and removing the impact on the main controller entirely.
+- **Restart behavior**: The current "big bang" restarts all matching workloads in a single pass, causing
+  customer-visible
+  downtime during upgrades. The new component reconciles per workload as events arrive — including namespace
+  `istio-injection` label changes fanned out to the workloads they affect — and restarts via annotation patches,
+  delegating the rollout to the built-in controllers so PodDisruptionBudgets are respected and mass eviction is
+  eliminated.
+- **Customer control**: The current implementation offers no way to influence restarts. The new component adds a
+  per-workload exclude annotation and a maintenance-window annotation (a plain `Sat-Sun 00:00-04:00` string, no cron
+  knowledge required), giving customers explicit opt-out and scheduling control.
+- **Supported workload types**: The current restarter nominally handles Pods and Jobs but only warns, silently skipping
+  them. The new component restricts support to Deployment, StatefulSet, and DaemonSet (rolling restart via annotation
+  patch) plus unmanaged ReplicaSets (restarted by pod deletion, at the user's own downtime risk), removing a class of
+  silent failures.
+- **Predicate system**: The existing system carries two interface types (`SidecarProxyPredicate`,
+  `IngressGatewayPredicate`)
+  with inconsistent contracts and known bugs. The new implementation replaces both with a single stateless `Rule`
+  interface returning a tri-state `Decision` (`Admit`/`Continue`/`Stop`). The `Stop` state lets vetoes — maintenance
+  windows, exclusions — live in the same immutable, ordered rule list rather than as special-cased logic, and rules are
+  shared across all workload-kind controllers.
+- **Testability**: The current imperative code mutates shared state and cannot be unit-tested. The new design makes
+  rules pure functions of their input, with time and other context injected at evaluation, so the decision logic is
+  covered by fast unit tests, the wired-up controller by `envtest` integration tests, and real rollouts by E2E tests.
+- **Observability**: The current implementation surfaces outcomes only through Istio CR status conditions, reset every
+  reconcile. The new component drops `ProxySidecarRestartSucceeded` for a `RestarterComponentReady` condition reflecting
+  component health, and adds per-workload Kubernetes Events and bounded-cardinality Prometheus metrics, giving operators
+  and customers independent diagnostic signals without reading controller logs.
+- **Operational complexity**: The standalone application adds a second binary and Helm chart to build, version, and
+  clean up on uninstall (via the Istio CR finalizer), plus a second informer cache. These costs are bounded and
+  predictable, and the Helm lifecycle keeps installation and removal auditable — an acceptable trade-off given the
+  memory and reliability problems it resolves have caused production incidents.

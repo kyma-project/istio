@@ -61,6 +61,8 @@ jobs:
       - name: Update external and FIPS images
         id: update
         shell: bash
+        env:
+          REGCERT_JSON: ${{ secrets.FIPS_REGISTRY_SA }}
         run: |
           set -euo pipefail
           bash ./hack/ci/update-istio-images.sh

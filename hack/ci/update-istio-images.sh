@@ -21,16 +21,61 @@ ensure_tools() {
   require_command yq
 }
 
+get_registry_auth_token() {
+  local registry="$1"
+  local temp_file
+  local regcert_content
+
+  if [ -z "${REGCERT_JSON:-}" ]; then
+    return 1
+  fi
+
+  regcert_content="${REGCERT_JSON}"
+
+  if ! echo "${regcert_content}" | jq -e '.client_email' >/dev/null 2>&1; then
+    echo "Warning: Could not extract client_email from service account credentials" >&2
+    return 1
+  fi
+
+  temp_file="$(mktemp)" || return 1
+  trap "rm -f ${temp_file}" RETURN
+
+  printf '_json_key:' > "${temp_file}"
+  echo "${regcert_content}" >> "${temp_file}"
+
+  base64 < "${temp_file}"
+}
+
 registry_tags() {
   local source_repo="$1"
-  local registry repo_path
+  local registry repo_path auth_token http_code
+  local curl_opts=("-fsSL" "-w" "%{http_code}")
+  local response
 
   registry="${source_repo%%/*}"
   repo_path="${source_repo#*/}"
 
+  if [ -n "${REGCERT_JSON:-}" ]; then
+    auth_token="$(get_registry_auth_token "${registry}" 2>/dev/null)" || true
+    if [ -n "${auth_token}" ]; then
+      curl_opts+=("-H" "Authorization: Basic ${auth_token}")
+      # Explicitly clear the token from environment after passing to curl
+      trap 'unset auth_token' RETURN
+    fi
+  fi
+
   # Artifact Registry-compatible Docker V2 tags endpoint.
-  curl -fsSL "https://${registry}/v2/${repo_path}/tags/list" \
-    | jq -r '.tags[]?' 2>/dev/null || true
+  # Using silent mode (-fsSL) to avoid logging sensitive headers
+  response="$(curl "${curl_opts[@]}" "https://${registry}/v2/${repo_path}/tags/list" 2>/dev/null)"
+  http_code="${response: -3}"
+
+  if [ "${http_code}" != "200" ]; then
+    echo "Warning: Failed to fetch tags from ${registry}/${repo_path} (HTTP ${http_code})" >&2
+    return 1
+  fi
+
+  # Remove the HTTP code from the response and parse JSON
+  echo "${response%???}" | jq -r '.tags[]?' 2>/dev/null || true
 }
 
 fetch_pilot_tags() {
@@ -132,6 +177,10 @@ update_fips_images() {
     fi
     desired_target_tag="${desired_patch}-$((desired_rev + 1))"
 
+    if [ "${#fips_tags[@]}" -gt 0 ]; then
+      echo "Successfully found FIPS image versions for $(basename ${source_repo}): newest version ${desired_source_tag}"
+    fi
+
     yq -i ".images[${i}].source = \"${source_repo}:${desired_source_tag}\"" fips-images.yaml
     yq -i ".images[${i}].target.tag = \"${desired_target_tag}\"" fips-images.yaml
   done
@@ -142,6 +191,9 @@ main() {
   build_latest_patch_map
   update_external_images
   update_fips_images
+
+  # Clear sensitive environment variables
+  unset REGCERT_JSON
 }
 
 main

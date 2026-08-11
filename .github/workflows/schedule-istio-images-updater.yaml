@@ -48,7 +48,7 @@ jobs:
   update-images:
     name: Update images on ${{ matrix.base }}
     environment:
-      name: restricted
+      name: e2e
       deployment: false
     runs-on: ubuntu-latest
     needs: discover-target-branches

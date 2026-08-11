@@ -2,41 +2,43 @@
 
 set -euo pipefail
 
-# Build map: major.minor -> newest patch from istio/pilot distroless tags,
-# then update external and FIPS image manifests accordingly.
+# Bump Istio images: pick the newest istio/pilot patch per minor from Docker Hub,
+# but only up to the newest patch actually available for every FIPS image, then
+# update external-images.yaml and fips-images.yaml.
 
 declare -A LATEST_PATCH_BY_MINOR=()
 
-require_command() {
-  local cmd="$1"
-  if ! command -v "${cmd}" >/dev/null 2>&1; then
-    echo "Required command not found: ${cmd}" >&2
-    exit 1
-  fi
+ensure_tools() {
+  local cmd
+  for cmd in curl jq yq; do
+    command -v "${cmd}" >/dev/null 2>&1 || { echo "Required command not found: ${cmd}" >&2; exit 1; }
+  done
 }
 
-ensure_tools() {
-  require_command curl
-  require_command jq
-  require_command yq
+registry_auth_token() {
+  [ -n "${REGCERT_JSON:-}" ] || return 1
+  echo "${REGCERT_JSON}" | jq -e '.client_email' >/dev/null 2>&1 || {
+    echo "Warning: no client_email in REGCERT_JSON" >&2; return 1; }
+  printf '_json_key:%s\n' "${REGCERT_JSON}" | base64
 }
 
 registry_tags() {
-  local source_repo="$1"
-  local registry repo_path
-
-  registry="${source_repo%%/*}"
-  repo_path="${source_repo#*/}"
-
-  # Artifact Registry-compatible Docker V2 tags endpoint.
-  curl -fsSL "https://${registry}/v2/${repo_path}/tags/list" \
-    | jq -r '.tags[]?' 2>/dev/null || true
+  local registry="${1%%/*}" path="${1#*/}" opts=(-fsSL -w '%{http_code}') token resp code
+  if [ -n "${REGCERT_JSON:-}" ]; then
+    token="$(registry_auth_token 2>/dev/null)" || true
+    [ -n "${token}" ] && opts+=(-H "Authorization: Basic ${token}")
+  fi
+  resp="$(curl "${opts[@]}" "https://${registry}/v2/${path}/tags/list" 2>/dev/null)" || true
+  code="${resp: -3}"
+  if [ "${code}" != "200" ]; then
+    echo "Warning: failed to fetch tags from ${registry}/${path} (HTTP ${code})" >&2
+    return 1
+  fi
+  echo "${resp%???}" | jq -r '.tags[]?' 2>/dev/null || true
 }
 
 fetch_pilot_tags() {
-  local url page
-  url='https://hub.docker.com/v2/repositories/istio/pilot/tags?page_size=100'
-
+  local url='https://hub.docker.com/v2/repositories/istio/pilot/tags?page_size=100' page
   while [ -n "${url}" ]; do
     page="$(curl -fsSL "${url}")"
     echo "${page}" | jq -r '.results[].name'
@@ -44,104 +46,91 @@ fetch_pilot_tags() {
   done
 }
 
+# Highest N among stdin tags matching "<prefix>.<N><suffix>".
+highest_num() { sed -nE "s/^${1//./\\.}\.([0-9]+)${2}\$/\1/p" | sort -n | tail -1; }
+# Highest N among stdin tags matching "<version>-<N>".
+highest_rev() { sed -nE "s/^${1//./\\.}-([0-9]+)\$/\1/p" | sort -n | tail -1; }
+
+img_count() { yq '.images | length' "$1"; }
+
 build_latest_patch_map() {
-  local source minor latest_patch latest_patch_num tag patch_num
+  local minor patch
   mapfile -t pilot_tags < <(fetch_pilot_tags)
+  for minor in $(yq -r '.images[].source' external-images.yaml \
+      | sed -nE 's#^istio/[^:]+:([0-9]+\.[0-9]+)\.[0-9]+-distroless$#\1#p' | sort -u); do
+    patch="$(printf '%s\n' "${pilot_tags[@]}" | highest_num "${minor}" '-distroless')"
+    [ -n "${patch}" ] && LATEST_PATCH_BY_MINOR["${minor}"]="${minor}.${patch}"
+  done
+}
 
-  while IFS= read -r source; do
-    if [[ "${source}" =~ ^istio/.+:([0-9]+\.[0-9]+)\.[0-9]+-distroless$ ]]; then
-      minor="${BASH_REMATCH[1]}"
-      latest_patch=''
-      latest_patch_num=-1
+adjust_patch_map_with_fips() {
+  local src repo minor p best dockerhub
+  local -A total=() count=() current=()
 
-      for tag in "${pilot_tags[@]}"; do
-        if [[ "${tag}" =~ ^${minor}\.([0-9]+)-distroless$ ]]; then
-          patch_num="${BASH_REMATCH[1]}"
-          if (( patch_num > latest_patch_num )); then
-            latest_patch_num=${patch_num}
-            latest_patch="${minor}.${patch_num}"
-          fi
-        fi
-      done
+  while IFS= read -r src; do
+    [[ "${src}" =~ ^(.+):([0-9]+\.[0-9]+)\.([0-9]+)(-[0-9]+)?$ ]] || continue
+    repo="${BASH_REMATCH[1]}"; minor="${BASH_REMATCH[2]}"
+    current["${minor}"]="${minor}.${BASH_REMATCH[3]}"
+    [ -n "${LATEST_PATCH_BY_MINOR[${minor}]:-}" ] || continue
+    total["${minor}"]=$(( ${total["${minor}"]:-0} + 1 ))
+    while read -r p; do
+      count["${minor}:${p}"]=$(( ${count["${minor}:${p}"]:-0} + 1 ))
+    done < <(registry_tags "${repo}" | sed -nE "s/^${minor//./\\.}\.([0-9]+)(-[0-9]+)?\$/\1/p" | sort -un)
+  done < <(yq -r '.images[].source' fips-images.yaml)
 
-      if [ -n "${latest_patch}" ]; then
-        LATEST_PATCH_BY_MINOR["${minor}"]="${latest_patch}"
-      fi
-    fi
-  done < <(yq -r '.images[].source' external-images.yaml)
+  for minor in "${!total[@]}"; do
+    dockerhub="${LATEST_PATCH_BY_MINOR[${minor}]}"
+    best=''
+    for ((p = 0; p <= ${dockerhub##*.}; p++)); do
+      [ "${count["${minor}:${p}"]:-0}" -eq "${total[${minor}]}" ] && best="${p}"
+    done
+    LATEST_PATCH_BY_MINOR["${minor}"]="${best:+${minor}.${best}}"
+    LATEST_PATCH_BY_MINOR["${minor}"]="${LATEST_PATCH_BY_MINOR[${minor}]:-${current[${minor}]}}"
+    echo "FIPS-checked ${minor}: using ${LATEST_PATCH_BY_MINOR[${minor}]} (Docker Hub latest ${dockerhub})"
+  done
 }
 
 update_external_images() {
-  local ext_count i source image_name minor current_patch newest_patch new_source
-
-  ext_count="$(yq '.images | length' external-images.yaml)"
-  for i in $(seq 0 $((ext_count - 1))); do
-    source="$(yq -r ".images[${i}].source" external-images.yaml)"
-    if [[ "${source}" =~ ^(istio/[^:]+):([0-9]+\.[0-9]+)\.([0-9]+)-distroless$ ]]; then
-      image_name="${BASH_REMATCH[1]}"
-      minor="${BASH_REMATCH[2]}"
-      current_patch="${BASH_REMATCH[2]}.${BASH_REMATCH[3]}"
-      newest_patch="${LATEST_PATCH_BY_MINOR[${minor}]:-${current_patch}}"
-      new_source="${image_name}:${newest_patch}-distroless"
-      yq -i ".images[${i}].source = \"${new_source}\"" external-images.yaml
-    fi
+  local i src repo minor patch
+  for ((i = 0; i < $(img_count external-images.yaml); i++)); do
+    src="$(yq -r ".images[${i}].source" external-images.yaml)"
+    [[ "${src}" =~ ^(istio/[^:]+):([0-9]+\.[0-9]+)\.[0-9]+-distroless$ ]] || continue
+    repo="${BASH_REMATCH[1]}"; minor="${BASH_REMATCH[2]}"
+    patch="${LATEST_PATCH_BY_MINOR[${minor}]:-}"
+    [ -n "${patch}" ] && yq -i ".images[${i}].source = \"${repo}:${patch}-distroless\"" external-images.yaml
   done
 }
 
 update_fips_images() {
-  local fips_count i source source_repo current_patch current_rev minor
-  local desired_patch desired_rev desired_source_tag desired_target_tag
-  local tag rev
+  local i src repo patch rev minor desired found source_tag target_tag
+  for ((i = 0; i < $(img_count fips-images.yaml); i++)); do
+    src="$(yq -r ".images[${i}].source" fips-images.yaml)"
+    [[ "${src}" =~ ^(.+):([0-9]+\.[0-9]+\.[0-9]+)(-([0-9]+))?$ ]] || continue
+    repo="${BASH_REMATCH[1]}"; patch="${BASH_REMATCH[2]}"; rev="${BASH_REMATCH[4]:-0}"
+    minor="${patch%.*}"
+    desired="${LATEST_PATCH_BY_MINOR[${minor}]:-${patch}}"
 
-  fips_count="$(yq '.images | length' fips-images.yaml)"
-  for i in $(seq 0 $((fips_count - 1))); do
-    source="$(yq -r ".images[${i}].source" fips-images.yaml)"
-    if [[ ! "${source}" =~ ^(.+):([0-9]+\.[0-9]+\.[0-9]+)(-([0-9]+))?$ ]]; then
-      continue
-    fi
+    # Baseline revision: keep current one only when the patch is unchanged.
+    [ "${desired}" = "${patch}" ] || rev=0
+    found="$(registry_tags "${repo}" | highest_rev "${desired}")"
+    [ -n "${found}" ] && (( found > rev )) && rev="${found}"
 
-    source_repo="${BASH_REMATCH[1]}"
-    current_patch="${BASH_REMATCH[2]}"
-    current_rev="${BASH_REMATCH[4]:-0}"
-    minor="$(echo "${current_patch}" | awk -F'.' '{print $1"."$2}')"
+    (( rev > 0 )) && source_tag="${desired}-${rev}" || source_tag="${desired}"
+    target_tag="${desired}-$((rev + 1))"
 
-    desired_patch="${LATEST_PATCH_BY_MINOR[${minor}]:-${current_patch}}"
-    desired_rev=0
-
-    # If patch does not change, keep baseline at current revision.
-    if [ "${desired_patch}" = "${current_patch}" ]; then
-      desired_rev=${current_rev}
-    fi
-
-    mapfile -t fips_tags < <(registry_tags "${source_repo}")
-    for tag in "${fips_tags[@]}"; do
-      if [[ "${tag}" = "${desired_patch}" ]]; then
-        continue
-      elif [[ "${tag}" =~ ^${desired_patch}-([0-9]+)$ ]]; then
-        rev="${BASH_REMATCH[1]}"
-        if (( rev > desired_rev )); then
-          desired_rev=${rev}
-        fi
-      fi
-    done
-
-    if (( desired_rev > 0 )); then
-      desired_source_tag="${desired_patch}-${desired_rev}"
-    else
-      desired_source_tag="${desired_patch}"
-    fi
-    desired_target_tag="${desired_patch}-$((desired_rev + 1))"
-
-    yq -i ".images[${i}].source = \"${source_repo}:${desired_source_tag}\"" fips-images.yaml
-    yq -i ".images[${i}].target.tag = \"${desired_target_tag}\"" fips-images.yaml
+    echo "FIPS $(basename "${repo}"): source ${source_tag}, target ${target_tag}"
+    yq -i ".images[${i}].source = \"${repo}:${source_tag}\"" fips-images.yaml
+    yq -i ".images[${i}].target.tag = \"${target_tag}\"" fips-images.yaml
   done
 }
 
 main() {
   ensure_tools
   build_latest_patch_map
+  adjust_patch_map_with_fips
   update_external_images
   update_fips_images
+  unset REGCERT_JSON
 }
 
 main

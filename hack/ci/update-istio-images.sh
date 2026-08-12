@@ -38,9 +38,17 @@ registry_tags() {
 }
 
 fetch_pilot_tags() {
-  local url='https://hub.docker.com/v2/repositories/istio/pilot/tags?page_size=100' page
+  local minor="$1"
+  local url="https://hub.docker.com/v2/repositories/istio/pilot/tags?page_size=100&name=${minor}." page
   while [ -n "${url}" ]; do
-    page="$(curl -fsSL "${url}")"
+    if ! page="$(curl -fsSL "${url}" 2>/dev/null)"; then
+      echo "Warning: failed to fetch pilot tags from ${url}" >&2
+      break
+    fi
+    if echo "${page}" | jq -e '.message' >/dev/null 2>&1; then
+      echo "Warning: Docker Hub error for ${minor}: $(echo "${page}" | jq -r '.message')" >&2
+      break
+    fi
     echo "${page}" | jq -r '.results[].name'
     url="$(echo "${page}" | jq -r '.next // empty')"
   done
@@ -54,10 +62,10 @@ highest_rev() { sed -nE "s/^${1//./\\.}-([0-9]+)\$/\1/p" | sort -n | tail -1; }
 img_count() { yq '.images | length' "$1"; }
 
 build_latest_patch_map() {
-  local minor patch
-  mapfile -t pilot_tags < <(fetch_pilot_tags)
+  local minor patch pilot_tags
   for minor in $(yq -r '.images[].source' external-images.yaml \
       | sed -nE 's#^istio/[^:]+:([0-9]+\.[0-9]+)\.[0-9]+-distroless$#\1#p' | sort -u); do
+    mapfile -t pilot_tags < <(fetch_pilot_tags "${minor}")
     patch="$(printf '%s\n' "${pilot_tags[@]}" | highest_num "${minor}" '-distroless')"
     [ -n "${patch}" ] && LATEST_PATCH_BY_MINOR["${minor}"]="${minor}.${patch}"
   done

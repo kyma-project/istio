@@ -363,38 +363,15 @@ By default, evaluation iterates over the list of defined rules and applies the f
 OR over `Admit`, with `Stop` acting as a short-circuiting veto:
 
 - a `Stop` from any rule stops evaluation immediately — the workload is **not** restarted;
-- otherwise the first `Admit` marks the workload for restart, but evaluation continues so that a later `Stop` can still
-  veto it;
+- otherwise the first `Admit` marks the workload for restart;
 - if every rule returns `Continue`, the workload is left untouched.
 
-When a workload must meet 2 or more conditions before it is admitted, `Rule` implementations can be combined using the
-helper function `And()`.
+Priority over the predicates is defined by the actions they implement. When implementing a new predicate, the developer
+must ensure that the predicate is added to the list in the correct order, so that it is evaluated in the right context.
+The order of predicates is defined by the Actions the implement:
 
-This function takes a list of `Rule` implementations and returns a new `Rule` that returns `Admit` only if all provided
-rules return `Admit`. If any of them returns `Continue`, the combined rule returns `Continue`. A `Stop` from any rule
-is propagated unchanged, preserving the veto semantics.
-
-```go
-type andRule struct {
-rules []Rule
-}
-
-func (a *andRule) Evaluate(ctx context.Context, obj Object) Decision {
-for _, rule := range a.rules {
-switch rule.Evaluate(ctx, obj) {
-case Stop:
-return Stop
-case Continue:
-return Continue
-}
-}
-return Admit
-}
-
-func And(rules ...Rule) Rule {
-return &andRule{rules: rules}
-}
-```
+- Predicates that return `Stop` must be evaluated first, as they veto the restart and short-circuit evaluation;
+- Predicates that return `Admit` must be evaluated after the `Stop` predicates.
 
 ### Event handling and reconciliation process
 

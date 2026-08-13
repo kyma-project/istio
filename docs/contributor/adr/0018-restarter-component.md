@@ -188,10 +188,11 @@ This is a fragile approach, as it can cause downtime if the ReplicaSet does not 
 availability or is not covered by a PodDisruptionBudget. The user must be aware of this and take responsibility for the
 risk of downtime.
 
-As mentioned in the Decision section, the component goes top-to-bottom. The controller first admits the parent object
+As mentioned in the Decision section, the component goes top-to-bottom. The controller first collects the parent object
 (Deployment, StatefulSet, DaemonSet, ReplicaSet) and then uses selectors to retrieve all child Pods to admit in a single
-reconcile loop. This implies that some predicates are evaluated only on the parent object and some only on the child
-Pods, so a separate list of predicates must be maintained for each type.
+reconcile loop. Then each workload (Parent + children) is evaluated through a set of predicates in a loop. If predicate 
+supports only one type of workload, it must implement a type assertion and skip the evaluation for unsupported workload
+types.
 
 If demand for support of other workload types arises, we can implement it in the future. However, we do not support
 other workload types in the first implementation.
@@ -231,7 +232,8 @@ This helps to avoid restarts of critical workloads that cannot tolerate downtime
 is set to `true`, the workload is excluded from restarts.
 If the annotation is not present, the workload is included in restarts by default.
 
-This mode excludes the workload from **all restarts**, including Istio updates that mitigate a CVE in the proxy.
+This mode excludes the workload from **restarts handled by component**, including Istio updates that mitigate a CVE in 
+the proxy. This does **NOT** exclude the workload from restarts caused by other means, like node drains.
 Using this annotation also implies that the user is aware of the risk of not restarting the workload and takes
 responsibility for keeping it updated.
 
@@ -252,12 +254,12 @@ edits do not trigger churn.
 
 ```go
 ctrl.NewControllerManagedBy(mgr).
-For(&appsv1.Deployment{}).
-Watches(
-&corev1.Namespace{},
-handler.EnqueueRequestsFromMapFunc(deploymentsInNamespace),
-builder.WithPredicates(injectionLabelChanged()),
-).
+    For(&appsv1.Deployment{}).
+    Watches(
+		&corev1.Namespace{},
+        handler.EnqueueRequestsFromMapFunc(deploymentsInNamespace),
+        builder.WithPredicates(injectionLabelChanged()),
+    ).
 Complete(r)
 ```
 
@@ -267,9 +269,9 @@ requeue, it re-evaluates the same rule chain against the current workload state.
 
 #### Extending the configuration and future-proofing
 
-These options are defined at the workload level. If there is a need to define them at the namespace level, we can
-introduce it in the future as a separate custom resource and plan a migration from workload-level annotations to a custom
-resource with label selectors.
+The options above (maintenance window, restart exclusion) are defined at the workload level. If there is a need to 
+define them at the namespace level, we can introduce it in the future as a separate custom resource and plan a migration
+from workload-level annotations to a custom resource with label selectors.
 This allows configuring restarter behavior for multiple workloads with a single configuration.
 
 ### Predicate logic for workload restart
@@ -293,7 +295,7 @@ short-circuiting evaluation.
 
 The three possible decisions are:
 
-- **`Admit`** — the workload has drifted from its desired state and, unless vetoed, should be restarted.
+- **`Restart`** — the workload has drifted from its desired state and, unless vetoed, should be restarted.
 - **`Continue`** — this predicate is indifferent; the decision is deferred to the remaining predicates. This is the
   neutral element of the default OR evaluation.
 - **`Stop`** — this predicate forbids the restart. Evaluation stops immediately and the workload is **not** restarted,
@@ -303,13 +305,13 @@ The three possible decisions are:
 type Decision int
 
 const (
-Continue Decision = iota
-Admit
-Stop
+    Continue Decision = iota
+    Restart
+    Stop
 )
 
 type Rule interface {
-Evaluate(ctx context.Context, obj Object) Decision
+    Evaluate(ctx context.Context, obj Object) Decision
 }
 ```
 
@@ -335,10 +337,10 @@ evaluated in a consistent order and that the behavior of the component is predic
 #### Naming scheme
 
 Rule names must describe *the condition being asserted*, not the action taken. The name states the condition that the
-rule detects as **true**; the `Decision` it returns (`Admit` or `Stop`) determines the direction. A developer must be
+rule detects as **true**; the `Decision` it returns (`Restart` or `Stop`) determines the direction. A developer must be
 able to understand what the rule checks from its name alone, without knowing which decision it maps to.
 
-- **`<Subject>Changed`** — for rules that return `Admit` when the workload has drifted from its desired state. Read as
+- **`<Subject>Changed`** — for rules that return `Restart` when the workload has drifted from its desired state. Read as
   "the subject changed, so the workload is stale". Examples: `CniModeChanged`, `ProxyConfigChanged`,
   `CompatibilityModeChanged`.
 
@@ -347,7 +349,7 @@ able to understand what the rule checks from its name alone, without knowing whi
   an exclusion annotation).
 
 These forms keep the name focused on *why* rather than *what*. A rule name must not describe the restart itself (for
-example, `RestartOnCni` or `DoProxyRestart` are discouraged) — the restart is implied by an `Admit` decision, and the
+example, `RestartOnCni` or `DoProxyRestart` are discouraged) — the restart is implied by an `Restart` decision, and the
 veto by a `Stop`.
 
 #### Logical operations of predicates
@@ -356,10 +358,10 @@ Each rule is a self-contained unit that evaluates a single aspect of the workloa
 Rules can be combined using logical operations to create more complex matching criteria.
 
 By default, evaluation iterates over the list of defined rules and applies the following logic. This implies a logical
-OR over `Admit`, with `Stop` acting as a short-circuiting veto:
+OR over `Restart`, with `Stop` acting as a short-circuiting veto:
 
 - a `Stop` from any rule stops evaluation immediately — the workload is **not** restarted;
-- otherwise, the first `Admit` marks the workload for restart;
+- otherwise, the first `Restart` marks the workload for restart;
 - if every rule returns `Continue`, the workload is left untouched.
 
 The priority of predicates is defined by the actions they implement. When implementing a new predicate, the developer
@@ -367,7 +369,7 @@ must ensure that the predicate is added to the list in the correct order, so tha
 The order of predicates is defined by the actions they implement:
 
 - Predicates that return `Stop` must be evaluated first, as they veto the restart and short-circuit evaluation;
-- Predicates that return `Admit` must be evaluated after the `Stop` predicates.
+- Predicates that return `Restart` must be evaluated after the `Stop` predicates.
 
 ### Event handling and reconciliation process
 
@@ -454,7 +456,7 @@ table below maps each unit to how it is tested and the property that makes that 
 | Unit                  | Test strategy                                                     | What makes it testable                                     |
 |-----------------------|-------------------------------------------------------------------|------------------------------------------------------------|
 | Individual `Rule`     | Table-driven unit test: given an `Object`, assert the `Decision`  | Pure function of its input; no API calls or side effects   |
-| Time-dependent rule   | Inject a fixed clock via `context.Context`; assert `Admit`/`Stop` | Reference time is passed in, not read from the wall clock  |
+| Time-dependent rule   | Inject a fixed clock via `context.Context`; assert `Restart`/`Stop` | Reference time is passed in, not read from the wall clock  |
 | Rule chain evaluation | Unit test asserting short-circuit and OR semantics                | Deterministic over an immutable, ordered rule list         |
 | Reconciler            | envtest against a real API server; assert restart patch / events  | Controller-runtime pattern; no bespoke pod-listing to mock |
 
@@ -491,7 +493,7 @@ Events instead (filterable by `reportingComponent=istio-restarter`).
 |----------------------------------------------------|-----------|---------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `istio_restarter_restarts_total`                   | Counter   | `kind`, `result` (`success` / `error`)                        | Restart attempts, split by outcome. Restart throughput and failure rate derive from this single metric.                                                                                                                                                                           |
 | `istio_restarter_skipped_total`                    | Counter   | `reason` (`excluded`, `maintenance_window`, `invalid_window`) | Workloads skipped by the preflight check or exclusion. Mirrors the skip reasons one-to-one.                                                                                                                                                                                       |
-| `istio_restarter_restart_pending`                  | Gauge     | `kind`                                                        | Workloads a rule returned `Admit` for but a `Stop` rule (exclusion or maintenance window) suppressed — a restart is *required* but not performed. Should trend to zero after a maintenance window opens; nonzero-stuck means blocked. Corresponds to the `RestartRequired` event. |
+| `istio_restarter_restart_pending`                  | Gauge     | `kind`                                                        | Workloads a rule returned `Restart` for but a `Stop` rule (exclusion or maintenance window) suppressed — a restart is *required* but not performed. Should trend to zero after a maintenance window opens; nonzero-stuck means blocked. Corresponds to the `RestartRequired` event. |
 | `istio_restarter_rule_evaluation_duration_seconds` | Histogram | `kind`                                                        | Time to evaluate the rule chain for one workload. Detects rules that became expensive.                                                                                                                                                                                            |
 | `istio_restarter_maintenance_window_active`        | Gauge     | —                                                             | `1` while *any* configured maintenance window is currently open, else `0`. A cluster-wide debugging signal for "why did nothing restart" — deliberately unlabeled to stay bounded-cardinality.                                                                                    |
 | `istio_restarter_component_info`                   | Gauge     | `version`, `istio_version`                                    | Constant `1`; carries the restarter build version and the target Istio version as labels. Lets dashboards correlate restart activity with a specific Istio upgrade.                                                                                                               |
@@ -519,7 +521,7 @@ improvements that make the restarter component more reliable, maintainable, and 
   silent failures.
 - **Predicate system**: The existing system carries two interface types (`SidecarProxyPredicate`,
   `IngressGatewayPredicate`) with inconsistent contracts and known bugs. The new implementation replaces both with a
-  single stateless `Rule` interface returning a tri-state `Decision` (`Admit`/`Continue`/`Stop`). The `Stop` state lets
+  single stateless `Rule` interface returning a tri-state `Decision` (`Restart`/`Continue`/`Stop`). The `Stop` state lets
   vetoes — maintenance windows, exclusions — live in the same immutable, ordered rule list rather than as special-cased
   logic, and rules are shared across all workload-kind controllers.
 - **Testability**: The current imperative code mutates shared state and cannot be unit-tested. The new design makes

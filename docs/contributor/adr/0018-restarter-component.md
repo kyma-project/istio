@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context
 
@@ -16,7 +16,6 @@ This document describes the following technical points related to the implementa
 - Predicate logic for workload restart
 - Event handling and reconciliation process
 - Metrics and observability
-- Available API
 
 This document does NOT enforce the following aspects of the implementation:
 
@@ -455,7 +454,6 @@ table below maps each unit to how it is tested and the property that makes that 
 | Unit                  | Test strategy                                                     | What makes it testable                                     |
 |-----------------------|-------------------------------------------------------------------|------------------------------------------------------------|
 | Individual `Rule`     | Table-driven unit test: given an `Object`, assert the `Decision`  | Pure function of its input; no API calls or side effects   |
-| `And()` combinator    | Unit test with fake rules returning fixed decisions               | Composition logic is independent of any concrete rule      |
 | Time-dependent rule   | Inject a fixed clock via `context.Context`; assert `Admit`/`Stop` | Reference time is passed in, not read from the wall clock  |
 | Rule chain evaluation | Unit test asserting short-circuit and OR semantics                | Deterministic over an immutable, ordered rule list         |
 | Reconciler            | envtest against a real API server; assert restart patch / events  | Controller-runtime pattern; no bespoke pod-listing to mock |

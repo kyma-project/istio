@@ -46,6 +46,19 @@ type Config struct {
 	// Enabling this setting allows Istio proxies to distinguish traffic between two different TCP services that are outside the mesh thanks to virtual IP address assignment to each ServiceEntry from reserved IP range 240.240.0.0/16.
 	// +kubebuilder:validation:Optional
 	EnableDNSProxying *bool `json:"enableDNSProxying,omitempty"`
+
+	// Configures which Istio proxy stats are emitted by matching stat names against inclusion regular expressions.
+	// Stats whose names do not match any of the configured inclusion patterns are not emitted by the proxy.
+	// +kubebuilder:validation:Optional
+	ProxyStatsMatcher *ProxyStatsMatcher `json:"proxyStatsMatcher,omitempty"`
+}
+
+// Configures the stats matcher for Istio proxy sidecars and gateways.
+type ProxyStatsMatcher struct {
+	// Defines a list of regular expressions used to select proxy stats for inclusion.
+	// Stats whose names match any of these regular expressions are included in the proxy stats output.
+	// +kubebuilder:validation:Optional
+	InclusionRegexps []string `json:"inclusionRegexps,omitempty"`
 }
 
 // Defines how the proxy handles the **X-Forwarded-Client-Cert** (XFCC) of the HTTP header.

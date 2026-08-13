@@ -259,6 +259,19 @@ func (m *meshConfigBuilder) BuildDNSProxyingConfiguration(enableDNSProxying *boo
 	return m
 }
 
+func (m *meshConfigBuilder) BuildProxyStatsMatcher(matcher *ProxyStatsMatcher) *meshConfigBuilder {
+	if matcher == nil || len(matcher.InclusionRegexps) == 0 {
+		return m
+	}
+
+	err := m.c.SetPath("defaultConfig.proxyStatsMatcher.inclusionRegexps", matcher.InclusionRegexps)
+	if err != nil {
+		return nil
+	}
+
+	return m
+}
+
 func (i *Istio) mergeConfig(op iopv1alpha1.IstioOperator, options ...MergeOption) (iopv1alpha1.IstioOperator, error) {
 	opts := &MergeOptions{
 		EnableDualStack: false,
@@ -282,6 +295,7 @@ func (i *Istio) mergeConfig(op iopv1alpha1.IstioOperator, options ...MergeOption
 		BuildAmbientConfig(ambientEnabled).
 		BuildTrustDomainConfig(i.Spec.Config.TrustDomain).
 		BuildDNSProxyingConfiguration(i.Spec.Config.EnableDNSProxying).
+		BuildProxyStatsMatcher(i.Spec.Config.ProxyStatsMatcher).
 		Build()
 
 	op.Spec.MeshConfig = newMeshConfig

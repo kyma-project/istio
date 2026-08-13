@@ -71,6 +71,11 @@ func (p *ProxyRestart) RestartProxies(
 		p.logger.Error(err, "Failed to create restart enableDNSProxying predicate")
 		return []restart.Warning{}, err
 	}
+	proxyStatsMatcherPredicate, err := predicates.NewProxyStatsMatcherRestartPredicate(istioCR)
+	if err != nil {
+		p.logger.Error(err, "Failed to create restart proxyStatsMatcher predicate")
+		return []restart.Warning{}, err
+	}
 	istioFeatures, err := istiofeatures.Get(ctx, p.k8sClient)
 	if err != nil && !apierrors.IsNotFound(err) {
 		p.logger.Error(err, "Failed to get Istio features")
@@ -81,6 +86,7 @@ func (p *ProxyRestart) RestartProxies(
 		prometheusMergePredicate,
 		predicates.NewImageResourcesPredicate(expectedImage, expectedResources),
 		enableDNSProxyingPredicate,
+		proxyStatsMatcherPredicate,
 		predicates.NewCniRestartPredicate(istioFeatures.DisableCni),
 	}
 

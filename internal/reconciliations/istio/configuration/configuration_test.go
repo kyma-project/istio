@@ -235,6 +235,74 @@ var _ = Describe("Istio Configuration", func() {
 			Expect(*appliedConfig.Config.NumTrustedProxies).To(Equal(2))
 			Expect(appliedConfig.IstioTag).To(Equal("1.16.1-distroless"))
 		})
+
+		It("should update proxyStatsMatcher when annotation does not exist", func() {
+			// given
+			istioCR := operatorv1alpha2.Istio{Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
+					ProxyStatsMatcher: &operatorv1alpha2.ProxyStatsMatcher{
+						InclusionRegexps: []string{".*upstream_rq_retry.*"},
+					},
+				},
+			}}
+
+			// when
+			err := configuration.UpdateLastAppliedProxyConfig(&istioCR)
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+
+			appliedConfig, err := configuration.GetLastAppliedConfiguration(&istioCR)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(appliedConfig.Config.ProxyStatsMatcher).NotTo(BeNil())
+			Expect(appliedConfig.Config.ProxyStatsMatcher.InclusionRegexps).To(ConsistOf(".*upstream_rq_retry.*"))
+		})
+
+		It("should update proxyStatsMatcher preserving other fields", func() {
+			// given
+			istioCR := operatorv1alpha2.Istio{Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
+					ProxyStatsMatcher: &operatorv1alpha2.ProxyStatsMatcher{
+						InclusionRegexps: []string{".*upstream_cx.*"},
+					},
+				},
+			}}
+			istioCR.Annotations = map[string]string{}
+			istioCR.Annotations[lastAppliedConfiguration] = `{"config":{"proxyStatsMatcher":{"inclusionRegexps":[".*upstream_rq_retry.*"]},"numTrustedProxies":2,"telemetry":{"metrics":{}}},"IstioTag":"1.16.1-distroless"}`
+
+			// when
+			err := configuration.UpdateLastAppliedProxyConfig(&istioCR)
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+
+			appliedConfig, err := configuration.GetLastAppliedConfiguration(&istioCR)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(appliedConfig.Config.ProxyStatsMatcher).NotTo(BeNil())
+			Expect(appliedConfig.Config.ProxyStatsMatcher.InclusionRegexps).To(ConsistOf(".*upstream_cx.*"))
+			Expect(*appliedConfig.Config.NumTrustedProxies).To(Equal(2))
+			Expect(appliedConfig.IstioTag).To(Equal("1.16.1-distroless"))
+		})
+
+		It("should clear proxyStatsMatcher when removed from spec", func() {
+			// given
+			istioCR := operatorv1alpha2.Istio{Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{},
+			}}
+			istioCR.Annotations = map[string]string{}
+			istioCR.Annotations[lastAppliedConfiguration] = `{"config":{"proxyStatsMatcher":{"inclusionRegexps":[".*upstream_rq_retry.*"]},"telemetry":{"metrics":{}}},"IstioTag":"1.16.1-distroless"}`
+
+			// when
+			err := configuration.UpdateLastAppliedProxyConfig(&istioCR)
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+
+			appliedConfig, err := configuration.GetLastAppliedConfiguration(&istioCR)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(appliedConfig.Config.ProxyStatsMatcher).To(BeNil())
+			Expect(appliedConfig.IstioTag).To(Equal("1.16.1-distroless"))
+		})
 	})
 
 })

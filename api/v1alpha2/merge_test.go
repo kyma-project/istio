@@ -1611,6 +1611,98 @@ var _ = Describe("Merge", func() {
 		})
 	})
 
+	Context("ProxyStatsMatcher", func() {
+		It("Should set inclusionRegexps in the mesh config when ProxyStatsMatcher is configured in the Istio CR", func() {
+			// given
+			m := mesh.DefaultMeshConfig()
+			meshConfigRaw := convert(m)
+			iop := iopv1alpha1.IstioOperator{
+				Spec: iopv1alpha1.IstioOperatorSpec{
+					MeshConfig: meshConfigRaw,
+				},
+			}
+
+			istioCR := istiov1alpha2.Istio{
+				Spec: istiov1alpha2.IstioSpec{
+					Config: istiov1alpha2.Config{
+						ProxyStatsMatcher: &istiov1alpha2.ProxyStatsMatcher{
+							InclusionRegexps: []string{".*upstream_rq_retry.*", ".*upstream_cx.*"},
+						},
+					},
+				},
+			}
+
+			// when
+			out, err := istioCR.MergeInto(iop)
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+			meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
+			Expect(err).ShouldNot(HaveOccurred())
+			inclusionRegexps, exists := meshConfig.GetPath("defaultConfig.proxyStatsMatcher.inclusionRegexps")
+			Expect(exists).To(BeTrue())
+			Expect(inclusionRegexps).To(ConsistOf(".*upstream_rq_retry.*", ".*upstream_cx.*"))
+		})
+
+		It("Should not set inclusionRegexps in the mesh config when ProxyStatsMatcher is nil in the Istio CR", func() {
+			// given
+			m := mesh.DefaultMeshConfig()
+			meshConfigRaw := convert(m)
+			iop := iopv1alpha1.IstioOperator{
+				Spec: iopv1alpha1.IstioOperatorSpec{
+					MeshConfig: meshConfigRaw,
+				},
+			}
+
+			istioCR := istiov1alpha2.Istio{
+				Spec: istiov1alpha2.IstioSpec{
+					Config: istiov1alpha2.Config{},
+				},
+			}
+
+			// when
+			out, err := istioCR.MergeInto(iop)
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+			meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
+			Expect(err).ShouldNot(HaveOccurred())
+			_, exists := meshConfig.GetPath("defaultConfig.proxyStatsMatcher.inclusionRegexps")
+			Expect(exists).To(BeFalse())
+		})
+
+		It("Should not set inclusionRegexps in the mesh config when InclusionRegexps is empty in the Istio CR", func() {
+			// given
+			m := mesh.DefaultMeshConfig()
+			meshConfigRaw := convert(m)
+			iop := iopv1alpha1.IstioOperator{
+				Spec: iopv1alpha1.IstioOperatorSpec{
+					MeshConfig: meshConfigRaw,
+				},
+			}
+
+			istioCR := istiov1alpha2.Istio{
+				Spec: istiov1alpha2.IstioSpec{
+					Config: istiov1alpha2.Config{
+						ProxyStatsMatcher: &istiov1alpha2.ProxyStatsMatcher{
+							InclusionRegexps: []string{},
+						},
+					},
+				},
+			}
+
+			// when
+			out, err := istioCR.MergeInto(iop)
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+			meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
+			Expect(err).ShouldNot(HaveOccurred())
+			_, exists := meshConfig.GetPath("defaultConfig.proxyStatsMatcher.inclusionRegexps")
+			Expect(exists).To(BeFalse())
+		})
+	})
+
 })
 
 func convert(a *meshv1alpha1.MeshConfig) json.RawMessage {

@@ -1523,6 +1523,19 @@ spec:
                     maximum: 4294967295
                     minimum: 0
                     type: integer
+                  proxyStatsMatcher:
+                    description: |-
+                      Configures which Istio proxy stats are emitted by matching stat names against inclusion regular expressions.
+                      Stats whose names do not match any of the configured inclusion patterns are not emitted by the proxy.
+                    properties:
+                      inclusionRegexps:
+                        description: |-
+                          Defines a list of regular expressions used to select proxy statistics for inclusion.
+                          Statistics with names that match any of these regular expressions are included in the proxy statistics output.
+                        items:
+                          type: string
+                        type: array
+                    type: object
                   telemetry:
                     description: Defines the telemetry configuration of Istio.
                     properties:

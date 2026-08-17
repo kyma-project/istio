@@ -165,6 +165,7 @@ func UpdateLastAppliedProxyConfig(istioCR *v1alpha2.Istio) error {
 
 	appliedConfig.CompatibilityMode = istioCR.Spec.CompatibilityMode
 	appliedConfig.Config.EnableDNSProxying = istioCR.Spec.Config.EnableDNSProxying
+	appliedConfig.Config.ProxyStatsMatcher = istioCR.Spec.Config.ProxyStatsMatcher
 
 	config, err := json.Marshal(appliedConfig)
 	if err != nil {

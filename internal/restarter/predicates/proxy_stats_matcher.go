@@ -8,7 +8,6 @@ import (
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/configuration"
 )
-
 type ProxyStatsMatcherRestartPredicate struct {
 	oldInclusionRegexps []string
 	newInclusionRegexps []string
@@ -24,11 +23,13 @@ func NewProxyStatsMatcherRestartPredicate(istioCR *v1alpha2.Istio) (*ProxyStatsM
 	if lastAppliedConfig.Config.ProxyStatsMatcher != nil {
 		oldRegexps = lastAppliedConfig.Config.ProxyStatsMatcher.InclusionRegexps
 	}
+	slices.Sort(oldRegexps)
 
 	var newRegexps []string
 	if istioCR.Spec.Config.ProxyStatsMatcher != nil {
 		newRegexps = istioCR.Spec.Config.ProxyStatsMatcher.InclusionRegexps
 	}
+	slices.Sort(newRegexps)
 
 	return &ProxyStatsMatcherRestartPredicate{
 		oldInclusionRegexps: oldRegexps,

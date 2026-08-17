@@ -75,6 +75,28 @@ var _ = Describe("ProxyStatsMatcher Predicate", func() {
 			}
 			Expect(predicate.Matches(v1.Pod{})).To(BeTrue())
 		})
+
+	})
+
+	Context("NewProxyStatsMatcherRestartPredicate reorder", func() {
+		It("should evaluate to false if inclusionRegexps are the same but in different order", func() {
+			predicate, err := NewProxyStatsMatcherRestartPredicate(&operatorv1alpha2.Istio{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						labels.LastAppliedConfiguration: `{"config":{"proxyStatsMatcher":{"inclusionRegexps":[".*upstream_rq_retry.*",".*upstream_cx.*"]}}}`,
+					},
+				},
+				Spec: operatorv1alpha2.IstioSpec{
+					Config: operatorv1alpha2.Config{
+						ProxyStatsMatcher: &operatorv1alpha2.ProxyStatsMatcher{
+							InclusionRegexps: []string{".*upstream_cx.*", ".*upstream_rq_retry.*"},
+						},
+					},
+				},
+			})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(predicate.Matches(v1.Pod{})).To(BeFalse())
+		})
 	})
 
 	Context("NewProxyStatsMatcherRestartPredicate", func() {

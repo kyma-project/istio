@@ -295,7 +295,7 @@ short-circuiting evaluation.
 
 The three possible decisions are:
 
-- **`Restart`** — the workload has drifted from its desired state and, unless vetoed, should be restarted.
+- **`Restart`** — the workload has drifted from its desired state and should be restarted.
 - **`Continue`** — this predicate is indifferent; the decision is deferred to the remaining predicates. This is the
   neutral element of the default OR evaluation.
 - **`Stop`** — this predicate forbids the restart. Evaluation stops immediately and the workload is **not** restarted,
@@ -358,7 +358,7 @@ Each rule is a self-contained unit that evaluates a single aspect of the workloa
 Rules can be combined using logical operations to create more complex matching criteria.
 
 By default, evaluation iterates over the list of defined rules and applies the following logic. This implies a logical
-OR over `Restart`, with `Stop` acting as a short-circuiting veto:
+OR over `Restart`, with `Stop` acting as a short-circuit:
 
 - a `Stop` from any rule stops evaluation immediately — the workload is **not** restarted;
 - otherwise, the first `Restart` marks the workload for restart;

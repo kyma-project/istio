@@ -21,7 +21,7 @@ require (
 	github.com/thoas/go-funk v0.9.3
 	gitlab.com/rodrigoodhin/gocure v0.0.0-20220718065339-f14dfe79276a
 	golang.org/x/time v0.15.0
-	google.golang.org/protobuf v1.36.11
+	google.golang.org/protobuf v1.36.12
 	gopkg.in/inf.v0 v0.9.1
 	gopkg.in/yaml.v3 v3.0.1
 	istio.io/api v1.30.1-0.20260529120535-23c54ad84d6e

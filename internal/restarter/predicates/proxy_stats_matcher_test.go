@@ -28,6 +28,14 @@ var _ = Describe("ProxyStatsMatcher Predicate", func() {
 			Expect(predicate.Matches(v1.Pod{})).To(BeFalse())
 		})
 
+		It("should evaluate to false if one inclusionRegexps is nil and the other is empty", func() {
+			predicate := ProxyStatsMatcherRestartPredicate{
+				oldInclusionRegexps: nil,
+				newInclusionRegexps: []string{},
+			}
+			Expect(predicate.Matches(v1.Pod{})).To(BeFalse())
+		})
+
 		It("should evaluate to true if inclusionRegexps values differ", func() {
 			predicate := ProxyStatsMatcherRestartPredicate{
 				oldInclusionRegexps: []string{".*upstream_rq_retry.*"},

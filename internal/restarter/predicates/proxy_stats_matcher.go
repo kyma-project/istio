@@ -1,7 +1,7 @@
 package predicates
 
 import (
-	"reflect"
+	"slices"
 
 	v1 "k8s.io/api/core/v1"
 
@@ -37,7 +37,7 @@ func NewProxyStatsMatcherRestartPredicate(istioCR *v1alpha2.Istio) (*ProxyStatsM
 }
 
 func (p ProxyStatsMatcherRestartPredicate) Matches(_ v1.Pod) bool {
-	return !reflect.DeepEqual(p.oldInclusionRegexps, p.newInclusionRegexps)
+	return !slices.Equal(p.oldInclusionRegexps, p.newInclusionRegexps)
 }
 
 func (p ProxyStatsMatcherRestartPredicate) MustMatch() bool {

@@ -55,8 +55,6 @@ type Config struct {
 
 // Configures the stats matcher for Istio proxy sidecars and gateways.
 type ProxyStatsMatcher struct {
-	// Defines a list of regular expressions used to select proxy stats for inclusion.
-	// Stats whose names match any of these regular expressions are included in the proxy stats output.
 	// Defines a list of regular expressions used to select proxy statistics for inclusion.
 	// Statistics with names that match any of these regular expressions are included in the proxy statistics output.
 	// +kubebuilder:validation:Optional
@@ -171,7 +169,7 @@ type RollingUpdate struct {
 	// +kubebuilder:validation:XIntOrString
 	// +kubebuilder:validation:Pattern=`^[0-9]+%?$`
 	// +kubebuilder:validation:XValidation:rule="(type(self) == int ? self >= 0 && self <= 2147483647: self.size() >= 0)",message="must not be negative, more than 2147483647 or an empty string"
-	MaxSurge *intstr.IntOrString `json:"maxSurge"       protobuf:"bytes,2,opt,name=maxSurge"`
+	MaxSurge *intstr.IntOrString `json:"maxSurge" protobuf:"bytes,2,opt,name=maxSurge"`
 	// Specifies the maximum number of Pods that can be unavailable during the update process. See [Max Unavailable](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#max-unavailable)
 	// +kubebuilder:validation:XIntOrString
 	// +kubebuilder:validation:Pattern="^((100|[0-9]{1,2})%|[0-9]+)$"

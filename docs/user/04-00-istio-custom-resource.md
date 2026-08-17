@@ -329,7 +329,7 @@ Appears in:
 
 | Field | Description | Validation |
 | --- | --- | --- |
-| **inclusionRegexps** <br /> string array | Defines a list of regular expressions used to select proxy stats for inclusion.<br />Stats whose names match any of these regular expressions are included in the proxy stats output. | Optional <br /> |
+| **inclusionRegexps** <br /> string array | Defines a list of regular expressions used to select proxy stats for inclusion.<br />Stats whose names match any of these regular expressions are included in the proxy stats output.<br />Defines a list of regular expressions used to select proxy statistics for inclusion.<br />Statistics with names that match any of these regular expressions are included in the proxy statistics output. | Optional <br /> |
 
 
 ### ResourceClaims

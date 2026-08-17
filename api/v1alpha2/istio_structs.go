@@ -57,6 +57,8 @@ type Config struct {
 type ProxyStatsMatcher struct {
 	// Defines a list of regular expressions used to select proxy stats for inclusion.
 	// Stats whose names match any of these regular expressions are included in the proxy stats output.
+	// Defines a list of regular expressions used to select proxy statistics for inclusion.
+	// Statistics with names that match any of these regular expressions are included in the proxy statistics output.
 	// +kubebuilder:validation:Optional
 	InclusionRegexps []string `json:"inclusionRegexps,omitempty"`
 }

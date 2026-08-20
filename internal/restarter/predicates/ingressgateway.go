@@ -21,11 +21,6 @@ func (i RestartPredicate) NewIngressGatewayEvaluator(_ context.Context) (Ingress
 		return nil, err
 	}
 
-	proxyStatsMatcher, err := NewProxyStatsMatcherRestartPredicate(i.istioCR)
-	if err != nil {
-		return nil, err
-	}
-
 	return CompositeIngressGatewayRestartEvaluator{
 		Evaluators: []IngressGatewayRestartEvaluator{
 			NumTrustedProxiesRestartEvaluator{
@@ -40,7 +35,7 @@ func (i RestartPredicate) NewIngressGatewayEvaluator(_ context.Context) (Ingress
 				NewTrustDomain: i.istioCR.Spec.Config.TrustDomain,
 				OldTrustDomain: lastAppliedConfig.Config.TrustDomain,
 			},
-			proxyStatsMatcher,
+			NewProxyStatsMatcherRestartPredicate(i.istioCR, lastAppliedConfig),
 		},
 	}, nil
 }

@@ -15,12 +15,7 @@ type ProxyStatsMatcherRestartPredicate struct {
 	newInclusionRegexps []string
 }
 
-func NewProxyStatsMatcherRestartPredicate(istioCR *v1alpha2.Istio) (*ProxyStatsMatcherRestartPredicate, error) {
-	lastAppliedConfig, err := configuration.GetLastAppliedConfiguration(istioCR)
-	if err != nil {
-		return nil, err
-	}
-
+func NewProxyStatsMatcherRestartPredicate(istioCR *v1alpha2.Istio, lastAppliedConfig configuration.AppliedConfig) *ProxyStatsMatcherRestartPredicate {
 	var oldRegexps []string
 	if lastAppliedConfig.Config.ProxyStatsMatcher != nil {
 		oldRegexps = lastAppliedConfig.Config.ProxyStatsMatcher.InclusionRegexps
@@ -36,7 +31,7 @@ func NewProxyStatsMatcherRestartPredicate(istioCR *v1alpha2.Istio) (*ProxyStatsM
 	return &ProxyStatsMatcherRestartPredicate{
 		oldInclusionRegexps: oldRegexps,
 		newInclusionRegexps: newRegexps,
-	}, nil
+	}
 }
 
 func (p ProxyStatsMatcherRestartPredicate) Matches(_ v1.Pod) bool {

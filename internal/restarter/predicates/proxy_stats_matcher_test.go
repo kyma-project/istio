@@ -6,6 +6,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/configuration"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -75,12 +76,11 @@ var _ = Describe("ProxyStatsMatcher Predicate", func() {
 			}
 			Expect(predicate.Matches(v1.Pod{})).To(BeTrue())
 		})
-
 	})
 
-	Context("NewProxyStatsMatcherRestartPredicate reorder", func() {
+	Context("NewProxyStatsMatcherRestartPredicate", func() {
 		It("should evaluate to false if inclusionRegexps are the same but in different order", func() {
-			predicate, err := NewProxyStatsMatcherRestartPredicate(&operatorv1alpha2.Istio{
+			istioCR := &operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
 						labels.LastAppliedConfiguration: `{"config":{"proxyStatsMatcher":{"inclusionRegexps":[".*upstream_rq_retry.*",".*upstream_cx.*"]}}}`,
@@ -93,63 +93,60 @@ var _ = Describe("ProxyStatsMatcher Predicate", func() {
 						},
 					},
 				},
-			})
+			}
+			lastAppliedConfig, err := configuration.GetLastAppliedConfiguration(istioCR)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(predicate.Matches(v1.Pod{})).To(BeFalse())
-		})
-	})
 
-	Context("NewProxyStatsMatcherRestartPredicate", func() {
-		It("should return an error if GetLastAppliedConfiguration fails", func() {
-			_, err := NewProxyStatsMatcherRestartPredicate(&operatorv1alpha2.Istio{
-				ObjectMeta: metav1.ObjectMeta{
-					Annotations: map[string]string{
-						labels.LastAppliedConfiguration: `{"erroneous-annotation-mock":erroneous-annotation-mock}`,
-					},
-				},
-			})
-			Expect(err).To(HaveOccurred())
+			predicate := NewProxyStatsMatcherRestartPredicate(istioCR, lastAppliedConfig)
+			Expect(predicate.Matches(v1.Pod{})).To(BeFalse())
 		})
 
 		It("should return nil for oldInclusionRegexps if lastAppliedConfiguration is empty", func() {
-			predicate, err := NewProxyStatsMatcherRestartPredicate(&operatorv1alpha2.Istio{
-				ObjectMeta: metav1.ObjectMeta{
-					Annotations: map[string]string{},
-				},
-			})
+			istioCR := &operatorv1alpha2.Istio{
+				ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{}},
+			}
+			lastAppliedConfig, err := configuration.GetLastAppliedConfiguration(istioCR)
 			Expect(err).NotTo(HaveOccurred())
+
+			predicate := NewProxyStatsMatcherRestartPredicate(istioCR, lastAppliedConfig)
 			Expect(predicate).NotTo(BeNil())
 			Expect(predicate.oldInclusionRegexps).To(BeNil())
 		})
 
 		It("should return nil for oldInclusionRegexps if proxyStatsMatcher is absent from lastAppliedConfiguration", func() {
-			predicate, err := NewProxyStatsMatcherRestartPredicate(&operatorv1alpha2.Istio{
+			istioCR := &operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
 						labels.LastAppliedConfiguration: `{"config":{"enableDNSProxying":true}}`,
 					},
 				},
-			})
+			}
+			lastAppliedConfig, err := configuration.GetLastAppliedConfiguration(istioCR)
 			Expect(err).NotTo(HaveOccurred())
+
+			predicate := NewProxyStatsMatcherRestartPredicate(istioCR, lastAppliedConfig)
 			Expect(predicate).NotTo(BeNil())
 			Expect(predicate.oldInclusionRegexps).To(BeNil())
 		})
 
 		It("should return inclusionRegexps from lastAppliedConfiguration", func() {
-			predicate, err := NewProxyStatsMatcherRestartPredicate(&operatorv1alpha2.Istio{
+			istioCR := &operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
 						labels.LastAppliedConfiguration: `{"config":{"proxyStatsMatcher":{"inclusionRegexps":[".*upstream_rq_retry.*",".*upstream_cx.*"]}}}`,
 					},
 				},
-			})
+			}
+			lastAppliedConfig, err := configuration.GetLastAppliedConfiguration(istioCR)
 			Expect(err).NotTo(HaveOccurred())
+
+			predicate := NewProxyStatsMatcherRestartPredicate(istioCR, lastAppliedConfig)
 			Expect(predicate).NotTo(BeNil())
 			Expect(predicate.oldInclusionRegexps).To(ConsistOf(".*upstream_rq_retry.*", ".*upstream_cx.*"))
 		})
 
 		It("should return inclusionRegexps from the Istio CR spec", func() {
-			predicate, err := NewProxyStatsMatcherRestartPredicate(&operatorv1alpha2.Istio{
+			istioCR := &operatorv1alpha2.Istio{
 				Spec: operatorv1alpha2.IstioSpec{
 					Config: operatorv1alpha2.Config{
 						ProxyStatsMatcher: &operatorv1alpha2.ProxyStatsMatcher{
@@ -157,8 +154,11 @@ var _ = Describe("ProxyStatsMatcher Predicate", func() {
 						},
 					},
 				},
-			})
+			}
+			lastAppliedConfig, err := configuration.GetLastAppliedConfiguration(istioCR)
 			Expect(err).NotTo(HaveOccurred())
+
+			predicate := NewProxyStatsMatcherRestartPredicate(istioCR, lastAppliedConfig)
 			Expect(predicate).NotTo(BeNil())
 			Expect(predicate.newInclusionRegexps).To(ConsistOf(".*upstream_rq_retry.*"))
 		})

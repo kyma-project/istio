@@ -35,6 +35,7 @@ func (i RestartPredicate) NewIngressGatewayEvaluator(_ context.Context) (Ingress
 				NewTrustDomain: i.istioCR.Spec.Config.TrustDomain,
 				OldTrustDomain: lastAppliedConfig.Config.TrustDomain,
 			},
+			NewProxyStatsMatcherRestartPredicate(i.istioCR, lastAppliedConfig),
 		},
 	}, nil
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/images"
 	"github.com/kyma-project/istio/operator/internal/istiofeatures"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/configuration"
 	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
 
 	"github.com/go-logr/logr"
@@ -71,11 +72,12 @@ func (p *ProxyRestart) RestartProxies(
 		p.logger.Error(err, "Failed to create restart enableDNSProxying predicate")
 		return []restart.Warning{}, err
 	}
-	proxyStatsMatcherPredicate, err := predicates.NewProxyStatsMatcherRestartPredicate(istioCR)
+	lastAppliedConfig, err := configuration.GetLastAppliedConfiguration(istioCR)
 	if err != nil {
-		p.logger.Error(err, "Failed to create restart proxyStatsMatcher predicate")
+		p.logger.Error(err, "Failed to get last applied configuration")
 		return []restart.Warning{}, err
 	}
+	proxyStatsMatcherPredicate := predicates.NewProxyStatsMatcherRestartPredicate(istioCR, lastAppliedConfig)
 	istioFeatures, err := istiofeatures.Get(ctx, p.k8sClient)
 	if err != nil && !apierrors.IsNotFound(err) {
 		p.logger.Error(err, "Failed to get Istio features")

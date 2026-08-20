@@ -208,7 +208,7 @@ var _ = Describe("Ingress Gateway Predicate", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(evaluator).NotTo(BeNil())
-			Expect(evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators).To(HaveLen(3))
+			Expect(evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators).To(HaveLen(4))
 			Expect(evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[0].(predicates.NumTrustedProxiesRestartEvaluator).OldNumTrustedProxies).To(BeNil())
 		})
 
@@ -231,7 +231,7 @@ var _ = Describe("Ingress Gateway Predicate", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(evaluator).NotTo(BeNil())
-			Expect(evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators).To(HaveLen(3))
+			Expect(evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators).To(HaveLen(4))
 			Expect(*evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[0].(predicates.NumTrustedProxiesRestartEvaluator).NewNumTrustedProxies).To(BeEquivalentTo(1))
 			Expect(*evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[1].(predicates.XForwardClientCertRestartEvaluator).OldXForwardClientCert).To(BeEquivalentTo(operatorv1alpha2.Sanitize))
 			Expect(*evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[1].(predicates.XForwardClientCertRestartEvaluator).NewXForwardClientCert).To(BeEquivalentTo(operatorv1alpha2.AppendForward))
@@ -256,10 +256,59 @@ var _ = Describe("Ingress Gateway Predicate", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(evaluator).NotTo(BeNil())
-			Expect(evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators).To(HaveLen(3))
+			Expect(evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators).To(HaveLen(4))
 			Expect(evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[0].(predicates.NumTrustedProxiesRestartEvaluator).NewNumTrustedProxies).To(BeNil())
 			Expect(evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[0].(predicates.NumTrustedProxiesRestartEvaluator).OldNumTrustedProxies).To(BeNil())
 		})
 
+	})
+
+	Context("NewIngressGatewayEvaluator proxyStatsMatcher", func() {
+		const (
+			mockIstioTag             string = "1.16.1-distroless"
+			lastAppliedConfiguration        = labels.LastAppliedConfiguration
+		)
+
+		It("should populate inclusionRegexps from lastAppliedConfiguration and spec", func() {
+			istio := &operatorv1alpha2.Istio{
+				Spec: operatorv1alpha2.IstioSpec{
+					Config: operatorv1alpha2.Config{
+						ProxyStatsMatcher: &operatorv1alpha2.ProxyStatsMatcher{
+							InclusionRegexps: []string{".*upstream_cx.*"},
+						},
+					},
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{lastAppliedConfiguration: fmt.Sprintf(`{"config":{"proxyStatsMatcher":{"inclusionRegexps":[".*upstream_rq_retry.*"]}},"IstioTag":"%s"}`, mockIstioTag)},
+				},
+			}
+
+			predicate := predicates.NewIngressGatewayRestartPredicate(istio)
+			evaluator, err := predicate.NewIngressGatewayEvaluator(context.Background())
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(evaluator.RequiresIngressGatewayRestart()).To(BeTrue())
+		})
+
+		It("should evaluate to false if inclusionRegexps are the same but in different order", func() {
+			istio := &operatorv1alpha2.Istio{
+				Spec: operatorv1alpha2.IstioSpec{
+					Config: operatorv1alpha2.Config{
+						ProxyStatsMatcher: &operatorv1alpha2.ProxyStatsMatcher{
+							InclusionRegexps: []string{".*upstream_cx.*", ".*upstream_rq_retry.*"},
+						},
+					},
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{lastAppliedConfiguration: fmt.Sprintf(`{"config":{"proxyStatsMatcher":{"inclusionRegexps":[".*upstream_rq_retry.*",".*upstream_cx.*"]}},"IstioTag":"%s"}`, mockIstioTag)},
+				},
+			}
+
+			predicate := predicates.NewIngressGatewayRestartPredicate(istio)
+			evaluator, err := predicate.NewIngressGatewayEvaluator(context.Background())
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(evaluator.RequiresIngressGatewayRestart()).To(BeFalse())
+		})
 	})
 })

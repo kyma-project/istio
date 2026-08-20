@@ -85,3 +85,60 @@ var _ = Describe("Validation", func() {
 	})
 
 })
+
+var _ = Describe("ValidateProxyStatsMatcher", func() {
+	It("should successfully validate when proxyStatsMatcher is nil", func() {
+		//given
+		istioCr := istioCR.Istio{
+			ObjectMeta: metav1.ObjectMeta{Name: "test"},
+		}
+		//when
+		err := validation.ValidateProxyStatsMatcher(istioCr)
+		//then
+		Expect(err).NotTo(HaveOccurred())
+	})
+
+	It("should successfully validate valid regular expressions", func() {
+		//given
+		istioCr := istioCR.Istio{
+			ObjectMeta: metav1.ObjectMeta{Name: "test"},
+			Spec: istioCR.IstioSpec{
+				Config: istioCR.Config{
+					ProxyStatsMatcher: &istioCR.ProxyStatsMatcher{
+						InclusionRegexps: []string{
+							".*",
+							"cluster\\..*\\.upstream_rq_total",
+							"^http\\..*",
+						},
+					},
+				},
+			},
+		}
+		//when
+		err := validation.ValidateProxyStatsMatcher(istioCr)
+		//then
+		Expect(err).NotTo(HaveOccurred())
+	})
+
+	It("should fail to validate when an inclusion regexp is invalid", func() {
+		//given
+		istioCr := istioCR.Istio{
+			ObjectMeta: metav1.ObjectMeta{Name: "test"},
+			Spec: istioCR.IstioSpec{
+				Config: istioCR.Config{
+					ProxyStatsMatcher: &istioCR.ProxyStatsMatcher{
+						InclusionRegexps: []string{
+							"valid.*",
+							"[invalid",
+						},
+					},
+				},
+			},
+		}
+		//when
+		err := validation.ValidateProxyStatsMatcher(istioCr)
+		//then
+		Expect(err).To(HaveOccurred())
+		Expect(err.Description()).To(ContainSubstring("ProxyStatsMatcher inclusionRegexps contains an invalid regular expression"))
+	})
+})

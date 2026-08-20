@@ -49,6 +49,7 @@ type Config struct {
 
 	// Configures which Istio proxy stats are emitted by matching stat names against inclusion regular expressions.
 	// Stats whose names do not match any of the configured inclusion patterns are not emitted by the proxy.
+	// For more information, see [Envoy Statistics](https://istio.io/latest/docs/ops/configuration/telemetry/envoy-stats/).
 	// +kubebuilder:validation:Optional
 	ProxyStatsMatcher *ProxyStatsMatcher `json:"proxyStatsMatcher,omitempty"`
 }

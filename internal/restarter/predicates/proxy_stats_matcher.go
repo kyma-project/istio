@@ -1,6 +1,7 @@
 package predicates
 
 import (
+	"context"
 	"slices"
 
 	v1 "k8s.io/api/core/v1"
@@ -8,17 +9,13 @@ import (
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/configuration"
 )
+
 type ProxyStatsMatcherRestartPredicate struct {
 	oldInclusionRegexps []string
 	newInclusionRegexps []string
 }
 
-func NewProxyStatsMatcherRestartPredicate(istioCR *v1alpha2.Istio) (*ProxyStatsMatcherRestartPredicate, error) {
-	lastAppliedConfig, err := configuration.GetLastAppliedConfiguration(istioCR)
-	if err != nil {
-		return nil, err
-	}
-
+func NewProxyStatsMatcherRestartPredicate(istioCR *v1alpha2.Istio, lastAppliedConfig configuration.AppliedConfig) *ProxyStatsMatcherRestartPredicate {
 	var oldRegexps []string
 	if lastAppliedConfig.Config.ProxyStatsMatcher != nil {
 		oldRegexps = lastAppliedConfig.Config.ProxyStatsMatcher.InclusionRegexps
@@ -34,7 +31,7 @@ func NewProxyStatsMatcherRestartPredicate(istioCR *v1alpha2.Istio) (*ProxyStatsM
 	return &ProxyStatsMatcherRestartPredicate{
 		oldInclusionRegexps: oldRegexps,
 		newInclusionRegexps: newRegexps,
-	}, nil
+	}
 }
 
 func (p ProxyStatsMatcherRestartPredicate) Matches(_ v1.Pod) bool {
@@ -47,4 +44,12 @@ func (p ProxyStatsMatcherRestartPredicate) MustMatch() bool {
 
 func (p ProxyStatsMatcherRestartPredicate) Name() string {
 	return "ProxyStatsMatcherRestartPredicate"
+}
+
+func (p ProxyStatsMatcherRestartPredicate) NewIngressGatewayEvaluator(_ context.Context) (IngressGatewayRestartEvaluator, error) {
+	return p, nil
+}
+
+func (p ProxyStatsMatcherRestartPredicate) RequiresIngressGatewayRestart() bool {
+	return !slices.Equal(p.oldInclusionRegexps, p.newInclusionRegexps)
 }

@@ -2,6 +2,7 @@ package predicates
 
 import (
 	"context"
+	"slices"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/configuration"
@@ -21,6 +22,18 @@ func (i RestartPredicate) NewIngressGatewayEvaluator(_ context.Context) (Ingress
 		return nil, err
 	}
 
+	var oldRegexps []string
+	if lastAppliedConfig.Config.ProxyStatsMatcher != nil {
+		oldRegexps = lastAppliedConfig.Config.ProxyStatsMatcher.InclusionRegexps
+	}
+	slices.Sort(oldRegexps)
+
+	var newRegexps []string
+	if i.istioCR.Spec.Config.ProxyStatsMatcher != nil {
+		newRegexps = i.istioCR.Spec.Config.ProxyStatsMatcher.InclusionRegexps
+	}
+	slices.Sort(newRegexps)
+
 	return CompositeIngressGatewayRestartEvaluator{
 		Evaluators: []IngressGatewayRestartEvaluator{
 			NumTrustedProxiesRestartEvaluator{
@@ -34,6 +47,10 @@ func (i RestartPredicate) NewIngressGatewayEvaluator(_ context.Context) (Ingress
 			TrustDomainsRestartEvaluator{
 				NewTrustDomain: i.istioCR.Spec.Config.TrustDomain,
 				OldTrustDomain: lastAppliedConfig.Config.TrustDomain,
+			},
+			ProxyStatsMatcherIngressGatewayRestartEvaluator{
+				NewInclusionRegexps: newRegexps,
+				OldInclusionRegexps: oldRegexps,
 			},
 		},
 	}, nil
@@ -102,4 +119,13 @@ func (i XForwardClientCertRestartEvaluator) RequiresIngressGatewayRestart() bool
 	}
 
 	return false
+}
+
+type ProxyStatsMatcherIngressGatewayRestartEvaluator struct {
+	NewInclusionRegexps []string
+	OldInclusionRegexps []string
+}
+
+func (p ProxyStatsMatcherIngressGatewayRestartEvaluator) RequiresIngressGatewayRestart() bool {
+	return !slices.Equal(p.OldInclusionRegexps, p.NewInclusionRegexps)
 }

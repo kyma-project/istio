@@ -141,7 +141,7 @@ Appears in:
 | **telemetry** <br /> [Telemetry](#telemetry) | Defines the telemetry configuration of Istio. | Optional <br /> |
 | **trustDomain** <br /> string | Defines trust domain configuration of Istio. | MaxLength: 255 <br />MinLength: 1 <br />Optional <br />Pattern: `^[a-z0-9]*([a-z0-9-_]*)?(\.[a-z0-9]*([a-z0-9-_]*[a-z0-9]*)?)*$` <br /> |
 | **enableDNSProxying** <br /> boolean | Enables or disables global DNS proxying in Istio sidecar and gateway proxies across the service mesh.<br />When enabled, DNS requests from application Pods are intercepted by Istio proxies<br />instead of being sent directly to upstream DNS servers.<br />Enabling this setting allows Istio proxies to distinguish traffic between two different TCP services that are outside the mesh thanks to virtual IP address assignment to each ServiceEntry from reserved IP range 240.240.0.0/16. | Optional <br /> |
-| **proxyStatsMatcher** <br /> [ProxyStatsMatcher](#proxystatsmatcher) | Configures which Istio proxy stats are emitted by matching stat names against inclusion regular expressions.<br />Stats whose names do not match any of the configured inclusion patterns are not emitted by the proxy. | Optional <br /> |
+| **proxyStatsMatcher** <br /> [ProxyStatsMatcher](#proxystatsmatcher) | Configures which Istio proxy stats are emitted by matching stat names against inclusion regular expressions.<br />Stats whose names do not match any of the configured inclusion patterns are not emitted by the proxy.<br />For more information, see https://istio.io/latest/docs/ops/configuration/telemetry/envoy-stats/ | Optional <br /> |
 
 ### EgressGateway
 

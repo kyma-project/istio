@@ -139,6 +139,11 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return r.terminateReconciliation(ctx, &istioCR, err, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonValidationFailed))
 	}
 
+	err = validation.ValidateProxyStatsMatcher(istioCR)
+	if err != nil {
+		return r.terminateReconciliation(ctx, &istioCR, err, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonValidationFailed))
+	}
+
 	if istioCR.GetNamespace() != namespace {
 		errWrongNS := fmt.Errorf("istio CR is not in %s namespace", namespace)
 		return r.terminateReconciliation(ctx, &istioCR, describederrors.NewDescribedError(errWrongNS, "Stopped Istio CR reconciliation"),

@@ -1,6 +1,7 @@
 package predicates
 
 import (
+	"context"
 	"slices"
 
 	v1 "k8s.io/api/core/v1"
@@ -8,6 +9,7 @@ import (
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/configuration"
 )
+
 type ProxyStatsMatcherRestartPredicate struct {
 	oldInclusionRegexps []string
 	newInclusionRegexps []string
@@ -47,4 +49,12 @@ func (p ProxyStatsMatcherRestartPredicate) MustMatch() bool {
 
 func (p ProxyStatsMatcherRestartPredicate) Name() string {
 	return "ProxyStatsMatcherRestartPredicate"
+}
+
+func (p ProxyStatsMatcherRestartPredicate) NewIngressGatewayEvaluator(_ context.Context) (IngressGatewayRestartEvaluator, error) {
+	return p, nil
+}
+
+func (p ProxyStatsMatcherRestartPredicate) RequiresIngressGatewayRestart() bool {
+	return !slices.Equal(p.oldInclusionRegexps, p.newInclusionRegexps)
 }

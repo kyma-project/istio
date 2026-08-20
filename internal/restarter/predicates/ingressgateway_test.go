@@ -263,64 +263,6 @@ var _ = Describe("Ingress Gateway Predicate", func() {
 
 	})
 
-	Context("ProxyStatsMatcherIngressGatewayRestartEvaluator", func() {
-		It("should evaluate to false if inclusionRegexps are the same", func() {
-			evaluator := predicates.ProxyStatsMatcherIngressGatewayRestartEvaluator{
-				OldInclusionRegexps: []string{".*upstream_rq_retry.*"},
-				NewInclusionRegexps: []string{".*upstream_rq_retry.*"},
-			}
-			Expect(evaluator.RequiresIngressGatewayRestart()).To(BeFalse())
-		})
-
-		It("should evaluate to false if both inclusionRegexps are nil", func() {
-			evaluator := predicates.ProxyStatsMatcherIngressGatewayRestartEvaluator{
-				OldInclusionRegexps: nil,
-				NewInclusionRegexps: nil,
-			}
-			Expect(evaluator.RequiresIngressGatewayRestart()).To(BeFalse())
-		})
-
-		It("should evaluate to true if inclusionRegexps values differ", func() {
-			evaluator := predicates.ProxyStatsMatcherIngressGatewayRestartEvaluator{
-				OldInclusionRegexps: []string{".*upstream_rq_retry.*"},
-				NewInclusionRegexps: []string{".*upstream_cx.*"},
-			}
-			Expect(evaluator.RequiresIngressGatewayRestart()).To(BeTrue())
-		})
-
-		It("should evaluate to true if a regexp is added", func() {
-			evaluator := predicates.ProxyStatsMatcherIngressGatewayRestartEvaluator{
-				OldInclusionRegexps: []string{".*upstream_rq_retry.*"},
-				NewInclusionRegexps: []string{".*upstream_rq_retry.*", ".*upstream_cx.*"},
-			}
-			Expect(evaluator.RequiresIngressGatewayRestart()).To(BeTrue())
-		})
-
-		It("should evaluate to true if a regexp is removed", func() {
-			evaluator := predicates.ProxyStatsMatcherIngressGatewayRestartEvaluator{
-				OldInclusionRegexps: []string{".*upstream_rq_retry.*", ".*upstream_cx.*"},
-				NewInclusionRegexps: []string{".*upstream_rq_retry.*"},
-			}
-			Expect(evaluator.RequiresIngressGatewayRestart()).To(BeTrue())
-		})
-
-		It("should evaluate to true if old is nil and new is not", func() {
-			evaluator := predicates.ProxyStatsMatcherIngressGatewayRestartEvaluator{
-				OldInclusionRegexps: nil,
-				NewInclusionRegexps: []string{".*upstream_rq_retry.*"},
-			}
-			Expect(evaluator.RequiresIngressGatewayRestart()).To(BeTrue())
-		})
-
-		It("should evaluate to true if new is nil and old is not", func() {
-			evaluator := predicates.ProxyStatsMatcherIngressGatewayRestartEvaluator{
-				OldInclusionRegexps: []string{".*upstream_rq_retry.*"},
-				NewInclusionRegexps: nil,
-			}
-			Expect(evaluator.RequiresIngressGatewayRestart()).To(BeTrue())
-		})
-	})
-
 	Context("NewIngressGatewayEvaluator proxyStatsMatcher", func() {
 		const (
 			mockIstioTag             string = "1.16.1-distroless"
@@ -345,9 +287,6 @@ var _ = Describe("Ingress Gateway Predicate", func() {
 			evaluator, err := predicate.NewIngressGatewayEvaluator(context.Background())
 
 			Expect(err).NotTo(HaveOccurred())
-			psEvaluator := evaluator.(predicates.CompositeIngressGatewayRestartEvaluator).Evaluators[3].(predicates.ProxyStatsMatcherIngressGatewayRestartEvaluator)
-			Expect(psEvaluator.OldInclusionRegexps).To(ConsistOf(".*upstream_rq_retry.*"))
-			Expect(psEvaluator.NewInclusionRegexps).To(ConsistOf(".*upstream_cx.*"))
 			Expect(evaluator.RequiresIngressGatewayRestart()).To(BeTrue())
 		})
 

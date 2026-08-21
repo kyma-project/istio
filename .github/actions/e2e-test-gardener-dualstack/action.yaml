@@ -1,0 +1,91 @@
+name: 'E2E tests (Gardener, dualstack)'
+description: 'Provisions a dualstack AWS Gardener shoot and runs an e2e make target with TEST_IP_FAMILY=dualstack'
+inputs:
+  manager_image:
+    description: "Manager image used for test"
+    required: true
+  gardener_secret:
+    description: "Kubeconfig secret for Gardener"
+    required: true
+  gardener_project_name:
+    required: true
+    description: "Name of the gardener project"
+  test_make_target:
+    description: 'Make target for integration tests to run'
+    required: true
+  operator_version:
+    description: 'Version of the operator image'
+    required: true
+  test_ip_family:
+    description: 'Value passed to TEST_IP_FAMILY (ipv4|ipv6|dualstack)'
+    required: false
+    default: 'dualstack'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Generate cluster name
+      shell: bash
+      # 'ds' prefix flags dualstack shoots in the Gardener project list.
+      run: echo CLUSTER_NAME=ds-$(echo $RANDOM | md5sum | head -c 7) >> $GITHUB_ENV
+    - uses: actions/setup-go@v5
+      with:
+        go-version-file: "go.mod"
+    - name: Prepare gardener kubeconfig
+      shell: bash
+      env:
+        GARDENER_TOKEN: ${{ inputs.gardener_secret }}
+      run: "${{ github.workspace }}/hack/ci/gardener_kubeconfig.sh"
+    - name: Provision dualstack cluster
+      shell: bash
+      env:
+        GARDENER_KUBECONFIG: "${{ github.workspace }}/gardener_kubeconfig.yaml"
+        CLUSTER_KUBECONFIG: "${{ github.workspace }}/${{ env.CLUSTER_NAME }}_kubeconfig.yaml"
+        # 'aws-dualstack' selects shoot_aws-dualstack.yaml and
+        # set-aws-dualstack-gardener.sh in hack/ci/.
+        GARDENER_PROVIDER: aws-dualstack
+        GARDENER_PROJECT_NAME: ${{ inputs.gardener_project_name }}
+        PIPELINE_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}
+      run: "${{ github.workspace }}/hack/ci/provision-gardener.sh"
+    - name: Run integration tests
+      shell: bash
+      env:
+        IMG: ${{ inputs.manager_image }}
+        CLUSTER_KUBECONFIG: "${{ github.workspace }}/${{ env.CLUSTER_NAME }}_kubeconfig.yaml"
+        OPERATOR_VERSION: ${{ inputs.operator_version }}
+        # Drives ipfamily.From() -> DialNetworks(); the make target
+        # inherits it via the shell, no Makefile change required.
+        TEST_IP_FAMILY: ${{ inputs.test_ip_family }}
+      run: EXPORT_RESULT=true "${{ github.workspace }}/hack/ci/integration-test-gardener.sh" ${{ inputs.test_make_target }}
+    - name: Gather deployment logs
+      shell: bash
+      if: always()
+      run: |
+        mkdir logs
+        export KUBECONFIG="${{ github.workspace }}/${{ env.CLUSTER_NAME }}_kubeconfig.yaml"
+        (kubectl logs -n kyma-system deployments/istio-controller-manager || true) > logs/istio-controller-manager.log
+    - name: Uploads logs
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: logs-${{ github.job }}-${{ inputs.test_make_target }}-dualstack
+        path: logs/
+    - name: Uploads artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: html-reports_${{ github.job }}_${{ github.run_id }}_${{ inputs.test_make_target }}_dualstack
+        path: tests/integration/reports/
+    - name: Upload artifacts - proxy config dumps
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: proxy-config-dumps-${{ github.job }}-${{ inputs.test_make_target }}-dualstack
+        path: tests/e2e/tests/**/test-artifacts/
+        if-no-files-found: ignore
+    - name: Deprovision cluster
+      if: success() || cancelled()
+      shell: bash
+      env:
+        GARDENER_KUBECONFIG: "${{ github.workspace }}/gardener_kubeconfig.yaml"
+        GARDENER_PROJECT_NAME: ${{ inputs.gardener_project_name }}
+      run: "${{ github.workspace }}/hack/ci/deprovision-gardener.sh"

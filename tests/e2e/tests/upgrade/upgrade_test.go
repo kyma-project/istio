@@ -73,7 +73,7 @@ func TestUpgrade(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		lbIp, err := load_balancer.GetLoadBalancerIP(t.Context(), c.GetControllerRuntimeClient())
+		lbIp, err := load_balancer.GetLoadBalancerAddress(t, c.GetControllerRuntimeClient())
 		require.NoError(t, err)
 
 		t.Logf("LoadBalancer IP: %s", lbIp)

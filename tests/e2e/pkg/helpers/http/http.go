@@ -1,9 +1,11 @@
 package httphelper
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -18,6 +20,10 @@ type Options struct {
 	Host    string
 	Headers map[string]string
 	Timeout time.Duration
+	// Network, when set, forces the TCP family used for dialling. Values:
+	// "tcp4" (IPv4 only), "tcp6" (IPv6 only). Empty means default ("tcp",
+	// resolver-luck). Pair with ipfamily.From().DialNetworks().
+	Network string
 }
 
 type Option func(*Options)
@@ -46,6 +52,14 @@ func WithTimeout(timeout time.Duration) Option {
 	}
 }
 
+// WithNetwork pins the TCP family for dialing. Use "tcp4" or "tcp6". An
+// empty value (the default) leaves family selection to the Go resolver.
+func WithNetwork(network string) Option {
+	return func(o *Options) {
+		o.Network = network
+	}
+}
+
 func NewHTTPClient(t *testing.T, options ...Option) *http.Client {
 	t.Helper()
 	opts := &Options{
@@ -55,11 +69,17 @@ func NewHTTPClient(t *testing.T, options ...Option) *http.Client {
 		opt(opts)
 	}
 
-	transport := http.Transport{
+	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
+	if opts.Network != "" {
+		dialer := &net.Dialer{Timeout: 30 * time.Second}
+		transport.DialContext = func(ctx context.Context, _network, addr string) (net.Conn, error) {
+			return dialer.DialContext(ctx, opts.Network, addr)
+		}
+	}
 	client := &http.Client{
-		Transport: TestLogTransportWrapper(t, opts.Prefix, opts.Host, opts.Headers, &transport),
+		Transport: TestLogTransportWrapper(t, opts.Prefix, opts.Host, opts.Headers, transport),
 	}
 	if opts.Timeout > 0 {
 		client.Timeout = opts.Timeout

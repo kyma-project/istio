@@ -10,6 +10,7 @@ import (
 	"github.com/kyma-project/istio/operator/internal/clusterconfig/factory/gke"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig/factory/k3d"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig/factory/openstack"
+	"github.com/kyma-project/istio/operator/internal/istiofeatures"
 	"k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 
@@ -106,7 +107,7 @@ type ClusterConfiguration map[string]interface{}
 // BuildFactory discovers the cluster provider and dual-stack/Garden flags,
 // then constructs the matching Factory. This is the single place where
 // LB/CNI configuration set up happens for a reconcile loop.
-func BuildFactory(ctx context.Context, k8sClient client.Client) (factory.Factory, error) {
+func BuildFactory(ctx context.Context, k8sClient client.Client, features istiofeatures.IstioFeatures) (factory.Factory, error) {
 	provider, err := DiscoverClusterProvider(ctx, k8sClient)
 	if err != nil {
 		return nil, err
@@ -118,7 +119,7 @@ func BuildFactory(ctx context.Context, k8sClient client.Client) (factory.Factory
 		return nil, err
 	}
 
-	dualStackEnabled, err := IsDualStackEnabled(ctx, k8sClient)
+	dualStackEnabled, err := IsDualStackEnabled(ctx, k8sClient, features.EnableDualStack)
 	if err != nil {
 		return nil, err
 	}
@@ -241,9 +242,11 @@ func MergeOverrides(template []byte, overrides ClusterConfiguration) ([]byte, er
 	return yaml.Marshal(templateMap)
 }
 
-func IsDualStackEnabled(ctx context.Context, sClient client.Client) (bool, error) {
+func IsDualStackEnabled(ctx context.Context, sClient client.Client, alphaOptIn bool) (bool, error) {
 	if !isExperimentalEnabled() {
-		return false, nil
+		if !alphaOptIn {
+			return false, nil
+		}
 	}
 	var kymaProvisioningInfo corev1.ConfigMap
 	err := sClient.Get(ctx, client.ObjectKey{Namespace: "kyma-system", Name: "kyma-provisioning-info"}, &kymaProvisioningInfo)

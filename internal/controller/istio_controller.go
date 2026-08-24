@@ -58,6 +58,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/internal/istiofeatures"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio"
 )
 
@@ -190,7 +191,12 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		}
 	}
 
-	clusterStrategy, buildStrategyErr := clusterconfig.BuildFactory(ctx, r.Client)
+	features, featuresErr := istiofeatures.Get(ctx, r.Client)
+	if featuresErr != nil {
+		r.log.Info("Could not get Istio features for cluster strategy, proceeding with default configuration", "error", featuresErr)
+	}
+
+	clusterStrategy, buildStrategyErr := clusterconfig.BuildFactory(ctx, r.Client, features)
 	if buildStrategyErr != nil {
 		return r.requeueReconciliation(ctx, &istioCR,
 			describederrors.NewDescribedError(buildStrategyErr, "Could not build cluster strategy"),

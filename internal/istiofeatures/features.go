@@ -19,6 +19,7 @@ const (
 type IstioFeatures struct {
 	DisableCni            bool `json:"disableCni"`
 	EnableControlPlaneVPA bool `json:"enableControlPlaneVPA"`
+	EnableDualStack       bool `json:"enableDualStack"`
 }
 
 func Get(ctx context.Context, k8sClient client.Client) (IstioFeatures, error) {

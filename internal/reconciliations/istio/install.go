@@ -116,7 +116,7 @@ func installIstio(ctx context.Context, args installArgs) (istiooperator.IstioIma
 	}
 
 	if err = patchModuleResourcesWithModuleLabel(ctx, k8sClient); err != nil {
-		return istioImageVersion, describederrors.NewDescribedError(err, "could not update managed metadata")
+		ctrl.Log.Info("Error occurred when patching module resources with label", "error", err)
 	}
 
 	err = gatherer.VerifyIstioPodsVersion(ctx, k8sClient, istioImageVersion.Version())

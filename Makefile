@@ -287,7 +287,11 @@ module-version:
 
 .PHONY: install-dualstack-prerequisites
 install-dualstack-prerequisites:
-	./hack/ci/gardener/configurations/aws-dualstack/prerequisites.sh
+	printf 'networkDetails:\n  dualStackIPEnabled: true\n' \
+	  | kubectl create configmap -n kyma-system kyma-provisioning-info \
+		  --from-file=details=/dev/stdin \
+		  --dry-run=client -o yaml \
+	  | kubectl apply -f -
 
 ########## Docs generation ###########
 bin/crd-ref-docs:

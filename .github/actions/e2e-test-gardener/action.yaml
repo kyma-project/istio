@@ -60,6 +60,7 @@ runs:
         # Drives ipfamily.From() -> DialNetworks(); the make target
         # inherits it via the shell, no Makefile change required.
         TEST_IP_FAMILY: ${{ inputs.test_ip_family }}
+        GARDENER_IP_STACK: ${{ inputs.gardener_ip_stack }}
       run: EXPORT_RESULT=true "${{ github.workspace }}/hack/ci/integration-test-gardener.sh" ${{ inputs.test_make_target }}
     - name: Gather deployment logs
       shell: bash

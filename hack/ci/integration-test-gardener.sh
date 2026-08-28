@@ -53,13 +53,6 @@ echo "Make target: $make_target"
 echo "Executing tests in cluster ${CLUSTER_NAME}, kubeconfig ${CLUSTER_KUBECONFIG}"
 export KUBECONFIG="${CLUSTER_KUBECONFIG}"
 
-
-# mechanism to provide configuration of environment which is bind strictly with provisioning BTP dependencies on Gardener
-if [ -f "${script_dir}/gardener/configurations/${GARDENER_PROVIDER}-${GARDENER_IP_STACK}/prerequisites.sh" ]; then
-    echo "Installing prerequisites"
-    source "${script_dir}/gardener/configurations/${GARDENER_PROVIDER}-${GARDENER_IP_STACK}/prerequisites.sh"
-fi
-
 export CLUSTER_DOMAIN=$(kubectl get configmap -n kube-system shoot-info -o jsonpath="{.data.domain}")
 echo "Cluster domain: ${CLUSTER_DOMAIN}"
 
@@ -67,6 +60,18 @@ export GARDENER_PROVIDER=$(kubectl get configmap -n kube-system shoot-info -o js
 echo "Gardener provider: ${GARDENER_PROVIDER}"
 
 export TEST_DOMAIN="${CLUSTER_DOMAIN}"
+
+echo "Creating kyma-system namespace and kyma-provisioning-info configmap "
+
+kubectl create namespace kyma-system --dry-run=client -o yaml | kubectl apply -f -
+kubectl label namespace kyma-system istio-injection=enabled --overwrite
+
+[[ "${GARDENER_IP_STACK}" == "dualstack" ]] && DUAL_STACK_ENABLED="true" || DUAL_STACK_ENABLED="false"
+
+kubectl create configmap -n kyma-system kyma-provisioning-info --from-file=details=/dev/stdin --dry-run=client -o yaml << 'EOF' | kubectl apply -f -
+networkDetails:
+  dualStackIPEnabled: ${DUAL_STACK_ENABLED}
+EOF
 
 # Add pwd to path to be able to use binaries downloaded in scripts
 export PATH="${PATH}:${PWD}"

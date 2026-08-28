@@ -63,7 +63,7 @@ spec:
         image: controller:latest
         name: manager
         securityContext:
-          # readOnlyRootFilesystem: true
+          readOnlyRootFilesystem: true
           allowPrivilegeEscalation: false
           capabilities:
             drop:
@@ -80,6 +80,9 @@ spec:
             port: 8081
           initialDelaySeconds: 5
           periodSeconds: 10
+        volumeMounts:
+          - mountPath: "/tmp"
+            name: tmpdir
         # TODO(user): Configure the resources accordingly based on the project requirements.
         # More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
         resources:
@@ -89,5 +92,8 @@ spec:
           requests:
             cpu: 10m
             memory: 64Mi
+      volumes:
+        - name: tmpdir
+          emptyDir: {}
       serviceAccountName: controller-manager
       terminationGracePeriodSeconds: 10

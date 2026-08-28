@@ -36,7 +36,6 @@ requiredVars=(
     CLUSTER_KUBECONFIG
     TEST_IP_FAMILY
     GARDENER_PROVIDER
-    GARDENER_IP_STACK
 )
 
 check_required_vars "${requiredVars[@]}"
@@ -61,24 +60,14 @@ echo "Gardener provider: ${GARDENER_PROVIDER}"
 
 export TEST_DOMAIN="${CLUSTER_DOMAIN}"
 
-echo "Creating kyma-system namespace and kyma-provisioning-info configmap "
-
-kubectl create namespace kyma-system --dry-run=client -o yaml | kubectl apply -f -
-kubectl label namespace kyma-system istio-injection=enabled --overwrite
-
-[[ "${GARDENER_IP_STACK}" == "dualstack" ]] && DUAL_STACK_ENABLED="true" || DUAL_STACK_ENABLED="false"
-
-kubectl create configmap -n kyma-system kyma-provisioning-info --from-file=details=/dev/stdin --dry-run=client -o yaml << 'EOF' | kubectl apply -f -
-networkDetails:
-  dualStackIPEnabled: ${DUAL_STACK_ENABLED}
-EOF
-
 # Add pwd to path to be able to use binaries downloaded in scripts
 export PATH="${PATH}:${PWD}"
 
+echo "Creating kyma-system namespace and kyma-provisioning-info configmap"
+make install-kyma-provisioning-info
+
 echo "Deploying Istio module, image: ${IMG}"
 make deploy
-
 
 echo "Executing tests..."
 echo "Executing make target $make_target"

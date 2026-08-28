@@ -23,9 +23,6 @@ permissions:
 env:
   IMAGE_NAME: "istio-manager"
   LABEL_NAME: "dualstack"
-  # Fixed for this workflow — IPv4 is exercised by the standard PR gate,
-  # so there is no reason to run this pipeline in any other mode.
-  TEST_IP_FAMILY: "dualstack"
 
 jobs:
   # PR events fire on every synchronize regardless of labels; gate the
@@ -106,13 +103,15 @@ jobs:
           - "dnsproxying-e2e-test"
     steps:
       - uses: actions/checkout@v7
-      - uses: ./.github/actions/e2e-test-gardener-dualstack
+      - uses: ./.github/actions/e2e-test-gardener
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           manager_image: ${{ needs.get-image.outputs.image }}
           gardener_secret: ${{ secrets.GARDENER_TOKEN }}
           gardener_project_name: ${{ vars.GARDENER_PROJECT_NAME }}
+          gardener_provider: aws
+          gardener_ip_stack: dualstack
           test_make_target: ${{ matrix.test_make_target }}
-          test_ip_family: ${{ env.TEST_IP_FAMILY }}
+          test_ip_family: ipv4 # ipv6 is not available now on gh runners, when it will be possible change to dualstack
           operator_version: ${{ needs.get-image.outputs.operator_version }}

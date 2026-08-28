@@ -258,7 +258,9 @@ jobs:
           gardener_secret: ${{ secrets.GARDENER_TOKEN }}
           gardener_project_name: ${{ vars.GARDENER_PROJECT_NAME }}
           gardener_provider: aws
+          gardener_ip_stack: ipv4
           test_make_target: ${{ matrix.test_make_target }}
+          test_ip_family: ipv4
           operator_version: ${{ needs.get-image.outputs.operator_version }}
 
   istio-e2e-test-gcp:
@@ -286,6 +288,8 @@ jobs:
           gardener_secret: ${{ secrets.GARDENER_TOKEN }}
           gardener_project_name: ${{ vars.GARDENER_PROJECT_NAME }}
           gardener_provider: gcp
+          gardener_ip_stack: ipv4
+          test_ip_family: ipv4
           test_make_target: ${{ matrix.test_make_target }}
           operator_version: ${{ needs.get-image.outputs.operator_version }}
 

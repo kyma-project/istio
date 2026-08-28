@@ -6,6 +6,7 @@
 # - IMG - Istio module image to be deployed (by make deploy)
 # - CLUSTER_NAME - Gardener cluster name
 # - CLUSTER_KUBECONFIG - Gardener cluster kubeconfig path
+# - TEST_IP_FAMILY - Tests can be run to check (ipv4|ipv6|dualstack)
 
 set -eo pipefail
 
@@ -31,6 +32,7 @@ requiredVars=(
     IMG
     CLUSTER_NAME
     CLUSTER_KUBECONFIG
+    TEST_IP_FAMILY
 )
 
 check_required_vars "${requiredVars[@]}"

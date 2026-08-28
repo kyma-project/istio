@@ -127,5 +127,16 @@ kubectl create  --kubeconfig "${GARDENER_KUBECONFIG}" \
     jq -r ".status.kubeconfig" | \
     base64 -d > "${CLUSTER_KUBECONFIG}"
 
+echo "Create kyma-system namespace"
+kubectl --kubeconfig "${CLUSTER_KUBECONFIG}" create namespace kyma-system --dry-run=client -o yaml | kubectl apply -f -
+kubectl --kubeconfig "${CLUSTER_KUBECONFIG}" label namespace kyma-system istio-injection=enabled --overwrite
+
+echo "Create kyma-provisioning-info configmap"
+[[ "${GARDENER_IP_STACK}" == "dualstack" ]] && DUAL_STACK_ENABLED="true" || DUAL_STACK_ENABLED="false"
+kubectl --kubeconfig "${CLUSTER_KUBECONFIG}" create configmap -n kyma-system kyma-provisioning-info --from-file=details=/dev/stdin --dry-run=client -o yaml << 'EOF' | kubectl apply -f -
+networkDetails:
+  dualStackIPEnabled: ${DUAL_STACK_ENABLED}
+EOF
+
 echo "Shoot provisioning finished"
 echo "::endgroup::"

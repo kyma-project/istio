@@ -285,6 +285,10 @@ deploy-latest-release: create-kyma-system-ns
 module-version:
 	sed 's/VERSION/$(VERSION)/g' config/default/kustomization.template.yaml > config/default/kustomization.yaml
 
+.PHONY: install-dualstack-prerequisites
+install-dualstack-prerequisites:
+	./hack/ci/gardener/configurations/aws-dualstack/prerequisites.sh
+
 ########## Docs generation ###########
 bin/crd-ref-docs:
 	mkdir -p bin

@@ -10,6 +10,8 @@
 
 set -eo pipefail
 
+script_dir="$(dirname "$(readlink -f "$0")")"
+
 if [ $# -lt 1 ]; then
     >&2 echo "Make target is required as parameter"
     exit 1
@@ -33,6 +35,8 @@ requiredVars=(
     CLUSTER_NAME
     CLUSTER_KUBECONFIG
     TEST_IP_FAMILY
+    GARDENER_PROVIDER
+    GARDENER_IP_STACK
 )
 
 check_required_vars "${requiredVars[@]}"
@@ -48,6 +52,13 @@ echo "Make target: $make_target"
 
 echo "Executing tests in cluster ${CLUSTER_NAME}, kubeconfig ${CLUSTER_KUBECONFIG}"
 export KUBECONFIG="${CLUSTER_KUBECONFIG}"
+
+
+# mechanism to provide configuration of environment which is bind strictly with provisioning BTP dependencies on Gardener
+if [ -f "${script_dir}/gardener/configurations/${GARDENER_PROVIDER}-${GARDENER_IP_STACK}/prerequisites.sh" ]; then
+    echo "Installing prerequisites"
+    source "${script_dir}/gardener/configurations/${GARDENER_PROVIDER}-${GARDENER_IP_STACK}/prerequisites.sh"
+fi
 
 export CLUSTER_DOMAIN=$(kubectl get configmap -n kube-system shoot-info -o jsonpath="{.data.domain}")
 echo "Cluster domain: ${CLUSTER_DOMAIN}"

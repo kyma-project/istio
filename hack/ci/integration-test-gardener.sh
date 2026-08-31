@@ -80,7 +80,7 @@ kubectl label namespace kyma-system istio-injection=enabled --overwrite
 
 [[ "${GARDENER_IP_STACK}" == "dualstack" ]] && DUAL_STACK_ENABLED="true" || DUAL_STACK_ENABLED="false"
 
-kubectl create configmap -n kyma-system kyma-provisioning-info --from-file=details=/dev/stdin --dry-run=client -o yaml << 'EOF' | kubectl apply -f -
+kubectl create configmap -n kyma-system kyma-provisioning-info --from-file=details=/dev/stdin --dry-run=client -o yaml << EOF | kubectl apply -f -
 networkDetails:
   dualStackIPEnabled: ${DUAL_STACK_ENABLED}
 EOF

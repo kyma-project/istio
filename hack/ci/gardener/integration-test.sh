@@ -75,15 +75,9 @@ export TEST_DOMAIN="${CLUSTER_DOMAIN}"
 
 echo "Creating kyma-system namespace and kyma-provisioning-info configmap "
 
-kubectl create namespace kyma-system --dry-run=client -o yaml | kubectl apply -f -
-kubectl label namespace kyma-system istio-injection=enabled --overwrite
-
 [[ "${GARDENER_IP_STACK}" == "dualstack" ]] && DUAL_STACK_ENABLED="true" || DUAL_STACK_ENABLED="false"
 
-kubectl create configmap -n kyma-system kyma-provisioning-info --from-file=details=/dev/stdin --dry-run=client -o yaml << EOF | kubectl apply -f -
-networkDetails:
-  dualStackIPEnabled: ${DUAL_STACK_ENABLED}
-EOF
+make create-provisioning-info DUAL_STACK_ENABLED="${DUAL_STACK_ENABLED}"
 
 # Add pwd to path to be able to use binaries downloaded in scripts
 export PATH="${PATH}:${PWD}"

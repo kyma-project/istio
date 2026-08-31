@@ -285,9 +285,11 @@ deploy-latest-release: create-kyma-system-ns
 module-version:
 	sed 's/VERSION/$(VERSION)/g' config/default/kustomization.template.yaml > config/default/kustomization.yaml
 
-.PHONY: install-dualstack-prerequisites
-install-dualstack-prerequisites:
-	printf 'networkDetails:\n  dualStackIPEnabled: true\n' \
+DUAL_STACK_ENABLED ?= true
+
+.PHONY: create-provisioning-info
+create-provisioning-info: create-kyma-system-ns
+	printf 'networkDetails:\n  dualStackIPEnabled: %s\n' "$(DUAL_STACK_ENABLED)" \
 	  | kubectl create configmap -n kyma-system kyma-provisioning-info \
 		  --from-file=details=/dev/stdin \
 		  --dry-run=client -o yaml \

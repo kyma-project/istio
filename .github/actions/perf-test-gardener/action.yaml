@@ -26,7 +26,7 @@ runs:
       shell: bash
       env:
         GARDENER_TOKEN: ${{ inputs.gardener_secret }}
-      run: "${{ github.workspace }}/hack/ci/gardener_kubeconfig.sh"
+      run: "${{ github.workspace }}/hack/ci/gardener/kubeconfig.sh"
     - name: Provision cluster
       shell: bash
       env:
@@ -35,13 +35,13 @@ runs:
         PRESET_NAME: ${{ inputs.preset_name }}
         GARDENER_PROJECT_NAME: ${{ inputs.gardener_project_name }}
         PIPELINE_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}
-      run: "${{ github.workspace }}/hack/ci/provision-gardener.sh"
+      run: "${{ github.workspace }}/hack/ci/gardener/provision.sh"
     - name: Run performance tests
       shell: bash
       env:
         IMG: ${{ inputs.manager_image }}
         CLUSTER_KUBECONFIG: "${{ github.workspace }}/${{ env.CLUSTER_NAME }}_kubeconfig.yaml"
-      run: EXPORT_RESULT=true "${{ github.workspace }}/hack/ci/performance-test-gardener.sh"
+      run: EXPORT_RESULT=true "${{ github.workspace }}/hack/ci/gardener/performance-test.sh"
     - uses: actions/upload-artifact@v4
       if: always()
       name: Export no sidecar summary
@@ -68,4 +68,4 @@ runs:
       env:
         GARDENER_KUBECONFIG: "${{ github.workspace }}/gardener_kubeconfig.yaml"
         GARDENER_PROJECT_NAME: ${{ inputs.gardener_project_name }}
-      run: "${{ github.workspace }}/hack/ci/deprovision-gardener.sh"
+      run: "${{ github.workspace }}/hack/ci/gardener/deprovision.sh"

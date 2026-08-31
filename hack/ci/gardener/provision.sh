@@ -6,10 +6,10 @@
 # - CLUSTER_KUBECONFIG - target path where the kubeconfig of the newly created cluster is stored
 # - GARDENER_KUBECONFIG - Gardener kubeconfig path
 # - PRESET_NAME - name of the preset to provision; selects the config directory
-#   gardener/configurations/${PRESET_NAME} holding vars.sh and shoot.yaml
+#   configurations/${PRESET_NAME} holding vars.sh and shoot.yaml
 # - GARDENER_PROJECT_NAME - name of the Gardener project
 # Other variables (provider, IP stack, region, machine type, ...) are loaded
-# from gardener/configurations/${PRESET_NAME}/vars.sh
+# from configurations/${PRESET_NAME}/vars.sh
 
 set -eo pipefail
 echo "::group::Provision Gardener cluster"
@@ -45,7 +45,7 @@ function check_required_files() {
 }
 
 check_required_vars PRESET_NAME
-preset_dir="${script_dir}/gardener/configurations/${PRESET_NAME}"
+preset_dir="${script_dir}/configurations/${PRESET_NAME}"
 if [ ! -f "${preset_dir}/vars.sh" ]; then
     >&2 echo "File '${preset_dir}/vars.sh' required but not found"
     echo "::endgroup::"

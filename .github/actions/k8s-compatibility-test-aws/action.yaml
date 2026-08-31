@@ -37,7 +37,7 @@ runs:
       shell: bash
       env:
         GARDENER_TOKEN: ${{ inputs.gardener_secret }}
-      run: "${{ github.workspace }}/hack/ci/gardener_kubeconfig.sh"
+      run: "${{ github.workspace }}/hack/ci/gardener/kubeconfig.sh"
     - name: Provision cluster
       shell: bash
       env:
@@ -46,7 +46,7 @@ runs:
         PRESET_NAME: ${{ inputs.preset_name }}
         GARDENER_PROJECT_NAME: ${{ inputs.gardener_project_name }}
         PIPELINE_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}
-      run: "${{ github.workspace }}/hack/ci/provision-gardener.sh"
+      run: "${{ github.workspace }}/hack/ci/gardener/provision.sh"
     - name: Run integration tests
       shell: bash
       env:
@@ -57,7 +57,7 @@ runs:
         # inherits it via the shell, no Makefile change required.
         TEST_IP_FAMILY: ${{ inputs.test_ip_family }}
         PRESET_NAME: ${{ inputs.preset_name }}
-      run: EXPORT_RESULT=true "${{ github.workspace }}/hack/ci/integration-test-gardener.sh" ${{ inputs.test_make_target }}
+      run: EXPORT_RESULT=true "${{ github.workspace }}/hack/ci/gardener/integration-test.sh" ${{ inputs.test_make_target }}
     - name: Check deprecations
       run: |
         set -eou pipefail
@@ -83,4 +83,4 @@ runs:
       env:
         GARDENER_KUBECONFIG: "${{ github.workspace }}/gardener_kubeconfig.yaml"
         GARDENER_PROJECT_NAME: ${{ inputs.gardener_project_name }}
-      run: "${{ github.workspace }}/hack/ci/deprovision-gardener.sh"
+      run: "${{ github.workspace }}/hack/ci/gardener/deprovision.sh"

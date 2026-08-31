@@ -1,5 +1,5 @@
 # Variables for e2e/integration tests on a Gardener AWS ipv4 shoot.
-# Auto-loaded by provision-gardener.sh / integration-test-gardener.sh when
+# Auto-loaded by provision.sh / integration-test.sh when
 # PRESET_NAME=aws-ipv4.
 
 MACHINE_TYPE="m5.xlarge"

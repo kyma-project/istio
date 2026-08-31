@@ -7,7 +7,7 @@
 # - CLUSTER_NAME - Gardener cluster name
 # - CLUSTER_KUBECONFIG - Gardener cluster kubeconfig path
 # - PRESET_NAME - provisioning preset; provides GARDENER_PROVIDER / GARDENER_IP_STACK
-#   via gardener/configurations/${PRESET_NAME}/vars.sh
+#   via configurations/${PRESET_NAME}/vars.sh
 # - TEST_IP_FAMILY - Tests can be run to check (ipv4|ipv6|dualstack)
 
 set -eo pipefail
@@ -44,7 +44,7 @@ check_required_vars "${requiredVars[@]}"
 
 # Load provider / IP stack from the same preset used to provision the cluster,
 # so provisioning and test-time selection share a single source of truth.
-preset_vars="${script_dir}/gardener/configurations/${PRESET_NAME}/vars.sh"
+preset_vars="${script_dir}/configurations/${PRESET_NAME}/vars.sh"
 if [ ! -f "${preset_vars}" ]; then
     >&2 echo "File '${preset_vars}' required but not found"
     exit 2

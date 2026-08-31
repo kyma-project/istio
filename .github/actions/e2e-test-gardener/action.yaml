@@ -7,12 +7,9 @@ inputs:
   gardener_secret:
     description: "Kubeconfig secret for Gardener"
     required: true
-  gardener_provider:
-    description: "Gardener provider to use"
+  preset_name:
+    description: "Provisioning preset (selects gardener/configurations/<preset_name>)"
     required: true
-  gardener_ip_stack:
-    description: "Gardener shoot ip stack (ipv4|ipv6|dualstack)"
-    default: ipv4
   gardener_project_name:
     required: true
     description: "Name of the gardener project"
@@ -46,8 +43,7 @@ runs:
       env:
         GARDENER_KUBECONFIG: "${{ github.workspace }}/gardener_kubeconfig.yaml"
         CLUSTER_KUBECONFIG: "${{ github.workspace }}/${{ env.CLUSTER_NAME }}_kubeconfig.yaml"
-        GARDENER_PROVIDER: ${{ inputs.gardener_provider }}
-        GARDENER_IP_STACK: ${{ inputs.gardener_ip_stack }}
+        PRESET_NAME: ${{ inputs.preset_name }}
         GARDENER_PROJECT_NAME: ${{ inputs.gardener_project_name }}
         PIPELINE_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}
       run: "${{ github.workspace }}/hack/ci/provision-gardener.sh"
@@ -60,7 +56,7 @@ runs:
         # Drives ipfamily.From() -> DialNetworks(); the make target
         # inherits it via the shell, no Makefile change required.
         TEST_IP_FAMILY: ${{ inputs.test_ip_family }}
-        GARDENER_IP_STACK: ${{ inputs.gardener_ip_stack }}
+        PRESET_NAME: ${{ inputs.preset_name }}
       run: EXPORT_RESULT=true "${{ github.workspace }}/hack/ci/integration-test-gardener.sh" ${{ inputs.test_make_target }}
     - name: Gather deployment logs
       shell: bash
@@ -78,7 +74,7 @@ runs:
     - name: Uploads artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: html-reports_${{ github.job }}_${{ github.run_id }}_${{ inputs.test_make_target }}_${{ inputs.gardener_provider }}
+        name: html-reports_${{ github.job }}_${{ github.run_id }}_${{ inputs.test_make_target }}_${{ inputs.preset_name }}
         path: tests/integration/reports/
     - name: Upload artifacts - proxy config dumps
       if: always()

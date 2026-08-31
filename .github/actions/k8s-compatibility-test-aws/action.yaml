@@ -7,12 +7,9 @@ inputs:
   gardener_secret:
     description: "Kubeconfig secret for Gardener"
     required: true
-  gardener_provider:
-    description: "Gardener provider to use"
-    required: true
-  gardener_ip_stack:
-    description: "Gardener shoot ip stack (ipv4|ipv6|dualstack)"
-    default: ipv4
+  preset_name:
+    description: "Provisioning preset (selects gardener/configurations/<preset_name>)"
+    default: aws-ipv4-compatibility
   gardener_project_name:
     required: true
     description: "Name of the gardener project"
@@ -46,11 +43,9 @@ runs:
       env:
         GARDENER_KUBECONFIG: "${{ github.workspace }}/gardener_kubeconfig.yaml"
         CLUSTER_KUBECONFIG: "${{ github.workspace }}/${{ env.CLUSTER_NAME }}_kubeconfig.yaml"
-        GARDENER_PROVIDER: ${{ inputs.gardener_provider }}
-        GARDENER_IP_STACK: ${{ inputs.gardener_ip_stack }}
+        PRESET_NAME: ${{ inputs.preset_name }}
         GARDENER_PROJECT_NAME: ${{ inputs.gardener_project_name }}
         PIPELINE_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}
-        COMPATIBILITY_TEST: "true"
       run: "${{ github.workspace }}/hack/ci/provision-gardener.sh"
     - name: Run integration tests
       shell: bash
@@ -61,7 +56,7 @@ runs:
         # Drives ipfamily.From() -> DialNetworks(); the make target
         # inherits it via the shell, no Makefile change required.
         TEST_IP_FAMILY: ${{ inputs.test_ip_family }}
-        GARDENER_IP_STACK: ${{ inputs.gardener_ip_stack }}
+        PRESET_NAME: ${{ inputs.preset_name }}
       run: EXPORT_RESULT=true "${{ github.workspace }}/hack/ci/integration-test-gardener.sh" ${{ inputs.test_make_target }}
     - name: Check deprecations
       run: |

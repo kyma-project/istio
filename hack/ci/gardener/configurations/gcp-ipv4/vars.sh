@@ -1,5 +1,6 @@
-# This file contains variables for integration tests run on a Gardener in GCP
-# It is automatically loaded by provision-gardener.sh and deprovision-gardener.sh
+# Variables for integration tests run on a Gardener GCP ipv4 shoot.
+# Auto-loaded by provision-gardener.sh / integration-test-gardener.sh when
+# PRESET_NAME=gcp-ipv4.
 
 MACHINE_TYPE="n2-standard-4"
 DISK_SIZE=50

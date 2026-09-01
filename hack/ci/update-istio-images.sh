@@ -19,38 +19,43 @@ registry_auth_token() {
   [ -n "${REGCERT_JSON:-}" ] || return 1
   echo "${REGCERT_JSON}" | jq -e '.client_email' >/dev/null 2>&1 || {
     echo "Warning: no client_email in REGCERT_JSON" >&2; return 1; }
-  printf '_json_key:%s\n' "${REGCERT_JSON}" | base64
+  printf '_json_key:%s' "${REGCERT_JSON}" | base64 | tr -d '\n'
 }
 
 registry_tags() {
-  local registry="${1%%/*}" path="${1#*/}" opts=(-fsSL -w '%{http_code}') token resp code
+  local registry="${1%%/*}" path="${1#*/}" opts=(-sSL -w '%{http_code}') token resp code url
+  url="https://${registry}/v2/${path}/tags/list"
   if [ -n "${REGCERT_JSON:-}" ]; then
     token="$(registry_auth_token 2>/dev/null)" || true
     [ -n "${token}" ] && opts+=(-H "Authorization: Basic ${token}")
   fi
-  resp="$(curl "${opts[@]}" "https://${registry}/v2/${path}/tags/list" 2>/dev/null)" || true
+  resp="$(curl "${opts[@]}" "${url}" 2>/dev/null)" || true
   code="${resp: -3}"
   if [ "${code}" != "200" ]; then
-    echo "Warning: failed to fetch tags from ${registry}/${path} (HTTP ${code})" >&2
+    echo "Warning: failed to fetch tags (HTTP ${code}) from ${url}" >&2
     return 1
   fi
   echo "${resp%???}" | jq -r '.tags[]?' 2>/dev/null || true
 }
 
-fetch_pilot_tags() {
+fetch_pilot_tags_for_minor() {
   local minor="$1"
-  local url="https://hub.docker.com/v2/repositories/istio/pilot/tags?page_size=100&name=${minor}." page
+  local url="https://hub.docker.com/v2/repositories/istio/pilot/tags?page_size=100&name=${minor}."
+  local page code body
   while [ -n "${url}" ]; do
-    if ! page="$(curl -fsSL "${url}" 2>/dev/null)"; then
-      echo "Warning: failed to fetch pilot tags from ${url}" >&2
-      break
+    page="$(curl -sSL -w '\n%{http_code}' "${url}" 2>/dev/null)" || true
+    code="${page##*$'\n'}"
+    body="${page%$'\n'*}"
+    if [ "${code}" != "200" ]; then
+      echo "Warning: failed to fetch pilot tags for minor ${minor} (HTTP ${code}) from ${url}" >&2
+      return 1
     fi
-    if echo "${page}" | jq -e '.message' >/dev/null 2>&1; then
-      echo "Warning: Docker Hub error for ${minor}: $(echo "${page}" | jq -r '.message')" >&2
-      break
+    if echo "${body}" | jq -e '.message' >/dev/null 2>&1; then
+      echo "Warning: Docker Hub error for minor ${minor}: $(echo "${body}" | jq -r '.message')" >&2
+      return 1
     fi
-    echo "${page}" | jq -r '.results[].name'
-    url="$(echo "${page}" | jq -r '.next // empty')"
+    echo "${body}" | jq -r '.results[].name'
+    url="$(echo "${body}" | jq -r '.next // empty')"
   done
 }
 
@@ -62,11 +67,11 @@ highest_rev() { sed -nE "s/^${1//./\\.}-([0-9]+)\$/\1/p" | sort -n | tail -1; }
 img_count() { yq '.images | length' "$1"; }
 
 build_latest_patch_map() {
-  local minor patch pilot_tags
+  local minor patch tags
   for minor in $(yq -r '.images[].source' external-images.yaml \
       | sed -nE 's#^istio/[^:]+:([0-9]+\.[0-9]+)\.[0-9]+-distroless$#\1#p' | sort -u); do
-    mapfile -t pilot_tags < <(fetch_pilot_tags "${minor}")
-    patch="$(printf '%s\n' "${pilot_tags[@]}" | highest_num "${minor}" '-distroless')"
+    tags="$(fetch_pilot_tags_for_minor "${minor}")" || continue
+    patch="$(printf '%s\n' "${tags}" | highest_num "${minor}" '-distroless')"
     [ -n "${patch}" ] && LATEST_PATCH_BY_MINOR["${minor}"]="${minor}.${patch}"
   done
 }

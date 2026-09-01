@@ -7,8 +7,8 @@ inputs:
   gardener_secret:
     description: "Kubeconfig secret for Gardener"
     required: true
-  gardener_configuration_preset:
-    description: "Provisioning preset (selects gardener/configurations/<gardener_configuration_preset>)"
+  gardener_configuration:
+    description: "Provisioning preset (selects gardener/configurations/<gardener_configuration>)"
     required: true
   gardener_project_name:
     required: true
@@ -43,7 +43,7 @@ runs:
       env:
         GARDENER_KUBECONFIG: "${{ github.workspace }}/gardener_kubeconfig.yaml"
         CLUSTER_KUBECONFIG: "${{ github.workspace }}/${{ env.CLUSTER_NAME }}_kubeconfig.yaml"
-        GARDENER_CONFIGURATION_PRESET: ${{ inputs.gardener_configuration_preset }}
+        GARDENER_CONFIGURATION: ${{ inputs.gardener_configuration }}
         GARDENER_PROJECT_NAME: ${{ inputs.gardener_project_name }}
         PIPELINE_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}
       run: "${{ github.workspace }}/hack/ci/gardener/provision.sh"
@@ -56,7 +56,7 @@ runs:
         # Drives ipfamily.From() -> DialNetworks(); the make target
         # inherits it via the shell, no Makefile change required.
         TEST_IP_FAMILY: ${{ inputs.test_ip_family }}
-        GARDENER_CONFIGURATION_PRESET: ${{ inputs.gardener_configuration_preset }}
+        GARDENER_CONFIGURATION: ${{ inputs.gardener_configuration }}
       run: EXPORT_RESULT=true "${{ github.workspace }}/hack/ci/gardener/integration-test.sh" ${{ inputs.test_make_target }}
     - name: Gather deployment logs
       shell: bash
@@ -74,7 +74,7 @@ runs:
     - name: Uploads artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: html-reports_${{ github.job }}_${{ github.run_id }}_${{ inputs.test_make_target }}_${{ inputs.gardener_configuration_preset }}
+        name: html-reports_${{ github.job }}_${{ github.run_id }}_${{ inputs.test_make_target }}_${{ inputs.gardener_configuration }}
         path: tests/integration/reports/
     - name: Upload artifacts - proxy config dumps
       if: always()

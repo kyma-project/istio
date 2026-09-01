@@ -1,6 +1,6 @@
 # Variables for the Kubernetes version compatibility check on a Gardener AWS
 # ipv4 shoot. Auto-loaded by provision.sh / integration-test.sh
-# when GARDENER_CONFIGURATION_PRESET=aws-ipv4-compatibility. Same shoot as aws-ipv4, but pinned to
+# when GARDENER_CONFIGURATION=aws-ipv4-compatibility. Same shoot as aws-ipv4, but pinned to
 # a newer Kubernetes version to catch upcoming-version breakages early.
 
 MACHINE_TYPE="m5.xlarge"

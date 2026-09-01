@@ -80,7 +80,7 @@ jobs:
           manager_image: ${{ needs.get-image.outputs.image }}
           gardener_secret: ${{ secrets.GARDENER_TOKEN }}
           gardener_project_name: ${{ vars.GARDENER_PROJECT_NAME }}
-          gardener_configuration_preset: aws-dualstack
+          gardener_configuration: aws-dualstack
           test_make_target: ${{ matrix.test_make_target }}
           test_ip_family: ipv4 # ipv6 is not available now on gh runners, when it will be possible change to dualstack
           operator_version: ${{ needs.get-image.outputs.operator_version }}

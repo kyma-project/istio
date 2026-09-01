@@ -6,8 +6,8 @@
 # - IMG - Istio module image to be deployed (by make deploy)
 # - CLUSTER_NAME - Gardener cluster name
 # - CLUSTER_KUBECONFIG - Gardener cluster kubeconfig path
-# - GARDENER_CONFIGURATION_PRESET - provisioning preset; provides GARDENER_PROVIDER / GARDENER_IP_STACK
-#   via configurations/${GARDENER_CONFIGURATION_PRESET}/vars.sh
+# - GARDENER_CONFIGURATION - provisioning preset; provides GARDENER_PROVIDER / GARDENER_IP_STACK
+#   via configurations/${GARDENER_CONFIGURATION}/vars.sh
 # - TEST_IP_FAMILY - Tests can be run to check (ipv4|ipv6|dualstack)
 
 set -eo pipefail
@@ -37,14 +37,14 @@ requiredVars=(
     CLUSTER_NAME
     CLUSTER_KUBECONFIG
     TEST_IP_FAMILY
-    GARDENER_CONFIGURATION_PRESET
+    GARDENER_CONFIGURATION
 )
 
 check_required_vars "${requiredVars[@]}"
 
 # Load provider / IP stack from the same preset used to provision the cluster,
 # so provisioning and test-time selection share a single source of truth.
-preset_vars="${script_dir}/configurations/${GARDENER_CONFIGURATION_PRESET}/vars.sh"
+preset_vars="${script_dir}/configurations/${GARDENER_CONFIGURATION}/vars.sh"
 if [ ! -f "${preset_vars}" ]; then
     >&2 echo "File '${preset_vars}' required but not found"
     exit 2

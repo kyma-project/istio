@@ -1,6 +1,6 @@
 # Variables for integration tests run on a Gardener GCP ipv4 shoot.
 # Auto-loaded by provision.sh / integration-test.sh when
-# PRESET_NAME=gcp-ipv4.
+# GARDENER_CONFIGURATION_PRESET=gcp-ipv4.
 
 MACHINE_TYPE="n2-standard-4"
 DISK_SIZE=50

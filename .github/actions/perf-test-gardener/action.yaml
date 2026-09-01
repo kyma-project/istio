@@ -7,8 +7,8 @@ inputs:
   gardener_secret:
     description: "Kubeconfig secret for Gardener"
     required: true
-  preset_name:
-    description: "Provisioning preset (selects gardener/configurations/<preset_name>)"
+  gardener_configuration_preset:
+    description: "Provisioning preset (selects gardener/configurations/<gardener_configuration_preset>)"
     required: true
   gardener_project_name:
     required: true
@@ -32,7 +32,7 @@ runs:
       env:
         GARDENER_KUBECONFIG: "${{ github.workspace }}/gardener_kubeconfig.yaml"
         CLUSTER_KUBECONFIG: "${{ github.workspace }}/${{ env.CLUSTER_NAME }}_kubeconfig.yaml"
-        PRESET_NAME: ${{ inputs.preset_name }}
+        GARDENER_CONFIGURATION_PRESET: ${{ inputs.gardener_configuration_preset }}
         GARDENER_PROJECT_NAME: ${{ inputs.gardener_project_name }}
         PIPELINE_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}
       run: "${{ github.workspace }}/hack/ci/gardener/provision.sh"

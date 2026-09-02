@@ -1,5 +1,5 @@
-name: 'Kubernetes version compatibility check'
-description: 'Runs Kubernetes version compatibility check'
+name: 'Kubernetes version compatibility check on Gardener'
+description: 'Runs Kubernetes version compatibility check on Gardener'
 inputs:
   manager_image:
     description: "Manager image used for test"
@@ -7,9 +7,9 @@ inputs:
   gardener_secret:
     description: "Kubeconfig secret for Gardener"
     required: true
-  gardener_provider:
-    description: "Gardener provider to use"
-    required: true
+  gardener_configuration:
+    description: "Provisioning preset (selects gardener/configurations/<gardener_configuration>)"
+    default: aws-ipv4-compatibility
   gardener_project_name:
     required: true
     description: "Name of the gardener project"
@@ -19,6 +19,10 @@ inputs:
   operator_version:
     description: 'Version of the operator image'
     required: true
+  test_ip_family:
+    description: 'Value passed to TEST_IP_FAMILY (ipv4|ipv6|dualstack)'
+    required: false
+    default: 'ipv4'
 
 runs:
   using: "composite"
@@ -33,24 +37,27 @@ runs:
       shell: bash
       env:
         GARDENER_TOKEN: ${{ inputs.gardener_secret }}
-      run: "${{ github.workspace }}/hack/ci/gardener_kubeconfig.sh"
+      run: "${{ github.workspace }}/hack/ci/gardener/kubeconfig.sh"
     - name: Provision cluster
       shell: bash
       env:
         GARDENER_KUBECONFIG: "${{ github.workspace }}/gardener_kubeconfig.yaml"
         CLUSTER_KUBECONFIG: "${{ github.workspace }}/${{ env.CLUSTER_NAME }}_kubeconfig.yaml"
-        GARDENER_PROVIDER: ${{ inputs.gardener_provider }}
+        GARDENER_CONFIGURATION: ${{ inputs.gardener_configuration }}
         GARDENER_PROJECT_NAME: ${{ inputs.gardener_project_name }}
         PIPELINE_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}
-        COMPATIBILITY_TEST: "true"
-      run: "${{ github.workspace }}/hack/ci/provision-gardener.sh"
+      run: "${{ github.workspace }}/hack/ci/gardener/provision.sh"
     - name: Run integration tests
       shell: bash
       env:
         IMG: ${{ inputs.manager_image }}
-        OPERATOR_VERSION: ${{ inputs.operator_version }}
         CLUSTER_KUBECONFIG: "${{ github.workspace }}/${{ env.CLUSTER_NAME }}_kubeconfig.yaml"
-      run: EXPORT_RESULT=true "${{ github.workspace }}/hack/ci/integration-test-gardener.sh" ${{ inputs.test_make_target }}
+        OPERATOR_VERSION: ${{ inputs.operator_version }}
+        # Drives ipfamily.From() -> DialNetworks(); the make target
+        # inherits it via the shell, no Makefile change required.
+        TEST_IP_FAMILY: ${{ inputs.test_ip_family }}
+        GARDENER_CONFIGURATION: ${{ inputs.gardener_configuration }}
+      run: EXPORT_RESULT=true "${{ github.workspace }}/hack/ci/gardener/integration-test.sh" ${{ inputs.test_make_target }}
     - name: Check deprecations
       run: |
         set -eou pipefail
@@ -76,4 +83,4 @@ runs:
       env:
         GARDENER_KUBECONFIG: "${{ github.workspace }}/gardener_kubeconfig.yaml"
         GARDENER_PROJECT_NAME: ${{ inputs.gardener_project_name }}
-      run: "${{ github.workspace }}/hack/ci/deprovision-gardener.sh"
+      run: "${{ github.workspace }}/hack/ci/gardener/deprovision.sh"

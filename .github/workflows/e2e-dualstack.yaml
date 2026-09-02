@@ -1,0 +1,86 @@
+name: E2E dualstack
+
+# Manual dualstack e2e run against a Gardener AWS dualstack shoot.
+# Mirrors the image flow of schedule-main-integration.yaml: it resolves the
+# latest main manager image already pushed to the registry, so the shoot can
+# pull it directly (no local build to hand across runners). IPv4 is covered by
+# the standard PR/daily gates, so this workflow is dualstack-only and dispatch-
+# only: each matrix entry provisions its own shoot, run it when you need the
+# signal.
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  # One in-flight run per ref keeps a re-dispatch from stacking shoots.
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  IMAGE_NAME: "europe-docker.pkg.dev/kyma-project/prod/istio/main/istio-manager"
+
+jobs:
+  get-image:
+    name: Get manager image
+    runs-on: ubuntu-latest
+    outputs:
+      image: "${{ steps.get-image.outputs.image }}"
+      operator_version: "${{ steps.get-image.outputs.operator_version }}"
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: get-image
+        name: Get image for tests
+        shell: bash
+        run: |
+          commit_id=$("./hack/ci/get-latest-sha.sh" "${IMAGE_NAME}")
+          image="${IMAGE_NAME}:${commit_id}"
+          operator_version="${commit_id}"
+          echo "image=${image}"
+          echo "image=${image}" >> $GITHUB_OUTPUT
+          echo "operator_version=${operator_version}"
+          echo "operator_version=${operator_version}" >> $GITHUB_OUTPUT
+      - id: check-image
+        name: Check whether image exists
+        shell: bash
+        run: docker pull "${{ steps.get-image.outputs.image }}"
+
+  istio-e2e-dualstack:
+    name: Istio E2E test (dualstack) ${{ matrix.test_make_target }}
+    environment:
+      name: e2e
+      deployment: false
+    runs-on: ubuntu-latest
+    needs: [ get-image ]
+    strategy:
+      # Keep sibling suites alive so a single flaky suite doesn't hide the
+      # rest of the breakage catalogue on first dualstack contact.
+      fail-fast: false
+      matrix:
+        # Mirrors istio-e2e-test-aws in schedule-main-integration.yaml —
+        # the full set of suites that run on Gardener AWS in main
+        # integration. k3d-only suites (installation, mesh_communication,
+        # observability, extauth, egress, smoke_test, ambient) are
+        # LB-agnostic in that pipeline and would not gain dualstack signal.
+        test_make_target:
+          - "xff_header-e2e-test"
+          - "trustdomain-e2e-test"
+          - "networkpolicy-e2e-test"
+          - "dnsproxying-e2e-test"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/e2e-test-gardener
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          manager_image: ${{ needs.get-image.outputs.image }}
+          gardener_secret: ${{ secrets.GARDENER_TOKEN }}
+          gardener_project_name: ${{ vars.GARDENER_PROJECT_NAME }}
+          gardener_configuration: aws-dualstack
+          test_make_target: ${{ matrix.test_make_target }}
+          test_ip_family: ipv4 # ipv6 is not available now on gh runners, when it will be possible change to dualstack
+          operator_version: ${{ needs.get-image.outputs.operator_version }}

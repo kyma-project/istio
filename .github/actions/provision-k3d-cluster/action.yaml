@@ -44,4 +44,4 @@ runs:
         [ "${{ inputs.calico }}"     == "true" ] && ARGS+=(--calico)
         [ "${{ inputs.kwok }}"       == "true" ] && ARGS+=(--kwok)
         [ "${{ inputs.kwok-nodes }}" != "0"    ] && ARGS+=(--kwok-nodes "${{ inputs.kwok-nodes }}")
-        ./hack/ci/provision-k3d.sh "${ARGS[@]}"
+        ./hack/ci/k3d/provision.sh "${ARGS[@]}"

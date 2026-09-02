@@ -494,7 +494,7 @@ func (r *IstioReconciler) shouldSetProcessing(istioCR *operatorv1alpha2.Istio) b
 		return true
 	}
 
-	readyCond := meta.FindStatusCondition(*istioCR.Status.Conditions, "Ready")
+	readyCond := meta.FindStatusCondition(*istioCR.Status.Conditions, string(operatorv1alpha2.ConditionTypeReady))
 	if readyCond == nil {
 		r.log.Info("Istio CR has no Ready condition yet, setting Processing status", "Istio", istioCR.Name)
 		return true

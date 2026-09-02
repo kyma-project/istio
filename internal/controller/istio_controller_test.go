@@ -64,7 +64,7 @@ var _ = Describe("shouldSetProcessing", func() {
 
 	It("should return true when generation increased since last Ready condition", func() {
 		conditions := []metav1.Condition{
-			{Type: "Ready", ObservedGeneration: 1},
+			{Type: string(operatorv1alpha2.ConditionTypeReady), ObservedGeneration: 1},
 		}
 		istioCR := &operatorv1alpha2.Istio{
 			ObjectMeta: metav1.ObjectMeta{Generation: 2},
@@ -75,7 +75,7 @@ var _ = Describe("shouldSetProcessing", func() {
 
 	It("should return false when Ready condition is up to date", func() {
 		conditions := []metav1.Condition{
-			{Type: "Ready", ObservedGeneration: 2},
+			{Type: string(operatorv1alpha2.ConditionTypeReady), ObservedGeneration: 2},
 		}
 		istioCR := &operatorv1alpha2.Istio{
 			ObjectMeta: metav1.ObjectMeta{Generation: 2},
@@ -212,7 +212,7 @@ var _ = Describe("Istio Controller", func() {
 		It("should not call update status to processing when Ready condition is up to date", func() {
 			// given
 			conditions := []metav1.Condition{
-				{Type: "Ready", Status: metav1.ConditionTrue, ObservedGeneration: 1},
+				{Type: string(operatorv1alpha2.ConditionTypeReady), Status: metav1.ConditionTrue, ObservedGeneration: 1},
 			}
 			istioCR := &operatorv1alpha2.Istio{
 				ObjectMeta: metav1.ObjectMeta{

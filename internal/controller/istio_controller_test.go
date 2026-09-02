@@ -43,6 +43,48 @@ const (
 	testReconciliationInterval = time.Second * 5
 )
 
+var _ = Describe("shouldSetProcessing", func() {
+	sut := &IstioReconciler{log: logr.Discard()}
+
+	It("should return true when CR has no conditions (first install)", func() {
+		istioCR := &operatorv1alpha2.Istio{
+			ObjectMeta: metav1.ObjectMeta{Generation: 1},
+		}
+		Expect(sut.shouldSetProcessing(istioCR)).To(BeTrue())
+	})
+
+	It("should return true when CR has no Ready condition", func() {
+		conditions := []metav1.Condition{}
+		istioCR := &operatorv1alpha2.Istio{
+			ObjectMeta: metav1.ObjectMeta{Generation: 1},
+			Status:     operatorv1alpha2.IstioStatus{Conditions: &conditions},
+		}
+		Expect(sut.shouldSetProcessing(istioCR)).To(BeTrue())
+	})
+
+	It("should return true when generation increased since last Ready condition", func() {
+		conditions := []metav1.Condition{
+			{Type: "Ready", ObservedGeneration: 1},
+		}
+		istioCR := &operatorv1alpha2.Istio{
+			ObjectMeta: metav1.ObjectMeta{Generation: 2},
+			Status:     operatorv1alpha2.IstioStatus{Conditions: &conditions},
+		}
+		Expect(sut.shouldSetProcessing(istioCR)).To(BeTrue())
+	})
+
+	It("should return false when Ready condition is up to date", func() {
+		conditions := []metav1.Condition{
+			{Type: "Ready", ObservedGeneration: 2},
+		}
+		istioCR := &operatorv1alpha2.Istio{
+			ObjectMeta: metav1.ObjectMeta{Generation: 2},
+			Status:     operatorv1alpha2.IstioStatus{Conditions: &conditions},
+		}
+		Expect(sut.shouldSetProcessing(istioCR)).To(BeFalse())
+	})
+})
+
 var _ = Describe("Istio Controller", func() {
 	Context("Reconcile", func() {
 		BeforeEach(func() {
@@ -165,6 +207,43 @@ var _ = Describe("Istio Controller", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(result).Should(Equal(reconcile.Result{}))
 			Expect(statusMock.updatedToProcessingCalled).Should(BeTrue())
+		})
+
+		It("should not call update status to processing when Ready condition is up to date", func() {
+			// given
+			conditions := []metav1.Condition{
+				{Type: "Ready", Status: metav1.ConditionTrue, ObservedGeneration: 1},
+			}
+			istioCR := &operatorv1alpha2.Istio{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:       istioCrName,
+					Namespace:  testNamespace,
+					Generation: 1,
+				},
+				Status: operatorv1alpha2.IstioStatus{Conditions: &conditions},
+			}
+
+			statusMock := NewStatusMock()
+			fakeClient := createFakeClient(istioCR)
+
+			sut := &IstioReconciler{
+				Client:                 fakeClient,
+				Scheme:                 getTestScheme(),
+				istioInstallation:      &istioInstallationReconciliationMock{},
+				restarters:             []restarter.Restarter{&restarterMock{}},
+				istioResources:         &istioResourcesReconciliationMock{},
+				userResources:          &UserResourcesMock{},
+				log:                    logr.Discard(),
+				statusHandler:          statusMock,
+				reconciliationInterval: testReconciliationInterval,
+			}
+
+			// when
+			_, err := sut.Reconcile(context.Background(), reconcile.Request{NamespacedName: types.NamespacedName{Namespace: testNamespace, Name: istioCrName}})
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(statusMock.updatedToProcessingCalled).Should(BeFalse())
 		})
 
 		It("should return an error when update status to processing failed", func() {

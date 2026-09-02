@@ -47,6 +47,7 @@ import (
 	"golang.org/x/time/rate"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -485,4 +486,25 @@ func (r *IstioReconciler) setConditionForError(istioCR *operatorv1alpha2.Istio, 
 		r.statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileFailed))
 	}
 	r.statusHandler.SetCondition(istioCR, reason)
+}
+
+func (r *IstioReconciler) shouldSetProcessing(istioCR *operatorv1alpha2.Istio) bool {
+	if istioCR.Status.Conditions == nil {
+		r.log.Info("Istio CR has no Ready condition yet, setting Processing status", "Istio", istioCR.Name)
+		return true
+	}
+
+	readyCond := meta.FindStatusCondition(*istioCR.Status.Conditions, "Ready")
+	if readyCond == nil {
+		r.log.Info("Istio CR has no Ready condition yet, setting Processing status", "Istio", istioCR.Name)
+		return true
+	}
+
+	if istioCR.Generation > readyCond.ObservedGeneration {
+		r.log.Info("Istio CR spec changed, setting Processing status", "Istio", istioCR.Name,
+			"generation", istioCR.Generation, "observedGeneration", readyCond.ObservedGeneration)
+		return true
+	}
+
+	return false
 }

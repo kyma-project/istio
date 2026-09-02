@@ -86,7 +86,7 @@ func installIstio(ctx context.Context, args installArgs) (istiooperator.IstioIma
 	if err != nil {
 		ctrl.Log.Info("Could not get Istio features, proceeding with default configuration", "error", err)
 	} else {
-		ctrl.Log.Info("Running with Istio features", "features", features)
+		ctrl.Log.Info("Running with Istio alpha features", "features", features)
 		options = append(options, operatorv1alpha2.WithFeatures(features))
 	}
 

@@ -243,10 +243,8 @@ func MergeOverrides(template []byte, overrides ClusterConfiguration) ([]byte, er
 }
 
 func IsDualStackEnabled(ctx context.Context, sClient client.Client, alphaOptIn bool) (bool, error) {
-	if !isExperimentalEnabled() {
-		if !alphaOptIn {
-			return false, nil
-		}
+	if !isExperimentalEnabled() && !alphaOptIn {
+		return false, nil
 	}
 	var kymaProvisioningInfo corev1.ConfigMap
 	err := sClient.Get(ctx, client.ObjectKey{Namespace: "kyma-system", Name: "kyma-provisioning-info"}, &kymaProvisioningInfo)

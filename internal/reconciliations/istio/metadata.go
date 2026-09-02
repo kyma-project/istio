@@ -2,6 +2,7 @@ package istio
 
 import (
 	"context"
+	"fmt"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -91,7 +92,6 @@ func patchModuleResourcesWithModuleLabel(ctx context.Context, c client.Client) e
 			key := item.GetNamespace() + "/" + item.GetName()
 			seen[key] = true
 		}
-
 		for _, item := range configList.Items {
 			key := item.GetNamespace() + "/" + item.GetName()
 			if seen[key] {
@@ -141,11 +141,10 @@ func patchModuleResourcesWithModuleLabel(ctx context.Context, c client.Client) e
 				u.SetLabels(l)
 				obj = u
 			}
-
 			if retryErr := retry.OnError(retry.DefaultRetry, func() error {
-				return c.Patch(ctx, obj, patch)
+				return client.IgnoreNotFound(c.Patch(ctx, obj, patch))
 			}); retryErr != nil {
-				return retryErr
+				return fmt.Errorf("failed to patch item %s/%s of kind %s with module label: %w", u.GetNamespace(), u.GetName(), u.GetKind(), retryErr)
 			}
 		}
 	}
@@ -171,19 +170,16 @@ func patchAdditionalResourceWithModuleLabel(ctx context.Context, c client.Client
 	}
 	apiErr := c.Get(ctx, client.ObjectKeyFromObject(obj), fetched)
 	if apiErr != nil {
-		if client.IgnoreNotFound(apiErr) == nil {
-			return nil
-		}
-		return apiErr
+		return client.IgnoreNotFound(apiErr)
 	}
 	//type assert back to client.Object because MergeFrom requires it
 	patch := client.MergeFrom(fetched.DeepCopyObject().(client.Object))
 	fetched.SetLabels(labels.SetModuleLabels(fetched.GetLabels()))
 
 	if retryErr := retry.OnError(retry.DefaultRetry, func() error {
-		return c.Patch(ctx, fetched, patch)
+		return client.IgnoreNotFound(c.Patch(ctx, fetched, patch))
 	}); retryErr != nil {
-		return retryErr
+		return fmt.Errorf("failed to patch item %s/%s: %w", fetched.GetNamespace(), fetched.GetName(), retryErr)
 	}
 	return nil
 }

@@ -30,6 +30,7 @@ type installArgs struct {
 	istioClient         libraryClient
 	istioImages         images.Images
 	clusterStrategy     factory.Factory
+	features            istiofeatures.IstioFeatures
 }
 
 //nolint:funlen // Function 'installIstio' has too many statements (51 > 50) TODO: refactor.
@@ -82,13 +83,8 @@ func installIstio(ctx context.Context, args installArgs) (istiooperator.IstioIma
 	ctrl.Log.Info("Installing Istio with", "profile", clusterSize.String())
 
 	var options []operatorv1alpha2.MergeOption
-	features, err := istiofeatures.Get(ctx, k8sClient)
-	if err != nil {
-		ctrl.Log.Info("Could not get Istio features, proceeding with default configuration", "error", err)
-	} else {
-		ctrl.Log.Info("Running with Istio alpha features", "features", features)
-		options = append(options, operatorv1alpha2.WithFeatures(features))
-	}
+	ctrl.Log.Info("Running with Istio alpha features", "features", args.features)
+	options = append(options, operatorv1alpha2.WithFeatures(args.features))
 
 	if enableDualStack {
 		options = append(options, operatorv1alpha2.WithDualStackEnabled())

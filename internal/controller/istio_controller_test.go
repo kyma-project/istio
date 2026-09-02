@@ -13,6 +13,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/kyma-project/istio/operator/internal/clusterconfig/factory"
+	"github.com/kyma-project/istio/operator/internal/istiofeatures"
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/kyma-project/istio/operator/internal/restarter"
 	"github.com/kyma-project/istio/operator/pkg/labels"
@@ -1194,7 +1195,7 @@ type istioInstallationReconciliationMock struct {
 	err describederrors.DescribedError
 }
 
-func (i *istioInstallationReconciliationMock) Reconcile(_ context.Context, _ *operatorv1alpha2.Istio, _ status.Status, _ images.Images, _ factory.Factory) (istiooperator.IstioImageVersion, describederrors.DescribedError) {
+func (i *istioInstallationReconciliationMock) Reconcile(_ context.Context, _ *operatorv1alpha2.Istio, _ status.Status, _ images.Images, _ factory.Factory, _ istiofeatures.IstioFeatures) (istiooperator.IstioImageVersion, describederrors.DescribedError) {
 	version, err := istiooperator.NewIstioImageVersionFromTag("1.16.0-distroless")
 	if err != nil {
 		i.err = describederrors.NewDescribedError(err, "error creating IstioImageVersion")

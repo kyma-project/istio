@@ -204,7 +204,7 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 			reconciliationRequeueTimeError)
 	}
 
-	istioImageVersion, installationErr := r.istioInstallation.Reconcile(ctx, &istioCR, r.statusHandler, r.istioImages, clusterStrategy)
+	istioImageVersion, installationErr := r.istioInstallation.Reconcile(ctx, &istioCR, r.statusHandler, r.istioImages, clusterStrategy, features)
 	if installationErr != nil {
 		return r.requeueReconciliation(ctx, &istioCR, installationErr,
 			operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonIstioInstallUninstallFailed),

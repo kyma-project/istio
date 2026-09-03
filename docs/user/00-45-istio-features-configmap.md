@@ -89,13 +89,13 @@ When enabled:
 **Type:** `boolean`
 **Default:** `false`
 
-When set to `true`, enables dual-stack (IPv4 + IPv6) support for the Istio service mesh. This configures Istio Pilot and all gateways to use `RequireDualStack` IP family policy and propagates the `ISTIO_DUAL_STACK` environment variable to all Envoy proxies.
+When set to `true`, enables dual-stack support (IPv4 and IPv6) for the Istio service mesh. This configures Istio Pilot and all gateways to use `RequireDualStack` IP family policy and propagates the `ISTIO_DUAL_STACK` environment variable to all Envoy proxies.
 
 >[!WARNING]
 > This flag only takes effect when the cluster load balancer is also configured for dual-stack. The `kyma-provisioning-info` ConfigMap in the `kyma-system` namespace must exist and contain `dualStackIPEnabled: true` under `networkDetails`. If the ConfigMap is absent or the field is `false`, enabling this flag has no effect.
 
 >[!WARNING]
-> **Enabling dual-stack is a one-way operation and cannot be reversed.** Once `enableDualStack` is set to `true` and reconciliation runs, setting the flag back to `false` or deleting the ConfigMap will not revert the Services to single-stack.
+> **Enabling dual-stack is a one-way operation and cannot be reversed.** Once `enableDualStack` is set to `true` and reconciliation runs, setting the flag back to `false` or deleting the ConfigMap doesn't revert the Services to single-stack.
 
 #### Behavior
 

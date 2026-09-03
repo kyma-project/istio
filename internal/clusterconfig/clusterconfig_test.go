@@ -6,6 +6,7 @@ import (
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
+	"github.com/kyma-project/istio/operator/internal/istiofeatures"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
@@ -439,7 +440,7 @@ func TestEvaluateClusterConfiguration(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := createFakeClient(t, tt.objects...)
 
-			str, err := clusterconfig.BuildFactory(context.Background(), c)
+			str, err := clusterconfig.BuildFactory(context.Background(), c, istiofeatures.IstioFeatures{})
 			require.NoError(t, err)
 			got := clusterconfig.ClusterConfigurationFromFactory(str)
 
@@ -521,7 +522,7 @@ func TestEvaluateClusterSize(t *testing.T) {
 func TestIsDualStackEnabled_NonExperimental(t *testing.T) {
 	c := createFakeClient(t)
 
-	ds, err := clusterconfig.IsDualStackEnabled(context.Background(), c)
+	ds, err := clusterconfig.IsDualStackEnabled(context.Background(), c, false)
 
 	require.NoError(t, err)
 	assert.False(t, ds)

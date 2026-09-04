@@ -1,0 +1,91 @@
+name: Istio Upgrade Worker
+
+# Branch-context worker for the scheduled Istio patch upgrade. It is never run
+# directly on a schedule; the schedule-istio-upgrade.yaml orchestrator
+# dispatches it once per target branch with --ref <branch>. Because of that
+# --ref, this workflow file, hack/ci/upgrade-istio.sh, and the checkout all
+# come from the dispatched branch, so the upgrade is computed and committed in
+# that branch's own context. It can also be dispatched by hand to test a single
+# branch.
+
+permissions:
+  contents: write
+  pull-requests: write
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  upgrade-istio:
+    name: Upgrade Istio on ${{ github.ref_name }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # full history + tags: release-note draft/create detection reads tags
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: "go.mod"
+
+      - name: Perform Istio upgrade
+        id: upgrade
+        shell: bash
+        env:
+          BASE_BRANCH: ${{ github.ref_name }}
+        run: bash ./hack/ci/upgrade-istio.sh
+
+      - name: Commit and create pull request
+        if: steps.upgrade.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          USERNAME: ${{ vars.ACTIONS_BOT_NAME }}
+          EMAIL: ${{ vars.ACTIONS_BOT_EMAIL }}
+          ISTIO_VERSION: ${{ steps.upgrade.outputs.istio_version }}
+          ANNOUNCE_URL: ${{ steps.upgrade.outputs.announce_url }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          base="${{ github.ref_name }}"
+          branch="autobump/istio-upgrade-${base}"
+          title="Bump Istio to ${ISTIO_VERSION} (${base})"
+
+          git config user.name "${USERNAME}"
+          git config user.email "${EMAIL}"
+
+          git checkout -B "${branch}"
+          git add config/manager/env-images.yaml \
+                  internal/istiooperator/istio-operator.yaml \
+                  internal/istiooperator/istio-operator-light.yaml \
+                  docs/release-notes go.mod go.sum
+          git commit -m "Bump Istio to ${ISTIO_VERSION}"
+          git push -f -u origin "${branch}"
+
+          {
+            echo '## Automated Istio version upgrade'
+            echo
+            echo "- Base branch: \`${base}\`"
+            echo "- Istio version: \`${ISTIO_VERSION}\`"
+            echo "- Istio changelog: ${ANNOUNCE_URL}"
+            echo "- Workflow run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            echo
+            echo 'Repoints `env-images.yaml` and the operator manifests at the synced images, bumps the `istio.io/istio` Go dependency, and adds a release note.'
+          } > istio-upgrade-pr-body.md
+
+          # Match only an OPEN PR for this head: a merged/closed one for the
+          # reused branch must not divert us into editing a merged PR.
+          existing="$(gh pr list --head "${branch}" --base "${base}" --state open --json number --jq '.[0].number')"
+          if [ -n "${existing}" ]; then
+            gh pr edit "${existing}" --title "${title}" --body-file istio-upgrade-pr-body.md
+          else
+            gh pr create \
+              --base "${base}" \
+              --head "${branch}" \
+              --title "${title}" \
+              --body-file istio-upgrade-pr-body.md
+          fi

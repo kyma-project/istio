@@ -1,0 +1,94 @@
+name: Istio Images Updater Worker
+
+# Branch-context worker for the scheduled Istio image update. It is never run
+# directly on a schedule; the schedule-istio-images-updater.yaml orchestrator
+# dispatches it once per target branch with --ref <branch>. Because of that
+# --ref, this workflow file, hack/ci/update-istio-images.sh, and the checkout
+# all come from the dispatched branch, so external-images.yaml and
+# fips-images.yaml are updated in that branch's own context. It can also be
+# dispatched by hand to test a single branch.
+
+permissions:
+  contents: write
+  pull-requests: write
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  update-images:
+    name: Update images on ${{ github.ref_name }}
+    environment:
+      name: e2e
+      deployment: false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Update external and FIPS images
+        id: update
+        shell: bash
+        env:
+          REGCERT_JSON: ${{ secrets.FIPS_REGISTRY_SA }}
+        run: |
+          set -euo pipefail
+          bash ./hack/ci/update-istio-images.sh
+
+          if git diff --quiet -- external-images.yaml fips-images.yaml; then
+            echo 'has_changes=false' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          {
+            echo '## Automated Istio image update'
+            echo
+            echo "- Base branch: \`${{ github.ref_name }}\`"
+            echo "- Workflow run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            echo
+            echo '### Changelog'
+            echo
+            echo '```diff'
+            git --no-pager diff -- external-images.yaml fips-images.yaml
+            echo '```'
+          } > image-update-changelog.md
+
+          echo 'has_changes=true' >> "$GITHUB_OUTPUT"
+      - name: Commit and create pull request
+        if: steps.update.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          base="${{ github.ref_name }}"
+          branch="autobump/istio-images-${base}"
+          title="Upgrade Istio external and FIPS images (${base})"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git checkout -B "${branch}"
+          git add external-images.yaml fips-images.yaml
+          git commit -m "Upgrade Istio external and FIPS images"
+          git push -f -u origin "${branch}"
+
+          # Match only an OPEN PR for this head: a merged/closed one for the
+          # reused branch must not divert us into editing a merged PR.
+          existing="$(gh pr list --head "${branch}" --base "${base}" --state open --json number --jq '.[0].number')"
+          if [ -n "${existing}" ]; then
+            gh pr edit "${existing}" \
+              --title "${title}" \
+              --body-file image-update-changelog.md
+          else
+            gh pr create \
+              --base "${base}" \
+              --head "${branch}" \
+              --title "${title}" \
+              --body-file image-update-changelog.md
+          fi

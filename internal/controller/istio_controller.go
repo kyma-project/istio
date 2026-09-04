@@ -21,11 +21,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pkg/errors"
-
 	"github.com/kyma-project/istio/operator/internal/images"
 	istiocrmetrics "github.com/kyma-project/istio/operator/internal/metrics"
 	"github.com/kyma-project/istio/operator/internal/resources"
+	"github.com/pkg/errors"
 
 	"github.com/kyma-project/istio/operator/internal/restarter"
 	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
@@ -48,6 +47,7 @@ import (
 	"golang.org/x/time/rate"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -129,6 +129,9 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	} else {
 		r.log.Info("WARNING: Istio CR metrics emitter is not initialized")
 	}
+
+	wantProcessing := istioCR.DeletionTimestamp.IsZero() && r.shouldSetProcessing(&istioCR)
+
 	r.statusHandler.SetCondition(&istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileUnknown))
 
 	if err := r.validate(&istioCR); err != nil {
@@ -178,10 +181,12 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 
 	if istioCR.DeletionTimestamp.IsZero() {
-		if err := r.statusHandler.UpdateToProcessing(ctx, &istioCR); err != nil {
-			r.log.Error(err, "Update status to processing failed")
-			// We don't update the status to error, because the status update already failed and to avoid another status update error we simply requeue the request.
-			return ctrl.Result{}, err
+		if wantProcessing {
+			if err := r.statusHandler.UpdateToProcessing(ctx, &istioCR); err != nil {
+				r.log.Error(err, "Update status to processing failed")
+				// We don't update the status to error, because the status update already failed and to avoid another status update error we simply requeue the request.
+				return ctrl.Result{}, err
+			}
 		}
 	} else {
 		if err := r.statusHandler.UpdateToDeleting(ctx, &istioCR); err != nil {
@@ -316,10 +321,6 @@ func (r *IstioReconciler) requeueReconciliation(ctx context.Context,
 }
 
 func (r *IstioReconciler) requeueReconciliationRestartNotFinished(ctx context.Context, istioCR *operatorv1alpha2.Istio, requeueAfter time.Duration) (ctrl.Result, error) {
-	statusUpdateErr := r.statusHandler.UpdateToProcessing(ctx, istioCR)
-	if statusUpdateErr != nil {
-		r.log.Error(statusUpdateErr, "Error during updating status to processing")
-	}
 	r.log.Info("Reconcile requeued")
 	return ctrl.Result{RequeueAfter: requeueAfter}, nil
 }
@@ -491,4 +492,25 @@ func (r *IstioReconciler) setConditionForError(istioCR *operatorv1alpha2.Istio, 
 		r.statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileFailed))
 	}
 	r.statusHandler.SetCondition(istioCR, reason)
+}
+
+func (r *IstioReconciler) shouldSetProcessing(istioCR *operatorv1alpha2.Istio) bool {
+	if istioCR.Status.Conditions == nil {
+		r.log.Info("Istio CR has no Ready condition yet, setting Processing status", "Istio", istioCR.Name)
+		return true
+	}
+
+	readyCond := meta.FindStatusCondition(*istioCR.Status.Conditions, string(operatorv1alpha2.ConditionTypeReady))
+	if readyCond == nil {
+		r.log.Info("Istio CR has no Ready condition yet, setting Processing status", "Istio", istioCR.Name)
+		return true
+	}
+
+	if istioCR.Generation > readyCond.ObservedGeneration {
+		r.log.Info("Istio CR spec changed, setting Processing status", "Istio", istioCR.Name,
+			"generation", istioCR.Generation, "observedGeneration", readyCond.ObservedGeneration)
+		return true
+	}
+
+	return false
 }

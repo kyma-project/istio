@@ -168,6 +168,115 @@ var _ = Describe("Istio Controller", func() {
 			Expect(statusMock.updatedToProcessingCalled).Should(BeTrue())
 		})
 
+		It("should not call update status to processing when Ready condition is up to date", func() {
+			// given
+			conditions := []metav1.Condition{
+				{Type: string(operatorv1alpha2.ConditionTypeReady), Status: metav1.ConditionTrue, ObservedGeneration: 1},
+			}
+			istioCR := &operatorv1alpha2.Istio{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:       istioCrName,
+					Namespace:  testNamespace,
+					Generation: 1,
+				},
+				Status: operatorv1alpha2.IstioStatus{Conditions: &conditions},
+			}
+
+			statusMock := NewStatusMock()
+			fakeClient := createFakeClient(istioCR)
+
+			sut := &IstioReconciler{
+				Client:                 fakeClient,
+				Scheme:                 getTestScheme(),
+				istioInstallation:      &istioInstallationReconciliationMock{},
+				restarters:             []restarter.Restarter{&restarterMock{}},
+				istioResources:         &istioResourcesReconciliationMock{},
+				userResources:          &UserResourcesMock{},
+				log:                    logr.Discard(),
+				statusHandler:          statusMock,
+				reconciliationInterval: testReconciliationInterval,
+			}
+
+			// when
+			_, err := sut.Reconcile(context.Background(), reconcile.Request{NamespacedName: types.NamespacedName{Namespace: testNamespace, Name: istioCrName}})
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(statusMock.updatedToProcessingCalled).Should(BeFalse())
+		})
+
+		It("should call update status to processing when CR has no Ready condition", func() {
+			// given
+			conditions := []metav1.Condition{}
+			istioCR := &operatorv1alpha2.Istio{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:       istioCrName,
+					Namespace:  testNamespace,
+					Generation: 1,
+				},
+				Status: operatorv1alpha2.IstioStatus{Conditions: &conditions},
+			}
+
+			statusMock := NewStatusMock()
+			fakeClient := createFakeClient(istioCR)
+
+			sut := &IstioReconciler{
+				Client:                 fakeClient,
+				Scheme:                 getTestScheme(),
+				istioInstallation:      &istioInstallationReconciliationMock{},
+				restarters:             []restarter.Restarter{&restarterMock{}},
+				istioResources:         &istioResourcesReconciliationMock{},
+				userResources:          &UserResourcesMock{},
+				log:                    logr.Discard(),
+				statusHandler:          statusMock,
+				reconciliationInterval: testReconciliationInterval,
+			}
+
+			// when
+			_, err := sut.Reconcile(context.Background(), reconcile.Request{NamespacedName: types.NamespacedName{Namespace: testNamespace, Name: istioCrName}})
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(statusMock.updatedToProcessingCalled).Should(BeTrue())
+		})
+
+		It("should call update status to processing when CR generation increased since last Ready condition", func() {
+			// given
+			conditions := []metav1.Condition{
+				{Type: string(operatorv1alpha2.ConditionTypeReady), Status: metav1.ConditionTrue, ObservedGeneration: 1},
+			}
+			istioCR := &operatorv1alpha2.Istio{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:       istioCrName,
+					Namespace:  testNamespace,
+					Generation: 2,
+				},
+				Status: operatorv1alpha2.IstioStatus{Conditions: &conditions},
+			}
+
+			statusMock := NewStatusMock()
+			fakeClient := createFakeClient(istioCR)
+
+			sut := &IstioReconciler{
+				Client:                 fakeClient,
+				Scheme:                 getTestScheme(),
+				istioInstallation:      &istioInstallationReconciliationMock{},
+				restarters:             []restarter.Restarter{&restarterMock{}},
+				istioResources:         &istioResourcesReconciliationMock{},
+				userResources:          &UserResourcesMock{},
+				log:                    logr.Discard(),
+				statusHandler:          statusMock,
+				reconciliationInterval: testReconciliationInterval,
+			}
+
+			// when
+			_, err := sut.Reconcile(context.Background(), reconcile.Request{NamespacedName: types.NamespacedName{Namespace: testNamespace, Name: istioCrName}})
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(statusMock.updatedToProcessingCalled).Should(BeTrue())
+		})
+
 		It("should return an error when update status to processing failed", func() {
 			// given
 			istioCR := &operatorv1alpha2.Istio{

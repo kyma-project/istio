@@ -1,68 +1,31 @@
-name: Istio Version Upgrade
+name: Istio Upgrade Worker
 
-# Scheduled Istio upgrade. Runs every morning (and on manual dispatch),
-# reads the already-synced target version from the in-repo image manifests
-# (external-images.yaml / fips-images.yaml, kept current by the image updater),
-# repoints the operator + Go dependency + release note, and opens a PR to main
-# and the active release branch. It never triggers on push; the images it adopts
-# must already be mirrored, which is guaranteed once an image-update PR is merged.
+# Branch-context worker for the scheduled Istio patch upgrade. It is never run
+# directly on a schedule; the schedule-istio-upgrade.yaml orchestrator
+# dispatches it once per target branch with --ref <branch>. Because of that
+# --ref, this workflow file, hack/ci/upgrade-istio.sh, and the checkout all
+# come from the dispatched branch, so the upgrade is computed and committed in
+# that branch's own context. It can also be dispatched by hand to test a single
+# branch.
 
 permissions:
   contents: write
   pull-requests: write
 
 on:
-  schedule:
-    - cron: "40 6 * * *"
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}
+  group: ${{ github.workflow }}-${{ github.ref_name }}
   cancel-in-progress: false
 
 jobs:
-  discover-target-branches:
-    name: Discover target branches
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.discover.outputs.matrix }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Build branch matrix
-        id: discover
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          git fetch --prune origin '+refs/heads/*:refs/remotes/origin/*'
-
-          latest_release="$(git for-each-ref --format='%(refname:short)' refs/remotes/origin/release-* \
-            | sed 's#^origin/##' \
-            | sort -V \
-            | tail -n 1)"
-
-          if [ -n "${latest_release}" ]; then
-            matrix="{\"include\":[{\"base\":\"main\"},{\"base\":\"${latest_release}\"}]}"
-          else
-            matrix='{"include":[{"base":"main"}]}'
-          fi
-
-          echo "matrix=${matrix}" >> "$GITHUB_OUTPUT"
-
   upgrade-istio:
-    name: Upgrade Istio on ${{ matrix.base }}
+    name: Upgrade Istio on ${{ github.ref_name }}
     runs-on: ubuntu-latest
-    needs: discover-target-branches
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJson(needs.discover-target-branches.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ matrix.base }}
           fetch-depth: 0 # full history + tags: release-note draft/create detection reads tags
 
       - uses: actions/setup-go@v7
@@ -73,7 +36,7 @@ jobs:
         id: upgrade
         shell: bash
         env:
-          BASE_BRANCH: ${{ matrix.base }}
+          BASE_BRANCH: ${{ github.ref_name }}
         run: bash ./hack/ci/upgrade-istio.sh
 
       - name: Commit and create pull request
@@ -88,8 +51,9 @@ jobs:
         run: |
           set -euo pipefail
 
-          branch="autobump/istio-upgrade-${{ matrix.base }}"
-          title="Bump Istio to ${ISTIO_VERSION} (${{ matrix.base }})"
+          base="${{ github.ref_name }}"
+          branch="autobump/istio-upgrade-${base}"
+          title="Bump Istio to ${ISTIO_VERSION} (${base})"
 
           git config user.name "${USERNAME}"
           git config user.email "${EMAIL}"
@@ -105,7 +69,7 @@ jobs:
           {
             echo '## Automated Istio version upgrade'
             echo
-            echo "- Base branch: \`${{ matrix.base }}\`"
+            echo "- Base branch: \`${base}\`"
             echo "- Istio version: \`${ISTIO_VERSION}\`"
             echo "- Istio changelog: ${ANNOUNCE_URL}"
             echo "- Workflow run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
@@ -115,12 +79,12 @@ jobs:
 
           # Match only an OPEN PR for this head: a merged/closed one for the
           # reused branch must not divert us into editing a merged PR.
-          existing="$(gh pr list --head "${branch}" --base "${{ matrix.base }}" --state open --json number --jq '.[0].number')"
+          existing="$(gh pr list --head "${branch}" --base "${base}" --state open --json number --jq '.[0].number')"
           if [ -n "${existing}" ]; then
             gh pr edit "${existing}" --title "${title}" --body-file istio-upgrade-pr-body.md
           else
             gh pr create \
-              --base "${{ matrix.base }}" \
+              --base "${base}" \
               --head "${branch}" \
               --title "${title}" \
               --body-file istio-upgrade-pr-body.md

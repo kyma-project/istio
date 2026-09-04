@@ -84,9 +84,30 @@ When enabled:
 - Only memory requests and limits are managed (`controlledResources: [memory]`).
 - Any memory-based metrics in the HPA are automatically removed to prevent autoscaler conflicts.
 
+### **enableDualStack**
+
+**Type:** `boolean`
+**Default:** `false`
+
+When set to `true`, enables dual-stack support (IPv4 and IPv6) for the Istio service mesh. This configures Istio Pilot and all gateways to use `RequireDualStack` IP family policy and propagates the `ISTIO_DUAL_STACK` environment variable to all Envoy proxies.
+
+>[!WARNING]
+> This flag only takes effect when the cluster load balancer is also configured for dual-stack. The `kyma-provisioning-info` ConfigMap in the `kyma-system` namespace must exist and contain `dualStackIPEnabled: true` under `networkDetails`. If the ConfigMap is absent or the field is `false`, enabling this flag has no effect.
+
+>[!WARNING]
+> **Enabling dual-stack is a one-way operation and cannot be reversed.** Once `enableDualStack` is set to `true` and reconciliation runs, setting the flag back to `false` or deleting the ConfigMap doesn't revert the Services to single-stack.
+
+#### Behavior
+
+When enabled and the cluster LB is dual-stack:
+- Istio Pilot is configured with `ISTIO_DUAL_STACK=true`.
+- Istio Pilot, ingress gateway, and egress gateway services use `ipFamilyPolicy: RequireDualStack`.
+- Sidecar proxies receive `ISTIO_DUAL_STACK=true` via mesh config `defaultConfig.proxyMetadata`.
+
 ## Feature Flags
 
 | Flag         | Type      | Default | Description                                                                                                                                                                                     |
 |--------------|-----------|---------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **disableCni** | `boolean` | `false` | When `true`, disables the Istio CNI node agent and falls back to the `istio-init` init container approach. See [Security Risks of Disabling Istio CNI](#security-risks-of-disabling-istio-cni). |
 | **enableControlPlaneVPA** | `boolean` | `false` | When `true`, creates VPA resources for Istio control plane components (istiod, gateways, CNI) managing memory only. Requires VPA CRD in the cluster. See [enableControlPlaneVPA](#enablecontrolplanevpa). |
+| **enableDualStack** | `boolean` | `false` | When `true`, enables dual-stack (IPv4 + IPv6) support for the Istio service mesh. Only takes effect when the cluster load balancer is also configured for dual-stack (`kyma-provisioning-info` ConfigMap must be present with `dualStackIPEnabled: true`). See [enableDualStack](#enabledualstack). |

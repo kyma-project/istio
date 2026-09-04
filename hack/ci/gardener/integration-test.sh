@@ -6,8 +6,13 @@
 # - IMG - Istio module image to be deployed (by make deploy)
 # - CLUSTER_NAME - Gardener cluster name
 # - CLUSTER_KUBECONFIG - Gardener cluster kubeconfig path
+# - GARDENER_CONFIGURATION - provisioning preset; provides GARDENER_PROVIDER / GARDENER_IP_STACK
+#   via configurations/${GARDENER_CONFIGURATION}/vars.sh
+# - TEST_IP_FAMILY - Tests can be run to check (ipv4|ipv6|dualstack)
 
 set -eo pipefail
+
+script_dir="$(dirname "$(readlink -f "$0")")"
 
 if [ $# -lt 1 ]; then
     >&2 echo "Make target is required as parameter"
@@ -31,9 +36,22 @@ requiredVars=(
     IMG
     CLUSTER_NAME
     CLUSTER_KUBECONFIG
+    TEST_IP_FAMILY
+    GARDENER_CONFIGURATION
 )
 
 check_required_vars "${requiredVars[@]}"
+
+# Load provider / IP stack from the same preset used to provision the cluster,
+# so provisioning and test-time selection share a single source of truth.
+preset_vars="${script_dir}/configurations/${GARDENER_CONFIGURATION}/vars.sh"
+if [ ! -f "${preset_vars}" ]; then
+    >&2 echo "File '${preset_vars}' required but not found"
+    exit 2
+fi
+set -a
+source "${preset_vars}"
+set +a
 
 make_target="$1"
 
@@ -54,6 +72,12 @@ export GARDENER_PROVIDER=$(kubectl get configmap -n kube-system shoot-info -o js
 echo "Gardener provider: ${GARDENER_PROVIDER}"
 
 export TEST_DOMAIN="${CLUSTER_DOMAIN}"
+
+echo "Creating kyma-system namespace and kyma-provisioning-info configmap "
+
+[[ "${GARDENER_IP_STACK}" == "dualstack" ]] && DUAL_STACK_ENABLED="true" || DUAL_STACK_ENABLED="false"
+
+make create-provisioning-info DUAL_STACK_ENABLED="${DUAL_STACK_ENABLED}"
 
 # Add pwd to path to be able to use binaries downloaded in scripts
 export PATH="${PATH}:${PWD}"

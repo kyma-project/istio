@@ -1,18 +1,18 @@
-name: 'Istio E2E test'
-description: 'Runs Istio E2E tests'
+name: 'Kubernetes version compatibility check'
+description: 'Runs Kubernetes version compatibility check'
 inputs:
-  operator-image-name:
+  operator_image_name:
     description: 'Operator image used for test'
     required: true
   test_make_target:
     description: 'Make target for e2e tests to run'
     required: true
-  operator-version:
+  operator_version:
     description: 'Version of the operator image'
     required: true
   k3d_configuration:
     description: "Configuration preset (selects hack/ci/k3d/configurations/<k3d_configuration>)"
-    required: true
+    default: default
 
 runs:
   using: "composite"
@@ -31,14 +31,23 @@ runs:
       run: |
         k3d image import ${{ inputs.operator-image-name }}
     - name: Run e2e tests
-      shell: bash
       env:
-        IMG: ${{ inputs.operator-image-name }}
-        OPERATOR_VERSION: ${{ inputs.operator-version }}
+        OPERATOR_VERSION: ${{ inputs.operator_version }}
+        IMG: ${{ inputs.operator_image_name}}
         K3D_CONFIGURATION: ${{ inputs.k3d_configuration }}
         E2E_LOGS_DIR: ${{ github.workspace }}/tests/e2e/tests
       run: |
         "${{ github.workspace }}/hack/ci/k3d/e2e-test.sh" ${{ inputs.test_make_target }}
+      shell: bash
+    - name: Check deprecations
+      run: |
+        set -eou pipefail
+        GO111MODULE=on go install github.com/prometheus/prom2json/cmd/prom2json@v1.3.3
+        kubectl get --context k3d-k3s-default --raw /metrics | prom2json | jq '.[] | select(.name=="apiserver_requested_deprecated_apis").metrics[].labels' > deprecations.txt
+      shell: bash
+    - name: Check that deprecations are empty
+      run: if [[ $(cat deprecations.txt | jq 'select(.resource != "endpoints" and .resource != "componentstatuses")') ]]; then exit 1; fi # we ignore endpoints as k3d/k3s makes a request to this deprecated (since v1.33) k8s resource
+      shell: bash
     - name: Gather kubectl logs
       shell: bash
       if: always()
@@ -61,13 +70,6 @@ runs:
         name: e2e-dump-logs-${{ github.job }}-${{ inputs.test_make_target }}
         path: tests/e2e/tests/**/logs/
         if-no-files-found: ignore
-    - name: Upload proxy config dumps
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: proxy-config-dumps-${{ github.job }}-${{ inputs.test_make_target }}
-        path: tests/e2e/tests/**/test-artifacts/
-        if-no-files-found: ignore
     - name: Upload test reports
       uses: actions/upload-artifact@v4
       if: always()
@@ -75,3 +77,9 @@ runs:
         name: test-reports-${{ github.job }}-${{ inputs.test_make_target }}
         path: tests/e2e/tests/**/report.xml
         if-no-files-found: ignore
+    - name: Upload deprecation report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: deprecation-report-${{ github.job }}-${{ inputs.test_make_target }}
+        path: deprecations.txt

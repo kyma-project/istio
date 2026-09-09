@@ -85,13 +85,7 @@ func (g GatewayAPICRDs) installOrWarnCRDs(ctx context.Context, k8sClient client.
 				return controllerutil.OperationResultNone, fmt.Errorf("failed to get CRD %s: %w", desired.GetName(), err)
 			}
 			// CRD does not exist — create it with module label
-			resources.ApplyVersionedLabels(&desired)
-			lbls := desired.GetLabels()
-			if lbls == nil {
-				lbls = make(map[string]string)
-			}
-			lbls[labels.ModuleLabelKey] = labels.ModuleLabelValue
-			desired.SetLabels(lbls)
+			applyManagementLabels(&desired)
 
 			if createErr := k8sClient.Create(ctx, &desired); createErr != nil {
 				return controllerutil.OperationResultNone, fmt.Errorf("failed to create CRD %s: %w", desired.GetName(), createErr)
@@ -110,15 +104,8 @@ func (g GatewayAPICRDs) installOrWarnCRDs(ctx context.Context, k8sClient client.
 			continue
 		}
 
-		// Module-managed CRD — update it
-		resources.ApplyVersionedLabels(&desired)
-		lbls := desired.GetLabels()
-		if lbls == nil {
-			lbls = make(map[string]string)
-		}
-		lbls[labels.ModuleLabelKey] = labels.ModuleLabelValue
-		desired.SetLabels(lbls)
-		desired.SetResourceVersion(existing.GetResourceVersion())
+		// Module-managed CRD — update it, preserving existing labels and annotations
+		mergeIntoExisting(&desired, existing)
 
 		if updateErr := k8sClient.Update(ctx, &desired); updateErr != nil {
 			return controllerutil.OperationResultNone, fmt.Errorf("failed to update CRD %s: %w", desired.GetName(), updateErr)
@@ -171,6 +158,46 @@ func (g GatewayAPICRDs) deleteManagedCRDs(ctx context.Context, k8sClient client.
 func isModuleManaged(obj unstructured.Unstructured) bool {
 	val, exists := obj.GetLabels()[labels.ModuleLabelKey]
 	return exists && val == labels.ModuleLabelValue
+}
+
+// applyManagementLabels stamps the versioned label set and the module ownership label onto obj.
+// Used on the create path where there is no existing object to preserve metadata from.
+func applyManagementLabels(obj *unstructured.Unstructured) {
+	resources.ApplyVersionedLabels(obj)
+	lbls := obj.GetLabels()
+	if lbls == nil {
+		lbls = make(map[string]string)
+	}
+	lbls[labels.ModuleLabelKey] = labels.ModuleLabelValue
+	obj.SetLabels(lbls)
+}
+
+// mergeIntoExisting prepares desired for an update by preserving existing labels and annotations
+// and then enforcing the module-owned values on top. This prevents reconciliation from stripping
+// labels/annotations set by other controllers (including the managed-by disclaimer).
+func mergeIntoExisting(desired *unstructured.Unstructured, existing unstructured.Unstructured) {
+	// Preserve existing labels, merge desired ones on top, then apply module-owned ones.
+	lbls := make(map[string]string)
+	for k, v := range existing.GetLabels() {
+		lbls[k] = v
+	}
+	for k, v := range desired.GetLabels() {
+		lbls[k] = v
+	}
+	desired.SetLabels(lbls)
+	applyManagementLabels(desired)
+
+	// Preserve existing annotations (e.g. the disclaimer), then merge desired ones on top.
+	annotations := make(map[string]string)
+	for k, v := range existing.GetAnnotations() {
+		annotations[k] = v
+	}
+	for k, v := range desired.GetAnnotations() {
+		annotations[k] = v
+	}
+	desired.SetAnnotations(annotations)
+
+	desired.SetResourceVersion(existing.GetResourceVersion())
 }
 
 // unmanagedCRDsWarning is a soft error that signals pre-existing unmanaged CRDs.

@@ -56,7 +56,11 @@ func uninstallIstio(ctx context.Context, args uninstallArgs) (istiooperator.Isti
 			SetCondition(false)
 	}
 
-	if resources.HasAnyModuleManagedGatewayAPICRD(ctx, k8sClient) {
+	hasModuleManagedCRDs, crdCheckErr := resources.HasAnyModuleManagedGatewayAPICRD(ctx, k8sClient)
+	if crdCheckErr != nil {
+		return istioImageVersion, describederrors.NewDescribedError(crdCheckErr, "Could not check Gateway API CRDs on the cluster")
+	}
+	if hasModuleManagedCRDs {
 		gatewayAPIFinder := resources.NewGatewayAPIResourcesFinder(ctx, k8sClient)
 		gatewayAPIResources, gatewayAPIErr := gatewayAPIFinder.FindUserCreatedGatewayAPIResources()
 		if gatewayAPIErr != nil {

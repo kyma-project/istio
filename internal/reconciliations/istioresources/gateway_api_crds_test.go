@@ -66,6 +66,47 @@ var _ = Describe("GatewayAPICRDs", func() {
 			Expect(updated.GetLabels()).To(HaveKeyWithValue(labels.ModuleLabelKey, labels.ModuleLabelValue))
 		})
 
+		It("should preserve existing labels and annotations on module-managed CRDs across reconciliations", func() {
+			// First reconciliation — CRDs are created and the disclaimer is annotated.
+			fakeClient := createFakeClient()
+			r := NewGatewayAPICRDs(false)
+
+			_, err := r.reconcile(context.Background(), fakeClient, owner, templateValues)
+			Expect(err).NotTo(HaveOccurred())
+
+			// Simulate AnnotateWithDisclaimer adding the annotation (done by the caller in production).
+			var crd unstructured.Unstructured
+			Expect(yaml.Unmarshal(gatewayAPIGatewaysCRD, &crd)).To(Succeed())
+			existing := unstructured.Unstructured{}
+			existing.SetGroupVersionKind(crd.GroupVersionKind())
+			Expect(fakeClient.Get(context.Background(), client.ObjectKey{Name: crd.GetName()}, &existing)).To(Succeed())
+
+			ann := existing.GetAnnotations()
+			if ann == nil {
+				ann = make(map[string]string)
+			}
+			ann["istios.operator.kyma-project.io/managed-by-disclaimer"] = "DO NOT EDIT"
+			ann["user-annotation"] = "preserved"
+			existing.SetAnnotations(ann)
+			existingLabels := existing.GetLabels()
+			existingLabels["user-label"] = "preserved"
+			existing.SetLabels(existingLabels)
+			Expect(fakeClient.Update(context.Background(), &existing)).To(Succeed())
+
+			// Second reconciliation — should not strip the disclaimer or user metadata.
+			_, err = r.reconcile(context.Background(), fakeClient, owner, templateValues)
+			Expect(err).NotTo(HaveOccurred())
+
+			var updated unstructured.Unstructured
+			updated.SetGroupVersionKind(crd.GroupVersionKind())
+			Expect(fakeClient.Get(context.Background(), client.ObjectKey{Name: crd.GetName()}, &updated)).To(Succeed())
+
+			Expect(updated.GetAnnotations()).To(HaveKeyWithValue("istios.operator.kyma-project.io/managed-by-disclaimer", "DO NOT EDIT"))
+			Expect(updated.GetAnnotations()).To(HaveKeyWithValue("user-annotation", "preserved"))
+			Expect(updated.GetLabels()).To(HaveKeyWithValue("user-label", "preserved"))
+			Expect(updated.GetLabels()).To(HaveKeyWithValue(labels.ModuleLabelKey, labels.ModuleLabelValue))
+		})
+
 		It("should return a warning and not modify CRDs that exist without module label", func() {
 			// Pre-create a CRD without module label
 			var desired unstructured.Unstructured

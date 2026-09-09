@@ -20,7 +20,6 @@ import (
 	modulehelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/modules"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/namespace"
 )
-
 const (
 	defaultNamespace     = "default"
 	istioSystemNamespace = "istio-system"
@@ -224,6 +223,23 @@ func TestInstallation(t *testing.T) {
 		istioassert.AssertCNINodeReady(t, c)
 		istioassert.AssertDefaultPeerAuthenticationExists(t, c)
 
+	})
+
+	t.Run("Gateway API CRDs are installed with module label when Istio module is installed", func(t *testing.T) {
+		c, err := client.ResourcesClient(t)
+		require.NoError(t, err)
+
+		err = infrahelpers.EnsureProductionClusterProfile(t)
+		require.NoError(t, err)
+
+		fips.EnsureFIPSRegistrySecret(t, istioSystemNamespace)
+		fips.EnsureFIPSRegistrySecret(t, defaultNamespace)
+
+		_, err = modulehelpers.NewIstioCRBuilder().ApplyAndCleanup(t)
+		require.NoError(t, err)
+
+		err = crds.AssertGatewayAPICRDsPresentWithModuleLabel(t.Context(), c.GetControllerRuntimeClient())
+		require.NoError(t, err)
 	})
 
 }

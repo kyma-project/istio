@@ -9,7 +9,9 @@ import (
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
 	"github.com/kyma-project/istio/operator/internal/clusterconfig/factory"
+	"github.com/kyma-project/istio/operator/internal/describederrors"
 	"github.com/kyma-project/istio/operator/internal/istiofeatures"
+	"github.com/kyma-project/istio/operator/pkg/labels"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
@@ -19,6 +21,7 @@ import (
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/scheme"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/yaml"
@@ -88,6 +91,26 @@ var _ = Describe("Reconciliation", func() {
 				Expect(cm.ObjectMeta.OwnerReferences[0].UID).To(Equal(istioCR.UID))
 			}
 		}
+	})
+
+	Context("GatewayAPICRDs warning propagation", func() {
+		It("should return a warning DescribedError when Gateway API CRDs already exist without module label", func() {
+			// Pre-create one of the managed CRDs without the module label so that
+			// GatewayAPICRDs.reconcile returns an unmanagedCRDsWarning.
+			var desired unstructured.Unstructured
+			Expect(yaml.Unmarshal(gatewayAPIHTTPRoutesCRD, &desired)).To(Succeed())
+			desired.SetLabels(map[string]string{"user-label": "user-value"})
+			client := createFakeClient(&desired)
+			reconciler := NewReconciler(client)
+
+			//when
+			err := reconciler.Reconcile(context.Background(), istioCR, mustBuildStrategy(client))
+
+			//then
+			Expect(err).To(HaveOccurred())
+			Expect(err.Level()).To(Equal(describederrors.Warning))
+			Expect(err.Error()).To(ContainSubstring(labels.ModuleLabelKey))
+		})
 	})
 
 	Context("proxy-protocol EnvoyFilter", func() {

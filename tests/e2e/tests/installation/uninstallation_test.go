@@ -17,6 +17,7 @@ import (
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/crds"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/destination_rule"
+	gatewayapihelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/gateway_api"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/httpbin"
 	modulehelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/modules"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/namespace"
@@ -153,6 +154,55 @@ func TestUninstall(t *testing.T) {
 		require.NoError(t, err)
 
 		err = crds.AssertIstioCRDsNotPresent(t.Context(), c.GetControllerRuntimeClient())
+		require.NoError(t, err)
+	})
+
+	t.Run("Uninstallation respects user-created Gateway API resources", func(t *testing.T) {
+		c, err := client.ResourcesClient(t)
+		require.NoError(t, err)
+
+		err = infrastructure.EnsureProductionClusterProfile(t)
+		require.NoError(t, err)
+
+		fips.EnsureFIPSRegistrySecret(t, "istio-system")
+		fips.EnsureFIPSRegistrySecret(t, defaultNamespace)
+
+		istioCR, err := modulehelpers.NewIstioCRBuilder().ApplyAndCleanup(t)
+		require.NoError(t, err)
+
+		// Create a user HTTPRoute that should block deletion
+		httpRoute, err := gatewayapihelpers.CreateHTTPRoute(t, "blocking-httproute", defaultNamespace)
+		require.NoError(t, err)
+
+		err = c.Delete(t.Context(), istioCR)
+		require.NoError(t, err)
+
+		// Deletion should be blocked — Istio CR must enter Warning state
+		istioassert.AssertWarningStatus(t, c, istioCR,
+			istioassert.WithExpectedCondition(
+				v1alpha2.ConditionTypeReady,
+				metav1.ConditionFalse,
+				v1alpha2.ConditionReasonGatewayAPIResourcesDangling,
+			),
+			istioassert.WithExpectedDescriptionContaining(
+				"Gateway API resources that block deletion",
+			),
+			istioassert.WithTimeout(2*time.Minute),
+		)
+
+		err = crds.AssertGatewayAPICRDsPresentWithModuleLabel(t.Context(), c.GetControllerRuntimeClient())
+		require.NoError(t, err)
+
+		// Remove the blocking resource — deletion should now proceed
+		err = c.Delete(t.Context(), httpRoute)
+		require.NoError(t, err)
+
+		resourceassert.AssertResourceDeleted(t, c, istioCR, 2*time.Minute)
+
+		err = crds.AssertGatewayAPICRDsNotPresent(t.Context(), c.GetControllerRuntimeClient())
+		require.NoError(t, err)
+
+		err = istioassert.AssertIstioNamespaceDeleted(t, c, 2*time.Minute)
 		require.NoError(t, err)
 	})
 

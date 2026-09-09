@@ -145,6 +145,18 @@ const (
 	// Resource targeting Istio Ingress Gateway detection failed.
 	ConditionReasonIngressTargetingUserResourceDetectionFailed        ConditionReason = "IngressTargetingUserResourceDetectionFailed"
 	ConditionReasonIngressTargetingUserResourceDetectionFailedMessage                 = "Resource targeting Istio Ingress Gateway detection failed"
+
+	// Gateway API CRDs
+
+	// Gateway API CRDs were installed successfully.
+	ConditionReasonGatewayAPICRDsInstalled        ConditionReason = "GatewayAPICRDsInstalled"
+	ConditionReasonGatewayAPICRDsInstalledMessage                 = "Gateway API CRDs installation succeeded"
+	// Gateway API CRDs were already present on the cluster and not managed by this module.
+	ConditionReasonGatewayAPICRDsAlreadyInstalled        ConditionReason = "GatewayAPICRDsAlreadyInstalled"
+	ConditionReasonGatewayAPICRDsAlreadyInstalledMessage                 = "Gateway API CRDs are already installed. To allow Kyma Istio module to manage them, add the label kyma-project.io/module=istio to the CRDs"
+	// Gateway API resources are blocking module deletion.
+	ConditionReasonGatewayAPIResourcesDangling        ConditionReason = "GatewayAPIResourcesDangling"
+	ConditionReasonGatewayAPIResourcesDanglingMessage                 = "Gateway API deletion blocked because of existing Gateway API resources"
 )
 
 // Couples a condition's reason with its message.

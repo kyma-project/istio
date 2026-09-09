@@ -971,6 +971,52 @@ var _ = Describe("Istio Controller", func() {
 			Expect(secondNotReadyTransitionTime.Compare(firstNotReadyTransitionTime.Time) >= 0).To(BeTrue())
 		})
 
+		It("should set a warning status and use the warning requeue interval when Gateway API CRDs are already installed without module label", func() {
+			// given
+			istioCR := &operatorv1alpha2.Istio{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      istioCrName,
+					Namespace: testNamespace,
+					Finalizers: []string{
+						"istios.operator.kyma-project.io/istio-installation",
+					},
+				},
+			}
+
+			fakeClient := createFakeClient(istioCR)
+
+			sut := &IstioReconciler{
+				Client:            fakeClient,
+				Scheme:            getTestScheme(),
+				istioInstallation: &istioInstallationReconciliationMock{},
+				restarters:        []restarter.Restarter{&restarterMock{}},
+				istioResources: &istioResourcesReconciliationMock{
+					err: describederrors.NewDescribedError(errors.New("unmanaged CRDs"), "unmanaged CRDs warning").SetWarning(),
+				},
+				userResources:          &UserResourcesMock{},
+				log:                    logr.Discard(),
+				statusHandler:          status.NewStatusHandler(fakeClient),
+				reconciliationInterval: testReconciliationInterval,
+			}
+
+			// when
+			result, err := sut.Reconcile(context.Background(), reconcile.Request{NamespacedName: types.NamespacedName{Namespace: testNamespace, Name: istioCrName}})
+
+			// then
+			Expect(err).ToNot(HaveOccurred())
+			Expect(result.RequeueAfter).To(Equal(reconciliationRequeueTimeWarning))
+
+			updatedIstioCR := operatorv1alpha2.Istio{}
+			Expect(fakeClient.Get(context.Background(), client.ObjectKeyFromObject(istioCR), &updatedIstioCR)).To(Succeed())
+
+			Expect(updatedIstioCR.Status.State).Should(Equal(operatorv1alpha2.Warning))
+			Expect(updatedIstioCR.Status.Conditions).ToNot(BeNil())
+			Expect(*updatedIstioCR.Status.Conditions).To(HaveLen(1))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonGatewayAPICRDsAlreadyInstalled)))
+			Expect((*updatedIstioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
+		})
+
 		Context("Restarters", func() {
 			It("should restart if reconciliations are successful", func() {
 				//given

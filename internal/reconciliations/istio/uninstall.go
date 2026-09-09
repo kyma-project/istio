@@ -56,6 +56,26 @@ func uninstallIstio(ctx context.Context, args uninstallArgs) (istiooperator.Isti
 			SetCondition(false)
 	}
 
+	if resources.HasAnyModuleManagedGatewayAPICRD(ctx, k8sClient) {
+		gatewayAPIFinder := resources.NewGatewayAPIResourcesFinder(ctx, k8sClient)
+		gatewayAPIResources, gatewayAPIErr := gatewayAPIFinder.FindUserCreatedGatewayAPIResources()
+		if gatewayAPIErr != nil {
+			return istioImageVersion, describederrors.NewDescribedError(gatewayAPIErr, "Could not get Gateway API resources from the cluster")
+		}
+		if len(gatewayAPIResources) > 0 {
+			funk.ForEach(gatewayAPIResources, func(a resources.Resource) {
+				ctrl.Log.Info("Gateway API resource is blocking Istio deletion", a.GVK.Kind, fmt.Sprintf("%s/%s", a.Namespace, a.Name))
+			})
+			statusHandler.SetCondition(istioCR, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonGatewayAPIResourcesDangling))
+			return istioImageVersion, describederrors.NewDescribedError(
+				fmt.Errorf("could not delete Istio module instance since there are %d Gateway API resources present", len(gatewayAPIResources)),
+				"There are Gateway API resources that block deletion. Please take a look at kyma-system/istio-controller-manager logs to see more information about the warning").
+				DisableErrorWrap().
+				SetWarning().
+				SetCondition(false)
+		}
+	}
+
 	err = istioClient.Uninstall(ctx)
 	if err != nil {
 		return istioImageVersion, describederrors.NewDescribedError(err, "Could not uninstall istio")

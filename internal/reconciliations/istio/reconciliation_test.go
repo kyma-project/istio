@@ -35,6 +35,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/scheme"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -790,6 +791,113 @@ var _ = Describe("Installation reconciliation", func() {
 		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
 		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonIstioUninstallSucceeded)))
 		Expect((*istioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
+	})
+
+	It("should not uninstall if there are Gateway API resources present and module-managed CRDs exist", func() {
+		// given
+		now := metav1.NewTime(time.Now())
+		numTrustedProxies := 1
+		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
+			Name:            "default",
+			ResourceVersion: "1",
+			Annotations: map[string]string{
+				labels.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
+			},
+			DeletionTimestamp: &now,
+			Finalizers:        []string{"istios.operator.kyma-project.io/istio-installation"},
+		},
+			Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
+					NumTrustedProxies: &numTrustedProxies,
+				},
+			},
+		}
+
+		// Pre-existing HTTPRoute (user resource) and a module-managed Gateway API CRD
+		httpRoute := unstructured.Unstructured{}
+		httpRoute.SetAPIVersion("gateway.networking.k8s.io/v1")
+		httpRoute.SetKind("HTTPRoute")
+		httpRoute.SetName("my-route")
+		httpRoute.SetNamespace("default")
+
+		managedCRD := unstructured.Unstructured{}
+		managedCRD.SetAPIVersion("apiextensions.k8s.io/v1")
+		managedCRD.SetKind("CustomResourceDefinition")
+		managedCRD.SetName("httproutes.gateway.networking.k8s.io")
+		managedCRD.SetLabels(map[string]string{"kyma-project.io/module": "istio"})
+
+		mockClient := mockLibraryClient{}
+		c := createFakeClient(&istioCR, &httpRoute, &managedCRD)
+		installation := istio.Installation{
+			Client:      c,
+			IstioClient: &mockClient,
+			Merger:      MergerMock{tag: istioTag},
+		}
+		statusHandler := status.NewStatusHandler(c)
+
+		// when
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.Images{Pilot: images.Image{Registry: "docker.io/istio", Name: "pilot", Tag: "1.10"}}, nil, istiofeatures.IstioFeatures{})
+
+		// then
+		Expect(err).Should(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("Gateway API resources present"))
+		Expect(err.Level()).To(Equal(describederrors.Warning))
+		Expect(err.ShouldSetCondition()).To(BeFalse())
+		Expect(mockClient.installCalled).To(BeFalse())
+		Expect(mockClient.uninstallCalled).To(BeFalse())
+
+		Expect(istioCR.Status.Conditions).ToNot(BeNil())
+		Expect(*istioCR.Status.Conditions).To(HaveLen(1))
+		Expect((*istioCR.Status.Conditions)[0].Type).To(Equal(string(operatorv1alpha2.ConditionTypeReady)))
+		Expect((*istioCR.Status.Conditions)[0].Reason).To(Equal(string(operatorv1alpha2.ConditionReasonGatewayAPIResourcesDangling)))
+		Expect((*istioCR.Status.Conditions)[0].Status).To(Equal(metav1.ConditionFalse))
+	})
+
+	It("should uninstall if Gateway API resources exist but no module-managed CRDs are present", func() {
+		// given
+		now := metav1.NewTime(time.Now())
+		numTrustedProxies := 1
+		istioCR := operatorv1alpha2.Istio{ObjectMeta: metav1.ObjectMeta{
+			Name:            "default",
+			ResourceVersion: "1",
+			Annotations: map[string]string{
+				labels.LastAppliedConfiguration: fmt.Sprintf(`{"config":{"numTrustedProxies":%d},"IstioTag":"%s"}`, numTrustedProxies, istioTag),
+			},
+			DeletionTimestamp: &now,
+			Finalizers:        []string{"istios.operator.kyma-project.io/istio-installation"},
+		},
+			Spec: operatorv1alpha2.IstioSpec{
+				Config: operatorv1alpha2.Config{
+					NumTrustedProxies: &numTrustedProxies,
+				},
+			},
+		}
+
+		// HTTPRoute exists but NO module-managed Gateway API CRD → deletion should not be blocked
+		httpRoute := unstructured.Unstructured{}
+		httpRoute.SetAPIVersion("gateway.networking.k8s.io/v1")
+		httpRoute.SetKind("HTTPRoute")
+		httpRoute.SetName("my-route")
+		httpRoute.SetNamespace("default")
+
+		istiod := createPod("istiod", gatherer.IstioNamespace, "discovery", istioVersion, "kyma-project.io/module=istio")
+		istioNamespace := createNamespace("istio-system")
+		mockClient := mockLibraryClient{}
+		c := createFakeClient(&istioCR, istiod, istioNamespace, &httpRoute)
+		installation := istio.Installation{
+			Client:      c,
+			IstioClient: &mockClient,
+			Merger:      MergerMock{tag: istioTag},
+		}
+		statusHandler := status.NewStatusHandler(c)
+
+		// when
+		_, err := installation.Reconcile(context.Background(), &istioCR, statusHandler, images.Images{Pilot: images.Image{Registry: "docker.io/istio", Name: "pilot", Tag: "1.10"}}, nil, istiofeatures.IstioFeatures{})
+
+		// then
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(mockClient.installCalled).To(BeFalse())
+		Expect(mockClient.uninstallCalled).To(BeTrue())
 	})
 
 	It("should not uninstall if there are Istio resources present", func() {

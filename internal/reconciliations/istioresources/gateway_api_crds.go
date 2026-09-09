@@ -39,6 +39,15 @@ var gatewayAPIListenerSetsCRD []byte
 //go:embed gateway_api_crds/gateway.networking.k8s.io_referencegrants.yaml
 var gatewayAPIReferenceGrantsCRD []byte
 
+//go:embed gateway_api_crds/gateway.networking.k8s.io_tcproutes.yaml
+var gatewayAPITCPRoutesCRD []byte
+
+//go:embed gateway_api_crds/gateway.networking.k8s.io_tlsroutes.yaml
+var gatewayAPITLSRoutesCRD []byte
+
+//go:embed gateway_api_crds/gateway.networking.k8s.io_udproutes.yaml
+var gatewayAPIUDPRoutesCRD []byte
+
 var gatewayAPICRDManifests = [][]byte{
 	gatewayAPIBackendTLSPoliciesCRD,
 	gatewayAPIGatewayClassesCRD,
@@ -47,6 +56,9 @@ var gatewayAPICRDManifests = [][]byte{
 	gatewayAPIHTTPRoutesCRD,
 	gatewayAPIListenerSetsCRD,
 	gatewayAPIReferenceGrantsCRD,
+	gatewayAPITCPRoutesCRD,
+	gatewayAPITLSRoutesCRD,
+	gatewayAPIUDPRoutesCRD,
 }
 
 type GatewayAPICRDs struct {

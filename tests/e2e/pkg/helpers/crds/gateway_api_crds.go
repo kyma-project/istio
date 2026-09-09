@@ -21,6 +21,9 @@ var gatewayAPICRDNames = []string{
 	"httproutes.gateway.networking.k8s.io",
 	"listenersets.gateway.networking.k8s.io",
 	"referencegrants.gateway.networking.k8s.io",
+	"tcproutes.gateway.networking.k8s.io",
+	"tlsroutes.gateway.networking.k8s.io",
+	"udproutes.gateway.networking.k8s.io",
 }
 
 var crdGVK = schema.GroupVersionKind{

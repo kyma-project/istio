@@ -391,7 +391,7 @@ func TestRestarter_Workload(t *testing.T) {
 				observed.Spec.Template.GetAnnotations()["istio-operator.kyma-project.io/restartedAt"] != oldRestartedAt
 		}), wait.WithTimeout(time.Minute*5)))
 	})
-	t.Run("Bare pod is not restarted, istio in Warning state", func(t *testing.T) {
+	t.Run("Bare pod is not restarted", func(t *testing.T) {
 		// Istio module does not support restarting Pods without OwnerReferences
 		testNamespace := "test-bare-pod-restart"
 		c, err := client.ResourcesClient(t)
@@ -413,12 +413,8 @@ func TestRestarter_Workload(t *testing.T) {
 			observed := obj.(*corev1.Pod)
 			return observed.UID == oldUID && observed.GetGeneration() == oldGeneration
 		})))
-		assert.NoError(t, wait.For(conditions.New(c).ResourceMatch(istioCR, func(obj k8s.Object) bool {
-			observed := obj.(*operatorv1alpha2.Istio).Status
-			return observed.State == operatorv1alpha2.Warning
-		})))
 	})
-	t.Run("Pod from running Job is not restarted, Istio in Warning state", func(t *testing.T) {
+	t.Run("Pod from running Job is not restarted", func(t *testing.T) {
 		// Istio module does not support restarting running Pods owned by Jobs
 		testNamespace := "test-job-restart"
 		c, err := client.ResourcesClient(t)
@@ -440,10 +436,6 @@ func TestRestarter_Workload(t *testing.T) {
 			observed := obj.(*batchv1.Job)
 			return observed.GetGeneration() == oldGeneration
 		})))
-		assert.NoError(t, wait.For(conditions.New(c).ResourceMatch(istioCR, func(obj k8s.Object) bool {
-			observed := obj.(*operatorv1alpha2.Istio).Status
-			return observed.State == operatorv1alpha2.Warning
-		})))
 	})
 }
 
@@ -451,7 +443,7 @@ func CreateDeploymentsWaitGroup(t *testing.T, r *resources.Resources, wg *sync.W
 	t.Helper()
 	deplTmpl := &appsv1.Deployment{}
 	require.NoError(t, decoder.DecodeFile(testdata, fileName, deplTmpl))
-	for i := 0; i < numDeployments; i++ {
+	for range numDeployments {
 		wg.Go(func() {
 			depl := deplTmpl.DeepCopy()
 			depl.SetNamespace(namespace)

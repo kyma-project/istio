@@ -3,7 +3,7 @@
 # Description: This script downloads k3d CLI and provisions a k3d cluster
 # Environment variables (optional):
 #   KUBERNETES_VERSION  - Kubernetes version (default: 1.33.5)
-#   K3D_VERSION         - k3d CLI version (default: v5.7.5)
+#   K3D_VERSION         - k3d CLI version (default: v5.9.0)
 #   CALICO_VERSION      - Calico version for --calico mode (default: v3.29.0)
 #   AGENTS              - Number of k3d agents (default: 0)
 #   SERVERS_MEMORY      - Memory for server nodes in GB (default: 16)
@@ -15,8 +15,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 # Configuration - override via environment variables
-KUBERNETES_VERSION="${KUBERNETES_VERSION:-1.34.3}"
-K3D_VERSION="${K3D_VERSION:-v5.8.3}"
+KUBERNETES_VERSION="${KUBERNETES_VERSION:-1.35.7}"
+K3D_VERSION="${K3D_VERSION:-v5.9.0}"
 CALICO_VERSION="${CALICO_VERSION:-v3.31.3}"
 AGENTS="${AGENTS:-0}"
 SERVERS_MEMORY="${SERVERS_MEMORY:-16}"

@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/kyma-project/istio/operator/internal/clusterconfig"
+	"github.com/kyma-project/istio/operator/internal/istiofeatures"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
@@ -18,7 +19,7 @@ import (
 func TestIsDualStackEnabled_Experimental(t *testing.T) {
 	c := createFakeClient(t, createKymaRuntimeConfigWithDualStack(t, true))
 
-	ds, err := clusterconfig.IsDualStackEnabled(context.Background(), c)
+	ds, err := clusterconfig.IsDualStackEnabled(context.Background(), c, false)
 
 	require.NoError(t, err)
 	assert.True(t, ds)
@@ -69,7 +70,7 @@ func TestDiscoverClusterProvider_Experimental(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := createFakeClient(t, tt.objects...)
 
-			str, err := clusterconfig.BuildFactory(context.Background(), c)
+			str, err := clusterconfig.BuildFactory(context.Background(), c, istiofeatures.IstioFeatures{})
 			require.NoError(t, err)
 			got := clusterconfig.ClusterConfigurationFromFactory(str)
 

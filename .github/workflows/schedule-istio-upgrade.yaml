@@ -1,0 +1,76 @@
+name: Schedule Istio Upgrade
+
+# Orchestrator for the scheduled Istio patch upgrade. It does no upgrade work
+# itself: each morning (and on manual dispatch) it discovers the target
+# branches (main + the latest release-*) and dispatches the worker workflow
+# once per branch with --ref <branch>. Running with --ref makes the worker
+# execute entirely in that branch's context - its own workflow file, its own
+# hack/ci/upgrade-istio.sh, and a checkout of that branch - so no branch is
+# ever read from another branch's checkout.
+#
+# workflow_dispatch is one of the two events (with repository_dispatch) that
+# GITHUB_TOKEN is allowed to trigger, so the default token is enough here; no
+# PAT/App token is needed just to fan out.
+
+permissions:
+  actions: write # required to dispatch the worker workflow via the Actions API
+
+on:
+  schedule:
+    - cron: "40 6 * * *" # morning UTC, off-peak minute; after the 04:00 image updater
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  discover-target-branches:
+    name: Discover target branches
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.discover.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Build branch matrix
+        id: discover
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git fetch --prune origin '+refs/heads/*:refs/remotes/origin/*'
+
+          latest_release="$(git for-each-ref --format='%(refname:short)' refs/remotes/origin/release-* \
+            | sed 's#^origin/##' \
+            | sort -V \
+            | tail -n 1)"
+
+          if [ -n "${latest_release}" ]; then
+            matrix="{\"include\":[{\"base\":\"main\"},{\"base\":\"${latest_release}\"}]}"
+          else
+            matrix='{"include":[{"base":"main"}]}'
+          fi
+
+          echo "matrix=${matrix}" >> "$GITHUB_OUTPUT"
+
+  dispatch-worker:
+    name: Dispatch worker on ${{ matrix.base }}
+    runs-on: ubuntu-latest
+    needs: discover-target-branches
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.discover-target-branches.outputs.matrix) }}
+    steps:
+      - name: Dispatch Istio upgrade worker
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          # --ref runs the worker exactly as it exists on matrix.base,
+          # checking out that branch's context. The worker file must exist on
+          # that branch for the dispatch to run its branch-specific logic.
+          gh workflow run istio-upgrade-worker.yaml --ref "${{ matrix.base }}"

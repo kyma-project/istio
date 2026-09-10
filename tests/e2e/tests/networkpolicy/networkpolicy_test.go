@@ -2,6 +2,7 @@ package networkpolicy_test
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
 	"testing"
 	"time"
@@ -23,6 +24,7 @@ import (
 	nphelper "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/networkpolicy"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/testsetup"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/virtual_service"
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/setup/ipfamily"
 )
 
 func TestNetworkPoliciesNotCreatedByDefault(t *testing.T) {
@@ -105,12 +107,18 @@ func TestWorkloadWithDefaultDenyPolicy(t *testing.T) {
 	err = virtual_service.CreateVirtualService(t, "httpbin-vs", testNs, deployment.Host, deployment.Host, gatewayhelper.GatewayReference)
 	require.NoError(t, err)
 
-	ingressAddr, err := load_balancer.GetLoadBalancerIP(t.Context(), r.GetControllerRuntimeClient())
+	ingressAddr, err := load_balancer.GetLoadBalancerAddress(t, r.GetControllerRuntimeClient())
 	require.NoError(t, err)
 
-	httpClient := httphelper.NewHTTPClient(t, httphelper.WithHost(deployment.Host))
 	url := fmt.Sprintf("http://%s/headers", ingressAddr)
-	httpassert.AssertOKResponse(t, httpClient, url)
+
+	// Iterate the configured IP families. In dualstack mode both v4 and v6
+	// must succeed; in single-family modes only that family runs.
+	ipfamily.ForEachDialNetwork(t, "networkpolicy-deny-all",
+		[]httphelper.Option{httphelper.WithHost(deployment.Host)},
+		func(t *testing.T, _ string, httpClient *http.Client) {
+			httpassert.AssertOKResponse(t, httpClient, url)
+		})
 }
 
 func TestIngressGatewayEgressBlockedWithoutLabel(t *testing.T) {
@@ -138,17 +146,24 @@ func TestIngressGatewayEgressBlockedWithoutLabel(t *testing.T) {
 	err = virtual_service.CreateVirtualService(t, "httpbin-vs", testNs, deployment.Host, deployment.Host, gatewayhelper.GatewayReference)
 	require.NoError(t, err)
 
-	ingressAddr, err := load_balancer.GetLoadBalancerIP(t.Context(), r.GetControllerRuntimeClient())
+	ingressAddr, err := load_balancer.GetLoadBalancerAddress(t, r.GetControllerRuntimeClient())
 	require.NoError(t, err)
 
-	// Traffic should fail because httpbin doesn't have the required label
-	// NetworkPolicy blocks at network level - expect connection error (timeout/reset), not HTTP error
-	httpClient := httphelper.NewHTTPClient(t,
-		httphelper.WithHost(deployment.Host),
-		httphelper.WithTimeout(5*time.Second))
-
 	url := fmt.Sprintf("http://%s/headers", ingressAddr)
-	httpassert.AssertConnectionError(t, httpClient, url)
+
+	// Traffic should fail because httpbin doesn't have the required label.
+	// NetworkPolicy blocks at network level - expect connection error
+	// (timeout/reset), not HTTP error. On dualstack we assert both
+	// families independently; each pays the 5s timeout on failure, which
+	// is the intended bounded wait.
+	ipfamily.ForEachDialNetwork(t, "networkpolicy-no-label",
+		[]httphelper.Option{
+			httphelper.WithHost(deployment.Host),
+			httphelper.WithTimeout(5 * time.Second),
+		},
+		func(t *testing.T, _ string, httpClient *http.Client) {
+			httpassert.AssertConnectionError(t, httpClient, url)
+		})
 }
 
 func TestEgressGatewayTraffic(t *testing.T) {

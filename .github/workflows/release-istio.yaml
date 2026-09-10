@@ -306,7 +306,8 @@ jobs:
           manager_image: ${{ needs.get-image.outputs.image }}
           gardener_secret: ${{ secrets.GARDENER_TOKEN }}
           gardener_project_name: ${{ vars.GARDENER_PROJECT_NAME }}
-          gardener_provider: aws
+          gardener_configuration: aws-ipv4
+          test_ip_family: ipv4
           test_make_target: ${{ matrix.test_make_target }}
           operator_version: ${{ needs.get-image.outputs.operator_version }}
 
@@ -334,7 +335,8 @@ jobs:
           manager_image: ${{ needs.get-image.outputs.image }}
           gardener_secret: ${{ secrets.GARDENER_TOKEN }}
           gardener_project_name: ${{ vars.GARDENER_PROJECT_NAME }}
-          gardener_provider: gcp
+          gardener_configuration: gcp-ipv4
+          test_ip_family: ipv4
           test_make_target: ${{ matrix.test_make_target }}
           operator_version: ${{ needs.get-image.outputs.operator_version }}
 

@@ -14,6 +14,7 @@ import (
 	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
 	securityv1 "istio.io/client-go/pkg/apis/security/v1"
 	"k8s.io/api/apps/v1beta1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	types2 "k8s.io/apimachinery/pkg/types"
@@ -78,6 +79,33 @@ var _ = Describe("status", func() {
 			Expect(cr.Status.Description).To(BeEmpty())
 			Expect(cr.Status.Conditions).To(BeNil())
 		})
+
+		It("should stamp conditions with current generation when updating to ready", func() {
+			// given
+			conditions := []metav1.Condition{
+				{Type: string(operatorv1alpha2.ConditionTypeReady), ObservedGeneration: 1},
+			}
+			cr := operatorv1alpha2.Istio{
+				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default", Generation: 2},
+				Status:     operatorv1alpha2.IstioStatus{Conditions: &conditions},
+			}
+			k8sClient := createFakeClient(&cr)
+			handler := NewStatusHandler(k8sClient)
+
+			handler.SetCondition(&cr, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileSucceeded))
+
+			// when
+			err := handler.UpdateToReady(context.TODO(), &cr)
+
+			// then
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(k8sClient.Get(context.TODO(), types2.NamespacedName{Name: "test", Namespace: "default"}, &cr)).To(Succeed())
+			Expect(cr.Status.Conditions).ToNot(BeNil())
+			readyCond := meta.FindStatusCondition(*cr.Status.Conditions, string(operatorv1alpha2.ConditionTypeReady))
+			Expect(readyCond).ToNot(BeNil())
+			Expect(readyCond.ObservedGeneration).To(Equal(int64(2)))
+		})
 	})
 
 	Describe("UpdateToDeleting", func() {
@@ -131,6 +159,33 @@ var _ = Describe("status", func() {
 			Expect(cr.Status.State).To(Equal(operatorv1alpha2.Processing))
 			Expect(cr.Status.Description).To(Equal("Reconciling Istio"))
 			Expect(cr.Status.Conditions).To(BeNil())
+		})
+
+		It("should preserve previous ObservedGeneration on conditions when updating to processing", func() {
+			// given
+			conditions := []metav1.Condition{
+				{Type: string(operatorv1alpha2.ConditionTypeReady), ObservedGeneration: 1},
+			}
+			cr := operatorv1alpha2.Istio{
+				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default", Generation: 2},
+				Status:     operatorv1alpha2.IstioStatus{Conditions: &conditions},
+			}
+			k8sClient := createFakeClient(&cr)
+			handler := NewStatusHandler(k8sClient)
+
+			handler.SetCondition(&cr, operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonReconcileUnknown))
+
+			// when
+			err := handler.UpdateToProcessing(context.TODO(), &cr)
+
+			// then
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(k8sClient.Get(context.TODO(), types2.NamespacedName{Name: "test", Namespace: "default"}, &cr)).To(Succeed())
+			Expect(cr.Status.Conditions).ToNot(BeNil())
+			readyCond := meta.FindStatusCondition(*cr.Status.Conditions, string(operatorv1alpha2.ConditionTypeReady))
+			Expect(readyCond).ToNot(BeNil())
+			Expect(readyCond.ObservedGeneration).To(Equal(int64(1)))
 		})
 	})
 

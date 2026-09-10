@@ -40,6 +40,29 @@ func (d Handler) update(ctx context.Context, istioCR *operatorv1alpha2.Istio) er
 		if getErr := d.client.Get(ctx, client.ObjectKeyFromObject(istioCR), istioCR); getErr != nil {
 			return getErr
 		}
+		conditions := newStatus.Conditions
+		if newStatus.State == operatorv1alpha2.Processing {
+			prevByType := make(map[string]metav1.Condition)
+			if istioCR.Status.Conditions != nil {
+				for _, c := range *istioCR.Status.Conditions {
+					prevByType[c.Type] = c
+				}
+			}
+			if conditions != nil {
+				for i := range *conditions {
+					if prev, ok := prevByType[(*conditions)[i].Type]; ok {
+						(*conditions)[i].ObservedGeneration = prev.ObservedGeneration
+					}
+				}
+			}
+			istioCR.Status = newStatus
+			return d.client.Status().Update(ctx, istioCR)
+		}
+		if conditions != nil {
+			for i := range *conditions {
+				(*conditions)[i].ObservedGeneration = istioCR.Generation
+			}
+		}
 		istioCR.Status = newStatus
 		if updateErr := d.client.Status().Update(ctx, istioCR); updateErr != nil {
 			return updateErr

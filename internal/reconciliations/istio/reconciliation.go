@@ -8,6 +8,7 @@ import (
 
 	"github.com/kyma-project/istio/operator/internal/clusterconfig/factory"
 	"github.com/kyma-project/istio/operator/internal/images"
+	"github.com/kyma-project/istio/operator/internal/istiofeatures"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/describederrors"
@@ -16,7 +17,7 @@ import (
 )
 
 type InstallationReconciliation interface {
-	Reconcile(ctx context.Context, istioCR *operatorv1alpha2.Istio, statusHandler status.Status, istioImageHub images.Images, clusterStrategy factory.Factory) (istiooperator.IstioImageVersion, describederrors.DescribedError)
+	Reconcile(ctx context.Context, istioCR *operatorv1alpha2.Istio, statusHandler status.Status, istioImageHub images.Images, clusterStrategy factory.Factory, features istiofeatures.IstioFeatures) (istiooperator.IstioImageVersion, describederrors.DescribedError)
 }
 
 type Installation struct {
@@ -32,6 +33,7 @@ func (i *Installation) Reconcile(
 	statusHandler status.Status,
 	images images.Images,
 	clusterStrategy factory.Factory,
+	features istiofeatures.IstioFeatures,
 ) (istiooperator.IstioImageVersion, describederrors.DescribedError) {
 	istioImageVersion, err := i.Merger.GetIstioImageVersion()
 	if err != nil {
@@ -49,6 +51,7 @@ func (i *Installation) Reconcile(
 			istioClient:         i.IstioClient,
 			istioImages:         images,
 			clusterStrategy:     clusterStrategy,
+			features:            features,
 		}
 		return installIstio(ctx, args)
 	}

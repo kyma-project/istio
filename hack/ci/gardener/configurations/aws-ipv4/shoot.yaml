@@ -10,7 +10,7 @@ spec:
   credentialsBindingName: ${GARDENER_PROVIDER_SECRET_NAME}
   cloudProfile:
     kind: CloudProfile
-    name: gcp
+    name: aws
   region: ${GARDENER_REGION}
   purpose: evaluation
   controlPlane:
@@ -18,16 +18,26 @@ spec:
       failureTolerance:
         type: zone
   provider:
-    type: gcp
+    type: aws
     infrastructureConfig:
-      apiVersion: gcp.provider.extensions.gardener.cloud/v1alpha1
+      apiVersion: aws.provider.extensions.gardener.cloud/v1alpha1
       kind: InfrastructureConfig
       networks:
-        workers: 10.250.0.0/16
-    controlPlaneConfig:
-      apiVersion: gcp.provider.extensions.gardener.cloud/v1alpha1
-      kind: ControlPlaneConfig
-      zone: ${GARDENER_REGION}-a
+        vpc:
+          cidr: 10.250.0.0/16
+        zones:
+          - name: ${GARDENER_REGION}a
+            internal: 10.250.48.0/20
+            public: 10.250.32.0/20
+            workers: 10.250.0.0/19
+          - name: ${GARDENER_REGION}b
+            internal: 10.250.112.0/20
+            public: 10.250.96.0/20
+            workers: 10.250.64.0/19
+          - name: ${GARDENER_REGION}c
+            internal: 10.250.176.0/20
+            public: 10.250.160.0/20
+            workers: 10.250.128.0/19
     workers:
       - name: cpu-worker
         minimum: ${SCALER_MIN}
@@ -38,21 +48,18 @@ spec:
           type: ${DISK_TYPE}
           size: ${DISK_SIZE}Gi
         zones:
-          - ${GARDENER_REGION}-a
-          - ${GARDENER_REGION}-b
-          - ${GARDENER_REGION}-c
+          - ${GARDENER_REGION}a
+          - ${GARDENER_REGION}b
+          - ${GARDENER_REGION}c
   networking:
     type: calico
     pods: 100.96.0.0/11
     nodes: 10.250.0.0/16
     services: 100.64.0.0/13
   kubernetes:
-    version: "${GARDENER_CLUSTER_VERSION}"
+    version: ${GARDENER_CLUSTER_VERSION}
   hibernation:
     enabled: false
-  addons:
-    nginxIngress:
-      enabled: false
   extensions:
     - type: shoot-dns-service
       providerConfig:

@@ -25,8 +25,7 @@ kubectl patch istios/default -n kyma-system --type merge -p '{"spec":{"experimen
 The Istio module does not install Gateway API CustomResourceDefinitions (CRDs). To install the CRDs from the experimental channel, run the following command:
 
 ```bash
-kubectl get crd gateways.gateway.networking.k8s.io &> /dev/null || \
-{ kubectl kustomize "github.com/kubernetes-sigs/gateway-api/config/crd/experimental?ref=v1.1.0" | kubectl apply -f -; }
+kubectl apply --server-side -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.6.1/experimental-install.yaml
 ```
 
 > [!NOTE]
@@ -45,7 +44,7 @@ kubectl get crd gateways.gateway.networking.k8s.io &> /dev/null || \
     ```bash
     kubectl create ns $NAMESPACE
     kubectl label namespace $NAMESPACE istio-injection=enabled --overwrite
-    kubectl create -n $NAMESPACE -f https://raw.githubusercontent.com/istio/istio/release-1.22/samples/tcp-echo/tcp-echo.yaml
+    kubectl create -n $NAMESPACE -f https://raw.githubusercontent.com/istio/istio/release-1.31/samples/tcp-echo/tcp-echo.yaml
     ```
 
 ### Expose a TCPEcho Service
@@ -74,11 +73,11 @@ kubectl get crd gateways.gateway.networking.k8s.io &> /dev/null || \
     > [!NOTE]
     > This command deploys the Istio Ingress service in your namespace with the corresponding Kubernetes Service of type `LoadBalanced` and an assigned external IP address.
 
-2. Create a TCPRoute to configure access to your worklad:
+2. Create a TCPRoute to configure access to your workload:
 
     ```bash
     cat <<EOF | kubectl apply -f -
-    apiVersion: gateway.networking.k8s.io/v1alpha2
+    apiVersion: gateway.networking.k8s.io/v1
     kind: TCPRoute
     metadata:
       name: tcp-echo
@@ -106,11 +105,10 @@ kubectl get crd gateways.gateway.networking.k8s.io &> /dev/null || \
 2. Deploy a `sleep` Service:
 
     ```bash
-    kubectl create -n $NAMESPACE -f https://raw.githubusercontent.com/istio/istio/release-1.22/samples/sleep/sleep.yaml
+    kubectl create -n $NAMESPACE -f https://raw.githubusercontent.com/istio/istio/release-1.31/samples/sleep/sleep.yaml
     ```
 
-
-2. Send TCP traffic:
+3. Send TCP traffic:
 
     ```bash
     export SLEEP=$(kubectl get pod -l app=sleep -n $NAMESPACE -o jsonpath={.items..metadata.name})
@@ -122,4 +120,3 @@ kubectl get crd gateways.gateway.networking.k8s.io &> /dev/null || \
     ```
     hello Mon Jul 29 12:43:56 UTC 2024
     ```
-

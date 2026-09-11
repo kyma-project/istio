@@ -11,6 +11,7 @@ export default [
     ] },
   { text: 'Istio Custom Resource', link: './04-00-istio-custom-resource' },
   { text: 'Network Policies', link: './00-50-network-policies.md' },
+  { text: 'Gateway API CRDs', link: './00-55-gateway-api-crds.md' },
   { text: 'Tutorials', link: './tutorials/README', collapsed: true, items: [
     { text: 'Expose Workloads Using oauth2-proxy', link: './tutorials/01-10-external-authorization-provider' },
     { text: 'Expose Workloads Using Gateway API', link: './tutorials/01-20-expose-httbin-gateway-api' },
@@ -33,6 +34,7 @@ export default [
     { text: 'Forbidden Error when the Host Header Contains a Port', link: './troubleshooting/03-65-403-if-host-header-contains-port'},
     { text: 'Istio Sidecar Injection Issues', link: './troubleshooting/03-30-istio-no-sidecar' },
     { text: 'Reverting the Istio module\'s deletion', link: './troubleshooting/03-50-recovering-from-unintentional-istio-removal' },
+    { text: 'Deletion Blocked by Gateway API Resources', link: './troubleshooting/03-55-gateway-api-resources-dangling' },
     { text: 'SAP HANA Database Connection Issues', link: './troubleshooting/03-80-cannot-connect-to-hana-db' },
     { text: 'Not Found Error', link: './troubleshooting/03-60-404-on-istio-gateway' },
     { text: 'Incompatible Istio Sidecar', link: './troubleshooting/03-40-incompatible-istio-sidecar-version' },

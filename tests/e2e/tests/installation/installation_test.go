@@ -226,4 +226,21 @@ func TestInstallation(t *testing.T) {
 
 	})
 
+	t.Run("Gateway API CRDs are installed with module label when Istio module is installed", func(t *testing.T) {
+		c, err := client.ResourcesClient(t)
+		require.NoError(t, err)
+
+		err = infrahelpers.EnsureProductionClusterProfile(t)
+		require.NoError(t, err)
+
+		fips.EnsureFIPSRegistrySecret(t, istioSystemNamespace)
+		fips.EnsureFIPSRegistrySecret(t, defaultNamespace)
+
+		_, err = modulehelpers.NewIstioCRBuilder().ApplyAndCleanup(t)
+		require.NoError(t, err)
+
+		err = crds.AssertGatewayAPICRDsPresentWithModuleLabel(t.Context(), c.GetControllerRuntimeClient())
+		require.NoError(t, err)
+	})
+
 }

@@ -62,9 +62,8 @@ var gatewayAPICRDManifests = [][]byte{
 	gatewayAPIUDPRoutesCRD,
 }
 
-// gatewayAPIPrimaryCRDName is the single CRD checked to determine whether the module
-// should take over management (or warn about unmanaged CRDs).
-const gatewayAPIPrimaryCRDName = "gateways.gateway.networking.k8s.io"
+// gatewayAPICRDName is the CRD checked to determine whether the module manages Gateway API CRDs.
+const gatewayAPICRDName = "gateways.gateway.networking.k8s.io"
 
 var crdGroupVersionKind = schema.GroupVersionKind{
 	Group:   "apiextensions.k8s.io",
@@ -92,12 +91,12 @@ func (g GatewayAPICRDs) reconcile(ctx context.Context, k8sClient client.Client, 
 }
 
 func (g GatewayAPICRDs) installOrWarnCRDs(ctx context.Context, k8sClient client.Client) (controllerutil.OperationResult, error) {
-	primaryUnmanaged, err := g.isPrimaryUnmanaged(ctx, k8sClient)
+	managed, err := g.isGatewayManaged(ctx, k8sClient)
 	if err != nil {
 		return controllerutil.OperationResultNone, err
 	}
-	if primaryUnmanaged {
-		return controllerutil.OperationResultNone, &unmanagedCRDsWarning{name: gatewayAPIPrimaryCRDName}
+	if !managed {
+		return controllerutil.OperationResultNone, &unmanagedCRDsWarning{}
 	}
 
 	for _, manifest := range gatewayAPICRDManifests {
@@ -141,18 +140,19 @@ func (g GatewayAPICRDs) installOrWarnCRDs(ctx context.Context, k8sClient client.
 	return controllerutil.OperationResultUpdated, nil
 }
 
-// isPrimaryUnmanaged returns true if the primary CRD exists but lacks the managed-gateway-api label.
-func (g GatewayAPICRDs) isPrimaryUnmanaged(ctx context.Context, k8sClient client.Client) (bool, error) {
+// isGatewayManaged returns true if the gateway CRD exists and carries the managed-gateway-api label.
+// Returns true (proceed) when the CRD does not exist yet — it will be created.
+func (g GatewayAPICRDs) isGatewayManaged(ctx context.Context, k8sClient client.Client) (bool, error) {
 	crd := unstructured.Unstructured{}
 	crd.SetGroupVersionKind(crdGroupVersionKind)
-	err := k8sClient.Get(ctx, client.ObjectKey{Name: gatewayAPIPrimaryCRDName}, &crd)
+	err := k8sClient.Get(ctx, client.ObjectKey{Name: gatewayAPICRDName}, &crd)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			return false, nil
+			return true, nil
 		}
-		return false, fmt.Errorf("failed to get CRD %s: %w", gatewayAPIPrimaryCRDName, err)
+		return false, fmt.Errorf("failed to get CRD %s: %w", gatewayAPICRDName, err)
 	}
-	return !hasManagedGatewayAPILabel(crd), nil
+	return hasManagedGatewayAPILabel(crd), nil
 }
 
 func (g GatewayAPICRDs) deleteManagedCRDs(ctx context.Context, k8sClient client.Client) (controllerutil.OperationResult, error) {
@@ -202,7 +202,7 @@ func applyManagementLabels(obj *unstructured.Unstructured) {
 		lbls = make(map[string]string)
 	}
 	lbls[labels.ModuleLabelKey] = labels.ModuleLabelValue
-	if obj.GetName() == gatewayAPIPrimaryCRDName {
+	if obj.GetName() == gatewayAPICRDName {
 		lbls[labels.ManagedGatewayAPILabelKey] = labels.ManagedGatewayAPILabelValue
 	}
 	obj.SetLabels(lbls)
@@ -232,13 +232,11 @@ func mergeIntoExisting(desired *unstructured.Unstructured, existing unstructured
 	desired.SetResourceVersion(existing.GetResourceVersion())
 }
 
-// unmanagedCRDsWarning is a soft error signalling the primary Gateway API CRD is not module-managed.
-type unmanagedCRDsWarning struct {
-	name string
-}
+// unmanagedCRDsWarning is a soft error used to signal the reconciler to return a Warning condition.
+type unmanagedCRDsWarning struct{}
 
 func (e *unmanagedCRDsWarning) Error() string {
-	return fmt.Sprintf("Gateway API CRD %s is already installed and not managed by Kyma Istio module. "+
-		"To allow Kyma Istio module to manage it, add the label %s=%s to the CRD",
-		e.name, labels.ManagedGatewayAPILabelKey, labels.ManagedGatewayAPILabelValue)
+	return fmt.Sprintf("Gateway API CRDs are already installed and not managed by Kyma Istio module. "+
+		"To allow Kyma Istio module to manage them, add the label %s=%s to the %s CRD",
+		labels.ManagedGatewayAPILabelKey, labels.ManagedGatewayAPILabelValue, gatewayAPICRDName)
 }

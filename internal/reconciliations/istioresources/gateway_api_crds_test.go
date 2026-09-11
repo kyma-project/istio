@@ -48,7 +48,7 @@ var _ = Describe("GatewayAPICRDs", func() {
 		})
 
 		It("should update module-managed CRDs that already exist", func() {
-			// Pre-create the primary CRD with both management labels
+			// Pre-create the gateways CRD with both management labels
 			var desired unstructured.Unstructured
 			Expect(yaml.Unmarshal(gatewayAPIGatewaysCRD, &desired)).To(Succeed())
 			lbls := map[string]string{
@@ -111,7 +111,7 @@ var _ = Describe("GatewayAPICRDs", func() {
 		})
 
 		It("should return a warning and not modify CRDs that exist without module label", func() {
-			// Pre-create the primary CRD without module label — that is what triggers the warning
+			// Pre-create the gateways CRD without module label — that is what triggers the warning
 			var desired unstructured.Unstructured
 			Expect(yaml.Unmarshal(gatewayAPIGatewaysCRD, &desired)).To(Succeed())
 			desired.SetLabels(map[string]string{"some-other-label": "value"})
@@ -121,11 +121,10 @@ var _ = Describe("GatewayAPICRDs", func() {
 			_, err := r.reconcile(context.Background(), fakeClient, owner, templateValues)
 
 			Expect(err).To(HaveOccurred())
-			warn, ok := err.(*unmanagedCRDsWarning)
+			_, ok := err.(*unmanagedCRDsWarning)
 			Expect(ok).To(BeTrue())
-			Expect(warn.name).To(Equal(desired.GetName()))
 
-			// Primary CRD should not have been modified — original label still present, no module label
+			// Gateways CRD should not have been modified — original label still present, no module label
 			var existing unstructured.Unstructured
 			existing.SetGroupVersionKind(desired.GroupVersionKind())
 			Expect(fakeClient.Get(context.Background(), client.ObjectKey{Name: desired.GetName()}, &existing)).To(Succeed())

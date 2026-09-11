@@ -95,7 +95,7 @@ var _ = Describe("Reconciliation", func() {
 
 	Context("GatewayAPICRDs warning propagation", func() {
 		It("should return a warning DescribedError when Gateway API CRDs already exist without module label", func() {
-			// Pre-create the primary managed CRD without the module label so that
+			// Pre-create the gateways CRD without the module label so that
 			// GatewayAPICRDs.reconcile returns an unmanagedCRDsWarning.
 			var desired unstructured.Unstructured
 			Expect(yaml.Unmarshal(gatewayAPIGatewaysCRD, &desired)).To(Succeed())

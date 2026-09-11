@@ -26,7 +26,7 @@ var gatewayAPICRDNames = []string{
 	"udproutes.gateway.networking.k8s.io",
 }
 
-const gatewayAPIPrimaryCRDName = "gateways.gateway.networking.k8s.io"
+const gatewayAPICRDName = "gateways.gateway.networking.k8s.io"
 
 var crdGVK = schema.GroupVersionKind{
 	Group:   "apiextensions.k8s.io",
@@ -36,7 +36,7 @@ var crdGVK = schema.GroupVersionKind{
 
 // AssertGatewayAPICRDsPresentWithModuleLabel checks that all Gateway API CRDs exist
 // on the cluster and carry the kyma-project.io/module=istio label.
-// It also verifies that the primary CRD carries the kyma-project.io/managed-gateway-api=true label.
+// It also verifies that the gateways CRD carries the kyma-project.io/managed-gateway-api=true label.
 func AssertGatewayAPICRDsPresentWithModuleLabel(ctx context.Context, c client.Client) error {
 	var errs []error
 	for _, name := range gatewayAPICRDNames {
@@ -50,10 +50,10 @@ func AssertGatewayAPICRDsPresentWithModuleLabel(ctx context.Context, c client.Cl
 		if !exists || val != labels.ModuleLabelValue {
 			errs = append(errs, fmt.Errorf("CRD %s missing module label %s=%s", name, labels.ModuleLabelKey, labels.ModuleLabelValue))
 		}
-		if name == gatewayAPIPrimaryCRDName {
+		if name == gatewayAPICRDName {
 			mgval, mgexists := crd.GetLabels()[labels.ManagedGatewayAPILabelKey]
 			if !mgexists || mgval != labels.ManagedGatewayAPILabelValue {
-				errs = append(errs, fmt.Errorf("primary CRD %s missing label %s=%s", name, labels.ManagedGatewayAPILabelKey, labels.ManagedGatewayAPILabelValue))
+				errs = append(errs, fmt.Errorf("CRD %s missing label %s=%s", name, labels.ManagedGatewayAPILabelKey, labels.ManagedGatewayAPILabelValue))
 			}
 		}
 	}

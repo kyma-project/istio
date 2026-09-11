@@ -77,7 +77,7 @@ func isIstioOwnedGatewayClass(obj unstructured.Unstructured) bool {
 	return strings.HasPrefix(controllerName, "istio.io/")
 }
 
-// HasAnyModuleManagedGatewayAPICRD returns true if the primary Gateway API CRD carries the managed-gateway-api label.
+// HasAnyModuleManagedGatewayAPICRD returns true if the gateways CRD carries the managed-gateway-api label.
 func HasAnyModuleManagedGatewayAPICRD(ctx context.Context, k8sClient client.Client) (bool, error) {
 	crdGVK := schema.GroupVersionKind{
 		Group:   "apiextensions.k8s.io",

@@ -1,8 +1,8 @@
 MODULE_NAME ?= istio
 
-# Module Registry used for pushing the image
-MODULE_REGISTRY_PORT ?= 8888
-MODULE_REGISTRY ?= op-kcp-registry.localhost:$(MODULE_REGISTRY_PORT)/unsigned
+# The canonical repository where official releases are published. Used by deploy-release.
+# Forks should not change this — they still install from the official upstream releases.
+RELEASE_REPOSITORY ?= $(shell cat RELEASE_REPOSITORY)
 
 # Operating system architecture
 OS_ARCH ?= $(shell uname -m)
@@ -10,10 +10,8 @@ OS_ARCH ?= $(shell uname -m)
 # Operating system type
 OS_TYPE ?= $(shell uname)
 
+# Version stored in the image
 VERSION ?= dev
-
-# Istio install binary path for running the installation in separate process
-ISTIO_INSTALL_BIN_PATH = ./bin/istio_install
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -26,19 +24,6 @@ endif
 # Options are set to exit when a recipe line exits non-zero or a piped command fails.
 SHELL = /usr/bin/env bash -o pipefail
 .SHELLFLAGS = -ec
-
-# Image URL to use all building/pushing image targets
-APP_NAME = istio-manager
-
-# Image URL to use all building/pushing image targets
-IMG_REGISTRY_PORT ?= $(MODULE_REGISTRY_PORT)
-IMG_REGISTRY ?= op-skr-registry.localhost:$(IMG_REGISTRY_PORT)/unsigned/operator-images
-IMG ?= $(IMG_REGISTRY)/$(MODULE_NAME)-operator:$(MODULE_VERSION)
-
-COMPONENT_CLI_VERSION ?= latest
-
-# It is required for upgrade integration test
-TARGET_BRANCH ?= ""
 
 ##@ General
 
@@ -65,11 +50,13 @@ manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and Cust
 
 .PHONY: generate-integration-test-manifest
 generate-integration-test-manifest: manifests kustomize module-version
+	$(if $(IMG),,$(error IMG must be set))
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default -o tests/integration/steps/operator_generated_manifest.yaml
 
 .PHONY: generate-upgrade-test-manifest
 generate-upgrade-test-manifest: manifests kustomize module-version
+	$(if $(IMG),,$(error IMG must be set))
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default -o tests/e2e/tests/upgrade/operator_generated_manifest.yaml
 
@@ -95,13 +82,16 @@ test-experimental-tag: manifests generate fmt vet setup-envtest ## Run tests.
 
 ##@ Build
 
+# Istio install binary path for running the installation in separate process
+ISTIO_INSTALL_BIN_PATH = ./bin/istio_install
+
 .PHONY: build
 build: generate fmt vet ## Build manager binary.
 	go build -o bin/manager cmd/main.go
 	go build -o $(ISTIO_INSTALL_BIN_PATH) cmd/istio-install/main.go
 
 .PHONY: run
-run: manifests install build create-kyma-system-ns ## Run a controller from your host.
+run: manifests install build create-namespace ## Run a controller from your host.
 	ISTIO_INSTALL_BIN_PATH=$(ISTIO_INSTALL_BIN_PATH) go run ./cmd/main.go
 
 TARGET_OS ?= linux
@@ -109,25 +99,18 @@ TARGET_ARCH ?= amd64
 
 .PHONY: docker-build
 docker-build: ## Build docker image with the manager.
+	$(if $(IMG),,$(error IMG must be set))
 	IMG=$(IMG) docker buildx build -t ${IMG} --platform=${TARGET_OS}/${TARGET_ARCH} .
 
 .PHONY: docker-build-experimental
 docker-build-experimental: ## Build docker image with the experimental manager
+	$(if $(IMG),,$(error IMG must be set))
 	IMG=$(IMG) docker build -t ${IMG} --build-arg GO_BUILD_TAGS=experimental --platform=${TARGET_OS}/${TARGET_ARCH} .
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
+	$(if $(IMG),,$(error IMG must be set))
 	docker push ${IMG}
-
-##@ Local
-
-.PHONY: local-run
-local-run:
-	make -C hack/local run
-
-.PHONY: local-stop
-local-stop:
-	make -C hack/local stop
 
 ##@ Deployment
 
@@ -135,8 +118,8 @@ ifndef ignore-not-found
   ignore-not-found = false
 endif
 
-.PHONY: create-kyma-system-ns
-create-kyma-system-ns:
+.PHONY: create-namespace
+create-namespace:
 	kubectl create namespace kyma-system --dry-run=client -o yaml | kubectl apply -f -
 	kubectl label namespace kyma-system istio-injection=enabled --overwrite
 
@@ -151,7 +134,8 @@ uninstall: manifests kustomize module-version ## Uninstall CRDs from the K8s clu
 	if [ -n "$$out" ]; then echo "$$out" | kubectl delete --ignore-not-found=$(ignore-not-found) -f -; else echo "No CRDs to delete; skipping."; fi
 
 .PHONY: deploy
-deploy: create-kyma-system-ns manifests kustomize module-version ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+deploy: manifests kustomize module-version ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+	$(if $(IMG),,$(error IMG must be set))
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 ifeq (,$(findstring experimental,$(VERSION)))
 	$(KUSTOMIZE) build config/regular | kubectl apply -f -
@@ -159,6 +143,10 @@ else
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 endif
 
+.PHONY: deploy-release
+deploy-release: ## Deploy controller from a GitHub release. Requires RELEASE_VERSION.
+	$(if $(RELEASE_VERSION),,$(error RELEASE_VERSION is required))
+	kubectl apply -f https://github.com/$(RELEASE_REPOSITORY)/releases/download/$(RELEASE_VERSION)/istio-manager.yaml
 
 .PHONY: undeploy
 undeploy: kustomize ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
@@ -236,7 +224,7 @@ endef
 	@echo "Finished E2E test: $*"
 
 .PHONY: upgrade-test
-upgrade-test: generate-upgrade-test-manifest deploy-latest-release gotestsum
+upgrade-test: generate-upgrade-test-manifest gotestsum
 	@echo "Running Upgrade test"
 	go clean -testcache
 	$(GOTESTSUM) --format testname --rerun-fails --packages="./tests/e2e/tests/upgrade/..." --junitfile "./tests/e2e/tests/upgrade/report.xml" -- -timeout 20m
@@ -250,6 +238,7 @@ module-image: docker-build docker-push ## Build the Module Image and push it to 
 
 .PHONY: generate-manifests
 generate-manifests: kustomize module-version
+	$(if $(IMG),,$(error IMG must be set))
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 ifeq (,$(findstring experimental,$(VERSION)))
 	echo "Generating manifest for regular and fast channel releases"
@@ -275,20 +264,15 @@ grpc-performance-test:
 	make -c tests/performance-grpc grpc-load-test
 	make -c tests/performance-grpc export-results
 
-.PHONY: deploy-latest-release
-deploy-latest-release: create-kyma-system-ns
-	./hack/ci/deploy-latest-release-to-cluster.sh $(TARGET_BRANCH)
-
 ########## Gardener specific ###########
 
 .PHONY: module-version
 module-version:
 	sed 's/VERSION/$(VERSION)/g' config/default/kustomization.template.yaml > config/default/kustomization.yaml
 
-DUAL_STACK_ENABLED ?= true
-
 .PHONY: create-provisioning-info
-create-provisioning-info: create-kyma-system-ns
+create-provisioning-info:
+	$(if $(DUAL_STACK_ENABLED),,$(error DUAL_STACK_ENABLED must be set))
 	printf 'networkDetails:\n  dualStackIPEnabled: %s\n' "$(DUAL_STACK_ENABLED)" \
 	  | kubectl create configmap -n kyma-system kyma-provisioning-info \
 		  --from-file=details=/dev/stdin \

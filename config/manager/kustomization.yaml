@@ -5,7 +5,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 images:
 - name: controller
-  newName: i566483/istio
-  newTag: vpa-cp-3
+  newName: europe-docker.pkg.dev/kyma-project/prod/istio/releases/istio-manager
+  newTag: to-be-replaced-by-make
 patches:
 - path: env-images.yaml

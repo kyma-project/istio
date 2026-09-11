@@ -108,8 +108,7 @@ jobs:
           test_make_target: ${{ matrix.test-make-target }}
           operator-image-name: ${{ needs.get-image.outputs.image }}
           operator-version: ${{ needs.get-image.outputs.operator_version }}
-          servers-memory: "16"
-          agents: 2
+          k3d_configuration: 'default'
 
   istio-e2e-test-evaluation-k3d:
     name: Istio E2E test (evaluation) K3D
@@ -129,8 +128,7 @@ jobs:
           test_make_target: ${{ matrix.test-make-target }}
           operator-image-name: ${{ needs.get-image.outputs.image }}
           operator-version: ${{ needs.get-image.outputs.operator_version }}
-          servers-memory: "4"
-          agents: 0
+          k3d_configuration: 'evaluation'
 
   istio-e2e-test-calico-k3d:
     name: Istio E2E test (Calico) K3D
@@ -146,9 +144,7 @@ jobs:
           test_make_target: "networkpolicy-e2e-test"
           operator-image-name: ${{ needs.get-image.outputs.image }}
           operator-version: ${{ needs.get-image.outputs.operator_version }}
-          servers-memory: "16"
-          agents: 0
-          calico: "true"
+          k3d_configuration: 'calico'
 
   istio-e2e-test-experimental-k3d:
     name: Istio E2E test (experimental) K3D
@@ -168,8 +164,7 @@ jobs:
           test_make_target: ${{ matrix.test-make-target }}
           operator-image-name: ${{ needs.get-image.outputs.image }}-experimental
           operator-version: ${{ needs.get-image.outputs.operator_version }}
-          servers-memory: "16"
-          agents: 2
+          k3d_configuration: 'default'
 
   istio-upgrade-test-k3d:
     name: Istio upgrade test K3D
@@ -180,7 +175,7 @@ jobs:
         with:
           fetch-depth: 0
       - uses: ./.github/actions/load-manager-image
-      - uses: ./.github/actions/e2e-test-k3d
+      - uses: ./.github/actions/upgrade-test-k3d
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TARGET_BRANCH: ${{ github.base_ref }}
@@ -188,8 +183,7 @@ jobs:
           test_make_target: "upgrade-test"
           operator-version: ${{ needs.get-image.outputs.operator_version }}
           operator-image-name: ${{ needs.get-image.outputs.image }}
-          servers-memory: "16"
-          agents: 2
+          k3d_configuration: 'default'
 
   verify-pins:
     name: Dispatch verify-commit-pins

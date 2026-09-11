@@ -89,13 +89,14 @@ jobs:
           - "networkpolicy-e2e-test"
     steps:
       - uses: actions/checkout@v7
-      - uses: ./.github/actions/k8s-compatibility-test
+      - uses: ./.github/actions/k8s-compatibility-test-k3d
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           operator_image_name: ${{ needs.get-image.outputs.image }}
           operator_version: ${{ needs.get-image.outputs.operator_version }}
           test_make_target: ${{ matrix.test_make_target }}
+          k3d_configuration: 'compatibility'
 
   k8s-compatibility-check-aws:
     name: Kubernetes version compatibility test - AWS
@@ -152,8 +153,7 @@ jobs:
           test_make_target: ${{ matrix.test-make-target }}
           operator-image-name: ${{ needs.get-image.outputs.image }}
           operator-version: ${{ needs.get-image.outputs.operator_version }}
-          servers-memory: "16"
-          agents: 2
+          k3d_configuration: 'default'
 
   istio-restarter-e2e-test-k3d:
     name: Istio Restarter E2E test K3D
@@ -168,10 +168,7 @@ jobs:
           test_make_target: "restarter-e2e-test"
           operator-image-name: ${{ needs.get-image.outputs.image }}
           operator-version: ${{ needs.get-image.outputs.operator_version }}
-          servers-memory: "16"
-          agents: 2
-          kwok: 'true'
-          kwok-nodes: 50
+          k3d_configuration: 'many-nodes'
 
   istio-e2e-test-evaluation-k3d:
     name: Istio E2E test (evaluation) K3D
@@ -190,8 +187,7 @@ jobs:
           test_make_target: ${{ matrix.test-make-target }}
           operator-image-name: ${{ needs.get-image.outputs.image }}
           operator-version: ${{ needs.get-image.outputs.operator_version }}
-          servers-memory: "4"
-          agents: 0
+          k3d_configuration: 'evaluation'
 
   istio-e2e-test-calico-k3d:
     name: Istio E2E test (Calico) K3D
@@ -206,9 +202,7 @@ jobs:
           test_make_target: "networkpolicy-e2e-test"
           operator-image-name: ${{ needs.get-image.outputs.image }}
           operator-version: ${{ needs.get-image.outputs.operator_version }}
-          servers-memory: "16"
-          agents: 0
-          calico: "true"
+          k3d_configuration: 'calico'
 
   istio-e2e-test-experimental-k3d:
     name: Istio E2E test (experimental) K3D
@@ -227,8 +221,7 @@ jobs:
           test_make_target: ${{ matrix.test-make-target }}
           operator-image-name: ${{ needs.get-image.outputs.image }}-experimental
           operator-version: ${{ needs.get-image.outputs.operator_version }}-experimental
-          servers-memory: "16"
-          agents: 2
+          k3d_configuration: 'default'
 
   istio-upgrade-test-k3d:
     name: Istio upgrade test K3D
@@ -238,7 +231,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: ./.github/actions/e2e-test-k3d
+      - uses: ./.github/actions/upgrade-test-k3d
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TARGET_BRANCH: ${{ github.ref_name }}
@@ -246,8 +239,7 @@ jobs:
           test_make_target: "upgrade-test"
           operator-version: ${{ needs.get-image.outputs.operator_version }}
           operator-image-name: ${{ needs.get-image.outputs.image }}
-          servers-memory: "16"
-          agents: 2
+          k3d_configuration: 'default'
 
   istio-e2e-test-fips-k3d:
     name: Istio E2E test (FIPS) K3D
@@ -274,10 +266,7 @@ jobs:
           test_make_target: ${{ matrix.test-make-target }}
           operator-image-name: ${{ needs.get-image.outputs.image }}
           operator-version: ${{ needs.get-image.outputs.operator_version }}
-          servers: 3
-          servers-memory: "16"
-          agents: 0
-          calico: "true"
+          k3d_configuration: 'calico' # FIPS tests don't work with flannel network
 
   istio-e2e-test-aws:
     name: Istio E2E test AWS

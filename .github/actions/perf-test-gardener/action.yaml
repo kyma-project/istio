@@ -41,7 +41,8 @@ runs:
       env:
         IMG: ${{ inputs.manager_image }}
         CLUSTER_KUBECONFIG: "${{ github.workspace }}/${{ env.CLUSTER_NAME }}_kubeconfig.yaml"
-      run: EXPORT_RESULT=true "${{ github.workspace }}/hack/ci/gardener/performance-test.sh"
+        EXPORT_RESULT: true
+      run: "${{ github.workspace }}/hack/ci/gardener/performance-test.sh"
     - uses: actions/upload-artifact@v4
       if: always()
       name: Export no sidecar summary

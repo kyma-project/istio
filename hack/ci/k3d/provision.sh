@@ -1,62 +1,33 @@
 #!/usr/bin/env bash
 
 # Description: This script downloads k3d CLI and provisions a k3d cluster
-# Environment variables (optional):
-#   KUBERNETES_VERSION  - Kubernetes version (default: 1.33.5)
-#   K3D_VERSION         - k3d CLI version (default: v5.9.0)
-#   CALICO_VERSION      - Calico version for --calico mode (default: v3.29.0)
-#   AGENTS              - Number of k3d agents (default: 0)
-#   SERVERS_MEMORY      - Memory for server nodes in GB (default: 16)
+# Environment variables:
+# - K3D_CONFIGURATION - configuration preset, used to load configurations/${K3D_CONFIGURATION}/vars.sh
 
 set -eo pipefail
+script_dir="$(dirname "$(readlink -f "$0")")"
+# shellcheck source=../common.sh
+source "${script_dir}/../common.sh"
 
-# Get the directory where this script is located
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+echo "Started provision script"
 
-# Configuration - override via environment variables
-KUBERNETES_VERSION="${KUBERNETES_VERSION:-1.35.7}"
-K3D_VERSION="${K3D_VERSION:-v5.9.0}"
-CALICO_VERSION="${CALICO_VERSION:-v3.31.3}"
-AGENTS="${AGENTS:-0}"
-SERVERS_MEMORY="${SERVERS_MEMORY:-16}"
-SERVERS="${SERVERS:-1}"
+require_vars K3D_CONFIGURATION
+load_configuration "${K3D_CONFIGURATION}"
 
-# Parse flags
-USE_CALICO=false
-USE_KWOK=false
-KWOK_NODES="${10:-0}"
-while [[ $# -gt 0 ]]; do
-    case "${1}" in
-        --calico)
-            USE_CALICO=true
-            ;;
-        --kwok)
-            USE_KWOK=true
-            ;;
-        --kwok-nodes)
-            KWOK_NODES="${2}"
-            shift
-            ;;
-        *)
-            echo "Unknown argument: ${1}"
-            exit 1
-            ;;
-    esac
-    shift
-done
-
-# Construct the k3s image tag
 K3S_IMAGE="rancher/k3s:v${KUBERNETES_VERSION}-k3s1"
 
 echo "Configuration:"
 echo "  Kubernetes version: ${KUBERNETES_VERSION}"
-echo "  K3s image: ${K3S_IMAGE}"
-echo "  Use Calico: ${USE_CALICO}"
 echo "  k3d version: ${K3D_VERSION}"
+echo "  k3s image: ${K3S_IMAGE}"
 echo "  Agents: ${AGENTS}"
 echo "  Servers: ${SERVERS}"
 echo "  Servers memory: ${SERVERS_MEMORY}g"
+echo "  Use Calico: ${USE_CALICO}"
+echo "  Calico version: ${CALICO_VERSION}"
+echo "  Use KWOK: ${USE_KWOK}"
+echo "  KWOK version: ${KWOK_VERSION}"
+echo "  Kwok nodes: ${KWOK_NODES}"
 
 # Function to install k3d
 install_k3d() {
@@ -114,78 +85,35 @@ provision_regular_cluster() {
 }
 
 setup_kwok() {
-# KWOK repository
-KWOK_REPO=kubernetes-sigs/kwok
-# Get latest
-KWOK_RELEASE="v0.7.0"
-kubectl apply -f "https://github.com/${KWOK_REPO}/releases/download/${KWOK_RELEASE}/kwok.yaml"
-kubectl apply -f "https://github.com/${KWOK_REPO}/releases/download/${KWOK_RELEASE}/stage-fast.yaml"
-kubectl apply -f "hack/manifests/chaos/job-pod-running.yaml"
+    echo "Installing KWOK"
+    # KWOK repository
+    KWOK_REPO=kubernetes-sigs/kwok
+    kubectl apply -f "https://github.com/${KWOK_REPO}/releases/download/${KWOK_VERSION}/kwok.yaml"
+    kubectl apply -f "https://github.com/${KWOK_REPO}/releases/download/${KWOK_VERSION}/stage-fast.yaml"
+    kubectl apply -f "hack/manifests/chaos/job-pod-running.yaml"
 
-if [[ "${KWOK_NODES}" -gt 0 ]]; then
-    echo "Creating ${KWOK_NODES} fake Nodes..."
-    for i in $(seq 1 "${KWOK_NODES}"); do
-kubectl apply -f - <<EOF
-  apiVersion: v1
-  kind: Node
-  metadata:
-    annotations:
-      node.alpha.kubernetes.io/ttl: "0"
-      kwok.x-k8s.io/node: fake
-    labels:
-      beta.kubernetes.io/arch: amd64
-      beta.kubernetes.io/os: linux
-      kubernetes.io/arch: amd64
-      kubernetes.io/hostname: kwok-node-$i
-      kubernetes.io/os: linux
-      kubernetes.io/role: agent
-      node-role.kubernetes.io/agent: ""
-      type: kwok
-    name: kwok-node-$i
-  spec:
-    taints: # Avoid scheduling actual running pods to fake Node
-    - effect: NoSchedule
-      key: kwok.x-k8s.io/node
-      value: fake
-  status:
-    allocatable:
-      cpu: 32
-      memory: 250Gi
-      pods: 110
-    capacity:
-      cpu: 32
-      memory: 256Gi
-      pods: 110
-    nodeInfo:
-      architecture: amd64
-      bootID: ""
-      containerRuntimeVersion: ""
-      kernelVersion: ""
-      kubeProxyVersion: "fake"
-      kubeletVersion: v1.35.0
-      machineID: ""
-      operatingSystem: linux
-      osImage: "Debian GNU/Linux 12 (trixie)"
-      systemUUID: ""
-    phase: Running
-EOF
-  done
-  fi
-}
-
-# Main execution
-main() {
-    install_k3d
-
-    if [ "${USE_CALICO}" = true ]; then
-        provision_calico_cluster
-    else
-        provision_regular_cluster
-    fi
-
-    if [ "${USE_KWOK}" = true ]; then
-        setup_kwok
+    if [[ "${KWOK_NODES}" -gt 0 ]]; then
+        check_envsubst_vars "${script_dir}/kwok-node-template.yaml"
+        echo "Creating ${KWOK_NODES} fake Nodes..."
+        for i in $(seq 1 "${KWOK_NODES}"); do
+            KWOK_NODE_NAME="kwok-node-${i}" envsubst < "${script_dir}/kwok-node-template.yaml" | kubectl apply -f -
+        done
     fi
 }
 
-main
+echo "Install k3d"
+install_k3d
+
+echo "Provision cluster"
+if [ "${USE_CALICO}" = true ]; then
+    provision_calico_cluster
+else
+    provision_regular_cluster
+fi
+
+if [ "${USE_KWOK}" = true ]; then
+    echo "Setup KWOK"
+    setup_kwok
+fi
+
+echo "Provision script finished"

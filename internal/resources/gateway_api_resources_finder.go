@@ -23,17 +23,6 @@ var gatewayAPIResourceGVKs = []schema.GroupVersionKind{
 	{Group: "gateway.networking.k8s.io", Version: "v1", Kind: "ListenerSet"},
 }
 
-// gatewayAPICRDNames are the names of the standard Gateway API CRDs that the module manages.
-var gatewayAPICRDNames = []string{
-	"backendtlspolicies.gateway.networking.k8s.io",
-	"gatewayclasses.gateway.networking.k8s.io",
-	"gateways.gateway.networking.k8s.io",
-	"grpcroutes.gateway.networking.k8s.io",
-	"httproutes.gateway.networking.k8s.io",
-	"listenersets.gateway.networking.k8s.io",
-	"referencegrants.gateway.networking.k8s.io",
-}
-
 type GatewayAPIResourcesFinder struct {
 	ctx    context.Context
 	client client.Client
@@ -88,28 +77,21 @@ func isIstioOwnedGatewayClass(obj unstructured.Unstructured) bool {
 	return strings.HasPrefix(controllerName, "istio.io/")
 }
 
-// HasAnyModuleManagedGatewayAPICRD returns (true, nil) if at least one of the standard Gateway API
-// CRDs on the cluster is managed by the Kyma Istio module (carries the module label).
-// It returns (false, nil) only when none are found. Any error other than NotFound is returned
-// so callers can block uninstallation safely rather than silently skipping the safety check.
+// HasAnyModuleManagedGatewayAPICRD returns true if the primary Gateway API CRD carries the managed-gateway-api label.
 func HasAnyModuleManagedGatewayAPICRD(ctx context.Context, k8sClient client.Client) (bool, error) {
 	crdGVK := schema.GroupVersionKind{
 		Group:   "apiextensions.k8s.io",
 		Version: "v1",
 		Kind:    "CustomResourceDefinition",
 	}
-	for _, name := range gatewayAPICRDNames {
-		crd := &unstructured.Unstructured{}
-		crd.SetGroupVersionKind(crdGVK)
-		if err := k8sClient.Get(ctx, client.ObjectKey{Name: name}, crd); err != nil {
-			if errors.IsNotFound(err) {
-				continue
-			}
-			return false, fmt.Errorf("failed to check Gateway API CRD %s: %w", name, err)
+	crd := &unstructured.Unstructured{}
+	crd.SetGroupVersionKind(crdGVK)
+	if err := k8sClient.Get(ctx, client.ObjectKey{Name: "gateways.gateway.networking.k8s.io"}, crd); err != nil {
+		if errors.IsNotFound(err) {
+			return false, nil
 		}
-		if val, exists := crd.GetLabels()[labels.ModuleLabelKey]; exists && val == labels.ModuleLabelValue {
-			return true, nil
-		}
+		return false, fmt.Errorf("failed to check Gateway API CRD: %w", err)
 	}
-	return false, nil
+	val, exists := crd.GetLabels()[labels.ManagedGatewayAPILabelKey]
+	return exists && val == labels.ManagedGatewayAPILabelValue, nil
 }

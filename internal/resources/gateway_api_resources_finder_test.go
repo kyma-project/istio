@@ -167,8 +167,8 @@ var _ = Describe("HasAnyModuleManagedGatewayAPICRD", func() {
 		crd := unstructured.Unstructured{}
 		crd.SetAPIVersion("apiextensions.k8s.io/v1")
 		crd.SetKind("CustomResourceDefinition")
-		crd.SetName("httproutes.gateway.networking.k8s.io")
-		crd.SetLabels(map[string]string{labels.ModuleLabelKey: labels.ModuleLabelValue})
+		crd.SetName("gateways.gateway.networking.k8s.io")
+		crd.SetLabels(map[string]string{labels.ManagedGatewayAPILabelKey: labels.ManagedGatewayAPILabelValue})
 
 		fakeClient := fake.NewClientBuilder().WithScheme(runtime.NewScheme()).WithObjects(&crd).Build()
 
@@ -182,7 +182,7 @@ var _ = Describe("HasAnyModuleManagedGatewayAPICRD", func() {
 		crd := unstructured.Unstructured{}
 		crd.SetAPIVersion("apiextensions.k8s.io/v1")
 		crd.SetKind("CustomResourceDefinition")
-		crd.SetName("httproutes.gateway.networking.k8s.io")
+		crd.SetName("gateways.gateway.networking.k8s.io")
 
 		fakeClient := fake.NewClientBuilder().WithScheme(runtime.NewScheme()).WithObjects(&crd).Build()
 

@@ -823,8 +823,8 @@ var _ = Describe("Installation reconciliation", func() {
 		managedCRD := unstructured.Unstructured{}
 		managedCRD.SetAPIVersion("apiextensions.k8s.io/v1")
 		managedCRD.SetKind("CustomResourceDefinition")
-		managedCRD.SetName("httproutes.gateway.networking.k8s.io")
-		managedCRD.SetLabels(map[string]string{"kyma-project.io/module": "istio"})
+		managedCRD.SetName("gateways.gateway.networking.k8s.io")
+		managedCRD.SetLabels(map[string]string{"kyma-project.io/managed-gateway-api": "true"})
 
 		mockClient := mockLibraryClient{}
 		c := createFakeClient(&istioCR, &httpRoute, &managedCRD)

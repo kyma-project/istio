@@ -13,6 +13,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/yaml"
@@ -61,6 +62,16 @@ var gatewayAPICRDManifests = [][]byte{
 	gatewayAPIUDPRoutesCRD,
 }
 
+// gatewayAPIPrimaryCRDName is the single CRD checked to determine whether the module
+// should take over management (or warn about unmanaged CRDs).
+const gatewayAPIPrimaryCRDName = "gateways.gateway.networking.k8s.io"
+
+var crdGroupVersionKind = schema.GroupVersionKind{
+	Group:   "apiextensions.k8s.io",
+	Version: "v1",
+	Kind:    "CustomResourceDefinition",
+}
+
 type GatewayAPICRDs struct {
 	shouldDelete bool
 }
@@ -81,7 +92,13 @@ func (g GatewayAPICRDs) reconcile(ctx context.Context, k8sClient client.Client, 
 }
 
 func (g GatewayAPICRDs) installOrWarnCRDs(ctx context.Context, k8sClient client.Client) (controllerutil.OperationResult, error) {
-	var unmanagedCRDNames []string
+	primaryUnmanaged, err := g.isPrimaryUnmanaged(ctx, k8sClient)
+	if err != nil {
+		return controllerutil.OperationResultNone, err
+	}
+	if primaryUnmanaged {
+		return controllerutil.OperationResultNone, &unmanagedCRDsWarning{name: gatewayAPIPrimaryCRDName}
+	}
 
 	for _, manifest := range gatewayAPICRDManifests {
 		var desired unstructured.Unstructured
@@ -96,7 +113,6 @@ func (g GatewayAPICRDs) installOrWarnCRDs(ctx context.Context, k8sClient client.
 			if !apierrors.IsNotFound(err) {
 				return controllerutil.OperationResultNone, fmt.Errorf("failed to get CRD %s: %w", desired.GetName(), err)
 			}
-			// CRD does not exist — create it with module label
 			applyManagementLabels(&desired)
 
 			if createErr := k8sClient.Create(ctx, &desired); createErr != nil {
@@ -109,14 +125,6 @@ func (g GatewayAPICRDs) installOrWarnCRDs(ctx context.Context, k8sClient client.
 			continue
 		}
 
-		// CRD already exists — check ownership
-		if !isModuleManaged(existing) {
-			ctrl.Log.Info("Gateway API CRD already exists and is not managed by Kyma Istio module, skipping", "name", existing.GetName())
-			unmanagedCRDNames = append(unmanagedCRDNames, existing.GetName())
-			continue
-		}
-
-		// Module-managed CRD — update it, preserving existing labels and annotations
 		mergeIntoExisting(&desired, existing)
 
 		if updateErr := k8sClient.Update(ctx, &desired); updateErr != nil {
@@ -130,10 +138,21 @@ func (g GatewayAPICRDs) installOrWarnCRDs(ctx context.Context, k8sClient client.
 		ctrl.Log.Info("Updated Gateway API CRD", "name", desired.GetName())
 	}
 
-	if len(unmanagedCRDNames) > 0 {
-		return controllerutil.OperationResultNone, &unmanagedCRDsWarning{names: unmanagedCRDNames}
-	}
 	return controllerutil.OperationResultUpdated, nil
+}
+
+// isPrimaryUnmanaged returns true if the primary CRD exists but lacks the managed-gateway-api label.
+func (g GatewayAPICRDs) isPrimaryUnmanaged(ctx context.Context, k8sClient client.Client) (bool, error) {
+	crd := unstructured.Unstructured{}
+	crd.SetGroupVersionKind(crdGroupVersionKind)
+	err := k8sClient.Get(ctx, client.ObjectKey{Name: gatewayAPIPrimaryCRDName}, &crd)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return false, nil
+		}
+		return false, fmt.Errorf("failed to get CRD %s: %w", gatewayAPIPrimaryCRDName, err)
+	}
+	return !hasManagedGatewayAPILabel(crd), nil
 }
 
 func (g GatewayAPICRDs) deleteManagedCRDs(ctx context.Context, k8sClient client.Client) (controllerutil.OperationResult, error) {
@@ -153,7 +172,7 @@ func (g GatewayAPICRDs) deleteManagedCRDs(ctx context.Context, k8sClient client.
 			return controllerutil.OperationResultNone, fmt.Errorf("failed to get CRD %s: %w", desired.GetName(), err)
 		}
 
-		if !isModuleManaged(existing) {
+		if !hasModuleLabel(existing) {
 			ctrl.Log.Info("Skipping deletion of unmanaged Gateway API CRD", "name", existing.GetName())
 			continue
 		}
@@ -166,14 +185,16 @@ func (g GatewayAPICRDs) deleteManagedCRDs(ctx context.Context, k8sClient client.
 	return controllerutil.OperationResultUpdated, nil
 }
 
-// isModuleManaged returns true if the resource carries the Kyma Istio module label.
-func isModuleManaged(obj unstructured.Unstructured) bool {
+func hasManagedGatewayAPILabel(obj unstructured.Unstructured) bool {
+	val, exists := obj.GetLabels()[labels.ManagedGatewayAPILabelKey]
+	return exists && val == labels.ManagedGatewayAPILabelValue
+}
+
+func hasModuleLabel(obj unstructured.Unstructured) bool {
 	val, exists := obj.GetLabels()[labels.ModuleLabelKey]
 	return exists && val == labels.ModuleLabelValue
 }
 
-// applyManagementLabels stamps the versioned label set and the module ownership label onto obj.
-// Used on the create path where there is no existing object to preserve metadata from.
 func applyManagementLabels(obj *unstructured.Unstructured) {
 	resources.ApplyVersionedLabels(obj)
 	lbls := obj.GetLabels()
@@ -181,14 +202,14 @@ func applyManagementLabels(obj *unstructured.Unstructured) {
 		lbls = make(map[string]string)
 	}
 	lbls[labels.ModuleLabelKey] = labels.ModuleLabelValue
+	if obj.GetName() == gatewayAPIPrimaryCRDName {
+		lbls[labels.ManagedGatewayAPILabelKey] = labels.ManagedGatewayAPILabelValue
+	}
 	obj.SetLabels(lbls)
 }
 
-// mergeIntoExisting prepares desired for an update by preserving existing labels and annotations
-// and then enforcing the module-owned values on top. This prevents reconciliation from stripping
-// labels/annotations set by other controllers (including the managed-by disclaimer).
+// mergeIntoExisting preserves existing labels/annotations and enforces module-owned values on top.
 func mergeIntoExisting(desired *unstructured.Unstructured, existing unstructured.Unstructured) {
-	// Preserve existing labels, merge desired ones on top, then apply module-owned ones.
 	lbls := make(map[string]string)
 	for k, v := range existing.GetLabels() {
 		lbls[k] = v
@@ -199,7 +220,6 @@ func mergeIntoExisting(desired *unstructured.Unstructured, existing unstructured
 	desired.SetLabels(lbls)
 	applyManagementLabels(desired)
 
-	// Preserve existing annotations (e.g. the disclaimer), then merge desired ones on top.
 	annotations := make(map[string]string)
 	for k, v := range existing.GetAnnotations() {
 		annotations[k] = v
@@ -212,13 +232,13 @@ func mergeIntoExisting(desired *unstructured.Unstructured, existing unstructured
 	desired.SetResourceVersion(existing.GetResourceVersion())
 }
 
-// unmanagedCRDsWarning is a soft error that signals pre-existing unmanaged CRDs.
+// unmanagedCRDsWarning is a soft error signalling the primary Gateway API CRD is not module-managed.
 type unmanagedCRDsWarning struct {
-	names []string
+	name string
 }
 
 func (e *unmanagedCRDsWarning) Error() string {
-	return fmt.Sprintf("Gateway API CRDs already installed and not managed by Kyma Istio module: %v. "+
-		"To allow Kyma Istio module to manage them, add the label %s=%s to each CRD",
-		e.names, labels.ModuleLabelKey, labels.ModuleLabelValue)
+	return fmt.Sprintf("Gateway API CRD %s is already installed and not managed by Kyma Istio module. "+
+		"To allow Kyma Istio module to manage it, add the label %s=%s to the CRD",
+		e.name, labels.ManagedGatewayAPILabelKey, labels.ManagedGatewayAPILabelValue)
 }

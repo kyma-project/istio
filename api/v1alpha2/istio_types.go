@@ -153,7 +153,7 @@ const (
 	ConditionReasonGatewayAPICRDsInstalledMessage                 = "Gateway API CRDs installation succeeded"
 	// Gateway API CRDs were already present on the cluster and not managed by this module.
 	ConditionReasonGatewayAPICRDsAlreadyInstalled        ConditionReason = "GatewayAPICRDsAlreadyInstalled"
-	ConditionReasonGatewayAPICRDsAlreadyInstalledMessage                 = "Gateway API CRDs are already installed. To allow Kyma Istio module to manage them, add the label kyma-project.io/module=istio to the CRDs"
+	ConditionReasonGatewayAPICRDsAlreadyInstalledMessage                 = "Gateway API CRDs are already installed. To allow Kyma Istio module to manage them, add the label kyma-project.io/managed-gateway-api=true to the gateways.gateway.networking.k8s.io CRD"
 	// Gateway API resources are blocking module deletion.
 	ConditionReasonGatewayAPIResourcesDangling        ConditionReason = "GatewayAPIResourcesDangling"
 	ConditionReasonGatewayAPIResourcesDanglingMessage                 = "Gateway API deletion blocked because of existing Gateway API resources"

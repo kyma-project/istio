@@ -95,10 +95,10 @@ var _ = Describe("Reconciliation", func() {
 
 	Context("GatewayAPICRDs warning propagation", func() {
 		It("should return a warning DescribedError when Gateway API CRDs already exist without module label", func() {
-			// Pre-create one of the managed CRDs without the module label so that
+			// Pre-create the primary managed CRD without the module label so that
 			// GatewayAPICRDs.reconcile returns an unmanagedCRDsWarning.
 			var desired unstructured.Unstructured
-			Expect(yaml.Unmarshal(gatewayAPIHTTPRoutesCRD, &desired)).To(Succeed())
+			Expect(yaml.Unmarshal(gatewayAPIGatewaysCRD, &desired)).To(Succeed())
 			desired.SetLabels(map[string]string{"user-label": "user-value"})
 			client := createFakeClient(&desired)
 			reconciler := NewReconciler(client)
@@ -109,7 +109,7 @@ var _ = Describe("Reconciliation", func() {
 			//then
 			Expect(err).To(HaveOccurred())
 			Expect(err.Level()).To(Equal(describederrors.Warning))
-			Expect(err.Error()).To(ContainSubstring(labels.ModuleLabelKey))
+			Expect(err.Error()).To(ContainSubstring(labels.ManagedGatewayAPILabelKey))
 		})
 	})
 

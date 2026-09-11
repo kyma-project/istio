@@ -20,6 +20,7 @@ import (
 	modulehelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/modules"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/namespace"
 )
+
 const (
 	defaultNamespace     = "default"
 	istioSystemNamespace = "istio-system"

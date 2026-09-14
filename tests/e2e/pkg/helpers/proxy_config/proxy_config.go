@@ -7,10 +7,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 	"testing"
-	"time"
 
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/artifacts"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
 )
 
@@ -157,45 +156,21 @@ func FindListenerByHostAndPort(listeners []ListenerData, host string, port int) 
 	return nil
 }
 
-// The tests uploads an artifact of proxy config dump for debugging purposes. It creates a directory structure based on the test name and timestamp, and saves the config dump as a JSON file named after the pod. If any step fails, it logs a warning but does not return an error to avoid disrupting the test flow.
 const (
-	baseArtifactDir = "test-artifacts"
-	proxyConfigDir  = "proxy_config_dumps"
+	proxyConfigDir = "proxy-config-dumps"
 )
-
-var (
-	testRunTimestamp string
-	timestampOnce    sync.Once
-)
-
-func getTestRunTimestamp() string {
-	timestampOnce.Do(func() {
-		testRunTimestamp = time.Now().Format("02_01_2006-15_04_05CET")
-	})
-	return testRunTimestamp
-}
-
-func sanitizePathComponent(name string) string {
-	replacer := strings.NewReplacer(
-		"/", "_", "\\", "_", ":", "_", "*", "_",
-		"?", "_", "\"", "_", "<", "_", ">", "_",
-		"|", "_", " ", "_", "(", "", ")", "", ",", "",
-	)
-	return replacer.Replace(name)
-}
 
 func saveProxyConfigDump(t *testing.T, podName string, data []byte) {
 	t.Helper()
 
-	testName := sanitizePathComponent(t.Name())
-	dir := filepath.Join(".", baseArtifactDir, getTestRunTimestamp(), testName, proxyConfigDir)
+	dir := filepath.Join(artifacts.Root(), artifacts.TestRunTimestamp(), artifacts.SanitizePathComponent(t.Name()), proxyConfigDir)
 
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		t.Logf("Warning: failed to create artifact dir: %v", err)
 		return
 	}
 
-	filename := fmt.Sprintf("%s-proxy_config_dump.json", sanitizePathComponent(podName))
+	filename := fmt.Sprintf("%s-proxy-config-dump.json", artifacts.SanitizePathComponent(podName))
 	filePath := filepath.Join(dir, filename)
 
 	if err := os.WriteFile(filePath, data, 0644); err != nil {

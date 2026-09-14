@@ -57,45 +57,38 @@ runs:
         # inherits it via the shell, no Makefile change required.
         TEST_IP_FAMILY: ${{ inputs.test_ip_family }}
         GARDENER_CONFIGURATION: ${{ inputs.gardener_configuration }}
-        E2E_LOGS_DIR: ${{ github.workspace }}/tests/e2e/tests
+        TEST_ARTIFACTS_DIR: ${{ github.workspace }}/test-artifacts
       run: |
         "${{ github.workspace }}/hack/ci/gardener/e2e-test.sh" ${{ inputs.test_make_target }}
-    - name: Gather kubectl logs
+    - name: Gather cluster artifacts
       shell: bash
       if: always()
       run: |
-        mkdir -p kubectl-logs
+        mkdir -p cluster-artifacts
         export KUBECONFIG="${{ github.workspace }}/${{ env.CLUSTER_NAME }}_kubeconfig.yaml"
-        (kubectl logs -n kyma-system deployments/istio-controller-manager || true) > kubectl-logs/istio-controller-manager.log
-        (kubectl logs -n istio-system deployments/istio-ingressgateway || true) > kubectl-logs/istio-ingressgateway.log
-        (kubectl logs -n istio-system deployments/istiod || true) > kubectl-logs/istiod.log
-    - name: Gather Gardener logs
+        (kubectl logs -n kyma-system deployments/istio-controller-manager || true) > cluster-artifacts/istio-controller-manager.log
+        (kubectl logs -n istio-system deployments/istio-ingressgateway || true) > cluster-artifacts/istio-ingressgateway.log
+        (kubectl logs -n istio-system deployments/istiod || true) > cluster-artifacts/istiod.log
+    - name: Gather Gardener artifacts
       shell: bash
       if: always()
       env:
         GARDENER_KUBECONFIG: "${{ github.workspace }}/gardener_kubeconfig.yaml"
       run: |
-        (kubectl --kubeconfig "${GARDENER_KUBECONFIG}" get shoot "${{ env.CLUSTER_NAME }}" -o yaml || true) > kubectl-logs/shoot.yaml
-    - name: Upload kubectl logs
+        (kubectl --kubeconfig "${GARDENER_KUBECONFIG}" get shoot "${{ env.CLUSTER_NAME }}" -o yaml || true) > cluster-artifacts/shoot.yaml
+    - name: Upload cluster artifacts
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: kubectl-logs-${{ github.job }}-${{ inputs.test_make_target }}-${{ inputs.gardener_configuration }}
-        path: kubectl-logs/
+        name: cluster-artifacts-${{ github.job }}-${{ inputs.test_make_target }}-${{ inputs.gardener_configuration }}
+        path: cluster-artifacts/
         if-no-files-found: ignore
-    - name: Upload e2e dump logs
+    - name: Upload test artifacts
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: e2e-dump-logs-${{ github.job }}-${{ inputs.test_make_target }}-${{ inputs.gardener_configuration }}
-        path: tests/e2e/tests/**/logs/
-        if-no-files-found: ignore
-    - name: Upload proxy config dumps
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: proxy-config-dumps-${{ github.job }}-${{ inputs.test_make_target }}-${{ inputs.gardener_configuration }}
-        path: tests/e2e/tests/**/test-artifacts/
+        name: test-artifacts-${{ github.job }}-${{ inputs.test_make_target }}-${{ inputs.gardener_configuration }}
+        path: test-artifacts/
         if-no-files-found: ignore
     - name: Upload test reports
       uses: actions/upload-artifact@v4

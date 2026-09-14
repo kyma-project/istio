@@ -57,7 +57,7 @@ runs:
         # inherits it via the shell, no Makefile change required.
         TEST_IP_FAMILY: ${{ inputs.test_ip_family }}
         GARDENER_CONFIGURATION: ${{ inputs.gardener_configuration }}
-        E2E_LOGS_DIR: ${{ github.workspace }}/tests/e2e/tests
+        TEST_ARTIFACTS_DIR: ${{ github.workspace }}/test-artifacts
       run: |
         "${{ github.workspace }}/hack/ci/gardener/e2e-test.sh" ${{ inputs.test_make_target }}
     - name: Check deprecations
@@ -70,35 +70,35 @@ runs:
     - name: Check that deprecations are empty
       run: if [[ $(cat deprecations.txt | jq 'select(.resource != "endpoints" and .resource != "componentstatuses")') ]]; then exit 1; fi # we ignore endpoints as Gardener makes a request to this deprecated (since v1.33) k8s resource, see: https://github.com/gardener/gardener/issues/12154
       shell: bash
-    - name: Gather kubectl logs
+    - name: Gather cluster artifacts
       shell: bash
       if: always()
       run: |
-        mkdir -p kubectl-logs
+        mkdir -p cluster-artifacts
         export KUBECONFIG="${{ github.workspace }}/${{ env.CLUSTER_NAME }}_kubeconfig.yaml"
-        (kubectl logs -n kyma-system deployments/istio-controller-manager || true) > kubectl-logs/istio-controller-manager.log
-        (kubectl logs -n istio-system deployments/istio-ingressgateway || true) > kubectl-logs/istio-ingressgateway.log
-        (kubectl logs -n istio-system deployments/istiod || true) > kubectl-logs/istiod.log
-    - name: Gather Gardener logs
+        (kubectl logs -n kyma-system deployments/istio-controller-manager || true) > cluster-artifacts/istio-controller-manager.log
+        (kubectl logs -n istio-system deployments/istio-ingressgateway || true) > cluster-artifacts/istio-ingressgateway.log
+        (kubectl logs -n istio-system deployments/istiod || true) > cluster-artifacts/istiod.log
+    - name: Gather Gardener artifacts
       shell: bash
       if: always()
       env:
         GARDENER_KUBECONFIG: "${{ github.workspace }}/gardener_kubeconfig.yaml"
       run: |
-        (kubectl --kubeconfig "${GARDENER_KUBECONFIG}" get shoot "${{ env.CLUSTER_NAME }}" -o yaml || true) > kubectl-logs/shoot.yaml
-    - name: Upload kubectl logs
+        (kubectl --kubeconfig "${GARDENER_KUBECONFIG}" get shoot "${{ env.CLUSTER_NAME }}" -o yaml || true) > cluster-artifacts/shoot.yaml
+    - name: Upload cluster artifacts
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: kubectl-logs-${{ github.job }}-${{ inputs.test_make_target }}
-        path: kubectl-logs/
+        name: cluster-artifacts-${{ github.job }}-${{ inputs.test_make_target }}
+        path: cluster-artifacts/
         if-no-files-found: ignore
-    - name: Upload e2e dump logs
+    - name: Upload test artifacts
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: e2e-dump-logs-${{ github.job }}-${{ inputs.test_make_target }}
-        path: tests/e2e/tests/**/logs/
+        name: test-artifacts-${{ github.job }}-${{ inputs.test_make_target }}
+        path: test-artifacts/
         if-no-files-found: ignore
     - name: Upload test reports
       uses: actions/upload-artifact@v4

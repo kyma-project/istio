@@ -44,37 +44,30 @@ runs:
         REFERENCE_RELEASE: ${{ env.REFERENCE_RELEASE }} # the reference release that is deployed at the beginning
         OPERATOR_VERSION: ${{ inputs.operator-version }}
         K3D_CONFIGURATION: ${{ inputs.k3d_configuration }}
-        E2E_LOGS_DIR: ${{ github.workspace }}/tests/e2e/tests
+        TEST_ARTIFACTS_DIR: ${{ github.workspace }}/test-artifacts
       run: |
         "${{ github.workspace }}/hack/ci/k3d/upgrade-test.sh" ${{ inputs.test_make_target }}
-    - name: Gather kubectl logs
+    - name: Gather cluster artifacts
       shell: bash
       if: always()
       run: |
-        mkdir -p kubectl-logs
-        (kubectl logs -n kyma-system deployments/istio-controller-manager || true) > kubectl-logs/istio-controller-manager.log
-        (kubectl logs -n istio-system deployments/istio-ingressgateway || true) > kubectl-logs/istio-ingressgateway.log
-        (kubectl logs -n istio-system deployments/istiod || true) > kubectl-logs/istiod.log
-    - name: Upload kubectl logs
+        mkdir -p cluster-artifacts
+        (kubectl logs -n kyma-system deployments/istio-controller-manager || true) > cluster-artifacts/istio-controller-manager.log
+        (kubectl logs -n istio-system deployments/istio-ingressgateway || true) > cluster-artifacts/istio-ingressgateway.log
+        (kubectl logs -n istio-system deployments/istiod || true) > cluster-artifacts/istiod.log
+    - name: Upload cluster artifacts
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: kubectl-logs-${{ github.job }}-${{ inputs.test_make_target }}
-        path: kubectl-logs/
+        name: cluster-artifacts-${{ github.job }}-${{ inputs.test_make_target }}
+        path: cluster-artifacts/
         if-no-files-found: ignore
-    - name: Upload e2e dump logs
+    - name: Upload test artifacts
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: e2e-dump-logs-${{ github.job }}-${{ inputs.test_make_target }}
-        path: tests/e2e/tests/**/logs/
-        if-no-files-found: ignore
-    - name: Upload proxy config dumps
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: proxy-config-dumps-${{ github.job }}-${{ inputs.test_make_target }}
-        path: tests/e2e/tests/**/test-artifacts/
+        name: test-artifacts-${{ github.job }}-${{ inputs.test_make_target }}
+        path: test-artifacts/
         if-no-files-found: ignore
     - name: Upload test reports
       uses: actions/upload-artifact@v4

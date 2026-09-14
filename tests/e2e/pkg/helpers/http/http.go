@@ -13,6 +13,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/artifacts"
 )
 
 type Options struct {
@@ -74,7 +76,7 @@ func NewHTTPClient(t *testing.T, options ...Option) *http.Client {
 	}
 	if opts.Network != "" {
 		dialer := &net.Dialer{Timeout: 30 * time.Second}
-		transport.DialContext = func(ctx context.Context, _network, addr string) (net.Conn, error) {
+		transport.DialContext = func(ctx context.Context, _, addr string) (net.Conn, error) {
 			return dialer.DialContext(ctx, opts.Network, addr)
 		}
 	}
@@ -115,8 +117,8 @@ func WithOutput(output io.Writer) TestLogTransportOption {
 
 func logfWithOptions(t *testing.T, prefix string, opts *TestLogTransportWrapperOptions, format string, args ...interface{}) {
 	sbuilder := &strings.Builder{}
-	sbuilder.WriteString(fmt.Sprintf("[%s] ", prefix))
-	sbuilder.WriteString(fmt.Sprintf(format, args...))
+	fmt.Fprintf(sbuilder, "[%s] ", prefix)
+	fmt.Fprintf(sbuilder, format, args...)
 	toLog := sbuilder.String()
 
 	if !opts.SuppressTestLog {
@@ -165,41 +167,19 @@ func TestLogTransportWrapper(t *testing.T, prefix string, host string, headers m
 }
 
 const (
-	artifactBaseDir = "test-artifacts"
-	httpLogsDir     = "http_logs"
+	httpLogsDir = "http-logs"
 )
-
-var (
-	testRunTimestamp string
-	timestampOnce    sync.Once
-)
-
-func getTestRunTimestamp() string {
-	timestampOnce.Do(func() {
-		testRunTimestamp = time.Now().Format("02_01_2006-15_04_05CET")
-	})
-	return testRunTimestamp
-}
-
-func sanitizePathComponent(name string) string {
-	replacer := strings.NewReplacer(
-		"/", "_", "\\", "_", ":", "_", "*", "_",
-		"?", "_", "\"", "_", "<", "_", ">", "_",
-		"|", "_", " ", "_", "(", "", ")", "", ",", "",
-	)
-	return replacer.Replace(name)
-}
 
 func OpenTestArtifactLog(t *testing.T, name string) io.Writer {
 	t.Helper()
 
-	dir := filepath.Join(".", artifactBaseDir, getTestRunTimestamp(), sanitizePathComponent(t.Name()), httpLogsDir)
+	dir := filepath.Join(artifacts.Root(), artifacts.TestRunTimestamp(), artifacts.SanitizePathComponent(t.Name()), httpLogsDir)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		t.Logf("Warning: failed to create artifact dir %s: %v", dir, err)
 		return nil
 	}
 
-	filePath := filepath.Join(dir, sanitizePathComponent(name)+".log")
+	filePath := filepath.Join(dir, artifacts.SanitizePathComponent(name)+".log")
 	f, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		t.Logf("Warning: failed to open artifact log %s: %v", filePath, err)

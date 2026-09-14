@@ -3,16 +3,20 @@ Follow the steps outlined in this troubleshooting guide if you unintentionally d
 
 ## Symptom
 
-The Istio custom resource (CR) is in the `Warning` state. The condition of type **Ready** is set to `false` with the reason `IstioCustomResourcesDangling`. To verify this, run the command:
+The Istio custom resource (CR) is in the `Warning` state. The condition of type **Ready** is set to `false` with the reason `IstioCustomResourcesDangling` or `GatewayAPIResourcesDangling`. To verify this, run the command:
 
 ```bash
 kubectl get istio default -n kyma-system -o jsonpath='{.status.conditions[0]}'
 ```
 
-You get an output similar to this one:
+You get an output similar to one of these:
 
 ```bash
 {"lastTransitionTime":"2024-09-26T18:23:00Z","message":"Istio deletion blocked because of existing Istio custom resources","reason":"IstioCustomResourcesDangling","status":"False","type":"Ready"}
+```
+
+```bash
+{"lastTransitionTime":"2024-09-26T18:23:00Z","message":"Gateway API deletion blocked because of existing Gateway API resources","reason":"GatewayAPIResourcesDangling","status":"False","type":"Ready"}
 ```
 
 >### Note:
@@ -22,7 +26,7 @@ You get an output similar to this one:
 
 The Istio module wasn't completely removed because related resources still exist in the cluster.
 
-For example, the issue occurs when you delete Istio, but there are still VirtualService resources either created by you or installed by another Kyma component or module. In such cases, the hooked finalizer pauses the deletion of Istio until you remove all the related resources. This [blocking deletion strategy](https://github.com/kyma-project/community/issues/765) is intentionally designed and is enabled by default for the Istio module.
+For example, the issue occurs when you delete Istio, but there are still VirtualService or Gateway API resources (such as `HTTPRoute` or `Gateway` objects) either created by you or installed by another Kyma component or module. In such cases, the hooked finalizer pauses the deletion of Istio until you remove all the related resources. This [blocking deletion strategy](https://github.com/kyma-project/community/issues/765) is intentionally designed and is enabled by default for the Istio module.
 
 
 ## Solution

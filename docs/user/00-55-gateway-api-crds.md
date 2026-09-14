@@ -17,7 +17,9 @@ If Gateway API CRDs are already installed in your cluster by another tool (for e
 
 To verify the condition, run:
 
-    
+```bash
+kubectl get istio default -n kyma-system -o jsonpath='{.status.conditions[0]}'
+```
 
 ## Hand Over Gateway API Management to the Istio Module
 
@@ -25,10 +27,12 @@ If you hand over management of pre-existing Gateway API CRDs to the Istio module
 
 To do this, add the `kyma-project.io/managed-gateway-api=true` label to the `gateways` CRD:
 
-    
+```bash
+kubectl label crd gateways.gateway.networking.k8s.io kyma-project.io/managed-gateway-api=true
+```
 
 ## Deleting the Istio Module with Gateway API Resources
 
 When you delete the Istio module, the module-managed Gateway API CRDs are removed together with the rest of the Istio resources. CRDs that were not installed by the Istio module are left on the cluster unchanged.
 
-To protect your existing Gateway API resources from being orphaned, deletion is blocked if any resources (such as `HTTPRoute` or `Gateway` objects) still exist on the cluster. The Istio CR transitions to the `Warning` state with the **Ready** condition set to `false` and the reason `GatewayAPIResourcesDangling`. If deletion is blocked, see [Istio Module Deletion Is Blocked](./troubleshooting/03-55-gateway-api-resources-dangling.md).
+To protect your existing Gateway API resources from being orphaned, deletion is blocked if any resources (such as `HTTPRoute` or `Gateway` objects) still exist on the cluster. The Istio CR transitions to the `Warning` state with the **Ready** condition set to `false` and the reason `GatewayAPIResourcesDangling`. If deletion is blocked, see [Reverting the Istio Module's Deletion](./troubleshooting/03-50-recovering-from-unintentional-istio-removal.md).

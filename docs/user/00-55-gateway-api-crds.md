@@ -30,6 +30,7 @@ To do this, add the `kyma-project.io/managed-gateway-api=true` label to the `gat
 ```bash
 kubectl label crd gateways.gateway.networking.k8s.io kyma-project.io/managed-gateway-api=true
 ```
+After labeling the `gateways` CRD, the Istio module manages all Gateway API CRDs going forward. This means the module automatically updates them during module upgrades and deletes them when the module is removed. The module also labels the remaining CRDs with `kyma-project.io/module: istio` during the next reconciliation.
 
 ## Deleting the Istio Module with Gateway API Resources
 

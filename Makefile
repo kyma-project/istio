@@ -262,11 +262,15 @@ grafana-dashboard: ## Generating Grafana manifests to visualize controller statu
 PULL_IMAGE_VERSION=PR-${PULL_NUMBER}
 POST_IMAGE_VERSION=v$(shell date '+%Y%m%d')-$(shell printf %.8s ${PULL_BASE_SHA})
 
+.PHONY: test-performance-web
+test-performance-web:
+	make -C tests/performance test-performance-web
+
 .PHONY: grpc-performance-test
 grpc-performance-test:
-	make -c tests/performance-grpc deploy-helm
-	make -c tests/performance-grpc grpc-load-test
-	make -c tests/performance-grpc export-results
+	make -C tests/performance-grpc deploy-helm
+	make -C tests/performance-grpc grpc-load-test
+	make -C tests/performance-grpc export-results
 
 ########## Gardener specific ###########
 

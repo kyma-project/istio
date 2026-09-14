@@ -63,9 +63,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           manager_image: ${{ needs.get-image.outputs.image }}
+          operator_version: ${{ needs.get-image.outputs.operator_version }}
           gardener_secret: ${{ secrets.GARDENER_TOKEN }}
           gardener_project_name: ${{ vars.GARDENER_PROJECT_NAME }}
           gardener_configuration: aws-ipv4
+          test_make_target: test-performance-web
 
   #############################################
   # Compatibility tests

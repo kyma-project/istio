@@ -238,9 +238,13 @@ func (r *IstioReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 	resourcesErr := r.istioResources.Reconcile(ctx, istioCR, clusterStrategy)
 	if resourcesErr != nil {
-		return r.requeueReconciliation(ctx, &istioCR, resourcesErr,
-			operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonCRsReconcileFailed),
-			reconciliationRequeueTimeError)
+		reason := operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonCRsReconcileFailed)
+		requeueTime := reconciliationRequeueTimeError
+		if resourcesErr.Level() == describederrors.Warning {
+			reason = operatorv1alpha2.NewReasonWithMessage(operatorv1alpha2.ConditionReasonGatewayAPICRDsAlreadyInstalled)
+			requeueTime = reconciliationRequeueTimeWarning
+		}
+		return r.requeueReconciliation(ctx, &istioCR, resourcesErr, reason, requeueTime)
 	}
 
 	// Remove installation finalizer only when we are done with resources, and finish reconciliation.

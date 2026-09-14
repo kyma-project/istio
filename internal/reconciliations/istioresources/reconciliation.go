@@ -2,6 +2,7 @@ package istioresources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
@@ -58,6 +59,11 @@ func (r *ResourcesReconciler) Reconcile(ctx context.Context, istioCR v1alpha2.Is
 		result, reconcileErr := resource.reconcile(ctx, r.client, owner, r.templateValues)
 
 		if reconcileErr != nil {
+			var unmanagedWarn *unmanagedCRDsWarning
+			if errors.As(reconcileErr, &unmanagedWarn) {
+				ctrl.Log.Info("Gateway API CRDs already installed without module label", "warning", reconcileErr.Error())
+				return describederrors.NewDescribedError(reconcileErr, reconcileErr.Error()).SetWarning()
+			}
 			return describederrors.NewDescribedError(reconcileErr, fmt.Sprintf("Could not reconcile Istio resource %s", resource.Name()))
 		}
 		ctrl.Log.Info("Reconciled Istio resource", "name", resource.Name(), "result", result)
@@ -77,12 +83,14 @@ func getResources(clusterStrategy factory.Factory, istioCR v1alpha2.Istio, featu
 		// NewPeerAuthenticationMtls does not delete resources
 		// NewProxyProtocolEnvoyFilter fails because CRDs are removed before it can delete the EnvoyFilter
 		return []Resource{
+			NewGatewayAPICRDs(true),
 			NewNetworkPolicies(true),
 			NewVPA(true),
 			NewControlPlaneVPA(true),
 		}
 	}
 	istioResources := []Resource{
+		NewGatewayAPICRDs(false),
 		NewPeerAuthenticationMtls(false),
 		NewNetworkPolicies(!istioCR.Spec.NetworkPoliciesEnabled),
 		NewVPA(false),

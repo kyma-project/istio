@@ -123,6 +123,9 @@ Underlying type: string
 | **IngressTargetingUserResourceFound** | Resource targeting Istio Ingress Gateway found.<br /> |
 | **IngressTargetingUserResourceNotFound** | No resources targeting Istio Ingress Gateway found.<br /> |
 | **IngressTargetingUserResourceDetectionFailed** | Resource targeting Istio Ingress Gateway detection failed.<br /> |
+| **GatewayAPICRDsInstalled** | Gateway API CRDs were installed successfully.<br /> |
+| **GatewayAPICRDsAlreadyInstalled** | Gateway API CRDs were already present on the cluster and not managed by this module.<br /> |
+| **GatewayAPIResourcesDangling** | Gateway API resources are blocking module deletion.<br /> |
 
 
 ### Config

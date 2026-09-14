@@ -82,6 +82,10 @@ var conditionReasons = map[ConditionReason]conditionMeta{
 		Status:  metav1.ConditionUnknown,
 		Message: ConditionReasonIngressTargetingUserResourceDetectionFailedMessage,
 	},
+
+	ConditionReasonGatewayAPICRDsInstalled:        {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonGatewayAPICRDsInstalledMessage},
+	ConditionReasonGatewayAPICRDsAlreadyInstalled: {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonGatewayAPICRDsAlreadyInstalledMessage},
+	ConditionReasonGatewayAPIResourcesDangling:    {Type: ConditionTypeReady, Status: metav1.ConditionFalse, Message: ConditionReasonGatewayAPIResourcesDanglingMessage},
 }
 
 type conditionMeta struct {

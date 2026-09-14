@@ -13,6 +13,17 @@ inputs:
   gardener_project_name:
     required: true
     description: "Name of the gardener project"
+  test_make_target:
+    description: "Make target for performance tests to run"
+    required: true
+  operator_version:
+    description: 'Version of the operator image'
+    required: true
+  test_ip_family:
+    description: 'Value passed to TEST_IP_FAMILY (ipv4|ipv6|dualstack)'
+    required: false
+    default: ipv4
+
 runs:
   using: "composite"
   steps:
@@ -41,8 +52,14 @@ runs:
       env:
         IMG: ${{ inputs.manager_image }}
         CLUSTER_KUBECONFIG: "${{ github.workspace }}/${{ env.CLUSTER_NAME }}_kubeconfig.yaml"
-        EXPORT_RESULT: true
-      run: "${{ github.workspace }}/hack/ci/gardener/performance-test.sh"
+        OPERATOR_VERSION: ${{ inputs.operator_version }}
+        # Drives ipfamily.From() -> DialNetworks(); the make target
+        # inherits it via the shell, no Makefile change required.
+        TEST_IP_FAMILY: ${{ inputs.test_ip_family }}
+        GARDENER_CONFIGURATION: ${{ inputs.gardener_configuration }}
+        E2E_LOGS_DIR: ${{ github.workspace }}/tests/e2e/tests
+      run: |
+        "${{ github.workspace }}/hack/ci/gardener/e2e-test.sh" ${{ inputs.test_make_target }}
     - uses: actions/upload-artifact@v4
       if: always()
       name: Export no sidecar summary

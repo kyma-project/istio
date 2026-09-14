@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	podLogsDir     = "pods"
+	podLogsDir     = "pod-logs"
 	podLogFileName = "%s-%s@%s.log"
 )
 

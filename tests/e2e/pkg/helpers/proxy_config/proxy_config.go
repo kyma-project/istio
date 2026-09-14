@@ -170,7 +170,7 @@ func saveProxyConfigDump(t *testing.T, podName string, data []byte) {
 		return
 	}
 
-	filename := fmt.Sprintf("%s-proxy_config_dump.json", artifacts.SanitizePathComponent(podName))
+	filename := fmt.Sprintf("%s-proxy-config-dump.json", artifacts.SanitizePathComponent(podName))
 	filePath := filepath.Join(dir, filename)
 
 	if err := os.WriteFile(filePath, data, 0644); err != nil {

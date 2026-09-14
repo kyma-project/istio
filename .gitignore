@@ -126,3 +126,7 @@ config/default/kustomization.yaml
 
 # ignore generated files for istiooperator tests
 internal/istiooperator/test/merged-istio-operator.yaml
+
+# ignore artifacts stored by tests
+test-artifacts
+tests/**/test-artifacts

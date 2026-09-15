@@ -21,10 +21,9 @@ You get one of the following outputs:
 ```
 
 ## Cause
+The Istio module wasn't completely removed because Istio or Gateway API resources still exist in the cluster.
 
-For example, the issue occurs when you delete Istio, but there are still VirtualService or Gateway API resources (such as `HTTPRoute` or `Gateway` objects) either created by you or installed by another Kyma component or module. In such cases, the hooked finalizer pauses the deletion of Istio until you remove all the related resources. This [blocking deletion strategy](https://github.com/kyma-project/community/issues/765) is intentionally designed and is enabled by default for the Istio module.
-
-The module uses a [blocking deletion strategy](https://github.com/kyma-project/community/issues/765) to prevent orphaned resources after the CRDs are removed.
+For example, the issue occurs when you delete Istio module, but there are still VirtualService or Gateway API resources (such as HTTPRoute or Gateway objects) either created by you or installed by another Kyma component or module. In such cases, the hooked finalizer pauses the deletion until you remove all the related resources. This [blocking deletion strategy](https://github.com/kyma-project/community/issues/765) is intentionally designed and is enabled by default for the Istio module.
 
 ## Solution
 

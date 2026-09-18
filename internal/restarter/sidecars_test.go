@@ -26,6 +26,7 @@ import (
 	"github.com/kyma-project/istio/operator/internal/istiooperator"
 	"github.com/kyma-project/istio/operator/internal/restarter"
 	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
+	v2 "github.com/kyma-project/istio/operator/internal/restarter/v2"
 	"github.com/kyma-project/istio/operator/internal/status"
 	"github.com/kyma-project/istio/operator/pkg/lib/gatherer"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars"
@@ -339,6 +340,6 @@ func (p *proxyRestarterMock) RestartProxies(_ context.Context, _ images.Image, _
 	return p.restartWarnings, p.err
 }
 
-func (p *proxyRestarterMock) RestartWithPredicates(_ context.Context, preds []predicates.SidecarProxyPredicate, _ *pods.RestartLimits, _ bool) ([]restart.Warning, error) {
+func (p *proxyRestarterMock) RestartWithPredicates(_ context.Context, preds []predicates.SidecarProxyPredicate, _ []v2.Rule, _ *pods.RestartLimits, _ bool) ([]restart.Warning, error) {
 	return p.restartWarnings, p.err
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
+	v2 "github.com/kyma-project/istio/operator/internal/restarter/v2"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -28,7 +29,7 @@ func NewPodsRestartLimits(podsPerPage int) *RestartLimits {
 }
 
 type Getter interface {
-	GetPodsToRestart(ctx context.Context, preds []predicates.SidecarProxyPredicate, limits *RestartLimits, restartFn func(context.Context, *v1.PodList) error) error
+	GetPodsToRestart(ctx context.Context, preds []predicates.SidecarProxyPredicate, rules []v2.Rule, limits *RestartLimits, restartFn func(context.Context, *v1.PodList) error) error
 	GetAllInjectedPods(context context.Context) (*v1.PodList, error)
 }
 
@@ -45,7 +46,7 @@ func NewPods(k8sClient client.Client, logger *logr.Logger) *Pods {
 }
 
 //nolint:gocognit // cognitive complexity 29 of func `(*Pods).GetPodsToRestart` is high (> 20) TODO refactor
-func (p *Pods) GetPodsToRestart(ctx context.Context, preds []predicates.SidecarProxyPredicate, limits *RestartLimits, restartFn func(context.Context, *v1.PodList) error) error {
+func (p *Pods) GetPodsToRestart(ctx context.Context, preds []predicates.SidecarProxyPredicate, rules []v2.Rule, limits *RestartLimits, restartFn func(context.Context, *v1.PodList) error) error {
 	continueToken := ""
 
 	for {
@@ -56,6 +57,23 @@ func (p *Pods) GetPodsToRestart(ctx context.Context, preds []predicates.SidecarP
 
 		page := &v1.PodList{}
 		for _, pod := range podsWithSidecar.Items {
+
+			// evaluate Rules with new decision schematic
+			// TODO move this part to the controller code once we have everything
+			for _, r := range rules {
+				d := r.Evaluate(&pod)
+				switch d {
+				case v2.Stop:
+					break
+				case v2.Restart:
+					page.Items = append(page.Items, pod)
+				case v2.Continue:
+					continue
+				default:
+					return fmt.Errorf("failed to evaluate rule: %w", v2.ErrDecisionUnknown)
+				}
+			}
+
 			optionalMatched := false
 			requiredMatched := true
 			for _, predicate := range preds {

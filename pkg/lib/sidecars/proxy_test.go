@@ -8,6 +8,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/kyma-project/istio/operator/internal/images"
 	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
+	v2 "github.com/kyma-project/istio/operator/internal/restarter/v2"
 	"github.com/kyma-project/istio/operator/internal/tests"
 	"github.com/kyma-project/istio/operator/pkg/labels"
 	"github.com/kyma-project/istio/operator/pkg/lib/sidecars"
@@ -236,7 +237,7 @@ var _ = Describe("RestartWithPredicates", func() {
 		podsLister := pods.NewPods(c, &logger)
 		actionRestarter := restart.NewActionRestarter(c, &logger)
 		proxyRestarter := sidecars.NewProxyRestarter(c, podsLister, actionRestarter, &logger)
-		warnings, err := proxyRestarter.RestartWithPredicates(ctx, preds, limits, true)
+		warnings, err := proxyRestarter.RestartWithPredicates(ctx, preds, nil, limits, true)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -261,7 +262,7 @@ var _ = Describe("RestartWithPredicates", func() {
 		podsLister := pods.NewPods(c, &logger)
 		actionRestarter := restart.NewActionRestarter(c, &logger)
 		proxyRestarter := sidecars.NewProxyRestarter(c, podsLister, actionRestarter, &logger)
-		warnings, err := proxyRestarter.RestartWithPredicates(ctx, preds, limits, true)
+		warnings, err := proxyRestarter.RestartWithPredicates(ctx, preds, nil, limits, true)
 
 		// then
 		Expect(err).NotTo(HaveOccurred())
@@ -285,7 +286,7 @@ var _ = Describe("RestartWithPredicates", func() {
 		podsLister := pods.NewPods(failClient, &logger)
 		actionRestarter := restart.NewActionRestarter(failClient, &logger)
 		proxyRestarter := sidecars.NewProxyRestarter(failClient, podsLister, actionRestarter, &logger)
-		warnings, err := proxyRestarter.RestartWithPredicates(ctx, preds, limits, true)
+		warnings, err := proxyRestarter.RestartWithPredicates(ctx, preds, nil, limits, true)
 
 		// then
 		Expect(err).To(HaveOccurred())
@@ -312,7 +313,7 @@ var _ = Describe("RestartWithPredicates", func() {
 		podsLister := pods.NewPods(failClient, &logger)
 		actionRestarter := restart.NewActionRestarter(failClient, &logger)
 		proxyRestarter := sidecars.NewProxyRestarter(failClient, podsLister, actionRestarter, &logger)
-		warnings, err := proxyRestarter.RestartWithPredicates(ctx, preds, limits, true)
+		warnings, err := proxyRestarter.RestartWithPredicates(ctx, preds, nil, limits, true)
 
 		// then
 		Expect(err).To(HaveOccurred())
@@ -339,7 +340,7 @@ var _ = Describe("RestartWithPredicates", func() {
 		podsLister := pods.NewPods(failClient, &logger)
 		actionRestarter := restart.NewActionRestarter(failClient, &logger)
 		proxyRestarter := sidecars.NewProxyRestarter(failClient, podsLister, actionRestarter, &logger)
-		warnings, err := proxyRestarter.RestartWithPredicates(ctx, preds, limits, false)
+		warnings, err := proxyRestarter.RestartWithPredicates(ctx, preds, nil, limits, false)
 
 		// then
 		Expect(err).ToNot(HaveOccurred())
@@ -526,7 +527,7 @@ func NewPodsMock() *PodsMock {
 	}
 }
 
-func (p *PodsMock) GetPodsToRestart(_ context.Context, preds []predicates.SidecarProxyPredicate, limits *pods.RestartLimits, restartFn func(context.Context, *v1.PodList) error) error {
+func (p *PodsMock) GetPodsToRestart(_ context.Context, preds []predicates.SidecarProxyPredicate, _ []v2.Rule, limits *pods.RestartLimits, restartFn func(context.Context, *v1.PodList) error) error {
 	if p.FailOnKymaWorkload {
 		_, ok := preds[len(preds)-1].(*predicates.KymaWorkloadRestartPredicate)
 		if ok {

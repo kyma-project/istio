@@ -42,6 +42,10 @@ body:
     - source: spec.config.telemetry.metrics.prometheusMerge
       name: config.prometheusMerge
       placeholder: 'false'
+    - source: spec.config.proxyStatsMatcher.inclusionRegexps
+      name: config.proxyStatsMatcher.inclusionRegexps.details
+      widget: JoinedArray
+      visibility: '$exists($value)'
 
     - name: config.authorizers
       widget: Table

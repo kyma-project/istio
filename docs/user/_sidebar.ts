@@ -8,6 +8,7 @@ export default [
     { text: 'Istio Trust Domain', link: './00-30-trust-domain.md'},
     { text: 'DNS Proxying', link: './00-35-dns-proxying.md' },
     { text: 'Configure Observability for the Istio Service Mesh', link: './00-40-enable-istio-access-logs.md' },
+    { text: 'Proxy Stats Matcher', link: './00-42-proxy-stats-matcher.md' },
     ] },
   { text: 'Istio Custom Resource', link: './04-00-istio-custom-resource' },
   { text: 'Network Policies', link: './00-50-network-policies.md' },

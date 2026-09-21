@@ -535,6 +535,14 @@ func (b *IstioCRBuilder) WithCNIResources(cpuRequests, memoryRequests, cpuLimits
 	return b.WithCNI(cni)
 }
 
+// WithProxyStatsMatcher sets the global proxyStatsMatcher inclusionRegexps on the Istio CR.
+func (b *IstioCRBuilder) WithProxyStatsMatcher(inclusionRegexps []string) *IstioCRBuilder {
+	b.istio.Spec.Config.ProxyStatsMatcher = &v1alpha2.ProxyStatsMatcher{
+		InclusionRegexps: inclusionRegexps,
+	}
+	return b
+}
+
 // WithEnableAmbient is a convenience method to enable or disable ambient mode
 func (b *IstioCRBuilder) WithEnableAmbient(enabled bool) *IstioCRBuilder {
 	if b.istio.Spec.Experimental == nil {

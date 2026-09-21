@@ -132,7 +132,23 @@ When you configure `proxyStatsMatcher` globally via the `Istio` CR, **all proxie
 
 ### Steps
 
-#### 1. Prepare Namespaces
+#### 1. Enable Outlier Detection Metrics Globally
+
+Configure the Istio CR to emit outlier detection statistics on all proxies in the mesh:
+
+```bash
+kubectl patch istio default -n kyma-system --type=merge -p '{"spec":{"config":{"proxyStatsMatcher":{"inclusionRegexps":[".*outlier_detection.*"]}}}}'
+```
+
+Verify the configuration:
+
+```bash
+kubectl get istio default -n kyma-system -o jsonpath='{.spec.config.proxyStatsMatcher.inclusionRegexps}'
+```
+
+All proxies in the mesh — sidecars and gateways — will now emit outlier detection metrics.
+
+#### 2. Prepare Namespaces
 
 Create the target and source namespaces. Enable Istio sidecar injection only on the source:
 
@@ -142,7 +158,7 @@ kubectl create ns source
 kubectl label namespace source istio-injection=enabled
 ```
 
-#### 2. Deploy the Target Workload
+#### 3. Deploy the Target Workload
 
 Deploy an `httpbin` workload in the `target` namespace:
 
@@ -192,7 +208,7 @@ spec:
             - containerPort: 80
 ```
 
-#### 3. Configure Outlier Detection
+#### 4. Configure Outlier Detection
 
 Apply a `DestinationRule` that ejects the host after five consecutive 5xx errors within a one-minute interval:
 
@@ -212,9 +228,9 @@ spec:
       maxEjectionPercent: 100
 ```
 
-#### 4. Deploy Source Pods with Outlier Detection Metrics Enabled
+#### 5. Deploy Source Pods
 
-Deploy two curl pods in the `source` namespace. Enable outlier detection metrics on each via the `proxy.istio.io/config` annotation:
+Deploy two curl pods in the `source` namespace. Since `proxyStatsMatcher` is configured globally, metrics are automatically enabled on all proxies:
 
 ```yaml
 apiVersion: v1
@@ -224,11 +240,6 @@ metadata:
   namespace: source
   labels:
     app: curl-1
-  annotations:
-    proxy.istio.io/config: |-
-      proxyStatsMatcher:
-        inclusionRegexps:
-          - ".*outlier_detection.*"
 spec:
   containers:
     - name: curl
@@ -242,11 +253,6 @@ metadata:
   namespace: source
   labels:
     app: curl-2
-  annotations:
-    proxy.istio.io/config: |-
-      proxyStatsMatcher:
-        inclusionRegexps:
-          - ".*outlier_detection.*"
 spec:
   containers:
     - name: curl
@@ -260,7 +266,7 @@ Wait for both pods to be ready:
 kubectl wait --for=condition=ready pod -n source curl-1 curl-2
 ```
 
-#### 5. Trigger Host Ejection
+#### 6. Trigger Host Ejection
 
 Send five consecutive 5xx responses from `curl-1` to exceed the outlier detection threshold:
 
@@ -272,7 +278,7 @@ done
 
 After the threshold is reached, the host is ejected from the load-balancing pool as seen from `curl-1`.
 
-#### 6. Observe the Ejection
+#### 7. Observe the Ejection
 
 Send one more request from `curl-1`. It fails because the host is ejected:
 
@@ -286,7 +292,7 @@ Send the same request from `curl-2`. It succeeds because `curl-2` has its own in
 kubectl exec -n source curl-2 -c curl -- curl -v "http://httpbin.target.svc.cluster.local:8000/headers"
 ```
 
-#### 7. Inspect Outlier Detection Metrics
+#### 8. Inspect Outlier Detection Metrics
 
 Check the metrics on `curl-1`. The active ejection count should be `1`:
 
@@ -314,10 +320,9 @@ Expected output:
 envoy_cluster_outlier_detection_ejections_active{cluster_name="outbound|8000||httpbin.target.svc.cluster.local"} 0
 ```
 
+#### 9. (Optional) Test Outlier Detection via Ingress Gateway
 
-#### 8. Test Outlier Detection via Ingress Gateway
-
-You can also verify that the ingress gateway proxy tracks ejection state independently when configured with `proxyStatsMatcher`. To do this:
+You can also verify that the ingress gateway proxy tracks ejection state independently since `proxyStatsMatcher` is configured globally. To do this:
 
 1. Create a Gateway and VirtualService to route traffic through the ingress:
 
@@ -360,13 +365,9 @@ spec:
           number: 8000
 ```
 
-2. Enable metrics on the ingress gateway by patching its deployment:
+2. Send 5xx requests through the gateway using kubectl exec from a pod inside the cluster.
 
-```bash
-kubectl patch deployment istio-ingressgateway -n istio-system --type=merge -p '{"spec":{"template":{"metadata":{"annotations":{"proxy.istio.io/config":"proxyStatsMatcher:\n  inclusionRegexps:\n    - \".*outlier_detection.*\""}}}}}'
-```
-
-3. Send 5xx requests through the gateway using kubectl exec from a pod inside the cluster (or use port-forward to access it locally).
+3. Since `proxyStatsMatcher` is globally configured, the gateway already emits outlier detection metrics.
 
 4. Inspect metrics on the ingress gateway pod:
 
@@ -376,7 +377,6 @@ kubectl exec -n istio-system "${ingress_pod}" -c istio-proxy -- pilot-agent requ
 ```
 
 The gateway should report active ejections after receiving five consecutive 5xx responses, demonstrating that gateway proxies also track outlier detection independently from sidecars.
-
 
 ## Considerations
 
@@ -392,3 +392,4 @@ The gateway should report active ejections after receiving five consecutive 5xx 
 - [Envoy Statistics](https://istio.io/latest/docs/ops/configuration/telemetry/envoy-stats/)
 - [DestinationRule outlier detection](https://istio.io/latest/docs/reference/config/networking/destination-rule/#OutlierDetection)
 - [Uneven Traffic Distribution with DestinationRules](./troubleshooting/03-95-uneven-load-balancing-with-destination-rules.md)
+

@@ -25,6 +25,7 @@ const podReadyTimeout = 2 * time.Minute
 
 func CreateOutlierDetectionDestinationRule(t *testing.T, r *resources.Resources, namespace, host string, consecutive5xx uint32, interval, baseEjectionTime time.Duration) error {
 	t.Helper()
+	t.Logf("creating outlier detection DestinationRule for %s/%s", namespace, host)
 
 	dr := &networkingv1.DestinationRule{
 		TypeMeta: metav1.TypeMeta{
@@ -52,6 +53,8 @@ func CreateOutlierDetectionDestinationRule(t *testing.T, r *resources.Resources,
 	if err != nil && !k8serrors.IsAlreadyExists(err) {
 		return fmt.Errorf("failed to create DestinationRule: %w", err)
 	}
+
+	t.Logf("created outlier detection DestinationRule for %s/%s", namespace, host)
 
 	setup.DeclareCleanup(t, func() {
 		_ = r.Delete(setup.GetCleanupContext(), dr)
@@ -102,13 +105,16 @@ func DeployCurlPod(t *testing.T, r *resources.Resources, name, namespace string,
 		_ = r.Delete(setup.GetCleanupContext(), pod)
 	})
 
-	return wait.For(
+	if err := wait.For(
 		conditions.New(r).PodRunning(pod),
 		wait.WithTimeout(podReadyTimeout),
 		wait.WithContext(t.Context()),
-	)
+	); err != nil {
+		return err
+	}
+	t.Logf("curl pod %s/%s is ready", namespace, name)
+	return nil
 }
-
 func ExecCurl(t *testing.T, r *resources.Resources, podName, namespace, url string) error {
 	t.Helper()
 	return ExecCurlWithHost(t, r, podName, namespace, url, "")
@@ -169,5 +175,6 @@ func GetIngressGatewayPodName(t *testing.T, r *resources.Resources) (string, err
 			return pod.Name, nil
 		}
 	}
+	t.Logf("no running istio-ingressgateway pod found in istio-system")
 	return "", fmt.Errorf("no running istio-ingressgateway pod found in istio-system")
 }

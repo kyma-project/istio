@@ -29,16 +29,29 @@ const (
 )
 
 func TestProxyStatsMatcher(t *testing.T) {
+	r, err := client.ResourcesClient(t)
+	require.NoError(t, err)
+
+	_, err = modulehelpers.NewIstioCRBuilder().ApplyAndCleanup(t)
+	require.NoError(t, err)
+
+	require.NoError(t, infrahelpers.CreateNamespace(t, targetNamespace))
+	require.NoError(t, infrahelpers.CreateNamespace(t, sourceNamespace, infrahelpers.WithSidecarInjectionEnabled()))
+
+	httpbinInfo, err := httpbin.NewBuilder().WithNamespace(targetNamespace).DeployWithCleanup(t)
+	require.NoError(t, err)
+
+	require.NoError(t, proxystatshelper.CreateOutlierDetectionDestinationRule(
+		t, r, targetNamespace, httpbinInfo.Host,
+		outlierDetectionConsecutive5xx, outlierDetectionInterval, outlierDetectionBaseEjectionTime,
+	))
+
+	httpbinURL := httpbinServiceURL(httpbinInfo)
+
 	t.Run("Outlier detection metrics are exposed on all proxies when proxyStatsMatcher is configured globally via Istio CR", func(t *testing.T) {
 		// given
-		r, httpbinInfo := setupOutlierDetectionScenario(
-			t,
-			modulehelpers.NewIstioCRBuilder().WithProxyStatsMatcher([]string{outlierDetectionRegexp}),
-			infrahelpers.IgnoreAlreadyExists(),
-		)
-		httpbinURL := httpbinServiceURL(httpbinInfo)
+		require.NoError(t, modulehelpers.NewIstioCRBuilder().WithProxyStatsMatcher([]string{outlierDetectionRegexp}).Update(t))
 
-		// Deploy a curl pod without any annotation — metrics come from the global Istio CR config.
 		curlName := "curl-global"
 		require.NoError(t, proxystatshelper.DeployCurlPod(t, r, curlName, sourceNamespace, nil))
 
@@ -52,8 +65,7 @@ func TestProxyStatsMatcher(t *testing.T) {
 
 	t.Run("Outlier detection metrics are not exposed when proxyStatsMatcher is not configured", func(t *testing.T) {
 		// given
-		r, httpbinInfo := setupOutlierDetectionScenario(t, modulehelpers.NewIstioCRBuilder(), infrahelpers.IgnoreAlreadyExists())
-		httpbinURL := httpbinServiceURL(httpbinInfo)
+		require.NoError(t, modulehelpers.NewIstioCRBuilder().Update(t))
 
 		curlName := "curl-no-stats"
 		require.NoError(t, proxystatshelper.DeployCurlPod(t, r, curlName, sourceNamespace, nil))
@@ -72,13 +84,7 @@ func TestProxyStatsMatcher(t *testing.T) {
 		// The docs state that proxy.istio.io/config replaces the global proxyStatsMatcher for
 		// that workload. This test verifies the replacement semantics: a pod annotated with
 		// pattern A does not inherit pattern B from the global Istio CR.
-
-		r, httpbinInfo := setupOutlierDetectionScenario(
-			t,
-			modulehelpers.NewIstioCRBuilder().WithProxyStatsMatcher([]string{outlierDetectionRegexp}),
-			infrahelpers.IgnoreAlreadyExists(),
-		)
-		httpbinURL := httpbinServiceURL(httpbinInfo)
+		require.NoError(t, modulehelpers.NewIstioCRBuilder().Update(t))
 
 		// Pod annotation overrides with a different, unrelated pattern — NOT outlier_detection.
 		curlName := "curl-override"
@@ -103,8 +109,7 @@ func TestProxyStatsMatcher(t *testing.T) {
 
 	t.Run("Outlier detection metrics are exposed on source proxy when proxyStatsMatcher is configured via pod annotation", func(t *testing.T) {
 		// given
-		r, httpbinInfo := setupOutlierDetectionScenario(t, modulehelpers.NewIstioCRBuilder(), infrahelpers.IgnoreAlreadyExists())
-		httpbinURL := httpbinServiceURL(httpbinInfo)
+		require.NoError(t, modulehelpers.NewIstioCRBuilder().Update(t))
 
 		// Deploy two curl pods with outlier_detection metrics enabled via annotation.
 		// Each pod tracks ejection state independently.
@@ -130,15 +135,9 @@ func TestProxyStatsMatcher(t *testing.T) {
 		// Ejection state is tracked by the proxy that originates the request — when traffic
 		// arrives via the ingress gateway, it is the gateway proxy (not a sidecar) that evaluates
 		// outlier detection and records the ejection metrics.
-
-		r, httpbinInfo := setupOutlierDetectionScenario(
-			t,
-			modulehelpers.NewIstioCRBuilder().WithProxyStatsMatcher([]string{outlierDetectionRegexp}),
-			infrahelpers.IgnoreAlreadyExists(),
-		)
+		require.NoError(t, modulehelpers.NewIstioCRBuilder().WithProxyStatsMatcher([]string{outlierDetectionRegexp}).Update(t))
 
 		require.NoError(t, gatewayhelper.CreateHTTPGateway(t))
-
 		require.NoError(t, virtualservice.CreateVirtualService(t, "httpbin", "kyma-system", httpbinInfo.Host, httpbinInfo.Host, gatewayhelper.GatewayReference))
 
 		// deploy a curl pod to send requests through the ingress gateway from inside the cluster
@@ -159,36 +158,6 @@ func TestProxyStatsMatcher(t *testing.T) {
 		proxystatsassert.AssertOutlierDetectionMetric(t, r, ingressPodName, "istio-system", httpbinInfo.Host, 1)
 		proxystatsassert.AssertOutlierDetectionMetric(t, r, curlName, sourceNamespace, httpbinInfo.Host, 0)
 	})
-}
-
-func setupOutlierDetectionScenario(t *testing.T, istioCRBuilder *modulehelpers.IstioCRBuilder, namespaceOptions ...infrahelpers.NamespaceOption) (*resources.Resources, *httpbin.DeploymentInfo) {
-	t.Helper()
-
-	r, err := client.ResourcesClient(t)
-	require.NoError(t, err)
-
-	_, err = istioCRBuilder.ApplyAndCleanup(t)
-	require.NoError(t, err)
-
-	sourceNamespaceOptions := append([]infrahelpers.NamespaceOption{infrahelpers.WithSidecarInjectionEnabled()}, namespaceOptions...)
-
-	require.NoError(t, infrahelpers.CreateNamespace(t, targetNamespace, namespaceOptions...))
-	require.NoError(t, infrahelpers.CreateNamespace(t, sourceNamespace, sourceNamespaceOptions...))
-
-	httpbinInfo, err := httpbin.NewBuilder().WithNamespace(targetNamespace).DeployWithCleanup(t)
-	require.NoError(t, err)
-
-	require.NoError(t, proxystatshelper.CreateOutlierDetectionDestinationRule(
-		t,
-		r,
-		targetNamespace,
-		httpbinInfo.Host,
-		outlierDetectionConsecutive5xx,
-		outlierDetectionInterval,
-		outlierDetectionBaseEjectionTime,
-	))
-
-	return r, httpbinInfo
 }
 
 func httpbinServiceURL(httpbinInfo *httpbin.DeploymentInfo) string {

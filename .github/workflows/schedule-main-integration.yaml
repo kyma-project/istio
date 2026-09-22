@@ -89,6 +89,7 @@ jobs:
           - "extauth-e2e-test"
           - "egress-e2e-test"
           - "networkpolicy-e2e-test"
+          - "proxy-e2e-test"
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/k8s-compatibility-test-k3d
@@ -118,6 +119,7 @@ jobs:
           - "extauth-e2e-test"
           - "egress-e2e-test"
           - "networkpolicy-e2e-test"
+          - "proxy_stats-e2e-test"
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/k8s-compatibility-test-aws
@@ -146,6 +148,7 @@ jobs:
           - "extauth-e2e-test"
           - "egress-e2e-test"
           - "networkpolicy-e2e-test"
+          - "proxy_stats-e2e-test"
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/e2e-test-k3d
@@ -269,7 +272,6 @@ jobs:
           operator-image-name: ${{ needs.get-image.outputs.image }}
           operator-version: ${{ needs.get-image.outputs.operator_version }}
           k3d_configuration: 'calico' # FIPS tests don't work with flannel network
-
   istio-e2e-test-aws:
     name: Istio E2E test AWS
     environment:

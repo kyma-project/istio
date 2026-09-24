@@ -128,7 +128,7 @@ This tutorial shows how to set up a complete scenario in which outlier detection
 
 Outlier detection is configured in a `DestinationRule` on the target host but is **evaluated by the source proxy** that makes requests. As a result, each source proxy tracks ejection state independently — one proxy may eject a host while another considers it healthy. This is why metrics must be observed on the source proxy, not the target.
 
-When you configure `proxyStatsMatcher` globally via the `Istio` CR, **all proxies in the mesh** — including ingress and egress gateways — emit the matched statistics.
+When you configure `proxyStatsMatcher` globally via the `Istio` CR, **all proxies in the mesh** — including ingress and egress gateways — receive that matcher configuration. Matching statistics can then be emitted by those proxies, while host-specific metrics appear when a given proxy has relevant traffic or state for that destination.
 
 ### Steps
 
@@ -322,7 +322,7 @@ envoy_cluster_outlier_detection_ejections_active{cluster_name="outbound|8000||ht
 
 #### 9. (Optional) Test Outlier Detection via Ingress Gateway
 
-You can also verify that the ingress gateway proxy tracks ejection state independently since `proxyStatsMatcher` is configured globally. To do this:
+When `proxyStatsMatcher` is configured globally, it propagates to the ingress gateway as well as sidecars. The gateway proxy evaluates outlier detection independently — ejection state is local to the proxy that originates the request, so the gateway tracks it separately from any sidecar.
 
 1. Create a Gateway and VirtualService to route traffic through the ingress:
 
@@ -338,7 +338,7 @@ spec:
     istio: ingressgateway
   servers:
   - hosts:
-    - '*'
+    - 'httpbin.target.svc.cluster.local'
     port:
       name: http
       number: 80
@@ -353,30 +353,39 @@ spec:
   gateways:
   - target/httpbin-gateway
   hosts:
-  - '*'
+  - 'httpbin.target.svc.cluster.local'
   http:
-  - match:
-    - uri:
-        prefix: /
-    route:
+  - route:
     - destination:
         host: httpbin.target.svc.cluster.local
         port:
           number: 8000
 ```
 
-2. Send 5xx requests through the gateway using kubectl exec from a pod inside the cluster.
+2. Send five consecutive 5xx requests through the gateway from a pod inside the cluster:
 
-3. Since `proxyStatsMatcher` is globally configured, the gateway already emits outlier detection metrics.
+```bash
+for i in $(seq 1 5); do
+  kubectl exec -n source curl-1 -c curl -- curl -s -o /dev/null \
+    -H "Host: httpbin.target.svc.cluster.local" \
+    "http://istio-ingressgateway.istio-system.svc.cluster.local/status/500"
+done
+```
 
-4. Inspect metrics on the ingress gateway pod:
+3. Inspect metrics on the ingress gateway pod. The active ejection count should be `1`:
 
 ```bash
 ingress_pod=$(kubectl get pod -n istio-system -l app=istio-ingressgateway -o jsonpath="{.items[0].metadata.name}")
 kubectl exec -n istio-system "${ingress_pod}" -c istio-proxy -- pilot-agent request GET /stats/prometheus | grep outlier_detection
 ```
 
-The gateway should report active ejections after receiving five consecutive 5xx responses, demonstrating that gateway proxies also track outlier detection independently from sidecars.
+4. Verify that the sidecar in `curl-1` reports no active ejection — it did not originate the gateway requests:
+
+```bash
+kubectl exec -n source curl-1 -c istio-proxy -- pilot-agent request GET /stats/prometheus | grep outlier_detection
+```
+
+If the ingress gateway is scaled to multiple replicas, each pod independently tracks ejection state. Because these metrics are destination- and traffic-driven, not every replica is guaranteed to expose host-specific outlier-detection statistics for a given backend. At least one replica that handled the traffic should expose the metric, and only the replica that processed enough consecutive 5xx requests reports an active ejection.
 
 ## Considerations
 

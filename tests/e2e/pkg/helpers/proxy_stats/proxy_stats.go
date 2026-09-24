@@ -148,16 +148,15 @@ func GetHTTPStatusCode(t *testing.T, r *resources.Resources, podName, namespace,
 	return strings.TrimSpace(stdout.String()), nil
 }
 
-func GetProxyStats(t *testing.T, r *resources.Resources, podName, namespace string) string {
+func GetProxyStats(t *testing.T, r *resources.Resources, podName, namespace string) (string, error) {
 	t.Helper()
 	cmd := []string{"pilot-agent", "request", "GET", "/stats/prometheus"}
 	var stdout, stderr bytes.Buffer
 	err := r.ExecInPod(t.Context(), namespace, podName, "istio-proxy", cmd, &stdout, &stderr)
 	if err != nil {
-		t.Logf("failed to get proxy stats from %s/%s: %v", namespace, podName, err)
-		return ""
+		return "", fmt.Errorf("failed to get proxy stats from %s/%s: %w", namespace, podName, err)
 	}
-	return stdout.String()
+	return stdout.String(), nil
 }
 
 func GetIngressGatewayPodName(t *testing.T, r *resources.Resources) (string, error) {

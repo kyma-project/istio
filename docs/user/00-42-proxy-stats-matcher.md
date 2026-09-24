@@ -324,6 +324,11 @@ envoy_cluster_outlier_detection_ejections_active{cluster_name="outbound|8000||ht
 
 When `proxyStatsMatcher` is configured globally, it propagates to the ingress gateway as well as sidecars. The gateway proxy evaluates outlier detection independently — ejection state is local to the proxy that originates the request, so the gateway tracks it separately from any sidecar.
 
+Two key properties follow from this:
+
+- **Ejection ownership**: when requests travel through the ingress gateway to a backend, it is the gateway proxy that records the ejection — not the client that sent traffic to the gateway.
+- **Per-replica independence**: when the gateway is scaled to multiple replicas, each pod maintains its own ejection state. A replica that received enough consecutive errors from a backend ejects it independently of replicas that did not.
+
 1. Create a Gateway and VirtualService to route traffic through the ingress:
 
 ```yaml
@@ -331,14 +336,13 @@ apiVersion: networking.istio.io/v1
 kind: Gateway
 metadata:
   name: httpbin-gateway
-  namespace: target
+  namespace: istio-system
 spec:
   selector:
-    app: istio-ingressgateway
     istio: ingressgateway
   servers:
   - hosts:
-    - 'httpbin.target.svc.cluster.local'
+    - 'httpbin.example.com'
     port:
       name: http
       number: 80
@@ -348,26 +352,26 @@ apiVersion: networking.istio.io/v1
 kind: VirtualService
 metadata:
   name: httpbin
-  namespace: target
+  namespace: istio-system
 spec:
   gateways:
-  - target/httpbin-gateway
+  - istio-system/httpbin-gateway
   hosts:
-  - 'httpbin.target.svc.cluster.local'
+  - 'httpbin.example.com'
   http:
   - route:
     - destination:
-        host: httpbin.target.svc.cluster.local
+        host: httpbin.<target-namespace>.svc.cluster.local
         port:
           number: 8000
 ```
 
-2. Send five consecutive 5xx requests through the gateway from a pod inside the cluster:
+2. Send enough consecutive 5xx requests through the gateway to exceed the ejection threshold:
 
 ```bash
 for i in $(seq 1 5); do
-  kubectl exec -n source curl-1 -c curl -- curl -s -o /dev/null \
-    -H "Host: httpbin.target.svc.cluster.local" \
+  kubectl exec -n <source-namespace> <curl-pod> -c curl -- curl -s -o /dev/null \
+    -H "Host: httpbin.example.com" \
     "http://istio-ingressgateway.istio-system.svc.cluster.local/status/500"
 done
 ```
@@ -379,13 +383,13 @@ ingress_pod=$(kubectl get pod -n istio-system -l app=istio-ingressgateway -o jso
 kubectl exec -n istio-system "${ingress_pod}" -c istio-proxy -- pilot-agent request GET /stats/prometheus | grep outlier_detection
 ```
 
-4. Verify that the sidecar in `curl-1` reports no active ejection — it did not originate the gateway requests:
+4. Verify that the curl pod's sidecar reports no active ejection — it sent requests to the gateway, not directly to the backend, so it has no ejection state for that cluster:
 
 ```bash
-kubectl exec -n source curl-1 -c istio-proxy -- pilot-agent request GET /stats/prometheus | grep outlier_detection
+kubectl exec -n <source-namespace> <curl-pod> -c istio-proxy -- pilot-agent request GET /stats/prometheus | grep outlier_detection
 ```
 
-If the ingress gateway is scaled to multiple replicas, each pod independently tracks ejection state. Because these metrics are destination- and traffic-driven, not every replica is guaranteed to expose host-specific outlier-detection statistics for a given backend. At least one replica that handled the traffic should expose the metric, and only the replica that processed enough consecutive 5xx requests reports an active ejection.
+When the gateway is scaled to multiple replicas, only the replicas that processed enough consecutive 5xx responses from the backend eject it. Each replica's `ejections_active` value is consistent with its own upstream 5xx count — a replica that crossed the threshold reports `1`, others report `0`.
 
 ## Considerations
 

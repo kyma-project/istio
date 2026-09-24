@@ -96,9 +96,8 @@ func AssertHTTPStatusCode(t *testing.T, r *resources.Resources, podName, namespa
 		"expected HTTP %s from %s via %s/%s within timeout", expectedStatus, url, namespace, podName)
 }
 
-// AssertProxyStatsAbsent asserts that the given substring is not present in the
-// proxy stats of the specified pod.
-func AssertProxyStatsAbsent(t *testing.T, r *resources.Resources, podName, namespace, substring string, opts ...AssertOption) {
+// AssertProxyStatsAbsent asserts that the given substring is not present in the proxy stats of the specified pod.
+func AssertProxyStatsAbsent(t *testing.T, r *resources.Resources, podName, namespace, substring string) {
 	t.Helper()
 
 	stats, err := proxystatshelper.GetProxyStats(t, r, podName, namespace)
@@ -107,21 +106,38 @@ func AssertProxyStatsAbsent(t *testing.T, r *resources.Resources, podName, names
 		"expected %q to be absent in %s/%s proxy stats", substring, namespace, podName)
 }
 
-// AssertProxyStatsPresent asserts that the given substring is present in the
-// proxy stats of the specified pod.
+// AssertProxyStatsPresent waits until the given substring is present in the
+// proxy stats of the specified pod, retrying until timeout.
 func AssertProxyStatsPresent(t *testing.T, r *resources.Resources, podName, namespace, substring string, opts ...AssertOption) {
 	t.Helper()
+	options := &AssertOptions{
+		Timeout:  60 * time.Second,
+		Interval: 2 * time.Second,
+	}
+	for _, opt := range opts {
+		opt(options)
+	}
 
-	stats, err := proxystatshelper.GetProxyStats(t, r, podName, namespace)
-	require.NoError(t, err, "failed to get proxy stats from %s/%s", namespace, podName)
-	require.Contains(t, stats, substring,
-		"expected %q to be present in %s/%s proxy stats", substring, namespace, podName)
+	err := wait.For(func(ctx context.Context) (bool, error) {
+		stats, getErr := proxystatshelper.GetProxyStats(t, r, podName, namespace)
+		if getErr != nil {
+			t.Logf("failed to get proxy stats from %s/%s, retrying: %v", namespace, podName, getErr)
+			return false, nil
+		}
+		if !strings.Contains(stats, substring) {
+			t.Logf("waiting for %q to appear in %s/%s proxy stats", substring, namespace, podName)
+			return false, nil
+		}
+		return true, nil
+	}, wait.WithTimeout(options.Timeout), wait.WithInterval(options.Interval), wait.WithContext(t.Context()))
+
+	require.NoError(t, err,
+		"metric %q not found in %s/%s proxy stats within timeout", substring, namespace, podName)
 }
 
-// AssertAllIngressGatewayPodsHaveEjectionMetric asserts that every running
-// ingress gateway pod exposes the outlier detection ejections_active metric for
-// the given host cluster.
-func AssertAllIngressGatewayPodsHaveEjectionMetric(t *testing.T, r *resources.Resources, host string, opts ...AssertOption) {
+// AssertAtLeastOneIngressGatewayPodHasEjection asserts that at least one running
+// ingress gateway pod reports ejections_active >= 1 for the given host cluster.
+func AssertAtLeastOneIngressGatewayPodHasEjection(t *testing.T, r *resources.Resources, host string) {
 	t.Helper()
 
 	podList := &corev1.PodList{}
@@ -130,7 +146,6 @@ func AssertAllIngressGatewayPodsHaveEjectionMetric(t *testing.T, r *resources.Re
 		resources.WithFieldSelector("metadata.namespace=istio-system"),
 	)
 	require.NoError(t, err, "failed to list ingress gateway pods")
-	require.Greater(t, len(podList.Items), 0, "no ingress gateway pods found")
 
 	for _, pod := range podList.Items {
 		if pod.Status.Phase != corev1.PodRunning {
@@ -139,16 +154,18 @@ func AssertAllIngressGatewayPodsHaveEjectionMetric(t *testing.T, r *resources.Re
 		stats, err := proxystatshelper.GetProxyStats(t, r, pod.Name, "istio-system")
 		require.NoError(t, err, "failed to get proxy stats from istio-system/%s", pod.Name)
 
-		_, found := countOutlierEjectionsActive(stats, host)
-		require.True(t, found,
-			"ingress gateway pod %s does not expose ejections_active metric for host %s", pod.Name, host)
+		if ejections, _ := countOutlierEjectionsActive(stats, host); ejections >= 1 {
+			return
+		}
 	}
+
+	t.Fatal("expected at least one ingress gateway pod to report ejections_active>=1")
 }
 
-// AssertEjectionStateMatchesUpstream5xx asserts that for each running ingress
-// gateway pod, its active ejection state matches whether it observed at least
-// threshold upstream 5xx responses for the given host cluster.
-func AssertEjectionStateMatchesUpstream5xx(t *testing.T, r *resources.Resources, host string, threshold int, opts ...AssertOption) {
+// AssertAllIngressGatewayPodsHaveEjectionMetric asserts that every running
+// ingress gateway pod exposes the outlier detection ejections_active metric for
+// the given host cluster.
+func AssertAllIngressGatewayPodsHaveEjectionMetric(t *testing.T, r *resources.Resources, host string) {
 	t.Helper()
 
 	podList := &corev1.PodList{}
@@ -158,7 +175,35 @@ func AssertEjectionStateMatchesUpstream5xx(t *testing.T, r *resources.Resources,
 	)
 	require.NoError(t, err, "failed to list ingress gateway pods")
 
-	atLeastOneEjection := false
+	checked := 0
+	for _, pod := range podList.Items {
+		if pod.Status.Phase != corev1.PodRunning {
+			continue
+		}
+		checked++
+		stats, err := proxystatshelper.GetProxyStats(t, r, pod.Name, "istio-system")
+		require.NoError(t, err, "failed to get proxy stats from istio-system/%s", pod.Name)
+
+		_, found := countOutlierEjectionsActive(stats, host)
+		require.True(t, found,
+			"ingress gateway pod %s does not expose ejections_active metric for host %s", pod.Name, host)
+	}
+
+	require.Greater(t, checked, 0, "no running ingress gateway pods found")
+}
+
+// AssertEjectionStateMatchesUpstream5xxMetric asserts that for each running ingress
+// gateway pod, its active ejection state matches whether it observed at least
+// threshold upstream 5xx responses for the given host cluster.
+func AssertEjectionStateMatchesUpstream5xxMetric(t *testing.T, r *resources.Resources, host string, threshold int) {
+	t.Helper()
+
+	podList := &corev1.PodList{}
+	err := r.List(t.Context(), podList,
+		resources.WithLabelSelector("app=istio-ingressgateway"),
+		resources.WithFieldSelector("metadata.namespace=istio-system"),
+	)
+	require.NoError(t, err, "failed to list ingress gateway pods")
 
 	for _, pod := range podList.Items {
 		if pod.Status.Phase != corev1.PodRunning {
@@ -176,13 +221,7 @@ func AssertEjectionStateMatchesUpstream5xx(t *testing.T, r *resources.Resources,
 		require.Equal(t, hasEnough5xx, hasActiveEjection,
 			"pod %s: activeEjection=%t, upstream5xx=%d (threshold %d)",
 			pod.Name, hasActiveEjection, upstream5xx, threshold)
-
-		if hasActiveEjection {
-			atLeastOneEjection = true
-		}
 	}
-
-	require.True(t, atLeastOneEjection, "at least one ingress gateway pod should report ejections_active>=1")
 }
 
 // countOutlierEjectionsActive returns the ejections_active gauge value for the

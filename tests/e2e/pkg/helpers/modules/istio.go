@@ -230,6 +230,34 @@ func waitForIstioCRReadiness(t *testing.T, r *resources.Resources, istio *v1alph
 	return nil
 }
 
+// waitForIstioCRReadinessWithContext is like waitForIstioCRReadiness but accepts an explicit context.
+// Used when t.Context() is no longer valid — for example inside t.Cleanup, where t.Context()
+// is already cancelled and would cause the wait to exit immediately.
+func waitForIstioCRReadinessWithContext(ctx context.Context, t *testing.T, r *resources.Resources, istio *v1alpha2.Istio) error {
+	t.Helper()
+	t.Log("Waiting for Istio custom resource to be ready")
+
+	clock := time.Now()
+
+	err := wait.For(conditions.New(r).ResourceMatch(istio, func(obj k8s.Object) bool {
+		istioCR := obj.(*v1alpha2.Istio)
+
+		t.Logf("Waiting for Istio custom resource to be ready; name: %s, namespace: %s", obj.GetName(), obj.GetNamespace())
+		t.Logf("Elapsed time: %s", time.Since(clock))
+
+		return istioCR.Status.State == v1alpha2.Ready
+	}), wait.WithContext(ctx))
+
+	if err != nil {
+		t.Logf("Failed to wait for Istio custom resource to be ready: %v", err)
+		t.Logf("Istio custom resource status: %+v", istio.Status)
+		return err
+	}
+
+	t.Log("Istio custom resource is ready")
+	return nil
+}
+
 func waitForIstioCRDeletion(t *testing.T, r *resources.Resources, istioCR *v1alpha2.Istio) error {
 	t.Helper()
 	t.Log("Waiting for Istio custom resource to be deleted")

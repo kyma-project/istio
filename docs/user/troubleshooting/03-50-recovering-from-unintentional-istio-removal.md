@@ -57,7 +57,7 @@ If you intentionally deleted the Istio module, you must clean up the blocking re
 1. To identify which resources are blocking the deletion, run:
 
     ```bash
-    kubectl logs -n kyma-system -l app=istio-controller-manager --tail=100 | grep "resource is blocking"
+    kubectl logs -n kyma-system -l app=istio-controller-manager | grep "resource is blocking"
     ```
 
 2. Remove the listed resources.

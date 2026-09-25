@@ -2,18 +2,23 @@ package proxy_stats
 
 import (
 	"fmt"
+	"net/http"
+	"strings"
 	"testing"
 	"time"
 
 	proxystatsassert "github.com/kyma-project/istio/operator/tests/e2e/pkg/asserts/proxy_stats"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
 	gatewayhelper "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/gateway"
+	httphelper "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/http"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/httpbin"
 	infrahelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/infrastructure"
+	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/load_balancer"
 	modulehelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/modules"
 	proxystatshelper "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/proxy_stats"
 	virtualservice "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/virtual_service"
 	"github.com/stretchr/testify/require"
+	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
 )
 
@@ -26,6 +31,8 @@ const (
 	outlierDetectionConsecutive5xx   uint32 = 5
 	outlierDetectionInterval                = 60 * time.Second
 	outlierDetectionBaseEjectionTime        = 300 * time.Second
+
+	ingressHost = "httpbin.local.kyma.dev"
 )
 
 func TestProxyStatsMatcher(t *testing.T) {
@@ -52,7 +59,10 @@ func TestProxyStatsMatcher(t *testing.T) {
 	httpbinURL := httpbinServiceURL(httpbinInfo)
 
 	require.NoError(t, gatewayhelper.CreateHTTPGateway(t))
-	require.NoError(t, virtualservice.CreateVirtualService(t, "httpbin", "kyma-system", httpbinInfo.Host, httpbinInfo.Host, gatewayhelper.GatewayReference))
+	require.NoError(t, virtualservice.CreateVirtualService(t, "httpbin", "kyma-system", httpbinInfo.Host, ingressHost, gatewayhelper.GatewayReference))
+
+	ingressAddr, err := load_balancer.GetLoadBalancerAddress(t, r.GetControllerRuntimeClient())
+	require.NoError(t, err)
 
 	t.Run("Outlier detection metrics are exposed on all proxies when proxyStatsMatcher is configured globally via Istio CR", func(t *testing.T) {
 		// given
@@ -137,22 +147,23 @@ func TestProxyStatsMatcher(t *testing.T) {
 		// Single replica so all requests land on the same pod, making ejection state deterministic.
 		require.NoError(t, waitForIngressGatewayReplicas(t, r, 1))
 
-		curlName := "curl-ingress-single"
-		require.NoError(t, proxystatshelper.DeployCurlPod(t, r, curlName, sourceNamespace, nil))
-
 		// when
-		ingressURL := "http://istio-ingressgateway.istio-system.svc.cluster.local"
-		triggerStatusCodesViaIngress(t, r, curlName, sourceNamespace, ingressURL, httpbinInfo.Host, int(outlierDetectionConsecutive5xx))
+		triggerIngressStatusCodes(t, ingressAddr, int(outlierDetectionConsecutive5xx))
 
 		// then
-		proxystatsassert.AssertHTTPStatusCode(t, r, curlName, sourceNamespace, fmt.Sprintf("%s/headers", ingressURL), httpbinInfo.Host, "503")
+		httpClient := httphelper.NewHTTPClient(t, httphelper.WithHost(ingressHost))
+		resp, err := httpClient.Get(fmt.Sprintf("http://%s/headers", ingressAddr)) //nolint:gosec // plain HTTP is intentional; ingress gateway does not terminate TLS in tests
+		require.NoError(t, err)
+		require.Equal(t, http.StatusServiceUnavailable, resp.StatusCode)
+		require.NoError(t, resp.Body.Close())
 
 		ingressPodName, err := proxystatshelper.GetIngressGatewayPodName(t, r)
 		require.NoError(t, err)
 
+		logIngressEjections(t, r, httpbinInfo.Host)
+
 		// Ejection is tracked on the ingress gateway pod that processed the upstream requests.
 		proxystatsassert.AssertOutlierDetectionMetric(t, r, ingressPodName, "istio-system", httpbinInfo.Host, 1)
-		proxystatsassert.AssertOutlierDetectionMetric(t, r, curlName, sourceNamespace, httpbinInfo.Host, 0)
 	})
 
 	t.Run("Outlier detection metrics are exposed on ingress gateway proxy with multiple replicas when proxyStatsMatcher is configured via Istio CR", func(t *testing.T) {
@@ -167,27 +178,24 @@ func TestProxyStatsMatcher(t *testing.T) {
 		// Sends numReplicas*threshold requests so at least one pod crosses the ejection threshold.
 		require.NoError(t, waitForIngressGatewayReplicas(t, r, numReplicas))
 
-		curlName := "curl-ingress"
-		require.NoError(t, proxystatshelper.DeployCurlPod(t, r, curlName, sourceNamespace, nil))
-
 		// when
-		ingressURL := "http://istio-ingressgateway.istio-system.svc.cluster.local"
 		requestCount := int(numReplicas) * int(outlierDetectionConsecutive5xx)
-		for range requestCount {
-			_, err := proxystatshelper.GetHTTPStatusCode(t, r, curlName, sourceNamespace, fmt.Sprintf("%s/status/500", ingressURL), httpbinInfo.Host)
-			require.NoError(t, err)
-		}
+		triggerIngressStatusCodes(t, ingressAddr, requestCount)
 
 		// then
-		proxystatsassert.AssertHTTPStatusCode(t, r, curlName, sourceNamespace, fmt.Sprintf("%s/headers", ingressURL), httpbinInfo.Host, "503")
+		httpClient := httphelper.NewHTTPClient(t, httphelper.WithHost(ingressHost))
+		resp, err := httpClient.Get(fmt.Sprintf("http://%s/headers", ingressAddr)) //nolint:gosec // plain HTTP is intentional; ingress gateway does not terminate TLS in tests
+		require.NoError(t, err)
+		require.Equal(t, http.StatusServiceUnavailable, resp.StatusCode)
+		require.NoError(t, resp.Body.Close())
+
+		logIngressEjections(t, r, httpbinInfo.Host)
+
 		proxystatsassert.AssertAllIngressGatewayPodsHaveEjectionMetric(t, r, httpbinInfo.Host)
 		proxystatsassert.AssertEjectionStateMatchesUpstream5xxMetric(t, r, httpbinInfo.Host, int(outlierDetectionConsecutive5xx))
 
 		// At least one pod must have crossed the ejection threshold given numReplicas*threshold requests.
 		proxystatsassert.AssertAtLeastOneIngressGatewayPodHasEjection(t, r, httpbinInfo.Host)
-
-		// Ejection is tracked by the ingress gateway proxy, not the curl sidecar.
-		proxystatsassert.AssertOutlierDetectionMetric(t, r, curlName, sourceNamespace, httpbinInfo.Host, 0)
 	})
 }
 
@@ -203,11 +211,43 @@ func triggerStatusCodesFromPod(t *testing.T, r *resources.Resources, podName, na
 	}
 }
 
-func triggerStatusCodesViaIngress(t *testing.T, r *resources.Resources, podName, namespace, ingressURL, host string, count int) {
+func triggerIngressStatusCodes(t *testing.T, ingressAddr string, count int) {
 	t.Helper()
-
+	httpClient := httphelper.NewHTTPClient(t, httphelper.WithHost(ingressHost))
 	for range count {
-		require.NoError(t, proxystatshelper.ExecCurlWithHost(t, r, podName, namespace, fmt.Sprintf("%s/status/500", ingressURL), host))
+		resp, err := httpClient.Get(fmt.Sprintf("http://%s/status/500", ingressAddr)) //nolint:gosec // plain HTTP is intentional; ingress gateway does not terminate TLS in tests
+		require.NoError(t, err)
+		require.NoError(t, resp.Body.Close())
+	}
+}
+
+func logIngressEjections(t *testing.T, r *resources.Resources, host string) {
+	t.Helper()
+	podList := &corev1.PodList{}
+	if err := r.List(t.Context(), podList,
+		resources.WithLabelSelector("app=istio-ingressgateway"),
+		resources.WithFieldSelector("metadata.namespace=istio-system"),
+	); err != nil {
+		t.Logf("failed to list ingress gateway pods: %v", err)
+		return
+	}
+	for i, pod := range podList.Items {
+		if pod.Status.Phase != corev1.PodRunning {
+			continue
+		}
+		stats, err := proxystatshelper.GetProxyStats(t, r, pod.Name, "istio-system")
+		if err != nil {
+			t.Logf("ingress pod %d: failed to get stats: %v", i, err)
+			continue
+		}
+		ejections := "0"
+		for line := range strings.SplitSeq(stats, "\n") {
+			if fields := strings.Fields(line); len(fields) == 2 &&
+				strings.Contains(fields[0], "ejections_active") && strings.Contains(fields[0], host) {
+				ejections = fields[1]
+			}
+		}
+		t.Logf("ingress pod %d: ejections_active=%s", i, ejections)
 	}
 }
 

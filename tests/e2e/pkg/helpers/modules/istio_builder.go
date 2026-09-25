@@ -345,6 +345,69 @@ func (b *IstioCRBuilder) Update(t *testing.T) error {
 	return nil
 }
 
+// UpdateAndRevert updates the Istio CR with the builder's current spec and registers a cleanup
+// that restores the pre-update spec when the test (or subtest) finishes.
+func (b *IstioCRBuilder) UpdateAndRevert(t *testing.T) error {
+	t.Helper()
+
+	r, err := client.ResourcesClient(t)
+	if err != nil {
+		t.Logf("Failed to get resources client: %v", err)
+		return err
+	}
+
+	desiredIcr := b.Build()
+
+	// Fetch the live CR to capture its current spec before we mutate it.
+	existingIcr := &v1alpha2.Istio{}
+	if err := r.Get(t.Context(), desiredIcr.Name, desiredIcr.Namespace, existingIcr); err != nil {
+		t.Logf("Failed to get existing Istio custom resource: %v", err)
+		return err
+	}
+
+	savedSpec := *existingIcr.Spec.DeepCopy()
+
+	// Apply the desired spec.
+	existingIcr.Spec = desiredIcr.Spec
+	logIstioCR(t, existingIcr)
+	if err := r.Update(t.Context(), existingIcr); err != nil {
+		t.Logf("Failed to update Istio custom resource: %v", err)
+		return err
+	}
+	if err := waitForIstioCRReadiness(t, r, existingIcr); err != nil {
+		t.Logf("Istio custom resource is not ready after update: %v", err)
+		return err
+	}
+
+	// Revert the CR spec when the subtest finishes, even if it failed.
+	// The CR is shared across all subtests, so leaving it in a mutated state would corrupt subsequent ones.
+	t.Cleanup(func() {
+		revertR, err := client.ResourcesClient(t)
+		if err != nil {
+			t.Logf("Failed to get resources client for revert: %v", err)
+			return
+		}
+		ctx := setup.GetCleanupContext()
+		live := &v1alpha2.Istio{}
+		if err := revertR.Get(ctx, desiredIcr.Name, desiredIcr.Namespace, live); err != nil {
+			t.Logf("Failed to get Istio CR for revert: %v", err)
+			return
+		}
+		live.Spec = savedSpec
+		logIstioCR(t, live)
+		if err := revertR.Update(ctx, live); err != nil {
+			t.Logf("Failed to revert Istio custom resource: %v", err)
+			return
+		}
+		if err := waitForIstioCRReadinessWithContext(ctx, t, revertR, live); err != nil {
+			t.Logf("Istio custom resource is not ready after revert: %v", err)
+		}
+	})
+
+	t.Log("Istio custom resource updated (revert registered)")
+	return nil
+}
+
 // Delete deletes the Istio CR from the cluster
 func (b *IstioCRBuilder) Delete(t *testing.T, ctx context.Context) error {
 	t.Helper()
@@ -533,6 +596,14 @@ func (b *IstioCRBuilder) WithCNIResources(cpuRequests, memoryRequests, cpuLimits
 	cni := NewCNIComponent()
 	cni.K8S.Resources = NewResources(cpuRequests, memoryRequests, cpuLimits, memoryLimits)
 	return b.WithCNI(cni)
+}
+
+// WithProxyStatsMatcher sets the global proxyStatsMatcher inclusionRegexps on the Istio CR.
+func (b *IstioCRBuilder) WithProxyStatsMatcher(inclusionRegexps []string) *IstioCRBuilder {
+	b.istio.Spec.Config.ProxyStatsMatcher = &v1alpha2.ProxyStatsMatcher{
+		InclusionRegexps: inclusionRegexps,
+	}
+	return b
 }
 
 // WithEnableAmbient is a convenience method to enable or disable ambient mode

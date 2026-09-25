@@ -98,6 +98,7 @@ jobs:
           - "trustdomain-e2e-test"
           - "networkpolicy-e2e-test"
           - "dnsproxying-e2e-test"
+          - "proxy_stats-e2e-test"
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/load-manager-image

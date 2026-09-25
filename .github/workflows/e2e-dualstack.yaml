@@ -64,7 +64,7 @@ jobs:
         # Mirrors istio-e2e-test-aws in schedule-main-integration.yaml —
         # the full set of suites that run on Gardener AWS in main
         # integration. k3d-only suites (installation, mesh_communication,
-        # observability, extauth, egress, smoke_test, ambient) are
+        # observability, extauth, egress, smoke_test, ambient, proxy_stats) are
         # LB-agnostic in that pipeline and would not gain dualstack signal.
         test_make_target:
           - "xff_header-e2e-test"

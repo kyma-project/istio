@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	proxystatsassert "github.com/kyma-project/istio/operator/tests/e2e/pkg/asserts/proxy_stats"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
 	gatewayhelper "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/gateway"
@@ -19,6 +20,7 @@ import (
 	virtualservice "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/virtual_service"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
 )
 
@@ -196,6 +198,24 @@ func TestProxyStatsMatcher(t *testing.T) {
 
 		// At least one pod must have crossed the ejection threshold given numReplicas*threshold requests.
 		proxystatsassert.AssertAtLeastOneIngressGatewayPodHasEjection(t, r, httpbinInfo.Host)
+	})
+
+	t.Run("Outlier detection metrics are exposed on egress gateway proxy when proxyStatsMatcher is configured via Istio CR", func(t *testing.T) {
+		// given
+		require.NoError(t, modulehelpers.NewIstioCRBuilder().
+			WithProxyStatsMatcher([]string{outlierDetectionRegexp}).
+			WithEgressGateway(&v1alpha2.EgressGateway{
+				Enabled: ptr.To(true),
+			}).
+			UpdateAndRevert(t))
+
+		require.NoError(t, proxystatshelper.WaitForEgressGatewayReady(t, r), "egress gateway deployment did not become ready")
+
+		// then
+		egressPodName, err := proxystatshelper.GetEgressGatewayPodName(t, r)
+		require.NoError(t, err)
+
+		proxystatsassert.AssertProxyStatsPresent(t, r, egressPodName, "istio-system", "outlier_detection")
 	})
 }
 

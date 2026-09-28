@@ -44,13 +44,13 @@ spec:
   config:
     proxyStatsMatcher:
       inclusionRegexps:
-        - ".*outbound.*"
+        - ".*outlier_detection.*"
 ```
 
 You can also use `kubectl patch`:
 
 ```bash
-kubectl patch istio default -n kyma-system --type=merge -p '{"spec":{"config":{"proxyStatsMatcher":{"inclusionRegexps":[".*outbound.*"]}}}}'
+kubectl patch istio default -n kyma-system --type=merge -p '{"spec":{"config":{"proxyStatsMatcher":{"inclusionRegexps":[".*outlier_detection.*"]}}}}'
 ```
 <!-- tabs:end -->
 
@@ -81,7 +81,7 @@ spec:
         proxy.istio.io/config: |-
           proxyStatsMatcher:
             inclusionRegexps:
-              - ".*outbound.*"
+              - ".*outlier_detection.*"
     spec:
       containers:
         - name: my-app
@@ -110,7 +110,7 @@ Choose the narrowest expressions that satisfy your use case to avoid enabling un
 To inspect matching statistics for a specific workload, run the following command in the `istio-proxy` container:
 
 ```bash
-kubectl exec -n <namespace> <pod-name> -c istio-proxy -- pilot-agent request GET /stats/prometheus | grep outbound
+kubectl exec -n <namespace> <pod-name> -c istio-proxy -- pilot-agent request GET /stats/prometheus | grep outlier_detection
 ```
 
 Replace `<namespace>` and `<pod-name>` with the namespace and name of a Pod that has an Istio sidecar proxy.

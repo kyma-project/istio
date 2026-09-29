@@ -367,18 +367,6 @@ func (b *IstioCRBuilder) UpdateAndRevert(t *testing.T) error {
 
 	savedSpec := *existingIcr.Spec.DeepCopy()
 
-	// Apply the desired spec.
-	existingIcr.Spec = desiredIcr.Spec
-	logIstioCR(t, existingIcr)
-	if err := r.Update(t.Context(), existingIcr); err != nil {
-		t.Logf("Failed to update Istio custom resource: %v", err)
-		return err
-	}
-	if err := waitForIstioCRReadiness(t, r, existingIcr); err != nil {
-		t.Logf("Istio custom resource is not ready after update: %v", err)
-		return err
-	}
-
 	// Revert the CR spec when the subtest finishes, even if it failed.
 	// The CR is shared across all subtests, so leaving it in a mutated state would corrupt subsequent ones.
 	t.Cleanup(func() {
@@ -403,6 +391,18 @@ func (b *IstioCRBuilder) UpdateAndRevert(t *testing.T) error {
 			t.Logf("Istio custom resource is not ready after revert: %v", err)
 		}
 	})
+
+	// Apply the desired spec.
+	existingIcr.Spec = desiredIcr.Spec
+	logIstioCR(t, existingIcr)
+	if err := r.Update(t.Context(), existingIcr); err != nil {
+		t.Logf("Failed to update Istio custom resource: %v", err)
+		return err
+	}
+	if err := waitForIstioCRReadiness(t, r, existingIcr); err != nil {
+		t.Logf("Istio custom resource is not ready after update: %v", err)
+		return err
+	}
 
 	t.Log("Istio custom resource updated (revert registered)")
 	return nil

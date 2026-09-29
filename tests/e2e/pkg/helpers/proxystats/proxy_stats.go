@@ -1,4 +1,4 @@
-package proxy_stats
+package proxystats
 
 import (
 	"bytes"
@@ -18,12 +18,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
 	"sigs.k8s.io/e2e-framework/klient/wait"
-	"sigs.k8s.io/e2e-framework/klient/wait/conditions"
 
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/setup"
 )
-
-const podReadyTimeout = 2 * time.Minute
 
 func CreateOutlierDetectionDestinationRule(t *testing.T, r *resources.Resources, namespace, host string, consecutive5xx uint32, interval, baseEjectionTime time.Duration) error {
 	t.Helper()
@@ -65,58 +62,6 @@ func CreateOutlierDetectionDestinationRule(t *testing.T, r *resources.Resources,
 	return nil
 }
 
-func DeployCurlPodWithStatsAnnotation(t *testing.T, r *resources.Resources, name, namespace string) error {
-	t.Helper()
-	annotations := map[string]string{
-		"proxy.istio.io/config": `proxyStatsMatcher:
-  inclusionRegexps:
-    - ".*outlier_detection.*"`,
-	}
-	return DeployCurlPod(t, r, name, namespace, annotations)
-}
-
-func DeployCurlPod(t *testing.T, r *resources.Resources, name, namespace string, annotations map[string]string) error {
-	t.Helper()
-	t.Logf("deploying curl pod %s/%s", namespace, name)
-
-	pod := &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        name,
-			Namespace:   namespace,
-			Annotations: annotations,
-			Labels:      map[string]string{"app": name},
-		},
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:    "curl",
-					Image:   "curlimages/curl:8.14.1",
-					Command: []string{"/bin/sleep", "36000"},
-				},
-			},
-		},
-	}
-
-	err := r.Create(t.Context(), pod)
-	if err != nil && !k8serrors.IsAlreadyExists(err) {
-		return fmt.Errorf("failed to create pod %s/%s: %w", namespace, name, err)
-	}
-
-	setup.DeclareCleanup(t, func() {
-		t.Logf("deleting curl pod %s/%s", namespace, name)
-		_ = r.Delete(setup.GetCleanupContext(), pod)
-	})
-
-	if err := wait.For(
-		conditions.New(r).PodRunning(pod),
-		wait.WithTimeout(podReadyTimeout),
-		wait.WithContext(t.Context()),
-	); err != nil {
-		return err
-	}
-	t.Logf("curl pod %s/%s is ready", namespace, name)
-	return nil
-}
 func ExecCurl(t *testing.T, r *resources.Resources, podName, namespace, url string) error {
 	t.Helper()
 	return ExecCurlWithHost(t, r, podName, namespace, url, "")

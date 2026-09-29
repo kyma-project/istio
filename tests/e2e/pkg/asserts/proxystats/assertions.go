@@ -1,4 +1,4 @@
-package proxystatsassert
+package proxystats
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
 	"sigs.k8s.io/e2e-framework/klient/wait"
 
-	proxystatshelper "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/proxy_stats"
+	proxystatshelper "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/proxystats"
 )
 
 type AssertOptions struct {

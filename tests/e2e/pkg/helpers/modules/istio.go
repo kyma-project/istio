@@ -203,32 +203,7 @@ func teardownIstioCR(t *testing.T, istioCR *v1alpha2.Istio) error {
 var istioCRDeletionTimeout = 2 * time.Minute
 
 func waitForIstioCRReadiness(t *testing.T, r *resources.Resources, istio *v1alpha2.Istio) error {
-	t.Helper()
-	t.Log("Waiting for Istio custom resource to be ready")
-
-	clock := time.Now()
-
-	err := wait.For(conditions.New(r).ResourceMatch(istio, func(obj k8s.Object) bool {
-		istioCR := obj.(*v1alpha2.Istio)
-
-		t.Logf("Waiting for Istio custom resource to be ready; name: %s, namespace: %s", obj.GetName(), obj.GetNamespace())
-		t.Logf("Elapsed time: %s", time.Since(clock))
-
-		return istioCR.Status.State == v1alpha2.Ready
-	}))
-
-	if err != nil {
-		t.Logf("Failed to wait for Istio custom resource to be ready: %v", err)
-		if err != nil {
-			t.Logf("Failed to get Istio custom resource: %v", err)
-		} else {
-			t.Logf("Istio custom resource status: %+v", istio.Status)
-		}
-		return err
-	}
-
-	t.Log("Istio custom resource is ready")
-	return nil
+	return waitForIstioCRReadinessWithContext(context.Background(), t, r, istio)
 }
 
 // waitForIstioCRReadinessWithContext is like waitForIstioCRReadiness but accepts an explicit context.
@@ -263,7 +238,7 @@ func waitForIstioCRDeletion(t *testing.T, r *resources.Resources, istioCR *v1alp
 	t.Helper()
 	t.Log("Waiting for Istio custom resource to be deleted")
 
-	err := wait.For(conditions.New(r).ResourceDeleted(istioCR), wait.WithTimeout(istioCRDeletionTimeout))
+	err := wait.For(conditions.New(r).ResourceDeleted(istioCR), wait.WithTimeout(istioCRDeletionTimeout), wait.WithContext(t.Context()))
 	if err != nil {
 		t.Logf("Failed to wait for Istio custom resource deletion: %v", err)
 		return err
@@ -276,7 +251,7 @@ func waitForIstioCRDeletion(t *testing.T, r *resources.Resources, istioCR *v1alp
 // WaitForIngressGatewayReplicas waits until the istio-ingressgateway Deployment reaches the expected
 // replica count and exactly that many pods are Ready. The pod-level Ready check guards against the
 // rollout transition window where the Deployment status reports ready but old RS pods are still present.
-func WaitForIngressGatewayReplicas(ctx context.Context, t *testing.T, r *resources.Resources, expected int32) error {
+func WaitForIngressGatewayReplicas(t *testing.T, r *resources.Resources, expected int32) error {
 	t.Helper()
 	return wait.For(func(ctx context.Context) (bool, error) {
 		dep := &appsv1.Deployment{}
@@ -315,5 +290,5 @@ func WaitForIngressGatewayReplicas(ctx context.Context, t *testing.T, r *resourc
 			return false, nil
 		}
 		return true, nil
-	}, wait.WithTimeout(5*time.Minute), wait.WithContext(ctx))
+	}, wait.WithTimeout(5*time.Minute), wait.WithContext(t.Context()))
 }

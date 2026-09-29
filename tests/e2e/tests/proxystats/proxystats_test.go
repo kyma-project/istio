@@ -1,4 +1,4 @@
-package proxy_stats
+package proxystats
 
 import (
 	"fmt"
@@ -8,15 +8,16 @@ import (
 	"time"
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
-	proxystatsassert "github.com/kyma-project/istio/operator/tests/e2e/pkg/asserts/proxy_stats"
+	proxystatsassert "github.com/kyma-project/istio/operator/tests/e2e/pkg/asserts/proxystats"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
 	gatewayhelper "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/gateway"
 	httphelper "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/http"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/httpbin"
+	httpincluster "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/httpincluster"
 	infrahelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/infrastructure"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/load_balancer"
 	modulehelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/modules"
-	proxystatshelper "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/proxy_stats"
+	proxystatshelper "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/proxystats"
 	virtualservice "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/virtual_service"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
@@ -41,7 +42,9 @@ func TestProxyStatsMatcher(t *testing.T) {
 	r, err := client.ResourcesClient(t)
 	require.NoError(t, err)
 
-	// Create the Istio CR once; each subtest updates it and reverts on cleanup.
+	// CR is shared across subtests (unlike the per-subtest ApplyAndCleanup pattern used elsewhere)
+	// because all subtests reuse the same namespaces and httpbin. Each subtest calls Update to
+	// configure what it needs; no revert is necessary since every subtest overwrites the spec.
 	_, err = modulehelpers.NewIstioCRBuilder().ApplyAndCleanup(t)
 	require.NoError(t, err)
 
@@ -68,10 +71,10 @@ func TestProxyStatsMatcher(t *testing.T) {
 
 	t.Run("Outlier detection metrics are exposed on all proxies when proxyStatsMatcher is configured globally via Istio CR", func(t *testing.T) {
 		// given
-		require.NoError(t, modulehelpers.NewIstioCRBuilder().WithProxyStatsMatcher([]string{outlierDetectionRegexp}).UpdateAndRevert(t))
+		require.NoError(t, modulehelpers.NewIstioCRBuilder().WithProxyStatsMatcher([]string{outlierDetectionRegexp}).Update(t))
 
 		curlName := "curl-global"
-		require.NoError(t, proxystatshelper.DeployCurlPod(t, r, curlName, sourceNamespace, nil))
+		require.NoError(t, httpincluster.DeployCurlPod(t, sourceNamespace, curlName))
 
 		// when
 		triggerStatusCodesFromPod(t, r, curlName, sourceNamespace, httpbinURL, int(outlierDetectionConsecutive5xx))
@@ -82,11 +85,11 @@ func TestProxyStatsMatcher(t *testing.T) {
 	})
 
 	t.Run("Outlier detection metrics are not exposed when proxyStatsMatcher is not configured", func(t *testing.T) {
-		// given — baseline has no proxyStatsMatcher; UpdateAndRevert guards against state left by a prior subtest.
-		require.NoError(t, modulehelpers.NewIstioCRBuilder().UpdateAndRevert(t))
+		// given — baseline has no proxyStatsMatcher.
+		require.NoError(t, modulehelpers.NewIstioCRBuilder().Update(t))
 
 		curlName := "curl-no-stats"
-		require.NoError(t, proxystatshelper.DeployCurlPod(t, r, curlName, sourceNamespace, nil))
+		require.NoError(t, httpincluster.DeployCurlPod(t, sourceNamespace, curlName))
 
 		// when
 		triggerStatusCodesFromPod(t, r, curlName, sourceNamespace, httpbinURL, int(outlierDetectionConsecutive5xx))
@@ -98,15 +101,15 @@ func TestProxyStatsMatcher(t *testing.T) {
 
 	t.Run("Per-workload annotation replaces global proxyStatsMatcher instead of extending it", func(t *testing.T) {
 		// given
-		require.NoError(t, modulehelpers.NewIstioCRBuilder().WithProxyStatsMatcher([]string{outlierDetectionRegexp}).UpdateAndRevert(t))
+		require.NoError(t, modulehelpers.NewIstioCRBuilder().WithProxyStatsMatcher([]string{outlierDetectionRegexp}).Update(t))
 
 		// Pod annotation overrides with a different pattern; outlier_detection must not appear.
 		curlName := "curl-override"
-		require.NoError(t, proxystatshelper.DeployCurlPod(t, r, curlName, sourceNamespace, map[string]string{
+		require.NoError(t, httpincluster.DeployCurlPod(t, sourceNamespace, curlName, httpincluster.WithAnnotations(map[string]string{
 			"proxy.istio.io/config": `proxyStatsMatcher:
  inclusionRegexps:
    - ".*listener_manager.*"`,
-		}))
+		})))
 
 		// when
 		triggerStatusCodesFromPod(t, r, curlName, sourceNamespace, httpbinURL, int(outlierDetectionConsecutive5xx))
@@ -119,14 +122,19 @@ func TestProxyStatsMatcher(t *testing.T) {
 
 	t.Run("Outlier detection metrics are exposed on source proxy when proxyStatsMatcher is configured via pod annotation", func(t *testing.T) {
 		// given — no global proxyStatsMatcher; annotation on the pod provides the config.
-		require.NoError(t, modulehelpers.NewIstioCRBuilder().UpdateAndRevert(t))
+		require.NoError(t, modulehelpers.NewIstioCRBuilder().Update(t))
 
 		// Two pods with the annotation; only the one that sends 5xx traffic should record an ejection.
 		curl1Name := "curl-1"
 		curl2Name := "curl-2"
 
-		require.NoError(t, proxystatshelper.DeployCurlPodWithStatsAnnotation(t, r, curl1Name, sourceNamespace))
-		require.NoError(t, proxystatshelper.DeployCurlPodWithStatsAnnotation(t, r, curl2Name, sourceNamespace))
+		outlierDetectionAnnotation := httpincluster.WithAnnotations(map[string]string{
+			"proxy.istio.io/config": `proxyStatsMatcher:
+  inclusionRegexps:
+    - ".*outlier_detection.*"`,
+		})
+		require.NoError(t, httpincluster.DeployCurlPod(t, sourceNamespace, curl1Name, outlierDetectionAnnotation))
+		require.NoError(t, httpincluster.DeployCurlPod(t, sourceNamespace, curl2Name, outlierDetectionAnnotation))
 
 		// when
 		triggerStatusCodesFromPod(t, r, curl1Name, sourceNamespace, httpbinURL, int(outlierDetectionConsecutive5xx))
@@ -144,7 +152,7 @@ func TestProxyStatsMatcher(t *testing.T) {
 		require.NoError(t, modulehelpers.NewIstioCRBuilder().
 			WithProxyStatsMatcher([]string{outlierDetectionRegexp}).
 			WithIngressGatewayHPA(1, 1).
-			UpdateAndRevert(t))
+			Update(t))
 
 		// Single replica so all requests land on the same pod, making ejection state deterministic.
 		require.NoError(t, waitForIngressGatewayReplicas(t, r, 1))
@@ -175,7 +183,7 @@ func TestProxyStatsMatcher(t *testing.T) {
 		require.NoError(t, modulehelpers.NewIstioCRBuilder().
 			WithProxyStatsMatcher([]string{outlierDetectionRegexp, upstreamRequestRegexp}).
 			WithIngressGatewayHPA(numReplicas, numReplicas).
-			UpdateAndRevert(t))
+			Update(t))
 
 		// Sends numReplicas*threshold requests so at least one pod crosses the ejection threshold.
 		require.NoError(t, waitForIngressGatewayReplicas(t, r, numReplicas))
@@ -207,7 +215,7 @@ func TestProxyStatsMatcher(t *testing.T) {
 			WithEgressGateway(&v1alpha2.EgressGateway{
 				Enabled: ptr.To(true),
 			}).
-			UpdateAndRevert(t))
+			Update(t))
 
 		require.NoError(t, proxystatshelper.WaitForEgressGatewayReady(t, r), "egress gateway deployment did not become ready")
 
@@ -272,5 +280,5 @@ func logIngressEjections(t *testing.T, r *resources.Resources, host string) {
 }
 
 func waitForIngressGatewayReplicas(t *testing.T, r *resources.Resources, expectedReplicas int32) error {
-	return modulehelpers.WaitForIngressGatewayReplicas(t.Context(), t, r, expectedReplicas)
+	return modulehelpers.WaitForIngressGatewayReplicas(t, r, expectedReplicas)
 }

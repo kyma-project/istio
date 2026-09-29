@@ -1,6 +1,8 @@
 # Disable Istio CNI
 Use this feature when your workloads use a sandboxed runtime such as gVisor, where Istio CNI is incompatible with the sandbox's network stack.
 
+By default, the Istio module deploys the [Istio CNI node agent](https://istio.io/latest/docs/setup/additional-setup/cni/) as a DaemonSet. The CNI plugin configures each Pod's network namespace without requiring elevated privileges in application containers or init containers.
+
 When you set `disableCni` to `true` in the `istio-features` ConfigMap, the Istio CNI node agent is not deployed. Instead, Istio uses an `istio-init` init container to configure network traffic interception in each Pod. This init container requires the `NET_ADMIN` and `NET_RAW` Linux capabilities to set up `iptables` rules that redirect traffic to the `istio-proxy` sidecar.
 
 > [!CAUTION]

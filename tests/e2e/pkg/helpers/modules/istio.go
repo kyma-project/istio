@@ -249,7 +249,7 @@ func waitForIstioCRDeletion(t *testing.T, r *resources.Resources, istioCR *v1alp
 }
 
 // WaitForIngressGatewayScaled waits until the istio-ingressgateway Deployment has exactly the
-// expected number of ready replicas.
+// expected number of ready replicas and no terminating pods remain
 func WaitForIngressGatewayScaled(t *testing.T, r *resources.Resources, expected int32) error {
 	t.Helper()
 	deployment := &appsv1.Deployment{
@@ -260,9 +260,10 @@ func WaitForIngressGatewayScaled(t *testing.T, r *resources.Resources, expected 
 	}
 
 	return wait.For(
-		conditions.New(r).ResourceScaled(deployment, func(obj k8s.Object) int32 {
-			return obj.(*appsv1.Deployment).Status.ReadyReplicas
-		}, expected),
+		conditions.New(r).ResourceMatch(deployment, func(obj k8s.Object) bool {
+			d := obj.(*appsv1.Deployment)
+			return d.Status.ReadyReplicas == expected && (d.Status.TerminatingReplicas == nil || *d.Status.TerminatingReplicas == 0)
+		}),
 		wait.WithTimeout(5*time.Minute),
 		wait.WithContext(t.Context()),
 	)

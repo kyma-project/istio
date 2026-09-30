@@ -102,7 +102,7 @@ jobs:
       dockerfile: Dockerfile
       context: .
       build-args: |
-        VERSION="${{ inputs.version }}"
+        VERSION=${{ inputs.version }}
       tags: "${{ inputs.version }}"
 
   build-image-experimental:
@@ -114,7 +114,7 @@ jobs:
       dockerfile: Dockerfile
       context: .
       build-args: |
-        VERSION="${{ inputs.version }}-experimental"
+        VERSION=${{ inputs.version }}-experimental
         GO_BUILD_TAGS=experimental
       tags: "${{ inputs.version }}-experimental"
 

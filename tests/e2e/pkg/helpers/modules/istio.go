@@ -260,9 +260,9 @@ func WaitForIngressGatewayScaled(t *testing.T, r *resources.Resources, expected 
 	}
 
 	return wait.For(
-		conditions.New(r).ResourceMatch(deployment, func(obj k8s.Object) bool {
-			return obj.(*appsv1.Deployment).Status.ReadyReplicas == expected
-		}),
+		conditions.New(r).ResourceScaled(deployment, func(obj k8s.Object) int32 {
+			return obj.(*appsv1.Deployment).Status.ReadyReplicas
+		}, expected),
 		wait.WithTimeout(5*time.Minute),
 		wait.WithContext(t.Context()),
 	)

@@ -18,7 +18,7 @@ The following beta features are available in the Istio module:
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `disableCni` | boolean | `false` | When `true`, disables the Istio CNI node agent and falls back to the `istio-init` init container approach. See [Disable Istio CNI](disable-istio-cni.md). |
+| `disableCni` | boolean | `false` | When `true`, disables the Istio Istio Container Network Interface (CNI) node agent and falls back to the `istio-init` init container approach. See [Disable Istio CNI](disable-istio-cni.md). |
 | `enableControlPlaneVPA` | boolean | `false` | When `true`, creates VPA resources for Istio control plane components (istiod, gateways, CNI), managing memory only. Requires VPA CRD in the cluster. See [Enable Control Plane VPA](enable-control-plane-vpa.md). |
 | `enableDualStack` | boolean | `false` | When `true`, enables dual-stack support (IPv4 and IPv6) for the Istio service mesh. Only takes effect when the cluster load balancer is also configured for dual stack (`kyma-provisioning-info` ConfigMap must be present with `dualStackIPEnabled: true`). Cannot be disabled once enabled. See [Enable Dual Stack](enable-dual-stack.md). |
 

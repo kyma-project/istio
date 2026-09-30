@@ -1,5 +1,5 @@
 configMapGenerator:
-- name: ui.operator.kyma-project.io
+- name: istio-ui.operator.kyma-project.io
   namespace: kyma-system
   files:
   - general

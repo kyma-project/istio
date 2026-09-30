@@ -13,7 +13,7 @@ import (
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
 	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/e2e-framework/klient/decoder"
@@ -238,7 +238,7 @@ func waitForIstioCRDeletion(t *testing.T, r *resources.Resources, istioCR *v1alp
 	t.Helper()
 	t.Log("Waiting for Istio custom resource to be deleted")
 
-	err := wait.For(conditions.New(r).ResourceDeleted(istioCR), wait.WithTimeout(istioCRDeletionTimeout), wait.WithContext(t.Context()))
+	err := wait.For(conditions.New(r).ResourceDeleted(istioCR), wait.WithTimeout(istioCRDeletionTimeout))
 	if err != nil {
 		t.Logf("Failed to wait for Istio custom resource deletion: %v", err)
 		return err
@@ -248,47 +248,22 @@ func waitForIstioCRDeletion(t *testing.T, r *resources.Resources, istioCR *v1alp
 	return nil
 }
 
-// WaitForIngressGatewayReplicas waits until the istio-ingressgateway Deployment reaches the expected
-// replica count and exactly that many pods are Ready. The pod-level Ready check guards against the
-// rollout transition window where the Deployment status reports ready but old RS pods are still present.
-func WaitForIngressGatewayReplicas(t *testing.T, r *resources.Resources, expected int32) error {
+// WaitForIngressGatewayScaled waits until the istio-ingressgateway Deployment has exactly the
+// expected number of ready replicas.
+func WaitForIngressGatewayScaled(t *testing.T, r *resources.Resources, expected int32) error {
 	t.Helper()
-	return wait.For(func(ctx context.Context) (bool, error) {
-		dep := &appsv1.Deployment{}
-		if err := r.Get(ctx, "istio-ingressgateway", "istio-system", dep); err != nil {
-			return false, err
-		}
-		deploymentReady := dep.Status.Replicas == expected &&
-			dep.Status.ReadyReplicas == expected &&
-			dep.Status.UpdatedReplicas == expected &&
-			dep.Status.AvailableReplicas == expected &&
-			dep.Status.ObservedGeneration >= dep.Generation
-		if !deploymentReady {
-			t.Logf("waiting for ingress gateway: total=%d ready=%d updated=%d available=%d (want %d)",
-				dep.Status.Replicas, dep.Status.ReadyReplicas, dep.Status.UpdatedReplicas, dep.Status.AvailableReplicas, expected)
-			return false, nil
-		}
+	deployment := &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "istio-ingressgateway",
+			Namespace: "istio-system",
+		},
+	}
 
-		podList := &corev1.PodList{}
-		if err := r.List(ctx, podList,
-			resources.WithLabelSelector("app=istio-ingressgateway"),
-			resources.WithFieldSelector("metadata.namespace=istio-system"),
-		); err != nil {
-			return false, err
-		}
-		ready := int32(0)
-		for _, pod := range podList.Items {
-			for _, cond := range pod.Status.Conditions {
-				if cond.Type == corev1.PodReady && cond.Status == corev1.ConditionTrue {
-					ready++
-					break
-				}
-			}
-		}
-		if ready != expected {
-			t.Logf("waiting for ingress gateway ready pods: got %d, want %d", ready, expected)
-			return false, nil
-		}
-		return true, nil
-	}, wait.WithTimeout(5*time.Minute), wait.WithContext(t.Context()))
+	return wait.For(
+		conditions.New(r).ResourceMatch(deployment, func(obj k8s.Object) bool {
+			return obj.(*appsv1.Deployment).Status.ReadyReplicas == expected
+		}),
+		wait.WithTimeout(5*time.Minute),
+		wait.WithContext(t.Context()),
+	)
 }

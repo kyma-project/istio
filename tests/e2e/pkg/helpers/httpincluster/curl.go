@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
 
@@ -206,7 +207,7 @@ func DeployCurlPod(t *testing.T, namespace, name string, options ...Option) erro
 		_ = r.Delete(setup.GetCleanupContext(), pod)
 	})
 
-	if err := wait.For(conditions.New(r).PodRunning(pod)); err != nil {
+	if err := wait.For(conditions.New(r).PodRunning(pod), wait.WithTimeout(2*time.Minute)); err != nil {
 		return err
 	}
 	t.Logf("curl pod %s/%s is ready", namespace, name)

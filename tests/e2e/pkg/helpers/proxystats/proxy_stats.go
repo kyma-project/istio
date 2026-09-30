@@ -2,7 +2,6 @@ package proxystats
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -12,12 +11,12 @@ import (
 	"github.com/golang/protobuf/ptypes/wrappers"
 	apinetworkingv1 "istio.io/api/networking/v1"
 	networkingv1 "istio.io/client-go/pkg/apis/networking/v1"
-	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
 	"sigs.k8s.io/e2e-framework/klient/wait"
+	"sigs.k8s.io/e2e-framework/klient/wait/conditions"
 
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/setup"
 )
@@ -146,20 +145,6 @@ func GetEgressGatewayPodName(t *testing.T, r *resources.Resources) (string, erro
 
 func WaitForEgressGatewayReady(t *testing.T, r *resources.Resources) error {
 	t.Helper()
-	return wait.For(func(ctx context.Context) (bool, error) {
-		dep := &appsv1.Deployment{}
-		if err := r.Get(ctx, "istio-egressgateway", "istio-system", dep); err != nil {
-			return false, err
-		}
-		deploymentReady := dep.Status.Replicas >= 1 &&
-			dep.Status.ReadyReplicas >= 1 &&
-			dep.Status.AvailableReplicas >= 1 &&
-			dep.Status.ObservedGeneration >= dep.Generation
-		if !deploymentReady {
-			t.Logf("waiting for egress gateway: total=%d ready=%d available=%d",
-				dep.Status.Replicas, dep.Status.ReadyReplicas, dep.Status.AvailableReplicas)
-			return false, nil
-		}
-		return true, nil
-	}, wait.WithTimeout(5*time.Minute), wait.WithContext(t.Context()))
+	return wait.For(conditions.New(r).DeploymentAvailable("istio-egressgateway", "istio-system"),
+		wait.WithTimeout(5*time.Minute), wait.WithContext(t.Context()))
 }

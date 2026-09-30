@@ -155,7 +155,7 @@ func TestProxyStatsMatcher(t *testing.T) {
 			Update(t))
 
 		// Single replica so all requests land on the same pod, making ejection state deterministic.
-		require.NoError(t, waitForIngressGatewayReplicas(t, r, 1))
+		require.NoError(t, modulehelpers.WaitForIngressGatewayScaled(t, r, 1))
 
 		// when
 		triggerIngressStatusCodes(t, ingressAddr, int(outlierDetectionConsecutive5xx))
@@ -186,7 +186,7 @@ func TestProxyStatsMatcher(t *testing.T) {
 			Update(t))
 
 		// Sends numReplicas*threshold requests so at least one pod crosses the ejection threshold.
-		require.NoError(t, waitForIngressGatewayReplicas(t, r, numReplicas))
+		require.NoError(t, modulehelpers.WaitForIngressGatewayScaled(t, r, numReplicas))
 
 		// when
 		requestCount := int(numReplicas) * int(outlierDetectionConsecutive5xx)
@@ -277,8 +277,4 @@ func logIngressEjections(t *testing.T, r *resources.Resources, host string) {
 		}
 		t.Logf("ingress pod %d: ejections_active=%s", i, ejections)
 	}
-}
-
-func waitForIngressGatewayReplicas(t *testing.T, r *resources.Resources, expectedReplicas int32) error {
-	return modulehelpers.WaitForIngressGatewayReplicas(t, r, expectedReplicas)
 }

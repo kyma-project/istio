@@ -272,6 +272,7 @@ jobs:
           operator-image-name: ${{ needs.get-image.outputs.image }}
           operator-version: ${{ needs.get-image.outputs.operator_version }}
           k3d_configuration: 'calico' # FIPS tests don't work with flannel network
+
   istio-e2e-test-aws:
     name: Istio E2E test AWS
     environment:

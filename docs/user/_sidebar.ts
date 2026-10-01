@@ -37,7 +37,7 @@ export default [
     { text: 'No Access Error', link: './troubleshooting/03-10-503-no-access' },
     { text: 'Forbidden Error when the Host Header Contains a Port', link: './troubleshooting/03-65-403-if-host-header-contains-port'},
     { text: 'Istio Sidecar Injection Issues', link: './troubleshooting/03-30-istio-no-sidecar' },
-    { text: 'Reverting the Istio module\'s deletion', link: './troubleshooting/03-50-recovering-from-unintentional-istio-removal' },
+    { text: 'Istio Module Deletion Blocked', link: './troubleshooting/03-50-recovering-from-unintentional-istio-removal' },
     { text: 'SAP HANA Database Connection Issues', link: './troubleshooting/03-80-cannot-connect-to-hana-db' },
     { text: 'Not Found Error', link: './troubleshooting/03-60-404-on-istio-gateway' },
     { text: 'Incompatible Istio Sidecar', link: './troubleshooting/03-40-incompatible-istio-sidecar-version' },

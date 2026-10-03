@@ -3,6 +3,7 @@ package proxystats
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 	"testing"
 	"time"
@@ -222,6 +223,21 @@ func AssertEjectionStateMatchesUpstream5xxMetric(t *testing.T, r *resources.Reso
 			"pod %s: activeEjection=%t, upstream5xx=%d (threshold %d)",
 			pod.Name, hasActiveEjection, upstream5xx, threshold)
 	}
+}
+
+func AssertIngressEventuallyReturns503(t *testing.T, httpClient *http.Client, ingressAddr string) {
+	t.Helper()
+	deadline := time.Now().Add(60 * time.Second)
+	for time.Now().Before(deadline) {
+		resp, err := httpClient.Get(fmt.Sprintf("http://%s/headers", ingressAddr)) //nolint:gosec // plain HTTP is intentional; ingress gateway does not terminate TLS in tests
+		require.NoError(t, err)
+		statusCode := resp.StatusCode
+		require.NoError(t, resp.Body.Close())
+		if statusCode == http.StatusServiceUnavailable {
+			return
+		}
+	}
+	t.Fatal("expected 503 from ingress gateway within timeout: no ingress pod returned 503 for /headers")
 }
 
 // countOutlierEjectionsActive returns the ejections_active gauge value for the

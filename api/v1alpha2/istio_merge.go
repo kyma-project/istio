@@ -284,7 +284,8 @@ func (i *Istio) mergeConfig(op iopv1alpha1.IstioOperator, options ...MergeOption
 		return op, err
 	}
 
-	ambientEnabled := i.Spec.Experimental != nil && i.Spec.Experimental.EnableAmbient != nil && *i.Spec.Experimental.EnableAmbient == true
+	ambientEnabled := opts.Features.EnableAmbient ||
+		(i.Spec.Experimental != nil && i.Spec.Experimental.EnableAmbient != nil && *i.Spec.Experimental.EnableAmbient)
 
 	newMeshConfig := mcb.
 		BuildNumTrustedProxies(i.Spec.Config.NumTrustedProxies).

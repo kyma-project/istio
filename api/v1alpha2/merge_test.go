@@ -748,6 +748,64 @@ var _ = Describe("Merge", func() {
 		Expect(exists).To(BeTrue())
 		Expect(hbone).To(Equal("true"))
 	})
+
+	It("should set serviceScopeConfigs in the mesh Config if ambient is enabled in the Istio CR", func() {
+		// given
+		enableAmbient := true
+		iop := iopv1alpha1.IstioOperator{
+			Spec: iopv1alpha1.IstioOperatorSpec{},
+		}
+		istioCR := istiov1alpha2.Istio{Spec: istiov1alpha2.IstioSpec{
+			Config: istiov1alpha2.Config{},
+			Experimental: &istiov1alpha2.Experimental{
+				EnableAmbient: &enableAmbient,
+			},
+		}}
+
+		// when
+		out, err := istioCR.MergeInto(iop)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		scopeConfigs, exists := meshConfig.GetPath("serviceScopeConfigs")
+		Expect(exists).To(BeTrue())
+		Expect(scopeConfigs).To(HaveLen(1))
+	})
+
+	It("should preserve mesh config built from the Istio CR when ambient is enabled", func() {
+		// given
+		enableAmbient := true
+		trustDomain := "trusted.com"
+		iop := iopv1alpha1.IstioOperator{
+			Spec: iopv1alpha1.IstioOperatorSpec{},
+		}
+		istioCR := istiov1alpha2.Istio{Spec: istiov1alpha2.IstioSpec{
+			Config: istiov1alpha2.Config{
+				TrustDomain: &trustDomain,
+			},
+			Experimental: &istiov1alpha2.Experimental{
+				EnableAmbient: &enableAmbient,
+			},
+		}}
+
+		// when
+		out, err := istioCR.MergeInto(iop)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		// ambient overlay and CR-derived config coexist
+		hbone, exists := meshConfig.GetPath("defaultConfig.proxyMetadata.ISTIO_META_ENABLE_HBONE")
+		Expect(exists).To(BeTrue())
+		Expect(hbone).To(Equal("true"))
+
+		td, exists := meshConfig.GetPath("trustDomain")
+		Expect(exists).To(BeTrue())
+		Expect(td).To(Equal("trusted.com"))
+	})
 	Context("TrustDomain", func() {
 		It("Should set IstioOperator TrustDomain, when Istio CR configures it", func() {
 			// given
@@ -1082,6 +1140,36 @@ var _ = Describe("Merge", func() {
 			Expect(good).To(BeTrue())
 			Expect(gp).To(BeTrue())
 
+		})
+
+		It("should NOT set global.variant when ambient is enabled, because Kyma bakes the variant into spec.tag", func() {
+			iop := iopv1alpha1.IstioOperator{
+				Spec: iopv1alpha1.IstioOperatorSpec{},
+			}
+
+			enabled := true
+
+			istioCR := istiov1alpha2.Istio{
+				Spec: istiov1alpha2.IstioSpec{
+					Experimental: &istiov1alpha2.Experimental{
+						EnableAmbient: &enabled,
+					},
+				},
+			}
+
+			// when
+			out, err := istioCR.MergeInto(iop)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			valuesMap, err := values.MapFromObject(out.Spec.Values)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			// The upstream ambient profile sets global.variant: distroless, but
+			// enableAmbient drops it. Otherwise the ztunnel chart would append the
+			// variant to a tag that already contains it (e.g.
+			// "1.31.0-distroless-distroless").
+			_, exists := valuesMap.GetPath("global.variant")
+			Expect(exists).To(BeFalse())
 		})
 
 		It("should set Ztunnel component to enabled if experimental enableAmbient is set to true", func() {

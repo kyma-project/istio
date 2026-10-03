@@ -1,11 +1,13 @@
 package v1alpha2
 
 import (
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"strconv"
 
 	"github.com/golang/protobuf/ptypes/duration"
+	"github.com/imdario/mergo"
 	"github.com/kyma-project/istio/operator/internal/istiofeatures"
 	"google.golang.org/protobuf/types/known/structpb"
 	meshv1alpha1 "istio.io/api/mesh/v1alpha1"
@@ -18,6 +20,15 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
+
+// ambientOverlay is a verbatim copy of the upstream Istio Helm ambient profile
+// (manifests/helm-profiles/ambient.yaml) from the pinned istio.io/istio module.
+// On an Istio bump, replace ambient-overlay.yaml by copying that upstream file
+// over it — do not hand-edit. TestAmbientOverlayMatchesUpstream enforces that
+// this file stays byte-for-byte identical to upstream.
+//
+//go:embed ambient-overlay.yaml
+var ambientOverlay []byte
 
 // +kubebuilder:object:generate=false
 type MergeOptions struct {
@@ -103,17 +114,6 @@ func (m *meshConfigBuilder) BuildPrometheusMergeConfig(prometheusMerge bool) *me
 func (m *meshConfigBuilder) BuildDualStackConfig(enableDualStack bool) *meshConfigBuilder {
 	if enableDualStack {
 		err := m.c.SetPath("defaultConfig.proxyMetadata.ISTIO_DUAL_STACK", "true")
-		if err != nil {
-			return nil
-		}
-	}
-
-	return m
-}
-
-func (m *meshConfigBuilder) BuildAmbientConfig(ambientEnabled bool) *meshConfigBuilder {
-	if ambientEnabled {
-		err := m.c.SetPath("defaultConfig.proxyMetadata.ISTIO_META_ENABLE_HBONE", "true")
 		if err != nil {
 			return nil
 		}
@@ -292,7 +292,6 @@ func (i *Istio) mergeConfig(op iopv1alpha1.IstioOperator, options ...MergeOption
 		BuildPrometheusMergeConfig(i.Spec.Config.Telemetry.Metrics.PrometheusMerge).
 		BuildDualStackConfig(opts.EnableDualStack).
 		BuildForwardClientCertDetails(i.Spec.Config.ForwardClientCertDetails).
-		BuildAmbientConfig(ambientEnabled).
 		BuildTrustDomainConfig(i.Spec.Config.TrustDomain).
 		BuildDNSProxyingConfiguration(i.Spec.Config.EnableDNSProxying).
 		BuildProxyStatsMatcher(i.Spec.Config.ProxyStatsMatcher).
@@ -391,46 +390,84 @@ func enableAmbient(op iopv1alpha1.IstioOperator, ambientEnabled bool) (iopv1alph
 		return op, nil
 	}
 
-	// enable ztunnel component
-	boolValue := iopv1alpha1.BoolValue{}
-	err := boolValue.UnmarshalJSON([]byte("true"))
+	// ambientOverlay is a verbatim copy of the upstream Istio Helm ambient
+	// profile (manifests/helm-profiles/ambient.yaml). It is values-rooted: the
+	// top-level `meshConfig` key maps to spec.meshConfig, and every other
+	// top-level key (global, pilot, cni, ...) maps to spec.values.
+	overlay, err := values.MapFromYaml(ambientOverlay)
 	if err != nil {
-		return iopv1alpha1.IstioOperator{}, err
+		return iopv1alpha1.IstioOperator{}, fmt.Errorf("failed to parse ambient overlay: %w", err)
 	}
+
+	// meshConfig is applied to spec.meshConfig; the remaining keys are values.
+	overlayMeshConfig, _ := overlay["meshConfig"].(map[string]any)
+	overlayValues := values.Map{}
+	for k, v := range overlay {
+		if k == "meshConfig" {
+			continue
+		}
+		overlayValues[k] = v
+	}
+
+	// Kyma bakes the image variant into spec.tag (e.g. "1.31.0-distroless"), so
+	// the upstream `global.variant: distroless` must NOT be applied — the ztunnel
+	// chart would otherwise append the variant a second time, producing tags like
+	// "1.31.0-distroless-distroless". Drop it here while leaving the overlay file
+	// a verbatim copy of upstream.
+	if global, ok := overlayValues["global"].(map[string]any); ok {
+		delete(global, "variant")
+		if len(global) == 0 {
+			delete(overlayValues, "global")
+		}
+	}
+
+	// enable the ztunnel component. This is the one ambient knob that lives in
+	// the upstream IstioOperator profile (manifests/profiles/ambient.yaml)
+	// rather than the Helm profile, so it is set here as a constant. Kyma
+	// deliberately does not mirror the profile's cni/ingressGateway settings:
+	// CNI is enabled unconditionally in mergeResources, and the ingress gateway
+	// must stay enabled.
 	if op.Spec.Components == nil {
 		op.Spec.Components = &iopv1alpha1.IstioComponentSpec{}
 	}
+	op.Spec.Components.Ztunnel = &iopv1alpha1.ComponentSpec{Enabled: boolValue(true)}
 
-	op.Spec.Components.Ztunnel = &iopv1alpha1.ComponentSpec{
-		Enabled: &boolValue,
-	}
-
-	// set values
-	valuesMap, err := values.MapFromObject(op.Spec.Values)
+	// meshConfig: deep-merge the overlay's meshConfig onto whatever was built so far
+	mergedMeshConfig, err := mergeRawMaps(op.Spec.MeshConfig, overlayMeshConfig)
 	if err != nil {
-		return iopv1alpha1.IstioOperator{}, err
+		return iopv1alpha1.IstioOperator{}, fmt.Errorf("failed to merge ambient meshConfig: %w", err)
 	}
+	op.Spec.MeshConfig = mergedMeshConfig
 
-	if valuesMap == nil {
-		valuesMap = make(values.Map)
-	}
-
-	err = valuesMap.SetPath("pilot.env.PILOT_ENABLE_AMBIENT", "true")
+	// values: deep-merge the overlay's values onto whatever was built so far
+	mergedValues, err := mergeRawMaps(op.Spec.Values, overlayValues)
 	if err != nil {
-		return iopv1alpha1.IstioOperator{}, err
+		return iopv1alpha1.IstioOperator{}, fmt.Errorf("failed to merge ambient values: %w", err)
 	}
-
-	err = valuesMap.SetPath("cni.ambient.enabled", true)
-	if err != nil {
-		return iopv1alpha1.IstioOperator{}, err
-	}
-
-	op.Spec.Values, err = values.ConvertMap[json.RawMessage](valuesMap)
-	if err != nil {
-		return op, err
-	}
+	op.Spec.Values = mergedValues
 
 	return op, nil
+}
+
+// mergeRawMaps deep-merges the src object into base and returns the result as a
+// json.RawMessage. Values present in src take precedence. A nil base is treated
+// as an empty object. src may be a values.Map, a map[string]any, or nil.
+func mergeRawMaps(base json.RawMessage, src map[string]any) (json.RawMessage, error) {
+	baseMap, err := values.MapFromObject(base)
+	if err != nil {
+		return nil, err
+	}
+	if baseMap == nil {
+		baseMap = make(values.Map)
+	}
+
+	srcMap := values.Map(src)
+
+	if err := mergo.Merge(&baseMap, srcMap, mergo.WithOverride); err != nil {
+		return nil, err
+	}
+
+	return json.RawMessage(baseMap.JSON()), nil
 }
 
 func boolValue(b bool) *iopv1alpha1.BoolValue {

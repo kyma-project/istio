@@ -192,12 +192,9 @@ func TestProxyStatsMatcher(t *testing.T) {
 		requestCount := int(numReplicas) * int(outlierDetectionConsecutive5xx)
 		triggerIngressStatusCodes(t, ingressAddr, requestCount)
 
-		// then
+		// then - each ingress pod tracks ejection independently; retry until the LB hits an ejected one.
 		httpClient := httphelper.NewHTTPClient(t, httphelper.WithHost(ingressHost))
-		resp, err := httpClient.Get(fmt.Sprintf("http://%s/headers", ingressAddr)) //nolint:gosec // plain HTTP is intentional; ingress gateway does not terminate TLS in tests
-		require.NoError(t, err)
-		require.Equal(t, http.StatusServiceUnavailable, resp.StatusCode)
-		require.NoError(t, resp.Body.Close())
+		proxystatsassert.AssertIngressEventuallyReturns503(t, httpClient, ingressAddr)
 
 		logIngressEjections(t, r, httpbinInfo.Host)
 

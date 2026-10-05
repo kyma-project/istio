@@ -1107,6 +1107,61 @@ var _ = Describe("Merge", func() {
 			ztunnelEnabled := out.Spec.Components.Ztunnel.Enabled.GetValueOrFalse()
 			Expect(ztunnelEnabled).To(BeTrue())
 		})
+
+		It("should set ISTIO_META_ENABLE_HBONE in the mesh config if enableAmbient is set in the alpha features ConfigMap", func() {
+			// given
+			iop := iopv1alpha1.IstioOperator{
+				Spec: iopv1alpha1.IstioOperatorSpec{},
+			}
+			istioCR := istiov1alpha2.Istio{Spec: istiov1alpha2.IstioSpec{}}
+
+			// when
+			out, err := istioCR.MergeInto(iop, istiov1alpha2.WithFeatures(istiofeatures.IstioFeatures{EnableAmbient: true}))
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+			meshConfig, mapErr := values.MapFromObject(out.Spec.MeshConfig)
+			Expect(mapErr).ShouldNot(HaveOccurred())
+			hbone, exists := meshConfig.GetPath("defaultConfig.proxyMetadata.ISTIO_META_ENABLE_HBONE")
+			Expect(exists).To(BeTrue())
+			Expect(hbone).To(Equal("true"))
+		})
+
+		It("should set PILOT_ENABLE_AMBIENT and cni.ambient.enabled if enableAmbient is set in the alpha features ConfigMap", func() {
+			// given
+			iop := iopv1alpha1.IstioOperator{
+				Spec: iopv1alpha1.IstioOperatorSpec{},
+			}
+			istioCR := istiov1alpha2.Istio{Spec: istiov1alpha2.IstioSpec{}}
+
+			// when
+			out, err := istioCR.MergeInto(iop, istiov1alpha2.WithFeatures(istiofeatures.IstioFeatures{EnableAmbient: true}))
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+			valuesMap, mapErr := values.MapFromObject(out.Spec.Values)
+			Expect(mapErr).ShouldNot(HaveOccurred())
+			Expect(values.TryGetPathAs[string](valuesMap, "pilot.env.PILOT_ENABLE_AMBIENT")).To(Equal("true"))
+			cniAmbient, good := valuesMap.GetPath("cni.ambient.enabled")
+			Expect(good).To(BeTrue())
+			Expect(cniAmbient).To(BeTrue())
+		})
+
+		It("should set Ztunnel component to enabled if enableAmbient is set in the alpha features ConfigMap", func() {
+			// given
+			iop := iopv1alpha1.IstioOperator{
+				Spec: iopv1alpha1.IstioOperatorSpec{},
+			}
+			istioCR := istiov1alpha2.Istio{Spec: istiov1alpha2.IstioSpec{}}
+
+			// when
+			out, err := istioCR.MergeInto(iop, istiov1alpha2.WithFeatures(istiofeatures.IstioFeatures{EnableAmbient: true}))
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+			ztunnelEnabled := out.Spec.Components.Ztunnel.Enabled.GetValueOrFalse()
+			Expect(ztunnelEnabled).To(BeTrue())
+		})
 	})
 
 	Context("EgressGateway", func() {

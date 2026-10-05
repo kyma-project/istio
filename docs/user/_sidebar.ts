@@ -16,7 +16,8 @@ export default [
   { text: 'Beta Istio Features', link: './beta-features/README', collapsed: true, items: [
       { text: 'Disable Istio CNI', link: './beta-features/disable-istio-cni' },
       { text: 'Enable Control Plane VPA', link: './beta-features/enable-control-plane-vpa' },
-      { text: 'Enable Dual Stack', link: './beta-features/enable-dual-stack' }
+      { text: 'Enable Dual Stack', link: './beta-features/enable-dual-stack' },
+      { text: 'Enable Ambient Mode', link: './beta-features/enable-ambient' }
       ] },
   { text: 'Tutorials', link: './tutorials/README', collapsed: true, items: [
     { text: 'Expose Workloads Using oauth2-proxy', link: './tutorials/01-10-external-authorization-provider' },

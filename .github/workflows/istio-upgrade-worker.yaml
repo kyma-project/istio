@@ -62,6 +62,7 @@ jobs:
           git add config/manager/env-images.yaml \
                   internal/istiooperator/istio-operator.yaml \
                   internal/istiooperator/istio-operator-light.yaml \
+                  component-config.yaml \
                   docs/release-notes go.mod go.sum
           git commit -m "Bump Istio to ${ISTIO_VERSION}"
           git push -f -u origin "${branch}"
@@ -74,7 +75,7 @@ jobs:
             echo "- Istio changelog: ${ANNOUNCE_URL}"
             echo "- Workflow run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
             echo
-            echo 'Repoints `env-images.yaml` and the operator manifests at the synced images, bumps the `istio.io/istio` Go dependency, and adds a release note.'
+            echo 'Repoints `env-images.yaml`, the operator manifests, and `component-config.yaml` at the synced images, bumps the `istio.io/istio` Go dependency, and adds a release note.'
           } > istio-upgrade-pr-body.md
 
           # Match only an OPEN PR for this head: a merged/closed one for the

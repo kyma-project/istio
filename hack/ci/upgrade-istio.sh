@@ -6,7 +6,8 @@ set -euo pipefail
 # synced by update-istio-images.sh (and its PR merged). This script:
 #   1. reads the target Istio version from the in-repo synced manifests
 #      (external-images.yaml, fips-images.yaml),
-#   2. repoints config/manager/env-images.yaml and the operator manifests at it,
+#   2. repoints config/manager/env-images.yaml, the operator manifests, and
+#      component-config.yaml at it,
 #   3. bumps the istio.io/istio Go dependency (go get -u -t + go mod tidy),
 #   4. appends an "Istio Updated to Version X.Y.Z" section to the current
 #      release-notes draft, or creates the next-version note file if the current
@@ -19,6 +20,7 @@ set -euo pipefail
 ENV_IMAGES="config/manager/env-images.yaml"
 EXTERNAL_IMAGES="external-images.yaml"
 FIPS_IMAGES="fips-images.yaml"
+COMPONENT_CONFIG="component-config.yaml"
 RELEASE_NOTES_DIR="docs/release-notes"
 OPERATOR_YAMLS=(
   "internal/istiooperator/istio-operator.yaml"
@@ -108,6 +110,25 @@ next_release_note_path() {
   fi
 }
 
+# component-config.yaml lists the images shipped on the branch for main-branch
+# security scanning as a flat list. Its non-manager entries carry the exact
+# registry path and tag of their env-images.yaml counterparts, so repoint each
+# one to the value this upgrade just wrote. Anchored sed keyed on the unique
+# repo path, matching the operator-manifest approach, to avoid yq reflowing the
+# hand-formatted file. The istio-manager:main entry has no env-images
+# counterpart and is left untouched; images absent from component-config.yaml
+# (e.g. ztunnel) match no line and are skipped.
+update_component_config() {
+  [ -f "${COMPONENT_CONFIG}" ] || return 0
+  local var val repo
+  for var in "${DISTROLESS_VARS[@]}" "${!FIPS_VAR_TO_IMG[@]}"; do
+    val="$(env_value "${var}")"
+    repo="${val%:*}"
+    sed -i.bak -E "s#^(  - ${repo//./\\.}:).*#\1${val##*:}#" "${COMPONENT_CONFIG}"
+    rm -f "${COMPONENT_CONFIG}.bak"
+  done
+}
+
 main() {
   ensure_tools
 
@@ -168,6 +189,9 @@ main() {
     sed -i.bak -E "s#^(  tag: \").*(\")#\1${target}-distroless\2#" "${f}"
     rm -f "${f}.bak"
   done
+
+  # component-config.yaml tracks the same images for security scanning.
+  update_component_config
 
   # Go dependency: mirror the manual upgrade (go get -u -t istio@version + tidy).
   echo "Bumping istio.io/istio to ${target}"

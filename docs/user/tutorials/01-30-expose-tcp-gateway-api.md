@@ -1,37 +1,12 @@
-<!-- open-source-only -->
-# Exposing a TCP Service Using Gateway API Alpha Support
+# Exposing a TCP Service Using Gateway API
 
-This tutorial shows how to expose a TCP Service using Gateway API.
-
-> [!WARNING]
-> Exposing an unsecured workload to the outside world is a potential security vulnerability, so tread carefully. This tutorial is based on the experimental version of the Istio module, so it is not meant to be used in a production environment.
+The Istio module automatically installs the Kubernetes [Gateway API](https://gateway-api.sigs.k8s.io/) CRDs. This tutorial shows how to expose a TCP service using a TCPRoute and Istio Ingress Gateway. For details on CRD management, see [Gateway API CRDs Management](../00-55-gateway-api-crds.md).
 
 ## Prerequisites
 
-* The Istio module installation in the experimental version
+* You have the Istio module added.
 
-## Steps
-
-### Configure Gateway API Alpha Support
-
-Edit the Istio custom resource by setting **enableAlphaGatewayAPI** to `true`:
-
-```bash
-kubectl patch istios/default -n kyma-system --type merge -p '{"spec":{"experimental":{"pilot": {"enableAlphaGatewayAPI": true}}}}'
-```
-
-### Install the experimental version of Gateway API CustomResourceDefinitions
-
-The Istio module does not install Gateway API CustomResourceDefinitions (CRDs). To install the CRDs from the experimental channel, run the following command:
-
-```bash
-kubectl apply --server-side -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.6.1/experimental-install.yaml
-```
-
-> [!NOTE]
-> If you've already installed Gateway API CRDs from the standard channel, you must delete them before installing Gateway API CRDs from the experimental channel.
-
-### Create a Workload
+## Procedure
 
 1. Export the name of the namespace in which you want to deploy the TCPEcho Service:
 
@@ -47,9 +22,7 @@ kubectl apply --server-side -f https://github.com/kubernetes-sigs/gateway-api/re
     kubectl create -n $NAMESPACE -f https://raw.githubusercontent.com/istio/istio/release-1.31/samples/tcp-echo/tcp-echo.yaml
     ```
 
-### Expose a TCPEcho Service
-
-1. Create a Kubernetes Gateway to deploy Istio Ingress Gateway:
+3. To expose a TCPEcho Service, create a Kubernetes Gateway to deploy Istio Ingress Gateway:
 
     ```bash
     cat <<EOF | kubectl apply -f -
@@ -73,7 +46,7 @@ kubectl apply --server-side -f https://github.com/kubernetes-sigs/gateway-api/re
     > [!NOTE]
     > This command deploys the Istio Ingress service in your namespace with the corresponding Kubernetes Service of type `LoadBalanced` and an assigned external IP address.
 
-2. Create a TCPRoute to configure access to your workload:
+4. Create a TCPRoute to configure access to your workload:
 
     ```bash
     cat <<EOF | kubectl apply -f -
@@ -93,30 +66,30 @@ kubectl apply --server-side -f https://github.com/kubernetes-sigs/gateway-api/re
     EOF
     ```
 
-### Send TCP Traffic to a TCPEcho Service
+5. Send TCP Traffic to a TCPEcho Service
 
-1. Discover Istio Ingress Gateway's IP and port:
+    1. Discover Istio Ingress Gateway's IP and port:
 
-    ```bash
-    export INGRESS_HOST=$(kubectl get gtw tcp-echo-gateway -n $NAMESPACE -o jsonpath='{.status.addresses[0].value}')
-    export INGRESS_PORT=$(kubectl get gtw tcp-echo-gateway -n $NAMESPACE -o jsonpath='{.spec.listeners[?(@.name=="tcp-31400")].port}')
-    ```
+        ```bash
+        export INGRESS_HOST=$(kubectl get gtw tcp-echo-gateway -n $NAMESPACE -o jsonpath='{.status.addresses[0].value}')
+        export INGRESS_PORT=$(kubectl get gtw tcp-echo-gateway -n $NAMESPACE -o jsonpath='{.spec.listeners[?(@.name=="tcp-31400")].port}')
+        ```
 
-2. Deploy a `sleep` Service:
+    2. Deploy a `sleep` Service:
 
-    ```bash
-    kubectl create -n $NAMESPACE -f https://raw.githubusercontent.com/istio/istio/release-1.31/samples/sleep/sleep.yaml
-    ```
+        ```bash
+        kubectl create -n $NAMESPACE -f https://raw.githubusercontent.com/istio/istio/release-1.31/samples/sleep/sleep.yaml
+        ```
 
-3. Send TCP traffic:
+    3. Send TCP traffic:
 
-    ```bash
-    export SLEEP=$(kubectl get pod -l app=sleep -n $NAMESPACE -o jsonpath={.items..metadata.name})
-    for i in {1..3}; do \
-    kubectl exec "$SLEEP" -c sleep -n $NAMESPACE -- sh -c "(date; sleep 1) | nc $INGRESS_HOST $INGRESS_PORT"; \
-    done
-    ```
-    You should see similar output:
-    ```
-    hello Mon Jul 29 12:43:56 UTC 2024
-    ```
+        ```bash
+        export SLEEP=$(kubectl get pod -l app=sleep -n $NAMESPACE -o jsonpath={.items..metadata.name})
+        for i in {1..3}; do \
+        kubectl exec "$SLEEP" -c sleep -n $NAMESPACE -- sh -c "(date; sleep 1) | nc $INGRESS_HOST $INGRESS_PORT"; \
+        done
+        ```
+        You should see similar output:
+        ```
+        hello Mon Jul 29 12:43:56 UTC 2024
+        ```

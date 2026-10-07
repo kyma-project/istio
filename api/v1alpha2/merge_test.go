@@ -1164,10 +1164,10 @@ var _ = Describe("Merge", func() {
 			valuesMap, err := values.MapFromObject(out.Spec.Values)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			// The upstream ambient profile sets global.variant: distroless, but
-			// enableAmbient drops it. Otherwise the ztunnel chart would append the
-			// variant to a tag that already contains it (e.g.
-			// "1.31.0-distroless-distroless").
+			// The Kyma ambient overlay intentionally omits global.variant
+			// (unlike the upstream profile) because Kyma bakes the variant into
+			// spec.tag; otherwise the ztunnel chart would append it a second time
+			// (e.g. "1.31.0-distroless-distroless").
 			_, exists := valuesMap.GetPath("global.variant")
 			Expect(exists).To(BeFalse())
 		})
@@ -1194,6 +1194,45 @@ var _ = Describe("Merge", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			ztunnelEnabled := out.Spec.Components.Ztunnel.Enabled.GetValueOrFalse()
 			Expect(ztunnelEnabled).To(BeTrue())
+		})
+
+		It("should merge ambient overlay values onto pre-existing spec.Values without clobbering them", func() {
+			// given
+			preExisting := values.Map{}
+			Expect(preExisting.SetPath("pilot.env.PRE_EXISTING", "keep-me")).To(Succeed())
+			rawValues, err := values.ConvertMap[json.RawMessage](preExisting)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			iop := iopv1alpha1.IstioOperator{
+				Spec: iopv1alpha1.IstioOperatorSpec{
+					Values: rawValues,
+				},
+			}
+
+			enabled := true
+			istioCR := istiov1alpha2.Istio{
+				Spec: istiov1alpha2.IstioSpec{
+					Experimental: &istiov1alpha2.Experimental{
+						EnableAmbient: &enabled,
+					},
+				},
+			}
+
+			// when
+			out, err := istioCR.MergeInto(iop)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			// then
+			valuesMap, err := values.MapFromObject(out.Spec.Values)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			// pre-existing value is preserved
+			Expect(values.TryGetPathAs[string](valuesMap, "pilot.env.PRE_EXISTING")).To(Equal("keep-me"))
+			// overlay value is merged in alongside it
+			Expect(values.TryGetPathAs[string](valuesMap, "pilot.env.PILOT_ENABLE_AMBIENT")).To(Equal("true"))
+			gp, good := valuesMap.GetPath("cni.ambient.enabled")
+			Expect(good).To(BeTrue())
+			Expect(gp).To(BeTrue())
 		})
 	})
 

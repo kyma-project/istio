@@ -1,4 +1,8 @@
-# The ambient profile enables ambient mode. The Istiod, CNI, and ztunnel charts must be deployed
+# Kyma-tailored ambient overlay, derived from the upstream Istio Helm ambient
+# profile (manifests/helm-profiles/ambient.yaml). Values Kyma does not use are
+# intentionally omitted: global.variant: distroless is dropped because Kyma bakes
+# the image variant into spec.tag, so the ztunnel chart would otherwise append the
+# variant twice (e.g. "1.31.0-distroless-distroless").
 meshConfig:
   defaultConfig:
     proxyMetadata:
@@ -10,8 +14,6 @@ meshConfig:
             operator: In
             values: ["true"]
       scope: GLOBAL
-global:
-  variant: distroless
 pilot:
   env:
     PILOT_ENABLE_AMBIENT: "true"

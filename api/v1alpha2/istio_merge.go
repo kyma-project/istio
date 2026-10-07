@@ -7,7 +7,6 @@ import (
 	"strconv"
 
 	"github.com/golang/protobuf/ptypes/duration"
-	"github.com/imdario/mergo"
 	"github.com/kyma-project/istio/operator/internal/istiofeatures"
 	"google.golang.org/protobuf/types/known/structpb"
 	meshv1alpha1 "istio.io/api/mesh/v1alpha1"
@@ -21,12 +20,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-// ambientOverlay is a verbatim copy of the upstream Istio Helm ambient profile
-// (manifests/helm-profiles/ambient.yaml) from the pinned istio.io/istio module.
-// On an Istio bump, replace ambient-overlay.yaml by copying that upstream file
-// over it — do not hand-edit. TestAmbientOverlayMatchesUpstream enforces that
-// this file stays byte-for-byte identical to upstream.
-//
 //go:embed ambient-overlay.yaml
 var ambientOverlay []byte
 
@@ -385,62 +378,45 @@ func enableDualStack(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, e
 }
 
 func enableAmbient(op iopv1alpha1.IstioOperator, ambientEnabled bool) (iopv1alpha1.IstioOperator, error) {
-	// if ambient is not enabled in the spec.Experimental, then we exit early without changes
 	if !ambientEnabled {
 		return op, nil
 	}
 
-	// ambientOverlay is a verbatim copy of the upstream Istio Helm ambient
-	// profile (manifests/helm-profiles/ambient.yaml). It is values-rooted: the
-	// top-level `meshConfig` key maps to spec.meshConfig, and every other
-	// top-level key (global, pilot, cni, ...) maps to spec.values.
 	overlay, err := values.MapFromYaml(ambientOverlay)
 	if err != nil {
 		return iopv1alpha1.IstioOperator{}, fmt.Errorf("failed to parse ambient overlay: %w", err)
 	}
 
-	// meshConfig is applied to spec.meshConfig; the remaining keys are values.
-	overlayMeshConfig, _ := overlay["meshConfig"].(map[string]any)
+	overlayMeshConfig := values.Map{}
 	overlayValues := values.Map{}
 	for k, v := range overlay {
 		if k == "meshConfig" {
+			mc, ok := values.CastAsMap(v)
+			if !ok {
+				return iopv1alpha1.IstioOperator{}, fmt.Errorf("ambient overlay meshConfig is not a map, got %T", v)
+			}
+			overlayMeshConfig = mc
 			continue
 		}
 		overlayValues[k] = v
 	}
 
-	// Kyma bakes the image variant into spec.tag (e.g. "1.31.0-distroless"), so
-	// the upstream `global.variant: distroless` must NOT be applied — the ztunnel
-	// chart would otherwise append the variant a second time, producing tags like
-	// "1.31.0-distroless-distroless". Drop it here while leaving the overlay file
-	// a verbatim copy of upstream.
-	if global, ok := overlayValues["global"].(map[string]any); ok {
-		delete(global, "variant")
-		if len(global) == 0 {
-			delete(overlayValues, "global")
-		}
+	ztunnel, err := boolValue(true)
+	if err != nil {
+		return iopv1alpha1.IstioOperator{}, fmt.Errorf("failed to enable ztunnel component: %w", err)
 	}
-
-	// enable the ztunnel component. This is the one ambient knob that lives in
-	// the upstream IstioOperator profile (manifests/profiles/ambient.yaml)
-	// rather than the Helm profile, so it is set here as a constant. Kyma
-	// deliberately does not mirror the profile's cni/ingressGateway settings:
-	// CNI is enabled unconditionally in mergeResources, and the ingress gateway
-	// must stay enabled.
 	if op.Spec.Components == nil {
 		op.Spec.Components = &iopv1alpha1.IstioComponentSpec{}
 	}
-	op.Spec.Components.Ztunnel = &iopv1alpha1.ComponentSpec{Enabled: boolValue(true)}
+	op.Spec.Components.Ztunnel = &iopv1alpha1.ComponentSpec{Enabled: ztunnel}
 
-	// meshConfig: deep-merge the overlay's meshConfig onto whatever was built so far
-	mergedMeshConfig, err := mergeRawMaps(op.Spec.MeshConfig, overlayMeshConfig)
+	mergedMeshConfig, err := mergeOverlay(op.Spec.MeshConfig, overlayMeshConfig)
 	if err != nil {
 		return iopv1alpha1.IstioOperator{}, fmt.Errorf("failed to merge ambient meshConfig: %w", err)
 	}
 	op.Spec.MeshConfig = mergedMeshConfig
 
-	// values: deep-merge the overlay's values onto whatever was built so far
-	mergedValues, err := mergeRawMaps(op.Spec.Values, overlayValues)
+	mergedValues, err := mergeOverlay(op.Spec.Values, overlayValues)
 	if err != nil {
 		return iopv1alpha1.IstioOperator{}, fmt.Errorf("failed to merge ambient values: %w", err)
 	}
@@ -449,34 +425,29 @@ func enableAmbient(op iopv1alpha1.IstioOperator, ambientEnabled bool) (iopv1alph
 	return op, nil
 }
 
-// mergeRawMaps deep-merges the src object into base and returns the result as a
-// json.RawMessage. Values present in src take precedence. A nil base is treated
-// as an empty object. src may be a values.Map, a map[string]any, or nil.
-func mergeRawMaps(base json.RawMessage, src map[string]any) (json.RawMessage, error) {
+// mergeOverlay deep-merges overlay onto base and returns the result as a
+// json.RawMessage. Keys in overlay take precedence. A nil base is treated as an
+// empty object.
+func mergeOverlay(base json.RawMessage, overlay values.Map) (json.RawMessage, error) {
 	baseMap, err := values.MapFromObject(base)
 	if err != nil {
 		return nil, err
 	}
 	if baseMap == nil {
-		baseMap = make(values.Map)
+		baseMap = values.Map{}
 	}
 
-	srcMap := values.Map(src)
-
-	if err := mergo.Merge(&baseMap, srcMap, mergo.WithOverride); err != nil {
-		return nil, err
-	}
+	baseMap.MergeFrom(overlay)
 
 	return json.RawMessage(baseMap.JSON()), nil
 }
 
-func boolValue(b bool) *iopv1alpha1.BoolValue {
-	boolValue := iopv1alpha1.BoolValue{}
-	err := boolValue.UnmarshalJSON([]byte(strconv.FormatBool(b)))
-	if err != nil {
-		panic(fmt.Sprintf("failed to unmarshal bool value: %v", err))
+func boolValue(b bool) (*iopv1alpha1.BoolValue, error) {
+	bv := iopv1alpha1.BoolValue{}
+	if err := bv.UnmarshalJSON([]byte(strconv.FormatBool(b))); err != nil {
+		return nil, err
 	}
-	return &boolValue
+	return &bv, nil
 }
 
 //nolint:gocognit,gocyclo,cyclop,funlen // cognitive complexity 189 of func `(*Istio).mergeResources` is high (> 20), cyclomatic complexity 70 of func `(*Istio).mergeResources` is high (> 30), Function 'mergeResources' has too many statements (129 > 50) TODO: refactor this function
@@ -493,8 +464,12 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator, options ...MergeOpt
 		op.Spec.Components = &iopv1alpha1.IstioComponentSpec{}
 	}
 
+	cniEnabled, err := boolValue(!opts.Features.DisableCni)
+	if err != nil {
+		return op, fmt.Errorf("failed to set CNI enabled: %w", err)
+	}
 	op.Spec.Components.Cni = &iopv1alpha1.ComponentSpec{
-		Enabled: boolValue(!opts.Features.DisableCni),
+		Enabled: cniEnabled,
 	}
 
 	if i.Spec.Components == nil {
@@ -547,7 +522,11 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator, options ...MergeOpt
 			}
 		}
 		if i.Spec.Components.EgressGateway.Enabled != nil {
-			op.Spec.Components.EgressGateways[0].Enabled = boolValue(*i.Spec.Components.EgressGateway.Enabled)
+			egressEnabled, err := boolValue(*i.Spec.Components.EgressGateway.Enabled)
+			if err != nil {
+				return op, fmt.Errorf("failed to set egress gateway enabled: %w", err)
+			}
+			op.Spec.Components.EgressGateways[0].Enabled = egressEnabled
 		}
 	}
 

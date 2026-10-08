@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
 
@@ -22,12 +23,19 @@ const (
 )
 
 type Options struct {
-	Method string
+	Method      string
+	Annotations map[string]string
 }
 
 func WithMethod(method string) Option {
 	return func(o *Options) {
 		o.Method = method
+	}
+}
+
+func WithAnnotations(annotations map[string]string) Option {
+	return func(o *Options) {
+		o.Annotations = annotations
 	}
 }
 
@@ -152,6 +160,58 @@ func RunRequestFromInsideClusterWithLabels(t *testing.T, namespace string, url s
 	t.Logf("[%s] stderr: %v", curlPodName, stdErrStr)
 
 	return stdOutStr, stdErrStr, err
+}
+
+// DeployCurlPod creates a named, long-lived curl pod with optional labels and annotations,
+// waits for it to be Running, and registers cleanup. Use ExecCurl or similar helpers
+// to send requests from the pod afterwards.
+func DeployCurlPod(t *testing.T, namespace, name string, options ...Option) error {
+	t.Helper()
+	opts := &Options{}
+	for _, opt := range options {
+		opt(opts)
+	}
+
+	r, err := client.ResourcesClient(t)
+	if err != nil {
+		t.Logf("Could not create resources client: err=%s", err)
+		return err
+	}
+
+	pod := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        name,
+			Namespace:   namespace,
+			Annotations: opts.Annotations,
+			Labels:      map[string]string{"app": name},
+		},
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{
+				{
+					Name:  containerName,
+					Image: "curlimages/curl:8.14.1",
+					Args:  []string{"sleep", "infinity"},
+				},
+			},
+		},
+	}
+
+	t.Logf("deploying curl pod %s/%s", namespace, name)
+	err = r.Create(t.Context(), pod)
+	if err != nil {
+		return err
+	}
+
+	setup.DeclareCleanup(t, func() {
+		t.Logf("deleting curl pod %s/%s", namespace, name)
+		_ = r.Delete(setup.GetCleanupContext(), pod)
+	})
+
+	if err := wait.For(conditions.New(r).PodRunning(pod), wait.WithTimeout(2*time.Minute)); err != nil {
+		return err
+	}
+	t.Logf("curl pod %s/%s is ready", namespace, name)
+	return nil
 }
 
 func RunOpenSSLSClientFromInsideCluster(t *testing.T, namespace string, url string) (string, string, error) {

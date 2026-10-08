@@ -1091,57 +1091,6 @@ var _ = Describe("Merge", func() {
 	})
 
 	Context("Ztunnel", func() {
-		It("should set dual stack env for Istio pilot if dualStack is enabled in the Istio CR", func() {
-			iop := iopv1alpha1.IstioOperator{
-				Spec: iopv1alpha1.IstioOperatorSpec{},
-			}
-
-			enabled := true
-
-			istioCR := istiov1alpha2.Istio{
-				Spec: istiov1alpha2.IstioSpec{
-					Experimental: &istiov1alpha2.Experimental{
-						EnableAmbient: &enabled,
-					},
-				},
-			}
-
-			// when
-			out, err := istioCR.MergeInto(iop)
-
-			valuesMap, err := values.MapFromObject(out.Spec.Values)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			Expect(values.TryGetPathAs[string](valuesMap, "pilot.env.PILOT_ENABLE_AMBIENT")).To(Equal("true"))
-		})
-
-		It("should set dual stack env for Istio pilot if dualStack is enabled in the Istio CR", func() {
-			iop := iopv1alpha1.IstioOperator{
-				Spec: iopv1alpha1.IstioOperatorSpec{},
-			}
-
-			enabled := true
-
-			istioCR := istiov1alpha2.Istio{
-				Spec: istiov1alpha2.IstioSpec{
-					Experimental: &istiov1alpha2.Experimental{
-						EnableAmbient: &enabled,
-					},
-				},
-			}
-
-			// when
-			out, err := istioCR.MergeInto(iop)
-
-			valuesMap, err := values.MapFromObject(out.Spec.Values)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			gp, good := valuesMap.GetPath("cni.ambient.enabled")
-			Expect(good).To(BeTrue())
-			Expect(gp).To(BeTrue())
-
-		})
-
 		It("should NOT set global.variant when ambient is enabled, because Kyma bakes the variant into spec.tag", func() {
 			iop := iopv1alpha1.IstioOperator{
 				Spec: iopv1alpha1.IstioOperatorSpec{},

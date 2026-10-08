@@ -4,10 +4,10 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"strconv"
 
 	"github.com/golang/protobuf/ptypes/duration"
-	"github.com/kyma-project/istio/operator/internal/istiofeatures"
 	"google.golang.org/protobuf/types/known/structpb"
 	meshv1alpha1 "istio.io/api/mesh/v1alpha1"
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
@@ -18,6 +18,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/intstr"
+
+	"github.com/kyma-project/istio/operator/internal/istiofeatures"
 )
 
 //go:embed ambient-overlay.yaml
@@ -141,9 +143,7 @@ func setupHeaders(envoyXAuthProvider *meshv1alpha1.MeshConfig_ExtensionProvider_
 		add := headers.InCheck.Add
 		if add != nil {
 			envoyXAuthProvider.EnvoyExtAuthzHttp.IncludeAdditionalHeadersInCheck = make(map[string]string)
-			for k, v := range add {
-				envoyXAuthProvider.EnvoyExtAuthzHttp.IncludeAdditionalHeadersInCheck[k] = v
-			}
+			maps.Copy(envoyXAuthProvider.EnvoyExtAuthzHttp.IncludeAdditionalHeadersInCheck, add)
 		}
 	}
 
@@ -168,7 +168,7 @@ func setupHeaders(envoyXAuthProvider *meshv1alpha1.MeshConfig_ExtensionProvider_
 }
 
 func (m *meshConfigBuilder) BuildExternalAuthorizerConfiguration(authorizers []*Authorizer) *meshConfigBuilder {
-	extensionProviders := values.TryGetPathAs[[]interface{}](m.c, "extensionProviders")
+	extensionProviders := values.TryGetPathAs[[]any](m.c, "extensionProviders")
 
 	for _, authorizer := range authorizers {
 		if authorizer == nil {

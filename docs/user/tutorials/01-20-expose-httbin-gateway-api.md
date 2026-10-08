@@ -24,7 +24,7 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
     ```bash
     kubectl create ns $NAMESPACE
     kubectl label namespace $NAMESPACE istio-injection=enabled --overwrite
-    kubectl create -n $NAMESPACE -f https://raw.githubusercontent.com/istio/istio/release-1.31/samples/httpbin/httpbin.yaml
+    kubectl create -n $NAMESPACE -f https://raw.githubusercontent.com/istio/istio/master/samples/httpbin/httpbin.yaml
     ```
 
     Verify all Pods are running:

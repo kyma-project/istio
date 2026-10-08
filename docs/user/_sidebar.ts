@@ -8,10 +8,17 @@ export default [
     { text: 'Istio Trust Domain', link: './00-30-trust-domain.md'},
     { text: 'DNS Proxying', link: './00-35-dns-proxying.md' },
     { text: 'Configure Observability for the Istio Service Mesh', link: './00-40-enable-istio-access-logs.md' },
+    { text: 'Proxy Stats Matcher', link: './00-42-proxy-stats-matcher.md' },
     ] },
   { text: 'Istio Custom Resource', link: './04-00-istio-custom-resource' },
   { text: 'Network Policies', link: './00-50-network-policies.md' },
   { text: 'Gateway API CRDs', link: './00-55-gateway-api-crds.md' },
+  { text: 'Beta Istio Features', link: './beta-features/README', collapsed: true, items: [
+      { text: 'Disable Istio CNI', link: './beta-features/disable-istio-cni' },
+      { text: 'Enable Control Plane VPA', link: './beta-features/enable-control-plane-vpa' },
+      { text: 'Enable Dual Stack', link: './beta-features/enable-dual-stack' },
+      { text: 'Enable Ambient Mode', link: './beta-features/enable-ambient' }
+      ] },
   { text: 'Tutorials', link: './tutorials/README', collapsed: true, items: [
     { text: 'Expose Workloads Using oauth2-proxy', link: './tutorials/01-10-external-authorization-provider' },
     { text: 'Expose Workloads Using Gateway API', link: './tutorials/01-20-expose-httbin-gateway-api' },
@@ -23,8 +30,7 @@ export default [
     ] },
   { text: 'Technical Reference', link: './technical-reference/README', collapsed: true, items: [
     { text: 'Istio Controller Parameters', link: './technical-reference/05-00-istio-controller-parameters' },
-    { text: 'Istio Controller RBAC Configuration', link: './technical-reference/05-10-istio-controller-rbac' },
-    { text: 'Alpha Istio Features', link: './00-45-istio-features-configmap.md' }
+    { text: 'Istio Controller RBAC Configuration', link: './technical-reference/05-10-istio-controller-rbac' }
     ] },
   { text: 'Troubleshooting', link: './troubleshooting/README', collapsed: true, items: [
     { text: 'Network Connectivity - Basic Diagnostics', link: './troubleshooting/03-00-network-connectivity' },
@@ -33,7 +39,7 @@ export default [
     { text: 'No Access Error', link: './troubleshooting/03-10-503-no-access' },
     { text: 'Forbidden Error when the Host Header Contains a Port', link: './troubleshooting/03-65-403-if-host-header-contains-port'},
     { text: 'Istio Sidecar Injection Issues', link: './troubleshooting/03-30-istio-no-sidecar' },
-    { text: 'Reverting the Istio module\'s deletion', link: './troubleshooting/03-50-recovering-from-unintentional-istio-removal' },
+    { text: 'Istio Module Deletion Blocked', link: './troubleshooting/03-50-recovering-from-unintentional-istio-removal' },
     { text: 'SAP HANA Database Connection Issues', link: './troubleshooting/03-80-cannot-connect-to-hana-db' },
     { text: 'Not Found Error', link: './troubleshooting/03-60-404-on-istio-gateway' },
     { text: 'Incompatible Istio Sidecar', link: './troubleshooting/03-40-incompatible-istio-sidecar-version' },

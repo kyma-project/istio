@@ -1161,6 +1161,69 @@ var _ = Describe("Merge", func() {
 			// overlay fields are also present
 			assertFullAmbientOverlay(out)
 		})
+
+		It("should not apply ambient overlay when Experimental.EnableAmbient is explicitly false", func() {
+			// given
+			disabled := false
+			iop := iopv1alpha1.IstioOperator{Spec: iopv1alpha1.IstioOperatorSpec{}}
+			istioCR := istiov1alpha2.Istio{
+				Spec: istiov1alpha2.IstioSpec{
+					Experimental: &istiov1alpha2.Experimental{
+						EnableAmbient: &disabled,
+					},
+				},
+			}
+
+			// when
+			out, err := istioCR.MergeInto(iop)
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+
+			meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
+			Expect(err).ShouldNot(HaveOccurred())
+			_, exists := meshConfig.GetPath("defaultConfig.proxyMetadata.ISTIO_META_ENABLE_HBONE")
+			Expect(exists).To(BeFalse())
+			_, exists = meshConfig.GetPath("serviceScopeConfigs")
+			Expect(exists).To(BeFalse())
+
+			valuesMap, err := values.MapFromObject(out.Spec.Values)
+			Expect(err).ShouldNot(HaveOccurred())
+			_, exists = valuesMap.GetPath("pilot.env.PILOT_ENABLE_AMBIENT")
+			Expect(exists).To(BeFalse())
+			_, exists = valuesMap.GetPath("cni.ambient.enabled")
+			Expect(exists).To(BeFalse())
+
+			Expect(out.Spec.Components.Ztunnel).To(BeNil())
+		})
+
+		It("should apply the ambient overlay exactly once when both activation paths are enabled", func() {
+			// given
+			enabled := true
+			iop := iopv1alpha1.IstioOperator{Spec: iopv1alpha1.IstioOperatorSpec{}}
+			istioCR := istiov1alpha2.Istio{
+				Spec: istiov1alpha2.IstioSpec{
+					Experimental: &istiov1alpha2.Experimental{
+						EnableAmbient: &enabled,
+					},
+				},
+			}
+
+			// when
+			out, err := istioCR.MergeInto(iop, istiov1alpha2.WithFeatures(istiofeatures.IstioFeatures{EnableAmbient: true}))
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+
+			// overlay applied, and serviceScopeConfigs not duplicated
+			meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
+			Expect(err).ShouldNot(HaveOccurred())
+			scopeConfigs, exists := meshConfig.GetPath("serviceScopeConfigs")
+			Expect(exists).To(BeTrue())
+			Expect(scopeConfigs).To(HaveLen(1))
+
+			assertFullAmbientOverlay(out)
+		})
 	})
 
 	Context("EgressGateway", func() {

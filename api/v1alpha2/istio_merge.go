@@ -426,9 +426,6 @@ func enableAmbient(op iopv1alpha1.IstioOperator, ambientEnabled bool) (iopv1alph
 	return op, nil
 }
 
-// mergeOverlay deep-merges overlay onto base and returns the result as a
-// json.RawMessage. Keys in overlay take precedence. A nil base is treated as an
-// empty object.
 func mergeOverlay(base json.RawMessage, overlay values.Map) (json.RawMessage, error) {
 	baseMap, err := values.MapFromObject(base)
 	if err != nil {

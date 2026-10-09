@@ -65,3 +65,14 @@ jobs:
           name: generated-manifest-diff
           path: git-diff.diff
         if: failure()
+
+  check-gateway-api-crds:
+    name: Check Gateway API CRDs match go.mod
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: "go.mod"
+      - name: Verify Gateway API CRDs are in sync with go.mod
+        run: make check-gateway-api-crds

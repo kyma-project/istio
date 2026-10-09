@@ -297,6 +297,14 @@ bin/crd-ref-docs:
 	mv bin/crd-ref-docs-x/crd-ref-docs bin/crd-ref-docs
 	rm -r bin/crd-ref-docs-x
 
+.PHONY: update-gateway-api-crds
+update-gateway-api-crds: ## Sync Gateway API CRDs from the sigs.k8s.io/gateway-api module version in go.mod (experimental channel).
+	./hack/update-gateway-api-crds.sh
+
+.PHONY: check-gateway-api-crds
+check-gateway-api-crds: ## Fail if committed Gateway API CRDs drift from the module version in go.mod.
+	./hack/check-gateway-api-crds.sh
+
 .PHONY: generate-crd-docs
 generate-crd-docs: bin/crd-ref-docs ## Generate CRD reference docs
 	./bin/crd-ref-docs \

@@ -20,6 +20,9 @@ en:
   config.prometheusMerge: Enable PrometheusMerge
   config.forwardClientCertDetails: X-Forwarded-Client-Cert header population strategy
   config.enableDNSProxying: Enable global DNS Proxying
+  config.proxyStatsMatcher: Proxy Stats Matcher
+  config.proxyStatsMatcher.inclusionRegexps: Inclusion Regexps
+  config.proxyStatsMatcher.inclusionRegexps.details: Proxy Stats Matcher Inclusion Regexps
 
   k8s.hpaSpec: Horizontal Pod Autoscaler
   k8s.hpaSpec.minReplicas: Minimum number of replicas
@@ -47,6 +50,7 @@ en:
   description.networkPoliciesEnabled: Enables installation of module related Network Policies in the kyma-system and istio-system namespaces.
   description.compatibilityMode: Sets Istio compatibility version the last minor version.
   description.enableDNSProxying: Enables or disables global DNS proxying in Istio sidecar and gateway proxies across the service mesh. When enabled, DNS requests from application pods are intercepted by the Istio proxies instead of being sent directly to upstream DNS servers.
+  description.proxyStatsMatcher.inclusionRegexps: List of regular expressions matching the names of additional proxy statistics to emit. Istio proxies always emit a built-in default set of statistics; this field extends that set with any statistics whose names match the provided patterns.
 
   egressGateway.enabled: Egress Gateway Enabled
   description.egressGateway.enabled: Enables or disables the Istio Egress Gateway.

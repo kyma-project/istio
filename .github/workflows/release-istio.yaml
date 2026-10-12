@@ -102,7 +102,7 @@ jobs:
       dockerfile: Dockerfile
       context: .
       build-args: |
-        VERSION="${{ inputs.version }}"
+        VERSION=${{ inputs.version }}
       tags: "${{ inputs.version }}"
 
   build-image-experimental:
@@ -114,7 +114,7 @@ jobs:
       dockerfile: Dockerfile
       context: .
       build-args: |
-        VERSION="${{ inputs.version }}-experimental"
+        VERSION=${{ inputs.version }}-experimental
         GO_BUILD_TAGS=experimental
       tags: "${{ inputs.version }}-experimental"
 
@@ -164,6 +164,7 @@ jobs:
           - "extauth-e2e-test"
           - "egress-e2e-test"
           - "networkpolicy-e2e-test"
+          - "proxystats-e2e-test"
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/e2e-test-k3d

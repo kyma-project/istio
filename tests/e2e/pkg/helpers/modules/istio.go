@@ -2,6 +2,7 @@ package modules
 
 import (
 	"bytes"
+	"context"
 	_ "embed"
 	"testing"
 	"text/template"
@@ -11,6 +12,8 @@ import (
 
 	"github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/client"
+	appsv1 "k8s.io/api/apps/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/e2e-framework/klient/decoder"
@@ -200,6 +203,13 @@ func teardownIstioCR(t *testing.T, istioCR *v1alpha2.Istio) error {
 var istioCRDeletionTimeout = 2 * time.Minute
 
 func waitForIstioCRReadiness(t *testing.T, r *resources.Resources, istio *v1alpha2.Istio) error {
+	return waitForIstioCRReadinessWithContext(context.Background(), t, r, istio)
+}
+
+// waitForIstioCRReadinessWithContext is like waitForIstioCRReadiness but accepts an explicit context.
+// Used when t.Context() is no longer valid — for example inside t.Cleanup, where t.Context()
+// is already cancelled and would cause the wait to exit immediately.
+func waitForIstioCRReadinessWithContext(ctx context.Context, t *testing.T, r *resources.Resources, istio *v1alpha2.Istio) error {
 	t.Helper()
 	t.Log("Waiting for Istio custom resource to be ready")
 
@@ -212,15 +222,11 @@ func waitForIstioCRReadiness(t *testing.T, r *resources.Resources, istio *v1alph
 		t.Logf("Elapsed time: %s", time.Since(clock))
 
 		return istioCR.Status.State == v1alpha2.Ready
-	}))
+	}), wait.WithContext(ctx))
 
 	if err != nil {
 		t.Logf("Failed to wait for Istio custom resource to be ready: %v", err)
-		if err != nil {
-			t.Logf("Failed to get Istio custom resource: %v", err)
-		} else {
-			t.Logf("Istio custom resource status: %+v", istio.Status)
-		}
+		t.Logf("Istio custom resource status: %+v", istio.Status)
 		return err
 	}
 
@@ -240,4 +246,25 @@ func waitForIstioCRDeletion(t *testing.T, r *resources.Resources, istioCR *v1alp
 
 	t.Log("Istio custom resource deleted successfully")
 	return nil
+}
+
+// WaitForIngressGatewayScaled waits until the istio-ingressgateway Deployment has exactly the
+// expected number of ready replicas and no terminating pods remain
+func WaitForIngressGatewayScaled(t *testing.T, r *resources.Resources, expected int32) error {
+	t.Helper()
+	deployment := &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "istio-ingressgateway",
+			Namespace: "istio-system",
+		},
+	}
+
+	return wait.For(
+		conditions.New(r).ResourceMatch(deployment, func(obj k8s.Object) bool {
+			d := obj.(*appsv1.Deployment)
+			return d.Status.ReadyReplicas == expected && (d.Status.TerminatingReplicas == nil || *d.Status.TerminatingReplicas == 0)
+		}),
+		wait.WithTimeout(5*time.Minute),
+		wait.WithContext(t.Context()),
+	)
 }

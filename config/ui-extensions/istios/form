@@ -46,6 +46,17 @@
     name: config.prometheusMerge
     value:
       type: bool
+  - path: config.proxyStatsMatcher
+    simple: true
+    name: config.proxyStatsMatcher
+    widget: FormGroup
+    children:
+      - path: inclusionRegexps
+        name: config.proxyStatsMatcher.inclusionRegexps
+        description: description.proxyStatsMatcher.inclusionRegexps
+        widget: SimpleList
+        children:
+          - path: '[]'
 - path: spec.config.authorizers
   name: config.authorizers
   widget: GenericList

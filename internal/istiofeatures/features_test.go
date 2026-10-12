@@ -87,6 +87,18 @@ func TestGetIstioFeatures_ConfigMapExists(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name:    "enableAmbient set to true",
+			cmData:  map[string]string{"features": `{"enableAmbient": true}`},
+			want:    istiofeatures.IstioFeatures{EnableAmbient: true},
+			wantErr: false,
+		},
+		{
+			name:    "enableAmbient set to false",
+			cmData:  map[string]string{"features": `{"enableAmbient": false}`},
+			want:    istiofeatures.IstioFeatures{EnableAmbient: false},
+			wantErr: false,
+		},
+		{
 			name:    "both features set",
 			cmData:  map[string]string{"features": `{"disableCni": true, "enableControlPlaneVPA": true}`},
 			want:    istiofeatures.IstioFeatures{DisableCni: true, EnableControlPlaneVPA: true},

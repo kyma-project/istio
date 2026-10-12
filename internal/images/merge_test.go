@@ -164,7 +164,7 @@ spec:
 	Describe("Merge configurable istio images ", func() {
 
 		DescribeTable("merges component images correctly",
-			func(input string, img images.Images, expectedPilot string, expectedCNI string, expectedProxy string, expectsError bool) {
+			func(input string, img images.Images, expectedPilot string, expectedCNI string, expectedProxy string, expectedZtunnel string, expectsError bool) {
 				out, err := images.MergeComponentImages([]byte(input), img)
 
 				if expectsError {
@@ -195,6 +195,14 @@ spec:
 
 				proxy_init := global["proxy_init"].(map[string]interface{})
 				Expect(proxy_init["image"]).To(Equal(expectedProxy))
+
+				// Check ztunnel image: present only when Ztunnel image is set
+				if expectedZtunnel != "" {
+					ztunnel := values["ztunnel"].(map[string]interface{})
+					Expect(ztunnel["image"]).To(Equal(expectedZtunnel))
+				} else {
+					Expect(values["ztunnel"]).To(BeNil())
+				}
 			},
 
 			Entry("sets all component images when values section is empty",
@@ -213,6 +221,7 @@ spec:
 				"my-hub/my-pilot:my-tag",
 				"my-hub/my-cni:my-tag",
 				"my-hub/my-proxy:my-tag",
+				"my-hub/my-ztunnel:my-tag",
 				false,
 			),
 
@@ -227,6 +236,8 @@ spec:
     global:
       proxy:
         image: old-proxy
+    ztunnel:
+      image: old-ztunnel
 `,
 				images.Images{
 					Registry:   "new-hub",
@@ -239,6 +250,7 @@ spec:
 				"new-hub/new-pilot:new-tag",
 				"new-hub/new-cni:new-tag",
 				"new-hub/new-proxy:new-tag",
+				"new-hub/new-ztunnel:new-tag",
 				false,
 			),
 
@@ -260,6 +272,9 @@ spec:
         resources:
           requests:
             memory: 128Mi
+    ztunnel:
+      image: old-ztunnel
+      logLevel: debug
 `,
 				images.Images{
 					Registry:   "updated-hub",
@@ -272,6 +287,7 @@ spec:
 				"updated-hub/updated-pilot:v1.0",
 				"updated-hub/updated-cni:v1.0",
 				"updated-hub/updated-proxy:v1.0",
+				"updated-hub/updated-ztunnel:v1.0",
 				false,
 			),
 
@@ -291,6 +307,26 @@ spec:
 				"registry.example.com/istio/pilot:1.20.0",
 				"registry.example.com/istio/install-cni:1.20.0",
 				"registry.example.com/istio/proxyv2:1.20.0",
+				"registry.example.com/istio/ztunnel:1.20.0",
+				false,
+			),
+
+			Entry("does not set ztunnel image when ztunnel is absent",
+				`
+spec:
+  profile: default
+`,
+				images.Images{
+					Registry:   "my-hub",
+					Tag:        "my-tag",
+					Pilot:      images.Image{Registry: "my-hub", Name: "my-pilot", Tag: "my-tag"},
+					InstallCNI: images.Image{Registry: "my-hub", Name: "my-cni", Tag: "my-tag"},
+					ProxyV2:    images.Image{Registry: "my-hub", Name: "my-proxy", Tag: "my-tag"},
+				},
+				"my-hub/my-pilot:my-tag",
+				"my-hub/my-cni:my-tag",
+				"my-hub/my-proxy:my-tag",
+				"",
 				false,
 			),
 		)
@@ -338,6 +374,9 @@ spec:
 			global := values["global"].(map[string]interface{})
 			proxy := global["proxy"].(map[string]interface{})
 			Expect(proxy["image"]).To(Equal("production.registry.io/istio/proxyv2:1.21.0"))
+
+			ztunnel := values["ztunnel"].(map[string]interface{})
+			Expect(ztunnel["image"]).To(Equal("production.registry.io/istio/ztunnel:1.21.0"))
 
 			// Verify other settings are preserved
 			pilotResources := pilot["resources"].(map[string]interface{})

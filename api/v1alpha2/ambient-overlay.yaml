@@ -1,0 +1,22 @@
+# Kyma-tailored ambient overlay, derived from the upstream Istio Helm ambient
+# profile (manifests/helm-profiles/ambient.yaml). Values Kyma does not use are
+# intentionally omitted: global.variant: distroless is dropped because Kyma bakes
+# the image variant into spec.tag, so the ztunnel chart would otherwise append the
+# variant twice (e.g. "1.31.0-distroless-distroless").
+meshConfig:
+  defaultConfig:
+    proxyMetadata:
+      ISTIO_META_ENABLE_HBONE: "true"
+  serviceScopeConfigs:
+    - servicesSelector:
+        matchExpressions:
+          - key: istio.io/global
+            operator: In
+            values: ["true"]
+      scope: GLOBAL
+pilot:
+  env:
+    PILOT_ENABLE_AMBIENT: "true"
+cni:
+  ambient:
+    enabled: true

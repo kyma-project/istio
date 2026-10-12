@@ -1,12 +1,13 @@
 package v1alpha2
 
 import (
+	_ "embed"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"strconv"
 
 	"github.com/golang/protobuf/ptypes/duration"
-	"github.com/kyma-project/istio/operator/internal/istiofeatures"
 	"google.golang.org/protobuf/types/known/structpb"
 	meshv1alpha1 "istio.io/api/mesh/v1alpha1"
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis"
@@ -17,7 +18,12 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/intstr"
+
+	"github.com/kyma-project/istio/operator/internal/istiofeatures"
 )
+
+//go:embed ambient-overlay.yaml
+var ambientOverlay []byte
 
 // +kubebuilder:object:generate=false
 type MergeOptions struct {
@@ -111,17 +117,6 @@ func (m *meshConfigBuilder) BuildDualStackConfig(enableDualStack bool) *meshConf
 	return m
 }
 
-func (m *meshConfigBuilder) BuildAmbientConfig(ambientEnabled bool) *meshConfigBuilder {
-	if ambientEnabled {
-		err := m.c.SetPath("defaultConfig.proxyMetadata.ISTIO_META_ENABLE_HBONE", "true")
-		if err != nil {
-			return nil
-		}
-	}
-
-	return m
-}
-
 func (m *meshConfigBuilder) AddProxyMetadata(key, value string) (*meshConfigBuilder, error) {
 	err := m.c.SetPath("defaultConfig.proxyMetadata."+key, value)
 	if err != nil {
@@ -148,9 +143,7 @@ func setupHeaders(envoyXAuthProvider *meshv1alpha1.MeshConfig_ExtensionProvider_
 		add := headers.InCheck.Add
 		if add != nil {
 			envoyXAuthProvider.EnvoyExtAuthzHttp.IncludeAdditionalHeadersInCheck = make(map[string]string)
-			for k, v := range add {
-				envoyXAuthProvider.EnvoyExtAuthzHttp.IncludeAdditionalHeadersInCheck[k] = v
-			}
+			maps.Copy(envoyXAuthProvider.EnvoyExtAuthzHttp.IncludeAdditionalHeadersInCheck, add)
 		}
 	}
 
@@ -175,7 +168,7 @@ func setupHeaders(envoyXAuthProvider *meshv1alpha1.MeshConfig_ExtensionProvider_
 }
 
 func (m *meshConfigBuilder) BuildExternalAuthorizerConfiguration(authorizers []*Authorizer) *meshConfigBuilder {
-	extensionProviders := values.TryGetPathAs[[]interface{}](m.c, "extensionProviders")
+	extensionProviders := values.TryGetPathAs[[]any](m.c, "extensionProviders")
 
 	for _, authorizer := range authorizers {
 		if authorizer == nil {
@@ -293,7 +286,6 @@ func (i *Istio) mergeConfig(op iopv1alpha1.IstioOperator, options ...MergeOption
 		BuildPrometheusMergeConfig(i.Spec.Config.Telemetry.Metrics.PrometheusMerge).
 		BuildDualStackConfig(opts.EnableDualStack).
 		BuildForwardClientCertDetails(i.Spec.Config.ForwardClientCertDetails).
-		BuildAmbientConfig(ambientEnabled).
 		BuildTrustDomainConfig(i.Spec.Config.TrustDomain).
 		BuildDNSProxyingConfiguration(i.Spec.Config.EnableDNSProxying).
 		BuildProxyStatsMatcher(i.Spec.Config.ProxyStatsMatcher).
@@ -387,60 +379,73 @@ func enableDualStack(op iopv1alpha1.IstioOperator) (iopv1alpha1.IstioOperator, e
 }
 
 func enableAmbient(op iopv1alpha1.IstioOperator, ambientEnabled bool) (iopv1alpha1.IstioOperator, error) {
-	// if ambient is not enabled in the spec.Experimental, then we exit early without changes
 	if !ambientEnabled {
 		return op, nil
 	}
 
-	// enable ztunnel component
-	boolValue := iopv1alpha1.BoolValue{}
-	err := boolValue.UnmarshalJSON([]byte("true"))
+	overlay, err := values.MapFromYaml(ambientOverlay)
 	if err != nil {
-		return iopv1alpha1.IstioOperator{}, err
+		return iopv1alpha1.IstioOperator{}, fmt.Errorf("failed to parse ambient overlay: %w", err)
+	}
+
+	overlayMeshConfig := values.Map{}
+	overlayValues := values.Map{}
+	for k, v := range overlay {
+		if k == "meshConfig" {
+			mc, ok := values.CastAsMap(v)
+			if !ok {
+				return iopv1alpha1.IstioOperator{}, fmt.Errorf("ambient overlay meshConfig is not a map, got %T", v)
+			}
+			overlayMeshConfig = mc
+			continue
+		}
+		overlayValues[k] = v
+	}
+
+	ztunnel, err := boolValue(true)
+	if err != nil {
+		return iopv1alpha1.IstioOperator{}, fmt.Errorf("failed to enable ztunnel component: %w", err)
 	}
 	if op.Spec.Components == nil {
 		op.Spec.Components = &iopv1alpha1.IstioComponentSpec{}
 	}
+	op.Spec.Components.Ztunnel = &iopv1alpha1.ComponentSpec{Enabled: ztunnel}
 
-	op.Spec.Components.Ztunnel = &iopv1alpha1.ComponentSpec{
-		Enabled: &boolValue,
-	}
-
-	// set values
-	valuesMap, err := values.MapFromObject(op.Spec.Values)
+	mergedMeshConfig, err := mergeOverlay(op.Spec.MeshConfig, overlayMeshConfig)
 	if err != nil {
-		return iopv1alpha1.IstioOperator{}, err
+		return iopv1alpha1.IstioOperator{}, fmt.Errorf("failed to merge ambient meshConfig: %w", err)
 	}
+	op.Spec.MeshConfig = mergedMeshConfig
 
-	if valuesMap == nil {
-		valuesMap = make(values.Map)
-	}
-
-	err = valuesMap.SetPath("pilot.env.PILOT_ENABLE_AMBIENT", "true")
+	mergedValues, err := mergeOverlay(op.Spec.Values, overlayValues)
 	if err != nil {
-		return iopv1alpha1.IstioOperator{}, err
+		return iopv1alpha1.IstioOperator{}, fmt.Errorf("failed to merge ambient values: %w", err)
 	}
-
-	err = valuesMap.SetPath("cni.ambient.enabled", true)
-	if err != nil {
-		return iopv1alpha1.IstioOperator{}, err
-	}
-
-	op.Spec.Values, err = values.ConvertMap[json.RawMessage](valuesMap)
-	if err != nil {
-		return op, err
-	}
+	op.Spec.Values = mergedValues
 
 	return op, nil
 }
 
-func boolValue(b bool) *iopv1alpha1.BoolValue {
-	boolValue := iopv1alpha1.BoolValue{}
-	err := boolValue.UnmarshalJSON([]byte(strconv.FormatBool(b)))
+func mergeOverlay(base json.RawMessage, overlay values.Map) (json.RawMessage, error) {
+	baseMap, err := values.MapFromObject(base)
 	if err != nil {
-		panic(fmt.Sprintf("failed to unmarshal bool value: %v", err))
+		return nil, err
 	}
-	return &boolValue
+	if baseMap == nil {
+		baseMap = values.Map{}
+	}
+
+	baseMap.MergeFrom(overlay)
+
+	return json.RawMessage(baseMap.JSON()), nil
+}
+
+func boolValue(b bool) (*iopv1alpha1.BoolValue, error) {
+	bv := iopv1alpha1.BoolValue{}
+	if err := bv.UnmarshalJSON([]byte(strconv.FormatBool(b))); err != nil {
+		return nil, err
+	}
+	return &bv, nil
 }
 
 //nolint:gocognit,gocyclo,cyclop,funlen // cognitive complexity 189 of func `(*Istio).mergeResources` is high (> 20), cyclomatic complexity 70 of func `(*Istio).mergeResources` is high (> 30), Function 'mergeResources' has too many statements (129 > 50) TODO: refactor this function
@@ -457,8 +462,12 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator, options ...MergeOpt
 		op.Spec.Components = &iopv1alpha1.IstioComponentSpec{}
 	}
 
+	cniEnabled, err := boolValue(!opts.Features.DisableCni)
+	if err != nil {
+		return op, fmt.Errorf("failed to set CNI enabled: %w", err)
+	}
 	op.Spec.Components.Cni = &iopv1alpha1.ComponentSpec{
-		Enabled: boolValue(!opts.Features.DisableCni),
+		Enabled: cniEnabled,
 	}
 
 	if i.Spec.Components == nil {
@@ -511,7 +520,11 @@ func (i *Istio) mergeResources(op iopv1alpha1.IstioOperator, options ...MergeOpt
 			}
 		}
 		if i.Spec.Components.EgressGateway.Enabled != nil {
-			op.Spec.Components.EgressGateways[0].Enabled = boolValue(*i.Spec.Components.EgressGateway.Enabled)
+			egressEnabled, err := boolValue(*i.Spec.Components.EgressGateway.Enabled)
+			if err != nil {
+				return op, fmt.Errorf("failed to set egress gateway enabled: %w", err)
+			}
+			op.Spec.Components.EgressGateways[0].Enabled = egressEnabled
 		}
 	}
 

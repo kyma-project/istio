@@ -725,29 +725,6 @@ var _ = Describe("Merge", func() {
 
 	})
 
-	It("should set ISTIO_META_ENABLE_HBONE in the mesh Config if ambient is enabled in the Istio CR", func() {
-		// given
-		enableAmbient := true
-		iop := iopv1alpha1.IstioOperator{
-			Spec: iopv1alpha1.IstioOperatorSpec{},
-		}
-		istioCR := istiov1alpha2.Istio{Spec: istiov1alpha2.IstioSpec{
-			Config: istiov1alpha2.Config{},
-			Experimental: &istiov1alpha2.Experimental{
-				EnableAmbient: &enableAmbient,
-			},
-		}}
-
-		// when
-		out, err := istioCR.MergeInto(iop)
-
-		meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
-		Expect(err).ShouldNot(HaveOccurred())
-
-		hbone, exists := meshConfig.GetPath("defaultConfig.proxyMetadata.ISTIO_META_ENABLE_HBONE")
-		Expect(exists).To(BeTrue())
-		Expect(hbone).To(Equal("true"))
-	})
 	Context("TrustDomain", func() {
 		It("Should set IstioOperator TrustDomain, when Istio CR configures it", func() {
 			// given
@@ -1032,126 +1009,52 @@ var _ = Describe("Merge", func() {
 		})
 	})
 
-	Context("Ztunnel", func() {
-		It("should set dual stack env for Istio pilot if dualStack is enabled in the Istio CR", func() {
-			iop := iopv1alpha1.IstioOperator{
-				Spec: iopv1alpha1.IstioOperatorSpec{},
-			}
+	Context("Ambient", func() {
+		assertFullAmbientOverlay := func(out iopv1alpha1.IstioOperator) {
+			GinkgoHelper()
 
-			enabled := true
-
-			istioCR := istiov1alpha2.Istio{
-				Spec: istiov1alpha2.IstioSpec{
-					Experimental: &istiov1alpha2.Experimental{
-						EnableAmbient: &enabled,
-					},
-				},
-			}
-
-			// when
-			out, err := istioCR.MergeInto(iop)
-
-			valuesMap, err := values.MapFromObject(out.Spec.Values)
+			meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
 			Expect(err).ShouldNot(HaveOccurred())
-
-			Expect(values.TryGetPathAs[string](valuesMap, "pilot.env.PILOT_ENABLE_AMBIENT")).To(Equal("true"))
-		})
-
-		It("should set dual stack env for Istio pilot if dualStack is enabled in the Istio CR", func() {
-			iop := iopv1alpha1.IstioOperator{
-				Spec: iopv1alpha1.IstioOperatorSpec{},
-			}
-
-			enabled := true
-
-			istioCR := istiov1alpha2.Istio{
-				Spec: istiov1alpha2.IstioSpec{
-					Experimental: &istiov1alpha2.Experimental{
-						EnableAmbient: &enabled,
-					},
-				},
-			}
-
-			// when
-			out, err := istioCR.MergeInto(iop)
-
-			valuesMap, err := values.MapFromObject(out.Spec.Values)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			gp, good := valuesMap.GetPath("cni.ambient.enabled")
-			Expect(good).To(BeTrue())
-			Expect(gp).To(BeTrue())
-
-		})
-
-		It("should set Ztunnel component to enabled if experimental enableAmbient is set to true", func() {
-			iop := iopv1alpha1.IstioOperator{
-				Spec: iopv1alpha1.IstioOperatorSpec{},
-			}
-
-			enabled := true
-
-			istioCR := istiov1alpha2.Istio{
-				Spec: istiov1alpha2.IstioSpec{
-					Experimental: &istiov1alpha2.Experimental{
-						EnableAmbient: &enabled,
-					},
-				},
-			}
-
-			// when
-			out, err := istioCR.MergeInto(iop)
-
-			// then
-			Expect(err).ShouldNot(HaveOccurred())
-			ztunnelEnabled := out.Spec.Components.Ztunnel.Enabled.GetValueOrFalse()
-			Expect(ztunnelEnabled).To(BeTrue())
-		})
-
-		It("should set ISTIO_META_ENABLE_HBONE in the mesh config if enableAmbient is set in the alpha features ConfigMap", func() {
-			// given
-			iop := iopv1alpha1.IstioOperator{
-				Spec: iopv1alpha1.IstioOperatorSpec{},
-			}
-			istioCR := istiov1alpha2.Istio{Spec: istiov1alpha2.IstioSpec{}}
-
-			// when
-			out, err := istioCR.MergeInto(iop, istiov1alpha2.WithFeatures(istiofeatures.IstioFeatures{EnableAmbient: true}))
-
-			// then
-			Expect(err).ShouldNot(HaveOccurred())
-			meshConfig, mapErr := values.MapFromObject(out.Spec.MeshConfig)
-			Expect(mapErr).ShouldNot(HaveOccurred())
 			hbone, exists := meshConfig.GetPath("defaultConfig.proxyMetadata.ISTIO_META_ENABLE_HBONE")
 			Expect(exists).To(BeTrue())
 			Expect(hbone).To(Equal("true"))
-		})
+			scopeConfigs, exists := meshConfig.GetPath("serviceScopeConfigs")
+			Expect(exists).To(BeTrue())
+			Expect(scopeConfigs).To(HaveLen(1))
 
-		It("should set PILOT_ENABLE_AMBIENT and cni.ambient.enabled if enableAmbient is set in the alpha features ConfigMap", func() {
-			// given
-			iop := iopv1alpha1.IstioOperator{
-				Spec: iopv1alpha1.IstioOperatorSpec{},
-			}
-			istioCR := istiov1alpha2.Istio{Spec: istiov1alpha2.IstioSpec{}}
-
-			// when
-			out, err := istioCR.MergeInto(iop, istiov1alpha2.WithFeatures(istiofeatures.IstioFeatures{EnableAmbient: true}))
-
-			// then
+			valuesMap, err := values.MapFromObject(out.Spec.Values)
 			Expect(err).ShouldNot(HaveOccurred())
-			valuesMap, mapErr := values.MapFromObject(out.Spec.Values)
-			Expect(mapErr).ShouldNot(HaveOccurred())
 			Expect(values.TryGetPathAs[string](valuesMap, "pilot.env.PILOT_ENABLE_AMBIENT")).To(Equal("true"))
 			cniAmbient, good := valuesMap.GetPath("cni.ambient.enabled")
 			Expect(good).To(BeTrue())
 			Expect(cniAmbient).To(BeTrue())
+
+			Expect(out.Spec.Components.Ztunnel.Enabled.GetValueOrFalse()).To(BeTrue())
+		}
+
+		It("should apply the full ambient overlay when enabled via Istio CR Experimental field", func() {
+			// given
+			enabled := true
+			iop := iopv1alpha1.IstioOperator{Spec: iopv1alpha1.IstioOperatorSpec{}}
+			istioCR := istiov1alpha2.Istio{
+				Spec: istiov1alpha2.IstioSpec{
+					Experimental: &istiov1alpha2.Experimental{
+						EnableAmbient: &enabled,
+					},
+				},
+			}
+
+			// when
+			out, err := istioCR.MergeInto(iop)
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+			assertFullAmbientOverlay(out)
 		})
 
-		It("should set Ztunnel component to enabled if enableAmbient is set in the alpha features ConfigMap", func() {
+		It("should apply the full ambient overlay when enabled via features ConfigMap", func() {
 			// given
-			iop := iopv1alpha1.IstioOperator{
-				Spec: iopv1alpha1.IstioOperatorSpec{},
-			}
+			iop := iopv1alpha1.IstioOperator{Spec: iopv1alpha1.IstioOperatorSpec{}}
 			istioCR := istiov1alpha2.Istio{Spec: istiov1alpha2.IstioSpec{}}
 
 			// when
@@ -1159,8 +1062,167 @@ var _ = Describe("Merge", func() {
 
 			// then
 			Expect(err).ShouldNot(HaveOccurred())
-			ztunnelEnabled := out.Spec.Components.Ztunnel.Enabled.GetValueOrFalse()
-			Expect(ztunnelEnabled).To(BeTrue())
+			assertFullAmbientOverlay(out)
+		})
+
+		It("should not set any ambient fields when ambient is not enabled", func() {
+			// given
+			iop := iopv1alpha1.IstioOperator{Spec: iopv1alpha1.IstioOperatorSpec{}}
+			istioCR := istiov1alpha2.Istio{Spec: istiov1alpha2.IstioSpec{}}
+
+			// when
+			out, err := istioCR.MergeInto(iop)
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+
+			meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
+			Expect(err).ShouldNot(HaveOccurred())
+			_, exists := meshConfig.GetPath("defaultConfig.proxyMetadata.ISTIO_META_ENABLE_HBONE")
+			Expect(exists).To(BeFalse())
+			_, exists = meshConfig.GetPath("serviceScopeConfigs")
+			Expect(exists).To(BeFalse())
+
+			valuesMap, err := values.MapFromObject(out.Spec.Values)
+			Expect(err).ShouldNot(HaveOccurred())
+			_, exists = valuesMap.GetPath("pilot.env.PILOT_ENABLE_AMBIENT")
+			Expect(exists).To(BeFalse())
+			_, exists = valuesMap.GetPath("cni.ambient.enabled")
+			Expect(exists).To(BeFalse())
+
+			Expect(out.Spec.Components.Ztunnel).To(BeNil())
+		})
+
+		It("should not set global.variant because Kyma bakes the image variant into spec.tag", func() {
+			// given
+			enabled := true
+			iop := iopv1alpha1.IstioOperator{Spec: iopv1alpha1.IstioOperatorSpec{}}
+			istioCR := istiov1alpha2.Istio{
+				Spec: istiov1alpha2.IstioSpec{
+					Experimental: &istiov1alpha2.Experimental{
+						EnableAmbient: &enabled,
+					},
+				},
+			}
+
+			// when
+			out, err := istioCR.MergeInto(iop)
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+			valuesMap, err := values.MapFromObject(out.Spec.Values)
+			Expect(err).ShouldNot(HaveOccurred())
+			_, exists := valuesMap.GetPath("global.variant")
+			Expect(exists).To(BeFalse())
+		})
+
+		It("should not clobber pre-existing IOP config when applying the ambient overlay", func() {
+			// given
+			preExistingValues := values.Map{}
+			Expect(preExistingValues.SetPath("pilot.env.PRE_EXISTING", "keep-me")).To(Succeed())
+			rawValues, err := values.ConvertMap[json.RawMessage](preExistingValues)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			m := mesh.DefaultMeshConfig()
+			meshConfigRaw := convert(m)
+
+			iop := iopv1alpha1.IstioOperator{
+				Spec: iopv1alpha1.IstioOperatorSpec{
+					Values:     rawValues,
+					MeshConfig: meshConfigRaw,
+				},
+			}
+
+			enabled := true
+			istioCR := istiov1alpha2.Istio{
+				Spec: istiov1alpha2.IstioSpec{
+					Experimental: &istiov1alpha2.Experimental{
+						EnableAmbient: &enabled,
+					},
+				},
+			}
+
+			// when
+			out, err := istioCR.MergeInto(iop)
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+
+			valuesMap, err := values.MapFromObject(out.Spec.Values)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(values.TryGetPathAs[string](valuesMap, "pilot.env.PRE_EXISTING")).To(Equal("keep-me"))
+
+			meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
+			Expect(err).ShouldNot(HaveOccurred())
+			trustDomain, exists := meshConfig.GetPath("trustDomain")
+			Expect(exists).To(BeTrue())
+			Expect(trustDomain).To(Equal("cluster.local"))
+
+			// overlay fields are also present
+			assertFullAmbientOverlay(out)
+		})
+
+		It("should not apply ambient overlay when Experimental.EnableAmbient is explicitly false", func() {
+			// given
+			disabled := false
+			iop := iopv1alpha1.IstioOperator{Spec: iopv1alpha1.IstioOperatorSpec{}}
+			istioCR := istiov1alpha2.Istio{
+				Spec: istiov1alpha2.IstioSpec{
+					Experimental: &istiov1alpha2.Experimental{
+						EnableAmbient: &disabled,
+					},
+				},
+			}
+
+			// when
+			out, err := istioCR.MergeInto(iop)
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+
+			meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
+			Expect(err).ShouldNot(HaveOccurred())
+			_, exists := meshConfig.GetPath("defaultConfig.proxyMetadata.ISTIO_META_ENABLE_HBONE")
+			Expect(exists).To(BeFalse())
+			_, exists = meshConfig.GetPath("serviceScopeConfigs")
+			Expect(exists).To(BeFalse())
+
+			valuesMap, err := values.MapFromObject(out.Spec.Values)
+			Expect(err).ShouldNot(HaveOccurred())
+			_, exists = valuesMap.GetPath("pilot.env.PILOT_ENABLE_AMBIENT")
+			Expect(exists).To(BeFalse())
+			_, exists = valuesMap.GetPath("cni.ambient.enabled")
+			Expect(exists).To(BeFalse())
+
+			Expect(out.Spec.Components.Ztunnel).To(BeNil())
+		})
+
+		It("should apply the ambient overlay exactly once when both activation paths are enabled", func() {
+			// given
+			enabled := true
+			iop := iopv1alpha1.IstioOperator{Spec: iopv1alpha1.IstioOperatorSpec{}}
+			istioCR := istiov1alpha2.Istio{
+				Spec: istiov1alpha2.IstioSpec{
+					Experimental: &istiov1alpha2.Experimental{
+						EnableAmbient: &enabled,
+					},
+				},
+			}
+
+			// when
+			out, err := istioCR.MergeInto(iop, istiov1alpha2.WithFeatures(istiofeatures.IstioFeatures{EnableAmbient: true}))
+
+			// then
+			Expect(err).ShouldNot(HaveOccurred())
+
+			// overlay applied, and serviceScopeConfigs not duplicated
+			meshConfig, err := values.MapFromObject(out.Spec.MeshConfig)
+			Expect(err).ShouldNot(HaveOccurred())
+			scopeConfigs, exists := meshConfig.GetPath("serviceScopeConfigs")
+			Expect(exists).To(BeTrue())
+			Expect(scopeConfigs).To(HaveLen(1))
+
+			assertFullAmbientOverlay(out)
 		})
 	})
 

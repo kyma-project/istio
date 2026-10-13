@@ -49,6 +49,9 @@ var gatewayAPITLSRoutesCRD []byte
 //go:embed gateway_api_crds/gateway.networking.k8s.io_udproutes.yaml
 var gatewayAPIUDPRoutesCRD []byte
 
+//go:embed gateway_api_crds/gateway.networking.k8s.io_vap_safeupgrades.yaml
+var gatewayAPIVAPSafeUpgradesCRD []byte
+
 var gatewayAPICRDManifests = [][]byte{
 	gatewayAPIBackendTLSPoliciesCRD,
 	gatewayAPIGatewayClassesCRD,
@@ -60,6 +63,7 @@ var gatewayAPICRDManifests = [][]byte{
 	gatewayAPITCPRoutesCRD,
 	gatewayAPITLSRoutesCRD,
 	gatewayAPIUDPRoutesCRD,
+	gatewayAPIVAPSafeUpgradesCRD,
 }
 
 // gatewayAPICRDName is the CRD checked to determine whether the module manages Gateway API CRDs.

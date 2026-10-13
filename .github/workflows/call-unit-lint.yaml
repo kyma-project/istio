@@ -75,4 +75,9 @@ jobs:
         with:
           go-version-file: "go.mod"
       - name: Verify Gateway API CRDs are in sync with go.mod
-        run: make check-gateway-api-crds
+        run: |
+          make update-gateway-api-crds
+          if [[ $(git status --porcelain) ]]; then
+            echo "Gateway API CRDs are out of sync. Run 'make update-gateway-api-crds' and commit the result."
+            exit 1
+          fi

@@ -23,22 +23,6 @@ import (
 //go:embed gateway_api_crds/gateway.networking.k8s.io_*.yaml
 var gatewayAPICRDsFS embed.FS
 
-var gatewayAPICRDManifests = func() [][]byte {
-	files, err := fs.Glob(gatewayAPICRDsFS, "gateway_api_crds/gateway.networking.k8s.io_*.yaml")
-	if err != nil {
-		panic(fmt.Sprintf("failed to glob embedded Gateway API CRDs: %v", err))
-	}
-	manifests := make([][]byte, 0, len(files))
-	for _, f := range files {
-		data, err := gatewayAPICRDsFS.ReadFile(f)
-		if err != nil {
-			panic(fmt.Sprintf("failed to read embedded Gateway API CRD %s: %v", f, err))
-		}
-		manifests = append(manifests, data)
-	}
-	return manifests
-}()
-
 var (
 	gatewayAPIGatewaysCRD, _       = gatewayAPICRDsFS.ReadFile("gateway_api_crds/gateway.networking.k8s.io_gateways.yaml")
 	gatewayAPIGatewayClassesCRD, _ = gatewayAPICRDsFS.ReadFile("gateway_api_crds/gateway.networking.k8s.io_gatewayclasses.yaml")
@@ -72,6 +56,23 @@ func (g GatewayAPICRDs) reconcile(ctx context.Context, k8sClient client.Client, 
 	return g.installOrWarnCRDs(ctx, k8sClient)
 }
 
+func walkCRDs(fn func(desired unstructured.Unstructured) error) error {
+	return fs.WalkDir(gatewayAPICRDsFS, "gateway_api_crds", func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() {
+			return err
+		}
+		data, err := gatewayAPICRDsFS.ReadFile(path)
+		if err != nil {
+			return fmt.Errorf("failed to read embedded CRD %s: %w", path, err)
+		}
+		var desired unstructured.Unstructured
+		if err := yaml.Unmarshal(data, &desired); err != nil {
+			return fmt.Errorf("failed to unmarshal Gateway API CRD manifest: %w", err)
+		}
+		return fn(desired)
+	})
+}
+
 func (g GatewayAPICRDs) installOrWarnCRDs(ctx context.Context, k8sClient client.Client) (controllerutil.OperationResult, error) {
 	managed, err := g.isGatewayManaged(ctx, k8sClient)
 	if err != nil {
@@ -81,35 +82,30 @@ func (g GatewayAPICRDs) installOrWarnCRDs(ctx context.Context, k8sClient client.
 		return controllerutil.OperationResultNone, &unmanagedCRDsWarning{}
 	}
 
-	for _, manifest := range gatewayAPICRDManifests {
-		var desired unstructured.Unstructured
-		if err := yaml.Unmarshal(manifest, &desired); err != nil {
-			return controllerutil.OperationResultNone, fmt.Errorf("failed to unmarshal Gateway API CRD manifest: %w", err)
-		}
-
+	if err := walkCRDs(func(desired unstructured.Unstructured) error {
 		existing := unstructured.Unstructured{}
 		existing.SetGroupVersionKind(desired.GroupVersionKind())
 		err := k8sClient.Get(ctx, client.ObjectKey{Name: desired.GetName()}, &existing)
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
-				return controllerutil.OperationResultNone, fmt.Errorf("failed to get CRD %s: %w", desired.GetName(), err)
+				return fmt.Errorf("failed to get CRD %s: %w", desired.GetName(), err)
 			}
 			applyManagementLabels(&desired)
 
 			if createErr := k8sClient.Create(ctx, &desired); createErr != nil {
-				return controllerutil.OperationResultNone, fmt.Errorf("failed to create CRD %s: %w", desired.GetName(), createErr)
+				return fmt.Errorf("failed to create CRD %s: %w", desired.GetName(), createErr)
 			}
 			if annotateErr := resources.AnnotateWithDisclaimer(ctx, &desired, k8sClient); annotateErr != nil {
 				ctrl.Log.Error(annotateErr, "Failed to annotate Gateway API CRD with disclaimer", "crd", desired.GetName())
 			}
 			ctrl.Log.Info("Created Gateway API CRD", "name", desired.GetName())
-			continue
+			return nil
 		}
 
 		mergeIntoExisting(&desired, existing)
 
 		if updateErr := k8sClient.Update(ctx, &desired); updateErr != nil {
-			return controllerutil.OperationResultNone, fmt.Errorf("failed to update CRD %s: %w", desired.GetName(), updateErr)
+			return fmt.Errorf("failed to update CRD %s: %w", desired.GetName(), updateErr)
 		}
 		if !resources.HasManagedByDisclaimer(existing) {
 			if annotateErr := resources.AnnotateWithDisclaimer(ctx, &desired, k8sClient); annotateErr != nil {
@@ -117,6 +113,9 @@ func (g GatewayAPICRDs) installOrWarnCRDs(ctx context.Context, k8sClient client.
 			}
 		}
 		ctrl.Log.Info("Updated Gateway API CRD", "name", desired.GetName())
+		return nil
+	}); err != nil {
+		return controllerutil.OperationResultNone, err
 	}
 
 	return controllerutil.OperationResultUpdated, nil
@@ -138,31 +137,29 @@ func (g GatewayAPICRDs) isGatewayManaged(ctx context.Context, k8sClient client.C
 }
 
 func (g GatewayAPICRDs) deleteManagedCRDs(ctx context.Context, k8sClient client.Client) (controllerutil.OperationResult, error) {
-	for _, manifest := range gatewayAPICRDManifests {
-		var desired unstructured.Unstructured
-		if err := yaml.Unmarshal(manifest, &desired); err != nil {
-			return controllerutil.OperationResultNone, fmt.Errorf("failed to unmarshal Gateway API CRD manifest: %w", err)
-		}
-
+	if err := walkCRDs(func(desired unstructured.Unstructured) error {
 		existing := unstructured.Unstructured{}
 		existing.SetGroupVersionKind(desired.GroupVersionKind())
 		err := k8sClient.Get(ctx, client.ObjectKey{Name: desired.GetName()}, &existing)
 		if err != nil {
 			if apierrors.IsNotFound(err) {
-				continue
+				return nil
 			}
-			return controllerutil.OperationResultNone, fmt.Errorf("failed to get CRD %s: %w", desired.GetName(), err)
+			return fmt.Errorf("failed to get CRD %s: %w", desired.GetName(), err)
 		}
 
 		if !hasModuleLabel(existing) {
 			ctrl.Log.Info("Skipping deletion of unmanaged Gateway API CRD", "name", existing.GetName())
-			continue
+			return nil
 		}
 
 		if deleteErr := k8sClient.Delete(ctx, &existing); deleteErr != nil && !apierrors.IsNotFound(deleteErr) {
-			return controllerutil.OperationResultNone, fmt.Errorf("failed to delete CRD %s: %w", existing.GetName(), deleteErr)
+			return fmt.Errorf("failed to delete CRD %s: %w", existing.GetName(), deleteErr)
 		}
 		ctrl.Log.Info("Deleted managed Gateway API CRD", "name", existing.GetName())
+		return nil
+	}); err != nil {
+		return controllerutil.OperationResultNone, err
 	}
 	return controllerutil.OperationResultUpdated, nil
 }

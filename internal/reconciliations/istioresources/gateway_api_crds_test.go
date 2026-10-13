@@ -4,6 +4,7 @@ package istioresources
 
 import (
 	"context"
+	"io/fs"
 
 	"github.com/kyma-project/istio/operator/pkg/labels"
 
@@ -35,16 +36,23 @@ var _ = Describe("GatewayAPICRDs", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(result).To(Equal(controllerutil.OperationResultUpdated))
 
-			// All 7 CRDs should be created
-			for _, manifest := range gatewayAPICRDManifests {
+			// All CRDs should be created
+			Expect(fs.WalkDir(gatewayAPICRDsFS, "gateway_api_crds", func(path string, d fs.DirEntry, err error) error {
+				if err != nil || d.IsDir() {
+					return err
+				}
+				data, err := gatewayAPICRDsFS.ReadFile(path)
+				Expect(err).NotTo(HaveOccurred())
+
 				var desired unstructured.Unstructured
-				Expect(yaml.Unmarshal(manifest, &desired)).To(Succeed())
+				Expect(yaml.Unmarshal(data, &desired)).To(Succeed())
 
 				existing := unstructured.Unstructured{}
 				existing.SetGroupVersionKind(desired.GroupVersionKind())
 				Expect(fakeClient.Get(context.Background(), client.ObjectKey{Name: desired.GetName()}, &existing)).To(Succeed())
 				Expect(existing.GetLabels()).To(HaveKeyWithValue(labels.ModuleLabelKey, labels.ModuleLabelValue))
-			}
+				return nil
+			})).To(Succeed())
 		})
 
 		It("should update module-managed CRDs that already exist", func() {

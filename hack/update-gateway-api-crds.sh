@@ -10,7 +10,7 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 MODULE="sigs.k8s.io/gateway-api"
 VERSION="$(cd "${REPO_ROOT}" && go list -m -f '{{.Version}}' "${MODULE}")"
 MODULE_DIR="$(go env GOMODCACHE)/${MODULE}@${VERSION}"
-SRC_DIR="${MODULE_DIR}/config/crd/experimental"
+SRC_DIR="${MODULE_DIR}/config/crd/standard"
 DEST_DIR="${REPO_ROOT}/internal/reconciliations/istioresources/gateway_api_crds"
 GO_FILE="${REPO_ROOT}/internal/reconciliations/istioresources/gateway_api_crds.go"
 

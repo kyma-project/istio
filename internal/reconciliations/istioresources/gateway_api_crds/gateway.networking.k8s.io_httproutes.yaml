@@ -4,7 +4,7 @@ metadata:
   annotations:
     api-approved.kubernetes.io: https://github.com/kubernetes-sigs/gateway-api/pull/4530
     gateway.networking.k8s.io/bundle-version: v1.6.0
-    gateway.networking.k8s.io/channel: experimental
+    gateway.networking.k8s.io/channel: standard
   name: httproutes.gateway.networking.k8s.io
 spec:
   group: gateway.networking.k8s.io
@@ -183,17 +183,6 @@ spec:
                   allowed by something in the namespace they are referring to. For example,
                   Gateway has the AllowedRoutes field, and ReferenceGrant provides a
                   generic way to enable other kinds of cross-namespace reference.
-
-
-                  ParentRefs from a Route to a Service in the same namespace are "producer"
-                  routes, which apply default routing rules to inbound connections from
-                  any namespace to the Service.
-
-                  ParentRefs from a Route to a Service in a different namespace are
-                  "consumer" routes, and these routing rules are only applied to outbound
-                  connections originating from the same namespace as the Route, for which
-                  the intended destination of the connections are a Service targeted as a
-                  ParentRef of the Route.
                 items:
                   description: |-
                     ParentReference identifies an API object (usually a Gateway) that can be considered
@@ -255,18 +244,6 @@ spec:
                         Gateway has the AllowedRoutes field, and ReferenceGrant provides a
                         generic way to enable any other kind of cross-namespace reference.
 
-
-                        ParentRefs from a Route to a Service in the same namespace are "producer"
-                        routes, which apply default routing rules to inbound connections from
-                        any namespace to the Service.
-
-                        ParentRefs from a Route to a Service in a different namespace are
-                        "consumer" routes, and these routing rules are only applied to outbound
-                        connections originating from the same namespace as the Route, for which
-                        the intended destination of the connections are a Service targeted as a
-                        ParentRef of the Route.
-
-
                         Support: Core
                       maxLength: 63
                       minLength: 1
@@ -284,12 +261,6 @@ spec:
                         as opposed to a listener(s) whose port(s) may be changed. When both Port
                         and SectionName are specified, the name and port of the selected listener
                         must match both specified values.
-
-
-                        When the parent resource is a Service, this targets a specific port in the
-                        Service spec. When both Port (experimental) and SectionName are specified,
-                        the name and port of the selected port must match both specified values.
-
 
                         Implementations MAY choose to support other parent resources.
                         Implementations supporting other types of parent resources MUST clearly
@@ -345,28 +316,25 @@ spec:
                 type: array
                 x-kubernetes-list-type: atomic
                 x-kubernetes-validations:
-                - message: sectionName or port must be specified when parentRefs includes
+                - message: sectionName must be specified when parentRefs includes
                     2 or more references to the same parent
                   rule: 'self.all(p1, self.all(p2, p1.group == p2.group && p1.kind
                     == p2.kind && p1.name == p2.name && (((!has(p1.__namespace__)
                     || p1.__namespace__ == '''') && (!has(p2.__namespace__) || p2.__namespace__
                     == '''')) || (has(p1.__namespace__) && has(p2.__namespace__) &&
-                    p1.__namespace__ == p2.__namespace__)) ? ((!has(p1.sectionName)
+                    p1.__namespace__ == p2.__namespace__ )) ? ((!has(p1.sectionName)
                     || p1.sectionName == '''') == (!has(p2.sectionName) || p2.sectionName
-                    == '''') && (!has(p1.port) || p1.port == 0) == (!has(p2.port)
-                    || p2.port == 0)): true))'
-                - message: sectionName or port must be unique when parentRefs includes
-                    2 or more references to the same parent
+                    == '''')) : true))'
+                - message: sectionName must be unique when parentRefs includes 2 or
+                    more references to the same parent
                   rule: self.all(p1, self.exists_one(p2, p1.group == p2.group && p1.kind
                     == p2.kind && p1.name == p2.name && (((!has(p1.__namespace__)
                     || p1.__namespace__ == '') && (!has(p2.__namespace__) || p2.__namespace__
                     == '')) || (has(p1.__namespace__) && has(p2.__namespace__) &&
                     p1.__namespace__ == p2.__namespace__ )) && (((!has(p1.sectionName)
                     || p1.sectionName == '') && (!has(p2.sectionName) || p2.sectionName
-                    == '')) || ( has(p1.sectionName) && has(p2.sectionName) && p1.sectionName
-                    == p2.sectionName)) && (((!has(p1.port) || p1.port == 0) && (!has(p2.port)
-                    || p2.port == 0)) || (has(p1.port) && has(p2.port) && p1.port
-                    == p2.port))))
+                    == '')) || (has(p1.sectionName) && has(p2.sectionName) && p1.sectionName
+                    == p2.sectionName))))
               rules:
                 default:
                 - matches:
@@ -425,21 +393,6 @@ spec:
                           ReferenceGrant object is required in the referent namespace to allow that
                           namespace's owner to accept the reference. See the ReferenceGrant
                           documentation for details.
-
-
-                          When the BackendRef points to a Kubernetes Service, implementations SHOULD
-                          honor the appProtocol field if it is set for the target Service Port.
-
-                          Implementations supporting appProtocol SHOULD recognize the Kubernetes
-                          Standard Application Protocols defined in KEP-3726.
-
-                          If a Service appProtocol isn't specified, an implementation MAY infer the
-                          backend protocol through its own means. Implementations MAY infer the
-                          protocol from the Route type referring to the backend Service.
-
-                          If a Route is not able to send traffic to the backend using the specified
-                          protocol then the backend is considered invalid. Implementations MUST set the
-                          "ResolvedRefs" condition to "False" with the "UnsupportedProtocol" reason.
                         properties:
                           filters:
                             description: |-
@@ -797,256 +750,6 @@ spec:
                                   - kind
                                   - name
                                   type: object
-                                externalAuth:
-                                  description: |-
-                                    ExternalAuth configures settings related to sending request details
-                                    to an external auth service. The external service MUST authenticate
-                                    the request, and MAY authorize the request as well.
-
-                                    If there is any problem communicating with the external service,
-                                    this filter MUST fail closed.
-
-                                    Support: Extended
-                                  properties:
-                                    backendRef:
-                                      description: |-
-                                        BackendRef is a reference to a backend to send authorization
-                                        requests to.
-
-                                        The backend must speak the selected protocol (GRPC or HTTP) on the
-                                        referenced port.
-
-                                        If the backend service requires TLS, use BackendTLSPolicy to tell the
-                                        implementation to supply the TLS details to be used to connect to that
-                                        backend.
-                                      properties:
-                                        group:
-                                          default: ""
-                                          description: |-
-                                            Group is the group of the referent. For example, "gateway.networking.k8s.io".
-                                            When unspecified or empty string, core API group is inferred.
-                                          maxLength: 253
-                                          pattern: ^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
-                                          type: string
-                                        kind:
-                                          default: Service
-                                          description: |-
-                                            Kind is the Kubernetes resource kind of the referent. For example
-                                            "Service".
-
-                                            Defaults to "Service" when not specified.
-
-                                            ExternalName services can refer to CNAME DNS records that may live
-                                            outside of the cluster and as such are difficult to reason about in
-                                            terms of conformance. They also may not be safe to forward to (see
-                                            CVE-2021-25740 for more information). Implementations SHOULD NOT
-                                            support ExternalName Services.
-
-                                            Support: Core (Services with a type other than ExternalName)
-
-                                            Support: Implementation-specific (Services with type ExternalName)
-                                          maxLength: 63
-                                          minLength: 1
-                                          pattern: ^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$
-                                          type: string
-                                        name:
-                                          description: Name is the name of the referent.
-                                          maxLength: 253
-                                          minLength: 1
-                                          type: string
-                                        namespace:
-                                          description: |-
-                                            Namespace is the namespace of the backend. When unspecified, the local
-                                            namespace is inferred.
-
-                                            Note that when a namespace different than the local namespace is specified,
-                                            a ReferenceGrant object is required in the referent namespace to allow that
-                                            namespace's owner to accept the reference. See the ReferenceGrant
-                                            documentation for details.
-
-                                            Support: Core
-                                          maxLength: 63
-                                          minLength: 1
-                                          pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
-                                          type: string
-                                        port:
-                                          description: |-
-                                            Port specifies the destination port number to use for this resource.
-                                            Port is required when the referent is a Kubernetes Service. In this
-                                            case, the port number is the service port number, not the target port.
-                                            For other resources, destination port might be derived from the referent
-                                            resource or this field.
-                                          format: int32
-                                          maximum: 65535
-                                          minimum: 1
-                                          type: integer
-                                      required:
-                                      - name
-                                      type: object
-                                      x-kubernetes-validations:
-                                      - message: Must have port for Service reference
-                                        rule: '(size(self.group) == 0 && self.kind
-                                          == ''Service'') ? has(self.port) : true'
-                                    forwardBody:
-                                      description: |-
-                                        ForwardBody controls if requests to the authorization server should include
-                                        the body of the client request; and if so, how big that body is allowed
-                                        to be.
-
-                                        It is expected that implementations will buffer the request body up to
-                                        `forwardBody.maxSize` bytes. Bodies over that size must be rejected with a
-                                        4xx series error (413 or 403 are common examples), and fail processing
-                                        of the filter.
-
-                                        If unset, or `forwardBody.maxSize` is set to `0`, then the body will not
-                                        be forwarded.
-
-                                        Feature Name: HTTPRouteExternalAuthForwardBody
-                                      properties:
-                                        maxSize:
-                                          description: |-
-                                            MaxSize specifies how large in bytes the largest body that will be buffered
-                                            and sent to the authorization server. If the body size is larger than
-                                            `maxSize`, then the body sent to the authorization server must be
-                                            truncated to `maxSize` bytes.
-
-                                            Experimental note: This behavior needs to be checked against
-                                            various dataplanes; it may need to be changed.
-                                            See https://github.com/kubernetes-sigs/gateway-api/pull/4001#discussion_r2291405746
-                                            for more.
-
-                                            If 0, the body will not be sent to the authorization server.
-                                          type: integer
-                                      type: object
-                                    grpc:
-                                      description: |-
-                                        GRPCAuthConfig contains configuration for communication with ext_authz
-                                        protocol-speaking backends.
-
-                                        If unset, implementations must assume the default behavior for each
-                                        included field is intended.
-                                      properties:
-                                        allowedHeaders:
-                                          description: |-
-                                            AllowedRequestHeaders specifies what headers from the client request
-                                            will be sent to the authorization server.
-
-                                            If this list is empty, then all headers must be sent.
-
-                                            If the list has entries, only those entries must be sent.
-                                          items:
-                                            type: string
-                                          maxItems: 64
-                                          type: array
-                                          x-kubernetes-list-type: set
-                                      type: object
-                                    http:
-                                      description: |-
-                                        HTTPAuthConfig contains configuration for communication with HTTP-speaking
-                                        backends.
-
-                                        If unset, implementations must assume the default behavior for each
-                                        included field is intended.
-                                      properties:
-                                        allowedHeaders:
-                                          description: |-
-                                            AllowedRequestHeaders specifies what additional headers from the client request
-                                            will be sent to the authorization server.
-
-                                            The following headers must always be sent to the authorization server,
-                                            regardless of this setting:
-
-                                            * `Host`
-                                            * `Method`
-                                            * `Path`
-                                            * `Content-Length`
-                                            * `Authorization`
-
-                                            If this list is empty, then only those headers must be sent.
-
-                                            Note that `Content-Length` has a special behavior, in that the length
-                                            sent must be correct for the actual request to the external authorization
-                                            server - that is, it must reflect the actual number of bytes sent in the
-                                            body of the request to the authorization server.
-
-                                            So if the `forwardBody` stanza is unset, or `forwardBody.maxSize` is set
-                                            to `0`, then `Content-Length` must be `0`. If `forwardBody.maxSize` is set
-                                            to anything other than `0`, then the `Content-Length` of the authorization
-                                            request must be set to the actual number of bytes forwarded.
-                                          items:
-                                            type: string
-                                          maxItems: 64
-                                          type: array
-                                          x-kubernetes-list-type: set
-                                        allowedResponseHeaders:
-                                          description: |-
-                                            AllowedResponseHeaders specifies what headers from the authorization response
-                                            will be copied into the request to the backend.
-
-                                            If this list is empty, then all headers from the authorization server
-                                            except Authority or Host must be copied.
-                                          items:
-                                            type: string
-                                          maxItems: 64
-                                          type: array
-                                          x-kubernetes-list-type: set
-                                        path:
-                                          description: |-
-                                            Path sets the prefix that paths from the client request will have added
-                                            when forwarded to the authorization server.
-
-                                            When empty or unspecified, no prefix is added.
-
-                                            Valid values are the same as the "value" regex for path values in the `match`
-                                            stanza, and the validation regex will screen out invalid paths in the same way.
-                                            Even with the validation, implementations MUST sanitize this input before using it
-                                            directly.
-                                          maxLength: 1024
-                                          pattern: ^(?:[-A-Za-z0-9/._~!$&'()*+,;=:@]|[%][0-9a-fA-F]{2})+$
-                                          type: string
-                                      type: object
-                                    protocol:
-                                      description: |-
-                                        ExternalAuthProtocol describes which protocol to use when communicating with an
-                                        ext_authz authorization server.
-
-                                        When this is set to GRPC, each backend must use the Envoy ext_authz protocol
-                                        on the port specified in `backendRefs`. Requests and responses are defined
-                                        in the protobufs explained at:
-                                        https://www.envoyproxy.io/docs/envoy/latest/api-v3/service/auth/v3/external_auth.proto
-
-                                        When this is set to HTTP, each backend must respond with a `200` status
-                                        code in on a successful authorization. Any other code is considered
-                                        an authorization failure.
-
-                                        Feature Names:
-                                        GRPC Support - HTTPRouteExternalAuthGRPC
-                                        HTTP Support - HTTPRouteExternalAuthHTTP
-                                      enum:
-                                      - HTTP
-                                      - GRPC
-                                      type: string
-                                  required:
-                                  - backendRef
-                                  - protocol
-                                  type: object
-                                  x-kubernetes-validations:
-                                  - message: grpc must be specified when protocol
-                                      is set to 'GRPC'
-                                    rule: 'self.protocol == ''GRPC'' ? has(self.grpc)
-                                      : true'
-                                  - message: protocol must be 'GRPC' when grpc is
-                                      set
-                                    rule: 'has(self.grpc) ? self.protocol == ''GRPC''
-                                      : true'
-                                  - message: http must be specified when protocol
-                                      is set to 'HTTP'
-                                    rule: 'self.protocol == ''HTTP'' ? has(self.http)
-                                      : true'
-                                  - message: protocol must be 'HTTP' when http is
-                                      set
-                                    rule: 'has(self.http) ? self.protocol == ''HTTP''
-                                      : true'
                                 requestHeaderModifier:
                                   description: |-
                                     RequestHeaderModifier defines a schema for a filter that modifies request
@@ -1092,14 +795,10 @@ spec:
                                             pattern: ^[A-Za-z0-9!#$%&'*+\-.^_\x60|~]+$
                                             type: string
                                           value:
-                                            description: |-
-                                              Value is the value of HTTP Header to be matched.
-
-                                              Must consist of printable US-ASCII characters, optionally separated
-                                              by single tabs or spaces. See: https://tools.ietf.org/html/rfc7230#section-3.2
+                                            description: Value is the value of HTTP
+                                              Header to be matched.
                                             maxLength: 4096
                                             minLength: 1
-                                            pattern: ^[!-~]+([\t ]?[!-~]+)*$
                                             type: string
                                         required:
                                         - name
@@ -1171,14 +870,10 @@ spec:
                                             pattern: ^[A-Za-z0-9!#$%&'*+\-.^_\x60|~]+$
                                             type: string
                                           value:
-                                            description: |-
-                                              Value is the value of HTTP Header to be matched.
-
-                                              Must consist of printable US-ASCII characters, optionally separated
-                                              by single tabs or spaces. See: https://tools.ietf.org/html/rfc7230#section-3.2
+                                            description: Value is the value of HTTP
+                                              Header to be matched.
                                             maxLength: 4096
                                             minLength: 1
-                                            pattern: ^[!-~]+([\t ]?[!-~]+)*$
                                             type: string
                                         required:
                                         - name
@@ -1543,14 +1238,10 @@ spec:
                                             pattern: ^[A-Za-z0-9!#$%&'*+\-.^_\x60|~]+$
                                             type: string
                                           value:
-                                            description: |-
-                                              Value is the value of HTTP Header to be matched.
-
-                                              Must consist of printable US-ASCII characters, optionally separated
-                                              by single tabs or spaces. See: https://tools.ietf.org/html/rfc7230#section-3.2
+                                            description: Value is the value of HTTP
+                                              Header to be matched.
                                             maxLength: 4096
                                             minLength: 1
-                                            pattern: ^[!-~]+([\t ]?[!-~]+)*$
                                             type: string
                                         required:
                                         - name
@@ -1622,14 +1313,10 @@ spec:
                                             pattern: ^[A-Za-z0-9!#$%&'*+\-.^_\x60|~]+$
                                             type: string
                                           value:
-                                            description: |-
-                                              Value is the value of HTTP Header to be matched.
-
-                                              Must consist of printable US-ASCII characters, optionally separated
-                                              by single tabs or spaces. See: https://tools.ietf.org/html/rfc7230#section-3.2
+                                            description: Value is the value of HTTP
+                                              Header to be matched.
                                             maxLength: 4096
                                             minLength: 1
-                                            pattern: ^[!-~]+([\t ]?[!-~]+)*$
                                             type: string
                                         required:
                                         - name
@@ -1683,7 +1370,6 @@ spec:
                                   - URLRewrite
                                   - ExtensionRef
                                   - CORS
-                                  - ExternalAuth
                                   type: string
                                 urlRewrite:
                                   description: |-
@@ -1821,12 +1507,6 @@ spec:
                               - message: filter.extensionRef must be specified for
                                   ExtensionRef filter.type
                                 rule: '!(!has(self.extensionRef) && self.type == ''ExtensionRef'')'
-                              - message: filter.externalAuth must be nil if the filter.type
-                                  is not ExternalAuth
-                                rule: '!(has(self.externalAuth) && self.type != ''ExternalAuth'')'
-                              - message: filter.externalAuth must be specified for
-                                  ExternalAuth filter.type
-                                rule: '!(!has(self.externalAuth) && self.type == ''ExternalAuth'')'
                             maxItems: 16
                             type: array
                             x-kubernetes-list-type: atomic
@@ -2326,254 +2006,6 @@ spec:
                             - kind
                             - name
                             type: object
-                          externalAuth:
-                            description: |-
-                              ExternalAuth configures settings related to sending request details
-                              to an external auth service. The external service MUST authenticate
-                              the request, and MAY authorize the request as well.
-
-                              If there is any problem communicating with the external service,
-                              this filter MUST fail closed.
-
-                              Support: Extended
-                            properties:
-                              backendRef:
-                                description: |-
-                                  BackendRef is a reference to a backend to send authorization
-                                  requests to.
-
-                                  The backend must speak the selected protocol (GRPC or HTTP) on the
-                                  referenced port.
-
-                                  If the backend service requires TLS, use BackendTLSPolicy to tell the
-                                  implementation to supply the TLS details to be used to connect to that
-                                  backend.
-                                properties:
-                                  group:
-                                    default: ""
-                                    description: |-
-                                      Group is the group of the referent. For example, "gateway.networking.k8s.io".
-                                      When unspecified or empty string, core API group is inferred.
-                                    maxLength: 253
-                                    pattern: ^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
-                                    type: string
-                                  kind:
-                                    default: Service
-                                    description: |-
-                                      Kind is the Kubernetes resource kind of the referent. For example
-                                      "Service".
-
-                                      Defaults to "Service" when not specified.
-
-                                      ExternalName services can refer to CNAME DNS records that may live
-                                      outside of the cluster and as such are difficult to reason about in
-                                      terms of conformance. They also may not be safe to forward to (see
-                                      CVE-2021-25740 for more information). Implementations SHOULD NOT
-                                      support ExternalName Services.
-
-                                      Support: Core (Services with a type other than ExternalName)
-
-                                      Support: Implementation-specific (Services with type ExternalName)
-                                    maxLength: 63
-                                    minLength: 1
-                                    pattern: ^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$
-                                    type: string
-                                  name:
-                                    description: Name is the name of the referent.
-                                    maxLength: 253
-                                    minLength: 1
-                                    type: string
-                                  namespace:
-                                    description: |-
-                                      Namespace is the namespace of the backend. When unspecified, the local
-                                      namespace is inferred.
-
-                                      Note that when a namespace different than the local namespace is specified,
-                                      a ReferenceGrant object is required in the referent namespace to allow that
-                                      namespace's owner to accept the reference. See the ReferenceGrant
-                                      documentation for details.
-
-                                      Support: Core
-                                    maxLength: 63
-                                    minLength: 1
-                                    pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
-                                    type: string
-                                  port:
-                                    description: |-
-                                      Port specifies the destination port number to use for this resource.
-                                      Port is required when the referent is a Kubernetes Service. In this
-                                      case, the port number is the service port number, not the target port.
-                                      For other resources, destination port might be derived from the referent
-                                      resource or this field.
-                                    format: int32
-                                    maximum: 65535
-                                    minimum: 1
-                                    type: integer
-                                required:
-                                - name
-                                type: object
-                                x-kubernetes-validations:
-                                - message: Must have port for Service reference
-                                  rule: '(size(self.group) == 0 && self.kind == ''Service'')
-                                    ? has(self.port) : true'
-                              forwardBody:
-                                description: |-
-                                  ForwardBody controls if requests to the authorization server should include
-                                  the body of the client request; and if so, how big that body is allowed
-                                  to be.
-
-                                  It is expected that implementations will buffer the request body up to
-                                  `forwardBody.maxSize` bytes. Bodies over that size must be rejected with a
-                                  4xx series error (413 or 403 are common examples), and fail processing
-                                  of the filter.
-
-                                  If unset, or `forwardBody.maxSize` is set to `0`, then the body will not
-                                  be forwarded.
-
-                                  Feature Name: HTTPRouteExternalAuthForwardBody
-                                properties:
-                                  maxSize:
-                                    description: |-
-                                      MaxSize specifies how large in bytes the largest body that will be buffered
-                                      and sent to the authorization server. If the body size is larger than
-                                      `maxSize`, then the body sent to the authorization server must be
-                                      truncated to `maxSize` bytes.
-
-                                      Experimental note: This behavior needs to be checked against
-                                      various dataplanes; it may need to be changed.
-                                      See https://github.com/kubernetes-sigs/gateway-api/pull/4001#discussion_r2291405746
-                                      for more.
-
-                                      If 0, the body will not be sent to the authorization server.
-                                    type: integer
-                                type: object
-                              grpc:
-                                description: |-
-                                  GRPCAuthConfig contains configuration for communication with ext_authz
-                                  protocol-speaking backends.
-
-                                  If unset, implementations must assume the default behavior for each
-                                  included field is intended.
-                                properties:
-                                  allowedHeaders:
-                                    description: |-
-                                      AllowedRequestHeaders specifies what headers from the client request
-                                      will be sent to the authorization server.
-
-                                      If this list is empty, then all headers must be sent.
-
-                                      If the list has entries, only those entries must be sent.
-                                    items:
-                                      type: string
-                                    maxItems: 64
-                                    type: array
-                                    x-kubernetes-list-type: set
-                                type: object
-                              http:
-                                description: |-
-                                  HTTPAuthConfig contains configuration for communication with HTTP-speaking
-                                  backends.
-
-                                  If unset, implementations must assume the default behavior for each
-                                  included field is intended.
-                                properties:
-                                  allowedHeaders:
-                                    description: |-
-                                      AllowedRequestHeaders specifies what additional headers from the client request
-                                      will be sent to the authorization server.
-
-                                      The following headers must always be sent to the authorization server,
-                                      regardless of this setting:
-
-                                      * `Host`
-                                      * `Method`
-                                      * `Path`
-                                      * `Content-Length`
-                                      * `Authorization`
-
-                                      If this list is empty, then only those headers must be sent.
-
-                                      Note that `Content-Length` has a special behavior, in that the length
-                                      sent must be correct for the actual request to the external authorization
-                                      server - that is, it must reflect the actual number of bytes sent in the
-                                      body of the request to the authorization server.
-
-                                      So if the `forwardBody` stanza is unset, or `forwardBody.maxSize` is set
-                                      to `0`, then `Content-Length` must be `0`. If `forwardBody.maxSize` is set
-                                      to anything other than `0`, then the `Content-Length` of the authorization
-                                      request must be set to the actual number of bytes forwarded.
-                                    items:
-                                      type: string
-                                    maxItems: 64
-                                    type: array
-                                    x-kubernetes-list-type: set
-                                  allowedResponseHeaders:
-                                    description: |-
-                                      AllowedResponseHeaders specifies what headers from the authorization response
-                                      will be copied into the request to the backend.
-
-                                      If this list is empty, then all headers from the authorization server
-                                      except Authority or Host must be copied.
-                                    items:
-                                      type: string
-                                    maxItems: 64
-                                    type: array
-                                    x-kubernetes-list-type: set
-                                  path:
-                                    description: |-
-                                      Path sets the prefix that paths from the client request will have added
-                                      when forwarded to the authorization server.
-
-                                      When empty or unspecified, no prefix is added.
-
-                                      Valid values are the same as the "value" regex for path values in the `match`
-                                      stanza, and the validation regex will screen out invalid paths in the same way.
-                                      Even with the validation, implementations MUST sanitize this input before using it
-                                      directly.
-                                    maxLength: 1024
-                                    pattern: ^(?:[-A-Za-z0-9/._~!$&'()*+,;=:@]|[%][0-9a-fA-F]{2})+$
-                                    type: string
-                                type: object
-                              protocol:
-                                description: |-
-                                  ExternalAuthProtocol describes which protocol to use when communicating with an
-                                  ext_authz authorization server.
-
-                                  When this is set to GRPC, each backend must use the Envoy ext_authz protocol
-                                  on the port specified in `backendRefs`. Requests and responses are defined
-                                  in the protobufs explained at:
-                                  https://www.envoyproxy.io/docs/envoy/latest/api-v3/service/auth/v3/external_auth.proto
-
-                                  When this is set to HTTP, each backend must respond with a `200` status
-                                  code in on a successful authorization. Any other code is considered
-                                  an authorization failure.
-
-                                  Feature Names:
-                                  GRPC Support - HTTPRouteExternalAuthGRPC
-                                  HTTP Support - HTTPRouteExternalAuthHTTP
-                                enum:
-                                - HTTP
-                                - GRPC
-                                type: string
-                            required:
-                            - backendRef
-                            - protocol
-                            type: object
-                            x-kubernetes-validations:
-                            - message: grpc must be specified when protocol is set
-                                to 'GRPC'
-                              rule: 'self.protocol == ''GRPC'' ? has(self.grpc) :
-                                true'
-                            - message: protocol must be 'GRPC' when grpc is set
-                              rule: 'has(self.grpc) ? self.protocol == ''GRPC'' :
-                                true'
-                            - message: http must be specified when protocol is set
-                                to 'HTTP'
-                              rule: 'self.protocol == ''HTTP'' ? has(self.http) :
-                                true'
-                            - message: protocol must be 'HTTP' when http is set
-                              rule: 'has(self.http) ? self.protocol == ''HTTP'' :
-                                true'
                           requestHeaderModifier:
                             description: |-
                               RequestHeaderModifier defines a schema for a filter that modifies request
@@ -2618,14 +2050,10 @@ spec:
                                       pattern: ^[A-Za-z0-9!#$%&'*+\-.^_\x60|~]+$
                                       type: string
                                     value:
-                                      description: |-
-                                        Value is the value of HTTP Header to be matched.
-
-                                        Must consist of printable US-ASCII characters, optionally separated
-                                        by single tabs or spaces. See: https://tools.ietf.org/html/rfc7230#section-3.2
+                                      description: Value is the value of HTTP Header
+                                        to be matched.
                                       maxLength: 4096
                                       minLength: 1
-                                      pattern: ^[!-~]+([\t ]?[!-~]+)*$
                                       type: string
                                   required:
                                   - name
@@ -2696,14 +2124,10 @@ spec:
                                       pattern: ^[A-Za-z0-9!#$%&'*+\-.^_\x60|~]+$
                                       type: string
                                     value:
-                                      description: |-
-                                        Value is the value of HTTP Header to be matched.
-
-                                        Must consist of printable US-ASCII characters, optionally separated
-                                        by single tabs or spaces. See: https://tools.ietf.org/html/rfc7230#section-3.2
+                                      description: Value is the value of HTTP Header
+                                        to be matched.
                                       maxLength: 4096
                                       minLength: 1
-                                      pattern: ^[!-~]+([\t ]?[!-~]+)*$
                                       type: string
                                   required:
                                   - name
@@ -3067,14 +2491,10 @@ spec:
                                       pattern: ^[A-Za-z0-9!#$%&'*+\-.^_\x60|~]+$
                                       type: string
                                     value:
-                                      description: |-
-                                        Value is the value of HTTP Header to be matched.
-
-                                        Must consist of printable US-ASCII characters, optionally separated
-                                        by single tabs or spaces. See: https://tools.ietf.org/html/rfc7230#section-3.2
+                                      description: Value is the value of HTTP Header
+                                        to be matched.
                                       maxLength: 4096
                                       minLength: 1
-                                      pattern: ^[!-~]+([\t ]?[!-~]+)*$
                                       type: string
                                   required:
                                   - name
@@ -3145,14 +2565,10 @@ spec:
                                       pattern: ^[A-Za-z0-9!#$%&'*+\-.^_\x60|~]+$
                                       type: string
                                     value:
-                                      description: |-
-                                        Value is the value of HTTP Header to be matched.
-
-                                        Must consist of printable US-ASCII characters, optionally separated
-                                        by single tabs or spaces. See: https://tools.ietf.org/html/rfc7230#section-3.2
+                                      description: Value is the value of HTTP Header
+                                        to be matched.
                                       maxLength: 4096
                                       minLength: 1
-                                      pattern: ^[!-~]+([\t ]?[!-~]+)*$
                                       type: string
                                   required:
                                   - name
@@ -3206,7 +2622,6 @@ spec:
                             - URLRewrite
                             - ExtensionRef
                             - CORS
-                            - ExternalAuth
                             type: string
                           urlRewrite:
                             description: |-
@@ -3341,12 +2756,6 @@ spec:
                         - message: filter.extensionRef must be specified for ExtensionRef
                             filter.type
                           rule: '!(!has(self.extensionRef) && self.type == ''ExtensionRef'')'
-                        - message: filter.externalAuth must be nil if the filter.type
-                            is not ExternalAuth
-                          rule: '!(has(self.externalAuth) && self.type != ''ExternalAuth'')'
-                        - message: filter.externalAuth must be specified for ExternalAuth
-                            filter.type
-                          rule: '!(!has(self.externalAuth) && self.type == ''ExternalAuth'')'
                       maxItems: 16
                       type: array
                       x-kubernetes-list-type: atomic
@@ -3488,14 +2897,10 @@ spec:
                                   - RegularExpression
                                   type: string
                                 value:
-                                  description: |-
-                                    Value is the value of HTTP Header to be matched.
-
-                                    Must consist of printable US-ASCII characters, optionally separated
-                                    by single tabs or spaces. See: https://tools.ietf.org/html/rfc7230#section-3.2
+                                  description: Value is the value of HTTP Header to
+                                    be matched.
                                   maxLength: 4096
                                   minLength: 1
-                                  pattern: ^[!-~]+([\t ]?[!-~]+)*$
                                   type: string
                               required:
                               - name
@@ -3677,177 +3082,6 @@ spec:
                       minLength: 1
                       pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                       type: string
-                    retry:
-                      description: |-
-                        Retry defines the configuration for when to retry an HTTP request.
-
-                        Support: Extended
-                      properties:
-                        attempts:
-                          description: |-
-                            Attempts specifies the maximum number of times an individual request
-                            from the gateway to a backend should be retried.
-
-                            If the maximum number of retries has been attempted without a successful
-                            response from the backend, the Gateway MUST return an error.
-
-                            When this field is unspecified, the number of times to attempt to retry
-                            a backend request is implementation-specific.
-
-                            Support: Extended
-                          minimum: 1
-                          type: integer
-                        backoff:
-                          description: |-
-                            Backoff specifies the minimum duration a Gateway should wait between
-                            retry attempts and is represented in Gateway API Duration formatting.
-
-                            For example, setting the `rules[].retry.backoff` field to the value
-                            `100ms` will cause a backend request to first be retried approximately
-                            100 milliseconds after timing out or receiving a response code configured
-                            to be retriable.
-
-                            An implementation MAY use an exponential or alternative backoff strategy
-                            for subsequent retry attempts, MAY cap the maximum backoff duration to
-                            some amount greater than the specified minimum, and MAY add arbitrary
-                            jitter to stagger requests, as long as unsuccessful backend requests are
-                            not retried before the configured minimum duration.
-
-                            If a Request timeout (`rules[].timeouts.request`) is configured on the
-                            route, the entire duration of the initial request and any retry attempts
-                            MUST not exceed the Request timeout duration. If any retry attempts are
-                            still in progress when the Request timeout duration has been reached,
-                            these SHOULD be canceled if possible and the Gateway MUST immediately
-                            return a timeout error.
-
-                            If a BackendRequest timeout (`rules[].timeouts.backendRequest`) is
-                            configured on the route, any retry attempts which reach the configured
-                            BackendRequest timeout duration without a response SHOULD be canceled if
-                            possible and the Gateway should wait for at least the specified backoff
-                            duration before attempting to retry the backend request again.
-
-                            If a BackendRequest timeout is _not_ configured on the route, retry
-                            attempts MAY time out after an implementation default duration, or MAY
-                            remain pending until a configured Request timeout or implementation
-                            default duration for total request time is reached.
-
-                            When this field is unspecified, the time to wait between retry attempts
-                            is implementation-specific.
-
-                            Support: Extended
-                          pattern: ^([0-9]{1,5}(h|m|s|ms)){1,4}$
-                          type: string
-                        codes:
-                          description: |-
-                            Codes defines the HTTP response status codes for which a backend request
-                            should be retried.
-
-                            Support: Extended
-                          items:
-                            description: |-
-                              HTTPRouteRetryStatusCode defines an HTTP response status code for
-                              which a backend request should be retried.
-
-                              Implementations MUST support the following status codes as retriable:
-
-                              * 500
-                              * 502
-                              * 503
-                              * 504
-
-                              Implementations MAY support specifying additional discrete values in the
-                              500-599 range.
-
-                              Implementations MAY support specifying discrete values in the 400-499 range,
-                              which are often inadvisable to retry.
-                            maximum: 599
-                            minimum: 400
-                            type: integer
-                          type: array
-                          x-kubernetes-list-type: set
-                      type: object
-                    sessionPersistence:
-                      description: |-
-                        SessionPersistence defines and configures session persistence
-                        for the route rule.
-
-                        Support: Extended
-                      properties:
-                        absoluteTimeout:
-                          description: |-
-                            AbsoluteTimeout defines the absolute timeout of the persistent
-                            session. Once the AbsoluteTimeout duration has elapsed, the
-                            session becomes invalid.
-
-                            Support: Extended
-                          pattern: ^([0-9]{1,5}(h|m|s|ms)){1,4}$
-                          type: string
-                        cookieConfig:
-                          description: |-
-                            CookieConfig provides configuration settings that are specific
-                            to cookie-based session persistence.
-
-                            Support: Core
-                          properties:
-                            lifetimeType:
-                              default: Session
-                              description: |-
-                                LifetimeType specifies whether the cookie has a permanent or
-                                session-based lifetime. A permanent cookie persists until its
-                                specified expiry time, defined by the Expires or Max-Age cookie
-                                attributes, while a session cookie is deleted when the current
-                                session ends.
-
-                                When set to "Permanent", AbsoluteTimeout indicates the
-                                cookie's lifetime via the Expires or Max-Age cookie attributes
-                                and is required.
-
-                                When set to "Session", AbsoluteTimeout indicates the
-                                absolute lifetime of the cookie tracked by the gateway and
-                                is optional.
-
-                                Defaults to "Session".
-
-                                Support: Core for "Session" type
-
-                                Support: Extended for "Permanent" type
-                              enum:
-                              - Permanent
-                              - Session
-                              type: string
-                          type: object
-                        sessionName:
-                          description: |-
-                            SessionName defines the name of the persistent session token
-                            which may be reflected in the cookie or the header. Users
-                            should avoid reusing session names to prevent unintended
-                            consequences, such as rejection or unpredictable behavior.
-
-                            Support: Implementation-specific
-                          maxLength: 128
-                          type: string
-                        type:
-                          default: Cookie
-                          description: |-
-                            Type defines the type of session persistence such as through
-                            the use of a header or cookie. Defaults to cookie based session
-                            persistence.
-
-                            Support: Core for "Cookie" type
-
-                            Support: Extended for "Header" type
-                          enum:
-                          - Cookie
-                          - Header
-                          type: string
-                      type: object
-                      x-kubernetes-validations:
-                      - message: AbsoluteTimeout must be specified when cookie lifetimeType
-                          is Permanent
-                        rule: '!has(self.cookieConfig) || !has(self.cookieConfig.lifetimeType)
-                          || self.cookieConfig.lifetimeType != ''Permanent'' || has(self.absoluteTimeout)'
-                      - message: cookieConfig can only be set with type Cookie
-                        rule: '!has(self.cookieConfig) || self.type == ''Cookie'''
                     timeouts:
                       description: |-
                         Timeouts defines the timeouts that can be configured for an HTTP request.
@@ -3970,27 +3204,6 @@ spec:
                     : 0) + (self.size() > 12 ? self[12].matches.size() : 0) + (self.size()
                     > 13 ? self[13].matches.size() : 0) + (self.size() > 14 ? self[14].matches.size()
                     : 0) + (self.size() > 15 ? self[15].matches.size() : 0) <= 128'
-                - message: Rule name must be unique within the route
-                  rule: self.all(l1, !has(l1.name) || self.exists_one(l2, has(l2.name)
-                    && l1.name == l2.name))
-              useDefaultGateways:
-                description: |-
-                  UseDefaultGateways indicates the default Gateway scope to use for this
-                  Route. If unset (the default) or set to None, the Route will not be
-                  attached to any default Gateway; if set, it will be attached to any
-                  default Gateway supporting the named scope, subject to the usual rules
-                  about which Routes a Gateway is allowed to claim.
-
-                  Think carefully before using this functionality! The set of default
-                  Gateways supporting the requested scope can change over time without
-                  any notice to the Route author, and in many situations it will not be
-                  appropriate to request a default Gateway for a given Route -- for
-                  example, a Route with specific security requirements should almost
-                  certainly not use a default Gateway.
-                enum:
-                - All
-                - None
-                type: string
             type: object
           status:
             description: Status defines the current state of HTTPRoute.
@@ -4168,18 +3381,6 @@ spec:
                             Gateway has the AllowedRoutes field, and ReferenceGrant provides a
                             generic way to enable any other kind of cross-namespace reference.
 
-
-                            ParentRefs from a Route to a Service in the same namespace are "producer"
-                            routes, which apply default routing rules to inbound connections from
-                            any namespace to the Service.
-
-                            ParentRefs from a Route to a Service in a different namespace are
-                            "consumer" routes, and these routing rules are only applied to outbound
-                            connections originating from the same namespace as the Route, for which
-                            the intended destination of the connections are a Service targeted as a
-                            ParentRef of the Route.
-
-
                             Support: Core
                           maxLength: 63
                           minLength: 1
@@ -4197,12 +3398,6 @@ spec:
                             as opposed to a listener(s) whose port(s) may be changed. When both Port
                             and SectionName are specified, the name and port of the selected listener
                             must match both specified values.
-
-
-                            When the parent resource is a Service, this targets a specific port in the
-                            Service spec. When both Port (experimental) and SectionName are specified,
-                            the name and port of the selected port must match both specified values.
-
 
                             Implementations MAY choose to support other parent resources.
                             Implementations supporting other types of parent resources MUST clearly
@@ -4438,17 +3633,6 @@ spec:
                   allowed by something in the namespace they are referring to. For example,
                   Gateway has the AllowedRoutes field, and ReferenceGrant provides a
                   generic way to enable other kinds of cross-namespace reference.
-
-
-                  ParentRefs from a Route to a Service in the same namespace are "producer"
-                  routes, which apply default routing rules to inbound connections from
-                  any namespace to the Service.
-
-                  ParentRefs from a Route to a Service in a different namespace are
-                  "consumer" routes, and these routing rules are only applied to outbound
-                  connections originating from the same namespace as the Route, for which
-                  the intended destination of the connections are a Service targeted as a
-                  ParentRef of the Route.
                 items:
                   description: |-
                     ParentReference identifies an API object (usually a Gateway) that can be considered
@@ -4510,18 +3694,6 @@ spec:
                         Gateway has the AllowedRoutes field, and ReferenceGrant provides a
                         generic way to enable any other kind of cross-namespace reference.
 
-
-                        ParentRefs from a Route to a Service in the same namespace are "producer"
-                        routes, which apply default routing rules to inbound connections from
-                        any namespace to the Service.
-
-                        ParentRefs from a Route to a Service in a different namespace are
-                        "consumer" routes, and these routing rules are only applied to outbound
-                        connections originating from the same namespace as the Route, for which
-                        the intended destination of the connections are a Service targeted as a
-                        ParentRef of the Route.
-
-
                         Support: Core
                       maxLength: 63
                       minLength: 1
@@ -4539,12 +3711,6 @@ spec:
                         as opposed to a listener(s) whose port(s) may be changed. When both Port
                         and SectionName are specified, the name and port of the selected listener
                         must match both specified values.
-
-
-                        When the parent resource is a Service, this targets a specific port in the
-                        Service spec. When both Port (experimental) and SectionName are specified,
-                        the name and port of the selected port must match both specified values.
-
 
                         Implementations MAY choose to support other parent resources.
                         Implementations supporting other types of parent resources MUST clearly
@@ -4600,28 +3766,25 @@ spec:
                 type: array
                 x-kubernetes-list-type: atomic
                 x-kubernetes-validations:
-                - message: sectionName or port must be specified when parentRefs includes
+                - message: sectionName must be specified when parentRefs includes
                     2 or more references to the same parent
                   rule: 'self.all(p1, self.all(p2, p1.group == p2.group && p1.kind
                     == p2.kind && p1.name == p2.name && (((!has(p1.__namespace__)
                     || p1.__namespace__ == '''') && (!has(p2.__namespace__) || p2.__namespace__
                     == '''')) || (has(p1.__namespace__) && has(p2.__namespace__) &&
-                    p1.__namespace__ == p2.__namespace__)) ? ((!has(p1.sectionName)
+                    p1.__namespace__ == p2.__namespace__ )) ? ((!has(p1.sectionName)
                     || p1.sectionName == '''') == (!has(p2.sectionName) || p2.sectionName
-                    == '''') && (!has(p1.port) || p1.port == 0) == (!has(p2.port)
-                    || p2.port == 0)): true))'
-                - message: sectionName or port must be unique when parentRefs includes
-                    2 or more references to the same parent
+                    == '''')) : true))'
+                - message: sectionName must be unique when parentRefs includes 2 or
+                    more references to the same parent
                   rule: self.all(p1, self.exists_one(p2, p1.group == p2.group && p1.kind
                     == p2.kind && p1.name == p2.name && (((!has(p1.__namespace__)
                     || p1.__namespace__ == '') && (!has(p2.__namespace__) || p2.__namespace__
                     == '')) || (has(p1.__namespace__) && has(p2.__namespace__) &&
                     p1.__namespace__ == p2.__namespace__ )) && (((!has(p1.sectionName)
                     || p1.sectionName == '') && (!has(p2.sectionName) || p2.sectionName
-                    == '')) || ( has(p1.sectionName) && has(p2.sectionName) && p1.sectionName
-                    == p2.sectionName)) && (((!has(p1.port) || p1.port == 0) && (!has(p2.port)
-                    || p2.port == 0)) || (has(p1.port) && has(p2.port) && p1.port
-                    == p2.port))))
+                    == '')) || (has(p1.sectionName) && has(p2.sectionName) && p1.sectionName
+                    == p2.sectionName))))
               rules:
                 default:
                 - matches:
@@ -4680,21 +3843,6 @@ spec:
                           ReferenceGrant object is required in the referent namespace to allow that
                           namespace's owner to accept the reference. See the ReferenceGrant
                           documentation for details.
-
-
-                          When the BackendRef points to a Kubernetes Service, implementations SHOULD
-                          honor the appProtocol field if it is set for the target Service Port.
-
-                          Implementations supporting appProtocol SHOULD recognize the Kubernetes
-                          Standard Application Protocols defined in KEP-3726.
-
-                          If a Service appProtocol isn't specified, an implementation MAY infer the
-                          backend protocol through its own means. Implementations MAY infer the
-                          protocol from the Route type referring to the backend Service.
-
-                          If a Route is not able to send traffic to the backend using the specified
-                          protocol then the backend is considered invalid. Implementations MUST set the
-                          "ResolvedRefs" condition to "False" with the "UnsupportedProtocol" reason.
                         properties:
                           filters:
                             description: |-
@@ -5052,256 +4200,6 @@ spec:
                                   - kind
                                   - name
                                   type: object
-                                externalAuth:
-                                  description: |-
-                                    ExternalAuth configures settings related to sending request details
-                                    to an external auth service. The external service MUST authenticate
-                                    the request, and MAY authorize the request as well.
-
-                                    If there is any problem communicating with the external service,
-                                    this filter MUST fail closed.
-
-                                    Support: Extended
-                                  properties:
-                                    backendRef:
-                                      description: |-
-                                        BackendRef is a reference to a backend to send authorization
-                                        requests to.
-
-                                        The backend must speak the selected protocol (GRPC or HTTP) on the
-                                        referenced port.
-
-                                        If the backend service requires TLS, use BackendTLSPolicy to tell the
-                                        implementation to supply the TLS details to be used to connect to that
-                                        backend.
-                                      properties:
-                                        group:
-                                          default: ""
-                                          description: |-
-                                            Group is the group of the referent. For example, "gateway.networking.k8s.io".
-                                            When unspecified or empty string, core API group is inferred.
-                                          maxLength: 253
-                                          pattern: ^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
-                                          type: string
-                                        kind:
-                                          default: Service
-                                          description: |-
-                                            Kind is the Kubernetes resource kind of the referent. For example
-                                            "Service".
-
-                                            Defaults to "Service" when not specified.
-
-                                            ExternalName services can refer to CNAME DNS records that may live
-                                            outside of the cluster and as such are difficult to reason about in
-                                            terms of conformance. They also may not be safe to forward to (see
-                                            CVE-2021-25740 for more information). Implementations SHOULD NOT
-                                            support ExternalName Services.
-
-                                            Support: Core (Services with a type other than ExternalName)
-
-                                            Support: Implementation-specific (Services with type ExternalName)
-                                          maxLength: 63
-                                          minLength: 1
-                                          pattern: ^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$
-                                          type: string
-                                        name:
-                                          description: Name is the name of the referent.
-                                          maxLength: 253
-                                          minLength: 1
-                                          type: string
-                                        namespace:
-                                          description: |-
-                                            Namespace is the namespace of the backend. When unspecified, the local
-                                            namespace is inferred.
-
-                                            Note that when a namespace different than the local namespace is specified,
-                                            a ReferenceGrant object is required in the referent namespace to allow that
-                                            namespace's owner to accept the reference. See the ReferenceGrant
-                                            documentation for details.
-
-                                            Support: Core
-                                          maxLength: 63
-                                          minLength: 1
-                                          pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
-                                          type: string
-                                        port:
-                                          description: |-
-                                            Port specifies the destination port number to use for this resource.
-                                            Port is required when the referent is a Kubernetes Service. In this
-                                            case, the port number is the service port number, not the target port.
-                                            For other resources, destination port might be derived from the referent
-                                            resource or this field.
-                                          format: int32
-                                          maximum: 65535
-                                          minimum: 1
-                                          type: integer
-                                      required:
-                                      - name
-                                      type: object
-                                      x-kubernetes-validations:
-                                      - message: Must have port for Service reference
-                                        rule: '(size(self.group) == 0 && self.kind
-                                          == ''Service'') ? has(self.port) : true'
-                                    forwardBody:
-                                      description: |-
-                                        ForwardBody controls if requests to the authorization server should include
-                                        the body of the client request; and if so, how big that body is allowed
-                                        to be.
-
-                                        It is expected that implementations will buffer the request body up to
-                                        `forwardBody.maxSize` bytes. Bodies over that size must be rejected with a
-                                        4xx series error (413 or 403 are common examples), and fail processing
-                                        of the filter.
-
-                                        If unset, or `forwardBody.maxSize` is set to `0`, then the body will not
-                                        be forwarded.
-
-                                        Feature Name: HTTPRouteExternalAuthForwardBody
-                                      properties:
-                                        maxSize:
-                                          description: |-
-                                            MaxSize specifies how large in bytes the largest body that will be buffered
-                                            and sent to the authorization server. If the body size is larger than
-                                            `maxSize`, then the body sent to the authorization server must be
-                                            truncated to `maxSize` bytes.
-
-                                            Experimental note: This behavior needs to be checked against
-                                            various dataplanes; it may need to be changed.
-                                            See https://github.com/kubernetes-sigs/gateway-api/pull/4001#discussion_r2291405746
-                                            for more.
-
-                                            If 0, the body will not be sent to the authorization server.
-                                          type: integer
-                                      type: object
-                                    grpc:
-                                      description: |-
-                                        GRPCAuthConfig contains configuration for communication with ext_authz
-                                        protocol-speaking backends.
-
-                                        If unset, implementations must assume the default behavior for each
-                                        included field is intended.
-                                      properties:
-                                        allowedHeaders:
-                                          description: |-
-                                            AllowedRequestHeaders specifies what headers from the client request
-                                            will be sent to the authorization server.
-
-                                            If this list is empty, then all headers must be sent.
-
-                                            If the list has entries, only those entries must be sent.
-                                          items:
-                                            type: string
-                                          maxItems: 64
-                                          type: array
-                                          x-kubernetes-list-type: set
-                                      type: object
-                                    http:
-                                      description: |-
-                                        HTTPAuthConfig contains configuration for communication with HTTP-speaking
-                                        backends.
-
-                                        If unset, implementations must assume the default behavior for each
-                                        included field is intended.
-                                      properties:
-                                        allowedHeaders:
-                                          description: |-
-                                            AllowedRequestHeaders specifies what additional headers from the client request
-                                            will be sent to the authorization server.
-
-                                            The following headers must always be sent to the authorization server,
-                                            regardless of this setting:
-
-                                            * `Host`
-                                            * `Method`
-                                            * `Path`
-                                            * `Content-Length`
-                                            * `Authorization`
-
-                                            If this list is empty, then only those headers must be sent.
-
-                                            Note that `Content-Length` has a special behavior, in that the length
-                                            sent must be correct for the actual request to the external authorization
-                                            server - that is, it must reflect the actual number of bytes sent in the
-                                            body of the request to the authorization server.
-
-                                            So if the `forwardBody` stanza is unset, or `forwardBody.maxSize` is set
-                                            to `0`, then `Content-Length` must be `0`. If `forwardBody.maxSize` is set
-                                            to anything other than `0`, then the `Content-Length` of the authorization
-                                            request must be set to the actual number of bytes forwarded.
-                                          items:
-                                            type: string
-                                          maxItems: 64
-                                          type: array
-                                          x-kubernetes-list-type: set
-                                        allowedResponseHeaders:
-                                          description: |-
-                                            AllowedResponseHeaders specifies what headers from the authorization response
-                                            will be copied into the request to the backend.
-
-                                            If this list is empty, then all headers from the authorization server
-                                            except Authority or Host must be copied.
-                                          items:
-                                            type: string
-                                          maxItems: 64
-                                          type: array
-                                          x-kubernetes-list-type: set
-                                        path:
-                                          description: |-
-                                            Path sets the prefix that paths from the client request will have added
-                                            when forwarded to the authorization server.
-
-                                            When empty or unspecified, no prefix is added.
-
-                                            Valid values are the same as the "value" regex for path values in the `match`
-                                            stanza, and the validation regex will screen out invalid paths in the same way.
-                                            Even with the validation, implementations MUST sanitize this input before using it
-                                            directly.
-                                          maxLength: 1024
-                                          pattern: ^(?:[-A-Za-z0-9/._~!$&'()*+,;=:@]|[%][0-9a-fA-F]{2})+$
-                                          type: string
-                                      type: object
-                                    protocol:
-                                      description: |-
-                                        ExternalAuthProtocol describes which protocol to use when communicating with an
-                                        ext_authz authorization server.
-
-                                        When this is set to GRPC, each backend must use the Envoy ext_authz protocol
-                                        on the port specified in `backendRefs`. Requests and responses are defined
-                                        in the protobufs explained at:
-                                        https://www.envoyproxy.io/docs/envoy/latest/api-v3/service/auth/v3/external_auth.proto
-
-                                        When this is set to HTTP, each backend must respond with a `200` status
-                                        code in on a successful authorization. Any other code is considered
-                                        an authorization failure.
-
-                                        Feature Names:
-                                        GRPC Support - HTTPRouteExternalAuthGRPC
-                                        HTTP Support - HTTPRouteExternalAuthHTTP
-                                      enum:
-                                      - HTTP
-                                      - GRPC
-                                      type: string
-                                  required:
-                                  - backendRef
-                                  - protocol
-                                  type: object
-                                  x-kubernetes-validations:
-                                  - message: grpc must be specified when protocol
-                                      is set to 'GRPC'
-                                    rule: 'self.protocol == ''GRPC'' ? has(self.grpc)
-                                      : true'
-                                  - message: protocol must be 'GRPC' when grpc is
-                                      set
-                                    rule: 'has(self.grpc) ? self.protocol == ''GRPC''
-                                      : true'
-                                  - message: http must be specified when protocol
-                                      is set to 'HTTP'
-                                    rule: 'self.protocol == ''HTTP'' ? has(self.http)
-                                      : true'
-                                  - message: protocol must be 'HTTP' when http is
-                                      set
-                                    rule: 'has(self.http) ? self.protocol == ''HTTP''
-                                      : true'
                                 requestHeaderModifier:
                                   description: |-
                                     RequestHeaderModifier defines a schema for a filter that modifies request
@@ -5347,14 +4245,10 @@ spec:
                                             pattern: ^[A-Za-z0-9!#$%&'*+\-.^_\x60|~]+$
                                             type: string
                                           value:
-                                            description: |-
-                                              Value is the value of HTTP Header to be matched.
-
-                                              Must consist of printable US-ASCII characters, optionally separated
-                                              by single tabs or spaces. See: https://tools.ietf.org/html/rfc7230#section-3.2
+                                            description: Value is the value of HTTP
+                                              Header to be matched.
                                             maxLength: 4096
                                             minLength: 1
-                                            pattern: ^[!-~]+([\t ]?[!-~]+)*$
                                             type: string
                                         required:
                                         - name
@@ -5426,14 +4320,10 @@ spec:
                                             pattern: ^[A-Za-z0-9!#$%&'*+\-.^_\x60|~]+$
                                             type: string
                                           value:
-                                            description: |-
-                                              Value is the value of HTTP Header to be matched.
-
-                                              Must consist of printable US-ASCII characters, optionally separated
-                                              by single tabs or spaces. See: https://tools.ietf.org/html/rfc7230#section-3.2
+                                            description: Value is the value of HTTP
+                                              Header to be matched.
                                             maxLength: 4096
                                             minLength: 1
-                                            pattern: ^[!-~]+([\t ]?[!-~]+)*$
                                             type: string
                                         required:
                                         - name
@@ -5798,14 +4688,10 @@ spec:
                                             pattern: ^[A-Za-z0-9!#$%&'*+\-.^_\x60|~]+$
                                             type: string
                                           value:
-                                            description: |-
-                                              Value is the value of HTTP Header to be matched.
-
-                                              Must consist of printable US-ASCII characters, optionally separated
-                                              by single tabs or spaces. See: https://tools.ietf.org/html/rfc7230#section-3.2
+                                            description: Value is the value of HTTP
+                                              Header to be matched.
                                             maxLength: 4096
                                             minLength: 1
-                                            pattern: ^[!-~]+([\t ]?[!-~]+)*$
                                             type: string
                                         required:
                                         - name
@@ -5877,14 +4763,10 @@ spec:
                                             pattern: ^[A-Za-z0-9!#$%&'*+\-.^_\x60|~]+$
                                             type: string
                                           value:
-                                            description: |-
-                                              Value is the value of HTTP Header to be matched.
-
-                                              Must consist of printable US-ASCII characters, optionally separated
-                                              by single tabs or spaces. See: https://tools.ietf.org/html/rfc7230#section-3.2
+                                            description: Value is the value of HTTP
+                                              Header to be matched.
                                             maxLength: 4096
                                             minLength: 1
-                                            pattern: ^[!-~]+([\t ]?[!-~]+)*$
                                             type: string
                                         required:
                                         - name
@@ -5938,7 +4820,6 @@ spec:
                                   - URLRewrite
                                   - ExtensionRef
                                   - CORS
-                                  - ExternalAuth
                                   type: string
                                 urlRewrite:
                                   description: |-
@@ -6076,12 +4957,6 @@ spec:
                               - message: filter.extensionRef must be specified for
                                   ExtensionRef filter.type
                                 rule: '!(!has(self.extensionRef) && self.type == ''ExtensionRef'')'
-                              - message: filter.externalAuth must be nil if the filter.type
-                                  is not ExternalAuth
-                                rule: '!(has(self.externalAuth) && self.type != ''ExternalAuth'')'
-                              - message: filter.externalAuth must be specified for
-                                  ExternalAuth filter.type
-                                rule: '!(!has(self.externalAuth) && self.type == ''ExternalAuth'')'
                             maxItems: 16
                             type: array
                             x-kubernetes-list-type: atomic
@@ -6581,254 +5456,6 @@ spec:
                             - kind
                             - name
                             type: object
-                          externalAuth:
-                            description: |-
-                              ExternalAuth configures settings related to sending request details
-                              to an external auth service. The external service MUST authenticate
-                              the request, and MAY authorize the request as well.
-
-                              If there is any problem communicating with the external service,
-                              this filter MUST fail closed.
-
-                              Support: Extended
-                            properties:
-                              backendRef:
-                                description: |-
-                                  BackendRef is a reference to a backend to send authorization
-                                  requests to.
-
-                                  The backend must speak the selected protocol (GRPC or HTTP) on the
-                                  referenced port.
-
-                                  If the backend service requires TLS, use BackendTLSPolicy to tell the
-                                  implementation to supply the TLS details to be used to connect to that
-                                  backend.
-                                properties:
-                                  group:
-                                    default: ""
-                                    description: |-
-                                      Group is the group of the referent. For example, "gateway.networking.k8s.io".
-                                      When unspecified or empty string, core API group is inferred.
-                                    maxLength: 253
-                                    pattern: ^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
-                                    type: string
-                                  kind:
-                                    default: Service
-                                    description: |-
-                                      Kind is the Kubernetes resource kind of the referent. For example
-                                      "Service".
-
-                                      Defaults to "Service" when not specified.
-
-                                      ExternalName services can refer to CNAME DNS records that may live
-                                      outside of the cluster and as such are difficult to reason about in
-                                      terms of conformance. They also may not be safe to forward to (see
-                                      CVE-2021-25740 for more information). Implementations SHOULD NOT
-                                      support ExternalName Services.
-
-                                      Support: Core (Services with a type other than ExternalName)
-
-                                      Support: Implementation-specific (Services with type ExternalName)
-                                    maxLength: 63
-                                    minLength: 1
-                                    pattern: ^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$
-                                    type: string
-                                  name:
-                                    description: Name is the name of the referent.
-                                    maxLength: 253
-                                    minLength: 1
-                                    type: string
-                                  namespace:
-                                    description: |-
-                                      Namespace is the namespace of the backend. When unspecified, the local
-                                      namespace is inferred.
-
-                                      Note that when a namespace different than the local namespace is specified,
-                                      a ReferenceGrant object is required in the referent namespace to allow that
-                                      namespace's owner to accept the reference. See the ReferenceGrant
-                                      documentation for details.
-
-                                      Support: Core
-                                    maxLength: 63
-                                    minLength: 1
-                                    pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
-                                    type: string
-                                  port:
-                                    description: |-
-                                      Port specifies the destination port number to use for this resource.
-                                      Port is required when the referent is a Kubernetes Service. In this
-                                      case, the port number is the service port number, not the target port.
-                                      For other resources, destination port might be derived from the referent
-                                      resource or this field.
-                                    format: int32
-                                    maximum: 65535
-                                    minimum: 1
-                                    type: integer
-                                required:
-                                - name
-                                type: object
-                                x-kubernetes-validations:
-                                - message: Must have port for Service reference
-                                  rule: '(size(self.group) == 0 && self.kind == ''Service'')
-                                    ? has(self.port) : true'
-                              forwardBody:
-                                description: |-
-                                  ForwardBody controls if requests to the authorization server should include
-                                  the body of the client request; and if so, how big that body is allowed
-                                  to be.
-
-                                  It is expected that implementations will buffer the request body up to
-                                  `forwardBody.maxSize` bytes. Bodies over that size must be rejected with a
-                                  4xx series error (413 or 403 are common examples), and fail processing
-                                  of the filter.
-
-                                  If unset, or `forwardBody.maxSize` is set to `0`, then the body will not
-                                  be forwarded.
-
-                                  Feature Name: HTTPRouteExternalAuthForwardBody
-                                properties:
-                                  maxSize:
-                                    description: |-
-                                      MaxSize specifies how large in bytes the largest body that will be buffered
-                                      and sent to the authorization server. If the body size is larger than
-                                      `maxSize`, then the body sent to the authorization server must be
-                                      truncated to `maxSize` bytes.
-
-                                      Experimental note: This behavior needs to be checked against
-                                      various dataplanes; it may need to be changed.
-                                      See https://github.com/kubernetes-sigs/gateway-api/pull/4001#discussion_r2291405746
-                                      for more.
-
-                                      If 0, the body will not be sent to the authorization server.
-                                    type: integer
-                                type: object
-                              grpc:
-                                description: |-
-                                  GRPCAuthConfig contains configuration for communication with ext_authz
-                                  protocol-speaking backends.
-
-                                  If unset, implementations must assume the default behavior for each
-                                  included field is intended.
-                                properties:
-                                  allowedHeaders:
-                                    description: |-
-                                      AllowedRequestHeaders specifies what headers from the client request
-                                      will be sent to the authorization server.
-
-                                      If this list is empty, then all headers must be sent.
-
-                                      If the list has entries, only those entries must be sent.
-                                    items:
-                                      type: string
-                                    maxItems: 64
-                                    type: array
-                                    x-kubernetes-list-type: set
-                                type: object
-                              http:
-                                description: |-
-                                  HTTPAuthConfig contains configuration for communication with HTTP-speaking
-                                  backends.
-
-                                  If unset, implementations must assume the default behavior for each
-                                  included field is intended.
-                                properties:
-                                  allowedHeaders:
-                                    description: |-
-                                      AllowedRequestHeaders specifies what additional headers from the client request
-                                      will be sent to the authorization server.
-
-                                      The following headers must always be sent to the authorization server,
-                                      regardless of this setting:
-
-                                      * `Host`
-                                      * `Method`
-                                      * `Path`
-                                      * `Content-Length`
-                                      * `Authorization`
-
-                                      If this list is empty, then only those headers must be sent.
-
-                                      Note that `Content-Length` has a special behavior, in that the length
-                                      sent must be correct for the actual request to the external authorization
-                                      server - that is, it must reflect the actual number of bytes sent in the
-                                      body of the request to the authorization server.
-
-                                      So if the `forwardBody` stanza is unset, or `forwardBody.maxSize` is set
-                                      to `0`, then `Content-Length` must be `0`. If `forwardBody.maxSize` is set
-                                      to anything other than `0`, then the `Content-Length` of the authorization
-                                      request must be set to the actual number of bytes forwarded.
-                                    items:
-                                      type: string
-                                    maxItems: 64
-                                    type: array
-                                    x-kubernetes-list-type: set
-                                  allowedResponseHeaders:
-                                    description: |-
-                                      AllowedResponseHeaders specifies what headers from the authorization response
-                                      will be copied into the request to the backend.
-
-                                      If this list is empty, then all headers from the authorization server
-                                      except Authority or Host must be copied.
-                                    items:
-                                      type: string
-                                    maxItems: 64
-                                    type: array
-                                    x-kubernetes-list-type: set
-                                  path:
-                                    description: |-
-                                      Path sets the prefix that paths from the client request will have added
-                                      when forwarded to the authorization server.
-
-                                      When empty or unspecified, no prefix is added.
-
-                                      Valid values are the same as the "value" regex for path values in the `match`
-                                      stanza, and the validation regex will screen out invalid paths in the same way.
-                                      Even with the validation, implementations MUST sanitize this input before using it
-                                      directly.
-                                    maxLength: 1024
-                                    pattern: ^(?:[-A-Za-z0-9/._~!$&'()*+,;=:@]|[%][0-9a-fA-F]{2})+$
-                                    type: string
-                                type: object
-                              protocol:
-                                description: |-
-                                  ExternalAuthProtocol describes which protocol to use when communicating with an
-                                  ext_authz authorization server.
-
-                                  When this is set to GRPC, each backend must use the Envoy ext_authz protocol
-                                  on the port specified in `backendRefs`. Requests and responses are defined
-                                  in the protobufs explained at:
-                                  https://www.envoyproxy.io/docs/envoy/latest/api-v3/service/auth/v3/external_auth.proto
-
-                                  When this is set to HTTP, each backend must respond with a `200` status
-                                  code in on a successful authorization. Any other code is considered
-                                  an authorization failure.
-
-                                  Feature Names:
-                                  GRPC Support - HTTPRouteExternalAuthGRPC
-                                  HTTP Support - HTTPRouteExternalAuthHTTP
-                                enum:
-                                - HTTP
-                                - GRPC
-                                type: string
-                            required:
-                            - backendRef
-                            - protocol
-                            type: object
-                            x-kubernetes-validations:
-                            - message: grpc must be specified when protocol is set
-                                to 'GRPC'
-                              rule: 'self.protocol == ''GRPC'' ? has(self.grpc) :
-                                true'
-                            - message: protocol must be 'GRPC' when grpc is set
-                              rule: 'has(self.grpc) ? self.protocol == ''GRPC'' :
-                                true'
-                            - message: http must be specified when protocol is set
-                                to 'HTTP'
-                              rule: 'self.protocol == ''HTTP'' ? has(self.http) :
-                                true'
-                            - message: protocol must be 'HTTP' when http is set
-                              rule: 'has(self.http) ? self.protocol == ''HTTP'' :
-                                true'
                           requestHeaderModifier:
                             description: |-
                               RequestHeaderModifier defines a schema for a filter that modifies request
@@ -6873,14 +5500,10 @@ spec:
                                       pattern: ^[A-Za-z0-9!#$%&'*+\-.^_\x60|~]+$
                                       type: string
                                     value:
-                                      description: |-
-                                        Value is the value of HTTP Header to be matched.
-
-                                        Must consist of printable US-ASCII characters, optionally separated
-                                        by single tabs or spaces. See: https://tools.ietf.org/html/rfc7230#section-3.2
+                                      description: Value is the value of HTTP Header
+                                        to be matched.
                                       maxLength: 4096
                                       minLength: 1
-                                      pattern: ^[!-~]+([\t ]?[!-~]+)*$
                                       type: string
                                   required:
                                   - name
@@ -6951,14 +5574,10 @@ spec:
                                       pattern: ^[A-Za-z0-9!#$%&'*+\-.^_\x60|~]+$
                                       type: string
                                     value:
-                                      description: |-
-                                        Value is the value of HTTP Header to be matched.
-
-                                        Must consist of printable US-ASCII characters, optionally separated
-                                        by single tabs or spaces. See: https://tools.ietf.org/html/rfc7230#section-3.2
+                                      description: Value is the value of HTTP Header
+                                        to be matched.
                                       maxLength: 4096
                                       minLength: 1
-                                      pattern: ^[!-~]+([\t ]?[!-~]+)*$
                                       type: string
                                   required:
                                   - name
@@ -7322,14 +5941,10 @@ spec:
                                       pattern: ^[A-Za-z0-9!#$%&'*+\-.^_\x60|~]+$
                                       type: string
                                     value:
-                                      description: |-
-                                        Value is the value of HTTP Header to be matched.
-
-                                        Must consist of printable US-ASCII characters, optionally separated
-                                        by single tabs or spaces. See: https://tools.ietf.org/html/rfc7230#section-3.2
+                                      description: Value is the value of HTTP Header
+                                        to be matched.
                                       maxLength: 4096
                                       minLength: 1
-                                      pattern: ^[!-~]+([\t ]?[!-~]+)*$
                                       type: string
                                   required:
                                   - name
@@ -7400,14 +6015,10 @@ spec:
                                       pattern: ^[A-Za-z0-9!#$%&'*+\-.^_\x60|~]+$
                                       type: string
                                     value:
-                                      description: |-
-                                        Value is the value of HTTP Header to be matched.
-
-                                        Must consist of printable US-ASCII characters, optionally separated
-                                        by single tabs or spaces. See: https://tools.ietf.org/html/rfc7230#section-3.2
+                                      description: Value is the value of HTTP Header
+                                        to be matched.
                                       maxLength: 4096
                                       minLength: 1
-                                      pattern: ^[!-~]+([\t ]?[!-~]+)*$
                                       type: string
                                   required:
                                   - name
@@ -7461,7 +6072,6 @@ spec:
                             - URLRewrite
                             - ExtensionRef
                             - CORS
-                            - ExternalAuth
                             type: string
                           urlRewrite:
                             description: |-
@@ -7596,12 +6206,6 @@ spec:
                         - message: filter.extensionRef must be specified for ExtensionRef
                             filter.type
                           rule: '!(!has(self.extensionRef) && self.type == ''ExtensionRef'')'
-                        - message: filter.externalAuth must be nil if the filter.type
-                            is not ExternalAuth
-                          rule: '!(has(self.externalAuth) && self.type != ''ExternalAuth'')'
-                        - message: filter.externalAuth must be specified for ExternalAuth
-                            filter.type
-                          rule: '!(!has(self.externalAuth) && self.type == ''ExternalAuth'')'
                       maxItems: 16
                       type: array
                       x-kubernetes-list-type: atomic
@@ -7743,14 +6347,10 @@ spec:
                                   - RegularExpression
                                   type: string
                                 value:
-                                  description: |-
-                                    Value is the value of HTTP Header to be matched.
-
-                                    Must consist of printable US-ASCII characters, optionally separated
-                                    by single tabs or spaces. See: https://tools.ietf.org/html/rfc7230#section-3.2
+                                  description: Value is the value of HTTP Header to
+                                    be matched.
                                   maxLength: 4096
                                   minLength: 1
-                                  pattern: ^[!-~]+([\t ]?[!-~]+)*$
                                   type: string
                               required:
                               - name
@@ -7932,177 +6532,6 @@ spec:
                       minLength: 1
                       pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
                       type: string
-                    retry:
-                      description: |-
-                        Retry defines the configuration for when to retry an HTTP request.
-
-                        Support: Extended
-                      properties:
-                        attempts:
-                          description: |-
-                            Attempts specifies the maximum number of times an individual request
-                            from the gateway to a backend should be retried.
-
-                            If the maximum number of retries has been attempted without a successful
-                            response from the backend, the Gateway MUST return an error.
-
-                            When this field is unspecified, the number of times to attempt to retry
-                            a backend request is implementation-specific.
-
-                            Support: Extended
-                          minimum: 1
-                          type: integer
-                        backoff:
-                          description: |-
-                            Backoff specifies the minimum duration a Gateway should wait between
-                            retry attempts and is represented in Gateway API Duration formatting.
-
-                            For example, setting the `rules[].retry.backoff` field to the value
-                            `100ms` will cause a backend request to first be retried approximately
-                            100 milliseconds after timing out or receiving a response code configured
-                            to be retriable.
-
-                            An implementation MAY use an exponential or alternative backoff strategy
-                            for subsequent retry attempts, MAY cap the maximum backoff duration to
-                            some amount greater than the specified minimum, and MAY add arbitrary
-                            jitter to stagger requests, as long as unsuccessful backend requests are
-                            not retried before the configured minimum duration.
-
-                            If a Request timeout (`rules[].timeouts.request`) is configured on the
-                            route, the entire duration of the initial request and any retry attempts
-                            MUST not exceed the Request timeout duration. If any retry attempts are
-                            still in progress when the Request timeout duration has been reached,
-                            these SHOULD be canceled if possible and the Gateway MUST immediately
-                            return a timeout error.
-
-                            If a BackendRequest timeout (`rules[].timeouts.backendRequest`) is
-                            configured on the route, any retry attempts which reach the configured
-                            BackendRequest timeout duration without a response SHOULD be canceled if
-                            possible and the Gateway should wait for at least the specified backoff
-                            duration before attempting to retry the backend request again.
-
-                            If a BackendRequest timeout is _not_ configured on the route, retry
-                            attempts MAY time out after an implementation default duration, or MAY
-                            remain pending until a configured Request timeout or implementation
-                            default duration for total request time is reached.
-
-                            When this field is unspecified, the time to wait between retry attempts
-                            is implementation-specific.
-
-                            Support: Extended
-                          pattern: ^([0-9]{1,5}(h|m|s|ms)){1,4}$
-                          type: string
-                        codes:
-                          description: |-
-                            Codes defines the HTTP response status codes for which a backend request
-                            should be retried.
-
-                            Support: Extended
-                          items:
-                            description: |-
-                              HTTPRouteRetryStatusCode defines an HTTP response status code for
-                              which a backend request should be retried.
-
-                              Implementations MUST support the following status codes as retriable:
-
-                              * 500
-                              * 502
-                              * 503
-                              * 504
-
-                              Implementations MAY support specifying additional discrete values in the
-                              500-599 range.
-
-                              Implementations MAY support specifying discrete values in the 400-499 range,
-                              which are often inadvisable to retry.
-                            maximum: 599
-                            minimum: 400
-                            type: integer
-                          type: array
-                          x-kubernetes-list-type: set
-                      type: object
-                    sessionPersistence:
-                      description: |-
-                        SessionPersistence defines and configures session persistence
-                        for the route rule.
-
-                        Support: Extended
-                      properties:
-                        absoluteTimeout:
-                          description: |-
-                            AbsoluteTimeout defines the absolute timeout of the persistent
-                            session. Once the AbsoluteTimeout duration has elapsed, the
-                            session becomes invalid.
-
-                            Support: Extended
-                          pattern: ^([0-9]{1,5}(h|m|s|ms)){1,4}$
-                          type: string
-                        cookieConfig:
-                          description: |-
-                            CookieConfig provides configuration settings that are specific
-                            to cookie-based session persistence.
-
-                            Support: Core
-                          properties:
-                            lifetimeType:
-                              default: Session
-                              description: |-
-                                LifetimeType specifies whether the cookie has a permanent or
-                                session-based lifetime. A permanent cookie persists until its
-                                specified expiry time, defined by the Expires or Max-Age cookie
-                                attributes, while a session cookie is deleted when the current
-                                session ends.
-
-                                When set to "Permanent", AbsoluteTimeout indicates the
-                                cookie's lifetime via the Expires or Max-Age cookie attributes
-                                and is required.
-
-                                When set to "Session", AbsoluteTimeout indicates the
-                                absolute lifetime of the cookie tracked by the gateway and
-                                is optional.
-
-                                Defaults to "Session".
-
-                                Support: Core for "Session" type
-
-                                Support: Extended for "Permanent" type
-                              enum:
-                              - Permanent
-                              - Session
-                              type: string
-                          type: object
-                        sessionName:
-                          description: |-
-                            SessionName defines the name of the persistent session token
-                            which may be reflected in the cookie or the header. Users
-                            should avoid reusing session names to prevent unintended
-                            consequences, such as rejection or unpredictable behavior.
-
-                            Support: Implementation-specific
-                          maxLength: 128
-                          type: string
-                        type:
-                          default: Cookie
-                          description: |-
-                            Type defines the type of session persistence such as through
-                            the use of a header or cookie. Defaults to cookie based session
-                            persistence.
-
-                            Support: Core for "Cookie" type
-
-                            Support: Extended for "Header" type
-                          enum:
-                          - Cookie
-                          - Header
-                          type: string
-                      type: object
-                      x-kubernetes-validations:
-                      - message: AbsoluteTimeout must be specified when cookie lifetimeType
-                          is Permanent
-                        rule: '!has(self.cookieConfig) || !has(self.cookieConfig.lifetimeType)
-                          || self.cookieConfig.lifetimeType != ''Permanent'' || has(self.absoluteTimeout)'
-                      - message: cookieConfig can only be set with type Cookie
-                        rule: '!has(self.cookieConfig) || self.type == ''Cookie'''
                     timeouts:
                       description: |-
                         Timeouts defines the timeouts that can be configured for an HTTP request.
@@ -8225,27 +6654,6 @@ spec:
                     : 0) + (self.size() > 12 ? self[12].matches.size() : 0) + (self.size()
                     > 13 ? self[13].matches.size() : 0) + (self.size() > 14 ? self[14].matches.size()
                     : 0) + (self.size() > 15 ? self[15].matches.size() : 0) <= 128'
-                - message: Rule name must be unique within the route
-                  rule: self.all(l1, !has(l1.name) || self.exists_one(l2, has(l2.name)
-                    && l1.name == l2.name))
-              useDefaultGateways:
-                description: |-
-                  UseDefaultGateways indicates the default Gateway scope to use for this
-                  Route. If unset (the default) or set to None, the Route will not be
-                  attached to any default Gateway; if set, it will be attached to any
-                  default Gateway supporting the named scope, subject to the usual rules
-                  about which Routes a Gateway is allowed to claim.
-
-                  Think carefully before using this functionality! The set of default
-                  Gateways supporting the requested scope can change over time without
-                  any notice to the Route author, and in many situations it will not be
-                  appropriate to request a default Gateway for a given Route -- for
-                  example, a Route with specific security requirements should almost
-                  certainly not use a default Gateway.
-                enum:
-                - All
-                - None
-                type: string
             type: object
           status:
             description: Status defines the current state of HTTPRoute.
@@ -8423,18 +6831,6 @@ spec:
                             Gateway has the AllowedRoutes field, and ReferenceGrant provides a
                             generic way to enable any other kind of cross-namespace reference.
 
-
-                            ParentRefs from a Route to a Service in the same namespace are "producer"
-                            routes, which apply default routing rules to inbound connections from
-                            any namespace to the Service.
-
-                            ParentRefs from a Route to a Service in a different namespace are
-                            "consumer" routes, and these routing rules are only applied to outbound
-                            connections originating from the same namespace as the Route, for which
-                            the intended destination of the connections are a Service targeted as a
-                            ParentRef of the Route.
-
-
                             Support: Core
                           maxLength: 63
                           minLength: 1
@@ -8452,12 +6848,6 @@ spec:
                             as opposed to a listener(s) whose port(s) may be changed. When both Port
                             and SectionName are specified, the name and port of the selected listener
                             must match both specified values.
-
-
-                            When the parent resource is a Service, this targets a specific port in the
-                            Service spec. When both Port (experimental) and SectionName are specified,
-                            the name and port of the selected port must match both specified values.
-
 
                             Implementations MAY choose to support other parent resources.
                             Implementations supporting other types of parent resources MUST clearly

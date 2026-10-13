@@ -2,8 +2,9 @@ package istioresources
 
 import (
 	"context"
-	_ "embed"
+	"embed"
 	"fmt"
+	"io/fs"
 
 	"github.com/kyma-project/istio/operator/internal/resources"
 	"github.com/kyma-project/istio/operator/pkg/labels"
@@ -19,52 +20,29 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-//go:embed gateway_api_crds/gateway.networking.k8s.io_backendtlspolicies.yaml
-var gatewayAPIBackendTLSPoliciesCRD []byte
+//go:embed gateway_api_crds/gateway.networking.k8s.io_*.yaml
+var gatewayAPICRDsFS embed.FS
 
-//go:embed gateway_api_crds/gateway.networking.k8s.io_gatewayclasses.yaml
-var gatewayAPIGatewayClassesCRD []byte
+var gatewayAPICRDManifests = func() [][]byte {
+	files, err := fs.Glob(gatewayAPICRDsFS, "gateway_api_crds/gateway.networking.k8s.io_*.yaml")
+	if err != nil {
+		panic(fmt.Sprintf("failed to glob embedded Gateway API CRDs: %v", err))
+	}
+	manifests := make([][]byte, 0, len(files))
+	for _, f := range files {
+		data, err := gatewayAPICRDsFS.ReadFile(f)
+		if err != nil {
+			panic(fmt.Sprintf("failed to read embedded Gateway API CRD %s: %v", f, err))
+		}
+		manifests = append(manifests, data)
+	}
+	return manifests
+}()
 
-//go:embed gateway_api_crds/gateway.networking.k8s.io_gateways.yaml
-var gatewayAPIGatewaysCRD []byte
-
-//go:embed gateway_api_crds/gateway.networking.k8s.io_grpcroutes.yaml
-var gatewayAPIGRPCRoutesCRD []byte
-
-//go:embed gateway_api_crds/gateway.networking.k8s.io_httproutes.yaml
-var gatewayAPIHTTPRoutesCRD []byte
-
-//go:embed gateway_api_crds/gateway.networking.k8s.io_listenersets.yaml
-var gatewayAPIListenerSetsCRD []byte
-
-//go:embed gateway_api_crds/gateway.networking.k8s.io_referencegrants.yaml
-var gatewayAPIReferenceGrantsCRD []byte
-
-//go:embed gateway_api_crds/gateway.networking.k8s.io_tcproutes.yaml
-var gatewayAPITCPRoutesCRD []byte
-
-//go:embed gateway_api_crds/gateway.networking.k8s.io_tlsroutes.yaml
-var gatewayAPITLSRoutesCRD []byte
-
-//go:embed gateway_api_crds/gateway.networking.k8s.io_udproutes.yaml
-var gatewayAPIUDPRoutesCRD []byte
-
-//go:embed gateway_api_crds/gateway.networking.k8s.io_vap_safeupgrades.yaml
-var gatewayAPIVAPSafeUpgradesCRD []byte
-
-var gatewayAPICRDManifests = [][]byte{
-	gatewayAPIBackendTLSPoliciesCRD,
-	gatewayAPIGatewayClassesCRD,
-	gatewayAPIGatewaysCRD,
-	gatewayAPIGRPCRoutesCRD,
-	gatewayAPIHTTPRoutesCRD,
-	gatewayAPIListenerSetsCRD,
-	gatewayAPIReferenceGrantsCRD,
-	gatewayAPITCPRoutesCRD,
-	gatewayAPITLSRoutesCRD,
-	gatewayAPIUDPRoutesCRD,
-	gatewayAPIVAPSafeUpgradesCRD,
-}
+var (
+	gatewayAPIGatewaysCRD, _       = gatewayAPICRDsFS.ReadFile("gateway_api_crds/gateway.networking.k8s.io_gateways.yaml")
+	gatewayAPIGatewayClassesCRD, _ = gatewayAPICRDsFS.ReadFile("gateway_api_crds/gateway.networking.k8s.io_gatewayclasses.yaml")
+)
 
 // gatewayAPICRDName is the CRD checked to determine whether the module manages Gateway API CRDs.
 const gatewayAPICRDName = "gateways.gateway.networking.k8s.io"

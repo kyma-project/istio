@@ -5,6 +5,7 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
+	"maps"
 
 	"github.com/kyma-project/istio/operator/internal/resources"
 	"github.com/kyma-project/istio/operator/pkg/labels"
@@ -51,19 +52,16 @@ func (g GatewayAPICRDs) reconcile(ctx context.Context, k8sClient client.Client, 
 	return g.installOrWarnCRDs(ctx, k8sClient)
 }
 
-func parseCRD(path string, d fs.DirEntry, err error) (unstructured.Unstructured, bool, error) {
-	if err != nil || d.IsDir() {
-		return unstructured.Unstructured{}, true, err
-	}
+func parseCRD(path string) (unstructured.Unstructured, error) {
 	data, err := gatewayAPICRDsFS.ReadFile(path)
 	if err != nil {
-		return unstructured.Unstructured{}, false, fmt.Errorf("failed to read embedded CRD %s: %w", path, err)
+		return unstructured.Unstructured{}, fmt.Errorf("failed to read embedded CRD %s: %w", path, err)
 	}
 	var desired unstructured.Unstructured
 	if err := yaml.Unmarshal(data, &desired); err != nil {
-		return unstructured.Unstructured{}, false, fmt.Errorf("failed to unmarshal Gateway API CRD manifest: %w", err)
+		return unstructured.Unstructured{}, fmt.Errorf("failed to unmarshal Gateway API CRD manifest: %w", err)
 	}
-	return desired, false, nil
+	return desired, nil
 }
 
 func (g GatewayAPICRDs) installOrWarnCRDs(ctx context.Context, k8sClient client.Client) (controllerutil.OperationResult, error) {
@@ -83,42 +81,46 @@ func (g GatewayAPICRDs) installOrWarnCRDs(ctx context.Context, k8sClient client.
 
 func (g GatewayAPICRDs) applyOne(ctx context.Context, k8sClient client.Client) fs.WalkDirFunc {
 	return func(path string, d fs.DirEntry, err error) error {
-		desired, skip, err := parseCRD(path, d, err)
-		if skip {
+		if err != nil || d.IsDir() {
+			return err
+		}
+		desired, err := parseCRD(path)
+		if err != nil {
 			return err
 		}
 
 		existing := unstructured.Unstructured{}
 		existing.SetGroupVersionKind(desired.GroupVersionKind())
 		err = k8sClient.Get(ctx, client.ObjectKeyFromObject(&desired), &existing)
-		if err != nil {
-			if !apierrors.IsNotFound(err) {
-				return fmt.Errorf("failed to get CRD %s: %w", desired.GetName(), err)
-			}
-			applyManagementLabels(&desired)
+		if err != nil && !apierrors.IsNotFound(err) {
+			return fmt.Errorf("failed to get CRD %s: %w", desired.GetName(), err)
+		}
 
+		if apierrors.IsNotFound(err) {
+			applyManagementLabels(&desired)
 			if createErr := k8sClient.Create(ctx, &desired); createErr != nil {
 				return fmt.Errorf("failed to create CRD %s: %w", desired.GetName(), createErr)
 			}
-			if annotateErr := resources.AnnotateWithDisclaimer(ctx, &desired, k8sClient); annotateErr != nil {
-				ctrl.Log.Error(annotateErr, "Failed to annotate Gateway API CRD with disclaimer", "crd", desired.GetName())
-			}
+			logAnnotationError(ctx, &desired, k8sClient)
 			ctrl.Log.Info("Created Gateway API CRD", "name", desired.GetName())
 			return nil
 		}
 
 		mergeIntoExisting(&desired, existing)
-
 		if updateErr := k8sClient.Update(ctx, &desired); updateErr != nil {
 			return fmt.Errorf("failed to update CRD %s: %w", desired.GetName(), updateErr)
 		}
 		if !resources.HasManagedByDisclaimer(existing) {
-			if annotateErr := resources.AnnotateWithDisclaimer(ctx, &desired, k8sClient); annotateErr != nil {
-				ctrl.Log.Error(annotateErr, "Failed to annotate Gateway API CRD with disclaimer", "crd", desired.GetName())
-			}
+			logAnnotationError(ctx, &desired, k8sClient)
 		}
 		ctrl.Log.Info("Updated Gateway API CRD", "name", desired.GetName())
 		return nil
+	}
+}
+
+func logAnnotationError(ctx context.Context, obj *unstructured.Unstructured, k8sClient client.Client) {
+	if err := resources.AnnotateWithDisclaimer(ctx, obj, k8sClient); err != nil {
+		ctrl.Log.Error(err, "Failed to annotate Gateway API CRD with disclaimer", "crd", obj.GetName())
 	}
 }
 
@@ -146,8 +148,11 @@ func (g GatewayAPICRDs) deleteManagedCRDs(ctx context.Context, k8sClient client.
 
 func (g GatewayAPICRDs) deleteOne(ctx context.Context, k8sClient client.Client) fs.WalkDirFunc {
 	return func(path string, d fs.DirEntry, err error) error {
-		desired, skip, err := parseCRD(path, d, err)
-		if skip {
+		if err != nil || d.IsDir() {
+			return err
+		}
+		desired, err := parseCRD(path)
+		if err != nil {
 			return err
 		}
 
@@ -200,22 +205,14 @@ func applyManagementLabels(obj *unstructured.Unstructured) {
 // mergeIntoExisting preserves existing labels/annotations and enforces module-owned values on top.
 func mergeIntoExisting(desired *unstructured.Unstructured, existing unstructured.Unstructured) {
 	lbls := make(map[string]string)
-	for k, v := range existing.GetLabels() {
-		lbls[k] = v
-	}
-	for k, v := range desired.GetLabels() {
-		lbls[k] = v
-	}
+	maps.Copy(lbls, existing.GetLabels())
+	maps.Copy(lbls, desired.GetLabels())
 	desired.SetLabels(lbls)
 	applyManagementLabels(desired)
 
 	annotations := make(map[string]string)
-	for k, v := range existing.GetAnnotations() {
-		annotations[k] = v
-	}
-	for k, v := range desired.GetAnnotations() {
-		annotations[k] = v
-	}
+	maps.Copy(annotations, existing.GetAnnotations())
+	maps.Copy(annotations, desired.GetAnnotations())
 	desired.SetAnnotations(annotations)
 
 	desired.SetResourceVersion(existing.GetResourceVersion())

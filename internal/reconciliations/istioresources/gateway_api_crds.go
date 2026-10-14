@@ -23,11 +23,6 @@ import (
 //go:embed gateway_api_crds/gateway.networking.k8s.io_*.yaml
 var gatewayAPICRDsFS embed.FS
 
-var (
-	gatewayAPIGatewaysCRD, _       = gatewayAPICRDsFS.ReadFile("gateway_api_crds/gateway.networking.k8s.io_gateways.yaml")
-	gatewayAPIGatewayClassesCRD, _ = gatewayAPICRDsFS.ReadFile("gateway_api_crds/gateway.networking.k8s.io_gatewayclasses.yaml")
-)
-
 // gatewayAPICRDName is the CRD checked to determine whether the module manages Gateway API CRDs.
 const gatewayAPICRDName = "gateways.gateway.networking.k8s.io"
 
@@ -56,21 +51,19 @@ func (g GatewayAPICRDs) reconcile(ctx context.Context, k8sClient client.Client, 
 	return g.installOrWarnCRDs(ctx, k8sClient)
 }
 
-func walkCRDs(fn func(desired unstructured.Unstructured) error) error {
-	return fs.WalkDir(gatewayAPICRDsFS, "gateway_api_crds", func(path string, d fs.DirEntry, err error) error {
-		if err != nil || d.IsDir() {
-			return err
-		}
-		data, err := gatewayAPICRDsFS.ReadFile(path)
-		if err != nil {
-			return fmt.Errorf("failed to read embedded CRD %s: %w", path, err)
-		}
-		var desired unstructured.Unstructured
-		if err := yaml.Unmarshal(data, &desired); err != nil {
-			return fmt.Errorf("failed to unmarshal Gateway API CRD manifest: %w", err)
-		}
-		return fn(desired)
-	})
+func parseCRD(path string, d fs.DirEntry, err error) (unstructured.Unstructured, bool, error) {
+	if err != nil || d.IsDir() {
+		return unstructured.Unstructured{}, true, err
+	}
+	data, err := gatewayAPICRDsFS.ReadFile(path)
+	if err != nil {
+		return unstructured.Unstructured{}, false, fmt.Errorf("failed to read embedded CRD %s: %w", path, err)
+	}
+	var desired unstructured.Unstructured
+	if err := yaml.Unmarshal(data, &desired); err != nil {
+		return unstructured.Unstructured{}, false, fmt.Errorf("failed to unmarshal Gateway API CRD manifest: %w", err)
+	}
+	return desired, false, nil
 }
 
 func (g GatewayAPICRDs) installOrWarnCRDs(ctx context.Context, k8sClient client.Client) (controllerutil.OperationResult, error) {
@@ -82,10 +75,22 @@ func (g GatewayAPICRDs) installOrWarnCRDs(ctx context.Context, k8sClient client.
 		return controllerutil.OperationResultNone, &unmanagedCRDsWarning{}
 	}
 
-	if err := walkCRDs(func(desired unstructured.Unstructured) error {
+	if err := fs.WalkDir(gatewayAPICRDsFS, "gateway_api_crds", g.applyOne(ctx, k8sClient)); err != nil {
+		return controllerutil.OperationResultNone, err
+	}
+	return controllerutil.OperationResultUpdated, nil
+}
+
+func (g GatewayAPICRDs) applyOne(ctx context.Context, k8sClient client.Client) fs.WalkDirFunc {
+	return func(path string, d fs.DirEntry, err error) error {
+		desired, skip, err := parseCRD(path, d, err)
+		if skip {
+			return err
+		}
+
 		existing := unstructured.Unstructured{}
 		existing.SetGroupVersionKind(desired.GroupVersionKind())
-		err := k8sClient.Get(ctx, client.ObjectKey{Name: desired.GetName()}, &existing)
+		err = k8sClient.Get(ctx, client.ObjectKeyFromObject(&desired), &existing)
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
 				return fmt.Errorf("failed to get CRD %s: %w", desired.GetName(), err)
@@ -114,11 +119,7 @@ func (g GatewayAPICRDs) installOrWarnCRDs(ctx context.Context, k8sClient client.
 		}
 		ctrl.Log.Info("Updated Gateway API CRD", "name", desired.GetName())
 		return nil
-	}); err != nil {
-		return controllerutil.OperationResultNone, err
 	}
-
-	return controllerutil.OperationResultUpdated, nil
 }
 
 // isGatewayManaged returns true if the gateway CRD exists and carries the managed-gateway-api label.
@@ -137,10 +138,22 @@ func (g GatewayAPICRDs) isGatewayManaged(ctx context.Context, k8sClient client.C
 }
 
 func (g GatewayAPICRDs) deleteManagedCRDs(ctx context.Context, k8sClient client.Client) (controllerutil.OperationResult, error) {
-	if err := walkCRDs(func(desired unstructured.Unstructured) error {
+	if err := fs.WalkDir(gatewayAPICRDsFS, "gateway_api_crds", g.deleteOne(ctx, k8sClient)); err != nil {
+		return controllerutil.OperationResultNone, err
+	}
+	return controllerutil.OperationResultUpdated, nil
+}
+
+func (g GatewayAPICRDs) deleteOne(ctx context.Context, k8sClient client.Client) fs.WalkDirFunc {
+	return func(path string, d fs.DirEntry, err error) error {
+		desired, skip, err := parseCRD(path, d, err)
+		if skip {
+			return err
+		}
+
 		existing := unstructured.Unstructured{}
 		existing.SetGroupVersionKind(desired.GroupVersionKind())
-		err := k8sClient.Get(ctx, client.ObjectKey{Name: desired.GetName()}, &existing)
+		err = k8sClient.Get(ctx, client.ObjectKeyFromObject(&desired), &existing)
 		if err != nil {
 			if apierrors.IsNotFound(err) {
 				return nil
@@ -158,10 +171,7 @@ func (g GatewayAPICRDs) deleteManagedCRDs(ctx context.Context, k8sClient client.
 		}
 		ctrl.Log.Info("Deleted managed Gateway API CRD", "name", existing.GetName())
 		return nil
-	}); err != nil {
-		return controllerutil.OperationResultNone, err
 	}
-	return controllerutil.OperationResultUpdated, nil
 }
 
 func hasManagedGatewayAPILabel(obj unstructured.Unstructured) bool {

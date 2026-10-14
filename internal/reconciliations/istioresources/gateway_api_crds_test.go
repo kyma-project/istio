@@ -4,6 +4,7 @@ package istioresources
 
 import (
 	"context"
+	"fmt"
 	"io/fs"
 
 	"github.com/kyma-project/istio/operator/pkg/labels"
@@ -16,6 +17,19 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/yaml"
 )
+
+var (
+	gatewayAPIGatewaysCRD       = mustReadCRD("gateway.networking.k8s.io_gateways.yaml")
+	gatewayAPIGatewayClassesCRD = mustReadCRD("gateway.networking.k8s.io_gatewayclasses.yaml")
+)
+
+func mustReadCRD(name string) []byte {
+	data, err := gatewayAPICRDsFS.ReadFile("gateway_api_crds/" + name)
+	if err != nil {
+		panic(fmt.Sprintf("failed to read embedded CRD %s: %v", name, err))
+	}
+	return data
+}
 
 var _ = Describe("GatewayAPICRDs", func() {
 	owner := metav1.OwnerReference{

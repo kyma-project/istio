@@ -98,7 +98,7 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
         ```bash
         export INGRESS_HOST=$(kubectl get gtw tcp-echo-gateway -n $NAMESPACE -o jsonpath='{.status.addresses[0].value}')
         export INGRESS_PORT=$(kubectl get gtw tcp-echo-gateway -n $NAMESPACE -o jsonpath='{.spec.listeners[?(@.name=="tcp-31400")].port}')
-        until export INGRESS_IP=$(dig +short $INGRESS_HOST A | head -1); [ -n "$INGRESS_IP" ]; do echo "Waiting..."; sleep 5; done
+        until export INGRESS_IP=$(dig +short $INGRESS_HOST A | head -1); [ -n "$INGRESS_IP" ]; do echo "Waiting for the load balancer IP to be assigned..."; sleep 5; done
         echo "Ingress IP: $INGRESS_IP, port: $INGRESS_PORT"
         ```
 

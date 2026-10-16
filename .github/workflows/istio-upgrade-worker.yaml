@@ -62,6 +62,7 @@ jobs:
           git add config/manager/env-images.yaml \
                   internal/istiooperator/istio-operator.yaml \
                   internal/istiooperator/istio-operator-light.yaml \
+                  internal/reconciliations/istioresources/gateway_api_crds/ \
                   component-config.yaml \
                   docs/release-notes go.mod go.sum
           git commit -m "Bump Istio to ${ISTIO_VERSION}"

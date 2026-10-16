@@ -198,6 +198,10 @@ main() {
   go get -u -t "istio.io/istio@${target}"
   go mod tidy
 
+  # Gateway API CRDs sync with Istio
+  echo "Syncing Gateway API CRDs with Istio"
+  make update-gateway-api-crds
+
   # Release note: append to the current draft, or create the next-version file.
   local note heading announce
   heading="## Istio Updated to Version ${target}"

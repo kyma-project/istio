@@ -42,7 +42,7 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
 
     ```bash
     export PARENT_DOMAIN={YOUR_PARENT_DOMAIN}
-    export SUBDOMAIN={YOUR_SUBDOMAIN}.${PARENT_DOMAIN}
+    export SUBDOMAIN=gateway-api-test.${PARENT_DOMAIN}
     export GATEWAY_DOMAIN="*.${SUBDOMAIN}"
     export WORKLOAD_DOMAIN="httpbin.${SUBDOMAIN}"
     echo "Parent domain: $PARENT_DOMAIN"

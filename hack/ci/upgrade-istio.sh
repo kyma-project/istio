@@ -200,7 +200,7 @@ main() {
 
   # Gateway API CRDs sync with Istio
   echo "Syncing Gateway API CRDs with Istio"
-  make update-gateway-api-crds
+  ./hack/update-gateway-api-crds.sh
 
   # Release note: append to the current draft, or create the next-version file.
   local note heading announce

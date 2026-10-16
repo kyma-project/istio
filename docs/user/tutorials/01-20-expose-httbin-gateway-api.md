@@ -5,7 +5,7 @@ The Istio module installs the Kubernetes [Gateway API](https://gateway-api.sigs.
 ## Prerequisites
 
 * You have the Istio module added.
-* This tutorial offers two approaches: using the **Kyma domain** (the default domain provided by your Kyma cluster, managed automatically by Gardener) or using a **Custom domain** (your own domain name that you manage through an external DNS provider). For the custom domain approach, you need credentials for a DNS provider supported by Gardener so the ACME DNS challenge can be completed during certificate issuance. For the list of supported providers, see [External DNS Management Guidelines](https://github.com/gardener/external-dns-management/blob/master/README.md#external-dns-management).
+* This tutorial offers two approaches: using the **Kyma domain** (the default domain provided by your Kyma cluster, managed automatically by Gardener) or using a **Custom domain** (your own domain name that you manage through an external DNS provider). For the custom domain approach, you need credentials for a DNS provider supported by Gardener. For the list of supported providers, see [External DNS Management Guidelines](https://github.com/gardener/external-dns-management/blob/master/README.md#external-dns-management).
 
 ## Context
 
@@ -24,16 +24,7 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
     export NAMESPACE={NAMESPACE_NAME}
     ```
 
-2. Export your domain names.
-
-    ```bash
-    export PARENT_DOMAIN={YOUR_PARENT_DOMAIN}
-    export SUBDOMAIN={YOUR_SUBDOMAIN}.${PARENT_DOMAIN}
-    export GATEWAY_DOMAIN="*.${SUBDOMAIN}"
-    export WORKLOAD_DOMAIN="httpbin.${SUBDOMAIN}"
-    ```
-
-3. Create a namespace with Istio injection enabled and deploy the HTTPBin Service.
+2. Create a namespace with Istio injection enabled and deploy the HTTPBin Service.
 
     ```bash
     kubectl create ns $NAMESPACE
@@ -45,6 +36,18 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
 
     ```bash
     kubectl get pods -l app=httpbin -n $NAMESPACE
+    ```
+
+3. Export your domain names.
+
+    ```bash
+    export PARENT_DOMAIN={YOUR_PARENT_DOMAIN}
+    export SUBDOMAIN={YOUR_SUBDOMAIN}.${PARENT_DOMAIN}
+    export GATEWAY_DOMAIN="*.${SUBDOMAIN}"
+    export WORKLOAD_DOMAIN="httpbin.${SUBDOMAIN}"
+    echo "Parent domain: $PARENT_DOMAIN"
+    echo "Gateway domain: $GATEWAY_DOMAIN"
+    echo "Workload domain: $WORKLOAD_DOMAIN"
     ```
 
 4. Create a secret with your DNS provider credentials.
@@ -127,7 +130,7 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
     EOF
     ```
 
-    Istio detects the new Gateway resource and automatically provisions a dedicated Envoy proxy pod and a Kubernetes Service of type `LoadBalancer` in your namespace to handle incoming traffic. The `cert.gardener.cloud/purpose: managed` annotation triggers the Gardener Certificate Service, which requests a TLS certificate from Let's Encrypt and stores it as a secret in the same namespace. For more information, see [Gardener Certificate Service](https://gardener.cloud/docs/extensions/others/gardener-extension-shoot-cert-service/tutorials/tutorial-custom-domain-with-istio/#install-istio).
+    Istio detects the new Gateway resource and automatically provisions a dedicated Envoy proxy pod and a Kubernetes Service of type `LoadBalancer` in your namespace to handle incoming traffic. When you add the `cert.gardener.cloud/purpose: managed` annotation, Gardener Certificate Service requests a TLS certificate from Let's Encrypt and stores it as a secret in the same namespace. For more information, see [Using annotated Gateway API Gateway and/or HTTPRoutes as Source](https://gardener.cloud/docs/extensions/others/gardener-extension-shoot-dns-service/tutorials/gateway-api-gateways/#using-a-gateway-as-a-source).
 
     Check if the TLS certificate secret was created:
 
@@ -209,7 +212,7 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
 
     After DNS propagates, it may take a few minutes for your system's DNS cache to refresh. When successful, you get the code `200 OK` in response.
 
-#### **Kyma domain**>
+#### **Kyma domain**
 
 1. Export the name of the namespace in which you want to deploy the HTTPBin Service:
     ```bash
@@ -271,16 +274,7 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
     EOF
     ```
 
-    Istio detects the new Gateway resource and automatically provisions a dedicated Envoy proxy pod and a Kubernetes Service of type `LoadBalancer` in your namespace to handle incoming traffic. At the same time, two Gardener controllers react to the annotations: the DNS controller creates a DNS record pointing to the Gateway's external IP, and the Certificate Service requests a TLS certificate from Let's Encrypt and stores it as a secret in the same namespace. For more information, see [Gardener Certificate Service](https://gardener.cloud/docs/extensions/others/gardener-extension-shoot-cert-service/tutorials/tutorial-custom-domain-with-istio/#install-istio) and [Gardener DNS Service](https://gardener.cloud/docs/extensions/others/gardener-extension-shoot-dns-service/tutorials/gateway-api-gateways/).
-
-    Wait for the Gateway to be programmed and have an external address assigned:
-
-    ```bash
-    kubectl wait --for=condition=Programmed gateway/httpbin-gateway -n "$NAMESPACE" --timeout=120s
-    echo "Waiting for Gateway external address..."
-    until LOAD_BALANCER_ADDRESS=$(kubectl get gtw httpbin-gateway -n "$NAMESPACE" -o jsonpath='{.status.addresses[0].value}') && [ -n "$LOAD_BALANCER_ADDRESS" ]; do echo "Waiting for external address..."; sleep 5; done
-    echo "Load Balancer address: ${LOAD_BALANCER_ADDRESS}"
-    ```
+    Istio detects the new Gateway resource and automatically provisions a dedicated Envoy proxy pod and a Kubernetes Service of type `LoadBalancer` in your namespace to handle incoming traffic. At the same time, two Gardener controllers react to the annotations: the DNS controller creates a DNS record pointing to the Gateway's external IP, and the Certificate Service requests a TLS certificate from Let's Encrypt and stores it as a secret in the same namespace. For more information, see [Using annotated Gateway API Gateway and/or HTTPRoutes as Source](https://gardener.cloud/docs/extensions/others/gardener-extension-shoot-dns-service/tutorials/gateway-api-gateways/#using-a-gateway-as-a-source) and [External DNS Management](https://gardener.cloud/docs/getting-started/features/dns-management/).
 
     Check if the TLS certificate secret was created:
 

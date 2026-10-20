@@ -36,7 +36,7 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
 
     ```bash
     export PARENT_DOMAIN={YOUR_PARENT_DOMAIN}
-    export SUBDOMAIN=gateway-api-tls.${PARENT_DOMAIN}
+    export SUBDOMAIN=tls.${PARENT_DOMAIN}
     export GATEWAY_DOMAIN="*.${SUBDOMAIN}"
     export WORKLOAD_DOMAIN="httpbin.${SUBDOMAIN}"
     echo "Parent domain: $PARENT_DOMAIN"
@@ -47,9 +47,9 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
     | Placeholder | Example domain name | Description |
     |---------|----------|---------|
     | **PARENT_DOMAIN** | `my-own-domain.example.com` | The domain name available in the public DNS zone. |
-    | **SUBDOMAIN** | `gateway-api-tls.my-own-domain.example.com` | A subdomain created under the parent domain, specifically for the TLS Gateway. |
-    | **GATEWAY_DOMAIN** | `*.gateway-api-tls.my-own-domain.example.com` | A wildcard domain covering all possible first-level subdomains under the TLS subdomain. When configuring the Gateway, this allows you to expose workloads on multiple hosts (for example, `httpbin.gateway-api-tls.my-default-domain.kyma.ondemand.com`, `test.gateway-api-tls.my-default-domain.kyma.ondemand.com`) without creating separate Gateway rules for each one.|
-    | **WORKLOAD_DOMAIN** | `httpbin.gateway-api-tls.my-own-domain.example.com` | The specific domain assigned to your workload. |
+    | **SUBDOMAIN** | `tls.my-own-domain.example.com` | A subdomain created under the parent domain, specifically for the TLS Gateway. |
+    | **GATEWAY_DOMAIN** | `*.tls.my-own-domain.example.com` | A wildcard domain covering all possible first-level subdomains under the TLS subdomain. When configuring the Gateway, this allows you to expose workloads on multiple hosts (for example, `httpbin.tls.my-default-domain.kyma.ondemand.com`, `test.tls.my-default-domain.kyma.ondemand.com`) without creating separate Gateway rules for each one.|
+    | **WORKLOAD_DOMAIN** | `httpbin.tls.my-own-domain.example.com` | The specific domain assigned to your workload. |
 
 3. Create a secret with your DNS provider credentials.
 
@@ -111,7 +111,7 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
 5. Create the server's certificate for the specified subdomain.
 
     ```bash
-    cat <<EOF | kubectl apply -f -
+    kubectl apply -f - <<EOF
     apiVersion: cert.gardener.cloud/v1alpha1
     kind: Certificate
     metadata:
@@ -119,7 +119,9 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
       namespace: "test"
     spec:
       secretName: httpbin-gatewayapi
-      commonName: "${GATEWAY_DOMAIN}"
+      commonName: "${SUBDOMAIN}"
+      dnsNames:
+        - "${GATEWAY_DOMAIN}"
       issuerRef:
         name: garden
     EOF
@@ -245,7 +247,7 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
 
     ```bash
     export PARENT_DOMAIN=$(kubectl get configmap -n kube-system shoot-info -o jsonpath="{.data.domain}")
-    export SUBDOMAIN="gateway-api-tls.${PARENT_DOMAIN}"
+    export SUBDOMAIN="tls.${PARENT_DOMAIN}"
     export GATEWAY_DOMAIN="*.${SUBDOMAIN}"
     export WORKLOAD_DOMAIN="httpbin.${SUBDOMAIN}"
     echo "Parent domain: $PARENT_DOMAIN"
@@ -257,9 +259,9 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
     | Placeholder         | Example domain name                                | Description                                                                                                                                                                                                                                                                                                                                       |
     |---------------------|----------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
     | **PARENT_DOMAIN**   | `my-default-domain.kyma.ondemand.com`              | The default domain of your Kyma cluster retrieved from the default TLS Gateway `kyma-gateway`.                                                                                                                                                                                                                                                    |
-    | **SUBDOMAIN**       | `gateway-api-tls.my-default-domain.kyma.ondemand.com`         | A subdomain created under the parent domain, specifically for the TLS Gateway. Having a separate subdomain is required if you use the default domain of your Kyma cluster, as the parent domain name is already assigned to the TLS Gateway `kyma-gateway` installed in your cluster by default.                                                 |
-    | **GATEWAY_DOMAIN**  | `*.gateway-api-tls.my-default-domain.kyma.ondemand.com`       | A wildcard domain covering all possible first-level subdomains under the TLS subdomain. When configuring the Gateway, this allows you to expose workloads on multiple hosts (for example, `httpbin.gateway-api-tls.my-default-domain.kyma.ondemand.com`, `test.gateway-api-tls.my-default-domain.kyma.ondemand.com`) without creating separate Gateway rules for each one. |
-    | **WORKLOAD_DOMAIN** | `httpbin.gateway-api-tls.my-default-domain.kyma.ondemand.com` | The specific domain assigned to your sample workload (HTTPBin Service) in this tutorial.                                                                                                                                                                                                                                                          |
+    | **SUBDOMAIN**       | `tls.my-default-domain.kyma.ondemand.com`         | A subdomain created under the parent domain, specifically for the TLS Gateway. Having a separate subdomain is required if you use the default domain of your Kyma cluster, as the parent domain name is already assigned to the TLS Gateway `kyma-gateway` installed in your cluster by default.                                                 |
+    | **GATEWAY_DOMAIN**  | `*.tls.my-default-domain.kyma.ondemand.com`       | A wildcard domain covering all possible first-level subdomains under the TLS subdomain. When configuring the Gateway, this allows you to expose workloads on multiple hosts (for example, `httpbin.tls.my-default-domain.kyma.ondemand.com`, `test.tls.my-default-domain.kyma.ondemand.com`) without creating separate Gateway rules for each one. |
+    | **WORKLOAD_DOMAIN** | `httpbin.tls.my-default-domain.kyma.ondemand.com` | The specific domain assigned to your sample workload (HTTPBin Service) in this tutorial.                                                                                                                                                                                                                                                          |
 
 3. Create the server's certificate for the specified subdomain.
     

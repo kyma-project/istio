@@ -14,29 +14,23 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
 
 ## Procedure
 
-1. Export the name of the namespace in which you want to deploy the TCP Echo Service:
-
-    ```bash
-    export NAMESPACE={NAMESPACE_NAME}
-    ```
-
-2. Create a namespace with Istio injection enabled and deploy the TCP Echo Service.
+1. Create a namespace with Istio injection enabled and deploy the TCP Echo Service.
 
     TCP Echo is a sample service that echoes back any TCP traffic it receives, prefixed with `hello`. It is used to verify that traffic flows correctly through the gateway.
 
     ```bash
-    kubectl create ns $NAMESPACE
-    kubectl label namespace $NAMESPACE istio-injection=enabled --overwrite
-    kubectl create -n $NAMESPACE -f https://raw.githubusercontent.com/istio/istio/release-1.31/samples/tcp-echo/tcp-echo.yaml
+    kubectl create ns test
+    kubectl label namespace test istio-injection=enabled --overwrite
+    kubectl create -n test -f https://raw.githubusercontent.com/istio/istio/release-1.31/samples/tcp-echo/tcp-echo.yaml
     ```
 
     Verify all Pods are ready:
 
     ```bash
-    kubectl get pods -l app=tcp-echo -n $NAMESPACE
+    kubectl get pods -l app=tcp-echo -n test
     ```
 
-3. To create an entry point for external TCP traffic, create a Kubernetes Gateway resource:
+2. To create an entry point for external TCP traffic, create a Kubernetes Gateway resource:
 
     ```bash
     cat <<EOF | kubectl apply -f -
@@ -44,7 +38,7 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
     kind: Gateway
     metadata:
       name: tcp-echo-gateway
-      namespace: ${NAMESPACE}
+      namespace: test
     spec:
       gatewayClassName: istio
       listeners:
@@ -62,10 +56,10 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
     Verify that the Gateway is programmed and has an external address assigned — this confirms the LoadBalancer is ready to accept traffic:
 
     ```bash
-    kubectl get gtw tcp-echo-gateway -n $NAMESPACE
+    kubectl get gtw tcp-echo-gateway -n test
     ```
     
-4. Create a TCPRoute to configure access to your workload:
+3. Create a TCPRoute to configure access to your workload:
 
     ```bash
     cat <<EOF | kubectl apply -f -
@@ -73,7 +67,7 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
     kind: TCPRoute
     metadata:
       name: tcp-echo
-      namespace: ${NAMESPACE}
+      namespace: test
     spec:
       parentRefs:
       - name: tcp-echo-gateway
@@ -88,16 +82,16 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
     Verify that the route is valid and all references are resolved:
 
     ```bash
-    kubectl describe tcproute tcp-echo -n $NAMESPACE
+    kubectl describe tcproute tcp-echo -n test
     ```
 
-5. Verify access to the TCP Echo Service:
+4. Verify access to the TCP Echo Service:
 
     1. Discover the gateway's external IP and port:
 
         ```bash
-        export INGRESS_HOST=$(kubectl get gtw tcp-echo-gateway -n $NAMESPACE -o jsonpath='{.status.addresses[0].value}')
-        export INGRESS_PORT=$(kubectl get gtw tcp-echo-gateway -n $NAMESPACE -o jsonpath='{.spec.listeners[?(@.name=="tcp-31400")].port}')
+        export INGRESS_HOST=$(kubectl get gtw tcp-echo-gateway -n test -o jsonpath='{.status.addresses[0].value}')
+        export INGRESS_PORT=$(kubectl get gtw tcp-echo-gateway -n test -o jsonpath='{.spec.listeners[?(@.name=="tcp-31400")].port}')
         until export INGRESS_IP=$(dig +short $INGRESS_HOST A | head -1); [ -n "$INGRESS_IP" ]; do echo "Waiting for the load balancer IP to be assigned..."; sleep 5; done
         echo "Ingress IP: $INGRESS_IP, port: $INGRESS_PORT"
         ```
@@ -107,21 +101,21 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
     2. Deploy a `sleep` Pod, which acts as a TCP client inside the mesh and sends traffic to the TCP Echo Service through the gateway.
 
         ```bash
-        kubectl create -n $NAMESPACE -f https://raw.githubusercontent.com/istio/istio/release-1.31/samples/sleep/sleep.yaml
+        kubectl create -n test -f https://raw.githubusercontent.com/istio/istio/release-1.31/samples/sleep/sleep.yaml
         ```
 
         Verify the Pod is running:
 
         ```bash
-        kubectl get pods -l app=sleep -n $NAMESPACE
+        kubectl get pods -l app=sleep -n test
         ```
 
     3. Send TCP traffic:
 
         ```bash
-        export SLEEP=$(kubectl get pod -l app=sleep -n $NAMESPACE -o jsonpath='{.items[0].metadata.name}')
+        export SLEEP=$(kubectl get pod -l app=sleep -n test -o jsonpath='{.items[0].metadata.name}')
         for i in {1..3}; do \
-        kubectl exec "$SLEEP" -c sleep -n $NAMESPACE -- sh -c "(date; sleep 1) | nc $INGRESS_IP $INGRESS_PORT"; \
+        kubectl exec "$SLEEP" -c sleep -n test -- sh -c "(date; sleep 1) | nc $INGRESS_IP $INGRESS_PORT"; \
         done
         ```
         

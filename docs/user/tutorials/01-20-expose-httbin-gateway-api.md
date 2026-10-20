@@ -111,7 +111,7 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
 5. Create the server's certificate for the specified subdomain.
 
     ```bash
-    kubectl apply -f - <<EOF
+    cat <<EOF | kubectl apply -f -
     apiVersion: cert.gardener.cloud/v1alpha1
     kind: Certificate
     metadata:
@@ -119,9 +119,7 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
       namespace: "test"
     spec:
       secretName: httpbin-gatewayapi
-      commonName: "${SUBDOMAIN}"
-      dnsNames:
-        - "${GATEWAY_DOMAIN}"
+      commonName: "${GATEWAY_DOMAIN}"
       issuerRef:
         name: garden
     EOF
@@ -130,7 +128,7 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
 6. Create a Kubernetes Gateway resource.
 
     ```bash
-    kubectl apply -f - <<EOF
+    cat <<EOF | kubectl apply -f -
     apiVersion: gateway.networking.k8s.io/v1
     kind: Gateway
     metadata:
@@ -164,7 +162,7 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
 8. Create a DNSEntry to point your domain to the Gateway's external IP.
 
     ```bash
-    kubectl apply -f - <<EOF
+    cat <<EOF | kubectl apply -f -
     apiVersion: dns.gardener.cloud/v1alpha1
     kind: DNSEntry
     metadata:
@@ -191,7 +189,7 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
     The HTTPRoute exposes only the `/headers` endpoint of the HTTPBin Service, which returns the headers of the incoming request. The HTTPBin Service listens on port `8000`.
 
     ```bash
-    kubectl apply -f - <<EOF
+    cat <<EOF | kubectl apply -f -
     apiVersion: gateway.networking.k8s.io/v1
     kind: HTTPRoute
     metadata:
@@ -283,7 +281,7 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
 4. Create a Kubernetes Gateway resource.
 
     ```bash
-    kubectl apply -f - <<EOF
+    cat <<EOF | kubectl apply -f -
     apiVersion: gateway.networking.k8s.io/v1
     kind: Gateway
     metadata:
@@ -317,7 +315,7 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
 6. Create a DNSEntry to point your domain to the Gateway's external IP.
 
     ```bash
-    kubectl apply -f - <<EOF
+    cat <<EOF | kubectl apply -f -
     apiVersion: dns.gardener.cloud/v1alpha1
     kind: DNSEntry
     metadata:
@@ -338,7 +336,7 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
     The HTTPRoute exposes only the `/headers` endpoint of the HTTPBin Service, which returns the headers of the incoming request. The HTTPBin Service listens on port `8000`.
 
     ```bash
-    kubectl apply -f - <<EOF
+    cat <<EOF | kubectl apply -f -
     apiVersion: gateway.networking.k8s.io/v1
     kind: HTTPRoute
     metadata:

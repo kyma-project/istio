@@ -1480,6 +1480,12 @@ spec:
                             Specify the namespace if it is required to unambiguously resolve a service in the service registry.
                             The host name refers to the fully qualified host name of a service defined by either a Kubernetes Service or a ServiceEntry.
                           type: string
+                        statusOnError:
+                          description: |-
+                            Specifies the custom HTTP status that is returned to the client when there is a network error to the external authorization service.
+                            The value must be one of the status codes defined in Envoy's `type.v3.StatusCode` enum (see https://www.envoyproxy.io/docs/envoy/latest/api-v3/type/v3/http_status.proto); codes outside this enum (for example, `418`) are ignored by Envoy, which falls back to the default status code.
+                            If not specified, the default status code is default - `403`.
+                          type: string
                         timeout:
                           description: Specifies the timeout for the HTTP authorization
                             request to the external service.

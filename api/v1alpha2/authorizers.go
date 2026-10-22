@@ -34,6 +34,15 @@ type Authorizer struct {
 	// Specifies the timeout for the HTTP authorization request to the external service.
 	// +kubebuilder:validation:Optional
 	Timeout *metav1.Duration `json:"timeout,omitempty"`
+
+	// Specifies the custom HTTP status that is returned to the client when there is a network error to the external authorization service.
+	// The value must be one of the HTTP error status codes (4xx or 5xx) defined in Envoy's `type.v3.StatusCode` enum (see https://www.envoyproxy.io/docs/envoy/latest/api-v3/type/v3/http_status.proto).
+	// Codes outside this enum (for example, `418`) are ignored by Envoy, which falls back to the default status code.
+	// The field accepts only the numeric value of the status code (for example, `403`), not the enum name (for example, `FORBIDDEN`).
+	// If not specified, the default status code is `403`.
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Pattern=`^[45][0-9]{2}$`
+	StatusOnError string `json:"statusOnError,omitempty"`
 }
 
 // Specifies headers included, added, or forwarded during authorization.

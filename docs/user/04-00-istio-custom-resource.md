@@ -53,6 +53,7 @@ Appears in:
 | **headers** <br /> [Headers](#headers) | Specifies the headers included, added, or forwarded during authorization. | Optional |
 | **pathPrefix** <br /> string | Specifies the prefix included in the request sent to the authorization service.<br />The prefix might be constructed with special characters (for example, `/test?original_path=`). | Optional <br /> |
 | **timeout** <br /> [Duration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.33/#duration-v1-meta) | Specifies the timeout for the HTTP authorization request to the external service. | Optional <br /> |
+| **statusOnError** <br /> string | Specifies the custom HTTP status that is returned to the client when there is a network error to the external authorization service.<br />The value must be one of the status codes defined in Envoy's `type.v3.StatusCode` enum (see https://www.envoyproxy.io/docs/envoy/latest/api-v3/type/v3/http_status.proto); codes outside this enum (for example, `418`) are ignored by Envoy, which falls back to the default status code.<br />If not specified, the default status code is default - `403`. | Optional <br /> |
 
 ### CniComponent
 

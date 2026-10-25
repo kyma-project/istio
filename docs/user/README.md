@@ -16,6 +16,13 @@ The Istio module offers the following features:
 - **Synchronization of the data plane with the Istio control plane**: This ensures that changes you make to the control plane are consistently reflected in the data plane, ensuring that the network operates consistently and reliably without any discrepancies.
 - **Support for the X-Forwarded-For (XFF) header**: You can configure the XFF header to manage and track the source of incoming requests.
 
+## Using the Istio Module in Kyma Dashboard
+
+All Istio resources are namespace-scoped in the Kyma dashboard:
+
+- To configure the Istio service mesh, edit the Istio custom resource (CR). It is located in the `kyma-system` namespace. Select the `kyma-system` namespace, go to **Kyma > Istio**, and select the `default` Istio CR. For more information, see [Istio Custom Resource](./04-00-istio-custom-resource.md).
+- To manage Istio networking and security resources for your workloads, such as VirtualServices, DestinationRules, Gateways, ServiceEntries, Sidecars, AuthorizationPolicies, RequestAuthentications, and Telemetries, select your workload's namespace and go to the **Istio** section in the navigation.
+
 ## Architecture
 
 ![Istio Operator Architecture](../assets/istio-controller-overview-user.svg)

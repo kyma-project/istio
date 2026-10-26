@@ -24,7 +24,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -40,7 +39,6 @@ type DeploymentReconciler struct {
 	Scheme     *runtime.Scheme
 	Evaluators evaluation.Source
 	Recorder   record.EventRecorder
-	IstioCRKey types.NamespacedName
 }
 
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete

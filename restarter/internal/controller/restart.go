@@ -85,13 +85,7 @@ func restartReplicaSetPods(ctx context.Context, c client.Client, rs *appsv1.Repl
 			return fmt.Errorf("delete pod %s/%s: %w", p.Namespace, p.Name, err)
 		}
 	}
-	patch := client.StrategicMergeFrom(rs.DeepCopy())
-	if rs.Spec.Template.Annotations == nil {
-		rs.Spec.Template.Annotations = map[string]string{}
-	}
-	rs.Spec.Template.Annotations[RestartAnnotation] = now().UTC().Format(time.RFC3339)
-	rs.Spec.Template.Annotations[FingerprintAnnotation] = fingerprint
-	return c.Patch(ctx, rs, patch)
+	return patchTemplateRestart(ctx, c, rs, &rs.Spec.Template, fingerprint)
 }
 
 // alreadyRestartedForConfig reports whether stamped equals the current config

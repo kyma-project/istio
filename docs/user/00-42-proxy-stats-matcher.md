@@ -26,8 +26,8 @@ To enable additional statistics for all managed proxies, configure the `Istio` C
 <!-- tabs:start -->
 #### **Kyma Dashboard**
 
-1. Go to **Cluster Details** in Kyma dashboard.
-2. In the `kyma-system` namespace, go to the **Istio** section.
+1. In the Kyma dashboard, select the `kyma-system` namespace.
+2. Go to **Kyma > Istio**, and select the `default` Istio CR.
 3. Choose **Edit**.
 4. Under **Proxy Stats Matcher**, add an entry to **Inclusion Regexps**.
 5. Save the changes.

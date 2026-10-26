@@ -36,8 +36,8 @@ You can enable DNS proxying globally using the Kyma Dashboard or kubectl.
 <!-- tabs:start -->
 #### **Kyma Dashboard**
 
-1. Go to **Cluster Details** in Kyma dashboard.
-2. In the `kyma-system` namespace, go to the **Istio** section.
+1. In the Kyma dashboard, select the `kyma-system` namespace.
+2. Go to **Kyma > Istio**, and select the `default` Istio CR.
 3. Choose **Edit**.
 4. In the configuration, set **Enable global DNS Proxying** to `true`.
 5. Save the changes.

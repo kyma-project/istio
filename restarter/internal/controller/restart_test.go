@@ -1,19 +1,3 @@
-/*
-Copyright 2026.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package controller
 
 import (
@@ -379,7 +363,7 @@ func TestReconcile_RestartDecisionTriggersAction(t *testing.T) {
 			s := runtime.NewScheme()
 			_ = appsv1.AddToScheme(s)
 			_ = corev1.AddToScheme(s)
-		_ = operatorv1alpha2.AddToScheme(s)
+			_ = operatorv1alpha2.AddToScheme(s)
 			_ = operatorv1alpha2.AddToScheme(s)
 
 			b := fake.NewClientBuilder().WithScheme(s).WithObjects(append(tt.seed, injectedNamespace())...)
@@ -418,11 +402,11 @@ func TestReconcile_RestartFailurePropagates(t *testing.T) {
 	}
 
 	tests := []struct {
-		name    string
-		seed    []client.Object
-		index   func(*fake.ClientBuilder) *fake.ClientBuilder
-		funcs   interceptor.Funcs
-		run     func(c client.Client) error
+		name  string
+		seed  []client.Object
+		index func(*fake.ClientBuilder) *fake.ClientBuilder
+		funcs interceptor.Funcs
+		run   func(c client.Client) error
 	}{
 		{
 			name: "Deployment patch error propagates",
@@ -546,7 +530,7 @@ func TestReconcile_RestartFailurePropagates(t *testing.T) {
 			s := runtime.NewScheme()
 			_ = appsv1.AddToScheme(s)
 			_ = corev1.AddToScheme(s)
-		_ = operatorv1alpha2.AddToScheme(s)
+			_ = operatorv1alpha2.AddToScheme(s)
 			_ = operatorv1alpha2.AddToScheme(s)
 
 			b := fake.NewClientBuilder().WithScheme(s).WithObjects(append(tt.seed, injectedNamespace())...).WithInterceptorFuncs(tt.funcs)
@@ -628,8 +612,8 @@ func TestReconcile_SkipsRestartWhenAlreadyStamped(t *testing.T) {
 				Selector: &metav1.LabelSelector{MatchLabels: appLabels},
 				Template: corev1.PodTemplateSpec{
 					ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
-						RestartAnnotation:      priorRestart,
-						FingerprintAnnotation:  fp,
+						RestartAnnotation:     priorRestart,
+						FingerprintAnnotation: fp,
 					}},
 				},
 			},
@@ -811,7 +795,7 @@ func runGateCases(t *testing.T, ns *corev1.Namespace, cases []restartGateCase) {
 			s := runtime.NewScheme()
 			_ = appsv1.AddToScheme(s)
 			_ = corev1.AddToScheme(s)
-		_ = operatorv1alpha2.AddToScheme(s)
+			_ = operatorv1alpha2.AddToScheme(s)
 			_ = operatorv1alpha2.AddToScheme(s)
 
 			b := fake.NewClientBuilder().WithScheme(s).WithObjects(append(tt.seed, ns)...)

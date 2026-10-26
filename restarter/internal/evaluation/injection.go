@@ -56,4 +56,3 @@ func injectOverride(templateLabels, templateAnnotations map[string]string) (inje
 	}
 	return lv == "true" || av == "true", true
 }
-

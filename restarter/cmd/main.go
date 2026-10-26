@@ -249,7 +249,6 @@ func main() {
 		Client:     mgr.GetClient(),
 		Scheme:     mgr.GetScheme(),
 		Evaluators: evalSource,
-		IstioCRKey: types.NamespacedName{Namespace: istioCRNamespace, Name: istioCRName},
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "Failed to create controller", "controller", "deployment")
 		os.Exit(1)
@@ -258,7 +257,6 @@ func main() {
 		Client:     mgr.GetClient(),
 		Scheme:     mgr.GetScheme(),
 		Evaluators: evalSource,
-		IstioCRKey: types.NamespacedName{Namespace: istioCRNamespace, Name: istioCRName},
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "Failed to create controller", "controller", "replicaset")
 		os.Exit(1)
@@ -267,7 +265,6 @@ func main() {
 		Client:     mgr.GetClient(),
 		Scheme:     mgr.GetScheme(),
 		Evaluators: evalSource,
-		IstioCRKey: types.NamespacedName{Namespace: istioCRNamespace, Name: istioCRName},
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "Failed to create controller", "controller", "statefulset")
 		os.Exit(1)
@@ -276,7 +273,6 @@ func main() {
 		Client:     mgr.GetClient(),
 		Scheme:     mgr.GetScheme(),
 		Evaluators: evalSource,
-		IstioCRKey: types.NamespacedName{Namespace: istioCRNamespace, Name: istioCRName},
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "Failed to create controller", "controller", "daemonset")
 		os.Exit(1)

@@ -1,8 +1,9 @@
-package controller
+package restart
 
 import (
 	"context"
 	"fmt"
+	"testing"
 	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -24,10 +25,22 @@ const RestartAnnotation = "istio-operator.kyma-project.io/restartedAt"
 // they differ, yielding exactly one restart per distinct config state.
 const FingerprintAnnotation = "istio-operator.kyma-project.io/restartFingerprint"
 
-// now is overridable for tests. It is a package-level variable and is NOT
-// safe for concurrent mutation: tests that override it must run sequentially
-// (do not call t.Parallel on tests that use withFixedNow).
-var now = time.Now
+// Now is overridable for tests via SetNowForTest. It is a package-level
+// variable and is NOT safe for concurrent mutation: tests that override it
+// must run sequentially (do not call t.Parallel on tests that use it).
+var Now = time.Now
+
+// SetNowForTest overrides Now for the duration of t and restores it on
+// cleanup. Now is a shared package var and is NOT safe for concurrent
+// mutation: tests that call this must not use t.Parallel. It lives in a
+// non-test file because the controller package's tests call it across the
+// package boundary.
+func SetNowForTest(t *testing.T, fn func() time.Time) {
+	t.Helper()
+	prev := Now
+	Now = fn
+	t.Cleanup(func() { Now = prev })
+}
 
 // patchTemplateRestart stamps the restart annotation and the config fingerprint
 // onto the pod template of a Deployment, StatefulSet, or DaemonSet via strategic
@@ -39,31 +52,34 @@ func patchTemplateRestart(ctx context.Context, c client.Client, obj client.Objec
 	if tmpl.Annotations == nil {
 		tmpl.Annotations = map[string]string{}
 	}
-	tmpl.Annotations[RestartAnnotation] = now().UTC().Format(time.RFC3339)
+	tmpl.Annotations[RestartAnnotation] = Now().UTC().Format(time.RFC3339)
 	tmpl.Annotations[FingerprintAnnotation] = fingerprint
 	return c.Patch(ctx, obj, patch)
 }
 
-func restartDeployment(ctx context.Context, c client.Client, d *appsv1.Deployment, fingerprint string) error {
+// Deployment performs a rolling restart of d by stamping its pod template.
+func Deployment(ctx context.Context, c client.Client, d *appsv1.Deployment, fingerprint string) error {
 	return patchTemplateRestart(ctx, c, d, &d.Spec.Template, fingerprint)
 }
 
-func restartStatefulSet(ctx context.Context, c client.Client, s *appsv1.StatefulSet, fingerprint string) error {
+// StatefulSet performs a rolling restart of s by stamping its pod template.
+func StatefulSet(ctx context.Context, c client.Client, s *appsv1.StatefulSet, fingerprint string) error {
 	return patchTemplateRestart(ctx, c, s, &s.Spec.Template, fingerprint)
 }
 
-func restartDaemonSet(ctx context.Context, c client.Client, d *appsv1.DaemonSet, fingerprint string) error {
+// DaemonSet performs a rolling restart of d by stamping its pod template.
+func DaemonSet(ctx context.Context, c client.Client, d *appsv1.DaemonSet, fingerprint string) error {
 	return patchTemplateRestart(ctx, c, d, &d.Spec.Template, fingerprint)
 }
 
-// restartReplicaSetPods deletes the given pods so the ReplicaSet controller
-// recreates them, then stamps both the restart timestamp and the config
-// fingerprint into the ReplicaSet's pod template annotations. The guard that
-// prevents duplicate restarts reads from the pod template, consistent with the
-// other workload kinds. Delete is the only reliable trigger for ownerless
-// ReplicaSets — patching the template alone does not force existing pods to be
-// replaced because the pod-template hash stays identical.
-func restartReplicaSetPods(ctx context.Context, c client.Client, rs *appsv1.ReplicaSet, pods []*corev1.Pod, fingerprint string) error {
+// ReplicaSetPods deletes the given pods so the ReplicaSet controller recreates
+// them, then stamps both the restart timestamp and the config fingerprint into
+// the ReplicaSet's pod template annotations. The guard that prevents duplicate
+// restarts reads from the pod template, consistent with the other workload
+// kinds. Delete is the only reliable trigger for ownerless ReplicaSets —
+// patching the template alone does not force existing pods to be replaced
+// because the pod-template hash stays identical.
+func ReplicaSetPods(ctx context.Context, c client.Client, rs *appsv1.ReplicaSet, pods []*corev1.Pod, fingerprint string) error {
 	for _, p := range pods {
 		if err := c.Delete(ctx, p); err != nil && client.IgnoreNotFound(err) != nil {
 			return fmt.Errorf("delete pod %s/%s: %w", p.Namespace, p.Name, err)
@@ -72,10 +88,10 @@ func restartReplicaSetPods(ctx context.Context, c client.Client, rs *appsv1.Repl
 	return patchTemplateRestart(ctx, c, rs, &rs.Spec.Template, fingerprint)
 }
 
-// alreadyRestartedForConfig reports whether stamped equals the current config
+// AlreadyRestartedForConfig reports whether stamped equals the current config
 // fingerprint, meaning the workload was already restarted for this config and
 // must not be restarted again. An empty fingerprint never matches, so a missing
 // or not-yet-known config can never suppress a restart by accident.
-func alreadyRestartedForConfig(stamped, fingerprint string) bool {
+func AlreadyRestartedForConfig(stamped, fingerprint string) bool {
 	return fingerprint != "" && stamped == fingerprint
 }

@@ -12,6 +12,8 @@ type DNSProxyingChanged struct {
 	newEnableDNSProxying *bool
 }
 
+func (c *DNSProxyingChanged) Name() string { return "DNSProxyingChanged" }
+
 // Evaluate returns Restart when the DNS proxying setting changed, and Continue
 // otherwise.
 func (c *DNSProxyingChanged) Evaluate(_ Object) Decision {

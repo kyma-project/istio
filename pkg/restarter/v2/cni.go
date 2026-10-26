@@ -1,6 +1,8 @@
 package v2
 
-import corev1 "k8s.io/api/core/v1"
+import (
+	corev1 "k8s.io/api/core/v1"
+)
 
 const (
 	istioInitContainerName       = "istio-init"
@@ -12,6 +14,8 @@ const (
 type CNIConfigChanged struct {
 	disableCNI bool
 }
+
+func (c *CNIConfigChanged) Name() string { return "CNIConfigChanged" }
 
 // Evaluate returns Restart when the pod's init containers no longer match the
 // expected CNI setting, and Continue otherwise.

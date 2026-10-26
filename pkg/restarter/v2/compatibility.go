@@ -13,6 +13,8 @@ type CompatibilityModeChanged struct {
 	hasProxyMetadata     bool
 }
 
+func (c *CompatibilityModeChanged) Name() string { return "CompatibilityModeChanged" }
+
 // Evaluate returns Restart when compatibility mode changed and proxy metadata is
 // present, and Continue otherwise.
 func (c *CompatibilityModeChanged) Evaluate(_ Object) Decision {

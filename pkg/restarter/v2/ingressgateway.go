@@ -18,6 +18,8 @@ type NumTrustedProxiesConfigChanged struct {
 	newNumTrustedProxies *int
 }
 
+func (c *NumTrustedProxiesConfigChanged) Name() string { return "NumTrustedProxiesConfigChanged" }
+
 // Evaluate returns Restart when obj is the ingress gateway Deployment and the
 // number of trusted proxies changed, and Continue otherwise.
 func (c *NumTrustedProxiesConfigChanged) Evaluate(obj Object) Decision {
@@ -41,6 +43,10 @@ type ForwardClientCertDetailsConfigChanged struct {
 	newForwardClientCert *operatorv1alpha2.XFCCStrategy
 }
 
+func (c *ForwardClientCertDetailsConfigChanged) Name() string {
+	return "ForwardClientCertDetailsConfigChanged"
+}
+
 // Evaluate returns Restart when obj is the ingress gateway Deployment and the
 // XFCC strategy changed, and Continue otherwise.
 func (c *ForwardClientCertDetailsConfigChanged) Evaluate(obj Object) Decision {
@@ -62,6 +68,8 @@ type TrustDomainConfigChanged struct {
 	oldTrustDomain *string
 	newTrustDomain *string
 }
+
+func (c *TrustDomainConfigChanged) Name() string { return "TrustDomainConfigChanged" }
 
 // Evaluate returns Restart when obj is the ingress gateway Deployment and the
 // trust domain changed, and Continue otherwise.

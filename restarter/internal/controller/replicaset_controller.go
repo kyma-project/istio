@@ -28,7 +28,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
@@ -54,63 +53,14 @@ type ReplicaSetReconciler struct {
 // +kubebuilder:rbac:groups=core,resources=events,verbs=create;patch
 
 func (r *ReplicaSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	l := logf.FromContext(ctx).WithValues("replicaset", req.NamespacedName)
-	l.V(1).Info("Reconciling ReplicaSet")
-
-	rs := &appsv1.ReplicaSet{}
-	if err := r.Get(ctx, req.NamespacedName, rs); err != nil {
-		return ctrl.Result{}, client.IgnoreNotFound(err)
-	}
-
-	ns := &corev1.Namespace{}
-	if err := r.Get(ctx, client.ObjectKey{Name: req.Namespace}, ns); err != nil {
-		return ctrl.Result{}, client.IgnoreNotFound(err)
-	}
-	if !evaluation.ShouldInject(ns.Labels, rs.Spec.Template.Labels, rs.Spec.Template.Annotations) {
-		l.V(1).Info("Injection is disabled for this workload. Skipping evaluation.")
-		return ctrl.Result{}, nil
-	}
-
-	podList := &corev1.PodList{}
-	if err := r.List(ctx, podList,
-		client.InNamespace(req.Namespace),
-		client.MatchingFields{replicaSetPodOwnerKey: string(rs.UID)},
-	); err != nil {
-		l.Error(err, "Failed to list Pods")
-		return ctrl.Result{}, err
-	}
-
-	pods := make([]*corev1.Pod, len(podList.Items))
-	for i := range podList.Items {
-		pods[i] = &podList.Items[i]
-	}
-
-	evs, fingerprint, err := r.Evaluators.Snapshot(ctx)
-	if err != nil {
-		l.Error(err, "Failed to snapshot evaluators")
-		return ctrl.Result{}, err
-	}
-	decision, kind := evaluation.EvaluateDetailed(ctx, rs, pods, evs)
-	l.V(1).Info("Evaluation decision", "decision", decision, "pods", len(pods))
-	emitDecisionEvent(r.Recorder, rs, decision)
-
-	if decision == evaluation.Restart {
-		if kind == evaluation.KindConfigDrift && alreadyRestartedForConfig(rs.Spec.Template.Annotations[FingerprintAnnotation], fingerprint) {
-			l.V(1).Info("Workload already restarted for current config; skipping", "fingerprint", fingerprint)
-			return ctrl.Result{}, nil
-		}
-		if !replicaSetRolledOut(rs) {
-			l.V(1).Info("Rollout in progress; deferring restart")
-			return ctrl.Result{}, nil
-		}
-		l.V(1).Info("Restarting ReplicaSet", "fingerprint", fingerprint)
-		if err := restartReplicaSetPods(ctx, r.Client, rs, pods, fingerprint); err != nil {
-			l.Error(err, "Failed to delete pods for ownerless ReplicaSet")
-			return ctrl.Result{}, err
-		}
-	}
-
-	return ctrl.Result{}, nil
+	return reconcileWorkload(ctx, r.Client, r.Evaluators, r.Recorder, req, workloadStrategy[*appsv1.ReplicaSet]{
+		logKey:    "replicaset",
+		newObj:    func() *appsv1.ReplicaSet { return &appsv1.ReplicaSet{} },
+		template:  func(rs *appsv1.ReplicaSet) *corev1.PodTemplateSpec { return &rs.Spec.Template },
+		listPods:  listPodsByOwnerIndex[*appsv1.ReplicaSet](replicaSetPodOwnerKey),
+		rolledOut: replicaSetRolledOut,
+		restart:   restartReplicaSetPods,
+	})
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -121,18 +71,7 @@ func (r *ReplicaSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		context.Background(),
 		&corev1.Pod{},
 		replicaSetPodOwnerKey,
-		func(obj client.Object) []string {
-			pod, ok := obj.(*corev1.Pod)
-			if !ok {
-				return nil
-			}
-			for _, ref := range pod.OwnerReferences {
-				if ref.Kind == "ReplicaSet" && ref.APIVersion == "apps/v1" {
-					return []string{string(ref.UID)}
-				}
-			}
-			return nil
-		},
+		podOwnerIndexer("ReplicaSet"),
 	); err != nil {
 		return err
 	}
@@ -142,19 +81,19 @@ func (r *ReplicaSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Watches(&operatorv1alpha2.Istio{}, handler.EnqueueRequestsFromMapFunc(
 			enqueueWorkloadsOnIstioChange(r.Client,
 				func() client.ObjectList { return &appsv1.ReplicaSetList{} },
-				func(list client.ObjectList) []client.Object {
-					items := list.(*appsv1.ReplicaSetList).Items
-					objs := make([]client.Object, len(items))
-					for i := range items {
-						objs[i] = &items[i]
-					}
-					return objs
-				},
-				func(obj client.Object) bool { return len(obj.GetOwnerReferences()) == 0 },
+				objectListItems(func(l *appsv1.ReplicaSetList) []appsv1.ReplicaSet { return l.Items }),
+				isOwnerless,
 			),
 		)).
 		Named("replicaset").
 		Complete(r)
+}
+
+// isOwnerless reports whether obj has no owner references. ReplicaSets owned by
+// a higher-level controller (e.g. Deployment) have their pods evaluated by the
+// owner's reconciler; this controller handles only ownerless ones.
+func isOwnerless(obj client.Object) bool {
+	return len(obj.GetOwnerReferences()) == 0
 }
 
 // ownerlessReplicaSet keeps only ReplicaSets with no owner. ReplicaSets owned
@@ -162,7 +101,5 @@ func (r *ReplicaSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 // the owner's reconciler; enqueueing them here would double-count evaluations
 // and emit duplicate events.
 func ownerlessReplicaSet() predicate.Predicate {
-	return predicate.NewPredicateFuncs(func(obj client.Object) bool {
-		return len(obj.GetOwnerReferences()) == 0
-	})
+	return predicate.NewPredicateFuncs(isOwnerless)
 }

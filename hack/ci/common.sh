@@ -2,6 +2,20 @@
 
 # Sourced by CI scripts. Provides shared utilities.
 
+# require_bash <major>
+# Exits if the current shell is not Bash or is older than the required major version.
+require_bash() {
+  local required_major="$1"
+  if [ -z "${BASH_VERSION:-}" ]; then
+    echo "This script requires Bash ${required_major}.0+ (current shell: $(ps -p $$ -o comm=))" >&2
+    exit 1
+  fi
+  if (( BASH_VERSINFO[0] < required_major )); then
+    echo "Bash ${required_major}.0+ is required (found ${BASH_VERSION})" >&2
+    exit 1
+  fi
+}
+
 # load_configuration <config_name>
 # Sources configurations/<config_name>/vars.sh relative to the calling script's directory,
 # auto-exporting all variables defined in that file.
@@ -20,12 +34,27 @@ load_configuration() {
   set +a
 }
 
+# require_tools tool1 tool2 ...
+# Verifies all named tools are available on PATH. Prints all missing ones before exiting.
+require_tools() {
+  local missing=false
+  for tool in "$@"; do
+    if ! command -v "${tool}" >/dev/null 2>&1; then
+      >&2 echo "Required tool not found: ${tool}"
+      missing=true
+    fi
+  done
+  if [ "${missing}" = true ]; then
+    exit 2
+  fi
+}
+
 # require_vars VAR1 VAR2 ...
 # Verifies all named variables are non-empty. Prints all missing ones before exiting.
 require_vars() {
   local missing=false
   for var in "$@"; do
-    if [ -z "${!var}" ]; then
+    if [ -z "${!var:-}" ]; then
       >&2 echo "Environment variable ${var} is required but not set"
       missing=true
     fi
@@ -40,7 +69,7 @@ require_vars() {
 require_files() {
   local missing=false
   for var in "$@"; do
-    local path="${!var}"
+    local path="${!var:-}"
     if [ ! -f "${path}" ]; then
       >&2 echo "File '${path}' (${var}) required but not found"
       missing=true

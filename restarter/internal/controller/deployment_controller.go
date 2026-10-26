@@ -29,7 +29,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/workload-controller/internal/evaluation"
@@ -54,75 +53,36 @@ type DeploymentReconciler struct {
 // +kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios,verbs=get;list;watch
 
 func (r *DeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	l := logf.FromContext(ctx).WithValues("deployment", req.NamespacedName)
-	l.V(1).Info("Reconciling Deployment")
-
-	deployment := &appsv1.Deployment{}
-	if err := r.Get(ctx, req.NamespacedName, deployment); err != nil {
-		return ctrl.Result{}, client.IgnoreNotFound(err)
-	}
-
-	ns := &corev1.Namespace{}
-	if err := r.Get(ctx, client.ObjectKey{Name: req.Namespace}, ns); err != nil {
-		return ctrl.Result{}, client.IgnoreNotFound(err)
-	}
-	if !evaluation.ShouldInject(ns.Labels, deployment.Spec.Template.Labels, deployment.Spec.Template.Annotations) {
-		l.V(1).Info("Injection is disabled for this workload. Skipping evaluation.")
-		return ctrl.Result{}, nil
-	}
-
-	// A nil selector means the Deployment is not yet usable; an empty selector would
-	// otherwise match every pod in the namespace, so skip both.
-	if deployment.Spec.Selector == nil ||
-		(len(deployment.Spec.Selector.MatchLabels) == 0 && len(deployment.Spec.Selector.MatchExpressions) == 0) {
-		return ctrl.Result{}, nil
-	}
-
-	sel, err := metav1.LabelSelectorAsSelector(deployment.Spec.Selector)
-	if err != nil {
-		return ctrl.Result{}, fmt.Errorf("invalid deployment selector: %w", err)
-	}
-
-	podList := &corev1.PodList{}
-	if err := r.List(ctx, podList,
-		client.InNamespace(req.Namespace),
-		client.MatchingLabelsSelector{Selector: sel},
-	); err != nil {
-		l.Error(err, "Failed to list Pods")
-		return ctrl.Result{}, err
-	}
-
-	pods := make([]*corev1.Pod, len(podList.Items))
-	for i := range podList.Items {
-		pods[i] = &podList.Items[i]
-	}
-
-	evs, fingerprint, err := r.Evaluators.Snapshot(ctx)
-	if err != nil {
-		l.Error(err, "Failed to snapshot evaluators")
-		return ctrl.Result{}, err
-	}
-	decision, kind := evaluation.EvaluateDetailed(ctx, deployment, pods, evs)
-	l.V(1).Info("Evaluation decision", "decision", decision, "pods", len(pods))
-	emitDecisionEvent(r.Recorder, deployment, decision)
-
-	if decision == evaluation.Restart {
-		if kind == evaluation.KindConfigDrift && alreadyRestartedForConfig(deployment.Spec.Template.Annotations[FingerprintAnnotation], fingerprint) {
-			l.V(1).Info("Workload already restarted for current config; skipping", "fingerprint", fingerprint)
-			return ctrl.Result{}, nil
-		}
-		if !deploymentRolledOut(deployment) {
-			l.V(1).Info("Rollout in progress; deferring restart")
-			return ctrl.Result{}, nil
-		}
-		l.V(1).Info("Restarting Deployment", "fingerprint", fingerprint)
-		if err := restartDeployment(ctx, r.Client, deployment, fingerprint); err != nil {
-			l.Error(err, "Failed to restart Deployment")
-			return ctrl.Result{}, err
-		}
-	}
-
-	return ctrl.Result{}, nil
+	return reconcileWorkload(ctx, r.Client, r.Evaluators, r.Recorder, req, workloadStrategy[*appsv1.Deployment]{
+		logKey:   "deployment",
+		newObj:   func() *appsv1.Deployment { return &appsv1.Deployment{} },
+		template: func(d *appsv1.Deployment) *corev1.PodTemplateSpec { return &d.Spec.Template },
+		listPods: func(ctx context.Context, c client.Client, req ctrl.Request, d *appsv1.Deployment) (*corev1.PodList, error) {
+			// A nil selector means the Deployment is not yet usable; an empty selector
+			// would otherwise match every pod in the namespace, so skip both by
+			// returning a nil list (no evaluation, no error).
+			if d.Spec.Selector == nil ||
+				(len(d.Spec.Selector.MatchLabels) == 0 && len(d.Spec.Selector.MatchExpressions) == 0) {
+				return nil, nil
+			}
+			sel, err := metav1.LabelSelectorAsSelector(d.Spec.Selector)
+			if err != nil {
+				return nil, fmt.Errorf("invalid deployment selector: %w", err)
+			}
+			podList := &corev1.PodList{}
+			if err := c.List(ctx, podList,
+				client.InNamespace(req.Namespace),
+				client.MatchingLabelsSelector{Selector: sel},
+			); err != nil {
+				return nil, err
+			}
+			return podList, nil
+		},
+		rolledOut: deploymentRolledOut,
+		restart: func(ctx context.Context, c client.Client, d *appsv1.Deployment, _ []*corev1.Pod, fp string) error {
+			return restartDeployment(ctx, c, d, fp)
+		},
+	})
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -134,14 +94,7 @@ func (r *DeploymentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Watches(&operatorv1alpha2.Istio{}, handler.EnqueueRequestsFromMapFunc(
 			enqueueWorkloadsOnIstioChange(r.Client,
 				func() client.ObjectList { return &appsv1.DeploymentList{} },
-				func(list client.ObjectList) []client.Object {
-					items := list.(*appsv1.DeploymentList).Items
-					objs := make([]client.Object, len(items))
-					for i := range items {
-						objs[i] = &items[i]
-					}
-					return objs
-				},
+				objectListItems(func(l *appsv1.DeploymentList) []appsv1.Deployment { return l.Items }),
 				nil,
 			),
 		)).

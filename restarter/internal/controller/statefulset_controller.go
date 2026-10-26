@@ -27,7 +27,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/workload-controller/internal/evaluation"
@@ -52,63 +51,16 @@ type StatefulSetReconciler struct {
 // +kubebuilder:rbac:groups=core,resources=events,verbs=create;patch
 
 func (r *StatefulSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	l := logf.FromContext(ctx).WithValues("statefulset", req.NamespacedName)
-	l.V(1).Info("Reconciling StatefulSet")
-
-	sts := &appsv1.StatefulSet{}
-	if err := r.Get(ctx, req.NamespacedName, sts); err != nil {
-		return ctrl.Result{}, client.IgnoreNotFound(err)
-	}
-
-	ns := &corev1.Namespace{}
-	if err := r.Get(ctx, client.ObjectKey{Name: req.Namespace}, ns); err != nil {
-		return ctrl.Result{}, client.IgnoreNotFound(err)
-	}
-	if !evaluation.ShouldInject(ns.Labels, sts.Spec.Template.Labels, sts.Spec.Template.Annotations) {
-		l.V(1).Info("Injection is disabled for this workload. Skipping evaluation.")
-		return ctrl.Result{}, nil
-	}
-
-	podList := &corev1.PodList{}
-	if err := r.List(ctx, podList,
-		client.InNamespace(req.Namespace),
-		client.MatchingFields{statefulSetPodOwnerKey: string(sts.UID)},
-	); err != nil {
-		l.Error(err, "Failed to list Pods")
-		return ctrl.Result{}, err
-	}
-
-	pods := make([]*corev1.Pod, len(podList.Items))
-	for i := range podList.Items {
-		pods[i] = &podList.Items[i]
-	}
-
-	evs, fingerprint, err := r.Evaluators.Snapshot(ctx)
-	if err != nil {
-		l.Error(err, "Failed to snapshot evaluators")
-		return ctrl.Result{}, err
-	}
-	decision, kind := evaluation.EvaluateDetailed(ctx, sts, pods, evs)
-	l.V(1).Info("Evaluation decision", "decision", decision, "pods", len(pods))
-	emitDecisionEvent(r.Recorder, sts, decision)
-
-	if decision == evaluation.Restart {
-		if kind == evaluation.KindConfigDrift && alreadyRestartedForConfig(sts.Spec.Template.Annotations[FingerprintAnnotation], fingerprint) {
-			l.V(1).Info("Workload already restarted for current config; skipping", "fingerprint", fingerprint)
-			return ctrl.Result{}, nil
-		}
-		if !statefulSetRolledOut(sts) {
-			l.V(1).Info("Rollout in progress; deferring restart")
-			return ctrl.Result{}, nil
-		}
-		l.V(1).Info("Restarting StatefulSet", "fingerprint", fingerprint)
-		if err := restartStatefulSet(ctx, r.Client, sts, fingerprint); err != nil {
-			l.Error(err, "Failed to restart StatefulSet")
-			return ctrl.Result{}, err
-		}
-	}
-
-	return ctrl.Result{}, nil
+	return reconcileWorkload(ctx, r.Client, r.Evaluators, r.Recorder, req, workloadStrategy[*appsv1.StatefulSet]{
+		logKey:    "statefulset",
+		newObj:    func() *appsv1.StatefulSet { return &appsv1.StatefulSet{} },
+		template:  func(s *appsv1.StatefulSet) *corev1.PodTemplateSpec { return &s.Spec.Template },
+		listPods:  listPodsByOwnerIndex[*appsv1.StatefulSet](statefulSetPodOwnerKey),
+		rolledOut: statefulSetRolledOut,
+		restart: func(ctx context.Context, c client.Client, s *appsv1.StatefulSet, _ []*corev1.Pod, fp string) error {
+			return restartStatefulSet(ctx, c, s, fp)
+		},
+	})
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -119,18 +71,7 @@ func (r *StatefulSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		context.Background(),
 		&corev1.Pod{},
 		statefulSetPodOwnerKey,
-		func(obj client.Object) []string {
-			pod, ok := obj.(*corev1.Pod)
-			if !ok {
-				return nil
-			}
-			for _, ref := range pod.OwnerReferences {
-				if ref.Kind == "StatefulSet" && ref.APIVersion == "apps/v1" {
-					return []string{string(ref.UID)}
-				}
-			}
-			return nil
-		},
+		podOwnerIndexer("StatefulSet"),
 	); err != nil {
 		return err
 	}
@@ -140,14 +81,7 @@ func (r *StatefulSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Watches(&operatorv1alpha2.Istio{}, handler.EnqueueRequestsFromMapFunc(
 			enqueueWorkloadsOnIstioChange(r.Client,
 				func() client.ObjectList { return &appsv1.StatefulSetList{} },
-				func(list client.ObjectList) []client.Object {
-					items := list.(*appsv1.StatefulSetList).Items
-					objs := make([]client.Object, len(items))
-					for i := range items {
-						objs[i] = &items[i]
-					}
-					return objs
-				},
+				objectListItems(func(l *appsv1.StatefulSetList) []appsv1.StatefulSet { return l.Items }),
 				nil,
 			),
 		)).

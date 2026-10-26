@@ -27,7 +27,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/workload-controller/internal/evaluation"
@@ -52,63 +51,16 @@ type DaemonSetReconciler struct {
 // +kubebuilder:rbac:groups=core,resources=events,verbs=create;patch
 
 func (r *DaemonSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	l := logf.FromContext(ctx).WithValues("daemonset", req.NamespacedName)
-	l.V(1).Info("Reconciling DaemonSet")
-
-	ds := &appsv1.DaemonSet{}
-	if err := r.Get(ctx, req.NamespacedName, ds); err != nil {
-		return ctrl.Result{}, client.IgnoreNotFound(err)
-	}
-
-	ns := &corev1.Namespace{}
-	if err := r.Get(ctx, client.ObjectKey{Name: req.Namespace}, ns); err != nil {
-		return ctrl.Result{}, client.IgnoreNotFound(err)
-	}
-	if !evaluation.ShouldInject(ns.Labels, ds.Spec.Template.Labels, ds.Spec.Template.Annotations) {
-		l.V(1).Info("Injection is disabled for this workload. Skipping evaluation.")
-		return ctrl.Result{}, nil
-	}
-
-	podList := &corev1.PodList{}
-	if err := r.List(ctx, podList,
-		client.InNamespace(req.Namespace),
-		client.MatchingFields{daemonSetPodOwnerKey: string(ds.UID)},
-	); err != nil {
-		l.Error(err, "Failed to list Pods")
-		return ctrl.Result{}, err
-	}
-
-	pods := make([]*corev1.Pod, len(podList.Items))
-	for i := range podList.Items {
-		pods[i] = &podList.Items[i]
-	}
-
-	evs, fingerprint, err := r.Evaluators.Snapshot(ctx)
-	if err != nil {
-		l.Error(err, "Failed to snapshot evaluators")
-		return ctrl.Result{}, err
-	}
-	decision, kind := evaluation.EvaluateDetailed(ctx, ds, pods, evs)
-	l.V(1).Info("Evaluation decision", "decision", decision, "pods", len(pods))
-	emitDecisionEvent(r.Recorder, ds, decision)
-
-	if decision == evaluation.Restart {
-		if kind == evaluation.KindConfigDrift && alreadyRestartedForConfig(ds.Spec.Template.Annotations[FingerprintAnnotation], fingerprint) {
-			l.V(1).Info("Workload already restarted for current config; skipping", "fingerprint", fingerprint)
-			return ctrl.Result{}, nil
-		}
-		if !daemonSetRolledOut(ds) {
-			l.V(1).Info("Rollout in progress; deferring restart")
-			return ctrl.Result{}, nil
-		}
-		l.V(1).Info("Restarting DaemonSet", "fingerprint", fingerprint)
-		if err := restartDaemonSet(ctx, r.Client, ds, fingerprint); err != nil {
-			l.Error(err, "Failed to restart DaemonSet")
-			return ctrl.Result{}, err
-		}
-	}
-
-	return ctrl.Result{}, nil
+	return reconcileWorkload(ctx, r.Client, r.Evaluators, r.Recorder, req, workloadStrategy[*appsv1.DaemonSet]{
+		logKey:    "daemonset",
+		newObj:    func() *appsv1.DaemonSet { return &appsv1.DaemonSet{} },
+		template:  func(d *appsv1.DaemonSet) *corev1.PodTemplateSpec { return &d.Spec.Template },
+		listPods:  listPodsByOwnerIndex[*appsv1.DaemonSet](daemonSetPodOwnerKey),
+		rolledOut: daemonSetRolledOut,
+		restart: func(ctx context.Context, c client.Client, d *appsv1.DaemonSet, _ []*corev1.Pod, fp string) error {
+			return restartDaemonSet(ctx, c, d, fp)
+		},
+	})
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -119,18 +71,7 @@ func (r *DaemonSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		context.Background(),
 		&corev1.Pod{},
 		daemonSetPodOwnerKey,
-		func(obj client.Object) []string {
-			pod, ok := obj.(*corev1.Pod)
-			if !ok {
-				return nil
-			}
-			for _, ref := range pod.OwnerReferences {
-				if ref.Kind == "DaemonSet" && ref.APIVersion == "apps/v1" {
-					return []string{string(ref.UID)}
-				}
-			}
-			return nil
-		},
+		podOwnerIndexer("DaemonSet"),
 	); err != nil {
 		return err
 	}
@@ -140,14 +81,7 @@ func (r *DaemonSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Watches(&operatorv1alpha2.Istio{}, handler.EnqueueRequestsFromMapFunc(
 			enqueueWorkloadsOnIstioChange(r.Client,
 				func() client.ObjectList { return &appsv1.DaemonSetList{} },
-				func(list client.ObjectList) []client.Object {
-					items := list.(*appsv1.DaemonSetList).Items
-					objs := make([]client.Object, len(items))
-					for i := range items {
-						objs[i] = &items[i]
-					}
-					return objs
-				},
+				objectListItems(func(l *appsv1.DaemonSetList) []appsv1.DaemonSet { return l.Items }),
 				nil,
 			),
 		)).

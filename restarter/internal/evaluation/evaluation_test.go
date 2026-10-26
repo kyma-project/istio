@@ -15,7 +15,7 @@ import (
 // stubEvaluator returns a fixed Decision for every call.
 type stubEvaluator struct{ d evaluation.Decision }
 
-func (s *stubEvaluator) Name() string                           { return "stubEvaluator" }
+func (s *stubEvaluator) Name() string                                 { return "stubEvaluator" }
 func (s *stubEvaluator) Evaluate(_ client.Object) evaluation.Decision { return s.d }
 
 func pod(name string) *corev1.Pod {

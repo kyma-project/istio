@@ -5,8 +5,8 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestStripForRestart(t *testing.T) {
@@ -20,9 +20,9 @@ func TestStripForRestart(t *testing.T) {
 			name: "deployment",
 			in: &appsv1.Deployment{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "dep",
-					Namespace: "ns",
-					Labels:    map[string]string{"app": "x"},
+					Name:        "dep",
+					Namespace:   "ns",
+					Labels:      map[string]string{"app": "x"},
 					Annotations: map[string]string{"a": "b"},
 					ManagedFields: []metav1.ManagedFieldsEntry{
 						{Manager: "m"},
@@ -38,9 +38,9 @@ func TestStripForRestart(t *testing.T) {
 			name: "pod",
 			in: &corev1.Pod{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "pod",
-					Namespace: "ns",
-					Labels:    map[string]string{"app": "x"},
+					Name:        "pod",
+					Namespace:   "ns",
+					Labels:      map[string]string{"app": "x"},
 					Annotations: map[string]string{"a": "b"},
 					ManagedFields: []metav1.ManagedFieldsEntry{
 						{Manager: "m"},

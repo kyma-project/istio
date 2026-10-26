@@ -1,8 +1,8 @@
-package controller
+package restart
 
 import appsv1 "k8s.io/api/apps/v1"
 
-// The rolledOut predicates mirror `kubectl rollout status`: a workload is
+// The RolledOut predicates mirror `kubectl rollout status`: a workload is
 // "rolled out" when its latest spec is fully observed and every replica runs the
 // updated revision. The restarter must not restart a workload whose previous
 // restart is still rolling out — old-revision pods still present mid-rollout
@@ -10,7 +10,7 @@ import appsv1 "k8s.io/api/apps/v1"
 // before it settles. A rollout is in progress whenever Generation has outrun
 // Status.ObservedGeneration, so the generation check uses > (not >=).
 
-func deploymentRolledOut(d *appsv1.Deployment) bool {
+func DeploymentRolledOut(d *appsv1.Deployment) bool {
 	if d.Generation > d.Status.ObservedGeneration {
 		return false
 	}
@@ -23,7 +23,7 @@ func deploymentRolledOut(d *appsv1.Deployment) bool {
 		d.Status.AvailableReplicas == want
 }
 
-func statefulSetRolledOut(s *appsv1.StatefulSet) bool {
+func StatefulSetRolledOut(s *appsv1.StatefulSet) bool {
 	if s.Generation > s.Status.ObservedGeneration {
 		return false
 	}
@@ -42,7 +42,7 @@ func statefulSetRolledOut(s *appsv1.StatefulSet) bool {
 		s.Status.AvailableReplicas == want
 }
 
-func daemonSetRolledOut(ds *appsv1.DaemonSet) bool {
+func DaemonSetRolledOut(ds *appsv1.DaemonSet) bool {
 	if ds.Generation > ds.Status.ObservedGeneration {
 		return false
 	}
@@ -50,7 +50,7 @@ func daemonSetRolledOut(ds *appsv1.DaemonSet) bool {
 		ds.Status.NumberAvailable == ds.Status.DesiredNumberScheduled
 }
 
-func replicaSetRolledOut(rs *appsv1.ReplicaSet) bool {
+func ReplicaSetRolledOut(rs *appsv1.ReplicaSet) bool {
 	if rs.Generation > rs.Status.ObservedGeneration {
 		return false
 	}

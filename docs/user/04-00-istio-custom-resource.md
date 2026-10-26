@@ -13,14 +13,6 @@ You are only allowed to use one Istio CR, which you must create in the `kyma-sys
 If the namespace contains multiple Istio CRs, the oldest one reconciles the module.
 Any additional Istio CR is placed in the `Warning` state.
 
-## View the Istio Custom Resource in Kyma Dashboard
-
-The Istio CR is namespace-scoped and lives in the `kyma-system` namespace. You reach it by selecting that namespace, not through a cluster-wide view such as **Cluster Details**. To view or edit it in the Kyma dashboard:
-
-1. In the Kyma dashboard, select the `kyma-system` namespace.
-2. Go to **Kyma > Istio**, and select the `default` Istio CR.
-3. To change the configuration, choose **Edit**.
-
 ## Sample Custom Resource
 This is a sample Istio CR that configures Istio installation in your Kyma cluster.
     

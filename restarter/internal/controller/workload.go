@@ -10,6 +10,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/kyma-project/istio/operator/workload-controller/internal/evaluation"
+	"github.com/kyma-project/istio/operator/workload-controller/internal/restart"
 )
 
 // workloadStrategy captures the per-type differences between the Deployment,
@@ -90,7 +91,7 @@ func reconcileWorkload[T client.Object](
 	emitDecisionEvent(recorder, obj, decision)
 
 	if decision == evaluation.Restart {
-		if kind == evaluation.KindConfigDrift && alreadyRestartedForConfig(tmpl.Annotations[FingerprintAnnotation], fingerprint) {
+		if kind == evaluation.KindConfigDrift && restart.AlreadyRestartedForConfig(tmpl.Annotations[restart.FingerprintAnnotation], fingerprint) {
 			l.V(1).Info("Workload already restarted for current config; skipping", "fingerprint", fingerprint)
 			return ctrl.Result{}, nil
 		}

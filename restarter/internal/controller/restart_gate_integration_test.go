@@ -16,6 +16,7 @@ import (
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/workload-controller/internal/evaluation"
+	"github.com/kyma-project/istio/operator/workload-controller/internal/restart"
 )
 
 // TestReconcile_IstioCRStateIgnored proves the Istio CR status is not consulted
@@ -96,9 +97,9 @@ func TestReconcile_IstioCRStateIgnored(t *testing.T) {
 			if err := c.Get(context.Background(), req.NamespacedName, got); err != nil {
 				t.Fatalf("get deployment: %v", err)
 			}
-			if got.Spec.Template.Annotations[RestartAnnotation] != fixedTime {
+			if got.Spec.Template.Annotations[restart.RestartAnnotation] != fixedTime {
 				t.Errorf("restart annotation = %q, want %q (restart should proceed regardless of CR state)",
-					got.Spec.Template.Annotations[RestartAnnotation], fixedTime)
+					got.Spec.Template.Annotations[restart.RestartAnnotation], fixedTime)
 			}
 		})
 	}

@@ -13,6 +13,7 @@ import (
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/workload-controller/internal/evaluation"
+	"github.com/kyma-project/istio/operator/workload-controller/internal/restart"
 )
 
 const statefulSetPodOwnerKey = ".metadata.statefulSetOwner"
@@ -38,9 +39,9 @@ func (r *StatefulSetReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		newObj:    func() *appsv1.StatefulSet { return &appsv1.StatefulSet{} },
 		template:  func(s *appsv1.StatefulSet) *corev1.PodTemplateSpec { return &s.Spec.Template },
 		listPods:  listPodsByOwnerIndex[*appsv1.StatefulSet](statefulSetPodOwnerKey),
-		rolledOut: statefulSetRolledOut,
+		rolledOut: restart.StatefulSetRolledOut,
 		restart: func(ctx context.Context, c client.Client, s *appsv1.StatefulSet, _ []*corev1.Pod, fp string) error {
-			return restartStatefulSet(ctx, c, s, fp)
+			return restart.StatefulSet(ctx, c, s, fp)
 		},
 	})
 }

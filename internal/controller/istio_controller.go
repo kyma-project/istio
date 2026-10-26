@@ -21,11 +21,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pkg/errors"
-
 	"github.com/kyma-project/istio/operator/internal/images"
 	istiocrmetrics "github.com/kyma-project/istio/operator/internal/metrics"
 	"github.com/kyma-project/istio/operator/internal/resources"
+	"github.com/pkg/errors"
 
 	"github.com/kyma-project/istio/operator/internal/restarter"
 	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
@@ -56,7 +55,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/istiofeatures"
@@ -73,6 +71,7 @@ type ControllerOptions struct {
 	ReconciliationInterval time.Duration
 	CRMetrics              *istiocrmetrics.IstioCRMetrics
 	IstioImages            images.Images
+	EnableRestart          bool
 }
 
 func NewController(mgr manager.Manager, options ControllerOptions) *IstioReconciler {
@@ -82,7 +81,7 @@ func NewController(mgr manager.Manager, options ControllerOptions) *IstioReconci
 	statusHandler := status.NewStatusHandler(mgr.GetClient())
 	podsLister := pods.NewPods(mgr.GetClient(), &logger)
 	actionRestarter := restart.NewActionRestarter(mgr.GetClient(), &logger)
-	restarters := []restarter.Restarter{
+	restarters := selectRestarters(options.EnableRestart, []restarter.Restarter{
 		restarter.NewIngressGatewayRestarter(mgr.GetClient(), []predicates.IngressGatewayPredicate{}, statusHandler),
 		restarter.NewSidecarsRestarter(
 			mgr.GetLogger(),
@@ -93,7 +92,7 @@ func NewController(mgr manager.Manager, options ControllerOptions) *IstioReconci
 			options.IstioImages,
 		),
 		restarter.NewForNetworkPolicy(mgr.GetClient(), statusHandler),
-	}
+	})
 	userResources := resources.NewUserResources(mgr.GetClient())
 
 	return &IstioReconciler{
@@ -109,6 +108,16 @@ func NewController(mgr manager.Manager, options ControllerOptions) *IstioReconci
 		crMetrics:              options.CRMetrics,
 		istioImages:            options.IstioImages,
 	}
+}
+
+// selectRestarters returns the given restarters when restarting is enabled, or
+// an empty slice when it is disabled, which turns the reconcile restart step
+// into a no-op (restarter.Restart returns nil for an empty slice).
+func selectRestarters(enableRestart bool, restarters []restarter.Restarter) []restarter.Restarter {
+	if !enableRestart {
+		return nil
+	}
+	return restarters
 }
 
 //nolint:gocognit,funlen // cognitive complexity 30 of func `(*IstioReconciler).Reconcile` is high (> 20), Function 'Reconcile' has too many statements (58 > 50) TODO: refactor this function
@@ -370,7 +379,7 @@ func (r *IstioReconciler) finishReconcile(ctx context.Context, istioCR *operator
 // +kubebuilder:rbac:groups="",resources=namespaces,verbs=create;get;patch;update
 // +kubebuilder:rbac:groups="",resources=nodes;replicationcontrollers,verbs=get;list;watch
 // +kubebuilder:rbac:groups="",resources=pods/status,verbs=patch;update
-// +kubebuilder:rbac:groups=admissionregistration.k8s.io,resources=mutatingwebhookconfigurations;validatingwebhookconfigurations;validatingadmissionpolicies,verbs=create;deletecollection;delete;get;list;patch;update;watch
+// +kubebuilder:rbac:groups=admissionregistration.k8s.io,resources=mutatingwebhookconfigurations;validatingwebhookconfigurations,verbs=create;deletecollection;delete;get;list;patch;update;watch
 // +kubebuilder:rbac:groups=apiextensions.k8s.io,resources=customresourcedefinitions.apiextensions.k8s.io;customresourcedefinitions,verbs=create;deletecollection;delete;get;list;patch;update;watch
 // +kubebuilder:rbac:groups=apps;extensions,resources=daemonsets;deployments;deployments/finalizers;replicasets;statefulsets,verbs=create;deletecollection;delete;get;list;patch;update;watch
 // +kubebuilder:rbac:groups=authentication.istio.io,resources=*,verbs=create;deletecollection;delete;get;list;patch;update;watch
@@ -424,7 +433,7 @@ func (r *IstioReconciler) SetupWithManager(mgr ctrl.Manager, rateLimiter RateLim
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&operatorv1alpha2.Istio{}, builder.WithPredicates(predicate.GenerationChangedPredicate{})).
+		For(&operatorv1alpha2.Istio{}, builder.WithPredicates(LastAppliedConfigurationChangedPredicate{})).
 		Watches(&corev1.ConfigMap{}, ElbConfigMapEventHandler{}).
 		Watches(&corev1.ConfigMap{}, IstioFeaturesConfigMapEventHandler{}).
 		WithOptions(controller.Options{

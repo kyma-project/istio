@@ -1,7 +1,8 @@
 package v2
 
 import (
-	"github.com/kyma-project/istio/operator/internal/images"
+	"strings"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -18,12 +19,18 @@ const (
 
 // SidecarImageChanged is a Evaluator that detects Istio proxy sidecar image drift.
 type SidecarImageChanged struct {
-	expectedImage images.Image
+	expectedTag string
 }
 
-// Evaluate returns Restart when the sidecar image no longer matches the expected
-// one, and Continue otherwise.
+func (i *SidecarImageChanged) Name() string { return "SidecarImageChanged" }
+
+// Evaluate returns Restart when the sidecar image tag no longer matches the
+// expected one, and Continue otherwise. When expectedTag is empty the expected
+// version is unknown and the rule never forces a restart.
 func (i *SidecarImageChanged) Evaluate(obj Object) Decision {
+	if i.expectedTag == "" {
+		return Continue
+	}
 	pod, ok := obj.(*corev1.Pod)
 	if !ok {
 		// this is not a pod, bail out, don't stop
@@ -33,7 +40,7 @@ func (i *SidecarImageChanged) Evaluate(obj Object) Decision {
 		return Continue
 	}
 	for _, c := range append(pod.Spec.InitContainers, pod.Spec.Containers...) {
-		if c.Name == istioSidecarName && !i.expectedImage.MatchesImageInContainer(c) {
+		if c.Name == istioSidecarName && sidecarImageTag(c.Image) != i.expectedTag {
 			return Restart
 		}
 	}
@@ -41,16 +48,44 @@ func (i *SidecarImageChanged) Evaluate(obj Object) Decision {
 	return Continue
 }
 
-// NewSidecarImageChangedRule returns a Evaluator that restarts workloads whose sidecar
-// image differs from the expected one.
-func NewSidecarImageChangedRule(image images.Image) Evaluator {
-	return &SidecarImageChanged{expectedImage: image}
+// sidecarImageTag extracts the tag from a container image reference.
+// It handles:
+//   - digest-only refs (foo@sha256:abc) -> ""
+//   - refs with both tag and digest (foo:1.2.3@sha256:abc) -> "1.2.3"
+//   - refs with a registry port (localhost:5000/ns/img:tag) -> "tag"
+//   - plain refs (registry/name:tag) -> "tag"
+func sidecarImageTag(ref string) string {
+	// Strip digest suffix first so a `:` inside the digest hash is not confused
+	// with the tag separator.
+	if idx := strings.Index(ref, "@"); idx != -1 {
+		ref = ref[:idx]
+	}
+	// Only consider the last path segment when searching for the tag colon, so
+	// a port in the registry host (e.g. localhost:5000) is not mistaken for the
+	// tag separator.
+	lastSlash := strings.LastIndex(ref, "/")
+	lastSegment := ref[lastSlash+1:]
+	colonIdx := strings.LastIndex(lastSegment, ":")
+	if colonIdx == -1 {
+		// No tag present (digest-only after stripping, or bare name).
+		return ""
+	}
+	return lastSegment[colonIdx+1:]
+}
+
+// NewSidecarImageChangedRule returns a Evaluator that restarts workloads whose
+// sidecar image tag differs from expectedTag. When expectedTag is empty the
+// evaluator never forces a restart.
+func NewSidecarImageChangedRule(expectedTag string) Evaluator {
+	return &SidecarImageChanged{expectedTag: expectedTag}
 }
 
 // SidecarResourcesChanged is a Evaluator that detects Istio proxy sidecar resource drift.
 type SidecarResourcesChanged struct {
 	req corev1.ResourceRequirements
 }
+
+func (i *SidecarResourcesChanged) Name() string { return "SidecarResourcesChanged" }
 
 // Evaluate returns Restart when the sidecar's resource requests or limits differ
 // from the expected ones, and Continue otherwise.
@@ -59,14 +94,18 @@ func (i *SidecarResourcesChanged) Evaluate(obj Object) Decision {
 	if !ok {
 		return Continue
 	}
+	effective, err := ParseResourceAnnotations(pod, i.req)
+	if err != nil {
+		return Continue
+	}
 	for _, c := range append(pod.Spec.InitContainers, pod.Spec.Containers...) {
 		if c.Name != istioSidecarName {
 			continue
 		}
-		equalCPURequests := c.Resources.Requests.Cpu().Equal(*i.req.Requests.Cpu())
-		equalMemoryRequests := c.Resources.Requests.Memory().Equal(*i.req.Requests.Memory())
-		equalCPULimits := c.Resources.Limits.Cpu().Equal(*i.req.Limits.Cpu())
-		equalMemoryLimits := c.Resources.Limits.Memory().Equal(*i.req.Limits.Memory())
+		equalCPURequests := c.Resources.Requests.Cpu().Equal(*effective.Requests.Cpu())
+		equalMemoryRequests := c.Resources.Requests.Memory().Equal(*effective.Requests.Memory())
+		equalCPULimits := c.Resources.Limits.Cpu().Equal(*effective.Limits.Cpu())
+		equalMemoryLimits := c.Resources.Limits.Memory().Equal(*effective.Limits.Memory())
 
 		if equalCPURequests && equalMemoryRequests && equalCPULimits && equalMemoryLimits {
 			return Continue

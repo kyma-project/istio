@@ -20,6 +20,8 @@ type PrometheusMergeConfigChanged struct {
 	enabled      bool
 }
 
+func (c *PrometheusMergeConfigChanged) Name() string { return "PrometheusMergeConfigChanged" }
+
 // Evaluate returns Restart when the pod's Prometheus annotations do not match the
 // expected PrometheusMerge setting, and Continue otherwise.
 func (c *PrometheusMergeConfigChanged) Evaluate(obj Object) Decision {

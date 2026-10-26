@@ -71,6 +71,7 @@ var (
 
 type FlagVar struct {
 	enableLeaderElection   bool
+	enableRestart          bool
 	failureBaseDelay       time.Duration
 	failureMaxDelay        time.Duration
 	metricsAddr            string
@@ -136,6 +137,7 @@ func main() {
 		ReconciliationInterval: flagVar.reconciliationInterval,
 		CRMetrics:              crMetrics,
 		IstioImages:            *istioImage,
+		EnableRestart:          flagVar.enableRestart,
 	}).SetupWithManager(mgr, rateLimiter); err != nil {
 		setupLog.Error(err, "Unable to create controller", "controller", "Istio")
 		os.Exit(1)
@@ -219,5 +221,7 @@ func defineFlagVar() *FlagVar {
 		"Indicates the failure max delay.")
 	flag.DurationVar(&flagVar.reconciliationInterval, "reconciliation-interval", reconciliationIntervalDefault,
 		"Indicates the time based reconciliation interval.")
+	flag.BoolVar(&flagVar.enableRestart, "enable-restart", true,
+		"Enables restarting of Istio-managed workloads (sidecars, ingress gateway, network policies) during reconciliation.")
 	return flagVar
 }

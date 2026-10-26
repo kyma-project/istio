@@ -15,6 +15,7 @@ import (
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/workload-controller/internal/evaluation"
+	"github.com/kyma-project/istio/operator/workload-controller/internal/restart"
 )
 
 const replicaSetPodOwnerKey = ".metadata.replicaSetOwner"
@@ -40,8 +41,8 @@ func (r *ReplicaSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		newObj:    func() *appsv1.ReplicaSet { return &appsv1.ReplicaSet{} },
 		template:  func(rs *appsv1.ReplicaSet) *corev1.PodTemplateSpec { return &rs.Spec.Template },
 		listPods:  listPodsByOwnerIndex[*appsv1.ReplicaSet](replicaSetPodOwnerKey),
-		rolledOut: replicaSetRolledOut,
-		restart:   restartReplicaSetPods,
+		rolledOut: restart.ReplicaSetRolledOut,
+		restart:   restart.ReplicaSetPods,
 	})
 }
 

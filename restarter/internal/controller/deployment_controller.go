@@ -15,6 +15,7 @@ import (
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/workload-controller/internal/evaluation"
+	"github.com/kyma-project/istio/operator/workload-controller/internal/restart"
 )
 
 // DeploymentReconciler reconciles a Deployment object
@@ -60,9 +61,9 @@ func (r *DeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 			}
 			return podList, nil
 		},
-		rolledOut: deploymentRolledOut,
+		rolledOut: restart.DeploymentRolledOut,
 		restart: func(ctx context.Context, c client.Client, d *appsv1.Deployment, _ []*corev1.Pod, fp string) error {
-			return restartDeployment(ctx, c, d, fp)
+			return restart.Deployment(ctx, c, d, fp)
 		},
 	})
 }

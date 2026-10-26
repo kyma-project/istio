@@ -13,6 +13,7 @@ import (
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/workload-controller/internal/evaluation"
+	"github.com/kyma-project/istio/operator/workload-controller/internal/restart"
 )
 
 const daemonSetPodOwnerKey = ".metadata.daemonSetOwner"
@@ -38,9 +39,9 @@ func (r *DaemonSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		newObj:    func() *appsv1.DaemonSet { return &appsv1.DaemonSet{} },
 		template:  func(d *appsv1.DaemonSet) *corev1.PodTemplateSpec { return &d.Spec.Template },
 		listPods:  listPodsByOwnerIndex[*appsv1.DaemonSet](daemonSetPodOwnerKey),
-		rolledOut: daemonSetRolledOut,
+		rolledOut: restart.DaemonSetRolledOut,
 		restart: func(ctx context.Context, c client.Client, d *appsv1.DaemonSet, _ []*corev1.Pod, fp string) error {
-			return restartDaemonSet(ctx, c, d, fp)
+			return restart.DaemonSet(ctx, c, d, fp)
 		},
 	})
 }

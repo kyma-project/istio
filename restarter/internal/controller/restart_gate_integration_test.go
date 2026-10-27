@@ -23,8 +23,6 @@ import (
 // before performing a restart. A Restart decision proceeds regardless of whether
 // the CR is Processing, Deleting, or absent.
 func TestReconcile_IstioCRStateIgnored(t *testing.T) {
-	withFixedNow(t)
-
 	appLabels := map[string]string{"app": "myapp"}
 	req := ctrl.Request{NamespacedName: types.NamespacedName{Name: "w", Namespace: "default"}}
 
@@ -97,10 +95,7 @@ func TestReconcile_IstioCRStateIgnored(t *testing.T) {
 			if err := c.Get(context.Background(), req.NamespacedName, got); err != nil {
 				t.Fatalf("get deployment: %v", err)
 			}
-			if got.Spec.Template.Annotations[restart.RestartAnnotation] != fixedTime {
-				t.Errorf("restart annotation = %q, want %q (restart should proceed regardless of CR state)",
-					got.Spec.Template.Annotations[restart.RestartAnnotation], fixedTime)
-			}
+			assertRestartAnnotationRecent(t, got.Spec.Template.Annotations[restart.RestartAnnotation])
 		})
 	}
 }

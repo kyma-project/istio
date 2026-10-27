@@ -26,3 +26,17 @@ func StripForRestart() toolscache.TransformFunc {
 		return obj, nil
 	}
 }
+
+// StripForRestartKeepOwnerRefs preserves OwnerReferences
+func StripForRestartKeepOwnerRefs() toolscache.TransformFunc {
+	return func(obj any) (any, error) {
+		accessor, err := meta.Accessor(obj)
+		if err != nil {
+			return obj, nil
+		}
+
+		accessor.SetManagedFields(nil)
+
+		return obj, nil
+	}
+}

@@ -3,7 +3,6 @@ package restart
 import (
 	"context"
 	"fmt"
-	"testing"
 	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -15,21 +14,12 @@ const RestartAnnotation = "istio-operator.kyma-project.io/restartedAt"
 
 const HashAnnotation = "istio-operator.kyma-project.io/restartHash"
 
-var Now = time.Now
-
-func SetNowForTest(t *testing.T, fn func() time.Time) {
-	t.Helper()
-	prev := Now
-	Now = fn
-	t.Cleanup(func() { Now = prev })
-}
-
 func patchTemplateRestart(ctx context.Context, c client.Client, obj client.Object, tmpl *corev1.PodTemplateSpec, fingerprint string) error {
 	patch := client.StrategicMergeFrom(obj.DeepCopyObject().(client.Object))
 	if tmpl.Annotations == nil {
 		tmpl.Annotations = map[string]string{}
 	}
-	tmpl.Annotations[RestartAnnotation] = Now().UTC().Format(time.RFC3339)
+	tmpl.Annotations[RestartAnnotation] = time.Now().UTC().Format(time.RFC3339)
 	tmpl.Annotations[HashAnnotation] = fingerprint
 	return c.Patch(ctx, obj, patch)
 }

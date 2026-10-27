@@ -15,33 +15,21 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
-const fixedTime = "2026-10-23T10:00:00Z"
-
-func withFixedNow(t *testing.T) {
+func assertRestartAnnotationRecent(t *testing.T, got string) {
 	t.Helper()
-	parsed, err := time.Parse(time.RFC3339, fixedTime)
-	if err != nil {
-		t.Fatalf("parse fixed time: %v", err)
+	if got == "" {
+		t.Fatalf("restart annotation missing")
 	}
-	SetNowForTest(t, func() time.Time { return parsed })
-}
-
-func TestSetNowForTest_RestoresAfterCleanup(t *testing.T) {
-	fixed := time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)
-	t.Run("override active inside", func(t *testing.T) {
-		SetNowForTest(t, func() time.Time { return fixed })
-		if !Now().Equal(fixed) {
-			t.Fatalf("Now() = %v inside subtest, want fixed %v", Now(), fixed)
-		}
-	})
-	if Now().Equal(fixed) {
-		t.Fatalf("Now() still fixed after cleanup; seam not restored")
+	parsed, err := time.Parse(time.RFC3339, got)
+	if err != nil {
+		t.Fatalf("restart annotation %q not RFC3339: %v", got, err)
+	}
+	if d := time.Since(parsed); d < -5*time.Second || d > 30*time.Second {
+		t.Errorf("restart annotation %q not recent (delta %v)", got, d)
 	}
 }
 
 func TestRestartHelpers_StampAnnotation(t *testing.T) {
-	withFixedNow(t)
-
 	tests := []struct {
 		name    string
 		obj     client.Object
@@ -88,17 +76,12 @@ func TestRestartHelpers_StampAnnotation(t *testing.T) {
 			if err := c.Get(context.Background(), key, fresh); err != nil {
 				t.Fatalf("get: %v", err)
 			}
-			got := tt.getTmpl(fresh).Annotations[RestartAnnotation]
-			if got != fixedTime {
-				t.Errorf("annotation %q = %q, want %q", RestartAnnotation, got, fixedTime)
-			}
+			assertRestartAnnotationRecent(t, tt.getTmpl(fresh).Annotations[RestartAnnotation])
 		})
 	}
 }
 
 func TestRestartHelpers_PreserveExistingAnnotations(t *testing.T) {
-	withFixedNow(t)
-
 	s := runtime.NewScheme()
 	_ = appsv1.AddToScheme(s)
 
@@ -122,13 +105,10 @@ func TestRestartHelpers_PreserveExistingAnnotations(t *testing.T) {
 	if fresh.Spec.Template.Annotations["keep"] != "me" {
 		t.Errorf("existing annotation lost")
 	}
-	if fresh.Spec.Template.Annotations[RestartAnnotation] != fixedTime {
-		t.Errorf("restart annotation missing")
-	}
+	assertRestartAnnotationRecent(t, fresh.Spec.Template.Annotations[RestartAnnotation])
 }
 
 func TestRestartReplicaSetPods_DeletesAll(t *testing.T) {
-	withFixedNow(t)
 	s := runtime.NewScheme()
 	_ = corev1.AddToScheme(s)
 	_ = appsv1.AddToScheme(s)
@@ -160,9 +140,7 @@ func TestRestartReplicaSetPods_DeletesAll(t *testing.T) {
 	if fresh.Spec.Template.Annotations[HashAnnotation] != "fp-1" {
 		t.Errorf("fingerprint annotation = %q, want %q", fresh.Spec.Template.Annotations[HashAnnotation], "fp-1")
 	}
-	if fresh.Spec.Template.Annotations[RestartAnnotation] != fixedTime {
-		t.Errorf("restart annotation = %q, want %q", fresh.Spec.Template.Annotations[RestartAnnotation], fixedTime)
-	}
+	assertRestartAnnotationRecent(t, fresh.Spec.Template.Annotations[RestartAnnotation])
 }
 
 func TestRestartReplicaSetPods_IgnoresNotFound(t *testing.T) {

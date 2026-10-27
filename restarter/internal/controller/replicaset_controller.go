@@ -28,10 +28,10 @@ type ReplicaSetReconciler struct {
 	Recorder   record.EventRecorder
 }
 
-// +kubebuilder:rbac:groups=apps,resources=replicasets,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=apps,resources=replicasets,verbs=get;list;watch;update;patch
 // +kubebuilder:rbac:groups=apps,resources=replicasets/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=apps,resources=replicasets/finalizers,verbs=update
-// +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch
+// +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;delete
 // +kubebuilder:rbac:groups=core,resources=namespaces,verbs=get;list;watch
 // +kubebuilder:rbac:groups=core,resources=events,verbs=create;patch
 

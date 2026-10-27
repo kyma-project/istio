@@ -379,7 +379,7 @@ func (r *IstioReconciler) finishReconcile(ctx context.Context, istioCR *operator
 // +kubebuilder:rbac:groups="",resources=namespaces,verbs=create;get;patch;update
 // +kubebuilder:rbac:groups="",resources=nodes;replicationcontrollers,verbs=get;list;watch
 // +kubebuilder:rbac:groups="",resources=pods/status,verbs=patch;update
-// +kubebuilder:rbac:groups=admissionregistration.k8s.io,resources=mutatingwebhookconfigurations;validatingwebhookconfigurations,verbs=create;deletecollection;delete;get;list;patch;update;watch
+// +kubebuilder:rbac:groups=admissionregistration.k8s.io,resources=mutatingwebhookconfigurations;validatingwebhookconfigurations;validatingadmissionpolicies,verbs=create;deletecollection;delete;get;list;patch;update;watch
 // +kubebuilder:rbac:groups=apiextensions.k8s.io,resources=customresourcedefinitions.apiextensions.k8s.io;customresourcedefinitions,verbs=create;deletecollection;delete;get;list;patch;update;watch
 // +kubebuilder:rbac:groups=apps;extensions,resources=daemonsets;deployments;deployments/finalizers;replicasets;statefulsets,verbs=create;deletecollection;delete;get;list;patch;update;watch
 // +kubebuilder:rbac:groups=authentication.istio.io,resources=*,verbs=create;deletecollection;delete;get;list;patch;update;watch

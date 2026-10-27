@@ -26,7 +26,7 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
     kubectl create -n test -f https://raw.githubusercontent.com/istio/istio/master/samples/httpbin/httpbin.yaml
     ```
 
-    Verify all Pods are running:
+    Verify all Pods are running.
 
     ```bash
     kubectl get pods -l app=httpbin -n test
@@ -51,7 +51,7 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
     | **GATEWAY_DOMAIN** | `*.tls.my-own-domain.example.com` | A wildcard domain covering all possible first-level subdomains under the TLS subdomain. When configuring the Gateway, this allows you to expose workloads on multiple hosts (for example, `httpbin.tls.my-default-domain.kyma.ondemand.com`, `test.tls.my-default-domain.kyma.ondemand.com`) without creating separate Gateway rules for each one.|
     | **WORKLOAD_DOMAIN** | `httpbin.tls.my-own-domain.example.com` | The specific domain assigned to your workload. |
 
-3. Create a secret with your DNS provider credentials.
+3. Create a Secret with your DNS provider credentials.
 
     The information you provide to the **data** field differs depending on the DNS provider you're using. The DNS provider must be supported by Gardener. To learn how to configure the Secret for a specific provider, follow [External DNS Management Guidelines](https://github.com/gardener/external-dns-management/blob/master/README.md#external-dns-management).
     
@@ -71,17 +71,17 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
     EOF
     ```
 
-    To verify that the secret is created, run:
+    To verify that the Secret is created, run the following command.
 
     ```bash
     kubectl get secret -n test dns-provider-credentials
     ```
 
-4. Create a DNSProvider that references the secret with your DNS provider credentials.
+4. Create a DNSProvider that references the Secret with your DNS provider credentials.
 
     The `spec.type` value depends on your DNS provider. For the list of supported providers and their types, see [External DNS Management Guidelines](https://github.com/gardener/external-dns-management/blob/master/README.md#external-dns-management). 
     
-    See an example `DNSProvider` for the AWS Route 53 DNS provider:
+    See an example `DNSProvider` for the AWS Route 53 DNS provider.
 
     ```bash
     kubectl apply -f - <<EOF
@@ -102,7 +102,7 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
     EOF
     ```
 
-    To verify that the `DNSProvider` is ready, run:
+    To verify that the `DNSProvider` is ready, run the following command.
 
     ```bash
     kubectl get dnsprovider -n test dns-provider
@@ -178,13 +178,13 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
     EOF
     ```
 
-    Check if the `DNSEntry` is ready:
+    Check if the DNSEntry is ready.
 
     ```bash
     kubectl get dnsentry -n test dns-entry
     ```
 
-9. Create an HTTPRoute to configure access to your workload:
+9. Create an HTTPRoute to configure access to your workload.
 
     The HTTPRoute exposes only the `/headers` endpoint of the HTTPBin Service, which returns the headers of the incoming request. The HTTPBin Service listens on port `8000`.
 
@@ -211,7 +211,7 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
     EOF
     ```
 
-    Check that the route is valid and all references are resolved:
+    Check that the route is valid and all references are resolved.
 
     ```bash
     kubectl describe httproute httpbin -n test
@@ -235,7 +235,7 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
     kubectl create -n test -f https://raw.githubusercontent.com/istio/istio/master/samples/httpbin/httpbin.yaml
     ```
 
-    Verify all Pods are running:
+    Verify all Pods are running.
 
     ```bash
     kubectl get pods -l app=httpbin -n test
@@ -331,7 +331,7 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
     EOF
     ```
 
-7. Create an HTTPRoute to configure access to your workload:
+7. Create an HTTPRoute to configure access to your workload.
 
     The HTTPRoute exposes only the `/headers` endpoint of the HTTPBin Service, which returns the headers of the incoming request. The HTTPBin Service listens on port `8000`.
 
@@ -358,7 +358,7 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
     EOF
     ```
 
-    Check that the route is valid and all references are resolved:
+    Check that the route is valid and all references are resolved.
 
     ```bash
     kubectl describe httproute httpbin -n test

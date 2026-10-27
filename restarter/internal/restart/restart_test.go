@@ -157,8 +157,8 @@ func TestRestartReplicaSetPods_DeletesAll(t *testing.T) {
 	if err := c.Get(context.Background(), types.NamespacedName{Name: "rs", Namespace: "default"}, fresh); err != nil {
 		t.Fatalf("get rs: %v", err)
 	}
-	if fresh.Spec.Template.Annotations[FingerprintAnnotation] != "fp-1" {
-		t.Errorf("fingerprint annotation = %q, want %q", fresh.Spec.Template.Annotations[FingerprintAnnotation], "fp-1")
+	if fresh.Spec.Template.Annotations[HashAnnotation] != "fp-1" {
+		t.Errorf("fingerprint annotation = %q, want %q", fresh.Spec.Template.Annotations[HashAnnotation], "fp-1")
 	}
 	if fresh.Spec.Template.Annotations[RestartAnnotation] != fixedTime {
 		t.Errorf("restart annotation = %q, want %q", fresh.Spec.Template.Annotations[RestartAnnotation], fixedTime)

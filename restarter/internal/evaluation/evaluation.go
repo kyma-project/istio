@@ -29,26 +29,11 @@ var ErrDecisionUnknown = v2.ErrDecisionUnknown
 type RestartKind int
 
 const (
-	KindNone        RestartKind = iota // no restart (Continue or Stop)
-	KindConfigDrift                    // winning evaluator fired on the workload object
-	KindPodState                       // winning evaluator fired on a pod object
+	KindNone RestartKind = iota
+	KindConfigDrift
+	KindPodState
 )
 
-// EvaluateDetailed runs all evaluators over the workload and then over each of
-// its pods, reporting whether the Restart came from a workload-level evaluator
-// (KindConfigDrift) or a pod-level evaluator (KindPodState). Returns Stop
-// immediately if any evaluator votes Stop, Restart if any votes Restart,
-// Continue if all votes are Continue. Returns Continue (KindNone) when pods is
-// empty — a workload with no running pods has nothing to restart, so the
-// workload-level loop is skipped. Returns KindNone when decision is Continue or Stop.
-// The distinction lets callers apply the fingerprint guard only to config-drift
-// restarts: a pod-state restart (wrong image after a botched rollout) must not
-// be suppressed by a stamp from the previous config-drift restart.
-//
-// Callers are responsible for only invoking this on workloads that should carry
-// an Istio sidecar (see ShouldInject): config-drift evaluators ignore the
-// workload object and would otherwise vote Restart on every reconcile against a
-// non-mesh workload.
 func EvaluateDetailed(ctx context.Context, workload Object, pods []*corev1.Pod, evaluators []Evaluator) (Decision, RestartKind) {
 	if len(pods) == 0 {
 		return Continue, KindNone

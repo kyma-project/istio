@@ -66,10 +66,17 @@ func TestShouldInject(t *testing.T) {
 			want:     false,
 		},
 		{
-			name:        "conflicting label true and annotation false opts out",
+			name:        "conflicting label true and annotation false: label wins, injects",
 			nsLabels:    map[string]string{evaluation.InjectionLabel: evaluation.InjectEnabled},
 			labels:      map[string]string{evaluation.InjectOverride: "true"},
 			annotations: map[string]string{evaluation.InjectOverride: "false"},
+			want:        true,
+		},
+		{
+			name:        "conflicting label false and annotation true: label wins, opts out",
+			nsLabels:    map[string]string{evaluation.InjectionLabel: evaluation.InjectEnabled},
+			labels:      map[string]string{evaluation.InjectOverride: "false"},
+			annotations: map[string]string{evaluation.InjectOverride: "true"},
 			want:        false,
 		},
 	}

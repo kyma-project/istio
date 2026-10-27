@@ -211,7 +211,7 @@ func TestReconcile_RestartDecisionTriggersAction(t *testing.T) {
 				if _, ok := rs.Spec.Template.Annotations[restart.RestartAnnotation]; !ok {
 					t.Errorf("ownerless RS template missing restart annotation")
 				}
-				if _, ok := rs.Spec.Template.Annotations[restart.FingerprintAnnotation]; !ok {
+				if _, ok := rs.Spec.Template.Annotations[restart.HashAnnotation]; !ok {
 					t.Errorf("ownerless RS template missing fingerprint annotation")
 				}
 			},
@@ -472,8 +472,8 @@ func TestReconcile_SkipsRestartWhenAlreadyStamped(t *testing.T) {
 				Selector: &metav1.LabelSelector{MatchLabels: appLabels},
 				Template: corev1.PodTemplateSpec{
 					ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
-						restart.RestartAnnotation:     priorRestart,
-						restart.FingerprintAnnotation: fp,
+						restart.RestartAnnotation: priorRestart,
+						restart.HashAnnotation:    fp,
 					}},
 				},
 			},
@@ -514,7 +514,7 @@ func TestReconcile_SkipsRestartWhenAlreadyStamped(t *testing.T) {
 			Spec: appsv1.ReplicaSetSpec{
 				Template: corev1.PodTemplateSpec{
 					ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
-						restart.FingerprintAnnotation: fp,
+						restart.HashAnnotation: fp,
 					}},
 				},
 			},
@@ -558,8 +558,8 @@ func TestReconcile_SkipsRestartWhenAlreadyStamped(t *testing.T) {
 				Replicas: ptr.To(int32(1)),
 				Template: corev1.PodTemplateSpec{
 					ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
-						restart.RestartAnnotation:     "2020-01-01T00:00:00Z",
-						restart.FingerprintAnnotation: "old-fp",
+						restart.RestartAnnotation: "2020-01-01T00:00:00Z",
+						restart.HashAnnotation:    "old-fp",
 					}},
 				},
 			},
@@ -581,8 +581,8 @@ func TestReconcile_SkipsRestartWhenAlreadyStamped(t *testing.T) {
 		if err := c.Get(context.Background(), req.NamespacedName, got); err != nil {
 			t.Fatalf("get: %v", err)
 		}
-		if got.Spec.Template.Annotations[restart.FingerprintAnnotation] != fp {
-			t.Errorf("fingerprint not advanced: got %q, want %q", got.Spec.Template.Annotations[restart.FingerprintAnnotation], fp)
+		if got.Spec.Template.Annotations[restart.HashAnnotation] != fp {
+			t.Errorf("fingerprint not advanced: got %q, want %q", got.Spec.Template.Annotations[restart.HashAnnotation], fp)
 		}
 		if got.Spec.Template.Annotations[restart.RestartAnnotation] != fixedTime {
 			t.Errorf("restart not performed for new fingerprint: restartedAt = %q, want %q",

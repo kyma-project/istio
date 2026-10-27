@@ -24,8 +24,8 @@ const (
 //   - The per-workload override sidecar.istio.io/inject — accepted as either a
 //     pod-template label or annotation — overrides the namespace: "false" always
 //     opts out; "true" opts in unless the namespace is istio-injection=disabled.
-//     If the label and annotation disagree, "false" wins (never restart a
-//     workload explicitly opted out).
+//     If the label and annotation disagree, label wins (annotations are deprecated,
+//     and the actual state will match the label)
 //   - Otherwise the namespace label decides: istio-injection=enabled injects;
 //     a disabled or unlabeled namespace does not.
 func ShouldInject(nsLabels, templateLabels, templateAnnotations map[string]string) bool {
@@ -43,16 +43,15 @@ func ShouldInject(nsLabels, templateLabels, templateAnnotations map[string]strin
 }
 
 // injectOverride reads the sidecar.istio.io/inject override from the pod
-// template's labels and annotations. The second return is false when neither
-// carries the key. When both are present and disagree, "false" wins.
+// template's labels and annotations. The second return is false when neither is set.
+// When both are present and disagree, the label wins: the
+// annotation form is deprecated, and the actual injected state tracks the label.
 func injectOverride(templateLabels, templateAnnotations map[string]string) (inject, set bool) {
-	lv, lok := templateLabels[InjectOverride]
-	av, aok := templateAnnotations[InjectOverride]
-	if !lok && !aok {
-		return false, false
+	if lv, lok := templateLabels[InjectOverride]; lok {
+		return lv == "true", true
 	}
-	if lv == "false" || av == "false" {
-		return false, true
+	if av, aok := templateAnnotations[InjectOverride]; aok {
+		return av == "true", true
 	}
-	return lv == "true" || av == "true", true
+	return false, false
 }

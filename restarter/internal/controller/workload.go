@@ -14,14 +14,9 @@ import (
 )
 
 // workloadStrategy captures the per-type differences between the Deployment,
-// StatefulSet, DaemonSet, and ReplicaSet reconcilers. Everything else in the
-// reconcile loop — the namespace injection gate, pod evaluation, the config
-// fingerprint guard, the rollout guard, and event emission — is identical
-// across kinds and lives in reconcileWorkload.
+// StatefulSet, DaemonSet, and ReplicaSet reconcilers.
 type workloadStrategy[T client.Object] struct {
-	// logKey is the structured-log field name for the workload (e.g. "deployment").
 	logKey string
-	// newObj allocates a zero value of the workload type to Get into.
 	newObj func() T
 	// template returns the pod template of the fetched workload, whose
 	// annotations hold the restart timestamp and config fingerprint.
@@ -91,7 +86,7 @@ func reconcileWorkload[T client.Object](
 	emitDecisionEvent(recorder, obj, decision)
 
 	if decision == evaluation.Restart {
-		if kind == evaluation.KindConfigDrift && restart.AlreadyRestartedForConfig(tmpl.Annotations[restart.FingerprintAnnotation], fingerprint) {
+		if kind == evaluation.KindConfigDrift && restart.AlreadyRestartedForConfig(tmpl.Annotations[restart.HashAnnotation], fingerprint) {
 			l.V(1).Info("Workload already restarted for current config; skipping", "fingerprint", fingerprint)
 			return ctrl.Result{}, nil
 		}
@@ -110,9 +105,7 @@ func reconcileWorkload[T client.Object](
 }
 
 // listPodsByOwnerIndex returns a listPods function that selects pods via a
-// field index keyed on the owning workload's UID. The three owner-ref
-// controllers (StatefulSet, DaemonSet, ReplicaSet) register such an index in
-// SetupWithManager and share this listing strategy.
+// field index keyed on the owning workload's UID.
 func listPodsByOwnerIndex[T client.Object](ownerKey string) func(context.Context, client.Client, ctrl.Request, T) (*corev1.PodList, error) {
 	return func(ctx context.Context, c client.Client, req ctrl.Request, obj T) (*corev1.PodList, error) {
 		podList := &corev1.PodList{}
@@ -144,11 +137,6 @@ func podOwnerIndexer(kind string) func(client.Object) []string {
 	}
 }
 
-// objectListItems returns the mapper enqueueWorkloadsOnIstioChange needs: it
-// type-asserts the listed objects to *L and returns element pointers as
-// []client.Object. Replaces the per-type closure every SetupWithManager used to
-// spell out by hand. The *L constraint lets the assertion target the concrete
-// list type (e.g. *appsv1.DeploymentList) rather than a bare type parameter.
 func objectListItems[L any, PL interface {
 	*L
 	client.ObjectList

@@ -24,13 +24,13 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
     kubectl create -n test -f https://raw.githubusercontent.com/istio/istio/release-1.31/samples/tcp-echo/tcp-echo.yaml
     ```
 
-    Verify all Pods are ready:
+    Verify all Pods are ready.
 
     ```bash
     kubectl get pods -l app=tcp-echo -n test
     ```
 
-2. To create an entry point for external TCP traffic, create a Kubernetes Gateway resource:
+2. To create an entry point for external TCP traffic, create a Kubernetes Gateway resource.
 
     ```bash
     cat <<EOF | kubectl apply -f -
@@ -53,13 +53,13 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
 
     Istio detects the new Gateway resource and automatically provisions a dedicated Envoy proxy Pod and a Kubernetes Service of type `LoadBalancer` in your namespace to handle incoming traffic.
 
-    Verify that the Gateway is programmed and has an external address assigned — this confirms the LoadBalancer is ready to accept traffic:
+    Verify that the Gateway is programmed and has an external address assigned — this confirms the LoadBalancer is ready to accept traffic.
 
     ```bash
     kubectl get gtw tcp-echo-gateway -n test
     ```
     
-3. Create a TCPRoute to configure access to your workload:
+3. Create a TCPRoute to configure access to your workload.
 
     ```bash
     cat <<EOF | kubectl apply -f -
@@ -79,13 +79,13 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
     EOF
     ```
 
-    Verify that the route is valid and all references are resolved:
+    Verify that the route is valid and all references are resolved.
 
     ```bash
     kubectl describe tcproute tcp-echo -n test
     ```
 
-4. Verify access to the TCP Echo Service:
+4. Verify access to the TCP Echo Service.
 
     1. Discover the gateway's external IP and port:
 
@@ -104,13 +104,13 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
         kubectl create -n test -f https://raw.githubusercontent.com/istio/istio/release-1.31/samples/sleep/sleep.yaml
         ```
 
-        Verify the Pod is running:
+        Verify the Pod is running.
 
         ```bash
         kubectl get pods -l app=sleep -n test
         ```
 
-    3. Send TCP traffic:
+    3. Send TCP traffic.
 
         ```bash
         export SLEEP=$(kubectl get pod -l app=sleep -n test -o jsonpath='{.items[0].metadata.name}')

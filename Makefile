@@ -137,11 +137,7 @@ uninstall: manifests kustomize module-version ## Uninstall CRDs from the K8s clu
 deploy: manifests kustomize module-version ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	$(if $(IMG),,$(error IMG must be set))
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-ifeq (,$(findstring experimental,$(VERSION)))
-	$(KUSTOMIZE) build config/regular | kubectl apply -f -
-else
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
-endif
 
 .PHONY: deploy-release
 deploy-release: ## Deploy controller from a GitHub release. Requires RELEASE_VERSION.
@@ -244,13 +240,7 @@ module-image: docker-build docker-push ## Build the Module Image and push it to 
 generate-manifests: kustomize module-version
 	$(if $(IMG),,$(error IMG must be set))
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-ifeq (,$(findstring experimental,$(VERSION)))
-	echo "Generating manifest for regular and fast channel releases"
-	$(KUSTOMIZE) build config/regular > istio-manager.yaml
-else
-	echo "Generating manifest for experimental channel releases"
 	$(KUSTOMIZE) build config/default > istio-manager.yaml
-endif
 	cat config/namespace/istio_system_namespace.yaml >> istio-manager.yaml
 
 ########## Grafana Dashboard ###########
@@ -296,6 +286,10 @@ bin/crd-ref-docs:
 	rm bin/crd-ref-docs.tar.gz
 	mv bin/crd-ref-docs-x/crd-ref-docs bin/crd-ref-docs
 	rm -r bin/crd-ref-docs-x
+
+.PHONY: update-gateway-api-crds
+update-gateway-api-crds: ## Sync Gateway API CRDs from the sigs.k8s.io/gateway-api module version in go.mod.
+	./hack/update-gateway-api-crds.sh
 
 .PHONY: generate-crd-docs
 generate-crd-docs: bin/crd-ref-docs ## Generate CRD reference docs

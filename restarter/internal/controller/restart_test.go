@@ -24,15 +24,18 @@ import (
 	"github.com/kyma-project/istio/operator/workload-controller/internal/restart"
 )
 
-const fixedTime = "2026-10-23T10:00:00Z"
-
-func withFixedNow(t *testing.T) {
+func assertRestartAnnotationRecent(t *testing.T, got string) {
 	t.Helper()
-	parsed, err := time.Parse(time.RFC3339, fixedTime)
-	if err != nil {
-		t.Fatalf("parse fixed time: %v", err)
+	if got == "" {
+		t.Fatalf("restart annotation missing")
 	}
-	restart.SetNowForTest(t, func() time.Time { return parsed })
+	parsed, err := time.Parse(time.RFC3339, got)
+	if err != nil {
+		t.Fatalf("restart annotation %q not RFC3339: %v", got, err)
+	}
+	if d := time.Since(parsed); d < -5*time.Second || d > 30*time.Second {
+		t.Errorf("restart annotation %q not recent (delta %v)", got, d)
+	}
 }
 
 // injectedNamespace returns the "default" namespace labeled for Istio injection,
@@ -50,7 +53,6 @@ func injectedNamespace() *corev1.Namespace {
 // performs the correct restart on a Restart decision: template annotation for
 // Deployment/StatefulSet/DaemonSet, pod delete for ownerless ReplicaSet.
 func TestReconcile_RestartDecisionTriggersAction(t *testing.T) {
-	withFixedNow(t)
 
 	appLabels := map[string]string{"app": "myapp"}
 	req := ctrl.Request{NamespacedName: types.NamespacedName{Name: "w", Namespace: "default"}}
@@ -89,9 +91,7 @@ func TestReconcile_RestartDecisionTriggersAction(t *testing.T) {
 				if err := c.Get(context.Background(), req.NamespacedName, got); err != nil {
 					t.Fatalf("get: %v", err)
 				}
-				if got.Spec.Template.Annotations[restart.RestartAnnotation] != fixedTime {
-					t.Errorf("annotation = %q, want %q", got.Spec.Template.Annotations[restart.RestartAnnotation], fixedTime)
-				}
+				assertRestartAnnotationRecent(t, got.Spec.Template.Annotations[restart.RestartAnnotation])
 			},
 		},
 		{
@@ -129,9 +129,7 @@ func TestReconcile_RestartDecisionTriggersAction(t *testing.T) {
 				if err := c.Get(context.Background(), req.NamespacedName, got); err != nil {
 					t.Fatalf("get: %v", err)
 				}
-				if got.Spec.Template.Annotations[restart.RestartAnnotation] != fixedTime {
-					t.Errorf("missing restart annotation")
-				}
+				assertRestartAnnotationRecent(t, got.Spec.Template.Annotations[restart.RestartAnnotation])
 			},
 		},
 		{
@@ -167,9 +165,7 @@ func TestReconcile_RestartDecisionTriggersAction(t *testing.T) {
 				if err := c.Get(context.Background(), req.NamespacedName, got); err != nil {
 					t.Fatalf("get: %v", err)
 				}
-				if got.Spec.Template.Annotations[restart.RestartAnnotation] != fixedTime {
-					t.Errorf("missing restart annotation")
-				}
+				assertRestartAnnotationRecent(t, got.Spec.Template.Annotations[restart.RestartAnnotation])
 			},
 		},
 		{
@@ -244,7 +240,6 @@ func TestReconcile_RestartDecisionTriggersAction(t *testing.T) {
 // the restart error so controller-runtime requeues. Uses interceptor funcs to
 // force a Patch (template-restart kinds) or Delete (ReplicaSet) error.
 func TestReconcile_RestartFailurePropagates(t *testing.T) {
-	withFixedNow(t)
 
 	appLabels := map[string]string{"app": "myapp"}
 	req := ctrl.Request{NamespacedName: types.NamespacedName{Name: "w", Namespace: "default"}}
@@ -408,7 +403,6 @@ func TestReconcile_RestartFailurePropagates(t *testing.T) {
 }
 
 func TestReconcile_ContinueDoesNotRestart(t *testing.T) {
-	withFixedNow(t)
 
 	appLabels := map[string]string{"app": "myapp"}
 	req := ctrl.Request{NamespacedName: types.NamespacedName{Name: "w", Namespace: "default"}}
@@ -451,7 +445,6 @@ func TestReconcile_ContinueDoesNotRestart(t *testing.T) {
 // rollout); an already-stamped ownerless ReplicaSet must not have its pods
 // deleted again.
 func TestReconcile_SkipsRestartWhenAlreadyStamped(t *testing.T) {
-	withFixedNow(t)
 
 	const fp = "config-fp-abc"
 	appLabels := map[string]string{"app": "myapp"}
@@ -494,7 +487,7 @@ func TestReconcile_SkipsRestartWhenAlreadyStamped(t *testing.T) {
 		if err := c.Get(context.Background(), req.NamespacedName, got); err != nil {
 			t.Fatalf("get: %v", err)
 		}
-		// A re-stamp would overwrite the old timestamp with fixedTime.
+		// A re-stamp would overwrite the old timestamp with a current one.
 		if got.Spec.Template.Annotations[restart.RestartAnnotation] != priorRestart {
 			t.Errorf("already-stamped workload was restarted again: restartedAt = %q, want unchanged %q",
 				got.Spec.Template.Annotations[restart.RestartAnnotation], priorRestart)
@@ -584,10 +577,11 @@ func TestReconcile_SkipsRestartWhenAlreadyStamped(t *testing.T) {
 		if got.Spec.Template.Annotations[restart.HashAnnotation] != fp {
 			t.Errorf("fingerprint not advanced: got %q, want %q", got.Spec.Template.Annotations[restart.HashAnnotation], fp)
 		}
-		if got.Spec.Template.Annotations[restart.RestartAnnotation] != fixedTime {
-			t.Errorf("restart not performed for new fingerprint: restartedAt = %q, want %q",
-				got.Spec.Template.Annotations[restart.RestartAnnotation], fixedTime)
+		if got.Spec.Template.Annotations[restart.RestartAnnotation] == "2020-01-01T00:00:00Z" {
+			t.Errorf("restart not performed for new fingerprint: restartedAt unchanged = %q",
+				got.Spec.Template.Annotations[restart.RestartAnnotation])
 		}
+		assertRestartAnnotationRecent(t, got.Spec.Template.Annotations[restart.RestartAnnotation])
 	})
 }
 
@@ -785,7 +779,6 @@ func restartGateSeeds(rolledOut bool) []restartGateCase {
 // Restart decision never results in a restart even though the workload is rolled
 // out.
 func TestReconcile_NonInjectedNamespaceIsSkipped(t *testing.T) {
-	withFixedNow(t)
 	ns := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "default",
@@ -799,6 +792,5 @@ func TestReconcile_NonInjectedNamespaceIsSkipped(t *testing.T) {
 // an injected but not-yet-rolled-out workload defers the restart: no stamp, no
 // pod delete, and an empty result (the next reconcile retries once rolled out).
 func TestReconcile_RolloutInProgressDefersRestart(t *testing.T) {
-	withFixedNow(t)
 	runGateCases(t, injectedNamespace(), restartGateSeeds(false))
 }

@@ -9,7 +9,6 @@ rules:
   resources:
   - configmaps
   - namespaces
-  - pods
   verbs:
   - get
   - list
@@ -22,6 +21,15 @@ rules:
   - create
   - patch
 - apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - delete
+  - get
+  - list
+  - watch
+- apiGroups:
   - apps
   resources:
   - daemonsets
@@ -29,8 +37,6 @@ rules:
   - replicasets
   - statefulsets
   verbs:
-  - create
-  - delete
   - get
   - list
   - patch

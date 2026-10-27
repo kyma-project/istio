@@ -217,6 +217,7 @@ func main() {
 	}
 
 	stripTransform := transform.StripForRestart()
+	stripPodTransform := transform.StripForRestartKeepOwnerRefs()
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
 		Metrics:                metricsServerOptions,
@@ -230,7 +231,7 @@ func main() {
 				&appsv1.ReplicaSet{}:  {Transform: stripTransform},
 				&appsv1.StatefulSet{}: {Transform: stripTransform},
 				&appsv1.DaemonSet{}:   {Transform: stripTransform},
-				&corev1.Pod{}:         {Transform: stripTransform},
+				&corev1.Pod{}:         {Transform: stripPodTransform},
 			},
 		},
 	})

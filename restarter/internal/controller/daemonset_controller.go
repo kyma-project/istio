@@ -26,7 +26,7 @@ type DaemonSetReconciler struct {
 	Recorder   record.EventRecorder
 }
 
-// +kubebuilder:rbac:groups=apps,resources=daemonsets,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=apps,resources=daemonsets,verbs=get;list;watch;update;patch
 // +kubebuilder:rbac:groups=apps,resources=daemonsets/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=apps,resources=daemonsets/finalizers,verbs=update
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch

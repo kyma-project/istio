@@ -150,7 +150,7 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
     EOF
     ```
 
-    Istio detects the new Gateway resource and automatically provisions a dedicated Envoy proxy pod and a Kubernetes Service of type `LoadBalancer` in your namespace to handle incoming traffic.
+    Istio detects the new Gateway resource and automatically provisions a dedicated Envoy proxy Pod and a Kubernetes Service of type `LoadBalancer` in your namespace to handle incoming traffic.
 
 7. Get the external IP address of the Gateway.
 
@@ -303,7 +303,7 @@ For details on Gateway API CRD management in the Istio module, see [Gateway API 
     EOF
     ```
 
-    Istio detects the new Gateway resource and automatically provisions a dedicated Envoy proxy pod and a Kubernetes Service of type `LoadBalancer` in your namespace to handle incoming traffic.
+    Istio detects the new Gateway resource and automatically provisions a dedicated Envoy proxy Pod and a Kubernetes Service of type `LoadBalancer` in your namespace to handle incoming traffic.
 
 5. Get the external IP address of the Gateway.
 

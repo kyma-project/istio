@@ -15,7 +15,10 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     go mod download
 
 # Copy the go source
-COPY . .
+COPY api/ api/
+COPY internal/ internal/
+COPY pkg/ pkg/
+COPY cmd/ cmd/
 
 # Build
 # the GOARCH has no default value to allow the binary to be built according to the host where the command

@@ -4,9 +4,8 @@
 !api/**/*.yaml
 !internal/**/*.yaml
 internal/resources/test_files
-restarter/
 **/*_test.go
 
-# Re-include Go module files
-!go.mod
-!go.sum
+# Re-include Go module files (root module + restarter submodule)
+!**/go.mod
+!**/go.sum

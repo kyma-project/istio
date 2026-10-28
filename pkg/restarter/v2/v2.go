@@ -12,9 +12,11 @@ import (
 )
 
 type Config struct {
-	IstioCR           *istioCR.Istio
-	LastAppliedConfig configuration.AppliedConfig
-	BetaFeatures      istiofeatures.IstioFeatures
+	IstioCR             *istioCR.Istio
+	LastAppliedConfig   configuration.AppliedConfig
+	BetaFeatures        istiofeatures.IstioFeatures
+	UseFingerprintDrift bool
+	Fingerprint         string
 	// SidecarResources is the expected Istio proxy resource spec; a pod whose sidecar differs is restarted.
 	SidecarResources corev1.ResourceRequirements
 }
@@ -28,12 +30,18 @@ func GetEvaluators(cfg Config) (evaluators []Evaluator, err error) {
 		return nil, err
 	}
 	evaluators = append(evaluators, NewCNIChangedRule(cfg.BetaFeatures.DisableCni))
-	evaluators = append(evaluators, NewCompatibilityModeChanged(*cfg.IstioCR, cfg.LastAppliedConfig, istioCR.ProxyMetaDataCompatibility))
-	evaluators = append(evaluators, NewDNSProxyingChanged(*cfg.IstioCR, cfg.LastAppliedConfig))
-	evaluators = append(evaluators, NewNumTrustedProxiesConfigChanged(*cfg.IstioCR, cfg.LastAppliedConfig))
-	evaluators = append(evaluators, NewForwardClientCertDetailsConfigChanged(*cfg.IstioCR, cfg.LastAppliedConfig))
-	evaluators = append(evaluators, NewTrustDomainConfigChanged(*cfg.IstioCR, cfg.LastAppliedConfig))
-	evaluators = append(evaluators, NewProxyStatsMatcherConfigChanged(cfg.IstioCR, cfg.LastAppliedConfig))
+
+	if !cfg.UseFingerprintDrift {
+		evaluators = append(evaluators, NewCompatibilityModeChanged(*cfg.IstioCR, cfg.LastAppliedConfig, istioCR.ProxyMetaDataCompatibility))
+		evaluators = append(evaluators, NewDNSProxyingChanged(*cfg.IstioCR, cfg.LastAppliedConfig))
+		evaluators = append(evaluators, NewNumTrustedProxiesConfigChanged(*cfg.IstioCR, cfg.LastAppliedConfig))
+		evaluators = append(evaluators, NewForwardClientCertDetailsConfigChanged(*cfg.IstioCR, cfg.LastAppliedConfig))
+		evaluators = append(evaluators, NewTrustDomainConfigChanged(*cfg.IstioCR, cfg.LastAppliedConfig))
+		evaluators = append(evaluators, NewProxyStatsMatcherConfigChanged(cfg.IstioCR, cfg.LastAppliedConfig))
+	} else {
+		evaluators = append(evaluators, NewFingerprintDriftChanged(cfg.Fingerprint))
+	}
+
 	evaluators = append(evaluators, NewPrometheusMergeConfigChanged(
 		cfg.IstioCR.Spec.Config.Telemetry.Metrics.PrometheusMerge,
 		15020,

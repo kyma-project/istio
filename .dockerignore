@@ -6,3 +6,7 @@
 internal/resources/test_files
 restarter/
 **/*_test.go
+
+# Re-include Go module files
+!go.mod
+!go.sum

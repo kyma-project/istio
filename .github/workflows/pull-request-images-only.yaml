@@ -1,0 +1,66 @@
+name: Pull Request (images only)
+
+# Handles PRs that change only image yaml files (external-images.yaml, fips-images.yaml).
+# If the PR contains non-image changes, this workflow skips and pull-request.yaml
+# runs the full test suite instead.
+# Only public images from external-images.yaml are checked; FIPS images are skipped.
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    types: [ synchronize, opened, reopened, ready_for_review ]
+    paths:
+      - "external-images.yaml"
+      - "fips-images.yaml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  detect-scope:
+    name: Detect scope
+    runs-on: ubuntu-latest
+    outputs:
+      images-only: ${{ steps.check.outputs.images-only }}
+    steps:
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          changed="$(gh pr diff --name-only "${PR_NUMBER}" --repo "${{ github.repository }}")"
+          echo "Changed files:"
+          echo "${changed}"
+          non_images="$(echo "${changed}" | grep -vE '^(external-images|fips-images)\.yaml$' || true)"
+          if [ -z "${non_images}" ]; then
+            echo "images-only=true" >> "${GITHUB_OUTPUT}"
+            echo "Only image yaml files changed"
+          else
+            echo "images-only=false" >> "${GITHUB_OUTPUT}"
+            echo "Non-image files changed — full PR pipeline will handle this"
+          fi
+
+  check-images:
+    name: Check images on Docker Hub
+    needs: [ detect-scope ]
+    if: needs.detect-scope.outputs.images-only == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check images exist on Docker Hub
+        run: hack/ci/check-dockerhub-images.sh
+      - name: Check Istio image versions are consistent
+        run: hack/ci/check-istio-images-consistency.sh
+
+  pull-request-status:
+    needs: [ detect-scope, check-images ]
+    if: needs.detect-scope.outputs.images-only == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - if: ${{ !(contains(needs.*.result, 'failure')) }}
+        run: exit 0
+      - if: ${{ contains(needs.*.result, 'failure') }}
+        run: exit 1

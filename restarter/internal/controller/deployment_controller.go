@@ -10,6 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 
@@ -77,7 +78,7 @@ func (r *DeploymentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 				objectListToClientObjects(func(l *appsv1.DeploymentList) []appsv1.Deployment { return l.Items }),
 				nil,
 			),
-		)).
+		), builder.WithPredicates(LastAppliedConfigurationChangedPredicate{})).
 		Named("deployment").
 		Complete(r)
 }

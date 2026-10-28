@@ -7,12 +7,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
-// LastAppliedConfigurationChangedPredicate enqueues an Istio CR update only when the
-// lastAppliedConfiguration annotation is newly set or its value changes. The operator
-// writes this annotation at the end of a successful reconcile, so reconciliation (and
-// the restart step it drives) is enqueued after the applied configuration is persisted
-// rather than on the raw spec edit. Create/Delete/Generic keep the default (true) so
-// initial reconcile and finalizer handling are unaffected.
+// LastAppliedConfigurationChangedPredicate reacts to switch of the Istio CR
+// last applied config annotation.
 type LastAppliedConfigurationChangedPredicate struct {
 	predicate.Funcs
 }

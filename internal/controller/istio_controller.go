@@ -55,6 +55,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/istiofeatures"
@@ -433,7 +434,7 @@ func (r *IstioReconciler) SetupWithManager(mgr ctrl.Manager, rateLimiter RateLim
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&operatorv1alpha2.Istio{}, builder.WithPredicates(LastAppliedConfigurationChangedPredicate{})).
+		For(&operatorv1alpha2.Istio{}, builder.WithPredicates(predicate.GenerationChangedPredicate{})).
 		Watches(&corev1.ConfigMap{}, ElbConfigMapEventHandler{}).
 		Watches(&corev1.ConfigMap{}, IstioFeaturesConfigMapEventHandler{}).
 		WithOptions(controller.Options{

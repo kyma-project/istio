@@ -67,7 +67,7 @@ func (r *ReplicaSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 				objectListToClientObjects(func(l *appsv1.ReplicaSetList) []appsv1.ReplicaSet { return l.Items }),
 				isOwnerless,
 			),
-		)).
+		), builder.WithPredicates(LastAppliedConfigurationChangedPredicate{})).
 		Named("replicaset").
 		Complete(r)
 }

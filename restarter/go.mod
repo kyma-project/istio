@@ -1,4 +1,4 @@
-module github.com/kyma-project/istio/restarter
+module github.com/kyma-project/istio/operator/restarter
 
 go 1.27.3
 

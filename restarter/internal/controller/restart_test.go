@@ -20,8 +20,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/interceptor"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/restarter/internal/evaluation"
-	"github.com/kyma-project/istio/restarter/internal/restart"
+	"github.com/kyma-project/istio/operator/restarter/internal/evaluation"
+	"github.com/kyma-project/istio/operator/restarter/internal/restart"
 )
 
 func assertRestartAnnotationRecent(t *testing.T, got string) {

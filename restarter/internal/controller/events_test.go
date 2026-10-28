@@ -7,7 +7,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/record"
 
-	"github.com/kyma-project/istio/restarter/internal/evaluation"
+	"github.com/kyma-project/istio/operator/restarter/internal/evaluation"
 )
 
 func newFakeDeployment() *appsv1.Deployment {

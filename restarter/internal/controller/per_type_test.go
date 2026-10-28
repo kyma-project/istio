@@ -14,7 +14,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/kyma-project/istio/restarter/internal/evaluation"
+	"github.com/kyma-project/istio/operator/restarter/internal/evaluation"
 )
 
 // fakeSource is a shared evaluation.Source test helper that returns a static

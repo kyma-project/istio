@@ -15,8 +15,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/restarter/internal/evaluation"
-	"github.com/kyma-project/istio/restarter/internal/restart"
+	"github.com/kyma-project/istio/operator/restarter/internal/evaluation"
+	"github.com/kyma-project/istio/operator/restarter/internal/restart"
 )
 
 // TestReconcile_IstioCRStateIgnored proves the Istio CR status is not consulted

@@ -9,8 +9,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
-	"github.com/kyma-project/istio/operator/workload-controller/internal/evaluation"
-	"github.com/kyma-project/istio/operator/workload-controller/internal/restart"
+	"github.com/kyma-project/istio/restarter/internal/evaluation"
+	"github.com/kyma-project/istio/restarter/internal/restart"
 )
 
 // workloadStrategy captures the per-type differences between the Deployment,

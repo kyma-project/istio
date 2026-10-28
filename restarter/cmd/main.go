@@ -43,9 +43,9 @@ import (
 	corev1 "k8s.io/api/core/v1"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/operator/workload-controller/internal/controller"
-	"github.com/kyma-project/istio/operator/workload-controller/internal/evaluation"
-	"github.com/kyma-project/istio/operator/workload-controller/internal/transform"
+	"github.com/kyma-project/istio/restarter/internal/controller"
+	"github.com/kyma-project/istio/restarter/internal/evaluation"
+	"github.com/kyma-project/istio/restarter/internal/transform"
 	// +kubebuilder:scaffold:imports
 )
 

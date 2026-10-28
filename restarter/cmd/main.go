@@ -244,6 +244,7 @@ func main() {
 		mgr.GetClient(),
 		types.NamespacedName{Namespace: istioCRNamespace, Name: istioCRName},
 		sidecarResources,
+		true,
 	)
 
 	if err := (&controller.DeploymentReconciler{

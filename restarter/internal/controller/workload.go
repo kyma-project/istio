@@ -53,8 +53,8 @@ func reconcileWorkload[T client.Object](
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 	tmpl := s.template(obj)
-	if !evaluation.ShouldInject(ns.Labels, tmpl.Labels, tmpl.Annotations) {
-		l.V(1).Info("")
+	if !shouldEvaluate(obj, ns.Labels, tmpl.Labels, tmpl.Annotations) {
+		l.V(1).Info("Workload not in injection scope and not ingress gateway; skipping")
 		return ctrl.Result{}, nil
 	}
 
@@ -142,4 +142,19 @@ func objectListToClientObjects[ListPtr client.ObjectList, ItemPtr interface {
 		}
 		return objects
 	}
+}
+
+// isIngressGateway reports whether obj is the Istio ingress gateway Deployment.
+// The match is narrow: name must be exactly "istio-ingressgateway" and namespace
+// must be exactly "istio-system".
+func isIngressGateway(obj client.Object) bool {
+	return obj.GetName() == "istio-ingressgateway" && obj.GetNamespace() == "istio-system"
+}
+
+// shouldEvaluate reports whether a workload should be evaluated for config drift.
+// It returns true when the workload is the Istio ingress gateway (which carries
+// inject=false but must still be restarted on config drift) or when Istio sidecar
+// injection is enabled for the workload.
+func shouldEvaluate(obj client.Object, nsLabels, tmplLabels, tmplAnnotations map[string]string) bool {
+	return isIngressGateway(obj) || evaluation.ShouldInject(nsLabels, tmplLabels, tmplAnnotations)
 }

@@ -3,7 +3,7 @@ package evaluation_test
 import (
 	"testing"
 
-	"github.com/kyma-project/istio/restarter/internal/evaluation"
+	"github.com/kyma-project/istio/operator/restarter/internal/evaluation"
 )
 
 func TestShouldInject(t *testing.T) {

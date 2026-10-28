@@ -5,7 +5,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/kyma-project/istio/restarter/internal/evaluation"
+	"github.com/kyma-project/istio/operator/restarter/internal/evaluation"
 )
 
 const (

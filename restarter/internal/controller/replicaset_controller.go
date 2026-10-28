@@ -14,8 +14,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
-	"github.com/kyma-project/istio/restarter/internal/evaluation"
-	"github.com/kyma-project/istio/restarter/internal/restart"
+	"github.com/kyma-project/istio/operator/restarter/internal/evaluation"
+	"github.com/kyma-project/istio/operator/restarter/internal/restart"
 )
 
 const replicaSetPodOwnerKey = ".metadata.replicaSetOwner"

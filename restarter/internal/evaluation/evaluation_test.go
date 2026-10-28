@@ -9,7 +9,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/kyma-project/istio/restarter/internal/evaluation"
+	"github.com/kyma-project/istio/operator/restarter/internal/evaluation"
 )
 
 // stubEvaluator returns a fixed Decision for every call.

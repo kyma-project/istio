@@ -6,8 +6,8 @@ import (
 )
 
 // StripForRestart returns a cache.TransformFunc that removes object fields never
-// read during predicate evaluation. It clears managedFields and ownerReferences
-// while retaining finalizers, name, namespace, labels and annotations.
+// read during predicate evaluation. It retains finalizers, name, namespace,
+// labels and annotations.
 func StripForRestart() toolscache.TransformFunc {
 	return func(obj any) (any, error) {
 		accessor, err := meta.Accessor(obj)
@@ -23,7 +23,9 @@ func StripForRestart() toolscache.TransformFunc {
 	}
 }
 
-// StripForRestartKeepOwnerRefs preserves OwnerReferences
+// StripForRestartKeepOwnerRefs returns a cache.TransformFunc that removes object fields never
+// read during predicate evaluation. It retains finalizers, name, namespace, labels,
+// annotations and owner references.
 func StripForRestartKeepOwnerRefs() toolscache.TransformFunc {
 	return func(obj any) (any, error) {
 		accessor, err := meta.Accessor(obj)

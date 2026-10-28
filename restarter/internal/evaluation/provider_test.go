@@ -86,6 +86,11 @@ func testSidecarResources() corev1.ResourceRequirements {
 
 func newProvider(t *testing.T, objs ...client.Object) *evaluation.Provider {
 	t.Helper()
+	return newProviderWithDriftMode(t, false, objs...)
+}
+
+func newProviderWithDriftMode(t *testing.T, useFingerprintDrift bool, objs ...client.Object) *evaluation.Provider {
+	t.Helper()
 	scheme := newTestScheme(t)
 	builder := fake.NewClientBuilder().WithScheme(scheme)
 	if len(objs) > 0 {
@@ -96,6 +101,7 @@ func newProvider(t *testing.T, objs ...client.Object) *evaluation.Provider {
 		c,
 		types.NamespacedName{Namespace: testIstioCRNamespace, Name: testIstioCRName},
 		testSidecarResources(),
+		useFingerprintDrift,
 	)
 }
 
@@ -216,6 +222,7 @@ func TestProvider_Snapshot_FingerprintStableWhenOnlySpecChanges(t *testing.T) {
 		c,
 		types.NamespacedName{Namespace: testIstioCRNamespace, Name: testIstioCRName},
 		testSidecarResources(),
+		false,
 	)
 
 	_, firstFP, err := p.Snapshot(t.Context())
@@ -260,6 +267,7 @@ func TestProvider_Snapshot_FingerprintStableWhenOnlyFeaturesConfigMapChanges(t *
 		c,
 		types.NamespacedName{Namespace: testIstioCRNamespace, Name: testIstioCRName},
 		testSidecarResources(),
+		false,
 	)
 
 	_, firstFP, err := p.Snapshot(t.Context())
@@ -303,6 +311,7 @@ func TestProvider_Snapshot_RebuildOnSpecChange(t *testing.T) {
 		c,
 		types.NamespacedName{Namespace: testIstioCRNamespace, Name: testIstioCRName},
 		testSidecarResources(),
+		false,
 	)
 
 	first, _, err := p.Snapshot(t.Context())
@@ -346,6 +355,7 @@ func TestProvider_Snapshot_RebuildOnFeaturesConfigMapResourceVersionChange(t *te
 		c,
 		types.NamespacedName{Namespace: testIstioCRNamespace, Name: testIstioCRName},
 		testSidecarResources(),
+		false,
 	)
 
 	first, _, err := p.Snapshot(t.Context())
@@ -394,6 +404,7 @@ func TestProvider_Snapshot_RebuildOnLastAppliedAnnotationChange(t *testing.T) {
 		c,
 		types.NamespacedName{Namespace: testIstioCRNamespace, Name: testIstioCRName},
 		testSidecarResources(),
+		false,
 	)
 
 	first, firstFP, err := p.Snapshot(t.Context())
@@ -524,5 +535,56 @@ func TestProvider_Snapshot_SidecarResourcesUsed(t *testing.T) {
 
 	if got := resourcesEval.Evaluate(differingPod); got != evaluation.Restart {
 		t.Errorf("SidecarResourcesChanged: expected Restart for differing pod, got %v", got)
+	}
+}
+
+// TestProvider_Snapshot_FingerprintDriftMode verifies that when useFingerprintDrift
+// is true and the CR has a non-empty lastAppliedConfiguration annotation, Snapshot
+// returns an evaluator slice containing exactly "FingerprintDriftChanged" among the
+// drift-related evaluators, and does NOT contain any of the per-field drift names.
+func TestProvider_Snapshot_FingerprintDriftMode(t *testing.T) {
+	const annotationValue = `{"config":{"numTrustedProxies":1}}`
+	p := newProviderWithDriftMode(t, true,
+		newIstioCR(map[string]string{labels.LastAppliedConfiguration: annotationValue}),
+		newFeaturesConfigMap("1"),
+	)
+
+	evals, _, err := p.Snapshot(t.Context())
+	if err != nil {
+		t.Fatalf("snapshot: %v", err)
+	}
+	if len(evals) == 0 {
+		t.Fatalf("expected non-empty evaluators")
+	}
+
+	var names []string
+	for _, e := range evals {
+		names = append(names, e.Name())
+	}
+
+	var foundFingerprint bool
+	for _, n := range names {
+		if n == "FingerprintDriftChanged" {
+			foundFingerprint = true
+		}
+	}
+	if !foundFingerprint {
+		t.Errorf("expected FingerprintDriftChanged evaluator, got %v", names)
+	}
+
+	perFieldNames := []string{
+		"CompatibilityModeChanged",
+		"DNSProxyingChanged",
+		"NumTrustedProxiesChanged",
+		"ForwardClientCertDetailsChanged",
+		"TrustDomainChanged",
+		"ProxyStatsMatcherChanged",
+	}
+	for _, n := range names {
+		for _, perField := range perFieldNames {
+			if n == perField {
+				t.Errorf("expected no per-field evaluator %q in fingerprint-drift mode, got %v", perField, names)
+			}
+		}
 	}
 }

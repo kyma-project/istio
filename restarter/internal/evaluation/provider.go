@@ -31,9 +31,10 @@ type Source interface {
 // Provider builds and caches the evaluator slice derived from cluster state
 // (Istio CR, istio-features ConfigMap). Safe for concurrent use.
 type Provider struct {
-	client           client.Client
-	istioCRKey       types.NamespacedName
-	sidecarResources corev1.ResourceRequirements
+	client              client.Client
+	istioCRKey          types.NamespacedName
+	sidecarResources    corev1.ResourceRequirements
+	useFingerprintDrift bool
 
 	mu       sync.RWMutex
 	cacheKey string
@@ -42,12 +43,14 @@ type Provider struct {
 
 // NewProvider returns a Provider that reads state via c and resolves the
 // Istio CR at key. sidecarResources holds the operator-supplied expected proxy
-// resource requirements.
-func NewProvider(c client.Client, key types.NamespacedName, sidecarResources corev1.ResourceRequirements) *Provider {
+// resource requirements. useFingerprintDrift selects the fingerprint-drift
+// evaluator instead of the per-field drift evaluators.
+func NewProvider(c client.Client, key types.NamespacedName, sidecarResources corev1.ResourceRequirements, useFingerprintDrift bool) *Provider {
 	return &Provider{
-		client:           c,
-		istioCRKey:       key,
-		sidecarResources: sidecarResources,
+		client:              c,
+		istioCRKey:          key,
+		sidecarResources:    sidecarResources,
+		useFingerprintDrift: useFingerprintDrift,
 	}
 }
 
@@ -96,7 +99,7 @@ func (p *Provider) Snapshot(ctx context.Context) ([]Evaluator, string, error) {
 		featuresRV = featuresCM.ResourceVersion
 	}
 
-	key, err := buildCacheKey(cr, cr.Annotations[labels.LastAppliedConfiguration], featuresRV, sidecarResources)
+	key, err := buildCacheKey(cr, cr.Annotations[labels.LastAppliedConfiguration], featuresRV, sidecarResources, p.useFingerprintDrift)
 	if err != nil {
 		return nil, "", fmt.Errorf("build cache key: %w", err)
 	}
@@ -118,10 +121,12 @@ func (p *Provider) Snapshot(ctx context.Context) ([]Evaluator, string, error) {
 	}
 
 	evaluators, err := v2.GetEvaluators(v2.Config{
-		IstioCR:           &cr,
-		LastAppliedConfig: lastApplied,
-		BetaFeatures:      features,
-		SidecarResources:  sidecarResources,
+		IstioCR:             &cr,
+		LastAppliedConfig:   lastApplied,
+		BetaFeatures:        features,
+		SidecarResources:    sidecarResources,
+		UseFingerprintDrift: p.useFingerprintDrift,
+		Fingerprint:         fp,
 	})
 	if err != nil {
 		return nil, "", fmt.Errorf("build evaluators: %w", err)
@@ -132,7 +137,7 @@ func (p *Provider) Snapshot(ctx context.Context) ([]Evaluator, string, error) {
 	return evaluators, fp, nil
 }
 
-func buildCacheKey(cr operatorv1alpha2.Istio, lastAppliedAnnotation, featuresRV string, resources corev1.ResourceRequirements) (string, error) {
+func buildCacheKey(cr operatorv1alpha2.Istio, lastAppliedAnnotation, featuresRV string, resources corev1.ResourceRequirements, useFingerprintDrift bool) (string, error) {
 	specJSON, err := json.Marshal(cr.Spec)
 	if err != nil {
 		return "", fmt.Errorf("marshal istio spec: %w", err)
@@ -140,6 +145,11 @@ func buildCacheKey(cr operatorv1alpha2.Istio, lastAppliedAnnotation, featuresRV 
 	resourcesJSON, err := json.Marshal(resources)
 	if err != nil {
 		return "", fmt.Errorf("marshal sidecar resources: %w", err)
+	}
+
+	var driftByte byte
+	if useFingerprintDrift {
+		driftByte = 1
 	}
 
 	h := sha256.New()
@@ -150,6 +160,8 @@ func buildCacheKey(cr operatorv1alpha2.Istio, lastAppliedAnnotation, featuresRV 
 	h.Write([]byte(featuresRV))
 	h.Write([]byte{0})
 	h.Write(resourcesJSON)
+	h.Write([]byte{0})
+	h.Write([]byte{driftByte})
 
 	return hex.EncodeToString(h.Sum(nil)), nil
 }

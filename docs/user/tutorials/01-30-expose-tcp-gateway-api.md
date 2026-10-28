@@ -1,6 +1,6 @@
 # Exposing a TCP Service Using Gateway API
 
-The Istio module installs the Kubernetes [Gateway API](https://gateway-api.sigs.k8s.io/) CRDs. This tutorial shows how to expose a TCP service using a Gateway resource and a TCPRoute.
+The Istio module installs the Kubernetes [Gateway API](https://gateway-api.sigs.k8s.io/) CustomResourceDefinitions (CRDs). This tutorial shows how to expose a TCP service using a Gateway resource and a TCPRoute.
 
 ## Prerequisites
 

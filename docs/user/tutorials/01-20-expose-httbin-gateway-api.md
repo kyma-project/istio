@@ -1,6 +1,6 @@
 # Exposing Workloads Using Gateway API 
 
-The Istio module installs the Kubernetes [Gateway API](https://gateway-api.sigs.k8s.io/) CRDs. This tutorial shows how to expose an HTTP workload using a Gateway resource and an HTTPRoute.
+The Istio module installs the Kubernetes [Gateway API](https://gateway-api.sigs.k8s.io/) CustomResourceDefinitions (CRDs). This tutorial shows how to expose an HTTP workload using a Gateway resource and an HTTPRoute.
 
 ## Prerequisites
 

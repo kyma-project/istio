@@ -1,149 +1,224 @@
 #!/usr/bin/env bash
 
+# Bump Istio images: determine the highest patch version where all public and
+# FIPS images are available, then update external-images.yaml and fips-images.yaml.
+# Public images are expected to use the -distroless tag suffix.
+
 set -euo pipefail
 
-# Bump Istio images: pick the newest istio/pilot patch per minor from Docker Hub,
-# but only up to the newest patch actually available for every FIPS image, then
-# update external-images.yaml and fips-images.yaml.
+# shellcheck source=hack/ci/common.sh
+source "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/common.sh"
 
-declare -A LATEST_PATCH_BY_MINOR=()
+require_tools curl jq yq
+require_vars REGCERT_JSON
 
-ensure_tools() {
-  local cmd
-  for cmd in curl jq yq; do
-    command -v "${cmd}" >/dev/null 2>&1 || { echo "Required command not found: ${cmd}" >&2; exit 1; }
-  done
-}
+ISTIO_IMAGE_SUFFIX="-distroless"
 
-registry_auth_token() {
-  [ -n "${REGCERT_JSON:-}" ] || return 1
-  echo "${REGCERT_JSON}" | jq -e '.client_email' >/dev/null 2>&1 || {
-    echo "Warning: no client_email in REGCERT_JSON" >&2; return 1; }
-  printf '_json_key:%s' "${REGCERT_JSON}" | base64 | tr -d '\n'
-}
+# Returns the Istio minor version (X.Y) from the istio/pilot image in external-images.yaml.
+determine_minor_version() {
+  local minor
 
-registry_tags() {
-  local registry="${1%%/*}" path="${1#*/}" opts=(-sSL -w '%{http_code}') token resp code url
-  url="https://${registry}/v2/${path}/tags/list"
-  if [ -n "${REGCERT_JSON:-}" ]; then
-    token="$(registry_auth_token 2>/dev/null)" || true
-    [ -n "${token}" ] && opts+=(-H "Authorization: Basic ${token}")
+  minor="$(yq -r '.images[].source' external-images.yaml \
+    | grep '^istio/pilot:' | cut -d: -f2 | cut -d. -f1-2)"
+
+  if [ -z "${minor}" ]; then
+    echo "Error: could not find istio/pilot image in external-images.yaml" >&2
+    exit 1
   fi
-  resp="$(curl "${opts[@]}" "${url}" 2>/dev/null)" || true
-  code="${resp: -3}"
-  if [ "${code}" != "200" ]; then
-    echo "Warning: failed to fetch tags (HTTP ${code}) from ${url}" >&2
-    return 1
-  fi
-  echo "${resp%???}" | jq -r '.tags[]?' 2>/dev/null || true
+
+  echo "${minor}"
 }
 
-fetch_pilot_tags_for_minor() {
+# Fetches all istio/pilot tags for a given minor from Docker Hub and returns
+# the highest patch number available with the distroless suffix.
+determine_highest_possible_istio_patch() {
   local minor="$1"
   local url="https://hub.docker.com/v2/repositories/istio/pilot/tags?page_size=100&name=${minor}."
-  local page code body
+  local page code body all_tags patch
+
+  all_tags=""
   while [ -n "${url}" ]; do
     page="$(curl -sSL -w '\n%{http_code}' "${url}" 2>/dev/null)" || true
     code="${page##*$'\n'}"
     body="${page%$'\n'*}"
     if [ "${code}" != "200" ]; then
-      echo "Warning: failed to fetch pilot tags for minor ${minor} (HTTP ${code}) from ${url}" >&2
-      return 1
+      echo "Error: failed to fetch pilot tags for minor ${minor} (HTTP ${code})" >&2
+      exit 1
     fi
     if echo "${body}" | jq -e '.message' >/dev/null 2>&1; then
-      echo "Warning: Docker Hub error for minor ${minor}: $(echo "${body}" | jq -r '.message')" >&2
-      return 1
+      echo "Error: Docker Hub error for minor ${minor}: $(echo "${body}" | jq -r '.message')" >&2
+      exit 1
     fi
-    echo "${body}" | jq -r '.results[].name'
+    all_tags="${all_tags}"$'\n'"$(echo "${body}" | jq -r '.results[].name')"
     url="$(echo "${body}" | jq -r '.next // empty')"
   done
+
+  patch="$(printf '%s\n' "${all_tags}" \
+    | sed -nE "s/^${minor//./\\.}\\.([0-9]+)${ISTIO_IMAGE_SUFFIX}\$/\1/p" \
+    | sort -n | tail -1)"
+
+  if [ -z "${patch}" ]; then
+    echo "Error: no ${ISTIO_IMAGE_SUFFIX} tags found for minor ${minor} on Docker Hub" >&2
+    exit 1
+  fi
+
+  echo "${patch}"
 }
 
-# Highest N among stdin tags matching "<prefix>.<N><suffix>".
-highest_num() { sed -nE "s/^${1//./\\.}\.([0-9]+)${2}\$/\1/p" | sort -n | tail -1; }
-# Highest N among stdin tags matching "<version>-<N>".
-highest_rev() { sed -nE "s/^${1//./\\.}-([0-9]+)\$/\1/p" | sort -n | tail -1; }
+# Returns 0 if the given image source (without tag) belongs to Istio.
+is_istio_image() {
+  local image_without_tag="$1"
+  local name
+  name="$(basename "${image_without_tag}")"
+  echo "${name}" | grep -qE "^(istio-|ztunnel|pilot|proxyv2|install-cni)"
+}
 
-img_count() { yq '.images | length' "$1"; }
+# Returns 0 if the given patch is available for all istio/* images in external-images.yaml.
+is_patch_available_on_dockerhub() {
+  local minor="$1" patch="$2"
+  local count i src image_without_tag image_tag code body_file
+  body_file="$(mktemp)"
+  trap "rm -f '${body_file}'" EXIT
 
-build_latest_patch_map() {
-  local minor patch tags
-  for minor in $(yq -r '.images[].source' external-images.yaml \
-      | sed -nE 's#^istio/[^:]+:([0-9]+\.[0-9]+)\.[0-9]+-distroless$#\1#p' | sort -u); do
-    tags="$(fetch_pilot_tags_for_minor "${minor}")" || continue
-    patch="$(printf '%s\n' "${tags}" | highest_num "${minor}" '-distroless')"
-    [ -n "${patch}" ] && LATEST_PATCH_BY_MINOR["${minor}"]="${minor}.${patch}"
+  count="$(yq '.images | length' external-images.yaml)"
+  for i in $(seq 0 $((count - 1))); do
+    src="$(yq -r ".images[${i}].source" external-images.yaml)"
+    image_without_tag="$(echo "${src}" | cut -d: -f1)"
+    if ! is_istio_image "${image_without_tag}"; then
+      echo "Skipping non-Istio image: ${image_without_tag}"
+      continue
+    fi
+
+    image_tag="${image_without_tag}:${minor}.${patch}${ISTIO_IMAGE_SUFFIX}"
+    echo "Checking Docker Hub: ${image_tag}"
+    code="$(curl -sSL -o "${body_file}" -w '%{http_code}' \
+      "https://hub.docker.com/v2/repositories/${image_without_tag}/tags/${minor}.${patch}${ISTIO_IMAGE_SUFFIX}" \
+      2>/dev/null)" || true
+    if [ "${code}" = "200" ]; then
+      echo "Available on Docker Hub: ${image_tag}"
+    elif [ "${code}" = "404" ]; then
+      echo "Not available on Docker Hub: ${image_tag}"
+      return 1
+    else
+      echo "Unexpected response from Docker Hub for ${image_tag} (HTTP ${code}):" >&2
+      cat "${body_file}" >&2
+      exit 1
+    fi
   done
 }
 
-adjust_patch_map_with_fips() {
-  local src repo minor p best dockerhub
-  local -A total=() count=() current=()
+# Returns 0 if the given patch is available for all FIPS images in fips-images.yaml.
+is_patch_available_in_fips_registry() {
+  local minor="$1" patch="$2"
+  local token count i src image_without_tag code body_file
+  body_file="$(mktemp)"
+  trap "rm -f '${body_file}'" EXIT
 
-  while IFS= read -r src; do
-    [[ "${src}" =~ ^(.+):([0-9]+\.[0-9]+)\.([0-9]+)(-[0-9]+)?$ ]] || continue
-    repo="${BASH_REMATCH[1]}"; minor="${BASH_REMATCH[2]}"
-    current["${minor}"]="${minor}.${BASH_REMATCH[3]}"
-    [ -n "${LATEST_PATCH_BY_MINOR[${minor}]:-}" ] || continue
-    total["${minor}"]=$(( ${total["${minor}"]:-0} + 1 ))
-    while read -r p; do
-      count["${minor}:${p}"]=$(( ${count["${minor}:${p}"]:-0} + 1 ))
-    done < <(registry_tags "${repo}" | sed -nE "s/^${minor//./\\.}\.([0-9]+)(-[0-9]+)?\$/\1/p" | sort -un)
-  done < <(yq -r '.images[].source' fips-images.yaml)
+  token="$(printf '_json_key:%s' "${REGCERT_JSON}" | base64 | tr -d '\n')"
+  count="$(yq '.images | length' fips-images.yaml)"
 
-  for minor in "${!total[@]}"; do
-    dockerhub="${LATEST_PATCH_BY_MINOR[${minor}]}"
-    best=''
-    for ((p = 0; p <= ${dockerhub##*.}; p++)); do
-      [ "${count["${minor}:${p}"]:-0}" -eq "${total[${minor}]}" ] && best="${p}"
-    done
-    LATEST_PATCH_BY_MINOR["${minor}"]="${best:+${minor}.${best}}"
-    LATEST_PATCH_BY_MINOR["${minor}"]="${LATEST_PATCH_BY_MINOR[${minor}]:-${current[${minor}]}}"
-    echo "FIPS-checked ${minor}: using ${LATEST_PATCH_BY_MINOR[${minor}]} (Docker Hub latest ${dockerhub})"
+  for i in $(seq 0 $((count - 1))); do
+    src="$(yq -r ".images[${i}].source" fips-images.yaml)"
+    image_without_tag="$(echo "${src}" | cut -d: -f1)"
+    if ! is_istio_image "${image_without_tag}"; then
+      echo "Skipping non-Istio image: ${image_without_tag}"
+      continue
+    fi
+
+    local registry="${image_without_tag%%/*}"
+    echo "Checking FIPS registry: $(basename "${image_without_tag}"):${minor}.${patch}"
+    code="$(curl -sSL -o "${body_file}" -w '%{http_code}' \
+      -H "Authorization: Basic ${token}" \
+      "https://${registry}/v2/${image_without_tag#*/}/manifests/${minor}.${patch}" 2>/dev/null)" || true
+    if [ "${code}" = "200" ]; then
+      echo "Available in FIPS registry: $(basename "${image_without_tag}"):${minor}.${patch}"
+    elif [ "${code}" = "404" ]; then
+      echo "Not available in FIPS registry: $(basename "${image_without_tag}"):${minor}.${patch}"
+      return 1
+    else
+      echo "Unexpected response from FIPS registry for $(basename "${image_without_tag}"):${minor}.${patch} (HTTP ${code}):" >&2
+      cat "${body_file}" >&2
+      exit 1
+    fi
   done
 }
 
 update_external_images() {
-  local i src repo minor patch
-  for ((i = 0; i < $(img_count external-images.yaml); i++)); do
+  local minor="$1" patch="$2"
+  local count i src image_without_tag new_tag
+
+  count="$(yq '.images | length' external-images.yaml)"
+  for i in $(seq 0 $((count - 1))); do
     src="$(yq -r ".images[${i}].source" external-images.yaml)"
-    [[ "${src}" =~ ^(istio/[^:]+):([0-9]+\.[0-9]+)\.[0-9]+-distroless$ ]] || continue
-    repo="${BASH_REMATCH[1]}"; minor="${BASH_REMATCH[2]}"
-    patch="${LATEST_PATCH_BY_MINOR[${minor}]:-}"
-    [ -n "${patch}" ] && yq -i ".images[${i}].source = \"${repo}:${patch}-distroless\"" external-images.yaml
+    image_without_tag="$(echo "${src}" | cut -d: -f1)"
+    if ! is_istio_image "${image_without_tag}"; then
+      echo "Skipping non-Istio image: ${image_without_tag}"
+      continue
+    fi
+    new_tag="${image_without_tag}:${minor}.${patch}${ISTIO_IMAGE_SUFFIX}"
+    if [ "${src}" = "${new_tag}" ]; then
+      echo "External image ${image_without_tag}: already up to date (${src})"
+    else
+      yq -i ".images[${i}].source = \"${new_tag}\"" external-images.yaml
+      echo "External image ${image_without_tag}: updated ${src} -> ${new_tag}"
+    fi
   done
 }
 
 update_fips_images() {
-  local i src repo patch rev minor desired found source_tag target_tag
-  for ((i = 0; i < $(img_count fips-images.yaml); i++)); do
+  local minor="$1" patch="$2"
+  local count i src image_without_tag current_target new_target
+
+  count="$(yq '.images | length' fips-images.yaml)"
+  for i in $(seq 0 $((count - 1))); do
     src="$(yq -r ".images[${i}].source" fips-images.yaml)"
-    [[ "${src}" =~ ^(.+):([0-9]+\.[0-9]+\.[0-9]+)(-([0-9]+))?$ ]] || continue
-    repo="${BASH_REMATCH[1]}"; patch="${BASH_REMATCH[2]}"; rev="${BASH_REMATCH[4]:-0}"
-    minor="${patch%.*}"
-    desired="${LATEST_PATCH_BY_MINOR[${minor}]:-${patch}}"
-
-    # Baseline revision: keep current one only when the patch is unchanged.
-    [ "${desired}" = "${patch}" ] || rev=0
-    found="$(registry_tags "${repo}" | highest_rev "${desired}")"
-    [ -n "${found}" ] && (( found > rev )) && rev="${found}"
-
-    (( rev > 0 )) && source_tag="${desired}-${rev}" || source_tag="${desired}"
-    target_tag="${desired}-$((rev + 1))"
-
-    echo "FIPS $(basename "${repo}"): source ${source_tag}, target ${target_tag}"
-    yq -i ".images[${i}].source = \"${repo}:${source_tag}\"" fips-images.yaml
-    yq -i ".images[${i}].target.tag = \"${target_tag}\"" fips-images.yaml
+    image_without_tag="$(echo "${src}" | cut -d: -f1)"
+    if ! is_istio_image "${image_without_tag}"; then
+      echo "Skipping non-Istio image: ${image_without_tag}"
+      continue
+    fi
+    current_target="$(yq -r ".images[${i}].target.tag" fips-images.yaml)"
+    new_target="${minor}.${patch}-1"
+    if [ "${src}" = "${image_without_tag}:${minor}.${patch}" ] && [ "${current_target}" = "${new_target}" ]; then
+      echo "FIPS image $(basename "${image_without_tag}"): already up to date (${src})"
+    else
+      yq -i ".images[${i}].source = \"${image_without_tag}:${minor}.${patch}\"" fips-images.yaml
+      yq -i ".images[${i}].target.tag = \"${new_target}\"" fips-images.yaml
+      echo "FIPS image $(basename "${image_without_tag}"): updated source ${src} -> ${image_without_tag}:${minor}.${patch}, target ${current_target} -> ${new_target}"
+    fi
   done
 }
 
 main() {
-  ensure_tools
-  build_latest_patch_map
-  adjust_patch_map_with_fips
-  update_external_images
-  update_fips_images
-  unset REGCERT_JSON
+  local minor highest_patch patch best_patch
+
+  echo "Determining minor version"
+  minor="$(determine_minor_version)"
+  echo "Minor version: ${minor}"
+
+  echo "Determining highest possible Istio patch for ${minor} on Docker Hub"
+  highest_patch="$(determine_highest_possible_istio_patch "${minor}")"
+  echo "Highest patch on Docker Hub: ${minor}.${highest_patch}"
+
+  best_patch=""
+  for patch in $(seq "${highest_patch}" -1 0); do
+    echo "Checking availability of ${minor}.${patch}"
+    if is_patch_available_on_dockerhub "${minor}" "${patch}" && \
+       is_patch_available_in_fips_registry "${minor}" "${patch}"; then
+      best_patch="${patch}"
+      break
+    fi
+    echo "Patch ${minor}.${patch} incomplete, trying lower"
+  done
+
+  if [ -z "${best_patch}" ]; then
+    echo "No complete patch found for ${minor}; nothing to upgrade"
+    return
+  fi
+
+  echo "Best available patch: ${minor}.${best_patch}"
+  update_external_images "${minor}" "${best_patch}"
+  update_fips_images "${minor}" "${best_patch}"
 }
 
 main

@@ -2,11 +2,15 @@ name: Schedule Istio Upgrade
 
 # Orchestrator for the scheduled Istio patch upgrade. It does no upgrade work
 # itself: each morning (and on manual dispatch) it discovers the target
-# branches (main + the latest release-*) and dispatches the worker workflow
+# branches (main + the two latest release-*) and dispatches the worker workflow
 # once per branch with --ref <branch>. Running with --ref makes the worker
 # execute entirely in that branch's context - its own workflow file, its own
 # hack/ci/upgrade-istio.sh, and a checkout of that branch - so no branch is
 # ever read from another branch's checkout.
+#
+# Two release branches are targeted because we maintain two active minor
+# releases at a time: the stable version (latest release-*) and the
+# second-to-last release-* which is still receiving patch updates.
 #
 # workflow_dispatch is one of the two events (with repository_dispatch) that
 # GITHUB_TOKEN is allowed to trigger, so the default token is enough here; no
@@ -41,18 +45,21 @@ jobs:
         run: |
           set -euo pipefail
 
+          num_release_branches=2
+
           git fetch --prune origin '+refs/heads/*:refs/remotes/origin/*'
 
-          latest_release="$(git for-each-ref --format='%(refname:short)' refs/remotes/origin/release-* \
+          release_branches="$(git for-each-ref --format='%(refname:short)' refs/remotes/origin/release-* \
             | sed 's#^origin/##' \
             | sort -V \
-            | tail -n 1)"
+            | tail -n "${num_release_branches}")"
 
-          if [ -n "${latest_release}" ]; then
-            matrix="{\"include\":[{\"base\":\"main\"},{\"base\":\"${latest_release}\"}]}"
-          else
-            matrix='{"include":[{"base":"main"}]}'
-          fi
+          release_branch_entries=''
+          for branch in ${release_branches}; do
+            echo "Discovered release branch: ${branch}"
+            release_branch_entries+=",{\"base\":\"${branch}\"}"
+          done
+          matrix="{\"include\":[{\"base\":\"main\"}${release_branch_entries}]}"
 
           echo "matrix=${matrix}" >> "$GITHUB_OUTPUT"
 

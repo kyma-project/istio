@@ -64,7 +64,7 @@ func (r *ReplicaSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Watches(&operatorv1alpha2.Istio{}, handler.EnqueueRequestsFromMapFunc(
 			enqueueWorkloadsOnIstioChange(r.Client,
 				func() client.ObjectList { return &appsv1.ReplicaSetList{} },
-				objectListItems(func(l *appsv1.ReplicaSetList) []appsv1.ReplicaSet { return l.Items }),
+				objectListToClientObjects(func(l *appsv1.ReplicaSetList) []appsv1.ReplicaSet { return l.Items }),
 				isOwnerless,
 			),
 		)).
@@ -72,17 +72,10 @@ func (r *ReplicaSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-// isOwnerless reports whether obj has no owner references. ReplicaSets owned by
-// a higher-level controller (e.g. Deployment) have their pods evaluated by the
-// owner's reconciler; this controller handles only ownerless ones.
 func isOwnerless(obj client.Object) bool {
 	return len(obj.GetOwnerReferences()) == 0
 }
 
-// ownerlessReplicaSet keeps only ReplicaSets with no owner. ReplicaSets owned
-// by a higher-level controller (e.g. Deployment) have their pods evaluated by
-// the owner's reconciler; enqueueing them here would double-count evaluations
-// and emit duplicate events.
 func ownerlessReplicaSet() predicate.Predicate {
 	return predicate.NewPredicateFuncs(isOwnerless)
 }

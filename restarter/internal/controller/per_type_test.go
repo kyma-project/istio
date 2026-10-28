@@ -70,10 +70,6 @@ func countEvents(r *record.FakeRecorder) int {
 	return n
 }
 
-// TestPerTypeEvaluation proves each owner-ref controller runs evaluation only on
-// pods owned by its own workload type and API group. A Restart decision emits one
-// RestartRequired event per evaluated pod, so the event count is the observable
-// proof that evaluation was (or was not) applied to a given pod.
 func TestPerTypeEvaluation(t *testing.T) {
 	const ownUID = types.UID("own-uid")
 
@@ -167,8 +163,6 @@ func TestPerTypeEvaluation(t *testing.T) {
 				t.Fatalf("Reconcile() unexpected error: %v", err)
 			}
 
-			// Only the single own-type, apps/v1 pod should have been evaluated,
-			// so exactly one RestartRequired event is emitted.
 			if got := countEvents(rec); got != 1 {
 				t.Errorf("evaluated pod count = %d events, want 1 (only the own apps/v1 pod)", got)
 			}

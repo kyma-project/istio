@@ -22,15 +22,10 @@ import (
 
 // Source is the interface controllers consume to obtain a current set of evaluators.
 type Source interface {
-	// Snapshot returns the current evaluators and a fingerprint of the config
+	// Snapshot returns the current evaluators and the hash of the config
 	// state they were derived from. The fingerprint is derived solely from the
-	// Istio CR's lastAppliedConfiguration annotation: it is the SHA-256 hex
-	// hash of that annotation value, or "" when the annotation is absent/empty
-	// or when the Istio CR itself is missing. Controllers stamp the fingerprint
-	// when they restart a workload and skip restarting a workload already
-	// stamped with the current fingerprint, so a restart happens once per
-	// distinct applied config rather than on every reconcile.
-	Snapshot(ctx context.Context) (evaluators []Evaluator, fingerprint string, err error)
+	// Istio CR's lastAppliedConfiguration annotation.
+	Snapshot(ctx context.Context) (evaluators []Evaluator, hash string, err error)
 }
 
 // Provider builds and caches the evaluator slice derived from cluster state
@@ -88,10 +83,6 @@ func (p *Provider) Snapshot(ctx context.Context) ([]Evaluator, string, error) {
 
 	sidecarResources := p.sidecarResources
 
-	// Fetch the istio-features ConfigMap directly so we can key the cache on
-	// its ResourceVersion; istiofeatures.Get reads the same CM but does not
-	// expose it. The ConfigMap is optional — treat NotFound as empty RV so
-	// the cache key stays stable until the CM appears.
 	var featuresRV string
 	var featuresCM corev1.ConfigMap
 	if err := p.client.Get(ctx, types.NamespacedName{
@@ -163,10 +154,6 @@ func buildCacheKey(cr operatorv1alpha2.Istio, lastAppliedAnnotation, featuresRV 
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
-// configFingerprint returns the SHA-256 hex hash of the lastAppliedConfiguration
-// annotation value, or "" when the annotation is absent or empty. An empty
-// fingerprint signals that the applied config is unknown and must never suppress
-// a restart.
 func configFingerprint(lastAppliedAnnotation string) string {
 	if lastAppliedAnnotation == "" {
 		return ""

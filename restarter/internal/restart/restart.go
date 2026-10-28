@@ -39,9 +39,7 @@ func DaemonSet(ctx context.Context, c client.Client, d *appsv1.DaemonSet, finger
 	return patchTemplateRestart(ctx, c, d, &d.Spec.Template, fingerprint)
 }
 
-// ReplicaSetPods deletes the given pods so the ReplicaSet controller recreates
-// Delete is the only reliable trigger for ownerless ReplicaSets —
-// patching the template alone does not force existing pods.
+// ReplicaSetPods deletes the given pods so the ReplicaSet controller recreates.
 func ReplicaSetPods(ctx context.Context, c client.Client, rs *appsv1.ReplicaSet, pods []*corev1.Pod, fingerprint string) error {
 	for _, p := range pods {
 		if err := c.Delete(ctx, p); err != nil && client.IgnoreNotFound(err) != nil {

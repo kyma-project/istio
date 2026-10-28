@@ -670,10 +670,7 @@ func runGateCases(t *testing.T, ns *corev1.Namespace, cases []restartGateCase) {
 	}
 }
 
-// restartGateSeeds returns one rolled-out workload (+ owned/matching pod) per
-// kind so that, with an injected namespace, a Restart decision would fire; the
-// skip/defer tests vary the namespace or the rollout status to prove the gate.
-func restartGateSeeds(rolledOut bool) []restartGateCase {
+func restartGates(rolledOut bool) []restartGateCase {
 	appLabels := map[string]string{"app": "myapp"}
 
 	dep := &appsv1.Deployment{
@@ -685,14 +682,14 @@ func restartGateSeeds(rolledOut bool) []restartGateCase {
 	}
 	sts := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{Name: "w", Namespace: "default", UID: "sts"},
-		Spec:       appsv1.StatefulSetSpec{Replicas: ptr.To(int32(1))},
+		Spec:       appsv1.StatefulSetSpec{Replicas: new(int32(1))},
 	}
 	ds := &appsv1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{Name: "w", Namespace: "default", UID: "ds"},
 	}
 	rs := &appsv1.ReplicaSet{
 		ObjectMeta: metav1.ObjectMeta{Name: "w", Namespace: "default", UID: "rs"},
-		Spec:       appsv1.ReplicaSetSpec{Replicas: ptr.To(int32(1))},
+		Spec:       appsv1.ReplicaSetSpec{Replicas: new(int32(1))},
 	}
 
 	if rolledOut {
@@ -785,12 +782,12 @@ func TestReconcile_NonInjectedNamespaceIsSkipped(t *testing.T) {
 			Labels: map[string]string{evaluation.InjectionLabel: evaluation.InjectDisabled},
 		},
 	}
-	runGateCases(t, ns, restartGateSeeds(true))
+	runGateCases(t, ns, restartGates(true))
 }
 
 // TestReconcile_RolloutInProgressDefersRestart proves that a Restart decision on
 // an injected but not-yet-rolled-out workload defers the restart: no stamp, no
 // pod delete, and an empty result (the next reconcile retries once rolled out).
 func TestReconcile_RolloutInProgressDefersRestart(t *testing.T) {
-	runGateCases(t, injectedNamespace(), restartGateSeeds(false))
+	runGateCases(t, injectedNamespace(), restartGates(false))
 }

@@ -2,7 +2,7 @@ package evaluation
 
 const (
 	// InjectionLabel is the namespace label that enables or disables Istio
-	// sidecar injection.
+	// sidecar injection on namespace level.
 	InjectionLabel = "istio-injection"
 	// InjectEnabled is the InjectionLabel value that selects a namespace for
 	// injection.
@@ -31,7 +31,7 @@ const (
 func ShouldInject(nsLabels, templateLabels, templateAnnotations map[string]string) bool {
 	nsDisabled := nsLabels[InjectionLabel] == InjectDisabled
 
-	override, set := injectOverride(templateLabels, templateAnnotations)
+	override, set := podLevelOverride(templateLabels, templateAnnotations)
 	if set {
 		if !override {
 			return false
@@ -42,11 +42,7 @@ func ShouldInject(nsLabels, templateLabels, templateAnnotations map[string]strin
 	return nsLabels[InjectionLabel] == InjectEnabled
 }
 
-// injectOverride reads the sidecar.istio.io/inject override from the pod
-// template's labels and annotations. The second return is false when neither is set.
-// When both are present and disagree, the label wins: the
-// annotation form is deprecated, and the actual injected state tracks the label.
-func injectOverride(templateLabels, templateAnnotations map[string]string) (inject, set bool) {
+func podLevelOverride(templateLabels, templateAnnotations map[string]string) (inject, set bool) {
 	if lv, lok := templateLabels[InjectOverride]; lok {
 		return lv == "true", true
 	}

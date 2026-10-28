@@ -18,24 +18,20 @@ import (
 type workloadStrategy[T client.Object] struct {
 	logKey string
 	newObj func() T
-	// template returns the pod template of the fetched workload, whose
-	// annotations hold the restart timestamp and config fingerprint.
+	// template allows access to the Pod template in the workload spec.
+	// Example: for Deployment return `spec.template`.
 	template func(T) *corev1.PodTemplateSpec
 	// listPods returns the pods the evaluators run against for this workload. A
 	// nil list with a nil error signals an early return with no evaluation (e.g.
 	// a Deployment with no usable selector).
 	listPods func(context.Context, client.Client, ctrl.Request, T) (*corev1.PodList, error)
-	// rolledOut reports whether a prior restart has fully settled; a restart is
-	// deferred until it has, so mid-rollout old-revision pods are not read as drift.
+	// rolledOut reports whether a prior rollout has fully settled
 	rolledOut func(T) bool
 	// restart performs the kind-specific restart (template patch, or pod delete
 	// for ownerless ReplicaSets) and stamps the restart timestamp and fingerprint.
 	restart func(context.Context, client.Client, T, []*corev1.Pod, string) error
 }
 
-// reconcileWorkload is the shared reconcile body for every workload kind. The
-// per-type behavior is supplied by s; see workloadStrategy. Behavior is
-// identical to the hand-written per-type Reconcile methods it replaces.
 func reconcileWorkload[T client.Object](
 	ctx context.Context,
 	c client.Client,
@@ -119,9 +115,6 @@ func listPodsByOwnerIndex[T client.Object](ownerKey string) func(context.Context
 	}
 }
 
-// podOwnerIndexer returns a field-index function that maps a pod to the UID of
-// its apps/v1 owner of the given kind. The three owner-ref controllers register
-// it against their owner-key so listPodsByOwnerIndex can select a workload's pods.
 func podOwnerIndexer(kind string) func(client.Object) []string {
 	return func(obj client.Object) []string {
 		pod, ok := obj.(*corev1.Pod)
@@ -137,16 +130,16 @@ func podOwnerIndexer(kind string) func(client.Object) []string {
 	}
 }
 
-func objectListItems[L any, PL interface {
-	*L
-	client.ObjectList
-}, I any](items func(PL) []I) func(client.ObjectList) []client.Object {
+func objectListToClientObjects[ListPtr client.ObjectList, ItemPtr interface {
+	*Item
+	client.Object
+}, Item any](itemsOf func(ListPtr) []Item) func(client.ObjectList) []client.Object {
 	return func(list client.ObjectList) []client.Object {
-		elems := items(list.(PL))
-		objs := make([]client.Object, len(elems))
-		for i := range elems {
-			objs[i] = any(&elems[i]).(client.Object)
+		items := itemsOf(list.(ListPtr))
+		objects := make([]client.Object, len(items))
+		for i := range items {
+			objects[i] = ItemPtr(&items[i])
 		}
-		return objs
+		return objects
 	}
 }

@@ -1,4 +1,4 @@
-package v2
+package evaluation
 
 import (
 	"errors"
@@ -7,16 +7,16 @@ import (
 	istioCR "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/istiofeatures"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/configuration"
+	v2 "github.com/kyma-project/istio/operator/pkg/restarter/v2"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 type Config struct {
-	IstioCR             *istioCR.Istio
-	LastAppliedConfig   configuration.AppliedConfig
-	BetaFeatures        istiofeatures.IstioFeatures
-	UseFingerprintDrift bool
-	Fingerprint         string
+	IstioCR           *istioCR.Istio
+	LastAppliedConfig configuration.AppliedConfig
+	BetaFeatures      istiofeatures.IstioFeatures
+	Fingerprint       string
 	// SidecarResources is the expected Istio proxy resource spec; a pod whose sidecar differs is restarted.
 	SidecarResources corev1.ResourceRequirements
 }
@@ -29,35 +29,20 @@ func GetEvaluators(cfg Config) (evaluators []Evaluator, err error) {
 	if err != nil {
 		return nil, err
 	}
-	evaluators = append(evaluators, NewCNIChangedRule(cfg.BetaFeatures.DisableCni))
-
-	if !cfg.UseFingerprintDrift {
-		evaluators = append(evaluators, NewCompatibilityModeChanged(*cfg.IstioCR, cfg.LastAppliedConfig, istioCR.ProxyMetaDataCompatibility))
-		evaluators = append(evaluators, NewDNSProxyingChanged(*cfg.IstioCR, cfg.LastAppliedConfig))
-		evaluators = append(evaluators, NewNumTrustedProxiesConfigChanged(*cfg.IstioCR, cfg.LastAppliedConfig))
-		evaluators = append(evaluators, NewForwardClientCertDetailsConfigChanged(*cfg.IstioCR, cfg.LastAppliedConfig))
-		evaluators = append(evaluators, NewTrustDomainConfigChanged(*cfg.IstioCR, cfg.LastAppliedConfig))
-		evaluators = append(evaluators, NewProxyStatsMatcherConfigChanged(cfg.IstioCR, cfg.LastAppliedConfig))
-	} else {
-		evaluators = append(evaluators, NewFingerprintDriftChanged(cfg.Fingerprint))
-	}
-
-	evaluators = append(evaluators, NewPrometheusMergeConfigChanged(
+	evaluators = append(evaluators, v2.NewCNIChangedRule(cfg.BetaFeatures.DisableCni))
+	evaluators = append(evaluators, v2.NewFingerprintDriftChanged(cfg.Fingerprint))
+	evaluators = append(evaluators, v2.NewPrometheusMergeConfigChanged(
 		cfg.IstioCR.Spec.Config.Telemetry.Metrics.PrometheusMerge,
 		15020,
 	))
-	evaluators = append(evaluators, NewSidecarImageChangedRule(cfg.LastAppliedConfig.IstioTag))
-	evaluators = append(evaluators, NewSidecarResourcesChangedRule(sidecarResources))
+	evaluators = append(evaluators, v2.NewSidecarImageChangedRule(cfg.LastAppliedConfig.IstioTag))
+	evaluators = append(evaluators, v2.NewSidecarResourcesChangedRule(sidecarResources))
 
 	return evaluators, nil
 }
 
-// effectiveSidecarResources overlays the proxy resources recorded in the last
-// applied configuration (components.proxy.k8s.resources) onto base, overriding
-// only the individual CPU/memory request and limit fields that config actually
-// sets. This mirrors how the operator merges proxy resources over the operator
-// defaults when rendering the sidecar, so the restart evaluator compares against
-// the same expected values the last applied config produced.
+// effectiveSidecarResources computes the actual values that
+// the proxy should have for resources.
 func effectiveSidecarResources(components *istioCR.Components, base corev1.ResourceRequirements) (corev1.ResourceRequirements, error) {
 	result := base.DeepCopy()
 

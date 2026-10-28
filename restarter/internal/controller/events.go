@@ -9,19 +9,20 @@ import (
 )
 
 const (
-	reasonRestartRequired = "RestartRequired"
-	reasonRestartSkipped  = "RestartSkipped"
+	reasonRestarting = "RestartingProxy"
+	reasonStopped    = "ProxyRestartStopped"
 )
 
 // emitDecisionEvent records a Kubernetes Event on obj for Restart or Stop decisions.
-func emitDecisionEvent(r record.EventRecorder, obj client.Object, d evaluation.Decision) {
+// evaluator is the name of the evaluator that produced the decision.
+func emitDecisionEvent(r record.EventRecorder, obj client.Object, d evaluation.Decision, evaluator string) {
 	if r == nil {
 		return
 	}
 	switch d {
 	case evaluation.Restart:
-		r.Event(obj, corev1.EventTypeWarning, reasonRestartRequired, "workload pods require a restart")
+		r.Eventf(obj, corev1.EventTypeNormal, reasonRestarting, "Istio proxy config or version is outdated (evaluator: %s)", evaluator)
 	case evaluation.Stop:
-		r.Event(obj, corev1.EventTypeNormal, reasonRestartSkipped, "restart skipped: evaluation returned Stop")
+		r.Eventf(obj, corev1.EventTypeWarning, reasonStopped, "Istio proxy evaluation stopped (evaluator: %s)", evaluator)
 	}
 }

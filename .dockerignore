@@ -6,5 +6,3 @@
 internal/resources/test_files
 restarter/
 **/*_test.go
-
-**/*.md

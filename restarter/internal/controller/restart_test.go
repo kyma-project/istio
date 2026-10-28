@@ -13,7 +13,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -71,7 +70,7 @@ func TestReconcile_RestartDecisionTriggersAction(t *testing.T) {
 					ObjectMeta: metav1.ObjectMeta{Name: "w", Namespace: "default", UID: "dep"},
 					Spec: appsv1.DeploymentSpec{
 						Selector: &metav1.LabelSelector{MatchLabels: appLabels},
-						Replicas: ptr.To(int32(1)),
+						Replicas: new(int32(1)),
 					},
 					Status: appsv1.DeploymentStatus{Replicas: 1, UpdatedReplicas: 1, AvailableReplicas: 1},
 				},
@@ -99,7 +98,7 @@ func TestReconcile_RestartDecisionTriggersAction(t *testing.T) {
 			seed: []client.Object{
 				&appsv1.StatefulSet{
 					ObjectMeta: metav1.ObjectMeta{Name: "w", Namespace: "default", UID: "sts"},
-					Spec:       appsv1.StatefulSetSpec{Replicas: ptr.To(int32(1))},
+					Spec:       appsv1.StatefulSetSpec{Replicas: new(int32(1))},
 					Status: appsv1.StatefulSetStatus{
 						Replicas: 1, ReadyReplicas: 1, CurrentReplicas: 1, UpdatedReplicas: 1, AvailableReplicas: 1,
 						CurrentRevision: "r1", UpdateRevision: "r1",
@@ -173,7 +172,7 @@ func TestReconcile_RestartDecisionTriggersAction(t *testing.T) {
 			seed: []client.Object{
 				&appsv1.ReplicaSet{
 					ObjectMeta: metav1.ObjectMeta{Name: "w", Namespace: "default", UID: "rs"},
-					Spec:       appsv1.ReplicaSetSpec{Replicas: ptr.To(int32(1))},
+					Spec:       appsv1.ReplicaSetSpec{Replicas: new(int32(1))},
 					Status:     appsv1.ReplicaSetStatus{Replicas: 1, AvailableReplicas: 1},
 				},
 				&corev1.Pod{
@@ -270,7 +269,7 @@ func TestReconcile_RestartFailurePropagates(t *testing.T) {
 					ObjectMeta: metav1.ObjectMeta{Name: "w", Namespace: "default", UID: "dep"},
 					Spec: appsv1.DeploymentSpec{
 						Selector: &metav1.LabelSelector{MatchLabels: appLabels},
-						Replicas: ptr.To(int32(1)),
+						Replicas: new(int32(1)),
 					},
 					Status: appsv1.DeploymentStatus{Replicas: 1, UpdatedReplicas: 1, AvailableReplicas: 1},
 				},
@@ -292,7 +291,7 @@ func TestReconcile_RestartFailurePropagates(t *testing.T) {
 			seed: []client.Object{
 				&appsv1.StatefulSet{
 					ObjectMeta: metav1.ObjectMeta{Name: "w", Namespace: "default", UID: "sts"},
-					Spec:       appsv1.StatefulSetSpec{Replicas: ptr.To(int32(1))},
+					Spec:       appsv1.StatefulSetSpec{Replicas: new(int32(1))},
 					Status: appsv1.StatefulSetStatus{
 						Replicas: 1, ReadyReplicas: 1, CurrentReplicas: 1, UpdatedReplicas: 1, AvailableReplicas: 1,
 						CurrentRevision: "r1", UpdateRevision: "r1",
@@ -354,7 +353,7 @@ func TestReconcile_RestartFailurePropagates(t *testing.T) {
 			seed: []client.Object{
 				&appsv1.ReplicaSet{
 					ObjectMeta: metav1.ObjectMeta{Name: "w", Namespace: "default", UID: "rs"},
-					Spec:       appsv1.ReplicaSetSpec{Replicas: ptr.To(int32(1))},
+					Spec:       appsv1.ReplicaSetSpec{Replicas: new(int32(1))},
 					Status:     appsv1.ReplicaSetStatus{Replicas: 1, AvailableReplicas: 1},
 				},
 				&corev1.Pod{
@@ -548,7 +547,7 @@ func TestReconcile_SkipsRestartWhenAlreadyStamped(t *testing.T) {
 			},
 			Spec: appsv1.DeploymentSpec{
 				Selector: &metav1.LabelSelector{MatchLabels: appLabels},
-				Replicas: ptr.To(int32(1)),
+				Replicas: new(int32(1)),
 				Template: corev1.PodTemplateSpec{
 					ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{
 						restart.RestartAnnotation: "2020-01-01T00:00:00Z",
@@ -677,7 +676,7 @@ func restartGates(rolledOut bool) []restartGateCase {
 		ObjectMeta: metav1.ObjectMeta{Name: "w", Namespace: "default", UID: "dep"},
 		Spec: appsv1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{MatchLabels: appLabels},
-			Replicas: ptr.To(int32(1)),
+			Replicas: new(int32(1)),
 		},
 	}
 	sts := &appsv1.StatefulSet{

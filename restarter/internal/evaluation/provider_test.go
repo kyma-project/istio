@@ -575,10 +575,10 @@ func TestProvider_Snapshot_FingerprintDriftMode(t *testing.T) {
 	perFieldNames := []string{
 		"CompatibilityModeChanged",
 		"DNSProxyingChanged",
-		"NumTrustedProxiesChanged",
-		"ForwardClientCertDetailsChanged",
-		"TrustDomainChanged",
-		"ProxyStatsMatcherChanged",
+		"NumTrustedProxiesConfigChanged",
+		"ForwardClientCertDetailsConfigChanged",
+		"TrustDomainConfigChanged",
+		"ProxyStatsMatcherConfigChanged",
 	}
 	for _, n := range names {
 		for _, perField := range perFieldNames {

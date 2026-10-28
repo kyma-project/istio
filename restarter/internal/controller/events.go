@@ -14,8 +14,6 @@ const (
 )
 
 // emitDecisionEvent records a Kubernetes Event on obj for Restart or Stop decisions.
-// Continue produces no event. A nil recorder is tolerated so the reconciler can be
-// exercised without SetupWithManager having wired one up.
 func emitDecisionEvent(r record.EventRecorder, obj client.Object, d evaluation.Decision) {
 	if r == nil {
 		return

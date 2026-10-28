@@ -23,8 +23,6 @@ const (
 	Stop     = v2.Stop
 )
 
-var ErrDecisionUnknown = v2.ErrDecisionUnknown
-
 // RestartKind distinguishes which evaluation pass produced a Restart decision.
 type RestartKind int
 

@@ -2,14 +2,6 @@ package restart
 
 import appsv1 "k8s.io/api/apps/v1"
 
-// The RolledOut predicates mirror `kubectl rollout status`: a workload is
-// "rolled out" when its latest spec is fully observed and every replica runs the
-// updated revision. The restarter must not restart a workload whose previous
-// restart is still rolling out — old-revision pods still present mid-rollout
-// would be read as drift by pod-state evaluators and re-trigger the restart
-// before it settles. A rollout is in progress whenever Generation has outrun
-// Status.ObservedGeneration, so the generation check uses > (not >=).
-
 func DeploymentRolledOut(d *appsv1.Deployment) bool {
 	if d.Generation > d.Status.ObservedGeneration {
 		return false
@@ -27,8 +19,6 @@ func StatefulSetRolledOut(s *appsv1.StatefulSet) bool {
 	if s.Generation > s.Status.ObservedGeneration {
 		return false
 	}
-	// UpdateRevision == CurrentRevision is the authoritative "no old-revision
-	// pods remain" signal; replica counts alone miss a partitioned update.
 	if s.Status.UpdateRevision != s.Status.CurrentRevision {
 		return false
 	}

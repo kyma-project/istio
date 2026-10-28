@@ -64,7 +64,7 @@ func (r *DaemonSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Watches(&operatorv1alpha2.Istio{}, handler.EnqueueRequestsFromMapFunc(
 			enqueueWorkloadsOnIstioChange(r.Client,
 				func() client.ObjectList { return &appsv1.DaemonSetList{} },
-				objectListItems(func(l *appsv1.DaemonSetList) []appsv1.DaemonSet { return l.Items }),
+				objectListToClientObjects(func(l *appsv1.DaemonSetList) []appsv1.DaemonSet { return l.Items }),
 				nil,
 			),
 		)).

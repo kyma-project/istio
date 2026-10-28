@@ -41,9 +41,6 @@ func (r *DeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		newObj:   func() *appsv1.Deployment { return &appsv1.Deployment{} },
 		template: func(d *appsv1.Deployment) *corev1.PodTemplateSpec { return &d.Spec.Template },
 		listPods: func(ctx context.Context, c client.Client, req ctrl.Request, d *appsv1.Deployment) (*corev1.PodList, error) {
-			// A nil selector means the Deployment is not yet usable; an empty selector
-			// would otherwise match every pod in the namespace, so skip both by
-			// returning a nil list (no evaluation, no error).
 			if d.Spec.Selector == nil ||
 				(len(d.Spec.Selector.MatchLabels) == 0 && len(d.Spec.Selector.MatchExpressions) == 0) {
 				return nil, nil
@@ -77,7 +74,7 @@ func (r *DeploymentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Watches(&operatorv1alpha2.Istio{}, handler.EnqueueRequestsFromMapFunc(
 			enqueueWorkloadsOnIstioChange(r.Client,
 				func() client.ObjectList { return &appsv1.DeploymentList{} },
-				objectListItems(func(l *appsv1.DeploymentList) []appsv1.Deployment { return l.Items }),
+				objectListToClientObjects(func(l *appsv1.DeploymentList) []appsv1.Deployment { return l.Items }),
 				nil,
 			),
 		)).

@@ -64,7 +64,7 @@ func (r *StatefulSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Watches(&operatorv1alpha2.Istio{}, handler.EnqueueRequestsFromMapFunc(
 			enqueueWorkloadsOnIstioChange(r.Client,
 				func() client.ObjectList { return &appsv1.StatefulSetList{} },
-				objectListItems(func(l *appsv1.StatefulSetList) []appsv1.StatefulSet { return l.Items }),
+				objectListToClientObjects(func(l *appsv1.StatefulSetList) []appsv1.StatefulSet { return l.Items }),
 				nil,
 			),
 		)).

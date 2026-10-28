@@ -32,47 +32,51 @@ const (
 	KindPodState
 )
 
-func EvaluateDetailed(ctx context.Context, workload Object, pods []*corev1.Pod, evaluators []Evaluator) (Decision, RestartKind) {
+// EvaluateDetailed returns the decision, which evaluation pass produced it, and
+// the name of the evaluator that produced a non-Continue decision (empty when the
+// decision is Continue).
+func EvaluateDetailed(ctx context.Context, workload Object, pods []*corev1.Pod, evaluators []Evaluator) (Decision, RestartKind, string) {
 	if len(pods) == 0 {
-		return Continue, KindNone
+		return Continue, KindNone, ""
 	}
 	lg := logf.FromContext(ctx).WithValues("workload", workload.GetName(), "namespace", workload.GetNamespace())
 
-	if d := runEvaluators(ctx, lg, workload, evaluators); d != Continue {
+	if d, name := runEvaluators(lg, workload, evaluators); d != Continue {
 		if d == Restart {
-			return Restart, KindConfigDrift
+			return Restart, KindConfigDrift, name
 		}
-		return d, KindNone
+		return d, KindNone, name
 	}
 	for _, p := range pods {
 		podLg := lg.WithValues("pod", p.GetName())
 		podLg.V(2).Info("Evaluating pod")
-		if d := runEvaluators(ctx, podLg, p, evaluators); d != Continue {
+		if d, name := runEvaluators(podLg, p, evaluators); d != Continue {
 			if d == Restart {
-				return Restart, KindPodState
+				return Restart, KindPodState, name
 			}
-			return d, KindNone
+			return d, KindNone, name
 		}
 	}
 	lg.V(2).Info("All evaluators voted continue")
-	return Continue, KindNone
+	return Continue, KindNone, ""
 }
 
 // runEvaluators returns the first non-Continue decision produced by evaluators
-// over target. Continue when every evaluator votes Continue.
-func runEvaluators(ctx context.Context, lg logr.Logger, target Object, evaluators []Evaluator) Decision {
+// over target along with the deciding evaluator's name. Continue with an empty
+// name when every evaluator votes Continue.
+func runEvaluators(lg logr.Logger, target Object, evaluators []Evaluator) (Decision, string) {
 	for _, e := range evaluators {
 		evLg := lg.WithValues("evaluator", e.Name())
 		switch e.Evaluate(target) {
 		case Stop:
 			evLg.V(3).Info("Evaluator voted stop")
-			return Stop
+			return Stop, e.Name()
 		case Restart:
-			evLg.V(3).Info("Evaluator voted restart")
-			return Restart
+			evLg.V(1).Info("Evaluator voted restart")
+			return Restart, e.Name()
 		case Continue:
 			evLg.V(3).Info("Evaluator voted continue")
 		}
 	}
-	return Continue
+	return Continue, ""
 }

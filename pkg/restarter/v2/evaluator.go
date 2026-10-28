@@ -22,6 +22,7 @@ var (
 )
 
 // Decision represents the verdict an Evaluator produces when evaluating an Object.
+// TODO: convert to a struct carrying a Reason string explaining the verdict.
 type Decision int
 
 func (decision Decision) String() string {

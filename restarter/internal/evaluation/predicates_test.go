@@ -1,4 +1,4 @@
-package v2
+package evaluation
 
 import (
 	"testing"
@@ -8,7 +8,6 @@ import (
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/configuration"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
-	"k8s.io/utils/ptr"
 )
 
 func proxyComponents(res *istioCR.Resources) *istioCR.Components {
@@ -17,6 +16,26 @@ func proxyComponents(res *istioCR.Resources) *istioCR.Components {
 			K8S: &istioCR.ProxyK8sConfig{Resources: res},
 		},
 	}
+}
+
+func resources(cpuReq, memReq, cpuLim, memLim string) corev1.ResourceRequirements {
+	return corev1.ResourceRequirements{
+		Requests: corev1.ResourceList{
+			corev1.ResourceCPU:    resource.MustParse(cpuReq),
+			corev1.ResourceMemory: resource.MustParse(memReq),
+		},
+		Limits: corev1.ResourceList{
+			corev1.ResourceCPU:    resource.MustParse(cpuLim),
+			corev1.ResourceMemory: resource.MustParse(memLim),
+		},
+	}
+}
+
+func resourcesEqual(a, b corev1.ResourceRequirements) bool {
+	return a.Requests.Cpu().Equal(*b.Requests.Cpu()) &&
+		a.Requests.Memory().Equal(*b.Requests.Memory()) &&
+		a.Limits.Cpu().Equal(*b.Limits.Cpu()) &&
+		a.Limits.Memory().Equal(*b.Limits.Memory())
 }
 
 func TestEffectiveSidecarResources(t *testing.T) {
@@ -44,7 +63,7 @@ func TestEffectiveSidecarResources(t *testing.T) {
 		{
 			name: "last applied overrides only cpu limit, other fields keep base",
 			components: proxyComponents(&istioCR.Resources{
-				Limits: &istioCR.ResourceClaims{CPU: ptr.To("250m")},
+				Limits: &istioCR.ResourceClaims{CPU: new("250m")},
 			}),
 			base:   base,
 			expect: resources("100m", "128Mi", "250m", "256Mi"),
@@ -52,8 +71,8 @@ func TestEffectiveSidecarResources(t *testing.T) {
 		{
 			name: "last applied overrides all four fields",
 			components: proxyComponents(&istioCR.Resources{
-				Requests: &istioCR.ResourceClaims{CPU: ptr.To("300m"), Memory: ptr.To("512Mi")},
-				Limits:   &istioCR.ResourceClaims{CPU: ptr.To("400m"), Memory: ptr.To("1Gi")},
+				Requests: &istioCR.ResourceClaims{CPU: new("300m"), Memory: new("512Mi")},
+				Limits:   &istioCR.ResourceClaims{CPU: new("400m"), Memory: new("1Gi")},
 			}),
 			base:   base,
 			expect: resources("300m", "512Mi", "400m", "1Gi"),
@@ -61,7 +80,7 @@ func TestEffectiveSidecarResources(t *testing.T) {
 		{
 			name: "last applied overrides requests memory only",
 			components: proxyComponents(&istioCR.Resources{
-				Requests: &istioCR.ResourceClaims{Memory: ptr.To("384Mi")},
+				Requests: &istioCR.ResourceClaims{Memory: new("384Mi")},
 			}),
 			base:   base,
 			expect: resources("100m", "384Mi", "200m", "256Mi"),
@@ -69,7 +88,7 @@ func TestEffectiveSidecarResources(t *testing.T) {
 		{
 			name: "base with nil maps, last applied sets cpu request",
 			components: proxyComponents(&istioCR.Resources{
-				Requests: &istioCR.ResourceClaims{CPU: ptr.To("150m")},
+				Requests: &istioCR.ResourceClaims{CPU: new("150m")},
 			}),
 			base: corev1.ResourceRequirements{},
 			expect: corev1.ResourceRequirements{
@@ -80,7 +99,7 @@ func TestEffectiveSidecarResources(t *testing.T) {
 		{
 			name: "unparseable value returns error",
 			components: proxyComponents(&istioCR.Resources{
-				Limits: &istioCR.ResourceClaims{CPU: ptr.To("not-a-quantity")},
+				Limits: &istioCR.ResourceClaims{CPU: new("not-a-quantity")},
 			}),
 			base:      base,
 			expectErr: true,
@@ -108,7 +127,7 @@ func TestEffectiveSidecarResources(t *testing.T) {
 func TestEffectiveSidecarResources_DoesNotMutateBase(t *testing.T) {
 	base := resources("100m", "128Mi", "200m", "256Mi")
 	components := proxyComponents(&istioCR.Resources{
-		Limits: &istioCR.ResourceClaims{CPU: ptr.To("999m")},
+		Limits: &istioCR.ResourceClaims{CPU: new("999m")},
 	})
 
 	if _, err := effectiveSidecarResources(components, base); err != nil {
@@ -122,50 +141,19 @@ func TestEffectiveSidecarResources_DoesNotMutateBase(t *testing.T) {
 
 func TestGetEvaluators(t *testing.T) {
 	tests := []struct {
-		name                  string
-		useFingerprintDrift   bool
-		fingerprint           string
-		wantNames             map[string]bool
-		wantExcludedNames     map[string]bool
+		name        string
+		fingerprint string
+		wantNames   map[string]bool
 	}{
 		{
-			name:                "per-field drift mode",
-			useFingerprintDrift: false,
-			fingerprint:         "",
+			name:        "builds the full evaluator set",
+			fingerprint: "test-fingerprint-123",
 			wantNames: map[string]bool{
-				"CNIConfigChanged":                      true,
-				"PrometheusMergeConfigChanged":          true,
-				"SidecarImageChanged":                   true,
-				"SidecarResourcesChanged":               true,
-				"CompatibilityModeChanged":              true,
-				"DNSProxyingChanged":                    true,
-				"NumTrustedProxiesConfigChanged":        true,
-				"ForwardClientCertDetailsConfigChanged": true,
-				"TrustDomainConfigChanged":              true,
-				"ProxyStatsMatcherConfigChanged":        true,
-			},
-			wantExcludedNames: map[string]bool{
-				"FingerprintDriftChanged": true,
-			},
-		},
-		{
-			name:                "fingerprint-drift mode",
-			useFingerprintDrift: true,
-			fingerprint:         "test-fingerprint-123",
-			wantNames: map[string]bool{
-				"CNIConfigChanged":            true,
+				"CNIConfigChanged":             true,
+				"FingerprintDriftChanged":      true,
 				"PrometheusMergeConfigChanged": true,
 				"SidecarImageChanged":          true,
 				"SidecarResourcesChanged":      true,
-				"FingerprintDriftChanged":      true,
-			},
-			wantExcludedNames: map[string]bool{
-				"CompatibilityModeChanged":              true,
-				"DNSProxyingChanged":                    true,
-				"NumTrustedProxiesConfigChanged":        true,
-				"ForwardClientCertDetailsConfigChanged": true,
-				"TrustDomainConfigChanged":              true,
-				"ProxyStatsMatcherConfigChanged":        true,
 			},
 		},
 	}
@@ -173,12 +161,11 @@ func TestGetEvaluators(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cfg := Config{
-				IstioCR:             &istioCR.Istio{},
-				LastAppliedConfig:   configuration.AppliedConfig{},
-				UseFingerprintDrift: tt.useFingerprintDrift,
-				Fingerprint:         tt.fingerprint,
-				BetaFeatures:        istiofeatures.IstioFeatures{},
-				SidecarResources:    corev1.ResourceRequirements{},
+				IstioCR:           &istioCR.Istio{},
+				LastAppliedConfig: configuration.AppliedConfig{},
+				Fingerprint:       tt.fingerprint,
+				BetaFeatures:      istiofeatures.IstioFeatures{},
+				SidecarResources:  corev1.ResourceRequirements{},
 			}
 
 			evaluators, err := GetEvaluators(cfg)
@@ -194,12 +181,6 @@ func TestGetEvaluators(t *testing.T) {
 			for wantName := range tt.wantNames {
 				if !evaluatorNames[wantName] {
 					t.Errorf("wanted evaluator %q not found in %v", wantName, evaluatorNames)
-				}
-			}
-
-			for excludedName := range tt.wantExcludedNames {
-				if evaluatorNames[excludedName] {
-					t.Errorf("excluded evaluator %q should not be present in %v", excludedName, evaluatorNames)
 				}
 			}
 		})

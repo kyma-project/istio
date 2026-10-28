@@ -48,6 +48,7 @@ func TestEvaluateDetailed(t *testing.T) {
 		evaluators []evaluation.Evaluator
 		wantD      evaluation.Decision
 		wantK      evaluation.RestartKind
+		wantName   string
 	}{
 		{
 			name:       "no pods returns Continue KindNone",
@@ -56,6 +57,7 @@ func TestEvaluateDetailed(t *testing.T) {
 			evaluators: []evaluation.Evaluator{&stubEvaluator{evaluation.Restart}},
 			wantD:      evaluation.Continue,
 			wantK:      evaluation.KindNone,
+			wantName:   "",
 		},
 		{
 			name:     "workload-level Restart returns KindConfigDrift",
@@ -64,8 +66,9 @@ func TestEvaluateDetailed(t *testing.T) {
 			evaluators: []evaluation.Evaluator{
 				&typedStubEvaluator{workloadDecision: evaluation.Restart, podDecision: evaluation.Continue},
 			},
-			wantD: evaluation.Restart,
-			wantK: evaluation.KindConfigDrift,
+			wantD:    evaluation.Restart,
+			wantK:    evaluation.KindConfigDrift,
+			wantName: "typedStubEvaluator",
 		},
 		{
 			name:     "pod-level Restart returns KindPodState",
@@ -74,8 +77,9 @@ func TestEvaluateDetailed(t *testing.T) {
 			evaluators: []evaluation.Evaluator{
 				&typedStubEvaluator{workloadDecision: evaluation.Continue, podDecision: evaluation.Restart},
 			},
-			wantD: evaluation.Restart,
-			wantK: evaluation.KindPodState,
+			wantD:    evaluation.Restart,
+			wantK:    evaluation.KindPodState,
+			wantName: "typedStubEvaluator",
 		},
 		{
 			name:     "Stop returns KindNone",
@@ -84,8 +88,9 @@ func TestEvaluateDetailed(t *testing.T) {
 			evaluators: []evaluation.Evaluator{
 				&stubEvaluator{evaluation.Stop},
 			},
-			wantD: evaluation.Stop,
-			wantK: evaluation.KindNone,
+			wantD:    evaluation.Stop,
+			wantK:    evaluation.KindNone,
+			wantName: "stubEvaluator",
 		},
 		{
 			name:     "all Continue returns KindNone",
@@ -94,19 +99,23 @@ func TestEvaluateDetailed(t *testing.T) {
 			evaluators: []evaluation.Evaluator{
 				&stubEvaluator{evaluation.Continue},
 			},
-			wantD: evaluation.Continue,
-			wantK: evaluation.KindNone,
+			wantD:    evaluation.Continue,
+			wantK:    evaluation.KindNone,
+			wantName: "",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotD, gotK := evaluation.EvaluateDetailed(context.Background(), tt.workload, tt.pods, tt.evaluators)
+			gotD, gotK, gotName := evaluation.EvaluateDetailed(context.Background(), tt.workload, tt.pods, tt.evaluators)
 			if gotD != tt.wantD {
 				t.Errorf("EvaluateDetailed() decision = %v, want %v", gotD, tt.wantD)
 			}
 			if gotK != tt.wantK {
 				t.Errorf("EvaluateDetailed() kind = %v, want %v", gotK, tt.wantK)
+			}
+			if gotName != tt.wantName {
+				t.Errorf("EvaluateDetailed() evaluator = %q, want %q", gotName, tt.wantName)
 			}
 		})
 	}

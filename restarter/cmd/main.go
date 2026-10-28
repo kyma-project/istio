@@ -74,7 +74,6 @@ func main() {
 	var istioCRNamespace, istioCRName string
 	var proxyCPURequest, proxyMemoryRequest, proxyCPULimit, proxyMemoryLimit string
 	var devMode bool
-	var enableConfigDrift bool
 	var tlsOpts []func(*tls.Config)
 	flag.StringVar(&metricsAddr, "metrics-bind-address", "0", "The address the metrics endpoint binds to. "+
 		"Use :8443 for HTTPS or :8080 for HTTP, or leave as 0 to disable the metrics service.")
@@ -103,8 +102,6 @@ func main() {
 	flag.StringVar(&proxyMemoryLimit, "proxy-memory-limit", "", "Expected memory limit for the Istio proxy sidecar container (required).")
 	flag.BoolVar(&devMode, "dev-mode", false,
 		"If set, use built-in development sidecar resource values instead of the required --proxy-* flags.")
-	flag.BoolVar(&enableConfigDrift, "enable-config-drift", true,
-		"Restart injected workloads and the ingress gateway on Istio CR config-fingerprint drift.")
 	opts := zap.Options{
 		Development: true,
 	}
@@ -220,7 +217,7 @@ func main() {
 	}
 
 	stripTransform := transform.StripForRestart()
-	stripPodTransform := transform.StripForRestartKeepOwnerRefs()
+	stripKeepOwnerRefs := transform.StripForRestartKeepOwnerRefs()
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
 		Metrics:                metricsServerOptions,
@@ -231,10 +228,10 @@ func main() {
 		Cache: cache.Options{
 			ByObject: map[client.Object]cache.ByObject{
 				&appsv1.Deployment{}:  {Transform: stripTransform},
-				&appsv1.ReplicaSet{}:  {Transform: stripTransform},
+				&appsv1.ReplicaSet{}:  {Transform: stripKeepOwnerRefs},
 				&appsv1.StatefulSet{}: {Transform: stripTransform},
 				&appsv1.DaemonSet{}:   {Transform: stripTransform},
-				&corev1.Pod{}:         {Transform: stripPodTransform},
+				&corev1.Pod{}:         {Transform: stripKeepOwnerRefs},
 			},
 		},
 	})
@@ -247,7 +244,6 @@ func main() {
 		mgr.GetClient(),
 		types.NamespacedName{Namespace: istioCRNamespace, Name: istioCRName},
 		sidecarResources,
-		enableConfigDrift,
 	)
 
 	if err := (&controller.DeploymentReconciler{

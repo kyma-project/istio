@@ -5,4 +5,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: docker.io/i566483/restarter-0
-  newTag: 0.0.27
+  newTag: 0.0.37

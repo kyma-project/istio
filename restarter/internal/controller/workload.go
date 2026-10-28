@@ -41,7 +41,7 @@ func reconcileWorkload[T client.Object](
 	s workloadStrategy[T],
 ) (ctrl.Result, error) {
 	l := logf.FromContext(ctx).WithValues(s.logKey, req.NamespacedName)
-	l.V(1).Info("Reconciling workload")
+	l.V(2).Info("Reconciling workload")
 
 	obj := s.newObj()
 	if err := c.Get(ctx, req.NamespacedName, obj); err != nil {
@@ -53,8 +53,10 @@ func reconcileWorkload[T client.Object](
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 	tmpl := s.template(obj)
+	// TODO: This evaluation excludes istio-ingressgateway.
+	// This is left as follow up to handle.
 	if !evaluation.ShouldInject(ns.Labels, tmpl.Labels, tmpl.Annotations) {
-		l.V(1).Info("")
+		l.V(2).Info("Workload should not be injected, skipping")
 		return ctrl.Result{}, nil
 	}
 
@@ -77,9 +79,9 @@ func reconcileWorkload[T client.Object](
 		l.Error(err, "Failed to snapshot evaluators")
 		return ctrl.Result{}, err
 	}
-	decision, kind := evaluation.EvaluateDetailed(ctx, obj, pods, evs)
-	l.V(1).Info("Evaluation decision", "decision", decision, "pods", len(pods))
-	emitDecisionEvent(recorder, obj, decision)
+	decision, kind, evaluator := evaluation.EvaluateDetailed(ctx, obj, pods, evs)
+	l.V(2).Info("Evaluation decision", "decision", decision, "evaluator", evaluator, "pods", len(pods))
+	emitDecisionEvent(recorder, obj, decision, evaluator)
 
 	if decision == evaluation.Restart {
 		if kind == evaluation.KindConfigDrift && restart.AlreadyRestartedForConfig(tmpl.Annotations[restart.HashAnnotation], fingerprint) {

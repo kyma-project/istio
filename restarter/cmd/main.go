@@ -74,6 +74,7 @@ func main() {
 	var istioCRNamespace, istioCRName string
 	var proxyCPURequest, proxyMemoryRequest, proxyCPULimit, proxyMemoryLimit string
 	var devMode bool
+	var enableConfigDrift bool
 	var tlsOpts []func(*tls.Config)
 	flag.StringVar(&metricsAddr, "metrics-bind-address", "0", "The address the metrics endpoint binds to. "+
 		"Use :8443 for HTTPS or :8080 for HTTP, or leave as 0 to disable the metrics service.")
@@ -102,6 +103,8 @@ func main() {
 	flag.StringVar(&proxyMemoryLimit, "proxy-memory-limit", "", "Expected memory limit for the Istio proxy sidecar container (required).")
 	flag.BoolVar(&devMode, "dev-mode", false,
 		"If set, use built-in development sidecar resource values instead of the required --proxy-* flags.")
+	flag.BoolVar(&enableConfigDrift, "enable-config-drift", true,
+		"Restart injected workloads and the ingress gateway on Istio CR config-fingerprint drift.")
 	opts := zap.Options{
 		Development: true,
 	}
@@ -244,7 +247,7 @@ func main() {
 		mgr.GetClient(),
 		types.NamespacedName{Namespace: istioCRNamespace, Name: istioCRName},
 		sidecarResources,
-		true,
+		enableConfigDrift,
 	)
 
 	if err := (&controller.DeploymentReconciler{

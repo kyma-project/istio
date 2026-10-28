@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	istioCR "github.com/kyma-project/istio/operator/api/v1alpha2"
+	"github.com/kyma-project/istio/operator/internal/istiofeatures"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/configuration"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/utils/ptr"
@@ -115,5 +117,91 @@ func TestEffectiveSidecarResources_DoesNotMutateBase(t *testing.T) {
 	want := resource.MustParse("200m")
 	if !base.Limits.Cpu().Equal(want) {
 		t.Errorf("base was mutated: cpu limit now %v", base.Limits.Cpu())
+	}
+}
+
+func TestGetEvaluators(t *testing.T) {
+	tests := []struct {
+		name                  string
+		useFingerprintDrift   bool
+		fingerprint           string
+		wantNames             map[string]bool
+		wantExcludedNames     map[string]bool
+	}{
+		{
+			name:                "per-field drift mode",
+			useFingerprintDrift: false,
+			fingerprint:         "",
+			wantNames: map[string]bool{
+				"CNIConfigChanged":                      true,
+				"PrometheusMergeConfigChanged":          true,
+				"SidecarImageChanged":                   true,
+				"SidecarResourcesChanged":               true,
+				"CompatibilityModeChanged":              true,
+				"DNSProxyingChanged":                    true,
+				"NumTrustedProxiesConfigChanged":        true,
+				"ForwardClientCertDetailsConfigChanged": true,
+				"TrustDomainConfigChanged":              true,
+				"ProxyStatsMatcherConfigChanged":        true,
+			},
+			wantExcludedNames: map[string]bool{
+				"FingerprintDriftChanged": true,
+			},
+		},
+		{
+			name:                "fingerprint-drift mode",
+			useFingerprintDrift: true,
+			fingerprint:         "test-fingerprint-123",
+			wantNames: map[string]bool{
+				"CNIConfigChanged":            true,
+				"PrometheusMergeConfigChanged": true,
+				"SidecarImageChanged":          true,
+				"SidecarResourcesChanged":      true,
+				"FingerprintDriftChanged":      true,
+			},
+			wantExcludedNames: map[string]bool{
+				"CompatibilityModeChanged":              true,
+				"DNSProxyingChanged":                    true,
+				"NumTrustedProxiesConfigChanged":        true,
+				"ForwardClientCertDetailsConfigChanged": true,
+				"TrustDomainConfigChanged":              true,
+				"ProxyStatsMatcherConfigChanged":        true,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := Config{
+				IstioCR:             &istioCR.Istio{},
+				LastAppliedConfig:   configuration.AppliedConfig{},
+				UseFingerprintDrift: tt.useFingerprintDrift,
+				Fingerprint:         tt.fingerprint,
+				BetaFeatures:        istiofeatures.IstioFeatures{},
+				SidecarResources:    corev1.ResourceRequirements{},
+			}
+
+			evaluators, err := GetEvaluators(cfg)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			evaluatorNames := make(map[string]bool)
+			for _, ev := range evaluators {
+				evaluatorNames[ev.Name()] = true
+			}
+
+			for wantName := range tt.wantNames {
+				if !evaluatorNames[wantName] {
+					t.Errorf("wanted evaluator %q not found in %v", wantName, evaluatorNames)
+				}
+			}
+
+			for excludedName := range tt.wantExcludedNames {
+				if evaluatorNames[excludedName] {
+					t.Errorf("excluded evaluator %q should not be present in %v", excludedName, evaluatorNames)
+				}
+			}
+		})
 	}
 }

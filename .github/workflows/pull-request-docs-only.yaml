@@ -1,0 +1,42 @@
+name: Pull Request (docs only)
+
+# Handles PRs that change only documentation files (*.md, *.txt).
+# If the PR contains non-doc changes, this workflow skips and pull-request.yaml
+# runs the full test suite instead.
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    types: [ synchronize, opened, reopened, ready_for_review ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  pull-request-status:
+    name: Doc-only check
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+    steps:
+      - name: Check scope
+        run: |
+          changed="$(gh pr diff --name-only "${PR_NUMBER}" --repo "${{ github.repository }}")"
+          echo "Changed files:"
+          echo "${changed}"
+          non_doc="$(echo "${changed}" | grep -vE '\.(md|txt)$' || true)"
+          if [ -n "${non_doc}" ]; then
+            echo "Non-doc files changed — not our scope, skipping"
+            echo "scope=other" >> "${GITHUB_OUTPUT}"
+          else
+            echo "Only documentation files changed"
+            echo "scope=doc-only" >> "${GITHUB_OUTPUT}"
+          fi
+        id: scope
+      - name: Doc-only change, no tests required
+        if: steps.scope.outputs.scope == 'doc-only'
+        run: echo "Documentation-only change; no tests required."

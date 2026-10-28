@@ -6,6 +6,11 @@ permissions:
 on:
   pull_request:
     types: [ synchronize, opened, reopened, ready_for_review ]
+    paths-ignore:
+      - "**/*.md"   # covered by pull-request-docs-only.yaml
+      - "**/*.txt"  # covered by pull-request-docs-only.yaml
+      - "external-images.yaml"  # covered by pull-request-images-only.yaml
+      - "fips-images.yaml"      # covered by pull-request-images-only.yaml
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}

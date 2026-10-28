@@ -1,0 +1,58 @@
+name: Pull Request (images only)
+
+# Handles PRs that change only image yaml files (external-images.yaml, fips-images.yaml).
+# If the PR contains non-image changes, this workflow skips and pull-request.yaml
+# runs the full test suite instead.
+# Only public images from external-images.yaml are checked; FIPS images are skipped.
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    types: [ synchronize, opened, reopened, ready_for_review ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  check-images:
+    name: Check images on Docker Hub
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+    steps:
+      - name: Check scope
+        id: scope
+        run: |
+          changed="$(gh pr diff --name-only "${PR_NUMBER}" --repo "${{ github.repository }}")"
+          echo "Changed files:"
+          echo "${changed}"
+          non_images="$(echo "${changed}" | grep -vE '^(external-images|fips-images)\.yaml$' || true)"
+          if [ -n "${non_images}" ]; then
+            echo "Non-image files changed — not our scope, skipping"
+            echo "scope=other" >> "${GITHUB_OUTPUT}"
+          else
+            echo "Only image yaml files changed"
+            echo "scope=images-only" >> "${GITHUB_OUTPUT}"
+          fi
+      - uses: actions/checkout@v7
+        if: steps.scope.outputs.scope == 'images-only'
+      - name: Check images exist on Docker Hub
+        if: steps.scope.outputs.scope == 'images-only'
+        run: hack/ci/check-dockerhub-images.sh
+      - name: Check Istio image versions are consistent
+        if: steps.scope.outputs.scope == 'images-only'
+        run: hack/ci/check-istio-images-consistency.sh
+
+  pull-request-status:
+    needs: [ check-images ]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - if: ${{ !(contains(needs.*.result, 'failure')) }}
+        run: exit 0
+      - if: ${{ contains(needs.*.result, 'failure') }}
+        run: exit 1

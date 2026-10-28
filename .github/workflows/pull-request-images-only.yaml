@@ -11,46 +11,54 @@ permissions:
 on:
   pull_request:
     types: [ synchronize, opened, reopened, ready_for_review ]
+    paths:
+      - "external-images.yaml"
+      - "fips-images.yaml"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}
   cancel-in-progress: true
 
 jobs:
-  check-images:
-    name: Check images on Docker Hub
+  detect-scope:
+    name: Detect scope
     runs-on: ubuntu-latest
-    env:
-      GH_TOKEN: ${{ github.token }}
-      PR_NUMBER: ${{ github.event.pull_request.number }}
+    outputs:
+      images-only: ${{ steps.check.outputs.images-only }}
     steps:
-      - name: Check scope
-        id: scope
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           changed="$(gh pr diff --name-only "${PR_NUMBER}" --repo "${{ github.repository }}")"
           echo "Changed files:"
           echo "${changed}"
           non_images="$(echo "${changed}" | grep -vE '^(external-images|fips-images)\.yaml$' || true)"
-          if [ -n "${non_images}" ]; then
-            echo "Non-image files changed — not our scope, skipping"
-            echo "scope=other" >> "${GITHUB_OUTPUT}"
-          else
+          if [ -z "${non_images}" ]; then
+            echo "images-only=true" >> "${GITHUB_OUTPUT}"
             echo "Only image yaml files changed"
-            echo "scope=images-only" >> "${GITHUB_OUTPUT}"
+          else
+            echo "images-only=false" >> "${GITHUB_OUTPUT}"
+            echo "Non-image files changed — full PR pipeline will handle this"
           fi
+
+  check-images:
+    name: Check images on Docker Hub
+    needs: [ detect-scope ]
+    if: needs.detect-scope.outputs.images-only == 'true'
+    runs-on: ubuntu-latest
+    steps:
       - uses: actions/checkout@v7
-        if: steps.scope.outputs.scope == 'images-only'
       - name: Check images exist on Docker Hub
-        if: steps.scope.outputs.scope == 'images-only'
         run: hack/ci/check-dockerhub-images.sh
       - name: Check Istio image versions are consistent
-        if: steps.scope.outputs.scope == 'images-only'
         run: hack/ci/check-istio-images-consistency.sh
 
   pull-request-status:
-    needs: [ check-images ]
+    needs: [ detect-scope, check-images ]
+    if: needs.detect-scope.outputs.images-only == 'true'
     runs-on: ubuntu-latest
-    if: always()
     steps:
       - if: ${{ !(contains(needs.*.result, 'failure')) }}
         run: exit 0

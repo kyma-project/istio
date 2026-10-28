@@ -10,33 +10,52 @@ permissions:
 on:
   pull_request:
     types: [ synchronize, opened, reopened, ready_for_review ]
+    paths:
+      - "**/*.md"
+      - "**/*.txt"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}
   cancel-in-progress: true
 
 jobs:
-  pull-request-status:
-    name: Doc-only check
+  detect-scope:
+    name: Detect scope
     runs-on: ubuntu-latest
-    env:
-      GH_TOKEN: ${{ github.token }}
-      PR_NUMBER: ${{ github.event.pull_request.number }}
+    outputs:
+      docs-only: ${{ steps.check.outputs.docs-only }}
     steps:
-      - name: Check scope
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           changed="$(gh pr diff --name-only "${PR_NUMBER}" --repo "${{ github.repository }}")"
           echo "Changed files:"
           echo "${changed}"
           non_doc="$(echo "${changed}" | grep -vE '\.(md|txt)$' || true)"
-          if [ -n "${non_doc}" ]; then
-            echo "Non-doc files changed — not our scope, skipping"
-            echo "scope=other" >> "${GITHUB_OUTPUT}"
-          else
+          if [ -z "${non_doc}" ]; then
+            echo "docs-only=true" >> "${GITHUB_OUTPUT}"
             echo "Only documentation files changed"
-            echo "scope=doc-only" >> "${GITHUB_OUTPUT}"
+          else
+            echo "docs-only=false" >> "${GITHUB_OUTPUT}"
+            echo "Non-doc files changed — full PR pipeline will handle this"
           fi
-        id: scope
-      - name: Doc-only change, no tests required
-        if: steps.scope.outputs.scope == 'doc-only'
-        run: echo "Documentation-only change; no tests required."
+
+  check-docs:
+    name: Check docs
+    needs: [ detect-scope ]
+    if: needs.detect-scope.outputs.docs-only == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Documentation-only change; no tests required."
+
+  pull-request-status:
+    needs: [ detect-scope, check-docs ]
+    if: needs.detect-scope.outputs.docs-only == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - if: ${{ !(contains(needs.*.result, 'failure')) }}
+        run: exit 0
+      - if: ${{ contains(needs.*.result, 'failure') }}
+        run: exit 1

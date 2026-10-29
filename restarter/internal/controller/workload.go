@@ -53,8 +53,10 @@ func reconcileWorkload[T client.Object](
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 	tmpl := s.template(obj)
-	// TODO: This evaluation excludes istio-ingressgateway.
-	// This is left as follow up to handle.
+
+	// Istio gateway Deployments (those have inject=false) are intentionally not handled
+	// here: the Deployment reconciler dispatches them to reconcileGateway before
+	// reaching this path, and the ShouldInject gate skips any that slip through.
 	if !evaluation.ShouldInject(ns.Labels, tmpl.Labels, tmpl.Annotations) {
 		l.V(2).Info("Workload should not be injected, skipping")
 		return ctrl.Result{}, nil
@@ -74,7 +76,7 @@ func reconcileWorkload[T client.Object](
 		pods[i] = &podList.Items[i]
 	}
 
-	evs, fingerprint, err := evaluators.Snapshot(ctx)
+	evs, fingerprint, err := evaluators.ProxySnapshot(ctx)
 	if err != nil {
 		l.Error(err, "Failed to snapshot evaluators")
 		return ctrl.Result{}, err

@@ -28,7 +28,7 @@ type fakeSource struct {
 	gatewayFP  string
 }
 
-func (f fakeSource) Snapshot(_ context.Context) ([]evaluation.Evaluator, string, error) {
+func (f fakeSource) ProxySnapshot(_ context.Context) ([]evaluation.Evaluator, string, error) {
 	return f.evs, f.fp, f.err
 }
 

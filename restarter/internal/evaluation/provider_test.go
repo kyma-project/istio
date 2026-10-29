@@ -3,7 +3,9 @@ package evaluation_test
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"reflect"
+	"slices"
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
@@ -16,6 +18,7 @@ import (
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/istiofeatures"
+	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/configuration"
 	"github.com/kyma-project/istio/operator/pkg/labels"
 	"github.com/kyma-project/istio/operator/restarter/internal/evaluation"
 )
@@ -558,5 +561,132 @@ func TestProvider_Snapshot_IncludesFingerprintDrift(t *testing.T) {
 	}
 	if !foundFingerprint {
 		t.Errorf("expected FingerprintDriftChanged evaluator, got %v", names)
+	}
+}
+
+// gatewayFingerprintFromAnnotation replicates the gatewayConfigFingerprint logic
+// so tests can compute expected values without importing the unexported helper.
+func gatewayFingerprintFromAnnotation(t *testing.T, annotationValue string) string {
+	t.Helper()
+	if annotationValue == "" {
+		return ""
+	}
+	var cfg configuration.AppliedConfig
+	if err := json.Unmarshal([]byte(annotationValue), &cfg); err != nil {
+		t.Fatalf("unmarshal annotation: %v", err)
+	}
+	numTrustedProxies := cfg.Config.NumTrustedProxies
+	forwardClientCertDetails := cfg.Config.ForwardClientCertDetails
+	trustDomain := cfg.Config.TrustDomain
+	proxyStatsMatcher := cfg.Config.ProxyStatsMatcher
+
+	if numTrustedProxies == nil && forwardClientCertDetails == nil &&
+		trustDomain == nil && proxyStatsMatcher == nil {
+		return ""
+	}
+
+	type gatewayConfig struct {
+		NumTrustedProxies        *int
+		ForwardClientCertDetails *operatorv1alpha2.XFCCStrategy
+		TrustDomain              *string
+		InclusionRegexps         []string
+	}
+
+	inclusionRegexps := []string{}
+	if proxyStatsMatcher != nil && len(proxyStatsMatcher.InclusionRegexps) > 0 {
+		inclusionRegexps = make([]string, len(proxyStatsMatcher.InclusionRegexps))
+		copy(inclusionRegexps, proxyStatsMatcher.InclusionRegexps)
+		slices.Sort(inclusionRegexps)
+	}
+
+	gc := gatewayConfig{
+		NumTrustedProxies:        numTrustedProxies,
+		ForwardClientCertDetails: forwardClientCertDetails,
+		TrustDomain:              trustDomain,
+		InclusionRegexps:         inclusionRegexps,
+	}
+
+	jsonData, err := json.Marshal(gc)
+	if err != nil {
+		t.Fatalf("marshal gateway config: %v", err)
+	}
+	sum := sha256.Sum256(jsonData)
+	return hex.EncodeToString(sum[:])
+}
+
+func TestProvider_GatewaySnapshot(t *testing.T) {
+	tests := []struct {
+		name              string
+		objects           []client.Object
+		wantEvaluatorLen  int
+		wantFingerprint   func(t *testing.T) string
+		wantNilEvaluators bool
+	}{
+		{
+			name:              "CR missing yields nil evaluators and empty fingerprint",
+			objects:           []client.Object{newFeaturesConfigMap("1")},
+			wantNilEvaluators: true,
+			wantFingerprint:   func(_ *testing.T) string { return "" },
+		},
+		{
+			name: "CR with gateway fields set yields one evaluator and correct fingerprint",
+			objects: []client.Object{
+				newIstioCR(map[string]string{
+					labels.LastAppliedConfiguration: `{"config":{"numTrustedProxies":3},"IstioTag":"1.0"}`,
+				}),
+				newFeaturesConfigMap("1"),
+			},
+			wantEvaluatorLen: 1,
+			wantFingerprint: func(t *testing.T) string {
+				return gatewayFingerprintFromAnnotation(t, `{"config":{"numTrustedProxies":3},"IstioTag":"1.0"}`)
+			},
+		},
+		{
+			name: "CR with empty annotation yields empty fingerprint",
+			objects: []client.Object{
+				newIstioCR(map[string]string{
+					labels.LastAppliedConfiguration: "",
+				}),
+				newFeaturesConfigMap("1"),
+			},
+			wantEvaluatorLen: 1,
+			wantFingerprint:  func(_ *testing.T) string { return "" },
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			scheme := newTestScheme(t)
+			builder := fake.NewClientBuilder().WithScheme(scheme)
+			if len(tc.objects) > 0 {
+				builder = builder.WithObjects(tc.objects...)
+			}
+			c := builder.Build()
+			p := evaluation.NewProvider(
+				c,
+				types.NamespacedName{Namespace: testIstioCRNamespace, Name: testIstioCRName},
+				testSidecarResources(),
+			)
+
+			evs, fp, err := p.GatewaySnapshot(t.Context())
+			if err != nil {
+				t.Fatalf("GatewaySnapshot() unexpected error: %v", err)
+			}
+
+			if tc.wantNilEvaluators {
+				if evs != nil {
+					t.Errorf("want nil evaluators when CR missing, got %v", evs)
+				}
+			} else {
+				if len(evs) != tc.wantEvaluatorLen {
+					t.Errorf("evaluators length = %d, want %d", len(evs), tc.wantEvaluatorLen)
+				}
+			}
+
+			wantFP := tc.wantFingerprint(t)
+			if fp != wantFP {
+				t.Errorf("fingerprint = %q, want %q", fp, wantFP)
+			}
+		})
 	}
 }

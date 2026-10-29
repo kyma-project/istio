@@ -41,6 +41,13 @@ func GetEvaluators(cfg Config) (evaluators []Evaluator, err error) {
 	return evaluators, nil
 }
 
+// GetGatewayEvaluators returns the evaluator slice used by the gateway controller.
+// It contains a single GatewayFingerprintDriftChanged evaluator seeded with the
+// current gateway-config fingerprint.
+func GetGatewayEvaluators(gatewayFingerprint string) []Evaluator {
+	return []Evaluator{v2.NewGatewayFingerprintDriftChanged(gatewayFingerprint)}
+}
+
 // effectiveSidecarResources computes the actual values that
 // the proxy should have for resources.
 func effectiveSidecarResources(components *istioCR.Components, base corev1.ResourceRequirements) (corev1.ResourceRequirements, error) {

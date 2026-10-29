@@ -17,6 +17,7 @@ import (
 
 	operatorv1alpha2 "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/restarter/internal/evaluation"
+	"github.com/kyma-project/istio/operator/restarter/internal/restart"
 )
 
 func makeDeploymentWithSelector(uid types.UID, labels map[string]string) *appsv1.Deployment {
@@ -164,4 +165,115 @@ func TestDeploymentReconcile_NotFound(t *testing.T) {
 	if err != nil {
 		t.Errorf("expected nil error for not-found Deployment, got %v", err)
 	}
+}
+
+// TestDeploymentReconcile_GatewayBranch verifies that Reconcile routes an
+// istio-ingressgateway Deployment through the gateway path and leaves a
+// normal injected Deployment on the sidecar path.
+func TestDeploymentReconcile_GatewayBranch(t *testing.T) {
+	const gwFP = "gw-fp-xyz"
+
+	t.Run("gateway Deployment with FP mismatch is restarted via gateway path", func(t *testing.T) {
+		s := runtime.NewScheme()
+		_ = appsv1.AddToScheme(s)
+		_ = corev1.AddToScheme(s)
+		_ = operatorv1alpha2.AddToScheme(s)
+
+		dep := ingressGatewayDeployment(nil, true)
+		pod := gatewayPod("gw-pod-1")
+
+		objs := []client.Object{dep, pod}
+		c := fake.NewClientBuilder().WithScheme(s).WithObjects(objs...).Build()
+
+		src := fakeSource{
+			gatewayEvs: []evaluation.Evaluator{&fakeEvaluator{evaluation.Restart}},
+			gatewayFP:  gwFP,
+		}
+		r := &DeploymentReconciler{
+			Client:     c,
+			Scheme:     s,
+			Evaluators: src,
+			Recorder:   record.NewFakeRecorder(10),
+		}
+
+		_, err := r.Reconcile(context.Background(), ctrl.Request{
+			NamespacedName: types.NamespacedName{
+				Name:      defaultIstioGatewayName,
+				Namespace: defaultIstioGatewayNamespace,
+			},
+		})
+		if err != nil {
+			t.Fatalf("Reconcile() error = %v", err)
+		}
+
+		got := &appsv1.Deployment{}
+		if err := c.Get(context.Background(), types.NamespacedName{
+			Name:      defaultIstioGatewayName,
+			Namespace: defaultIstioGatewayNamespace,
+		}, got); err != nil {
+			t.Fatalf("get deployment: %v", err)
+		}
+		if got.Spec.Template.Annotations[restart.HashAnnotation] != gwFP {
+			t.Errorf("HashAnnotation = %q, want %q (gateway path not taken)",
+				got.Spec.Template.Annotations[restart.HashAnnotation], gwFP)
+		}
+		assertRestartAnnotationRecent(t, got.Spec.Template.Annotations[restart.RestartAnnotation])
+	})
+
+	t.Run("normal injected Deployment is not affected by gatewayEvs", func(t *testing.T) {
+		s := runtime.NewScheme()
+		_ = appsv1.AddToScheme(s)
+		_ = corev1.AddToScheme(s)
+		_ = operatorv1alpha2.AddToScheme(s)
+
+		appLabels := map[string]string{"app": "myapp"}
+		dep := &appsv1.Deployment{
+			ObjectMeta: metav1.ObjectMeta{Name: "my-dep", Namespace: "default", UID: "dep-uid"},
+			Spec: appsv1.DeploymentSpec{
+				Selector: &metav1.LabelSelector{MatchLabels: appLabels},
+				Replicas: func() *int32 { ; return new(int32(1)) }(),
+			},
+			Status: appsv1.DeploymentStatus{Replicas: 1, UpdatedReplicas: 1, AvailableReplicas: 1},
+		}
+		pod := &corev1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "p", Namespace: "default", Labels: appLabels}}
+		ns := &corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:   "default",
+				Labels: map[string]string{evaluation.InjectionLabel: evaluation.InjectEnabled},
+			},
+		}
+
+		objs := []client.Object{dep, pod, ns}
+		c := fake.NewClientBuilder().WithScheme(s).WithObjects(objs...).Build()
+
+		src := fakeSource{
+			// gatewayEvs votes Restart, but evs (sidecar path) votes Continue.
+			// The non-gateway Deployment must not be restarted.
+			evs:        []evaluation.Evaluator{&fakeEvaluator{evaluation.Continue}},
+			gatewayEvs: []evaluation.Evaluator{&fakeEvaluator{evaluation.Restart}},
+			gatewayFP:  gwFP,
+		}
+		r := &DeploymentReconciler{
+			Client:     c,
+			Scheme:     s,
+			Evaluators: src,
+			Recorder:   record.NewFakeRecorder(10),
+		}
+
+		_, err := r.Reconcile(context.Background(), ctrl.Request{
+			NamespacedName: types.NamespacedName{Name: "my-dep", Namespace: "default"},
+		})
+		if err != nil {
+			t.Fatalf("Reconcile() error = %v", err)
+		}
+
+		got := &appsv1.Deployment{}
+		if err := c.Get(context.Background(), types.NamespacedName{Name: "my-dep", Namespace: "default"}, got); err != nil {
+			t.Fatalf("get deployment: %v", err)
+		}
+		if got.Spec.Template.Annotations[restart.RestartAnnotation] != "" {
+			t.Errorf("non-gateway Deployment was restarted via gateway path: restartedAt = %q",
+				got.Spec.Template.Annotations[restart.RestartAnnotation])
+		}
+	})
 }

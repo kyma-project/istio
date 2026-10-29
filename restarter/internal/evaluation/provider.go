@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"sync"
 
 	corev1 "k8s.io/api/core/v1"
@@ -25,6 +26,11 @@ type Source interface {
 	// state they were derived from. The fingerprint is derived solely from the
 	// Istio CR's lastAppliedConfiguration annotation.
 	Snapshot(ctx context.Context) (evaluators []Evaluator, hash string, err error)
+	// GatewaySnapshot returns evaluators and a fingerprint for Istio gateway
+	// Deployments (ingress and egress), derived from the gateway-config subset
+	// of the Istio CR's lastAppliedConfiguration annotation. A missing Istio
+	// CR yields (nil, "", nil).
+	GatewaySnapshot(ctx context.Context) (evaluators []Evaluator, gatewayFingerprint string, err error)
 }
 
 // Provider builds and caches the evaluator slice derived from cluster state
@@ -160,4 +166,81 @@ func configFingerprint(lastAppliedAnnotation string) string {
 	}
 	sum := sha256.Sum256([]byte(lastAppliedAnnotation))
 	return hex.EncodeToString(sum[:])
+}
+
+// GatewaySnapshot returns a one-element evaluator slice and the gateway-config
+// fingerprint for Istio gateway Deployments (ingress and egress). It reads the
+// Istio CR
+// and its lastAppliedConfiguration annotation on every call (no cache needed).
+// A missing Istio CR yields (nil, "", nil).
+func (p *Provider) GatewaySnapshot(ctx context.Context) ([]Evaluator, string, error) {
+	var cr operatorv1alpha2.Istio
+	if err := p.client.Get(ctx, p.istioCRKey, &cr); err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil, "", nil
+		}
+		return nil, "", fmt.Errorf("get istio CR: %w", err)
+	}
+
+	var lastApplied configuration.AppliedConfig
+	if cr.Annotations[labels.LastAppliedConfiguration] != "" {
+		var err error
+		lastApplied, err = configuration.GetLastAppliedConfiguration(&cr)
+		if err != nil {
+			return nil, "", fmt.Errorf("get last applied configuration: %w", err)
+		}
+	}
+
+	fp, err := gatewayConfigFingerprint(lastApplied)
+	if err != nil {
+		return nil, "", fmt.Errorf("compute gateway fingerprint: %w", err)
+	}
+
+	return GetGatewayEvaluators(fp), fp, nil
+}
+
+func gatewayConfigFingerprint(cfg configuration.AppliedConfig) (string, error) {
+	// Extract the 4 gateway-relevant fields from the config
+	numTrustedProxies := cfg.Config.NumTrustedProxies
+	forwardClientCertDetails := cfg.Config.ForwardClientCertDetails
+	trustDomain := cfg.Config.TrustDomain
+	proxyStatsMatcher := cfg.Config.ProxyStatsMatcher
+
+	// Return empty string when all four fields are nil/empty
+	if numTrustedProxies == nil && forwardClientCertDetails == nil &&
+		trustDomain == nil && proxyStatsMatcher == nil {
+		return "", nil
+	}
+
+	// Create a struct to hold the gateway config for hashing
+	type gatewayConfig struct {
+		NumTrustedProxies         *int
+		ForwardClientCertDetails  *operatorv1alpha2.XFCCStrategy
+		TrustDomain              *string
+		InclusionRegexps         []string
+	}
+
+	// Sort inclusion regexps to ensure consistent hashing regardless of order
+	inclusionRegexps := []string{}
+	if proxyStatsMatcher != nil && len(proxyStatsMatcher.InclusionRegexps) > 0 {
+		inclusionRegexps = make([]string, len(proxyStatsMatcher.InclusionRegexps))
+		copy(inclusionRegexps, proxyStatsMatcher.InclusionRegexps)
+		slices.Sort(inclusionRegexps)
+	}
+
+	gc := gatewayConfig{
+		NumTrustedProxies:        numTrustedProxies,
+		ForwardClientCertDetails: forwardClientCertDetails,
+		TrustDomain:             trustDomain,
+		InclusionRegexps:        inclusionRegexps,
+	}
+
+	// Marshal to JSON and hash
+	jsonData, err := json.Marshal(gc)
+	if err != nil {
+		return "", fmt.Errorf("marshal gateway config: %w", err)
+	}
+
+	sum := sha256.Sum256(jsonData)
+	return hex.EncodeToString(sum[:]), nil
 }

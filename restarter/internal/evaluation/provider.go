@@ -22,14 +22,11 @@ import (
 
 // Source is the interface controllers consume to obtain a current set of evaluators.
 type Source interface {
-	// Snapshot returns the current evaluators and the hash of the config
-	// state they were derived from. The fingerprint is derived solely from the
-	// Istio CR's lastAppliedConfiguration annotation.
-	Snapshot(ctx context.Context) (evaluators []Evaluator, hash string, err error)
+	// ProxySnapshot returns evaluators relevant for istio-proxy injected
+	// workloads.
+	ProxySnapshot(ctx context.Context) (evaluators []Evaluator, hash string, err error)
 	// GatewaySnapshot returns evaluators and a fingerprint for Istio gateway
-	// Deployments (ingress and egress), derived from the gateway-config subset
-	// of the Istio CR's lastAppliedConfiguration annotation. A missing Istio
-	// CR yields (nil, "", nil).
+	// Deployments (ingress and egress).
 	GatewaySnapshot(ctx context.Context) (evaluators []Evaluator, gatewayFingerprint string, err error)
 }
 
@@ -56,12 +53,7 @@ func NewProvider(c client.Client, key types.NamespacedName, sidecarResources cor
 	}
 }
 
-// Snapshot returns the current evaluator slice and a fingerprint derived
-// solely from the Istio CR's lastAppliedConfiguration annotation, rebuilding
-// the slice only when the underlying inputs have changed. A missing Istio CR
-// yields (nil, "", nil). A missing or empty lastAppliedConfiguration
-// annotation yields "" as the fingerprint.
-func (p *Provider) Snapshot(ctx context.Context) ([]Evaluator, string, error) {
+func (p *Provider) ProxySnapshot(ctx context.Context) ([]Evaluator, string, error) {
 	var cr operatorv1alpha2.Istio
 	if err := p.client.Get(ctx, p.istioCRKey, &cr); err != nil {
 		if apierrors.IsNotFound(err) {
@@ -86,27 +78,32 @@ func (p *Provider) Snapshot(ctx context.Context) ([]Evaluator, string, error) {
 		}
 	}
 
-	sidecarResources := p.sidecarResources
-
-	var featuresRV string
-	var featuresCM corev1.ConfigMap
-	if err := p.client.Get(ctx, types.NamespacedName{
-		Name:      istiofeatures.ConfigMapName,
-		Namespace: istiofeatures.ConfigMapNamespace,
-	}, &featuresCM); err != nil {
-		if !apierrors.IsNotFound(err) {
-			return nil, "", fmt.Errorf("get istio-features configmap: %w", err)
-		}
-	} else {
-		featuresRV = featuresCM.ResourceVersion
-	}
-
-	key, err := buildCacheKey(cr, cr.Annotations[labels.LastAppliedConfiguration], featuresRV, sidecarResources)
+	fp, err := proxyConfigFingerprint(lastApplied)
 	if err != nil {
-		return nil, "", fmt.Errorf("build cache key: %w", err)
+		return nil, "", fmt.Errorf("compute proxy fingerprint: %w", err)
 	}
 
-	fp := configFingerprint(cr.Annotations[labels.LastAppliedConfiguration])
+	effectiveResources, err := effectiveSidecarResources(lastApplied.Components, p.sidecarResources)
+	if err != nil {
+		return nil, "", fmt.Errorf("compute effective sidecar resources: %w", err)
+	}
+
+	// The cache key gates rebuilding the evaluator slice, so it must cover every
+	// input an evaluator captures at build time: the drift fingerprint plus the
+	// inputs owned by dedicated evaluators (DisableCni, PrometheusMerge, IstioTag
+	// and the expected sidecar resources). A change to any of them must rebuild
+	// the slice so no evaluator keeps a stale value.
+	resourcesJSON, err := json.Marshal(effectiveResources)
+	if err != nil {
+		return nil, "", fmt.Errorf("marshal sidecar resources: %w", err)
+	}
+	key := fmt.Sprintf("%s|%t|%t|%s|%s",
+		fp,
+		features.DisableCni,
+		lastApplied.Config.Telemetry.Metrics.PrometheusMerge,
+		lastApplied.IstioTag,
+		resourcesJSON,
+	)
 
 	p.mu.RLock()
 	if key == p.cacheKey && p.cached != nil {
@@ -126,7 +123,7 @@ func (p *Provider) Snapshot(ctx context.Context) ([]Evaluator, string, error) {
 		IstioCR:           &cr,
 		LastAppliedConfig: lastApplied,
 		BetaFeatures:      features,
-		SidecarResources:  sidecarResources,
+		SidecarResources:  p.sidecarResources,
 		Fingerprint:       fp,
 	})
 	if err != nil {
@@ -138,41 +135,45 @@ func (p *Provider) Snapshot(ctx context.Context) ([]Evaluator, string, error) {
 	return evaluators, fp, nil
 }
 
-func buildCacheKey(cr operatorv1alpha2.Istio, lastAppliedAnnotation, featuresRV string, resources corev1.ResourceRequirements) (string, error) {
-	specJSON, err := json.Marshal(cr.Spec)
-	if err != nil {
-		return "", fmt.Errorf("marshal istio spec: %w", err)
-	}
-	resourcesJSON, err := json.Marshal(resources)
-	if err != nil {
-		return "", fmt.Errorf("marshal sidecar resources: %w", err)
+// proxyConfigFingerprint is the drift signal stamped on workloads and compared
+// by the FingerprintDriftChanged evaluator. It hashes only the proxy-restart
+// config fields.
+func proxyConfigFingerprint(cfg configuration.AppliedConfig) (string, error) {
+	// Sort inclusion regexps to ensure consistent hashing regardless of order
+	inclusionRegexps := []string{}
+	if m := cfg.Config.ProxyStatsMatcher; m != nil && len(m.InclusionRegexps) > 0 {
+		inclusionRegexps = make([]string, len(m.InclusionRegexps))
+		copy(inclusionRegexps, m.InclusionRegexps)
+		slices.Sort(inclusionRegexps)
 	}
 
-	h := sha256.New()
-	h.Write(specJSON)
-	h.Write([]byte{0})
-	h.Write([]byte(lastAppliedAnnotation))
-	h.Write([]byte{0})
-	h.Write([]byte(featuresRV))
-	h.Write([]byte{0})
-	h.Write(resourcesJSON)
+	// Return empty string when no proxy field carries a value
+	if !cfg.CompatibilityMode && cfg.Config.EnableDNSProxying == nil && len(inclusionRegexps) == 0 {
+		return "", nil
+	}
 
-	return hex.EncodeToString(h.Sum(nil)), nil
+	type proxyConfig struct {
+		CompatibilityMode bool
+		EnableDNSProxying *bool
+		InclusionRegexps  []string
+	}
+
+	pc := proxyConfig{
+		CompatibilityMode: cfg.CompatibilityMode,
+		EnableDNSProxying: cfg.Config.EnableDNSProxying,
+		InclusionRegexps:  inclusionRegexps,
+	}
+
+	jsonData, err := json.Marshal(pc)
+	if err != nil {
+		return "", fmt.Errorf("marshal proxy config: %w", err)
+	}
+
+	sum := sha256.Sum256(jsonData)
+	return hex.EncodeToString(sum[:]), nil
 }
 
-func configFingerprint(lastAppliedAnnotation string) string {
-	if lastAppliedAnnotation == "" {
-		return ""
-	}
-	sum := sha256.Sum256([]byte(lastAppliedAnnotation))
-	return hex.EncodeToString(sum[:])
-}
-
-// GatewaySnapshot returns a one-element evaluator slice and the gateway-config
-// fingerprint for Istio gateway Deployments (ingress and egress). It reads the
-// Istio CR
-// and its lastAppliedConfiguration annotation on every call (no cache needed).
-// A missing Istio CR yields (nil, "", nil).
+// GatewaySnapshot returns evaluators relevant for gateway restart.
 func (p *Provider) GatewaySnapshot(ctx context.Context) ([]Evaluator, string, error) {
 	var cr operatorv1alpha2.Istio
 	if err := p.client.Get(ctx, p.istioCRKey, &cr); err != nil {
@@ -200,22 +201,19 @@ func (p *Provider) GatewaySnapshot(ctx context.Context) ([]Evaluator, string, er
 }
 
 func gatewayConfigFingerprint(cfg configuration.AppliedConfig) (string, error) {
-	// Extract the 4 gateway-relevant fields from the config
 	numTrustedProxies := cfg.Config.NumTrustedProxies
 	forwardClientCertDetails := cfg.Config.ForwardClientCertDetails
 	trustDomain := cfg.Config.TrustDomain
 	proxyStatsMatcher := cfg.Config.ProxyStatsMatcher
 
-	// Return empty string when all four fields are nil/empty
 	if numTrustedProxies == nil && forwardClientCertDetails == nil &&
 		trustDomain == nil && proxyStatsMatcher == nil {
 		return "", nil
 	}
 
-	// Create a struct to hold the gateway config for hashing
 	type gatewayConfig struct {
-		NumTrustedProxies         *int
-		ForwardClientCertDetails  *operatorv1alpha2.XFCCStrategy
+		NumTrustedProxies        *int
+		ForwardClientCertDetails *operatorv1alpha2.XFCCStrategy
 		TrustDomain              *string
 		InclusionRegexps         []string
 	}
@@ -231,8 +229,8 @@ func gatewayConfigFingerprint(cfg configuration.AppliedConfig) (string, error) {
 	gc := gatewayConfig{
 		NumTrustedProxies:        numTrustedProxies,
 		ForwardClientCertDetails: forwardClientCertDetails,
-		TrustDomain:             trustDomain,
-		InclusionRegexps:        inclusionRegexps,
+		TrustDomain:              trustDomain,
+		InclusionRegexps:         inclusionRegexps,
 	}
 
 	// Marshal to JSON and hash

@@ -37,6 +37,15 @@ type DeploymentReconciler struct {
 // +kubebuilder:rbac:groups=operator.kyma-project.io,resources=istios,verbs=get;list;watch
 
 func (r *DeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	d := &appsv1.Deployment{}
+	if err := r.Get(ctx, req.NamespacedName, d); err != nil {
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	if isIstioGateway(d) {
+		return reconcileGateway(ctx, r.Client, r.Evaluators, r.Recorder, d)
+	}
+
 	return reconcileWorkload(ctx, r.Client, r.Evaluators, r.Recorder, req, workloadStrategy[*appsv1.Deployment]{
 		logKey:   "deployment",
 		newObj:   func() *appsv1.Deployment { return &appsv1.Deployment{} },

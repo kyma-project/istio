@@ -21,13 +21,19 @@ import (
 // evaluator slice, fingerprint, and optional error across controller tests in
 // this package.
 type fakeSource struct {
-	evs []evaluation.Evaluator
-	fp  string
-	err error
+	evs        []evaluation.Evaluator
+	fp         string
+	err        error
+	gatewayEvs []evaluation.Evaluator
+	gatewayFP  string
 }
 
 func (f fakeSource) Snapshot(_ context.Context) ([]evaluation.Evaluator, string, error) {
 	return f.evs, f.fp, f.err
+}
+
+func (f fakeSource) GatewaySnapshot(_ context.Context) ([]evaluation.Evaluator, string, error) {
+	return f.gatewayEvs, f.gatewayFP, f.err
 }
 
 func ownerPod(name, kind, apiVersion string, ownerUID types.UID) *corev1.Pod {

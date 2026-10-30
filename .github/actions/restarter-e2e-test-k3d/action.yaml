@@ -34,20 +34,15 @@ runs:
       run: |
         k3d image import ${{ inputs.operator-image-name }}
         k3d image import ${{ inputs.restarter-image-name }}
-    - name: Deploy controllers
-      shell: bash
-      env:
-        BASE_IMG: ${{ inputs.operator-image-name }}
-        RESTARTER_IMG: ${{ inputs.restarter-image-name }}
-      run: |
-        bash "${{ github.workspace }}/hack/ci/k3d/deploy-restarter-topology.sh"
     - name: Run e2e tests
       shell: bash
       env:
         IMG: ${{ inputs.operator-image-name }}
+        RESTARTER_IMG: ${{ inputs.restarter-image-name }}
         OPERATOR_VERSION: ${{ inputs.operator-version }}
         K3D_CONFIGURATION: ${{ inputs.k3d_configuration }}
         TEST_ARTIFACTS_DIR: ${{ github.workspace }}/test-artifacts
+        DEPLOY_RESTARTER: "true"
       run: |
         "${{ github.workspace }}/hack/ci/k3d/e2e-test.sh" ${{ inputs.test_make_target }}
     - name: Gather cluster artifacts

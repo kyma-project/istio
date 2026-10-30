@@ -3,7 +3,6 @@ package v2
 import (
 	"testing"
 
-	"github.com/kyma-project/istio/operator/internal/images"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -14,18 +13,18 @@ import (
 func TestSidecarImageChanged_Evaluate(t *testing.T) {
 	tc := []struct {
 		name           string
-		image          images.Image
+		expectedTag    string
 		object         client.Object
 		expectDecision Decision
 	}{
 		{
-			name:  "image in pod different than expected, restart",
-			image: images.Image{Registry: "istio", Name: "proxy", Tag: "1.0.0"},
+			name:        "tag in pod different than expected, restart",
+			expectedTag: "1.31.1-distroless",
 			object: &corev1.Pod{
 				ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: "bar"},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
-						{Name: "istio-proxy", Image: "istio/proxy:0.9.0"},
+						{Name: "istio-proxy", Image: "europe-docker.pkg.dev/kyma/prod/proxyv2:1.30.0-distroless"},
 						{Name: "app", Image: "foo/bar:1.0.0"},
 					},
 				},
@@ -33,13 +32,13 @@ func TestSidecarImageChanged_Evaluate(t *testing.T) {
 			expectDecision: Restart,
 		},
 		{
-			name:  "image in pod same as expected, continue",
-			image: images.Image{Registry: "istio", Name: "proxy", Tag: "1.0.0"},
+			name:        "tag matches even with different registry/name, continue",
+			expectedTag: "1.31.1-distroless",
 			object: &corev1.Pod{
 				ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: "bar"},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
-						{Name: "istio-proxy", Image: "istio/proxy:1.0.0"},
+						{Name: "istio-proxy", Image: "other-registry.example.com/other/proxyv2:1.31.1-distroless"},
 						{Name: "app", Image: "foo/bar:1.0.0"},
 					},
 				},
@@ -47,8 +46,8 @@ func TestSidecarImageChanged_Evaluate(t *testing.T) {
 			expectDecision: Continue,
 		},
 		{
-			name:  "pod has custom image annotation, continue",
-			image: images.Image{Registry: "istio", Name: "proxy", Tag: "1.0.0"},
+			name:        "pod has custom image annotation, continue",
+			expectedTag: "1.31.1-distroless",
 			object: &corev1.Pod{
 				ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: "bar",
 					Annotations: map[string]string{"sidecar.istio.io/proxyImage": "custom/proxy:1.0.0"}},
@@ -62,8 +61,8 @@ func TestSidecarImageChanged_Evaluate(t *testing.T) {
 			expectDecision: Continue,
 		},
 		{
-			name:  "pod doesn't have a sidecar, continue",
-			image: images.Image{Registry: "istio", Name: "proxy", Tag: "1.0.0"},
+			name:        "pod doesn't have a sidecar, continue",
+			expectedTag: "1.31.1-distroless",
 			object: &corev1.Pod{
 				ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: "bar"},
 				Spec: corev1.PodSpec{
@@ -75,17 +74,82 @@ func TestSidecarImageChanged_Evaluate(t *testing.T) {
 			expectDecision: Continue,
 		},
 		{
-			name:  "object not a pod, continue",
-			image: images.Image{Registry: "istio", Name: "proxy", Tag: "1.0.0"},
+			name:        "object not a pod, continue",
+			expectedTag: "1.31.1-distroless",
 			object: &appsv1.Deployment{
 				ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: "bar"},
 			},
 			expectDecision: Continue,
 		},
+		{
+			name:        "empty expected tag never forces restart, continue",
+			expectedTag: "",
+			object: &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: "bar"},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{Name: "istio-proxy", Image: "registry/proxyv2:1.31.1-distroless"},
+					},
+				},
+			},
+			expectDecision: Continue,
+		},
+		{
+			name:        "digest suffix stripped before tag comparison, tag matches, continue",
+			expectedTag: "1.31.1-distroless",
+			object: &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: "bar"},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{Name: "istio-proxy", Image: "registry/proxyv2:1.31.1-distroless@sha256:abc123"},
+					},
+				},
+			},
+			expectDecision: Continue,
+		},
+		{
+			name:        "registry with port, tag extracted correctly, matches, continue",
+			expectedTag: "1.31.1-distroless",
+			object: &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: "bar"},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{Name: "istio-proxy", Image: "localhost:5000/ns/proxyv2:1.31.1-distroless"},
+					},
+				},
+			},
+			expectDecision: Continue,
+		},
+		{
+			name:        "registry with port, tag differs, restart",
+			expectedTag: "1.31.1-distroless",
+			object: &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: "bar"},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{Name: "istio-proxy", Image: "localhost:5000/ns/proxyv2:1.30.0-distroless"},
+					},
+				},
+			},
+			expectDecision: Restart,
+		},
+		{
+			name:        "init container with mismatched tag, restart",
+			expectedTag: "1.31.1-distroless",
+			object: &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: "bar"},
+				Spec: corev1.PodSpec{
+					InitContainers: []corev1.Container{
+						{Name: "istio-proxy", Image: "registry/proxyv2:1.30.0-distroless"},
+					},
+				},
+			},
+			expectDecision: Restart,
+		},
 	}
 	for _, tt := range tc {
 		t.Run(tt.name, func(t *testing.T) {
-			eval := NewSidecarImageChangedRule(tt.image)
+			eval := NewSidecarImageChangedRule(tt.expectedTag)
 			d := eval.Evaluate(tt.object)
 			if d != tt.expectDecision {
 				t.Errorf("wrong decision: got %v, want %v", d, tt.expectDecision)
@@ -104,6 +168,19 @@ func resources(cpuReq, memReq, cpuLim, memLim string) corev1.ResourceRequirement
 			corev1.ResourceCPU:    resource.MustParse(cpuLim),
 			corev1.ResourceMemory: resource.MustParse(memLim),
 		},
+	}
+}
+
+// limitOnly builds a ResourceRequirements with only Limits[cpu] and Requests[cpu]
+// set, mirroring what ParseResourceAnnotations produces when only the cpu limit
+// annotation is present (it resets both maps to empty, sets Limits[cpu], and because
+// the cpu request annotation is absent, mirrors the limit into Requests[cpu]; memory
+// keys remain unset).
+func limitOnly(cpuLim string) corev1.ResourceRequirements {
+	q := resource.MustParse(cpuLim)
+	return corev1.ResourceRequirements{
+		Limits:   corev1.ResourceList{corev1.ResourceCPU: q},
+		Requests: corev1.ResourceList{corev1.ResourceCPU: q},
 	}
 }
 
@@ -213,6 +290,62 @@ func TestSidecarResourcesChanged_Evaluate(t *testing.T) {
 			req:  expected,
 			object: &appsv1.Deployment{
 				ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: "bar"},
+			},
+			expectDecision: Continue,
+		},
+		{
+			name: "annotation overrides all, pod matches annotation, continue",
+			req:  expected,
+			object: &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: "bar", Annotations: map[string]string{
+					"sidecar.istio.io/proxyCPU":         "111m",
+					"sidecar.istio.io/proxyMemory":      "129Mi",
+					"sidecar.istio.io/proxyCPULimit":    "222m",
+					"sidecar.istio.io/proxyMemoryLimit": "257Mi",
+				}},
+				Spec: corev1.PodSpec{Containers: []corev1.Container{
+					{Name: "istio-proxy", Resources: resources("111m", "129Mi", "222m", "257Mi")},
+				}},
+			},
+			expectDecision: Continue,
+		},
+		{
+			name: "annotation overrides cpu limit only, pod matches, continue",
+			req:  expected,
+			object: &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: "bar", Annotations: map[string]string{
+					"sidecar.istio.io/proxyCPULimit": "500m",
+				}},
+				// Istio resets then applies: only the annotated limit (and its request mirror) are set.
+				Spec: corev1.PodSpec{Containers: []corev1.Container{
+					{Name: "istio-proxy", Resources: limitOnly("500m")},
+				}},
+			},
+			expectDecision: Continue,
+		},
+		{
+			name: "annotation set but pod differs from annotation, restart",
+			req:  expected,
+			object: &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: "bar", Annotations: map[string]string{
+					"sidecar.istio.io/proxyCPU": "111m",
+				}},
+				Spec: corev1.PodSpec{Containers: []corev1.Container{
+					{Name: "istio-proxy", Resources: resources("100m", "128Mi", "200m", "256Mi")},
+				}},
+			},
+			expectDecision: Restart,
+		},
+		{
+			name: "unparseable annotation, continue (webhook rejects pod)",
+			req:  expected,
+			object: &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: "bar", Annotations: map[string]string{
+					"sidecar.istio.io/proxyCPU": "not-a-quantity",
+				}},
+				Spec: corev1.PodSpec{Containers: []corev1.Container{
+					{Name: "istio-proxy", Resources: resources("100m", "128Mi", "200m", "256Mi")},
+				}},
 			},
 			expectDecision: Continue,
 		},

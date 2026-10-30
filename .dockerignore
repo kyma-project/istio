@@ -1,4 +1,11 @@
-# More info: https://docs.docker.com/engine/reference/builder/#dockerignore-file
-# Ignore build and test binaries.
-bin/
-testbin/
+**
+
+!**/*.go
+!api/**/*.yaml
+!internal/**/*.yaml
+internal/resources/test_files
+**/*_test.go
+
+# Re-include Go module files (root module + restarter submodule)
+!**/go.mod
+!**/go.sum

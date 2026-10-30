@@ -15,6 +15,8 @@ type ProxyStatsMatcherConfigChanged struct {
 	newInclusionRegexps []string
 }
 
+func (p *ProxyStatsMatcherConfigChanged) Name() string { return "ProxyStatsMatcherConfigChanged" }
+
 // Evaluate returns Restart when the inclusion regexps changed, and Continue
 // otherwise.
 func (p *ProxyStatsMatcherConfigChanged) Evaluate(_ Object) Decision {

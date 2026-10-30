@@ -1,0 +1,5 @@
+# Base controller must not restart Istio-managed workloads in this test; the
+# standalone restarter controller owns that behavior here.
+- op: add
+  path: /spec/template/spec/containers/0/args/-
+  value: --enable-restart=false

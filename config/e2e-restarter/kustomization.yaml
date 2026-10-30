@@ -1,0 +1,14 @@
+# CI-only overlay for the restarter E2E workflow. It deploys the base istio
+# controller with restarts disabled so the standalone restarter controller is the
+# only component restarting Istio-managed workloads during the test.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../default
+
+patches:
+  - path: enable-restart-false-patch.yaml
+    target:
+      kind: Deployment
+      name: controller-manager

@@ -36,14 +36,29 @@ type ReplicaSetReconciler struct {
 // +kubebuilder:rbac:groups=core,resources=events,verbs=create;patch
 
 func (r *ReplicaSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	return reconcileWorkload(ctx, r.Client, r.Evaluators, r.Recorder, req, workloadStrategy[*appsv1.ReplicaSet]{
-		logKey:    "replicaset",
-		newObj:    func() *appsv1.ReplicaSet { return &appsv1.ReplicaSet{} },
-		template:  func(rs *appsv1.ReplicaSet) *corev1.PodTemplateSpec { return &rs.Spec.Template },
-		listPods:  listPodsByOwnerIndex[*appsv1.ReplicaSet](replicaSetPodOwnerKey),
-		rolledOut: restart.ReplicaSetRolledOut,
-		restart:   restart.ReplicaSetPods,
-	})
+	return reconcileWorkload(ctx, r.Client, r.Evaluators, r.Recorder, req, replicaSetStrategy{})
+}
+
+type replicaSetStrategy struct{}
+
+func (replicaSetStrategy) logKey() string { return "replicaset" }
+
+func (replicaSetStrategy) newObj() *appsv1.ReplicaSet { return &appsv1.ReplicaSet{} }
+
+func (replicaSetStrategy) template(rs *appsv1.ReplicaSet) *corev1.PodTemplateSpec {
+	return &rs.Spec.Template
+}
+
+func (replicaSetStrategy) listPods(ctx context.Context, c client.Client, req ctrl.Request, rs *appsv1.ReplicaSet) (*corev1.PodList, error) {
+	return listPodsByOwnerIndex[*appsv1.ReplicaSet](replicaSetPodOwnerKey)(ctx, c, req, rs)
+}
+
+func (replicaSetStrategy) rolledOut(rs *appsv1.ReplicaSet) bool {
+	return restart.ReplicaSetRolledOut(rs)
+}
+
+func (replicaSetStrategy) restart(ctx context.Context, c client.Client, rs *appsv1.ReplicaSet, pods []*corev1.Pod, fp string) error {
+	return restart.ReplicaSetPods(ctx, c, rs, pods, fp)
 }
 
 // SetupWithManager sets up the controller with the Manager.

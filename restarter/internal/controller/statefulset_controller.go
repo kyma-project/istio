@@ -35,16 +35,29 @@ type StatefulSetReconciler struct {
 // +kubebuilder:rbac:groups=core,resources=events,verbs=create;patch
 
 func (r *StatefulSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	return reconcileWorkload(ctx, r.Client, r.Evaluators, r.Recorder, req, workloadStrategy[*appsv1.StatefulSet]{
-		logKey:    "statefulset",
-		newObj:    func() *appsv1.StatefulSet { return &appsv1.StatefulSet{} },
-		template:  func(s *appsv1.StatefulSet) *corev1.PodTemplateSpec { return &s.Spec.Template },
-		listPods:  listPodsByOwnerIndex[*appsv1.StatefulSet](statefulSetPodOwnerKey),
-		rolledOut: restart.StatefulSetRolledOut,
-		restart: func(ctx context.Context, c client.Client, s *appsv1.StatefulSet, _ []*corev1.Pod, fp string) error {
-			return restart.StatefulSet(ctx, c, s, fp)
-		},
-	})
+	return reconcileWorkload(ctx, r.Client, r.Evaluators, r.Recorder, req, statefulSetStrategy{})
+}
+
+type statefulSetStrategy struct{}
+
+func (statefulSetStrategy) logKey() string { return "statefulset" }
+
+func (statefulSetStrategy) newObj() *appsv1.StatefulSet { return &appsv1.StatefulSet{} }
+
+func (statefulSetStrategy) template(s *appsv1.StatefulSet) *corev1.PodTemplateSpec {
+	return &s.Spec.Template
+}
+
+func (statefulSetStrategy) listPods(ctx context.Context, c client.Client, req ctrl.Request, s *appsv1.StatefulSet) (*corev1.PodList, error) {
+	return listPodsByOwnerIndex[*appsv1.StatefulSet](statefulSetPodOwnerKey)(ctx, c, req, s)
+}
+
+func (statefulSetStrategy) rolledOut(s *appsv1.StatefulSet) bool {
+	return restart.StatefulSetRolledOut(s)
+}
+
+func (statefulSetStrategy) restart(ctx context.Context, c client.Client, s *appsv1.StatefulSet, _ []*corev1.Pod, fp string) error {
+	return restart.StatefulSet(ctx, c, s, fp)
 }
 
 // SetupWithManager sets up the controller with the Manager.

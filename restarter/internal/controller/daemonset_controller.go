@@ -35,16 +35,29 @@ type DaemonSetReconciler struct {
 // +kubebuilder:rbac:groups=core,resources=events,verbs=create;patch
 
 func (r *DaemonSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	return reconcileWorkload(ctx, r.Client, r.Evaluators, r.Recorder, req, workloadStrategy[*appsv1.DaemonSet]{
-		logKey:    "daemonset",
-		newObj:    func() *appsv1.DaemonSet { return &appsv1.DaemonSet{} },
-		template:  func(d *appsv1.DaemonSet) *corev1.PodTemplateSpec { return &d.Spec.Template },
-		listPods:  listPodsByOwnerIndex[*appsv1.DaemonSet](daemonSetPodOwnerKey),
-		rolledOut: restart.DaemonSetRolledOut,
-		restart: func(ctx context.Context, c client.Client, d *appsv1.DaemonSet, _ []*corev1.Pod, fp string) error {
-			return restart.DaemonSet(ctx, c, d, fp)
-		},
-	})
+	return reconcileWorkload(ctx, r.Client, r.Evaluators, r.Recorder, req, daemonSetStrategy{})
+}
+
+type daemonSetStrategy struct{}
+
+func (daemonSetStrategy) logKey() string { return "daemonset" }
+
+func (daemonSetStrategy) newObj() *appsv1.DaemonSet { return &appsv1.DaemonSet{} }
+
+func (daemonSetStrategy) template(d *appsv1.DaemonSet) *corev1.PodTemplateSpec {
+	return &d.Spec.Template
+}
+
+func (daemonSetStrategy) listPods(ctx context.Context, c client.Client, req ctrl.Request, d *appsv1.DaemonSet) (*corev1.PodList, error) {
+	return listPodsByOwnerIndex[*appsv1.DaemonSet](daemonSetPodOwnerKey)(ctx, c, req, d)
+}
+
+func (daemonSetStrategy) rolledOut(d *appsv1.DaemonSet) bool {
+	return restart.DaemonSetRolledOut(d)
+}
+
+func (daemonSetStrategy) restart(ctx context.Context, c client.Client, d *appsv1.DaemonSet, _ []*corev1.Pod, fp string) error {
+	return restart.DaemonSet(ctx, c, d, fp)
 }
 
 // SetupWithManager sets up the controller with the Manager.

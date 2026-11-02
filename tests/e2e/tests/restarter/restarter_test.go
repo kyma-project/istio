@@ -30,13 +30,12 @@ var testdata embed.FS
 
 // testing ingressgateway restarts
 func TestRestarter_IngressGateway(t *testing.T) {
+	installSharedIstio(t)
 	t.Run("NumTrustedProxies changed, gateway restarted", func(t *testing.T) {
 		c, err := client.ResourcesClient(t)
 		require.NoError(t, err)
 
-		_, err = modulehelpers.NewIstioCRBuilder().
-			ApplyAndCleanup(t)
-		require.NoError(t, err)
+		resetIstioCR(t)
 		dep := appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Name: "istio-ingressgateway", Namespace: "istio-system"}}
 		require.NoError(t, wait.For(conditions.New(c).DeploymentAvailable(dep.GetName(), dep.GetNamespace())))
 		require.NoError(t, c.Get(t.Context(), dep.GetName(), dep.GetNamespace(), &dep))
@@ -55,9 +54,7 @@ func TestRestarter_IngressGateway(t *testing.T) {
 		c, err := client.ResourcesClient(t)
 		require.NoError(t, err)
 
-		_, err = modulehelpers.NewIstioCRBuilder().
-			ApplyAndCleanup(t)
-		require.NoError(t, err)
+		resetIstioCR(t)
 		dep := appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Name: "istio-ingressgateway", Namespace: "istio-system"}}
 		require.NoError(t, wait.For(conditions.New(c).DeploymentAvailable(dep.GetName(), dep.GetNamespace())))
 		require.NoError(t, c.Get(t.Context(), dep.GetName(), dep.GetNamespace(), &dep))
@@ -76,9 +73,7 @@ func TestRestarter_IngressGateway(t *testing.T) {
 		c, err := client.ResourcesClient(t)
 		require.NoError(t, err)
 
-		_, err = modulehelpers.NewIstioCRBuilder().
-			ApplyAndCleanup(t)
-		require.NoError(t, err)
+		resetIstioCR(t)
 		dep := appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Name: "istio-ingressgateway", Namespace: "istio-system"}}
 		require.NoError(t, wait.For(conditions.New(c).DeploymentAvailable(dep.GetName(), dep.GetNamespace())))
 		require.NoError(t, c.Get(t.Context(), dep.GetName(), dep.GetNamespace(), &dep))
@@ -96,6 +91,7 @@ func TestRestarter_IngressGateway(t *testing.T) {
 }
 
 func TestRestarter_Workload(t *testing.T) {
+	installSharedIstio(t)
 	t.Run("Sidecar images differ on 62 pods, all workloads restarted", func(t *testing.T) {
 		testNamespace := "test-workload-restart"
 		invalidImage := "europe-docker.pkg.dev/kyma-project/prod/external/istio/proxyv2:1.21.3-distroless"
@@ -105,9 +101,7 @@ func TestRestarter_Workload(t *testing.T) {
 		c, err := client.ResourcesClient(t)
 		require.NoError(t, err)
 		require.NoError(t, infrastructure.CreateNamespace(t, testNamespace, infrastructure.WithSidecarInjectionEnabled()))
-		_, err = modulehelpers.NewIstioCRBuilder().
-			ApplyAndCleanup(t)
-		require.NoError(t, err)
+		resetIstioCR(t)
 
 		// concurrently create test deployments
 		wg := sync.WaitGroup{}
@@ -191,9 +185,7 @@ func TestRestarter_Workload(t *testing.T) {
 		c, err := client.ResourcesClient(t)
 		require.NoError(t, err)
 		require.NoError(t, infrastructure.CreateNamespace(t, testNamespace, infrastructure.WithSidecarInjectionEnabled()))
-		_, err = modulehelpers.NewIstioCRBuilder().
-			ApplyAndCleanup(t)
-		require.NoError(t, err)
+		resetIstioCR(t)
 		depl := appsv1.Deployment{}
 		require.NoError(t, decoder.DecodeFile(testdata, "testdata/deployment_to_restart.yaml", &depl))
 		depl.SetNamespace(testNamespace)
@@ -210,9 +202,7 @@ func TestRestarter_Workload(t *testing.T) {
 		c, err := client.ResourcesClient(t)
 		require.NoError(t, err)
 		require.NoError(t, infrastructure.CreateNamespace(t, testNamespace, infrastructure.WithSidecarInjectionEnabled()))
-		_, err = modulehelpers.NewIstioCRBuilder().
-			ApplyAndCleanup(t)
-		require.NoError(t, err)
+		resetIstioCR(t)
 		depl := appsv1.Deployment{}
 		require.NoError(t, decoder.DecodeFile(testdata, "testdata/deployment_to_restart.yaml", &depl))
 		depl.SetNamespace(testNamespace)
@@ -254,9 +244,7 @@ func TestRestarter_Workload(t *testing.T) {
 		c, err := client.ResourcesClient(t)
 		require.NoError(t, err)
 		require.NoError(t, infrastructure.CreateNamespace(t, testNamespace, infrastructure.WithSidecarInjectionEnabled()))
-		_, err = modulehelpers.NewIstioCRBuilder().
-			ApplyAndCleanup(t)
-		require.NoError(t, err)
+		resetIstioCR(t)
 
 		depl := appsv1.Deployment{}
 		require.NoError(t, decoder.DecodeFile(testdata, "testdata/deployment_to_restart.yaml", &depl))
@@ -293,9 +281,7 @@ func TestRestarter_Workload(t *testing.T) {
 		c, err := client.ResourcesClient(t)
 		require.NoError(t, err)
 		require.NoError(t, infrastructure.CreateNamespace(t, testNamespace, infrastructure.WithSidecarInjectionEnabled()))
-		_, err = modulehelpers.NewIstioCRBuilder().
-			ApplyAndCleanup(t)
-		require.NoError(t, err)
+		resetIstioCR(t)
 
 		depl := appsv1.Deployment{}
 		require.NoError(t, decoder.DecodeFile(testdata, "testdata/deployment_to_restart.yaml", &depl))
@@ -328,9 +314,7 @@ func TestRestarter_Workload(t *testing.T) {
 		c, err := client.ResourcesClient(t)
 		require.NoError(t, err)
 		require.NoError(t, infrastructure.CreateNamespace(t, testNamespace, infrastructure.WithSidecarInjectionEnabled()))
-		_, err = modulehelpers.NewIstioCRBuilder().
-			ApplyAndCleanup(t)
-		require.NoError(t, err)
+		resetIstioCR(t)
 		depl := appsv1.Deployment{}
 		require.NoError(t, decoder.DecodeFile(testdata, "testdata/failed_deployment.yaml", &depl))
 		depl.SetNamespace(testNamespace)
@@ -343,9 +327,7 @@ func TestRestarter_Workload(t *testing.T) {
 		c, err := client.ResourcesClient(t)
 		require.NoError(t, err)
 		require.NoError(t, infrastructure.CreateNamespace(t, testNamespace, infrastructure.WithSidecarInjectionEnabled()))
-		_, err = modulehelpers.NewIstioCRBuilder().
-			ApplyAndCleanup(t)
-		require.NoError(t, err)
+		resetIstioCR(t)
 		ss := appsv1.StatefulSet{}
 		require.NoError(t, decoder.DecodeFile(testdata, "testdata/statefulset_to_restart.yaml", &ss))
 		ss.SetNamespace(testNamespace)
@@ -373,9 +355,7 @@ func TestRestarter_Workload(t *testing.T) {
 		c, err := client.ResourcesClient(t)
 		require.NoError(t, err)
 		require.NoError(t, infrastructure.CreateNamespace(t, testNamespace, infrastructure.WithSidecarInjectionEnabled()))
-		_, err = modulehelpers.NewIstioCRBuilder().
-			ApplyAndCleanup(t)
-		require.NoError(t, err)
+		resetIstioCR(t)
 		ds := appsv1.DaemonSet{}
 		require.NoError(t, decoder.DecodeFile(testdata, "testdata/daemonset_to_restart.yaml", &ds))
 		ds.SetNamespace(testNamespace)
@@ -397,16 +377,13 @@ func TestRestarter_Workload(t *testing.T) {
 		c, err := client.ResourcesClient(t)
 		require.NoError(t, err)
 		require.NoError(t, infrastructure.CreateNamespace(t, testNamespace, infrastructure.WithSidecarInjectionEnabled()))
-		istioCR, err := modulehelpers.NewIstioCRBuilder().
-			ApplyAndCleanup(t)
-		require.NoError(t, err)
+		resetIstioCR(t)
 		pod := corev1.Pod{}
 		require.NoError(t, decoder.DecodeFile(testdata, "testdata/pod_to_restart.yaml", &pod))
 		pod.SetNamespace(testNamespace)
 		require.NoError(t, c.Create(t.Context(), &pod))
 		require.NoError(t, wait.For(conditions.New(c).PodReady(&pod)))
-		istioCR.Spec.Config.EnableDNSProxying = new(true)
-		require.NoError(t, c.Update(t.Context(), istioCR))
+		require.NoError(t, modulehelpers.NewIstioCRBuilder().WithEnableDNSProxying(true).Update(t))
 		oldUID := pod.GetUID()
 		oldGeneration := pod.GetGeneration()
 		assert.NoError(t, wait.For(conditions.New(c).ResourceMatch(&pod, func(obj k8s.Object) bool {
@@ -420,16 +397,13 @@ func TestRestarter_Workload(t *testing.T) {
 		c, err := client.ResourcesClient(t)
 		require.NoError(t, err)
 		require.NoError(t, infrastructure.CreateNamespace(t, testNamespace, infrastructure.WithSidecarInjectionEnabled()))
-		istioCR, err := modulehelpers.NewIstioCRBuilder().
-			ApplyAndCleanup(t)
-		require.NoError(t, err)
+		resetIstioCR(t)
 		job := batchv1.Job{}
 		require.NoError(t, decoder.DecodeFile(testdata, "testdata/job_to_restart.yaml", &job))
 		job.SetNamespace(testNamespace)
 		require.NoError(t, c.Create(t.Context(), &job))
 
-		istioCR.Spec.Config.EnableDNSProxying = new(true)
-		require.NoError(t, c.Update(t.Context(), istioCR))
+		require.NoError(t, modulehelpers.NewIstioCRBuilder().WithEnableDNSProxying(true).Update(t))
 
 		oldGeneration := job.GetGeneration()
 		assert.NoError(t, wait.For(conditions.New(c).ResourceMatch(&job, func(obj k8s.Object) bool {
@@ -451,6 +425,25 @@ func CreateDeploymentsWaitGroup(t *testing.T, r *resources.Resources, wg *sync.W
 			require.NoError(t, wait.For(conditions.New(r).DeploymentAvailable(depl.GetName(), depl.GetNamespace())))
 		})
 	}
+}
+
+// installSharedIstio installs a single Istio module for the whole parent test and
+// registers its teardown once. Subtests reuse this installation instead of
+// reinstalling Istio per subtest; they call resetIstioCR to return the shared CR to
+// a clean default before applying their own change.
+func installSharedIstio(t *testing.T) {
+	t.Helper()
+	_, err := modulehelpers.NewIstioCRBuilder().ApplyAndCleanup(t)
+	require.NoError(t, err)
+}
+
+// resetIstioCR returns the shared Istio CR to its default configuration so each
+// subtest starts from a deterministic state. Because the default clears all config,
+// every subtest's subsequent mutation is a real spec change and reliably triggers a
+// reconcile.
+func resetIstioCR(t *testing.T) {
+	t.Helper()
+	require.NoError(t, modulehelpers.NewIstioCRBuilder().Update(t))
 }
 
 func GetPodImage(pod corev1.Pod, containerName string) string {

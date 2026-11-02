@@ -30,10 +30,13 @@ This tutorial uses an authorization service that is deliberately unreachable, so
 
 ## Prerequisites
 
-- You have the Istio module installed and deployed.
-- To expose the workload, you use one of the following:
-    - The default domain of your Kyma cluster and the default Gateway `kyma-system/kyma-gateway`. This Gateway is available only when you add the API Gateway module.
-    - A custom domain and a custom TLS Gateway.
+- You have the Istio module in your cluster.
+- To expose the workload, choose one of the following approaches:
+    - Use the default domain of your Kyma cluster and the default Gateway `kyma-system/kyma-gateway`. This Gateway is available only when you add the API Gateway module.
+       > [!TIP]
+       > To find the default domain of your Kyma cluster, run `kubectl get gateways.networking.istio.io -n kyma-system kyma-gateway -o jsonpath='{.spec.servers[0].hosts}'`.
+       
+    - Use a custom domain and a custom TLS Gateway. See [Configure a TLS Gateway in SAP BTP, Kyma Runtime](https://kyma-project.io/external-content/api-gateway/docs/user/istio-gateways/set-up-tls-gateway.html).
 
 ## Procedure
 
@@ -57,7 +60,7 @@ This tutorial uses an authorization service that is deliberately unreachable, so
 
     ```bash
     export DOMAIN_NAME={YOUR_DOMAIN_NAME}
-    export GATEWAY={YOUR_GATEWAY}
+    export GATEWAY={GATEWAY_NAMESPACE}/{GATEWAY_NAME}
     ```
 
 4. Create a VirtualService to expose the workload:

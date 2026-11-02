@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"slices"
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
@@ -14,6 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/discovery"
+	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
 	"sigs.k8s.io/yaml"
 
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/artifacts"
@@ -57,6 +59,12 @@ func DumpClusterResources(t *testing.T) {
 	for _, serverPreferredResource := range serverPreferredResources {
 		for _, apiResource := range serverPreferredResource.APIResources {
 			resourceName := apiResource.Name
+			// Skip resources that cannot be listed (e.g. subjectaccessreviews,
+			// tokenreviews and other virtual/create-only API endpoints); the
+			// server rejects a list on them.
+			if !slices.Contains(apiResource.Verbs, "list") {
+				continue
+			}
 			var unstructuredList = &unstructured.UnstructuredList{}
 			groupVersion, err := schema.ParseGroupVersion(serverPreferredResource.GroupVersion)
 			if err != nil {
@@ -118,6 +126,11 @@ func storeLogsFromAllPods(t *testing.T, basePath string) {
 		t.Logf("Could not list pods: err=%s", err)
 		return
 	}
+	kwokNodes, err := listKwokNodes(r)
+	if err != nil {
+		t.Logf("Could not list kwok nodes: err=%s", err)
+		return
+	}
 	p := path.Join(basePath, artifacts.TestRunTimestamp(), artifacts.SanitizePathComponent(t.Name()), podLogsDir)
 	err = os.MkdirAll(p, 0o755)
 	if err != nil {
@@ -125,11 +138,30 @@ func storeLogsFromAllPods(t *testing.T, basePath string) {
 		return
 	}
 	for _, pod := range podList.Items {
+		// kwok nodes are simulated and have no kubelet, so any log request
+		// against a pod scheduled on one returns 502 Bad Gateway.
+		if kwokNodes[pod.Spec.NodeName] {
+			continue
+		}
 		err := storeLogsFromPodToFile(t, basePath, pod.Namespace, pod.Name)
 		if err != nil {
 			t.Logf("Could not get logs from pod %s in namespace %s: err=%s", pod.Name, pod.Namespace, err)
 		}
 	}
+}
+
+// listKwokNodes returns the set of node names simulated by kwok. Pods scheduled
+// on them cannot serve logs (no kubelet), so they are skipped during log dump.
+func listKwokNodes(r *resources.Resources) (map[string]bool, error) {
+	nodeList := &corev1.NodeList{}
+	if err := r.List(context.Background(), nodeList, resources.WithLabelSelector("type=kwok")); err != nil {
+		return nil, err
+	}
+	kwokNodes := make(map[string]bool, len(nodeList.Items))
+	for _, node := range nodeList.Items {
+		kwokNodes[node.Name] = true
+	}
+	return kwokNodes, nil
 }
 
 func storeLogsFromPodToFile(t *testing.T, basePath, namespace, podName string) error {

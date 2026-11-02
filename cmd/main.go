@@ -222,6 +222,6 @@ func defineFlagVar() *FlagVar {
 	flag.DurationVar(&flagVar.reconciliationInterval, "reconciliation-interval", reconciliationIntervalDefault,
 		"Indicates the time based reconciliation interval.")
 	flag.BoolVar(&flagVar.enableRestart, "enable-restart", true,
-		"Enables restarting of Istio-managed workloads (sidecars, ingress gateway, network policies) during reconciliation.")
+		"Enables restarting of Istio-managed workloads (sidecars, ingress-gateway) during reconciliation.")
 	return flagVar
 }

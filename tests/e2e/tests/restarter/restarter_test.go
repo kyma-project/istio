@@ -438,9 +438,7 @@ func installSharedIstio(t *testing.T) {
 }
 
 // resetIstioCR returns the shared Istio CR to its default configuration so each
-// subtest starts from a deterministic state. Because the default clears all config,
-// every subtest's subsequent mutation is a real spec change and reliably triggers a
-// reconcile.
+// subtest starts from a deterministic state.
 func resetIstioCR(t *testing.T) {
 	t.Helper()
 	require.NoError(t, modulehelpers.NewIstioCRBuilder().Update(t))

@@ -76,3 +76,5 @@ See the [Code of Conduct](CODE_OF_CONDUCT.md) document.
 <!--- mandatory section - do not change this! --->
 
 See the [license](./LICENSE) file.
+
+Checking doc-only pr

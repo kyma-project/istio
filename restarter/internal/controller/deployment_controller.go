@@ -46,33 +46,44 @@ func (r *DeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return reconcileGateway(ctx, r.Client, r.Evaluators, r.Recorder, d)
 	}
 
-	return reconcileWorkload(ctx, r.Client, r.Evaluators, r.Recorder, req, workloadStrategy[*appsv1.Deployment]{
-		logKey:   "deployment",
-		newObj:   func() *appsv1.Deployment { return &appsv1.Deployment{} },
-		template: func(d *appsv1.Deployment) *corev1.PodTemplateSpec { return &d.Spec.Template },
-		listPods: func(ctx context.Context, c client.Client, req ctrl.Request, d *appsv1.Deployment) (*corev1.PodList, error) {
-			if d.Spec.Selector == nil ||
-				(len(d.Spec.Selector.MatchLabels) == 0 && len(d.Spec.Selector.MatchExpressions) == 0) {
-				return nil, nil
-			}
-			sel, err := metav1.LabelSelectorAsSelector(d.Spec.Selector)
-			if err != nil {
-				return nil, fmt.Errorf("invalid deployment selector: %w", err)
-			}
-			podList := &corev1.PodList{}
-			if err := c.List(ctx, podList,
-				client.InNamespace(req.Namespace),
-				client.MatchingLabelsSelector{Selector: sel},
-			); err != nil {
-				return nil, err
-			}
-			return podList, nil
-		},
-		rolledOut: restart.DeploymentRolledOut,
-		restart: func(ctx context.Context, c client.Client, d *appsv1.Deployment, _ []*corev1.Pod, fp string) error {
-			return restart.Deployment(ctx, c, d, fp)
-		},
-	})
+	return reconcileWorkload(ctx, r.Client, r.Evaluators, r.Recorder, req, deploymentStrategy{})
+}
+
+type deploymentStrategy struct{}
+
+func (deploymentStrategy) logKey() string { return "deployment" }
+
+func (deploymentStrategy) newObj() *appsv1.Deployment { return &appsv1.Deployment{} }
+
+func (deploymentStrategy) template(d *appsv1.Deployment) *corev1.PodTemplateSpec {
+	return &d.Spec.Template
+}
+
+func (deploymentStrategy) listPods(ctx context.Context, c client.Client, req ctrl.Request, d *appsv1.Deployment) (*corev1.PodList, error) {
+	if d.Spec.Selector == nil ||
+		(len(d.Spec.Selector.MatchLabels) == 0 && len(d.Spec.Selector.MatchExpressions) == 0) {
+		return nil, nil
+	}
+	sel, err := metav1.LabelSelectorAsSelector(d.Spec.Selector)
+	if err != nil {
+		return nil, fmt.Errorf("invalid deployment selector: %w", err)
+	}
+	podList := &corev1.PodList{}
+	if err := c.List(ctx, podList,
+		client.InNamespace(req.Namespace),
+		client.MatchingLabelsSelector{Selector: sel},
+	); err != nil {
+		return nil, err
+	}
+	return podList, nil
+}
+
+func (deploymentStrategy) rolledOut(d *appsv1.Deployment) bool {
+	return restart.DeploymentRolledOut(d)
+}
+
+func (deploymentStrategy) restart(ctx context.Context, c client.Client, d *appsv1.Deployment, _ []*corev1.Pod, fp string) error {
+	return restart.Deployment(ctx, c, d, fp)
 }
 
 // SetupWithManager sets up the controller with the Manager.

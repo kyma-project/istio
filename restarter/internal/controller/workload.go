@@ -15,21 +15,21 @@ import (
 
 // workloadStrategy captures the per-type differences between the Deployment,
 // StatefulSet, DaemonSet, and ReplicaSet reconcilers.
-type workloadStrategy[T client.Object] struct {
-	logKey string
-	newObj func() T
+type workloadStrategy[T client.Object] interface {
+	logKey() string
+	newObj() T
 	// template allows access to the Pod template in the workload spec.
 	// Example: for Deployment return `spec.template`.
-	template func(T) *corev1.PodTemplateSpec
+	template(T) *corev1.PodTemplateSpec
 	// listPods returns the pods the evaluators run against for this workload. A
 	// nil list with a nil error signals an early return with no evaluation (e.g.
 	// a Deployment with no usable selector).
-	listPods func(context.Context, client.Client, ctrl.Request, T) (*corev1.PodList, error)
+	listPods(context.Context, client.Client, ctrl.Request, T) (*corev1.PodList, error)
 	// rolledOut reports whether a prior rollout has fully settled
-	rolledOut func(T) bool
+	rolledOut(T) bool
 	// restart performs the kind-specific restart (template patch, or pod delete
 	// for ownerless ReplicaSets) and stamps the restart timestamp and fingerprint.
-	restart func(context.Context, client.Client, T, []*corev1.Pod, string) error
+	restart(context.Context, client.Client, T, []*corev1.Pod, string) error
 }
 
 func reconcileWorkload[T client.Object](
@@ -40,7 +40,7 @@ func reconcileWorkload[T client.Object](
 	req ctrl.Request,
 	s workloadStrategy[T],
 ) (ctrl.Result, error) {
-	l := logf.FromContext(ctx).WithValues(s.logKey, req.NamespacedName)
+	l := logf.FromContext(ctx).WithValues(s.logKey(), req.NamespacedName)
 	l.V(2).Info("Reconciling workload")
 
 	obj := s.newObj()

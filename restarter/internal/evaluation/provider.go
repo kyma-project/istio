@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"slices"
-	"sync"
 
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -30,16 +29,12 @@ type Source interface {
 	GatewaySnapshot(ctx context.Context) (evaluators []Evaluator, gatewayFingerprint string, err error)
 }
 
-// Provider builds and caches the evaluator slice derived from cluster state
+// Provider builds the evaluator slice derived from cluster state
 // (Istio CR, istio-features ConfigMap). Safe for concurrent use.
 type Provider struct {
 	client           client.Client
 	istioCRKey       types.NamespacedName
 	sidecarResources corev1.ResourceRequirements
-
-	mu       sync.RWMutex
-	cacheKey string
-	cached   []Evaluator
 }
 
 // NewProvider returns a Provider that reads state via c and resolves the
@@ -83,42 +78,6 @@ func (p *Provider) ProxySnapshot(ctx context.Context) ([]Evaluator, string, erro
 		return nil, "", fmt.Errorf("compute proxy fingerprint: %w", err)
 	}
 
-	effectiveResources, err := effectiveSidecarResources(lastApplied.Components, p.sidecarResources)
-	if err != nil {
-		return nil, "", fmt.Errorf("compute effective sidecar resources: %w", err)
-	}
-
-	// The cache key gates rebuilding the evaluator slice, so it must cover every
-	// input an evaluator captures at build time: the drift fingerprint plus the
-	// inputs owned by dedicated evaluators (DisableCni, PrometheusMerge, IstioTag
-	// and the expected sidecar resources). A change to any of them must rebuild
-	// the slice so no evaluator keeps a stale value.
-	resourcesJSON, err := json.Marshal(effectiveResources)
-	if err != nil {
-		return nil, "", fmt.Errorf("marshal sidecar resources: %w", err)
-	}
-	key := fmt.Sprintf("%s|%t|%t|%s|%s",
-		fp,
-		features.DisableCni,
-		lastApplied.Config.Telemetry.Metrics.PrometheusMerge,
-		lastApplied.IstioTag,
-		resourcesJSON,
-	)
-
-	p.mu.RLock()
-	if key == p.cacheKey && p.cached != nil {
-		cached := p.cached
-		p.mu.RUnlock()
-		return cached, fp, nil
-	}
-	p.mu.RUnlock()
-
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	if key == p.cacheKey && p.cached != nil {
-		return p.cached, fp, nil
-	}
-
 	evaluators, err := GetEvaluators(Config{
 		IstioCR:           &cr,
 		LastAppliedConfig: lastApplied,
@@ -130,8 +89,6 @@ func (p *Provider) ProxySnapshot(ctx context.Context) ([]Evaluator, string, erro
 		return nil, "", fmt.Errorf("build evaluators: %w", err)
 	}
 
-	p.cacheKey = key
-	p.cached = evaluators
 	return evaluators, fp, nil
 }
 

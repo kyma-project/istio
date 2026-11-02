@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"reflect"
 	"slices"
 	"testing"
 
@@ -135,10 +134,6 @@ func newProvider(t *testing.T, objs ...client.Object) *evaluation.Provider {
 	)
 }
 
-func slicePtr(evs []evaluation.Evaluator) uintptr {
-	return reflect.ValueOf(evs).Pointer()
-}
-
 func TestProvider_Snapshot_MissingCR(t *testing.T) {
 	// Only the ConfigMap exists; no Istio CR.
 	p := newProvider(t, newFeaturesConfigMap("1"))
@@ -168,40 +163,6 @@ func TestProvider_Snapshot_MissingFeaturesConfigMap(t *testing.T) {
 	}
 }
 
-func TestProvider_Snapshot_CacheHit(t *testing.T) {
-	p := newProvider(t, newIstioCR(nil), newFeaturesConfigMap("1"))
-
-	first, firstFP, err := p.ProxySnapshot(t.Context())
-	if err != nil {
-		t.Fatalf("first snapshot: %v", err)
-	}
-	if len(first) == 0 {
-		t.Fatalf("expected non-empty evaluators on first call")
-	}
-
-	second, secondFP, err := p.ProxySnapshot(t.Context())
-	if err != nil {
-		t.Fatalf("second snapshot: %v", err)
-	}
-	// Cache hit: same slice header (pointer) means Provider did not rebuild.
-	if slicePtr(first) != slicePtr(second) {
-		t.Errorf("expected cached slice to be returned verbatim; got different slice pointers")
-	}
-	if len(first) != len(second) {
-		t.Errorf("cache hit: length changed between calls (%d -> %d)", len(first), len(second))
-	}
-	// No lastAppliedConfiguration annotation => fingerprint is "" on both calls.
-	if firstFP != "" {
-		t.Errorf("expected empty fingerprint when annotation is absent, got %q", firstFP)
-	}
-	if firstFP != secondFP {
-		t.Errorf("cache hit: fingerprint must be stable between calls, got %q -> %q", firstFP, secondFP)
-	}
-}
-
-// TestProvider_Snapshot_FingerprintMatchesProxyConfig verifies that the
-// returned fingerprint matches the proxy-config hash of the
-// lastAppliedConfiguration annotation value.
 func TestProvider_Snapshot_FingerprintMatchesProxyConfig(t *testing.T) {
 	const annotationValue = `{"config":{"enableDNSProxying":true}}`
 	p := newProvider(t,
@@ -333,93 +294,7 @@ func TestProvider_Snapshot_FingerprintStableWhenOnlyFeaturesConfigMapChanges(t *
 	}
 }
 
-func TestProvider_Snapshot_NoRebuildOnSpecOnlyChange(t *testing.T) {
-	scheme := newTestScheme(t)
-	cr := newIstioCR(nil)
-	cm := newFeaturesConfigMap("1")
-	c := fake.NewClientBuilder().WithScheme(scheme).WithObjects(cr, cm).Build()
-	p := evaluation.NewProvider(
-		c,
-		types.NamespacedName{Namespace: testIstioCRNamespace, Name: testIstioCRName},
-		testSidecarResources(),
-	)
-
-	first, _, err := p.ProxySnapshot(t.Context())
-	if err != nil {
-		t.Fatalf("first snapshot: %v", err)
-	}
-	if len(first) == 0 {
-		t.Fatalf("expected non-empty evaluators")
-	}
-
-	// Mutate the Istio CR spec on the server without touching
-	// lastAppliedConfiguration. The cache key is derived from the applied
-	// config, so a spec change that is not yet reconciled must not rebuild.
-	var live operatorv1alpha2.Istio
-	if err := c.Get(t.Context(), types.NamespacedName{Namespace: testIstioCRNamespace, Name: testIstioCRName}, &live); err != nil {
-		t.Fatalf("get live CR: %v", err)
-	}
-	live.Spec.CompatibilityMode = true
-	if err := c.Update(t.Context(), &live); err != nil {
-		t.Fatalf("update CR: %v", err)
-	}
-
-	second, _, err := p.ProxySnapshot(t.Context())
-	if err != nil {
-		t.Fatalf("second snapshot: %v", err)
-	}
-	if slicePtr(first) != slicePtr(second) {
-		t.Errorf("expected cached slice after spec-only change; got rebuild")
-	}
-}
-
-func TestProvider_Snapshot_RebuildOnFeaturesConfigMapResourceVersionChange(t *testing.T) {
-	scheme := newTestScheme(t)
-	cr := newIstioCR(nil)
-	cm := newFeaturesConfigMap("1")
-	c := fake.NewClientBuilder().WithScheme(scheme).WithObjects(cr, cm).Build()
-	p := evaluation.NewProvider(
-		c,
-		types.NamespacedName{Namespace: testIstioCRNamespace, Name: testIstioCRName},
-		testSidecarResources(),
-	)
-
-	first, _, err := p.ProxySnapshot(t.Context())
-	if err != nil {
-		t.Fatalf("first snapshot: %v", err)
-	}
-	if len(first) == 0 {
-		t.Fatalf("expected non-empty evaluators")
-	}
-
-	// Update the ConfigMap to bump its ResourceVersion.
-	var liveCM corev1.ConfigMap
-	if err := c.Get(t.Context(), types.NamespacedName{Namespace: istiofeatures.ConfigMapNamespace, Name: istiofeatures.ConfigMapName}, &liveCM); err != nil {
-		t.Fatalf("get live CM: %v", err)
-	}
-	if liveCM.Data == nil {
-		liveCM.Data = map[string]string{}
-	}
-	liveCM.Data["features"] = `{"disableCni": true}`
-	if err := c.Update(t.Context(), &liveCM); err != nil {
-		t.Fatalf("update CM: %v", err)
-	}
-
-	second, _, err := p.ProxySnapshot(t.Context())
-	if err != nil {
-		t.Fatalf("second snapshot: %v", err)
-	}
-	// Evaluator slice must be rebuilt after a ConfigMap ResourceVersion change
-	// even though the fingerprint (annotation-derived) stays the same.
-	if slicePtr(first) == slicePtr(second) {
-		t.Errorf("expected rebuild after ConfigMap resourceVersion change; got cached slice")
-	}
-	if len(second) == 0 {
-		t.Errorf("expected non-empty evaluators after rebuild")
-	}
-}
-
-func TestProvider_Snapshot_RebuildOnLastAppliedAnnotationChange(t *testing.T) {
+func TestProvider_Snapshot_FingerprintChangesOnLastAppliedAnnotationChange(t *testing.T) {
 	scheme := newTestScheme(t)
 	cr := newIstioCR(map[string]string{
 		labels.LastAppliedConfiguration: `{"config":{"enableDNSProxying":false}}`,
@@ -459,9 +334,6 @@ func TestProvider_Snapshot_RebuildOnLastAppliedAnnotationChange(t *testing.T) {
 	if err != nil {
 		t.Fatalf("second snapshot: %v", err)
 	}
-	if slicePtr(first) == slicePtr(second) {
-		t.Errorf("expected rebuild after proxy-relevant lastAppliedConfiguration change; got cached slice")
-	}
 	if len(second) == 0 {
 		t.Errorf("expected non-empty evaluators after rebuild")
 	}
@@ -479,7 +351,7 @@ func TestProvider_Snapshot_RebuildOnLastAppliedAnnotationChange(t *testing.T) {
 	}
 }
 
-func TestProvider_Snapshot_NoRebuildOnGatewayOnlyAnnotationChange(t *testing.T) {
+func TestProvider_Snapshot_FingerprintStableOnGatewayOnlyAnnotationChange(t *testing.T) {
 	scheme := newTestScheme(t)
 	cr := newIstioCR(map[string]string{
 		labels.LastAppliedConfiguration: `{"config":{"numTrustedProxies":1}}`,
@@ -492,16 +364,13 @@ func TestProvider_Snapshot_NoRebuildOnGatewayOnlyAnnotationChange(t *testing.T) 
 		testSidecarResources(),
 	)
 
-	first, _, err := p.ProxySnapshot(t.Context())
+	_, firstFP, err := p.ProxySnapshot(t.Context())
 	if err != nil {
 		t.Fatalf("first snapshot: %v", err)
 	}
-	if len(first) == 0 {
-		t.Fatalf("expected non-empty evaluators")
-	}
 
 	// numTrustedProxies drives only the gateway fingerprint, not proxy restart,
-	// so changing it must not rebuild the cached proxy evaluators.
+	// so changing it must not change the proxy fingerprint.
 	var live operatorv1alpha2.Istio
 	if err := c.Get(t.Context(), types.NamespacedName{Namespace: testIstioCRNamespace, Name: testIstioCRName}, &live); err != nil {
 		t.Fatalf("get live CR: %v", err)
@@ -511,12 +380,12 @@ func TestProvider_Snapshot_NoRebuildOnGatewayOnlyAnnotationChange(t *testing.T) 
 		t.Fatalf("update CR annotations: %v", err)
 	}
 
-	second, _, err := p.ProxySnapshot(t.Context())
+	_, secondFP, err := p.ProxySnapshot(t.Context())
 	if err != nil {
 		t.Fatalf("second snapshot: %v", err)
 	}
-	if slicePtr(first) != slicePtr(second) {
-		t.Errorf("expected cached slice after gateway-only change; got rebuild")
+	if firstFP != secondFP {
+		t.Errorf("proxy fingerprint changed on gateway-only field change: %q -> %q", firstFP, secondFP)
 	}
 }
 
@@ -639,12 +508,11 @@ func TestProvider_Snapshot_IncludesFingerprintDrift(t *testing.T) {
 	}
 }
 
-// TestProvider_Snapshot_RebuildOnProxyComponentsResourceChange verifies that
-// changing Components.Proxy.K8S.Resources in the lastAppliedConfiguration
-// annotation rebuilds the evaluator slice, because the effective sidecar
-// resources change and the SidecarResourcesChanged evaluator must capture the
-// new expectation.
-func TestProvider_Snapshot_RebuildOnProxyComponentsResourceChange(t *testing.T) {
+// TestProvider_Snapshot_ProxyComponentsResourceChangeBuilds verifies that a
+// lastAppliedConfiguration annotation carrying Components.Proxy.K8S.Resources
+// is parsed into effective sidecar resources and yields a non-empty evaluator
+// slice (the SidecarResourcesChanged evaluator captures the new expectation).
+func TestProvider_Snapshot_ProxyComponentsResourceChangeBuilds(t *testing.T) {
 	const annotationBefore = `{"config":{}}`
 	const annotationAfter = `{"components":{"proxy":{"k8s":{"resources":{"requests":{"cpu":"50m","memory":"64Mi"}}}}}}`
 	scheme := newTestScheme(t)
@@ -678,11 +546,8 @@ func TestProvider_Snapshot_RebuildOnProxyComponentsResourceChange(t *testing.T) 
 	if err != nil {
 		t.Fatalf("second snapshot: %v", err)
 	}
-	if slicePtr(first) == slicePtr(second) {
-		t.Errorf("expected rebuild after Components.Proxy.K8S.Resources change; got cached slice")
-	}
 	if len(second) == 0 {
-		t.Errorf("expected non-empty evaluators after rebuild")
+		t.Errorf("expected non-empty evaluators after resource-bearing annotation change")
 	}
 }
 

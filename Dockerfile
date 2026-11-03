@@ -42,3 +42,5 @@ ENV GODEBUG="fips140=only,tlsmlkem=0"
 USER 65532:65532
 
 ENTRYPOINT ["/manager"]
+
+# test dockerfile change

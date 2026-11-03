@@ -265,7 +265,12 @@ jobs:
     runs-on: ubuntu-latest
     if: always()
     steps:
-      - if: ${{ !(contains(needs.*.result, 'failure')) }}
-        run: exit 0
       - if: ${{ contains(needs.*.result, 'failure') }}
-        run: exit 1
+        run: |
+          echo "Some jobs failed"
+          exit 1
+      - if: ${{ contains(needs.*.result, 'cancelled') }}
+        run: |
+          echo "Some jobs were cancelled"
+          exit 1
+      - run: echo "All jobs passed"

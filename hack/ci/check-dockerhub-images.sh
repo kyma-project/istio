@@ -5,12 +5,13 @@
 
 set -euo pipefail
 
-# shellcheck source=hack/ci/common.sh
-source "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/common.sh"
+script_dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+# shellcheck source=./common.sh
+source "${script_dir}/common.sh"
 
 require_tools curl yq
 
-IMAGES_FILE="external-images.yaml"
+IMAGES_FILE="${script_dir}/../../external-images.yaml"
 
 main() {
   local count i src code body_file failed
@@ -45,7 +46,7 @@ main() {
     exit 1
   fi
 
-  echo "All images in ${IMAGES_FILE} are available on Docker Hub"
+  echo "All external images are available on Docker Hub"
 }
 
 main

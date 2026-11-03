@@ -5,10 +5,14 @@
 
 set -euo pipefail
 
-# shellcheck source=hack/ci/common.sh
-source "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/common.sh"
+script_dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+# shellcheck source=./common.sh
+source "${script_dir}/common.sh"
 
 require_tools yq
+
+EXTERNAL_IMAGES_FILE="${script_dir}/../../external-images.yaml"
+FIPS_IMAGES_FILE="${script_dir}/../../fips-images.yaml"
 
 is_istio_image() {
   local image_without_tag="$1"
@@ -37,7 +41,7 @@ main() {
   local all_versions unique_versions version_count
 
   echo "Collecting Istio versions from external-images.yaml and fips-images.yaml"
-  all_versions="$(collect_versions external-images.yaml; collect_versions fips-images.yaml)"
+  all_versions="$(collect_versions "${EXTERNAL_IMAGES_FILE}"; collect_versions "${FIPS_IMAGES_FILE}")"
 
   echo "Found versions:"
   echo "${all_versions}"

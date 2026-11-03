@@ -191,6 +191,9 @@ func (m *meshConfigBuilder) BuildExternalAuthorizerConfiguration(authorizers []*
 				Seconds: int64(authorizer.Timeout.Seconds()),
 			}
 		}
+		if len(authorizer.StatusOnError) > 0 {
+			envoyXAuthProvider.EnvoyExtAuthzHttp.StatusOnError = authorizer.StatusOnError
+		}
 
 		headers := authorizer.Headers
 		setupHeaders(&envoyXAuthProvider, headers)

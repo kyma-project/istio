@@ -4,15 +4,16 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
+	"net/http"
+	"testing"
+	"time"
+
 	gatewayhelper "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/gateway"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/httpbin"
 	infrahelpers "github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/infrastructure"
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/helpers/portforward"
 	"github.com/stretchr/testify/assert"
-	"net/http"
 	"sigs.k8s.io/e2e-framework/klient/wait"
-	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/e2e-framework/klient/decoder"
@@ -48,6 +49,7 @@ func TestAPIRuleExtAuth(t *testing.T) {
 						"ExtAuthServiceNamespace": "ext-auth",
 						"PathPrefix":              "/status/200?original=",
 						"Timeout":                 "5s",
+						"StatusOnError":           "",
 					}),
 				),
 			)
@@ -78,6 +80,7 @@ func TestAPIRuleExtAuth(t *testing.T) {
 						"ExtAuthServiceNamespace": "ext-auth",
 						"PathPrefix":              "/delay/1?original=",
 						"Timeout":                 "2s",
+						"StatusOnError":           "",
 					}),
 				),
 			)
@@ -139,6 +142,7 @@ func TestAPIRuleExtAuth(t *testing.T) {
 						"ExtAuthServiceNamespace": "ext-auth",
 						"PathPrefix":              "/delay/3?original=",
 						"Timeout":                 "2s",
+						"StatusOnError":           "",
 					}),
 				),
 			)
@@ -201,6 +205,7 @@ func TestAPIRuleExtAuth(t *testing.T) {
 						"ExtAuthServiceNamespace": "ext-auth",
 						"PathPrefix":              "/status/200?original=",
 						"Timeout":                 "5s",
+						"StatusOnError":           "",
 					}),
 				),
 			)
@@ -261,6 +266,7 @@ func TestAPIRuleExtAuth(t *testing.T) {
 						"ExtAuthServiceNamespace": "ext-auth",
 						"PathPrefix":              "/status/403?original=",
 						"Timeout":                 "5s",
+						"StatusOnError":           "",
 					}),
 				),
 			)
@@ -309,6 +315,67 @@ func TestAPIRuleExtAuth(t *testing.T) {
 				return true, nil
 			}, wait.WithTimeout(10*time.Second), wait.WithInterval(1*time.Second))
 			assert.NoError(t, err, "Failed to assert endpoint returns 403 Forbidden")
+		})
+
+		t.Run("extauth with statusOnError=417 returns 417 instead of default 403 on network error", func(t *testing.T) {
+			// given
+			require.NoError(
+				t,
+				modulehelpers.CreateIstioOperatorCR(t,
+					modulehelpers.WithIstioOperatorTemplate(IstioExtAuthOperatorConfig),
+					modulehelpers.WithIstioOperatorTemplateValues(map[string]interface{}{
+						"ExtAuthServiceName":      svcName,
+						"ExtAuthServicePort":      9999,
+						"ExtAuthServiceNamespace": "ext-auth",
+						"PathPrefix":              "/status/200?original=",
+						"Timeout":                 "2s",
+						"StatusOnError":           "417",
+					}),
+				),
+			)
+			require.NoError(t, gatewayhelper.CreateHTTPGateway(t))
+			gatewayDomain, gatewayPort, err := portforward.CreateIngressGatewayPortForwarding(t)
+			require.NoError(t, err, "Failed to create port-forwarding to kyma-gateway")
+
+			testBackground, err := testsetup.SetupRandomNamespaceWithOauth2MockAndHttpbin(t, testsetup.WithPrefix("extauth-test"))
+			require.NoError(t, err, "Failed to setup test background with OAuth2 mock and httpbin")
+
+			// when
+			createdVS, err := infrahelpers.CreateResourceWithTemplateValues(
+				t,
+				VirtualServiceExtAuth,
+				map[string]any{
+					"Name":            testBackground.TestName,
+					"HostName":        fmt.Sprintf("%s.%s", testBackground.TestName, gatewayDomain),
+					"DestinationHost": testBackground.TargetServiceName,
+					"DestinationPort": testBackground.TargetServicePort,
+					"GatewayName":     "kyma-system/kyma-gateway",
+				},
+				decoder.MutateNamespace(testBackground.Namespace),
+			)
+			require.NoError(t, err, "Failed to create VirtualService resource")
+			require.NotEmpty(t, createdVS, "Created VirtualService resource should not be empty")
+
+			createdAP, err := infrahelpers.CreateResource(
+				t,
+				IstioExtAuthAuthorizationPolicy,
+				decoder.MutateNamespace(testBackground.Namespace),
+			)
+			require.NoError(t, err, "Failed to create AuthorizationPolicy resource")
+			require.NotEmpty(t, createdAP, "Created AuthorizationPolicy resource should not be empty")
+
+			// then
+			waitFrom := time.Now()
+			err = wait.For(func(ctx context.Context) (done bool, err error) {
+				t.Logf("Waiting for endpoint to return 417 Expectation Failed")
+				t.Logf("Elapsed time: %v", time.Since(waitFrom))
+				err = extauth.AssertEndpoint(t, http.MethodGet, fmt.Sprintf("http://%s.%s:%d/headers", testBackground.TestName, gatewayDomain, gatewayPort), map[string]string{}, http.StatusExpectationFailed)
+				if err != nil {
+					return false, err
+				}
+				return true, nil
+			}, wait.WithTimeout(60*time.Second), wait.WithInterval(2*time.Second))
+			assert.NoError(t, err, "Failed to assert endpoint returns 417 Expectation Failed")
 		})
 	})
 }

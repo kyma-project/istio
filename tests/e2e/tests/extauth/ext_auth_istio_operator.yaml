@@ -11,3 +11,6 @@ spec:
         service: "{{ .ExtAuthServiceName }}.{{ .ExtAuthServiceNamespace }}.svc.cluster.local"
         pathPrefix: {{ .PathPrefix }}
         timeout: {{ .Timeout }}
+        {{- if .StatusOnError }}
+        statusOnError: "{{ .StatusOnError }}"
+        {{- end }}

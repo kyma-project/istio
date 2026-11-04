@@ -13,7 +13,7 @@ Alternatively, you can use the default domain of your Kyma cluster and the defau
   >[!TIP]
   > To get the default domain of your Kyma cluster, run the following command:
   >```yaml
-  >kubectl get gateway -n kyma-system kyma-gateway -o jsonpath='{.spec.servers[0].hosts}'
+  >kubectl get gateways.networking.istio.io -n kyma-system kyma-gateway -o jsonpath='{.spec.servers[0].hosts}'
   >```
 
 * You have installed [Helm](https://helm.sh/docs/intro/install/).

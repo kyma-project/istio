@@ -15,10 +15,11 @@ The Istio module offers the following features:
 - **Fine-tuning capabilities**: You can optimize Istio and fine-tune its settings according to specific performance or operational requirements.
 - **Synchronization of the data plane with the Istio control plane**: This ensures that changes you make to the control plane are consistently reflected in the data plane, ensuring that the network operates consistently and reliably without any discrepancies.
 - **Support for the X-Forwarded-For (XFF) header**: You can configure the XFF header to manage and track the source of incoming requests.
+- **Gateway API CRD lifecycle management**: The module installs and manages the lifecycle of the Kubernetes Gateway API CRDs, enabling you to use Gateway API resources for traffic management and workload exposure.
 
 ## Architecture
 
-![Istio Operator Architecture](../assets/istio-controller-overview-user.svg)
+![Istio Operator Architecture](../assets/istio-controller-overview-user.drawio.svg)
 
 ### Istio Operator
 

@@ -22,7 +22,21 @@ var (
 )
 
 // Decision represents the verdict an Evaluator produces when evaluating an Object.
+// TODO: convert to a struct carrying a Reason string explaining the verdict.
 type Decision int
+
+func (decision Decision) String() string {
+	switch decision {
+	case Continue:
+		return "Continue"
+	case Restart:
+		return "Restart"
+	case Stop:
+		return "Stop"
+	default:
+		return "Unknown"
+	}
+}
 
 // Object is the Kubernetes object an Evaluator evaluates. It aliases
 // controller-runtime's client.Object.
@@ -31,5 +45,6 @@ type Object = client.Object
 // Evaluator evaluates an Object and returns a Decision describing whether it should
 // be restarted, skipped, or whether evaluation should stop.
 type Evaluator interface {
+	Name() string
 	Evaluate(Object) Decision
 }

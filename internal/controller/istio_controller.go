@@ -21,11 +21,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pkg/errors"
-
 	"github.com/kyma-project/istio/operator/internal/images"
 	istiocrmetrics "github.com/kyma-project/istio/operator/internal/metrics"
 	"github.com/kyma-project/istio/operator/internal/resources"
+	"github.com/pkg/errors"
 
 	"github.com/kyma-project/istio/operator/internal/restarter"
 	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
@@ -73,6 +72,7 @@ type ControllerOptions struct {
 	ReconciliationInterval time.Duration
 	CRMetrics              *istiocrmetrics.IstioCRMetrics
 	IstioImages            images.Images
+	EnableRestart          bool
 }
 
 func NewController(mgr manager.Manager, options ControllerOptions) *IstioReconciler {
@@ -82,7 +82,7 @@ func NewController(mgr manager.Manager, options ControllerOptions) *IstioReconci
 	statusHandler := status.NewStatusHandler(mgr.GetClient())
 	podsLister := pods.NewPods(mgr.GetClient(), &logger)
 	actionRestarter := restart.NewActionRestarter(mgr.GetClient(), &logger)
-	restarters := []restarter.Restarter{
+	restarters := selectRestarters(options.EnableRestart, []restarter.Restarter{
 		restarter.NewIngressGatewayRestarter(mgr.GetClient(), []predicates.IngressGatewayPredicate{}, statusHandler),
 		restarter.NewSidecarsRestarter(
 			mgr.GetLogger(),
@@ -93,7 +93,7 @@ func NewController(mgr manager.Manager, options ControllerOptions) *IstioReconci
 			options.IstioImages,
 		),
 		restarter.NewForNetworkPolicy(mgr.GetClient(), statusHandler),
-	}
+	})
 	userResources := resources.NewUserResources(mgr.GetClient())
 
 	return &IstioReconciler{
@@ -109,6 +109,16 @@ func NewController(mgr manager.Manager, options ControllerOptions) *IstioReconci
 		crMetrics:              options.CRMetrics,
 		istioImages:            options.IstioImages,
 	}
+}
+
+// selectRestarters returns the given restarters when restarting is enabled, or
+// an empty slice when it is disabled, which turns the reconcile restart step
+// into a no-op (restarter.Restart returns nil for an empty slice).
+func selectRestarters(enableRestart bool, restarters []restarter.Restarter) []restarter.Restarter {
+	if !enableRestart {
+		return nil
+	}
+	return restarters
 }
 
 //nolint:gocognit,funlen // cognitive complexity 30 of func `(*IstioReconciler).Reconcile` is high (> 20), Function 'Reconcile' has too many statements (58 > 50) TODO: refactor this function

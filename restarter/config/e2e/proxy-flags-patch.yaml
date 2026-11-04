@@ -1,0 +1,15 @@
+# Replace the whole args list: drop --dev-mode so the --proxy-* flags below are
+# honored (with --dev-mode the restarter ignores them and uses built-in dev values;
+# see restarter/cmd/main.go). --metrics-bind-address is kept because the base
+# overlay's manager_metrics_patch.yaml prepends it.
+- op: replace
+  path: /spec/template/spec/containers/0/args
+  value:
+    - --metrics-bind-address=:8443
+    - --leader-elect
+    - --health-probe-bind-address=:8081
+    - --zap-log-level=3
+    - --proxy-cpu-limit=1000m
+    - --proxy-memory-limit=1Gi
+    - --proxy-cpu-request=10m
+    - --proxy-memory-request=192Mi

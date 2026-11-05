@@ -43,7 +43,7 @@ Warning: version difference between client (1.37) and server (1.35) exceeds the 
 
 Before you start troubleshooting, understand the Istio architecture. The following diagram shows the main components of Istio and how they interact with each other.
 
-![Istio architecture with istiod and the Envoy proxies](./assets/istio-architecture.svg)
+![Istio architecture with istiod and the Envoy proxies](./assets/istio-architecture.png)
 
 The main component of Istio is `istiod`, which is responsible for the following tasks:
 - Managing and propagating the configuration from Kubernetes resources to the service mesh
@@ -54,7 +54,7 @@ Istio propagates the sidecar configuration to the proxies with the xDS protocol.
 
 The following diagram shows the connectivity flow in the Istio service mesh.
 
-![Connectivity flow through the Istio service mesh](./assets/istio-connection.svg)
+![Connectivity flow through the Istio service mesh](./assets/istio-connection.png)
 
 Before a request reaches the service mesh, it first resolves the host through DNS and arrives at the cloud provider's load balancer, which forwards it to the Kubernetes Service that exposes Istio Ingress Gateway. These steps belong to the cloud provider and the Kubernetes cluster, not to the Istio module, so they are outside the scope of this guide. The following steps describe the path once the request enters the mesh.
 

@@ -52,36 +52,36 @@ The mesh returns a `503` for one of the following reasons:
 
 1. Confirm that Istio Ingress Gateway has no healthy upstream for the route. Inspect the endpoints that the Envoy proxy sees for the Service.
 
-    Get the name of the Istio Ingress Gateway Pod:
+    1. Get the name of the Istio Ingress Gateway Pod:
 
-    ```bash
-    kubectl get pods --namespace istio-system --selector istio=ingressgateway --output name
-    ```
+        ```bash
+        kubectl get pods --namespace istio-system --selector istio=ingressgateway --output name
+        ```
 
-    List the endpoints for the Service that the route targets. The `--cluster` value identifies the upstream in the format `outbound|{SERVICE_PORT}||{SERVICE_FQDN}`, where `{SERVICE_FQDN}` is the fully qualified Service name, such as `app-503.app-503.svc.cluster.local`:
+    2. List the endpoints for the Service that the route targets. The `--cluster` value identifies the upstream in the format `outbound|{SERVICE_PORT}||{SERVICE_FQDN}`, where `{SERVICE_FQDN}` is the fully qualified Service name, such as `app-503.app-503.svc.cluster.local`:
 
-    ```bash
-    istioctl proxy-config endpoints {POD_NAME}.istio-system --cluster "outbound|{SERVICE_PORT}||{SERVICE_FQDN}"
-    ```
-    ```
-    ENDPOINT           STATUS        OUTLIER CHECK     CLUSTER
-    100.64.0.27:80     UNHEALTHY     OK                outbound|8000||app-503.app-503.svc.cluster.local
-    ```
+        ```bash
+        istioctl proxy-config endpoints {POD_NAME}.istio-system --cluster "outbound|{SERVICE_PORT}||{SERVICE_FQDN}"
+        ```
+        ```
+        ENDPOINT           STATUS        OUTLIER CHECK     CLUSTER
+        100.64.0.27:80     UNHEALTHY     OK                outbound|8000||app-503.app-503.svc.cluster.local
+        ```
 
-    To list every upstream at once instead of a single cluster, omit the `--cluster` flag.
+        To list every upstream at once instead of a single cluster, omit the `--cluster` flag.
 
-    If the `STATUS` column shows `UNHEALTHY`, or the list is empty, Envoy has no healthy upstream, which confirms a mesh-generated `503`. When the workload becomes ready, the same endpoint changes to `HEALTHY`:
+    3. Check the `STATUS` column. If it shows `UNHEALTHY`, or the list is empty, Envoy has no healthy upstream, which confirms a mesh-generated `503`. When the workload becomes ready, the same endpoint changes to `HEALTHY`:
 
-    ```
-    ENDPOINT           STATUS      OUTLIER CHECK     CLUSTER
-    100.64.0.28:80     HEALTHY     OK                outbound|8000||app-503.app-503.svc.cluster.local
-    ```
+        ```
+        ENDPOINT           STATUS      OUTLIER CHECK     CLUSTER
+        100.64.0.28:80     HEALTHY     OK                outbound|8000||app-503.app-503.svc.cluster.local
+        ```
 
-    If no endpoint appears at all, verify that the cluster exists for the Service and that the route targets the correct host and port:
+    4. If no endpoint appears at all, verify that the cluster exists for the Service and that the route targets the correct host and port:
 
-    ```bash
-    istioctl proxy-config cluster {POD_NAME}.istio-system --fqdn {SERVICE_FQDN}
-    ```
+        ```bash
+        istioctl proxy-config cluster {POD_NAME}.istio-system --fqdn {SERVICE_FQDN}
+        ```
 
 2. Check the workload and its endpoints:
 
@@ -108,7 +108,6 @@ The mesh returns a `503` for one of the following reasons:
 
 If the restart doesn't help, the ingress itself might be misconfigured, for example, due to a corrupted certificate. Follow these steps:
 
-<!-- tabs:start -->
 #### **Kyma Dashboard**
 
 1. Check all ports used by Istio Ingress Gateway:

@@ -16,7 +16,7 @@ curl -sD - http://{YOUR_HOST}/{YOUR_PATH}
 Compare your output with the following two cases:
 
 - If the response body is a generic Envoy message, such as `no healthy upstream`, and the `x-envoy-upstream-service-time` header is **absent**, the mesh generated the `503`. Istio Ingress Gateway could not route the request to a healthy workload, and the Envoy proxy generated the response before it reached your application. See [The `503` Comes from the Service Mesh](#the-503-comes-from-the-service-mesh).
-- If the response body is your application's own payload and the `x-envoy-upstream-service-time` header is **present**, the application generated the `503`. The request was routed correctly and reached your workload, but the application responded with `503` on its own, for example because a dependency is down or the application is overloaded. See [The `503` Comes from Your Application](#the-503-comes-from-your-application).
+- If the response body is your application's own payload and the `x-envoy-upstream-service-time` header is **present**, the application generated the `503`. The request was routed correctly and reached your workload, but the application itself responded with `503`, for example, because a dependency is down or the application is overloaded. See [The `503` Comes from Your Application](#the-503-comes-from-your-application).
 
 The `server` response header is `istio-envoy` in both cases, because every response passes back through the proxy.
 
@@ -90,7 +90,7 @@ The mesh returns a `503` for one of the following reasons:
     kubectl get endpointslices --namespace {YOUR_NAMESPACE} --selector kubernetes.io/service-name={YOUR_SERVICE}
     ```
 
-    If every endpoint reports `ready=false` or the list is empty, the Service has no healthy upstream. Fix the workload's readiness, for example a failing readiness probe or a crashing container, until at least one endpoint is ready.
+    If every endpoint reports `ready=false` or the list is empty, the Service has no healthy upstream. Resolve the workload's readiness issues, such as a failing readiness probe or a crashing container, until at least one endpoint is ready.
 
 3. Verify that the VirtualService routes to the correct host, port, and subset, and that these values match the Service.
 
@@ -106,7 +106,7 @@ The mesh returns a `503` for one of the following reasons:
     kubectl rollout status deployment istio-ingressgateway --namespace istio-system
     ```
 
-If the restart doesn't help, the ingress itself might be misconfigured, for example because of a corrupted certificate. Follow these steps:
+If the restart doesn't help, the ingress itself might be misconfigured, for example, due to a corrupted certificate. Follow these steps:
 
 <!-- tabs:start -->
 #### **Kyma Dashboard**
@@ -148,7 +148,7 @@ If the restart doesn't help, the ingress itself might be misconfigured, for exam
 <!-- tabs:end -->
 
 > ### NOTE:
-> To get a full picture of what Istio Ingress Gateway does with each request, enable access logs. The access log entry includes a response flag, such as `UH` for *no healthy upstream*, that tells you why Envoy returned the status. For more information, see [Increase Verbosity of the Istio Ingress Logs](./03-05-increase-verbosity-of-ingress-logs.md).
+> To understand how the Istio Ingress Gateway handles each request, enable access logs. The access log entry includes a response flag, such as `UH` for *no healthy upstream*, indicating why Envoy returned the status. For more information, see [Increase Verbosity of the Istio Ingress Logs](./03-05-increase-verbosity-of-ingress-logs.md).
 
 ## The `503` Comes from Your Application
 
@@ -162,12 +162,12 @@ content-length: 22
 x-envoy-upstream-service-time: 9
 server: istio-envoy
 
-application is broken
+{application-generated error response}
 ```
 
 ### Cause
 
-The application itself returns the `503`, for example because a dependency is unavailable, a connection pool is exhausted, or the application is overloaded. This is outside the scope of Istio. Istio routes the request correctly and passes the application's response back unchanged.
+The application itself returns the `503`, for example, because a dependency is unavailable, a connection pool is exhausted, or the application is overloaded. This is outside the scope of Istio. Istio routes the request correctly and passes the application's response back unchanged.
 
 ### Solution
 
@@ -178,14 +178,14 @@ The application itself returns the `503`, for example because a dependency is un
     curl -sD - http://127.0.0.1:18080/{YOUR_PATH}
     ```
 
-    A `503` returned here comes straight from the application and confirms that the mesh is not the cause. The direct response shows the application server in the `server` header, such as `nginx`, instead of `istio-envoy`:
+    A `503` returned by a direct request to the Pod indicates that the application, rather than the service mesh, causes the error. The direct response shows the application server in the `server` header, such as `nginx`, instead of `istio-envoy`:
 
     ```
     HTTP/1.1 503 Service Temporarily Unavailable
     Server: nginx/1.30.6
     Content-Length: 22
 
-    application is broken
+    {application-generated error response}
     ```
 
 2. Debug the workload, not Istio. Check the application logs and the status of its dependencies:
@@ -194,4 +194,4 @@ The application itself returns the `503`, for example because a dependency is un
     kubectl logs --namespace {YOUR_NAMESPACE} deploy/{YOUR_DEPLOYMENT} --container {YOUR_CONTAINER}
     ```
 
-3. Fix the root cause in the application, for example restore the unavailable dependency or increase the application's capacity.
+3. Fix the root cause in the application. For example, restore the unavailable dependency or increase the application's capacity.

@@ -34,7 +34,7 @@ export default [
     ] },
   { text: 'Troubleshooting', link: './troubleshooting/README', collapsed: true, items: [
     { text: 'Prerequisites and Architecture', link: './troubleshooting/03-00-prerequisites' },
-    { text: 'Network Connectivity - Diagnostics', link: './troubleshooting/03-01-network-connectivity' },
+    { text: 'Network Connectivity Diagnostics', link: './troubleshooting/03-01-network-connectivity' },
     { text: 'Increase Verbosity of the Istio Ingress Logs', link: './troubleshooting/03-05-increase-verbosity-of-ingress-logs' },
     { text: 'Diagnosing 503 Errors', link: './troubleshooting/03-10-503-diagnostics' },
     { text: 'Diagnosing 403 Errors', link: './troubleshooting/03-11-403-diagnostics' },

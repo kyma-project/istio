@@ -4,7 +4,8 @@ Follow this troubleshooting guide if a connection to a workload in the service m
 
 ## Identify the Origin of the Error
 
-A connection reset by mTLS and a connection blocked by a NetworkPolicy fail in different ways, and the error text tells them apart. The decisive signal is whether the connection reaches the Envoy proxy at all.
+When mTLS resets a connection, you get a different error than when a
+NetworkPolicy blocks it. The decisive signal is whether the connection reaches the Envoy proxy at all.
 
 Send a request to the failing workload and inspect the error. Compare your output with the following two cases:
 
@@ -12,7 +13,7 @@ Send a request to the failing workload and inspect the error. Compare your outpu
 - **A NetworkPolicy blocks the connection:** The connection fails with `Connection refused` or a connection timeout, with no `503` response and no `server: istio-envoy` header. A NetworkPolicy dropped the packets at the network layer, below Istio, so the connection never reached the Envoy proxy. See [A NetworkPolicy Blocks the Connection](#a-networkpolicy-blocks-the-connection).
 
 > ### NOTE:
-> Use the error text and the absence of a mesh response to decide the origin. An mTLS reset reaches the Envoy proxy and is actively reset, whereas a NetworkPolicy drop never reaches the proxy, so the connection is refused or times out without any `server: istio-envoy` header.
+> Check the error message to help identify the cause. If mTLS causes the failure, the connection reaches the Envoy proxy, which resets it. If a NetworkPolicy blocks the traffic before it reaches the proxy, the connection is refused or times out. Neither case returns an HTTP response, so there is no `server: istio-envoy` header.
 
 ## mTLS Resets the Connection
 
@@ -39,14 +40,14 @@ A connection fails with `Connection refused` or a connection timeout, and no `50
 
 By default, a Pod accepts traffic from any source. When you create a NetworkPolicy that selects a Pod, that Pod rejects all traffic that the policy does not explicitly allow. Two cases break a workload in the service mesh:
 
-- **A NetworkPolicy blocks traffic to or from the application.** The policy selects an istio-enabled workload and does not allow the traffic that you send. The request to the application times out, although Istio is configured correctly.
-- **A NetworkPolicy blocks a sidecar from reaching the Istio control plane.** The policy restricts egress from an istio-enabled workload and does not allow traffic to `istiod` on the xDS port `15012`. The sidecar cannot fetch its configuration, so its routing becomes stale, and new connections fail.
+- **A NetworkPolicy blocks traffic to or from the application.** The policy selects an Istio-enabled workload and does not allow the traffic that you send. The request to the application times out, although Istio is configured correctly.
+- **A NetworkPolicy blocks a sidecar from reaching the Istio control plane.** The policy restricts egress from an Istio-enabled workload and does not allow traffic to `istiod` on the xDS port `15012`. The sidecar cannot fetch its configuration, so its routing becomes stale, and new connections fail.
 
 ### Solution
 
 Follow these steps to find out whether a NetworkPolicy causes the failure and how to fix it.
 
-1. Check whether any NetworkPolicy resources are present. If the cluster has none, a NetworkPolicy is not the cause:
+1. Check whether any NetworkPolicy resources are present. If none exist, you can rule out a NetworkPolicy as the cause:
 
     ```bash
     kubectl get networkpolicies --all-namespaces
@@ -56,9 +57,9 @@ Follow these steps to find out whether a NetworkPolicy causes the failure and ho
     kube-system   gardener.cloud--deny-all   <none>                 4h
     ```
 
-    The `POD-SELECTOR` column shows which Pods each policy selects. An empty selector, shown as `<none>`, selects every Pod in the policy's namespace, including istio-enabled workloads.
+    The `POD-SELECTOR` column shows which Pods each policy selects. An empty selector, shown as `<none>`, selects every Pod in the policy's namespace, including Istio-enabled workloads.
 
-2. Find out whether a policy selects an istio-enabled workload or an Istio component. First, confirm that the affected Pod runs a sidecar. A Pod with a sidecar reports two containers in the `READY` column, such as `2/2`:
+2. Find out whether a policy selects an Istio-enabled workload or an Istio component. First, confirm that the affected Pod runs a sidecar. A Pod with a sidecar reports two containers in the `READY` column, such as `2/2`:
 
     ```bash
     kubectl get pods --namespace {YOUR_NAMESPACE}
@@ -91,13 +92,13 @@ Follow these steps to find out whether a NetworkPolicy causes the failure and ho
 4. Adjust the NetworkPolicy resources. A NetworkPolicy only allows traffic, so you add rules until the required traffic is permitted:
 
     - Allow ingress to the application from its clients on the application port.
-    - Allow egress from istio-enabled workloads to `istiod` in the `istio-system` namespace on ports `15012` and `15014`.
+    - Allow egress from Istio-enabled workloads to `istiod` in the `istio-system` namespace on ports `15012` and `15014`.
     - Allow egress to the cluster DNS service on port `53`, so the sidecar can resolve service names.
 
 As a best practice, follow these recommendations when you use NetworkPolicy resources with the service mesh:
 
 - Start from a known baseline. Apply a default-deny policy, then add explicit allow rules for the traffic that you expect, instead of denying individual flows.
-- Keep the control plane reachable. Always allow egress to `istiod` on ports `15012` and `15014` from every istio-enabled workload, and allow DNS egress on port `53`.
+- Keep the control plane reachable. Always allow egress to `istiod` on ports `15012` and `15014` from every Istio-enabled workload, and allow DNS egress on port `53`.
 - Scope policies with precise selectors. A policy with an empty `spec.podSelector` selects every Pod in the namespace, which can block Istio components unintentionally.
 - Verify the effect after each change. Run `istioctl proxy-status` to confirm that every sidecar still synchronizes with `istiod`.
 

@@ -4,7 +4,7 @@ Follow this troubleshooting guide if you receive the `403 Forbidden` status code
 
 ## Identify the Origin of the `403` Error
 
-A `403` error from an AuthorizationPolicy, a `403` error from your application, and a `403` error from an external firewall look similar, but you can tell them apart by inspecting the response. Identifying the origin saves you from looking in the wrong place.
+A `403` error from an AuthorizationPolicy, a `403` error from your application, and a `403` error from an external firewall look similar, but you can tell them apart by inspecting the response.
 
 The decisive signal is the response body. An AuthorizationPolicy returns the fixed plain-text body `RBAC: access denied`, whereas your application returns its own payload, and an external component returns a vendor-specific page or nothing.
 
@@ -36,7 +36,7 @@ To decide which case applies, use the following signals:
 
 - The response has the `server: istio-envoy` header and an `RBAC: access denied` body. An AuthorizationPolicy rejected the request, regardless of whether the `x-envoy-upstream-service-time` header is present. See [The `403` Comes from an AuthorizationPolicy](#the-403-comes-from-an-authorizationpolicy).
 - The response has the `server: istio-envoy` header and your application's own body, not `RBAC: access denied`. The `x-envoy-upstream-service-time` header is present. Your application generated the `403` error. See [The `403` Comes from Your Application](#the-403-comes-from-your-application).
-- The response has no `server: istio-envoy` header, or carries a vendor-specific error page instead of `RBAC: access denied`. Something other than Istio produced the `403` error, such as an external proxy or WAF in front of the cluster. This is not an Istio problem. See [The `403` Comes from Outside the Mesh](#the-403-comes-from-outside-the-mesh).
+- The response has no `server: istio-envoy` header, or it carries a vendor-specific error page instead of `RBAC: access denied`. Something other than Istio produced the `403` error, such as an external proxy or WAF in front of the cluster. This issue is outside the scope of Istio. See [The `403` Comes from Outside the Mesh](#the-403-comes-from-outside-the-mesh).
 
 > ### NOTE:
 > Use the response body to decide the origin, not the `server` header or the `x-envoy-upstream-service-time` header. The proxy adds `server: istio-envoy` to both an AuthorizationPolicy response and an application response, and the `x-envoy-upstream-service-time` header can appear on a sidecar-enforced AuthorizationPolicy response as well. Only the `RBAC: access denied` body uniquely identifies an AuthorizationPolicy rejection.
@@ -70,7 +70,7 @@ RBAC: access denied
 
 ### Cause
 
-A misconfigured AuthorizationPolicy is a common cause of `403` errors. A frequent example is an unnecessary port number in the Host header. Istio checks the host as-is. If the Host header contains a port number and the AuthorizationPolicy defines only a hostname, Istio denies the request.
+A misconfigured AuthorizationPolicy is a common cause of `403` errors. A frequent example is an unnecessary port number in the `Host` header. Istio checks the host as-is. If the `Host` header contains a port number and the AuthorizationPolicy defines only a hostname, Istio denies the request.
 
 The following AuthorizationPolicy allows only the hostname `httpbin.local.kyma.dev`, without a port:
 
@@ -93,7 +93,7 @@ spec:
       app: istio-ingressgateway
 ```
 
-A request whose Host header includes the port `443` does not match the policy, so Istio denies it:
+A request whose `Host` header includes the port `443` does not match the policy, so Istio denies it:
 
 ```bash
 curl -k -H "Host: httpbin.local.kyma.dev:443" https://httpbin.local.kyma.dev/headers
@@ -234,4 +234,5 @@ An external firewall, proxy, or WAF in front of the cluster rejects the request 
 
 ### Solution
 
-Because the block is outside the mesh, you cannot fix it with Istio configuration. Contact your network administrator, and provide the request details and the full response. To confirm that the traffic is blocked at the network layer rather than inside the mesh, see [Check for an External Firewall Blocking Access](./03-01-network-connectivity.md#check-for-an-external-firewall-blocking-access).
+Because the block is outside the mesh, you cannot fix it by changing the Istio
+configuration. Contact your network administrator and provide the request details and the full response. To confirm that the traffic is blocked at the network layer rather than inside the mesh, see [Check for an External Firewall Blocking Access](./03-01-network-connectivity.md#check-for-an-external-firewall-blocking-access).

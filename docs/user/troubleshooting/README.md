@@ -5,7 +5,7 @@ The troubleshooting section aims to identify the most common recurring problems 
 ## Guides
 
 - [Prerequisites and Architecture](./03-00-prerequisites.md) - Install the required tools and learn how a request flows through the service mesh. Start here before running network diagnostics.
-- [Network Connectivity - Diagnostics](./03-01-network-connectivity.md) - Step-by-step diagnostics for external connectivity issues, covering the ingress gateway, Gateway resource, DNS, external firewalls, and Istio traffic resources.
+- [Network Connectivity Diagnostics](./03-01-network-connectivity.md) - Follow step-by-step guidance to diagnose common connectivity problems and identify where requests fail. The guide covers the ingress gateway, Gateway resource, DNS, external firewalls, and Istio traffic resources.
 - [Increase Verbosity of the Istio Ingress Logs](./03-05-increase-verbosity-of-ingress-logs.md) - Enable Istio access logs to see whether requests reach the Ingress Gateway and what happens to them.
 - [Diagnosing 503 Errors](./03-10-503-diagnostics.md) - Determine whether a `503 Service Unavailable` response comes from the service mesh having no healthy upstream or from your application, and fix the right component.
 - [Diagnosing 403 Errors](./03-11-403-diagnostics.md) - Determine whether a `403 Forbidden` response comes from an Istio AuthorizationPolicy, your application, or an external firewall, and fix the right component, including the port-in-Host-header case.

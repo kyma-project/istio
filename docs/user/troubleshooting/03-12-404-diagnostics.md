@@ -82,7 +82,7 @@ To find out which routes the Envoy proxy applies, inspect the live route configu
     kubectl get virtualservices --all-namespaces
     ```
 
-Verify that a VirtualService exposes the requested host and path, and that it binds to the correct Gateway resource. If no route matches, add or correct the VirtualService route. For more information about debugging Istio traffic resources, see [Network Connectivity - Diagnostics](./03-01-network-connectivity.md#debugging-istio-resources).
+Verify that a VirtualService exposes the requested host and path, and that it binds to the correct Gateway resource. If no route matches, add or correct the VirtualService route. For more information about debugging Istio traffic resources, see [Network Connectivity Diagnostics](./03-01-network-connectivity.md#debugging-istio-resources).
 
 ## Two Gateway Resources Share the Same Host
 
@@ -94,7 +94,9 @@ Two Gateway resources define the same host, so Istio Ingress Gateway cannot reli
 
 When you create two Gateway resources with the same host, selector, and port, they conflict. Istio Ingress Gateway cannot match an incoming request to a specific Gateway resource. For more information about this behavior, see the [Istio documentation](https://istio.io/latest/docs/ops/common-problems/network-issues/#404-errors-occur-when-multiple-gateways-configured-with-same-tls-certificate).
 
-A conflict can span namespaces. For example, a Gateway resource in the `default` namespace and a Gateway resource in another namespace can both claim the same host.
+Gateway resources can conflict even if they're in different namespaces. For
+example, a Gateway resource in the `default` namespace and a Gateway resource
+in another namespace conflict if they use the same host.
 
 When you create Ingress resources that use Istio as their ingress class, a Gateway entry is also created underneath. To check the cluster's configuration, run the `istioctl x internal-debug configz` command.
 
@@ -134,7 +136,7 @@ not found by the application
 
 ### Cause
 
-Istio routes the request correctly, but the application rejects it with its own `404` response, for example because the requested path does not exist in the application. Because the response originates in the workload, no Istio configuration change fixes it.
+Istio routes the request correctly, but the application rejects it with its own `404` response, for example, because the requested path does not exist in the application. Because the response originates from the workload, you can't fix it by changing the Istio configuration.
 
 ### Solution
 

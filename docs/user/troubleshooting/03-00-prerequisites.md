@@ -41,7 +41,7 @@ Warning: version difference between client (1.37) and server (1.35) exceeds the 
 
 ## Understanding Istio Architecture
 
-Before you start troubleshooting, understand the Istio architecture. The following diagram shows the main components of Istio and how they interact with each other.
+Before you start troubleshooting, familiarize yourself with the Istio architecture. The following diagram shows the main components of Istio and how they interact with each other.
 
 ![Istio architecture with istiod and the Envoy proxies](./assets/istio-architecture.png)
 
@@ -58,15 +58,17 @@ The following diagram shows the connectivity flow in the Istio service mesh.
 
 Before a request reaches the service mesh, it first resolves the host through DNS and arrives at the cloud provider's load balancer, which forwards it to the Kubernetes Service that exposes Istio Ingress Gateway. These steps belong to the cloud provider and the Kubernetes cluster, not to the Istio module, so they are outside the scope of this guide. The following steps describe the path once the request enters the mesh.
 
-All connections go through Istio Ingress Gateway, which is the entrypoint to the service mesh. Istio Ingress Gateway is deployed during the installation stage with a Kubernetes Service of type `LoadBalancer`. The Service exposes Istio Ingress Gateway to the external world with a dedicated IP address that the cloud provider assigns. You expose services through Istio Ingress Gateway with the following Istio resources:
+All connections go through Istio Ingress Gateway, which is the entry point to the service mesh. Istio Ingress Gateway is deployed during the installation stage with a Kubernetes Service of type `LoadBalancer`. The Service exposes Istio Ingress Gateway to the external world using a dedicated IP address assigned by the cloud provider. You expose services through Istio Ingress Gateway with the following Istio resources:
 - Gateway
 - VirtualService
 - AuthorizationPolicy
 - DestinationRule
 
-When a request reaches the service mesh, it passes through two enforcement points before your application handles it: Istio Ingress Gateway and the istio-proxy sidecar running alongside the workload. Both are Envoy proxies, and both apply the configuration propagated by `istiod`. A request can be accepted, routed, or rejected at either point. Understanding this flow helps you determine where a connection is blocked. A request travels through the mesh in the following steps:
+When a request reaches the service mesh, it passes through two enforcement points before your application handles it: Istio Ingress Gateway and the istio-proxy sidecar running alongside the workload. Both are Envoy proxies that apply the configuration propagated by `istiod`, and either can accept, route, or reject a request. Understanding this flow helps you determine where a connection is blocked.
 
-1. The request arrives at Istio Ingress Gateway, the entrypoint to the service mesh.
+A request travels through the mesh in the following sequence:
+
+1. The request arrives at Istio Ingress Gateway, the entry point to the service mesh.
 2. Istio Ingress Gateway processes the request. It applies the security policies, such as `AuthorizationPolicy` and `RequestAuthentication`, and matches the request against the configured routes defined by the Gateway and VirtualService resources. At this point, the request can already be rejected, for example with a `403 Forbidden` or `404 Not Found` response.
 3. Istio Ingress Gateway opens a connection to the target workload, selected according to the matched route and any DestinationRule configuration.
 4. The istio-proxy sidecar of the workload receives the connection. Because the sidecar intercepts all inbound traffic, the request reaches the proxy before the application container.

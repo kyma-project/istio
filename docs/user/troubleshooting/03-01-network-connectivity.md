@@ -1,9 +1,9 @@
-# Network Connectivity - Diagnostics
+# Network Connectivity Diagnostics
 
 If you're having trouble with network connectivity and don't know where to begin troubleshooting, follow these steps. The issues might not be directly related to Istio, but could be caused by misconfigured Istio resources or other cluster resources.
 
 > ### Note:
-> Before you start, install the required tools and get familiar with the Istio architecture. For more information, see [Network Connectivity - Prerequisites and Architecture](./03-00-prerequisites.md).
+> Before you start, install the required tools and get familiar with the Istio architecture. For more information, see [Prerequisites and Architecture](./03-00-prerequisites.md).
 
 - Verify the state of the Istio CR. If it is in the `Warning` state, check the warning message and conditions. It might help you begin the investigation.
 - Verify that no [NetworkPolicies](https://kubernetes.io/docs/concepts/services-networking/network-policies/) affect the connectivity by blocking traffic between Pods in the service mesh. To find all NetworkPolicy resources, run `kubectl get networkpolicies --all-namespaces`.
@@ -20,7 +20,7 @@ Begin with two quick checks that narrow down the problem. First, run `istioctl a
 
 ### Analyze the Mesh Configuration
 
-Run `istioctl analyze` to check the state of your mesh and point out common errors and misconfigurations.
+Run `istioctl analyze` to detect common errors and misconfigurations in your mesh.
 
 - Analyze a specific namespace:
   ```bash
@@ -32,24 +32,32 @@ Run `istioctl analyze` to check the state of your mesh and point out common erro
   istioctl analyze --all-namespaces
   ```
 
-If the analyzer finds no problems, it reports that no validation issues were found:
+If the analyzer doesn't find any problems, you get the following output:
 
 ```
 ✔ No validation issues found when analyzing namespace: default.
 ```
 
-Otherwise, the analyzer prints one line per finding. Each line includes a severity (`Error`, `Warning`, or `Info`), a message code such as `IST0133`, the kind, namespace, and name of the affected resource, and a description:
+If the analyzer finds issues, it prints one line per finding. Each line contains the following information:
+
+- The severity: `Error`, `Warning`, or `Info`
+- The message code, such as `IST0133`
+- The kind, namespace, and name of the affected resource
+- A description of the issue
+
+See the following example output:
 
 ```
 Warning [IST0133] (AuthorizationPolicy app-403/deny-no-port) Schema validation warning: configured AuthorizationPolicy will deny all traffic to TCP ports under its scope due to the use of only HTTP attributes in a DENY rule; it is recommended to explicitly specify the port
 Error [IST0145] (Gateway default/app-404-gateway) Conflict with gateways team-b/other-gateway (workload selector istio=ingressgateway, port 80, hosts app-404.example.com).
 ```
 
-Review all output carefully and use the message code and the named resource to decide where to look next:
+Review all output carefully and use the message code and the named resource to decide what to check next. The analyzer reports the resources using the `(Kind namespace/name)` format. For example, the previous output shows the following issues:
 
 - `IST0133`: A `DENY` AuthorizationPolicy uses only HTTP attributes and might block more TCP traffic than intended. See [AuthorizationPolicies](#authorizationpolicies).
 - `IST0145`: Two Gateway resources claim the same host, which causes `404` errors. See [Diagnosing 404 Errors](./03-12-404-diagnostics.md).
-- Any other finding: Open the resource named in the message, which the analyzer reports as `(Kind namespace/name)`, and verify its configuration.
+
+For any other finding, open the resource named in the message and verify its configuration.
 
 A clean `istioctl analyze` result does not guarantee that traffic flows. It only means that the mesh configuration is internally consistent. Continue with the `curl` check.
 
@@ -97,7 +105,7 @@ Analyze the `curl` output to decide where to continue:
 
 ## Connection Does Not Reach the Service Mesh
 
-Several things can cause issues with external connectivity to the service mesh. Follow these steps to verify that the cluster endpoint is reachable and working.
+Several issues can affect external connectivity to the service mesh. Follow these steps to verify that the cluster endpoint is reachable and working.
 
 ### Check the Istio Ingress Gateway Service
 
@@ -119,10 +127,9 @@ The cloud provider typically performs this configuration, which is not part of I
 
 ### Check the Istio Gateway Resource
 
-The Gateway resource defines the ports and protocols that the `istio-ingressgateway` Service listens on. If the Gateway resource is misconfigured, the service mesh is not reachable. The user creates this resource and is responsible for any changes to it.
+The Gateway resource defines the ports and protocols that the `istio-ingressgateway` Service listens on. If the Gateway resource is misconfigured, the service mesh is not reachable. 
 
-> ### Note:
-> If you use SAP BTP, Kyma runtime, the API Gateway module manages the Gateway resource `kyma-gateway`. However, the same troubleshooting steps apply.
+In SAP BTP, Kyma runtime, the API Gateway module creates and manages the default Gateway resource `kyma-gateway` in the `kyma-system` namespace. If you create your own Gateway resources, you're responsible for their configuration.
 
 List all Gateway resources in a namespace:
 ```bash
@@ -212,7 +219,7 @@ Address: XXX.XXX.XXX.XXX
 
 If you get a different IP address than the external IP of the `istio-ingressgateway` Service, or if you get an `NXDOMAIN` error, the hostname does not resolve correctly. Update the DNS records to point to the correct external IP of the `istio-ingressgateway` Service.
 
-This configuration is not part of Istio, and the DNS provider typically performs it. If you have this problem, contact your DNS provider for support.
+This configuration is not part of Istio, and the DNS provider typically handles it. If the hostname doesn't resolve correctly, contact your DNS provider.
 
 If you use Gardener, you can manage DNS records with the Gardener DNS extension. For more information, see the [Gardener documentation](https://gardener.cloud/docs/extensions/others/gardener-extension-shoot-dns-service/#gardener-extension-for-dns-services).
 
@@ -269,29 +276,15 @@ Check the following signals in the response:
 
 ### Check for an External Firewall Blocking Access
 
-If the DNS resolves correctly to the external IP but the connection still fails, the traffic might be blocked **before** it reaches Istio Ingress Gateway. A firewall outside of the cluster typically causes this, such as a cloud provider security group, a network ACL, or a corporate firewall between you and the cluster. This is a network-layer (L3/L4) block and is not part of Istio.
+If the DNS resolves correctly to the external IP but the connection still fails, the traffic might be blocked **before** it reaches Istio Ingress Gateway. The most common cause is a firewall outside the cluster, such as a cloud
+provider security group, a network ACL, or a corporate firewall between you
+and the cluster. This is a network-layer (L3/L4) block and is not part of Istio.
 
-The key symptom of an external firewall block is that the connection never completes. There is no HTTP response at all, and therefore no `server: istio-envoy` header. Instead, you see a TCP-level failure, such as a timeout or a connection refused. Compare the following two outcomes.
+The key symptom of an external firewall block is that the connection never completes. There's no HTTP response at all, so there's no `server: istio-envoy` header either. Instead, you get a TCP-level failure, such as a timeout or a connection refused error. Compare the following two outcomes.
 
-A connection timeout typically means that a firewall silently drops the packets:
+- A connection timeout typically means that a firewall silently drops the packets:
 
-```bash
-curl -Lv --connect-timeout 5 http://host.my-service.example.com
-```
-```
-*   Trying XXX.XXX.XXX.XXX:80...
-* connect to XXX.XXX.XXX.XXX port 80 failed: Operation timed out
-* Failed to connect to host.my-service.example.com port 80 after 5002 ms: Couldn't connect to server
-* Closing connection
-curl: (28) Failed to connect to host.my-service.example.com port 80 after 5002 ms: Couldn't connect to server
-```
-
-A `Connection refused` error typically means that nothing is listening on that port, or a firewall actively rejects the packets:
-
-```
-*   Trying XXX.XXX.XXX.XXX:80...
-* connect to XXX.XXX.XXX.XXX port 80 failed: Connection refused
-```
+    
 
 To find out whether the port itself is reachable, independently of HTTP, test the TCP connection directly. For example, test port 80 and the HTTPS port 443:
 
@@ -300,7 +293,7 @@ nc -zv host.my-service.example.com 80
 nc -zv host.my-service.example.com 443
 ```
 
-If `nc` cannot open the connection, but the `istio-ingressgateway` Service and the Gateway resource are both configured correctly, the block is almost certainly external to the cluster. Verify the following:
+If `nc` cannot open the connection, but the `istio-ingressgateway` Service and the Gateway resource are both configured correctly, the block is almost certainly external to the cluster. Verify the following conditions are met:
 
 - The `istio-ingressgateway` Service exposes the port that you test. Only the ports listed in the Service are reachable through the load balancer:
   ```bash

@@ -155,3 +155,88 @@ func TestRestartReplicaSetPods_IgnoresNotFound(t *testing.T) {
 		t.Errorf("expected nil for already-missing pod, got %v", err)
 	}
 }
+
+func TestDeployment(t *testing.T) {
+	s := runtime.NewScheme()
+	_ = appsv1.AddToScheme(s)
+
+	d := &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Name: "d", Namespace: "default"}}
+	c := fake.NewClientBuilder().WithScheme(s).WithObjects(d).Build()
+
+	if err := Deployment(context.Background(), c, d, "fp-dep"); err != nil {
+		t.Fatalf("Deployment: %v", err)
+	}
+
+	fresh := &appsv1.Deployment{}
+	if err := c.Get(context.Background(), client.ObjectKeyFromObject(d), fresh); err != nil {
+		t.Fatalf("get: %v", err)
+	}
+	if fresh.Spec.Template.Annotations[HashAnnotation] != "fp-dep" {
+		t.Errorf("hash annotation = %q, want %q", fresh.Spec.Template.Annotations[HashAnnotation], "fp-dep")
+	}
+	assertRestartAnnotationRecent(t, fresh.Spec.Template.Annotations[RestartAnnotation])
+}
+
+func TestStatefulSet(t *testing.T) {
+	s := runtime.NewScheme()
+	_ = appsv1.AddToScheme(s)
+
+	sts := &appsv1.StatefulSet{ObjectMeta: metav1.ObjectMeta{Name: "s", Namespace: "default"}}
+	c := fake.NewClientBuilder().WithScheme(s).WithObjects(sts).Build()
+
+	if err := StatefulSet(context.Background(), c, sts, "fp-sts"); err != nil {
+		t.Fatalf("StatefulSet: %v", err)
+	}
+
+	fresh := &appsv1.StatefulSet{}
+	if err := c.Get(context.Background(), client.ObjectKeyFromObject(sts), fresh); err != nil {
+		t.Fatalf("get: %v", err)
+	}
+	if fresh.Spec.Template.Annotations[HashAnnotation] != "fp-sts" {
+		t.Errorf("hash annotation = %q, want %q", fresh.Spec.Template.Annotations[HashAnnotation], "fp-sts")
+	}
+	assertRestartAnnotationRecent(t, fresh.Spec.Template.Annotations[RestartAnnotation])
+}
+
+func TestDaemonSet(t *testing.T) {
+	s := runtime.NewScheme()
+	_ = appsv1.AddToScheme(s)
+
+	ds := &appsv1.DaemonSet{ObjectMeta: metav1.ObjectMeta{Name: "ds", Namespace: "default"}}
+	c := fake.NewClientBuilder().WithScheme(s).WithObjects(ds).Build()
+
+	if err := DaemonSet(context.Background(), c, ds, "fp-ds"); err != nil {
+		t.Fatalf("DaemonSet: %v", err)
+	}
+
+	fresh := &appsv1.DaemonSet{}
+	if err := c.Get(context.Background(), client.ObjectKeyFromObject(ds), fresh); err != nil {
+		t.Fatalf("get: %v", err)
+	}
+	if fresh.Spec.Template.Annotations[HashAnnotation] != "fp-ds" {
+		t.Errorf("hash annotation = %q, want %q", fresh.Spec.Template.Annotations[HashAnnotation], "fp-ds")
+	}
+	assertRestartAnnotationRecent(t, fresh.Spec.Template.Annotations[RestartAnnotation])
+}
+
+func TestAlreadyRestartedForConfig(t *testing.T) {
+	tests := []struct {
+		name    string
+		stamped string
+		hash    string
+		want    bool
+	}{
+		{name: "empty hash with stamped", stamped: "abc", hash: "", want: false},
+		{name: "empty hash and empty stamped", stamped: "", hash: "", want: false},
+		{name: "stamped equals hash", stamped: "abc", hash: "abc", want: true},
+		{name: "stamped differs from hash", stamped: "abc", hash: "def", want: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := AlreadyRestartedForConfig(tt.stamped, tt.hash); got != tt.want {
+				t.Errorf("AlreadyRestartedForConfig(%q, %q) = %v, want %v", tt.stamped, tt.hash, got, tt.want)
+			}
+		})
+	}
+}

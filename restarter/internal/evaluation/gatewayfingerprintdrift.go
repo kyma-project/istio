@@ -1,4 +1,4 @@
-package v2
+package evaluation
 
 import (
 	"slices"
@@ -10,16 +10,16 @@ const gatewayLabelKey = "istio"
 
 var gatewayLabelValues = []string{"ingressgateway", "egressgateway"}
 
-// GatewayFingerprintDriftChanged is an Evaluator that detects when an Istio
+// GatewayFingerprintChanged is an Evaluator that detects when an Istio
 // gateway Deployment's fingerprint annotation differs from the current
 // fingerprint value. It acts on Deployments labelled istio=ingressgateway or
 // istio=egressgateway to provide defense-in-depth isolation.
-type GatewayFingerprintDriftChanged struct {
+type GatewayFingerprintChanged struct {
 	currentFingerprint string
 }
 
-func (e *GatewayFingerprintDriftChanged) Name() string {
-	return "GatewayFingerprintDriftChanged"
+func (e *GatewayFingerprintChanged) Name() string {
+	return "GatewayFingerprintChanged"
 }
 
 // Evaluate returns Restart when obj is an Istio gateway Deployment (labelled
@@ -27,7 +27,7 @@ func (e *GatewayFingerprintDriftChanged) Name() string {
 // differs from the current fingerprint. It returns Continue for empty current
 // fingerprint, non-Deployment objects, non-gateway Deployments, Pods, or
 // matching annotations.
-func (e *GatewayFingerprintDriftChanged) Evaluate(obj Object) Decision {
+func (e *GatewayFingerprintChanged) Evaluate(obj Object) Decision {
 	if e.currentFingerprint == "" {
 		return Continue
 	}
@@ -52,14 +52,14 @@ func (e *GatewayFingerprintDriftChanged) Evaluate(obj Object) Decision {
 // getStamp extracts the fingerprint annotation from the Deployment's pod
 // template. Returns a pointer to the value; the empty string when absent (nil
 // map or missing key) so that an unstamped gateway triggers a restart.
-func (e *GatewayFingerprintDriftChanged) getStamp(deployment *appsv1.Deployment) *string {
-	return new(deployment.Spec.Template.ObjectMeta.Annotations[fingerprintAnnotationKey])
+func (e *GatewayFingerprintChanged) getStamp(deployment *appsv1.Deployment) *string {
+	return new(deployment.Spec.Template.ObjectMeta.Annotations[FingerprintAnnotationKey])
 }
 
-// NewGatewayFingerprintDriftChanged returns an Evaluator that detects fingerprint
+// NewGatewayFingerprintChanged returns an Evaluator that detects fingerprint
 // drift for Istio gateway Deployments.
-func NewGatewayFingerprintDriftChanged(currentFingerprint string) Evaluator {
-	return &GatewayFingerprintDriftChanged{
+func NewGatewayFingerprintChanged(currentFingerprint string) Evaluator {
+	return &GatewayFingerprintChanged{
 		currentFingerprint: currentFingerprint,
 	}
 }

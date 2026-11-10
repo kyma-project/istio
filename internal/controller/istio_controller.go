@@ -82,18 +82,23 @@ func NewController(mgr manager.Manager, options ControllerOptions) *IstioReconci
 	statusHandler := status.NewStatusHandler(mgr.GetClient())
 	podsLister := pods.NewPods(mgr.GetClient(), &logger)
 	actionRestarter := restart.NewActionRestarter(mgr.GetClient(), &logger)
-	restarters := selectRestarters(options.EnableRestart, []restarter.Restarter{
-		restarter.NewIngressGatewayRestarter(mgr.GetClient(), []predicates.IngressGatewayPredicate{}, statusHandler),
-		restarter.NewSidecarsRestarter(
-			mgr.GetLogger(),
-			mgr.GetClient(),
-			&merger,
-			sidecars.NewProxyRestarter(mgr.GetClient(), podsLister, actionRestarter, &logger),
-			statusHandler,
-			options.IstioImages,
-		),
-		restarter.NewForNetworkPolicy(mgr.GetClient(), statusHandler),
-	})
+	// When restarting is disabled the slice stays nil, which turns the reconcile
+	// restart step into a no-op (restarter.Restart returns nil for an empty slice).
+	var restarters []restarter.Restarter
+	if options.EnableRestart {
+		restarters = []restarter.Restarter{
+			restarter.NewIngressGatewayRestarter(mgr.GetClient(), []predicates.IngressGatewayPredicate{}, statusHandler),
+			restarter.NewSidecarsRestarter(
+				mgr.GetLogger(),
+				mgr.GetClient(),
+				&merger,
+				sidecars.NewProxyRestarter(mgr.GetClient(), podsLister, actionRestarter, &logger),
+				statusHandler,
+				options.IstioImages,
+			),
+			restarter.NewForNetworkPolicy(mgr.GetClient(), statusHandler),
+		}
+	}
 	userResources := resources.NewUserResources(mgr.GetClient())
 
 	return &IstioReconciler{
@@ -109,16 +114,6 @@ func NewController(mgr manager.Manager, options ControllerOptions) *IstioReconci
 		crMetrics:              options.CRMetrics,
 		istioImages:            options.IstioImages,
 	}
-}
-
-// selectRestarters returns the given restarters when restarting is enabled, or
-// an empty slice when it is disabled, which turns the reconcile restart step
-// into a no-op (restarter.Restart returns nil for an empty slice).
-func selectRestarters(enableRestart bool, restarters []restarter.Restarter) []restarter.Restarter {
-	if !enableRestart {
-		return nil
-	}
-	return restarters
 }
 
 //nolint:gocognit,funlen // cognitive complexity 30 of func `(*IstioReconciler).Reconcile` is high (> 20), Function 'Reconcile' has too many statements (58 > 50) TODO: refactor this function

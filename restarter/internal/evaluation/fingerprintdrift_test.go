@@ -1,8 +1,9 @@
-package v2
+package evaluation_test
 
 import (
 	"testing"
 
+	"github.com/kyma-project/istio/operator/restarter/internal/evaluation"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -80,57 +81,57 @@ func replicaSetWithStamp(stamp string) client.Object {
 	}
 }
 
-func TestFingerprintDriftChanged_Evaluate(t *testing.T) {
+func TestFingerprintChanged_Evaluate(t *testing.T) {
 	tc := []struct {
 		name           string
 		currentFP      string
 		object         client.Object
-		expectDecision Decision
+		expectDecision evaluation.Decision
 	}{
 		{
 			name:           "empty fingerprint + Deployment with any stamp",
 			currentFP:      "",
 			object:         deploymentWithStamp("old"),
-			expectDecision: Continue,
+			expectDecision: evaluation.Restart,
 		},
 		{
 			name:           "Deployment stamp == fingerprint",
 			currentFP:      "same",
 			object:         deploymentWithStamp("same"),
-			expectDecision: Continue,
+			expectDecision: evaluation.Continue,
 		},
 		{
 			name:           "Deployment stamp != fingerprint",
 			currentFP:      "new",
 			object:         deploymentWithStamp("old"),
-			expectDecision: Restart,
+			expectDecision: evaluation.Restart,
 		},
 		{
 			name:           "Deployment empty stamp + non-empty fingerprint",
 			currentFP:      "new",
 			object:         deploymentWithoutStamp(),
-			expectDecision: Restart,
+			expectDecision: evaluation.Restart,
 		},
 		{
 			name:           "StatefulSet stamp != fingerprint",
 			currentFP:      "new",
 			object:         statefulSetWithStamp("old"),
-			expectDecision: Restart,
+			expectDecision: evaluation.Restart,
 		},
 		{
 			name:           "DaemonSet stamp != fingerprint",
 			currentFP:      "new",
 			object:         daemonSetWithStamp("old"),
-			expectDecision: Restart,
+			expectDecision: evaluation.Restart,
 		},
 		{
 			name:           "ReplicaSet stamp != fingerprint",
 			currentFP:      "new",
 			object:         replicaSetWithStamp("old"),
-			expectDecision: Restart,
+			expectDecision: evaluation.Restart,
 		},
 		{
-			name: "Pod with any annotations",
+			name:      "Pod with any annotations",
 			currentFP: "new",
 			object: &corev1.Pod{
 				ObjectMeta: metav1.ObjectMeta{
@@ -141,18 +142,18 @@ func TestFingerprintDriftChanged_Evaluate(t *testing.T) {
 					},
 				},
 			},
-			expectDecision: Continue,
+			expectDecision: evaluation.Continue,
 		},
 		{
 			name:           "non-workload object (Namespace)",
 			currentFP:      "new",
 			object:         &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "test-ns"}},
-			expectDecision: Continue,
+			expectDecision: evaluation.Continue,
 		},
 	}
 	for _, tt := range tc {
 		t.Run(tt.name, func(t *testing.T) {
-			eval := NewFingerprintDriftChanged(tt.currentFP)
+			eval := evaluation.NewFingerprintChanged(tt.currentFP)
 			d := eval.Evaluate(tt.object)
 			if d != tt.expectDecision {
 				t.Errorf("wrong decision: got %v, want %v", d, tt.expectDecision)

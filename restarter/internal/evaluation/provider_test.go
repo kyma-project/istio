@@ -475,7 +475,7 @@ func TestProvider_Snapshot_SidecarResourcesUsed(t *testing.T) {
 }
 
 // TestProvider_Snapshot_IncludesFingerprintDrift verifies that Snapshot always
-// returns an evaluator slice containing "FingerprintDriftChanged" when the CR has
+// returns an evaluator slice containing "FingerprintChanged" when the CR has
 // a non-empty lastAppliedConfiguration annotation.
 func TestProvider_Snapshot_IncludesFingerprintDrift(t *testing.T) {
 	const annotationValue = `{"config":{"numTrustedProxies":1}}`
@@ -499,12 +499,12 @@ func TestProvider_Snapshot_IncludesFingerprintDrift(t *testing.T) {
 
 	var foundFingerprint bool
 	for _, n := range names {
-		if n == "FingerprintDriftChanged" {
+		if n == "FingerprintChanged" {
 			foundFingerprint = true
 		}
 	}
 	if !foundFingerprint {
-		t.Errorf("expected FingerprintDriftChanged evaluator, got %v", names)
+		t.Errorf("expected FingerprintChanged evaluator, got %v", names)
 	}
 }
 

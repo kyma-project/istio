@@ -93,7 +93,7 @@ func (p *Provider) ProxySnapshot(ctx context.Context) ([]Evaluator, string, erro
 }
 
 // proxyConfigFingerprint is the drift signal stamped on workloads and compared
-// by the FingerprintDriftChanged evaluator. It hashes only the proxy-restart
+// by the FingerprintChanged evaluator. It hashes only the proxy-restart
 // config fields.
 func proxyConfigFingerprint(cfg configuration.AppliedConfig) (string, error) {
 	// Sort inclusion regexps to ensure consistent hashing regardless of order

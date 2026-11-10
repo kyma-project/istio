@@ -1,8 +1,6 @@
-package v2
+package evaluation
 
 import (
-	"errors"
-
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -16,13 +14,7 @@ const (
 	Stop
 )
 
-var (
-	// ErrDecisionUnknown is returned when evaluated Evaluator returned unknown decision.
-	ErrDecisionUnknown = errors.New("unknown decision")
-)
-
 // Decision represents the verdict an Evaluator produces when evaluating an Object.
-// TODO: convert to a struct carrying a Reason string explaining the verdict.
 type Decision int
 
 func (decision Decision) String() string {

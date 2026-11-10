@@ -6,21 +6,6 @@ import (
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-
-	v2 "github.com/kyma-project/istio/operator/pkg/restarter/v2"
-)
-
-type (
-	// Evaluator aliases the v2 Evaluator so there is a single source of truth.
-	Evaluator = v2.Evaluator
-	Decision  = v2.Decision
-	Object    = v2.Object
-)
-
-const (
-	Continue = v2.Continue
-	Restart  = v2.Restart
-	Stop     = v2.Stop
 )
 
 // RestartKind distinguishes which evaluation pass produced a Restart decision.

@@ -1,8 +1,9 @@
-package v2
+package evaluation_test
 
 import (
 	"testing"
 
+	"github.com/kyma-project/istio/operator/restarter/internal/evaluation"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -15,7 +16,7 @@ func TestSidecarImageChanged_Evaluate(t *testing.T) {
 		name           string
 		expectedTag    string
 		object         client.Object
-		expectDecision Decision
+		expectDecision evaluation.Decision
 	}{
 		{
 			name:        "tag in pod different than expected, restart",
@@ -29,7 +30,7 @@ func TestSidecarImageChanged_Evaluate(t *testing.T) {
 					},
 				},
 			},
-			expectDecision: Restart,
+			expectDecision: evaluation.Restart,
 		},
 		{
 			name:        "tag matches even with different registry/name, continue",
@@ -43,7 +44,7 @@ func TestSidecarImageChanged_Evaluate(t *testing.T) {
 					},
 				},
 			},
-			expectDecision: Continue,
+			expectDecision: evaluation.Continue,
 		},
 		{
 			name:        "pod has custom image annotation, continue",
@@ -58,7 +59,7 @@ func TestSidecarImageChanged_Evaluate(t *testing.T) {
 					},
 				},
 			},
-			expectDecision: Continue,
+			expectDecision: evaluation.Continue,
 		},
 		{
 			name:        "pod doesn't have a sidecar, continue",
@@ -71,7 +72,7 @@ func TestSidecarImageChanged_Evaluate(t *testing.T) {
 					},
 				},
 			},
-			expectDecision: Continue,
+			expectDecision: evaluation.Continue,
 		},
 		{
 			name:        "object not a pod, continue",
@@ -79,7 +80,7 @@ func TestSidecarImageChanged_Evaluate(t *testing.T) {
 			object: &appsv1.Deployment{
 				ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: "bar"},
 			},
-			expectDecision: Continue,
+			expectDecision: evaluation.Continue,
 		},
 		{
 			name:        "empty expected tag never forces restart, continue",
@@ -92,7 +93,7 @@ func TestSidecarImageChanged_Evaluate(t *testing.T) {
 					},
 				},
 			},
-			expectDecision: Continue,
+			expectDecision: evaluation.Continue,
 		},
 		{
 			name:        "digest suffix stripped before tag comparison, tag matches, continue",
@@ -105,7 +106,7 @@ func TestSidecarImageChanged_Evaluate(t *testing.T) {
 					},
 				},
 			},
-			expectDecision: Continue,
+			expectDecision: evaluation.Continue,
 		},
 		{
 			name:        "registry with port, tag extracted correctly, matches, continue",
@@ -118,7 +119,7 @@ func TestSidecarImageChanged_Evaluate(t *testing.T) {
 					},
 				},
 			},
-			expectDecision: Continue,
+			expectDecision: evaluation.Continue,
 		},
 		{
 			name:        "registry with port, tag differs, restart",
@@ -131,7 +132,7 @@ func TestSidecarImageChanged_Evaluate(t *testing.T) {
 					},
 				},
 			},
-			expectDecision: Restart,
+			expectDecision: evaluation.Restart,
 		},
 		{
 			name:        "init container with mismatched tag, restart",
@@ -144,30 +145,17 @@ func TestSidecarImageChanged_Evaluate(t *testing.T) {
 					},
 				},
 			},
-			expectDecision: Restart,
+			expectDecision: evaluation.Restart,
 		},
 	}
 	for _, tt := range tc {
 		t.Run(tt.name, func(t *testing.T) {
-			eval := NewSidecarImageChangedRule(tt.expectedTag)
+			eval := evaluation.NewSidecarImageChangedRule(tt.expectedTag)
 			d := eval.Evaluate(tt.object)
 			if d != tt.expectDecision {
 				t.Errorf("wrong decision: got %v, want %v", d, tt.expectDecision)
 			}
 		})
-	}
-}
-
-func resources(cpuReq, memReq, cpuLim, memLim string) corev1.ResourceRequirements {
-	return corev1.ResourceRequirements{
-		Requests: corev1.ResourceList{
-			corev1.ResourceCPU:    resource.MustParse(cpuReq),
-			corev1.ResourceMemory: resource.MustParse(memReq),
-		},
-		Limits: corev1.ResourceList{
-			corev1.ResourceCPU:    resource.MustParse(cpuLim),
-			corev1.ResourceMemory: resource.MustParse(memLim),
-		},
 	}
 }
 
@@ -191,7 +179,7 @@ func TestSidecarResourcesChanged_Evaluate(t *testing.T) {
 		name           string
 		req            corev1.ResourceRequirements
 		object         client.Object
-		expectDecision Decision
+		expectDecision evaluation.Decision
 	}{
 		{
 			name: "resources in pod same as expected, continue",
@@ -205,7 +193,7 @@ func TestSidecarResourcesChanged_Evaluate(t *testing.T) {
 					},
 				},
 			},
-			expectDecision: Continue,
+			expectDecision: evaluation.Continue,
 		},
 		{
 			name: "cpu request differs, restart",
@@ -218,7 +206,7 @@ func TestSidecarResourcesChanged_Evaluate(t *testing.T) {
 					},
 				},
 			},
-			expectDecision: Restart,
+			expectDecision: evaluation.Restart,
 		},
 		{
 			name: "memory request differs, restart",
@@ -231,7 +219,7 @@ func TestSidecarResourcesChanged_Evaluate(t *testing.T) {
 					},
 				},
 			},
-			expectDecision: Restart,
+			expectDecision: evaluation.Restart,
 		},
 		{
 			name: "cpu limit differs, restart",
@@ -244,7 +232,7 @@ func TestSidecarResourcesChanged_Evaluate(t *testing.T) {
 					},
 				},
 			},
-			expectDecision: Restart,
+			expectDecision: evaluation.Restart,
 		},
 		{
 			name: "memory limit differs, restart",
@@ -257,7 +245,7 @@ func TestSidecarResourcesChanged_Evaluate(t *testing.T) {
 					},
 				},
 			},
-			expectDecision: Restart,
+			expectDecision: evaluation.Restart,
 		},
 		{
 			name: "sidecar in init containers same as expected, continue",
@@ -270,7 +258,7 @@ func TestSidecarResourcesChanged_Evaluate(t *testing.T) {
 					},
 				},
 			},
-			expectDecision: Continue,
+			expectDecision: evaluation.Continue,
 		},
 		{
 			name: "pod doesn't have a sidecar, continue",
@@ -283,7 +271,7 @@ func TestSidecarResourcesChanged_Evaluate(t *testing.T) {
 					},
 				},
 			},
-			expectDecision: Continue,
+			expectDecision: evaluation.Continue,
 		},
 		{
 			name: "object not a pod, continue",
@@ -291,7 +279,7 @@ func TestSidecarResourcesChanged_Evaluate(t *testing.T) {
 			object: &appsv1.Deployment{
 				ObjectMeta: metav1.ObjectMeta{Name: "foo", Namespace: "bar"},
 			},
-			expectDecision: Continue,
+			expectDecision: evaluation.Continue,
 		},
 		{
 			name: "annotation overrides all, pod matches annotation, continue",
@@ -307,7 +295,7 @@ func TestSidecarResourcesChanged_Evaluate(t *testing.T) {
 					{Name: "istio-proxy", Resources: resources("111m", "129Mi", "222m", "257Mi")},
 				}},
 			},
-			expectDecision: Continue,
+			expectDecision: evaluation.Continue,
 		},
 		{
 			name: "annotation overrides cpu limit only, pod matches, continue",
@@ -321,7 +309,7 @@ func TestSidecarResourcesChanged_Evaluate(t *testing.T) {
 					{Name: "istio-proxy", Resources: limitOnly("500m")},
 				}},
 			},
-			expectDecision: Continue,
+			expectDecision: evaluation.Continue,
 		},
 		{
 			name: "annotation set but pod differs from annotation, restart",
@@ -334,7 +322,7 @@ func TestSidecarResourcesChanged_Evaluate(t *testing.T) {
 					{Name: "istio-proxy", Resources: resources("100m", "128Mi", "200m", "256Mi")},
 				}},
 			},
-			expectDecision: Restart,
+			expectDecision: evaluation.Restart,
 		},
 		{
 			name: "unparseable annotation, continue (webhook rejects pod)",
@@ -347,12 +335,12 @@ func TestSidecarResourcesChanged_Evaluate(t *testing.T) {
 					{Name: "istio-proxy", Resources: resources("100m", "128Mi", "200m", "256Mi")},
 				}},
 			},
-			expectDecision: Continue,
+			expectDecision: evaluation.Continue,
 		},
 	}
 	for _, tt := range tc {
 		t.Run(tt.name, func(t *testing.T) {
-			eval := NewSidecarResourcesChangedRule(tt.req)
+			eval := evaluation.NewSidecarResourcesChangedRule(tt.req)
 			d := eval.Evaluate(tt.object)
 			if d != tt.expectDecision {
 				t.Errorf("wrong decision: got %v, want %v", d, tt.expectDecision)
@@ -480,7 +468,7 @@ func TestParseResourceAnnotations(t *testing.T) {
 	}
 	for _, tt := range tc {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ParseResourceAnnotations(tt.object, tt.reqs)
+			got, err := evaluation.ParseResourceAnnotations(tt.object, tt.reqs)
 			if tt.expectErr {
 				if err == nil {
 					t.Fatalf("expected an error, got nil")

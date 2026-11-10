@@ -64,7 +64,6 @@ spec:
           - --leader-elect
           - --health-probe-bind-address=:8081
           - --zap-log-level=1
-          - --dev-mode
         image: controller:latest
         name: manager
         ports:

@@ -1,14 +1,9 @@
-package v2
+package evaluation
 
 import (
-	"context"
 	"strconv"
-	"strings"
 
-	"istio.io/istio/pkg/config/mesh"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // PrometheusMergeConfigChanged is an Evaluator that detects when a pod's
@@ -58,33 +53,4 @@ func NewPrometheusMergeConfigChanged(enabled bool, port int32) Evaluator {
 		expectedPath: "/stats/prometheus",
 		enabled:      enabled,
 	}
-}
-
-// GetStatusPort returns the Istio proxy status port read from the mesh
-// configuration in the istio-system/istio ConfigMap. It falls back to the
-// default status port when the ConfigMap, its mesh config, or the status port
-// cannot be resolved.
-func GetStatusPort(ctx context.Context, c client.Client) int32 {
-	const defaultPort int32 = 15020
-
-	istioConfigMap := &corev1.ConfigMap{}
-	if err := c.Get(ctx, types.NamespacedName{Namespace: "istio-system", Name: "istio"}, istioConfigMap); err != nil {
-		return defaultPort
-	}
-
-	meshConfigYAML, hasMesh := istioConfigMap.Data["mesh"]
-	if !hasMesh {
-		return defaultPort
-	}
-
-	// Clean up the YAML string - remove any leading indicators like "|-"
-	meshConfigYAML = strings.TrimSpace(strings.TrimPrefix(meshConfigYAML, "|-"))
-
-	meshConfig, err := mesh.ApplyMeshConfigDefaults(meshConfigYAML)
-	if err != nil {
-		return defaultPort
-	}
-
-	// ApplyMeshConfigDefaults always sets a non-zero status port.
-	return meshConfig.GetDefaultConfig().GetStatusPort()
 }

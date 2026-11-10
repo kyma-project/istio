@@ -8,11 +8,14 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/kyma-project/istio/operator/restarter/internal/evaluation"
 )
 
 const RestartAnnotation = "istio-operator.kyma-project.io/restartedAt"
 
-const HashAnnotation = "istio-operator.kyma-project.io/restartHash"
+// HashAnnotation aliases evaluation.FingerprintAnnotationKey, the single source of truth for the restart fingerprint annotation key.
+const HashAnnotation = evaluation.FingerprintAnnotationKey
 
 func patchTemplateRestart(ctx context.Context, c client.Client, obj client.Object, tmpl *corev1.PodTemplateSpec, fingerprint string) error {
 	patch := client.StrategicMergeFrom(obj.DeepCopyObject().(client.Object))
@@ -41,12 +44,15 @@ func DaemonSet(ctx context.Context, c client.Client, d *appsv1.DaemonSet, finger
 
 // ReplicaSetPods deletes the given pods so the ReplicaSet controller recreates.
 func ReplicaSetPods(ctx context.Context, c client.Client, rs *appsv1.ReplicaSet, pods []*corev1.Pod, fingerprint string) error {
+	if err := patchTemplateRestart(ctx, c, rs, &rs.Spec.Template, fingerprint); err != nil {
+		return err
+	}
 	for _, p := range pods {
 		if err := c.Delete(ctx, p); err != nil && client.IgnoreNotFound(err) != nil {
 			return fmt.Errorf("delete pod %s/%s: %w", p.Namespace, p.Name, err)
 		}
 	}
-	return patchTemplateRestart(ctx, c, rs, &rs.Spec.Template, fingerprint)
+	return nil
 }
 
 func AlreadyRestartedForConfig(stamped, hash string) bool {

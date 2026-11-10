@@ -7,7 +7,6 @@ import (
 	istioCR "github.com/kyma-project/istio/operator/api/v1alpha2"
 	"github.com/kyma-project/istio/operator/internal/istiofeatures"
 	"github.com/kyma-project/istio/operator/internal/reconciliations/istio/configuration"
-	v2 "github.com/kyma-project/istio/operator/pkg/restarter/v2"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
@@ -29,23 +28,23 @@ func GetEvaluators(cfg Config) (evaluators []Evaluator, err error) {
 	if err != nil {
 		return nil, err
 	}
-	evaluators = append(evaluators, v2.NewCNIChangedRule(cfg.BetaFeatures.DisableCni))
-	evaluators = append(evaluators, v2.NewFingerprintDriftChanged(cfg.Fingerprint))
-	evaluators = append(evaluators, v2.NewPrometheusMergeConfigChanged(
+	evaluators = append(evaluators, NewCNIChangedRule(cfg.BetaFeatures.DisableCni))
+	evaluators = append(evaluators, NewFingerprintChanged(cfg.Fingerprint))
+	evaluators = append(evaluators, NewPrometheusMergeConfigChanged(
 		cfg.IstioCR.Spec.Config.Telemetry.Metrics.PrometheusMerge,
 		15020,
 	))
-	evaluators = append(evaluators, v2.NewSidecarImageChangedRule(cfg.LastAppliedConfig.IstioTag))
-	evaluators = append(evaluators, v2.NewSidecarResourcesChangedRule(sidecarResources))
+	evaluators = append(evaluators, NewSidecarImageChangedRule(cfg.LastAppliedConfig.IstioTag))
+	evaluators = append(evaluators, NewSidecarResourcesChangedRule(sidecarResources))
 
 	return evaluators, nil
 }
 
 // GetGatewayEvaluators returns the evaluator slice used by the gateway controller.
-// It contains a single GatewayFingerprintDriftChanged evaluator seeded with the
+// It contains a single GatewayFingerprintChanged evaluator seeded with the
 // current gateway-config fingerprint.
 func GetGatewayEvaluators(gatewayFingerprint string) []Evaluator {
-	return []Evaluator{v2.NewGatewayFingerprintDriftChanged(gatewayFingerprint)}
+	return []Evaluator{NewGatewayFingerprintChanged(gatewayFingerprint)}
 }
 
 // effectiveSidecarResources computes the actual values that

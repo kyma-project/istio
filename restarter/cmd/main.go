@@ -61,121 +61,120 @@ func init() {
 	// +kubebuilder:scaffold:scheme
 }
 
-// nolint:gocyclo
-func main() {
-	var metricsAddr string
-	var metricsCertPath, metricsCertName, metricsCertKey string
-	var webhookCertPath, webhookCertName, webhookCertKey string
-	var webhookPort int
-	var enableLeaderElection bool
-	var probeAddr string
-	var secureMetrics bool
-	var enableHTTP2 bool
-	var istioCRNamespace, istioCRName string
-	var proxyCPURequest, proxyMemoryRequest, proxyCPULimit, proxyMemoryLimit string
-	var devMode bool
-	var tlsOpts []func(*tls.Config)
-	flag.StringVar(&metricsAddr, "metrics-bind-address", "0", "The address the metrics endpoint binds to. "+
+type config struct {
+	metricsAddr          string
+	metricsCertPath      string
+	metricsCertName      string
+	metricsCertKey       string
+	webhookCertPath      string
+	webhookCertName      string
+	webhookCertKey       string
+	webhookPort          int
+	enableLeaderElection bool
+	probeAddr            string
+	secureMetrics        bool
+	enableHTTP2          bool
+	istioCRNamespace     string
+	istioCRName          string
+	proxyCPURequest      string
+	proxyMemoryRequest   string
+	proxyCPULimit        string
+	proxyMemoryLimit     string
+}
+
+func parseFlags() (config, zap.Options) {
+	var cfg config
+	flag.StringVar(&cfg.metricsAddr, "metrics-bind-address", "0", "The address the metrics endpoint binds to. "+
 		"Use :8443 for HTTPS or :8080 for HTTP, or leave as 0 to disable the metrics service.")
-	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
-	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
+	flag.StringVar(&cfg.probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
+	flag.BoolVar(&cfg.enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
-	flag.BoolVar(&secureMetrics, "metrics-secure", true,
+	flag.BoolVar(&cfg.secureMetrics, "metrics-secure", true,
 		"If set, the metrics endpoint is served securely via HTTPS. Use --metrics-secure=false to use HTTP instead.")
-	flag.StringVar(&webhookCertPath, "webhook-cert-path", "", "The directory that contains the webhook certificate.")
-	flag.StringVar(&webhookCertName, "webhook-cert-name", "tls.crt", "The name of the webhook certificate file.")
-	flag.StringVar(&webhookCertKey, "webhook-cert-key", "tls.key", "The name of the webhook key file.")
-	flag.IntVar(&webhookPort, "webhook-port", 9443, "Port the webhook server listens on. "+
+	flag.StringVar(&cfg.webhookCertPath, "webhook-cert-path", "", "The directory that contains the webhook certificate.")
+	flag.StringVar(&cfg.webhookCertName, "webhook-cert-name", "tls.crt", "The name of the webhook certificate file.")
+	flag.StringVar(&cfg.webhookCertKey, "webhook-cert-key", "tls.key", "The name of the webhook key file.")
+	flag.IntVar(&cfg.webhookPort, "webhook-port", 9443, "Port the webhook server listens on. "+
 		"Defaults to 9443. Set -1 to disable the webhook server.")
-	flag.StringVar(&metricsCertPath, "metrics-cert-path", "",
+	flag.StringVar(&cfg.metricsCertPath, "metrics-cert-path", "",
 		"The directory that contains the metrics server certificate.")
-	flag.StringVar(&metricsCertName, "metrics-cert-name", "tls.crt", "The name of the metrics server certificate file.")
-	flag.StringVar(&metricsCertKey, "metrics-cert-key", "tls.key", "The name of the metrics server key file.")
-	flag.BoolVar(&enableHTTP2, "enable-http2", false,
+	flag.StringVar(&cfg.metricsCertName, "metrics-cert-name", "tls.crt", "The name of the metrics server certificate file.")
+	flag.StringVar(&cfg.metricsCertKey, "metrics-cert-key", "tls.key", "The name of the metrics server key file.")
+	flag.BoolVar(&cfg.enableHTTP2, "enable-http2", false,
 		"If set, HTTP/2 will be enabled for the metrics and webhook servers")
-	flag.StringVar(&istioCRNamespace, "istio-cr-namespace", "kyma-system", "Namespace of the Istio CR to read evaluators from.")
-	flag.StringVar(&istioCRName, "istio-cr-name", "default", "Name of the Istio CR to read evaluators from.")
-	flag.StringVar(&proxyCPURequest, "proxy-cpu-request", "", "Expected CPU request for the Istio proxy sidecar container (required).")
-	flag.StringVar(&proxyMemoryRequest, "proxy-memory-request", "", "Expected memory request for the Istio proxy sidecar container (required).")
-	flag.StringVar(&proxyCPULimit, "proxy-cpu-limit", "", "Expected CPU limit for the Istio proxy sidecar container (required).")
-	flag.StringVar(&proxyMemoryLimit, "proxy-memory-limit", "", "Expected memory limit for the Istio proxy sidecar container (required).")
-	flag.BoolVar(&devMode, "dev-mode", false,
-		"If set, use built-in development sidecar resource values instead of the required --proxy-* flags.")
+	flag.StringVar(&cfg.istioCRNamespace, "istio-cr-namespace", "kyma-system", "Namespace of the Istio CR to read evaluators from.")
+	flag.StringVar(&cfg.istioCRName, "istio-cr-name", "default", "Name of the Istio CR to read evaluators from.")
+	flag.StringVar(&cfg.proxyCPURequest, "proxy-cpu-request", "", "Expected CPU request for the Istio proxy sidecar container (required).")
+	flag.StringVar(&cfg.proxyMemoryRequest, "proxy-memory-request", "", "Expected memory request for the Istio proxy sidecar container (required).")
+	flag.StringVar(&cfg.proxyCPULimit, "proxy-cpu-limit", "", "Expected CPU limit for the Istio proxy sidecar container (required).")
+	flag.StringVar(&cfg.proxyMemoryLimit, "proxy-memory-limit", "", "Expected memory limit for the Istio proxy sidecar container (required).")
 	opts := zap.Options{
-		Development: true,
+		Development: false,
 	}
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
+	return cfg, opts
+}
+
+// nolint:gocyclo
+func main() {
+	cfg, opts := parseFlags()
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
-	var sidecarResources corev1.ResourceRequirements
-	if devMode {
-		setupLog.Info("Dev mode: using built-in sidecar resource values, ignoring --proxy-* flags")
-		sidecarResources = corev1.ResourceRequirements{
-			Requests: corev1.ResourceList{
-				corev1.ResourceCPU:    resource.MustParse("10m"),
-				corev1.ResourceMemory: resource.MustParse("32Mi"),
-			},
-			Limits: corev1.ResourceList{
-				corev1.ResourceCPU:    resource.MustParse("250m"),
-				corev1.ResourceMemory: resource.MustParse("254Mi"),
-			},
-		}
-	} else {
-		if proxyCPURequest == "" {
-			setupLog.Error(nil, "Flag --proxy-cpu-request is required")
-			os.Exit(1)
-		}
-		cpuReq, err := resource.ParseQuantity(proxyCPURequest)
-		if err != nil {
-			setupLog.Error(err, "Failed to parse --proxy-cpu-request")
-			os.Exit(1)
-		}
-
-		if proxyMemoryRequest == "" {
-			setupLog.Error(nil, "Flag --proxy-memory-request is required")
-			os.Exit(1)
-		}
-		memReq, err := resource.ParseQuantity(proxyMemoryRequest)
-		if err != nil {
-			setupLog.Error(err, "Failed to parse --proxy-memory-request")
-			os.Exit(1)
-		}
-
-		if proxyCPULimit == "" {
-			setupLog.Error(nil, "Flag --proxy-cpu-limit is required")
-			os.Exit(1)
-		}
-		cpuLim, err := resource.ParseQuantity(proxyCPULimit)
-		if err != nil {
-			setupLog.Error(err, "Failed to parse --proxy-cpu-limit")
-			os.Exit(1)
-		}
-
-		if proxyMemoryLimit == "" {
-			setupLog.Error(nil, "Flag --proxy-memory-limit is required")
-			os.Exit(1)
-		}
-		memLim, err := resource.ParseQuantity(proxyMemoryLimit)
-		if err != nil {
-			setupLog.Error(err, "Failed to parse --proxy-memory-limit")
-			os.Exit(1)
-		}
-
-		sidecarResources = corev1.ResourceRequirements{
-			Requests: corev1.ResourceList{corev1.ResourceCPU: cpuReq, corev1.ResourceMemory: memReq},
-			Limits:   corev1.ResourceList{corev1.ResourceCPU: cpuLim, corev1.ResourceMemory: memLim},
-		}
+	if cfg.proxyCPURequest == "" {
+		setupLog.Error(nil, "Flag --proxy-cpu-request is required")
+		os.Exit(1)
+	}
+	cpuReq, err := resource.ParseQuantity(cfg.proxyCPURequest)
+	if err != nil {
+		setupLog.Error(err, "Failed to parse --proxy-cpu-request")
+		os.Exit(1)
 	}
 
+	if cfg.proxyMemoryRequest == "" {
+		setupLog.Error(nil, "Flag --proxy-memory-request is required")
+		os.Exit(1)
+	}
+	memReq, err := resource.ParseQuantity(cfg.proxyMemoryRequest)
+	if err != nil {
+		setupLog.Error(err, "Failed to parse --proxy-memory-request")
+		os.Exit(1)
+	}
+
+	if cfg.proxyCPULimit == "" {
+		setupLog.Error(nil, "Flag --proxy-cpu-limit is required")
+		os.Exit(1)
+	}
+	cpuLim, err := resource.ParseQuantity(cfg.proxyCPULimit)
+	if err != nil {
+		setupLog.Error(err, "Failed to parse --proxy-cpu-limit")
+		os.Exit(1)
+	}
+
+	if cfg.proxyMemoryLimit == "" {
+		setupLog.Error(nil, "Flag --proxy-memory-limit is required")
+		os.Exit(1)
+	}
+	memLim, err := resource.ParseQuantity(cfg.proxyMemoryLimit)
+	if err != nil {
+		setupLog.Error(err, "Failed to parse --proxy-memory-limit")
+		os.Exit(1)
+	}
+
+	sidecarResources := corev1.ResourceRequirements{
+		Requests: corev1.ResourceList{corev1.ResourceCPU: cpuReq, corev1.ResourceMemory: memReq},
+		Limits:   corev1.ResourceList{corev1.ResourceCPU: cpuLim, corev1.ResourceMemory: memLim},
+	}
+
+	var tlsOpts []func(*tls.Config)
 	disableHTTP2 := func(c *tls.Config) {
 		setupLog.Info("Disabling HTTP/2")
 		c.NextProtos = []string{"http/1.1"}
 	}
 
-	if !enableHTTP2 {
+	if !cfg.enableHTTP2 {
 		tlsOpts = append(tlsOpts, disableHTTP2)
 	}
 
@@ -183,47 +182,48 @@ func main() {
 	webhookTLSOpts := tlsOpts
 	webhookServerOptions := webhook.Options{
 		TLSOpts: webhookTLSOpts,
-		Port:    webhookPort,
+		Port:    cfg.webhookPort,
 	}
 
-	if len(webhookCertPath) > 0 {
+	if len(cfg.webhookCertPath) > 0 {
 		setupLog.Info("Initializing webhook certificate watcher using provided certificates",
-			"webhook-cert-path", webhookCertPath, "webhook-cert-name", webhookCertName, "webhook-cert-key", webhookCertKey)
+			"webhook-cert-path", cfg.webhookCertPath, "webhook-cert-name", cfg.webhookCertName, "webhook-cert-key", cfg.webhookCertKey)
 
-		webhookServerOptions.CertDir = webhookCertPath
-		webhookServerOptions.CertName = webhookCertName
-		webhookServerOptions.KeyName = webhookCertKey
+		webhookServerOptions.CertDir = cfg.webhookCertPath
+		webhookServerOptions.CertName = cfg.webhookCertName
+		webhookServerOptions.KeyName = cfg.webhookCertKey
 	}
 
 	webhookServer := webhook.NewServer(webhookServerOptions)
 
 	metricsServerOptions := metricsserver.Options{
-		BindAddress:   metricsAddr,
-		SecureServing: secureMetrics,
+		BindAddress:   cfg.metricsAddr,
+		SecureServing: cfg.secureMetrics,
 		TLSOpts:       tlsOpts,
 	}
 
-	if secureMetrics {
+	if cfg.secureMetrics {
 		metricsServerOptions.FilterProvider = filters.WithAuthenticationAndAuthorization
 	}
 
-	if len(metricsCertPath) > 0 {
+	if len(cfg.metricsCertPath) > 0 {
 		setupLog.Info("Initializing metrics certificate watcher using provided certificates",
-			"metrics-cert-path", metricsCertPath, "metrics-cert-name", metricsCertName, "metrics-cert-key", metricsCertKey)
+			"metrics-cert-path", cfg.metricsCertPath, "metrics-cert-name", cfg.metricsCertName, "metrics-cert-key", cfg.metricsCertKey)
 
-		metricsServerOptions.CertDir = metricsCertPath
-		metricsServerOptions.CertName = metricsCertName
-		metricsServerOptions.KeyName = metricsCertKey
+		metricsServerOptions.CertDir = cfg.metricsCertPath
+		metricsServerOptions.CertName = cfg.metricsCertName
+		metricsServerOptions.KeyName = cfg.metricsCertKey
 	}
 
 	stripTransform := transform.StripForRestart()
 	stripKeepOwnerRefs := transform.StripForRestartKeepOwnerRefs()
+	stripPod := transform.StripForPod()
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
 		Metrics:                metricsServerOptions,
 		WebhookServer:          webhookServer,
-		HealthProbeBindAddress: probeAddr,
-		LeaderElection:         enableLeaderElection,
+		HealthProbeBindAddress: cfg.probeAddr,
+		LeaderElection:         cfg.enableLeaderElection,
 		LeaderElectionID:       "02e73aaf.kyma-project.io",
 		Cache: cache.Options{
 			ByObject: map[client.Object]cache.ByObject{
@@ -231,7 +231,7 @@ func main() {
 				&appsv1.ReplicaSet{}:  {Transform: stripKeepOwnerRefs},
 				&appsv1.StatefulSet{}: {Transform: stripTransform},
 				&appsv1.DaemonSet{}:   {Transform: stripTransform},
-				&corev1.Pod{}:         {Transform: stripKeepOwnerRefs},
+				&corev1.Pod{}:         {Transform: stripPod},
 			},
 		},
 	})
@@ -242,7 +242,7 @@ func main() {
 
 	evalSource := evaluation.NewProvider(
 		mgr.GetClient(),
-		types.NamespacedName{Namespace: istioCRNamespace, Name: istioCRName},
+		types.NamespacedName{Namespace: cfg.istioCRNamespace, Name: cfg.istioCRName},
 		sidecarResources,
 	)
 

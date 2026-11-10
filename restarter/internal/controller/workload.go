@@ -104,6 +104,25 @@ func reconcileWorkload[T client.Object](
 	return ctrl.Result{}, nil
 }
 
+const (
+	reasonRestarting = "RestartingProxy"
+	reasonStopped    = "ProxyRestartStopped"
+)
+
+// emitDecisionEvent records a Kubernetes Event on obj for Restart or Stop decisions.
+// evaluator is the name of the evaluator that produced the decision.
+func emitDecisionEvent(r record.EventRecorder, obj client.Object, d evaluation.Decision, evaluator string) {
+	if r == nil {
+		return
+	}
+	switch d {
+	case evaluation.Restart:
+		r.Eventf(obj, corev1.EventTypeNormal, reasonRestarting, "Istio proxy config or version is outdated (evaluator: %s)", evaluator)
+	case evaluation.Stop:
+		r.Eventf(obj, corev1.EventTypeWarning, reasonStopped, "Istio proxy evaluation stopped (evaluator: %s)", evaluator)
+	}
+}
+
 // listPodsByOwnerIndex returns a listPods function that selects pods via a
 // field index keyed on the owning workload's UID.
 func listPodsByOwnerIndex[T client.Object](ownerKey string) func(context.Context, client.Client, ctrl.Request, T) (*corev1.PodList, error) {

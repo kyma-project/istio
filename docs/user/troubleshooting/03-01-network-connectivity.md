@@ -5,14 +5,13 @@ If you're having trouble with network connectivity and don't know where to begin
 > ### Note:
 > Before you start, install the required tools and get familiar with the Istio architecture. For more information, see [Prerequisites and Architecture](./03-00-prerequisites.md).
 
-- Verify the state of the Istio CR. If it is in the `Warning` state, check the warning message and conditions. It might help you begin the investigation.
-- Verify that no [NetworkPolicies](https://kubernetes.io/docs/concepts/services-networking/network-policies/) affect the connectivity by blocking traffic between Pods in the service mesh. To find all NetworkPolicy resources, run `kubectl get networkpolicies --all-namespaces`.
-- The configuration of the following resources can affect the connectivity in the service mesh. Verify that these resources are configured as intended:
-    - [DestinationRule](https://istio.io/latest/docs/reference/config/networking/destination-rule/)
-    - [PeerAuthentication](https://istio.io/latest/docs/reference/config/security/peer_authentication/)
-    - [Gateway](https://istio.io/latest/docs/reference/config/networking/gateway/)
-    - [AuthorizationPolicy](https://istio.io/latest/docs/reference/config/security/authorization-policy/)
-    - [RequestAuthentication](https://istio.io/latest/docs/reference/config/security/request_authentication/)
+This guide walks you through network connectivity troubleshooting in three stages:
+
+- [Starting Point](#starting-point): Run two quick checks, `istioctl analyze` and a `curl` request, to narrow down where the problem is.
+- [Connection Does Not Reach the Service Mesh](#connection-does-not-reach-the-service-mesh): Verify that traffic reaches Istio Ingress Gateway by checking the Service, the Gateway resource, DNS resolution, and external firewalls.
+- [Debugging Istio Resources](#debugging-istio-resources): Inspect the Istio resources that control traffic flow, such as AuthorizationPolicy, RequestAuthentication, and EnvoyFilter resources.
+
+Work through the stages in order. Each one points you to the next step based on what you find.
 
 ## Starting Point
 

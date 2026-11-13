@@ -134,420 +134,454 @@ func newProvider(t *testing.T, objs ...client.Object) *evaluation.Provider {
 	)
 }
 
-func TestProvider_Snapshot_MissingCR(t *testing.T) {
-	// Only the ConfigMap exists; no Istio CR.
-	p := newProvider(t, newFeaturesConfigMap("1"))
+func TestProvider_ProxySnapshot(t *testing.T) {
+	tests := []struct {
+		name string
+		run  func(t *testing.T)
+	}{
+		{
+			name: "CR missing yields nil slice and empty fingerprint",
+			run: func(t *testing.T) {
+				// Only the ConfigMap exists; no Istio CR.
+				p := newProvider(t, newFeaturesConfigMap("1"))
 
-	got, fingerprint, err := p.ProxySnapshot(t.Context())
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if got != nil {
-		t.Errorf("want nil slice when CR is missing, got %v", got)
-	}
-	if fingerprint != "" {
-		t.Errorf("want empty fingerprint when CR is missing, got %q", fingerprint)
-	}
-}
-
-func TestProvider_Snapshot_MissingFeaturesConfigMap(t *testing.T) {
-	// CR exists, but the istio-features ConfigMap does not — treated as optional.
-	p := newProvider(t, newIstioCR(nil))
-
-	got, _, err := p.ProxySnapshot(t.Context())
-	if err != nil {
-		t.Fatalf("unexpected error when istio-features ConfigMap is missing: %v", err)
-	}
-	if len(got) == 0 {
-		t.Errorf("expected non-empty evaluators even when istio-features ConfigMap is missing")
-	}
-}
-
-func TestProvider_Snapshot_FingerprintMatchesProxyConfig(t *testing.T) {
-	const annotationValue = `{"config":{"enableDNSProxying":true}}`
-	p := newProvider(t,
-		newIstioCR(map[string]string{labels.LastAppliedConfiguration: annotationValue}),
-		newFeaturesConfigMap("1"),
-	)
-
-	_, fp, err := p.ProxySnapshot(t.Context())
-	if err != nil {
-		t.Fatalf("snapshot: %v", err)
-	}
-
-	want := proxyFingerprintFromAnnotation(t, annotationValue)
-	if want == "" {
-		t.Fatalf("test annotation must set a proxy field")
-	}
-	if fp != want {
-		t.Errorf("fingerprint = %q, want %q (proxy-config hash of annotation)", fp, want)
-	}
-}
-
-// TestProvider_Snapshot_EmptyAnnotationYieldsEmptyFingerprint verifies that a
-// CR with an explicitly empty lastAppliedConfiguration annotation produces a
-// "" fingerprint, not a hash of the empty string.
-func TestProvider_Snapshot_EmptyAnnotationYieldsEmptyFingerprint(t *testing.T) {
-	p := newProvider(t,
-		newIstioCR(map[string]string{labels.LastAppliedConfiguration: ""}),
-		newFeaturesConfigMap("1"),
-	)
-
-	_, fp, err := p.ProxySnapshot(t.Context())
-	if err != nil {
-		t.Fatalf("snapshot: %v", err)
-	}
-	if fp != "" {
-		t.Errorf("expected empty fingerprint for empty annotation, got %q", fp)
-	}
-}
-
-// TestProvider_Snapshot_FingerprintStableWhenOnlySpecChanges verifies that
-// changing the Istio CR spec (without touching the annotation) does NOT change
-// the returned fingerprint, because the fingerprint is derived solely from the
-// lastAppliedConfiguration annotation.
-func TestProvider_Snapshot_FingerprintStableWhenOnlySpecChanges(t *testing.T) {
-	const annotationValue = `{"config":{"numTrustedProxies":1}}`
-	scheme := newTestScheme(t)
-	cr := newIstioCR(map[string]string{labels.LastAppliedConfiguration: annotationValue})
-	cm := newFeaturesConfigMap("1")
-	c := fake.NewClientBuilder().WithScheme(scheme).WithObjects(cr, cm).Build()
-	p := evaluation.NewProvider(
-		c,
-		types.NamespacedName{Namespace: testIstioCRNamespace, Name: testIstioCRName},
-		testSidecarResources(),
-	)
-
-	_, firstFP, err := p.ProxySnapshot(t.Context())
-	if err != nil {
-		t.Fatalf("first snapshot: %v", err)
-	}
-
-	// Mutate the Istio CR spec on the server; leave the annotation unchanged.
-	var live operatorv1alpha2.Istio
-	if err := c.Get(t.Context(), types.NamespacedName{Namespace: testIstioCRNamespace, Name: testIstioCRName}, &live); err != nil {
-		t.Fatalf("get live CR: %v", err)
-	}
-	live.Spec.CompatibilityMode = true
-	if err := c.Update(t.Context(), &live); err != nil {
-		t.Fatalf("update CR: %v", err)
-	}
-
-	_, secondFP, err := p.ProxySnapshot(t.Context())
-	if err != nil {
-		t.Fatalf("second snapshot: %v", err)
-	}
-
-	want := proxyFingerprintFromAnnotation(t, annotationValue)
-	if firstFP != want {
-		t.Errorf("first fingerprint = %q, want %q", firstFP, want)
-	}
-	if secondFP != want {
-		t.Errorf("second fingerprint = %q, want %q (fingerprint must not change when only spec changes)", secondFP, want)
-	}
-}
-
-// TestProvider_Snapshot_FingerprintStableWhenOnlyFeaturesConfigMapChanges verifies
-// that updating the istio-features ConfigMap (without touching the annotation)
-// does NOT change the returned fingerprint.
-func TestProvider_Snapshot_FingerprintStableWhenOnlyFeaturesConfigMapChanges(t *testing.T) {
-	const annotationValue = `{"config":{"numTrustedProxies":1}}`
-	scheme := newTestScheme(t)
-	cr := newIstioCR(map[string]string{labels.LastAppliedConfiguration: annotationValue})
-	cm := newFeaturesConfigMap("1")
-	c := fake.NewClientBuilder().WithScheme(scheme).WithObjects(cr, cm).Build()
-	p := evaluation.NewProvider(
-		c,
-		types.NamespacedName{Namespace: testIstioCRNamespace, Name: testIstioCRName},
-		testSidecarResources(),
-	)
-
-	_, firstFP, err := p.ProxySnapshot(t.Context())
-	if err != nil {
-		t.Fatalf("first snapshot: %v", err)
-	}
-
-	// Update the ConfigMap to bump its ResourceVersion; annotation unchanged.
-	var liveCM corev1.ConfigMap
-	if err := c.Get(t.Context(), types.NamespacedName{Namespace: istiofeatures.ConfigMapNamespace, Name: istiofeatures.ConfigMapName}, &liveCM); err != nil {
-		t.Fatalf("get live CM: %v", err)
-	}
-	if liveCM.Data == nil {
-		liveCM.Data = map[string]string{}
-	}
-	liveCM.Data["features"] = `{"disableCni": true}`
-	if err := c.Update(t.Context(), &liveCM); err != nil {
-		t.Fatalf("update CM: %v", err)
-	}
-
-	_, secondFP, err := p.ProxySnapshot(t.Context())
-	if err != nil {
-		t.Fatalf("second snapshot: %v", err)
-	}
-
-	want := proxyFingerprintFromAnnotation(t, annotationValue)
-	if firstFP != want {
-		t.Errorf("first fingerprint = %q, want %q", firstFP, want)
-	}
-	if secondFP != want {
-		t.Errorf("second fingerprint = %q, want %q (fingerprint must not change when only ConfigMap changes)", secondFP, want)
-	}
-}
-
-func TestProvider_Snapshot_FingerprintChangesOnLastAppliedAnnotationChange(t *testing.T) {
-	scheme := newTestScheme(t)
-	cr := newIstioCR(map[string]string{
-		labels.LastAppliedConfiguration: `{"config":{"enableDNSProxying":false}}`,
-	})
-	cm := newFeaturesConfigMap("1")
-	c := fake.NewClientBuilder().WithScheme(scheme).WithObjects(cr, cm).Build()
-	p := evaluation.NewProvider(
-		c,
-		types.NamespacedName{Namespace: testIstioCRNamespace, Name: testIstioCRName},
-		testSidecarResources(),
-	)
-
-	first, firstFP, err := p.ProxySnapshot(t.Context())
-	if err != nil {
-		t.Fatalf("first snapshot: %v", err)
-	}
-	if len(first) == 0 {
-		t.Fatalf("expected non-empty evaluators")
-	}
-
-	// Change a proxy-relevant field in the lastAppliedConfiguration annotation;
-	// spec unchanged.
-	var live operatorv1alpha2.Istio
-	if err := c.Get(t.Context(), types.NamespacedName{Namespace: testIstioCRNamespace, Name: testIstioCRName}, &live); err != nil {
-		t.Fatalf("get live CR: %v", err)
-	}
-	if live.Annotations == nil {
-		live.Annotations = map[string]string{}
-	}
-	const newAnnotation = `{"config":{"enableDNSProxying":true}}`
-	live.Annotations[labels.LastAppliedConfiguration] = newAnnotation
-	if err := c.Update(t.Context(), &live); err != nil {
-		t.Fatalf("update CR annotations: %v", err)
-	}
-
-	second, secondFP, err := p.ProxySnapshot(t.Context())
-	if err != nil {
-		t.Fatalf("second snapshot: %v", err)
-	}
-	if len(second) == 0 {
-		t.Errorf("expected non-empty evaluators after rebuild")
-	}
-	// Fingerprint must reflect the new annotation value.
-	wantFirst := proxyFingerprintFromAnnotation(t, `{"config":{"enableDNSProxying":false}}`)
-	wantSecond := proxyFingerprintFromAnnotation(t, newAnnotation)
-	if firstFP != wantFirst {
-		t.Errorf("first fingerprint = %q, want %q", firstFP, wantFirst)
-	}
-	if secondFP != wantSecond {
-		t.Errorf("second fingerprint = %q, want %q", secondFP, wantSecond)
-	}
-	if firstFP == secondFP {
-		t.Errorf("expected fingerprint to change after lastAppliedConfiguration change, stayed %q", firstFP)
-	}
-}
-
-func TestProvider_Snapshot_FingerprintStableOnGatewayOnlyAnnotationChange(t *testing.T) {
-	scheme := newTestScheme(t)
-	cr := newIstioCR(map[string]string{
-		labels.LastAppliedConfiguration: `{"config":{"numTrustedProxies":1}}`,
-	})
-	cm := newFeaturesConfigMap("1")
-	c := fake.NewClientBuilder().WithScheme(scheme).WithObjects(cr, cm).Build()
-	p := evaluation.NewProvider(
-		c,
-		types.NamespacedName{Namespace: testIstioCRNamespace, Name: testIstioCRName},
-		testSidecarResources(),
-	)
-
-	_, firstFP, err := p.ProxySnapshot(t.Context())
-	if err != nil {
-		t.Fatalf("first snapshot: %v", err)
-	}
-
-	// numTrustedProxies drives only the gateway fingerprint, not proxy restart,
-	// so changing it must not change the proxy fingerprint.
-	var live operatorv1alpha2.Istio
-	if err := c.Get(t.Context(), types.NamespacedName{Namespace: testIstioCRNamespace, Name: testIstioCRName}, &live); err != nil {
-		t.Fatalf("get live CR: %v", err)
-	}
-	live.Annotations[labels.LastAppliedConfiguration] = `{"config":{"numTrustedProxies":2}}`
-	if err := c.Update(t.Context(), &live); err != nil {
-		t.Fatalf("update CR annotations: %v", err)
-	}
-
-	_, secondFP, err := p.ProxySnapshot(t.Context())
-	if err != nil {
-		t.Fatalf("second snapshot: %v", err)
-	}
-	if firstFP != secondFP {
-		t.Errorf("proxy fingerprint changed on gateway-only field change: %q -> %q", firstFP, secondFP)
-	}
-}
-
-func TestProvider_Snapshot_SidecarResourcesUsed(t *testing.T) {
-	res := testSidecarResources()
-	const annotationValue = `{"config":{"numTrustedProxies":1}}`
-	p := newProvider(t,
-		newIstioCR(map[string]string{labels.LastAppliedConfiguration: annotationValue}),
-		newFeaturesConfigMap("1"),
-	)
-
-	evals, fp, err := p.ProxySnapshot(t.Context())
-	if err != nil {
-		t.Fatalf("snapshot: %v", err)
-	}
-	if len(evals) == 0 {
-		t.Fatalf("expected non-empty evaluators")
-	}
-	wantFP := proxyFingerprintFromAnnotation(t, annotationValue)
-	if fp != wantFP {
-		t.Errorf("fingerprint = %q, want %q", fp, wantFP)
-	}
-
-	// Second call must return the same fingerprint (stable).
-	_, fp2, err := p.ProxySnapshot(t.Context())
-	if err != nil {
-		t.Fatalf("second snapshot: %v", err)
-	}
-	if fp != fp2 {
-		t.Errorf("fingerprint not stable across two calls: %q -> %q", fp, fp2)
-	}
-
-	// A pod whose istio-proxy container resources exactly match the expected
-	// values should produce Continue from the SidecarResourcesChanged evaluator.
-	matchingPod := &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{Name: "matching", Namespace: "default"},
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:      "istio-proxy",
-					Resources: res,
-				},
+				got, fingerprint, err := p.ProxySnapshot(t.Context())
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				if got != nil {
+					t.Errorf("want nil slice when CR is missing, got %v", got)
+				}
+				if fingerprint != "" {
+					t.Errorf("want empty fingerprint when CR is missing, got %q", fingerprint)
+				}
 			},
 		},
-	}
+		{
+			name: "missing features ConfigMap is optional",
+			run: func(t *testing.T) {
+				// CR exists, but the istio-features ConfigMap does not — treated as optional.
+				p := newProvider(t, newIstioCR(nil))
 
-	var resourcesEval evaluation.Evaluator
-	for _, e := range evals {
-		if e.Name() == "SidecarResourcesChanged" {
-			resourcesEval = e
-			break
-		}
-	}
-	if resourcesEval == nil {
-		t.Fatal("SidecarResourcesChanged evaluator not present in snapshot")
-	}
+				got, _, err := p.ProxySnapshot(t.Context())
+				if err != nil {
+					t.Fatalf("unexpected error when istio-features ConfigMap is missing: %v", err)
+				}
+				if len(got) == 0 {
+					t.Errorf("expected non-empty evaluators even when istio-features ConfigMap is missing")
+				}
+			},
+		},
+		{
+			name: "fingerprint matches proxy config",
+			run: func(t *testing.T) {
+				const annotationValue = `{"config":{"enableDNSProxying":true}}`
+				p := newProvider(t,
+					newIstioCR(map[string]string{labels.LastAppliedConfiguration: annotationValue}),
+					newFeaturesConfigMap("1"),
+				)
 
-	if got := resourcesEval.Evaluate(matchingPod); got != evaluation.Continue {
-		t.Errorf("SidecarResourcesChanged: expected Continue for matching pod, got %v", got)
-	}
+				_, fp, err := p.ProxySnapshot(t.Context())
+				if err != nil {
+					t.Fatalf("snapshot: %v", err)
+				}
 
-	// A pod whose istio-proxy container has different resources should produce Restart.
-	differingPod := &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{Name: "differing", Namespace: "default"},
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name: "istio-proxy",
-					Resources: corev1.ResourceRequirements{
-						Requests: corev1.ResourceList{
-							corev1.ResourceCPU:    resource.MustParse("50m"),
-							corev1.ResourceMemory: resource.MustParse("64Mi"),
-						},
-						Limits: corev1.ResourceList{
-							corev1.ResourceCPU:    resource.MustParse("500m"),
-							corev1.ResourceMemory: resource.MustParse("512Mi"),
+				want := proxyFingerprintFromAnnotation(t, annotationValue)
+				if want == "" {
+					t.Fatalf("test annotation must set a proxy field")
+				}
+				if fp != want {
+					t.Errorf("fingerprint = %q, want %q (proxy-config hash of annotation)", fp, want)
+				}
+			},
+		},
+		{
+			// Verifies that a CR with an explicitly empty lastAppliedConfiguration
+			// annotation produces a "" fingerprint, not a hash of the empty string.
+			name: "empty annotation yields empty fingerprint",
+			run: func(t *testing.T) {
+				p := newProvider(t,
+					newIstioCR(map[string]string{labels.LastAppliedConfiguration: ""}),
+					newFeaturesConfigMap("1"),
+				)
+
+				_, fp, err := p.ProxySnapshot(t.Context())
+				if err != nil {
+					t.Fatalf("snapshot: %v", err)
+				}
+				if fp != "" {
+					t.Errorf("expected empty fingerprint for empty annotation, got %q", fp)
+				}
+			},
+		},
+		{
+			// Verifies that changing the Istio CR spec (without touching the
+			// annotation) does NOT change the returned fingerprint, because the
+			// fingerprint is derived solely from the lastAppliedConfiguration
+			// annotation.
+			name: "fingerprint stable when only spec changes",
+			run: func(t *testing.T) {
+				const annotationValue = `{"config":{"numTrustedProxies":1}}`
+				scheme := newTestScheme(t)
+				cr := newIstioCR(map[string]string{labels.LastAppliedConfiguration: annotationValue})
+				cm := newFeaturesConfigMap("1")
+				c := fake.NewClientBuilder().WithScheme(scheme).WithObjects(cr, cm).Build()
+				p := evaluation.NewProvider(
+					c,
+					types.NamespacedName{Namespace: testIstioCRNamespace, Name: testIstioCRName},
+					testSidecarResources(),
+				)
+
+				_, firstFP, err := p.ProxySnapshot(t.Context())
+				if err != nil {
+					t.Fatalf("first snapshot: %v", err)
+				}
+
+				// Mutate the Istio CR spec on the server; leave the annotation unchanged.
+				var live operatorv1alpha2.Istio
+				if err := c.Get(t.Context(), types.NamespacedName{Namespace: testIstioCRNamespace, Name: testIstioCRName}, &live); err != nil {
+					t.Fatalf("get live CR: %v", err)
+				}
+				live.Spec.CompatibilityMode = true
+				if err := c.Update(t.Context(), &live); err != nil {
+					t.Fatalf("update CR: %v", err)
+				}
+
+				_, secondFP, err := p.ProxySnapshot(t.Context())
+				if err != nil {
+					t.Fatalf("second snapshot: %v", err)
+				}
+
+				want := proxyFingerprintFromAnnotation(t, annotationValue)
+				if firstFP != want {
+					t.Errorf("first fingerprint = %q, want %q", firstFP, want)
+				}
+				if secondFP != want {
+					t.Errorf("second fingerprint = %q, want %q (fingerprint must not change when only spec changes)", secondFP, want)
+				}
+			},
+		},
+		{
+			// Verifies that updating the istio-features ConfigMap (without touching
+			// the annotation) does NOT change the returned fingerprint.
+			name: "fingerprint stable when only features ConfigMap changes",
+			run: func(t *testing.T) {
+				const annotationValue = `{"config":{"numTrustedProxies":1}}`
+				scheme := newTestScheme(t)
+				cr := newIstioCR(map[string]string{labels.LastAppliedConfiguration: annotationValue})
+				cm := newFeaturesConfigMap("1")
+				c := fake.NewClientBuilder().WithScheme(scheme).WithObjects(cr, cm).Build()
+				p := evaluation.NewProvider(
+					c,
+					types.NamespacedName{Namespace: testIstioCRNamespace, Name: testIstioCRName},
+					testSidecarResources(),
+				)
+
+				_, firstFP, err := p.ProxySnapshot(t.Context())
+				if err != nil {
+					t.Fatalf("first snapshot: %v", err)
+				}
+
+				// Update the ConfigMap to bump its ResourceVersion; annotation unchanged.
+				var liveCM corev1.ConfigMap
+				if err := c.Get(t.Context(), types.NamespacedName{Namespace: istiofeatures.ConfigMapNamespace, Name: istiofeatures.ConfigMapName}, &liveCM); err != nil {
+					t.Fatalf("get live CM: %v", err)
+				}
+				if liveCM.Data == nil {
+					liveCM.Data = map[string]string{}
+				}
+				liveCM.Data["features"] = `{"disableCni": true}`
+				if err := c.Update(t.Context(), &liveCM); err != nil {
+					t.Fatalf("update CM: %v", err)
+				}
+
+				_, secondFP, err := p.ProxySnapshot(t.Context())
+				if err != nil {
+					t.Fatalf("second snapshot: %v", err)
+				}
+
+				want := proxyFingerprintFromAnnotation(t, annotationValue)
+				if firstFP != want {
+					t.Errorf("first fingerprint = %q, want %q", firstFP, want)
+				}
+				if secondFP != want {
+					t.Errorf("second fingerprint = %q, want %q (fingerprint must not change when only ConfigMap changes)", secondFP, want)
+				}
+			},
+		},
+		{
+			name: "fingerprint changes on lastApplied annotation change",
+			run: func(t *testing.T) {
+				scheme := newTestScheme(t)
+				cr := newIstioCR(map[string]string{
+					labels.LastAppliedConfiguration: `{"config":{"enableDNSProxying":false}}`,
+				})
+				cm := newFeaturesConfigMap("1")
+				c := fake.NewClientBuilder().WithScheme(scheme).WithObjects(cr, cm).Build()
+				p := evaluation.NewProvider(
+					c,
+					types.NamespacedName{Namespace: testIstioCRNamespace, Name: testIstioCRName},
+					testSidecarResources(),
+				)
+
+				first, firstFP, err := p.ProxySnapshot(t.Context())
+				if err != nil {
+					t.Fatalf("first snapshot: %v", err)
+				}
+				if len(first) == 0 {
+					t.Fatalf("expected non-empty evaluators")
+				}
+
+				// Change a proxy-relevant field in the lastAppliedConfiguration annotation;
+				// spec unchanged.
+				var live operatorv1alpha2.Istio
+				if err := c.Get(t.Context(), types.NamespacedName{Namespace: testIstioCRNamespace, Name: testIstioCRName}, &live); err != nil {
+					t.Fatalf("get live CR: %v", err)
+				}
+				if live.Annotations == nil {
+					live.Annotations = map[string]string{}
+				}
+				const newAnnotation = `{"config":{"enableDNSProxying":true}}`
+				live.Annotations[labels.LastAppliedConfiguration] = newAnnotation
+				if err := c.Update(t.Context(), &live); err != nil {
+					t.Fatalf("update CR annotations: %v", err)
+				}
+
+				second, secondFP, err := p.ProxySnapshot(t.Context())
+				if err != nil {
+					t.Fatalf("second snapshot: %v", err)
+				}
+				if len(second) == 0 {
+					t.Errorf("expected non-empty evaluators after rebuild")
+				}
+				// Fingerprint must reflect the new annotation value.
+				wantFirst := proxyFingerprintFromAnnotation(t, `{"config":{"enableDNSProxying":false}}`)
+				wantSecond := proxyFingerprintFromAnnotation(t, newAnnotation)
+				if firstFP != wantFirst {
+					t.Errorf("first fingerprint = %q, want %q", firstFP, wantFirst)
+				}
+				if secondFP != wantSecond {
+					t.Errorf("second fingerprint = %q, want %q", secondFP, wantSecond)
+				}
+				if firstFP == secondFP {
+					t.Errorf("expected fingerprint to change after lastAppliedConfiguration change, stayed %q", firstFP)
+				}
+			},
+		},
+		{
+			name: "fingerprint stable on gateway-only annotation change",
+			run: func(t *testing.T) {
+				scheme := newTestScheme(t)
+				cr := newIstioCR(map[string]string{
+					labels.LastAppliedConfiguration: `{"config":{"numTrustedProxies":1}}`,
+				})
+				cm := newFeaturesConfigMap("1")
+				c := fake.NewClientBuilder().WithScheme(scheme).WithObjects(cr, cm).Build()
+				p := evaluation.NewProvider(
+					c,
+					types.NamespacedName{Namespace: testIstioCRNamespace, Name: testIstioCRName},
+					testSidecarResources(),
+				)
+
+				_, firstFP, err := p.ProxySnapshot(t.Context())
+				if err != nil {
+					t.Fatalf("first snapshot: %v", err)
+				}
+
+				// numTrustedProxies drives only the gateway fingerprint, not proxy restart,
+				// so changing it must not change the proxy fingerprint.
+				var live operatorv1alpha2.Istio
+				if err := c.Get(t.Context(), types.NamespacedName{Namespace: testIstioCRNamespace, Name: testIstioCRName}, &live); err != nil {
+					t.Fatalf("get live CR: %v", err)
+				}
+				live.Annotations[labels.LastAppliedConfiguration] = `{"config":{"numTrustedProxies":2}}`
+				if err := c.Update(t.Context(), &live); err != nil {
+					t.Fatalf("update CR annotations: %v", err)
+				}
+
+				_, secondFP, err := p.ProxySnapshot(t.Context())
+				if err != nil {
+					t.Fatalf("second snapshot: %v", err)
+				}
+				if firstFP != secondFP {
+					t.Errorf("proxy fingerprint changed on gateway-only field change: %q -> %q", firstFP, secondFP)
+				}
+			},
+		},
+		{
+			name: "sidecar resources used",
+			run: func(t *testing.T) {
+				res := testSidecarResources()
+				const annotationValue = `{"config":{"numTrustedProxies":1}}`
+				p := newProvider(t,
+					newIstioCR(map[string]string{labels.LastAppliedConfiguration: annotationValue}),
+					newFeaturesConfigMap("1"),
+				)
+
+				evals, fp, err := p.ProxySnapshot(t.Context())
+				if err != nil {
+					t.Fatalf("snapshot: %v", err)
+				}
+				if len(evals) == 0 {
+					t.Fatalf("expected non-empty evaluators")
+				}
+				wantFP := proxyFingerprintFromAnnotation(t, annotationValue)
+				if fp != wantFP {
+					t.Errorf("fingerprint = %q, want %q", fp, wantFP)
+				}
+
+				// Second call must return the same fingerprint (stable).
+				_, fp2, err := p.ProxySnapshot(t.Context())
+				if err != nil {
+					t.Fatalf("second snapshot: %v", err)
+				}
+				if fp != fp2 {
+					t.Errorf("fingerprint not stable across two calls: %q -> %q", fp, fp2)
+				}
+
+				// A pod whose istio-proxy container resources exactly match the expected
+				// values should produce Continue from the SidecarResourcesChanged evaluator.
+				matchingPod := &corev1.Pod{
+					ObjectMeta: metav1.ObjectMeta{Name: "matching", Namespace: "default"},
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{
+							{
+								Name:      "istio-proxy",
+								Resources: res,
+							},
 						},
 					},
-				},
+				}
+
+				var resourcesEval evaluation.Evaluator
+				for _, e := range evals {
+					if e.Name() == "SidecarResourcesChanged" {
+						resourcesEval = e
+						break
+					}
+				}
+				if resourcesEval == nil {
+					t.Fatal("SidecarResourcesChanged evaluator not present in snapshot")
+				}
+
+				if got := resourcesEval.Evaluate(matchingPod); got != evaluation.Continue {
+					t.Errorf("SidecarResourcesChanged: expected Continue for matching pod, got %v", got)
+				}
+
+				// A pod whose istio-proxy container has different resources should produce Restart.
+				differingPod := &corev1.Pod{
+					ObjectMeta: metav1.ObjectMeta{Name: "differing", Namespace: "default"},
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{
+							{
+								Name: "istio-proxy",
+								Resources: corev1.ResourceRequirements{
+									Requests: corev1.ResourceList{
+										corev1.ResourceCPU:    resource.MustParse("50m"),
+										corev1.ResourceMemory: resource.MustParse("64Mi"),
+									},
+									Limits: corev1.ResourceList{
+										corev1.ResourceCPU:    resource.MustParse("500m"),
+										corev1.ResourceMemory: resource.MustParse("512Mi"),
+									},
+								},
+							},
+						},
+					},
+				}
+
+				if got := resourcesEval.Evaluate(differingPod); got != evaluation.Restart {
+					t.Errorf("SidecarResourcesChanged: expected Restart for differing pod, got %v", got)
+				}
+			},
+		},
+		{
+			// Verifies that Snapshot always returns an evaluator slice containing
+			// "FingerprintChanged" when the CR has a non-empty
+			// lastAppliedConfiguration annotation.
+			name: "includes fingerprint drift evaluator",
+			run: func(t *testing.T) {
+				const annotationValue = `{"config":{"numTrustedProxies":1}}`
+				p := newProvider(t,
+					newIstioCR(map[string]string{labels.LastAppliedConfiguration: annotationValue}),
+					newFeaturesConfigMap("1"),
+				)
+
+				evals, _, err := p.ProxySnapshot(t.Context())
+				if err != nil {
+					t.Fatalf("snapshot: %v", err)
+				}
+				if len(evals) == 0 {
+					t.Fatalf("expected non-empty evaluators")
+				}
+
+				var names []string
+				for _, e := range evals {
+					names = append(names, e.Name())
+				}
+
+				var foundFingerprint bool
+				for _, n := range names {
+					if n == "FingerprintChanged" {
+						foundFingerprint = true
+					}
+				}
+				if !foundFingerprint {
+					t.Errorf("expected FingerprintChanged evaluator, got %v", names)
+				}
+			},
+		},
+		{
+			// Verifies that a lastAppliedConfiguration annotation carrying
+			// Components.Proxy.K8S.Resources is parsed into effective sidecar
+			// resources and yields a non-empty evaluator slice (the
+			// SidecarResourcesChanged evaluator captures the new expectation).
+			name: "proxy components resource change builds",
+			run: func(t *testing.T) {
+				const annotationBefore = `{"config":{}}`
+				const annotationAfter = `{"components":{"proxy":{"k8s":{"resources":{"requests":{"cpu":"50m","memory":"64Mi"}}}}}}`
+				scheme := newTestScheme(t)
+				cr := newIstioCR(map[string]string{labels.LastAppliedConfiguration: annotationBefore})
+				cm := newFeaturesConfigMap("1")
+				c := fake.NewClientBuilder().WithScheme(scheme).WithObjects(cr, cm).Build()
+				p := evaluation.NewProvider(
+					c,
+					types.NamespacedName{Namespace: testIstioCRNamespace, Name: testIstioCRName},
+					testSidecarResources(),
+				)
+
+				first, _, err := p.ProxySnapshot(t.Context())
+				if err != nil {
+					t.Fatalf("first snapshot: %v", err)
+				}
+				if len(first) == 0 {
+					t.Fatalf("expected non-empty evaluators")
+				}
+
+				var live operatorv1alpha2.Istio
+				if err := c.Get(t.Context(), types.NamespacedName{Namespace: testIstioCRNamespace, Name: testIstioCRName}, &live); err != nil {
+					t.Fatalf("get live CR: %v", err)
+				}
+				live.Annotations[labels.LastAppliedConfiguration] = annotationAfter
+				if err := c.Update(t.Context(), &live); err != nil {
+					t.Fatalf("update CR annotations: %v", err)
+				}
+
+				second, _, err := p.ProxySnapshot(t.Context())
+				if err != nil {
+					t.Fatalf("second snapshot: %v", err)
+				}
+				if len(second) == 0 {
+					t.Errorf("expected non-empty evaluators after resource-bearing annotation change")
+				}
 			},
 		},
 	}
 
-	if got := resourcesEval.Evaluate(differingPod); got != evaluation.Restart {
-		t.Errorf("SidecarResourcesChanged: expected Restart for differing pod, got %v", got)
-	}
-}
-
-// TestProvider_Snapshot_IncludesFingerprintDrift verifies that Snapshot always
-// returns an evaluator slice containing "FingerprintChanged" when the CR has
-// a non-empty lastAppliedConfiguration annotation.
-func TestProvider_Snapshot_IncludesFingerprintDrift(t *testing.T) {
-	const annotationValue = `{"config":{"numTrustedProxies":1}}`
-	p := newProvider(t,
-		newIstioCR(map[string]string{labels.LastAppliedConfiguration: annotationValue}),
-		newFeaturesConfigMap("1"),
-	)
-
-	evals, _, err := p.ProxySnapshot(t.Context())
-	if err != nil {
-		t.Fatalf("snapshot: %v", err)
-	}
-	if len(evals) == 0 {
-		t.Fatalf("expected non-empty evaluators")
-	}
-
-	var names []string
-	for _, e := range evals {
-		names = append(names, e.Name())
-	}
-
-	var foundFingerprint bool
-	for _, n := range names {
-		if n == "FingerprintChanged" {
-			foundFingerprint = true
-		}
-	}
-	if !foundFingerprint {
-		t.Errorf("expected FingerprintChanged evaluator, got %v", names)
-	}
-}
-
-// TestProvider_Snapshot_ProxyComponentsResourceChangeBuilds verifies that a
-// lastAppliedConfiguration annotation carrying Components.Proxy.K8S.Resources
-// is parsed into effective sidecar resources and yields a non-empty evaluator
-// slice (the SidecarResourcesChanged evaluator captures the new expectation).
-func TestProvider_Snapshot_ProxyComponentsResourceChangeBuilds(t *testing.T) {
-	const annotationBefore = `{"config":{}}`
-	const annotationAfter = `{"components":{"proxy":{"k8s":{"resources":{"requests":{"cpu":"50m","memory":"64Mi"}}}}}}`
-	scheme := newTestScheme(t)
-	cr := newIstioCR(map[string]string{labels.LastAppliedConfiguration: annotationBefore})
-	cm := newFeaturesConfigMap("1")
-	c := fake.NewClientBuilder().WithScheme(scheme).WithObjects(cr, cm).Build()
-	p := evaluation.NewProvider(
-		c,
-		types.NamespacedName{Namespace: testIstioCRNamespace, Name: testIstioCRName},
-		testSidecarResources(),
-	)
-
-	first, _, err := p.ProxySnapshot(t.Context())
-	if err != nil {
-		t.Fatalf("first snapshot: %v", err)
-	}
-	if len(first) == 0 {
-		t.Fatalf("expected non-empty evaluators")
-	}
-
-	var live operatorv1alpha2.Istio
-	if err := c.Get(t.Context(), types.NamespacedName{Namespace: testIstioCRNamespace, Name: testIstioCRName}, &live); err != nil {
-		t.Fatalf("get live CR: %v", err)
-	}
-	live.Annotations[labels.LastAppliedConfiguration] = annotationAfter
-	if err := c.Update(t.Context(), &live); err != nil {
-		t.Fatalf("update CR annotations: %v", err)
-	}
-
-	second, _, err := p.ProxySnapshot(t.Context())
-	if err != nil {
-		t.Fatalf("second snapshot: %v", err)
-	}
-	if len(second) == 0 {
-		t.Errorf("expected non-empty evaluators after resource-bearing annotation change")
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.run(t)
+		})
 	}
 }
 
@@ -676,4 +710,66 @@ func TestProvider_GatewaySnapshot(t *testing.T) {
 			}
 		})
 	}
+
+	// Relation cases: assert how two annotations' gateway fingerprints compare,
+	// independent of their exact value.
+	gatewayFP := func(t *testing.T, annotationValue string) string {
+		t.Helper()
+		p := newProvider(t,
+			newIstioCR(map[string]string{labels.LastAppliedConfiguration: annotationValue}),
+			newFeaturesConfigMap("1"),
+		)
+		_, fp, err := p.GatewaySnapshot(t.Context())
+		if err != nil {
+			t.Fatalf("GatewaySnapshot(%q): unexpected error: %v", annotationValue, err)
+		}
+		return fp
+	}
+
+	relations := []struct {
+		name      string
+		a, b      string
+		wantEqual bool
+	}{
+		{
+			name:      "TrustDomain difference changes fingerprint",
+			a:         `{"config":{"trustDomain":"cluster.local"}}`,
+			b:         `{"config":{"trustDomain":"different.local"}}`,
+			wantEqual: false,
+		},
+		{
+			name:      "ForwardClientCertDetails difference changes fingerprint",
+			a:         `{"config":{"forwardClientCertDetails":"APPEND_FORWARD"}}`,
+			b:         `{"config":{"forwardClientCertDetails":"SANITIZE_SET"}}`,
+			wantEqual: false,
+		},
+		{
+			name:      "ProxyStatsMatcher regexps in different order yield same fingerprint",
+			a:         `{"config":{"proxyStatsMatcher":{"inclusionRegexps":["aaa","bbb","ccc"]}}}`,
+			b:         `{"config":{"proxyStatsMatcher":{"inclusionRegexps":["ccc","aaa","bbb"]}}}`,
+			wantEqual: true,
+		},
+		{
+			name:      "CompatibilityMode does not affect gateway fingerprint",
+			a:         `{"config":{"numTrustedProxies":1},"compatibilityMode":true}`,
+			b:         `{"config":{"numTrustedProxies":1},"compatibilityMode":false}`,
+			wantEqual: true,
+		},
+	}
+
+	for _, rc := range relations {
+		t.Run(rc.name, func(t *testing.T) {
+			fpA := gatewayFP(t, rc.a)
+			fpB := gatewayFP(t, rc.b)
+			if (fpA == fpB) != rc.wantEqual {
+				t.Errorf("fingerprint equality = %v, want %v (a=%q b=%q)", fpA == fpB, rc.wantEqual, fpA, fpB)
+			}
+		})
+	}
+
+	t.Run("gateway field set yields non-empty fingerprint", func(t *testing.T) {
+		if fp := gatewayFP(t, `{"config":{"numTrustedProxies":1}}`); fp == "" {
+			t.Errorf("expected non-empty fingerprint, got empty")
+		}
+	})
 }

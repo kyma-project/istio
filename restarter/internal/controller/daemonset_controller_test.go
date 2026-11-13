@@ -50,6 +50,7 @@ func TestDaemonSetReconcile(t *testing.T) {
 		pods           []*corev1.Pod
 		evaluators     []evaluation.Evaluator
 		snapshotErr    error
+		missing        bool
 		wantResult     ctrl.Result
 		wantErrPresent bool
 	}{
@@ -57,6 +58,11 @@ func TestDaemonSetReconcile(t *testing.T) {
 			name:       "no pods, no evaluators → Continue, no error",
 			pods:       nil,
 			evaluators: nil,
+			wantResult: ctrl.Result{},
+		},
+		{
+			name:       "missing DaemonSet → nil error, empty result",
+			missing:    true,
 			wantResult: ctrl.Result{},
 		},
 		{
@@ -128,8 +134,12 @@ func TestDaemonSetReconcile(t *testing.T) {
 				Recorder:   record.NewFakeRecorder(10),
 			}
 
+			name := "my-ds"
+			if tt.missing {
+				name = "missing"
+			}
 			got, err := r.Reconcile(context.Background(), ctrl.Request{
-				NamespacedName: types.NamespacedName{Name: "my-ds", Namespace: "default"},
+				NamespacedName: types.NamespacedName{Name: name, Namespace: "default"},
 			})
 			if (err != nil) != tt.wantErrPresent {
 				t.Errorf("Reconcile() error = %v, wantErrPresent %v", err, tt.wantErrPresent)
@@ -138,22 +148,5 @@ func TestDaemonSetReconcile(t *testing.T) {
 				t.Errorf("Reconcile() result = %v, want %v", got, tt.wantResult)
 			}
 		})
-	}
-}
-
-func TestDaemonSetReconcile_NotFound(t *testing.T) {
-	s := runtime.NewScheme()
-	_ = appsv1.AddToScheme(s)
-	_ = corev1.AddToScheme(s)
-	_ = operatorv1alpha2.AddToScheme(s)
-
-	fakeClient := fake.NewClientBuilder().WithScheme(s).Build()
-	r := &DaemonSetReconciler{Client: fakeClient, Scheme: s}
-
-	_, err := r.Reconcile(context.Background(), ctrl.Request{
-		NamespacedName: types.NamespacedName{Name: "missing", Namespace: "default"},
-	})
-	if err != nil {
-		t.Errorf("expected nil error for not-found DS, got %v", err)
 	}
 }

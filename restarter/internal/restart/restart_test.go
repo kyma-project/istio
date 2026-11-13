@@ -29,194 +29,190 @@ func assertRestartAnnotationRecent(t *testing.T, got string) {
 	}
 }
 
-func TestRestartHelpers_StampAnnotation(t *testing.T) {
+func TestDeployment(t *testing.T) {
 	tests := []struct {
-		name    string
-		obj     client.Object
-		restart func(ctx context.Context, c client.Client, obj client.Object) error
-		getTmpl func(client.Object) *corev1.PodTemplateSpec
+		name        string
+		existing    map[string]string
+		fingerprint string
 	}{
-		{
-			name: "Deployment",
-			obj:  &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Name: "d", Namespace: "default"}},
-			restart: func(ctx context.Context, c client.Client, o client.Object) error {
-				return Deployment(ctx, c, o.(*appsv1.Deployment), "")
-			},
-			getTmpl: func(o client.Object) *corev1.PodTemplateSpec { return &o.(*appsv1.Deployment).Spec.Template },
-		},
-		{
-			name: "StatefulSet",
-			obj:  &appsv1.StatefulSet{ObjectMeta: metav1.ObjectMeta{Name: "s", Namespace: "default"}},
-			restart: func(ctx context.Context, c client.Client, o client.Object) error {
-				return StatefulSet(ctx, c, o.(*appsv1.StatefulSet), "")
-			},
-			getTmpl: func(o client.Object) *corev1.PodTemplateSpec { return &o.(*appsv1.StatefulSet).Spec.Template },
-		},
-		{
-			name: "DaemonSet",
-			obj:  &appsv1.DaemonSet{ObjectMeta: metav1.ObjectMeta{Name: "ds", Namespace: "default"}},
-			restart: func(ctx context.Context, c client.Client, o client.Object) error {
-				return DaemonSet(ctx, c, o.(*appsv1.DaemonSet), "")
-			},
-			getTmpl: func(o client.Object) *corev1.PodTemplateSpec { return &o.(*appsv1.DaemonSet).Spec.Template },
-		},
+		{name: "stamps restart and hash", fingerprint: "fp-dep"},
+		{name: "preserves existing annotations", existing: map[string]string{"keep": "me"}, fingerprint: "fp-dep"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := runtime.NewScheme()
 			_ = appsv1.AddToScheme(s)
-			c := fake.NewClientBuilder().WithScheme(s).WithObjects(tt.obj).Build()
 
-			if err := tt.restart(context.Background(), c, tt.obj); err != nil {
-				t.Fatalf("restart: %v", err)
+			d := &appsv1.Deployment{
+				ObjectMeta: metav1.ObjectMeta{Name: "d", Namespace: "default"},
+				Spec: appsv1.DeploymentSpec{
+					Template: corev1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{Annotations: tt.existing},
+					},
+				},
 			}
-			key := client.ObjectKeyFromObject(tt.obj)
-			fresh := tt.obj.DeepCopyObject().(client.Object)
-			if err := c.Get(context.Background(), key, fresh); err != nil {
+			c := fake.NewClientBuilder().WithScheme(s).WithObjects(d).Build()
+
+			if err := Deployment(context.Background(), c, d, tt.fingerprint); err != nil {
+				t.Fatalf("Deployment: %v", err)
+			}
+
+			fresh := &appsv1.Deployment{}
+			if err := c.Get(context.Background(), client.ObjectKeyFromObject(d), fresh); err != nil {
 				t.Fatalf("get: %v", err)
 			}
-			assertRestartAnnotationRecent(t, tt.getTmpl(fresh).Annotations[RestartAnnotation])
+			ann := fresh.Spec.Template.Annotations
+			if ann[HashAnnotation] != tt.fingerprint {
+				t.Errorf("hash annotation = %q, want %q", ann[HashAnnotation], tt.fingerprint)
+			}
+			for k, v := range tt.existing {
+				if ann[k] != v {
+					t.Errorf("existing annotation %q = %q, want %q", k, ann[k], v)
+				}
+			}
+			assertRestartAnnotationRecent(t, ann[RestartAnnotation])
 		})
 	}
 }
 
-func TestRestartHelpers_PreserveExistingAnnotations(t *testing.T) {
-	s := runtime.NewScheme()
-	_ = appsv1.AddToScheme(s)
-
-	d := &appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{Name: "d", Namespace: "default"},
-		Spec: appsv1.DeploymentSpec{
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{Annotations: map[string]string{"keep": "me"}},
-			},
-		},
-	}
-	c := fake.NewClientBuilder().WithScheme(s).WithObjects(d).Build()
-
-	if err := Deployment(context.Background(), c, d, ""); err != nil {
-		t.Fatalf("restart: %v", err)
-	}
-	fresh := &appsv1.Deployment{}
-	if err := c.Get(context.Background(), client.ObjectKeyFromObject(d), fresh); err != nil {
-		t.Fatalf("get: %v", err)
-	}
-	if fresh.Spec.Template.Annotations["keep"] != "me" {
-		t.Errorf("existing annotation lost")
-	}
-	assertRestartAnnotationRecent(t, fresh.Spec.Template.Annotations[RestartAnnotation])
-}
-
-func TestRestartReplicaSetPods_DeletesAll(t *testing.T) {
-	s := runtime.NewScheme()
-	_ = corev1.AddToScheme(s)
-	_ = appsv1.AddToScheme(s)
-
-	mkPod := func(name string) *corev1.Pod {
-		return &corev1.Pod{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: "default"}}
-	}
-	p1 := mkPod("p1")
-	p2 := mkPod("p2")
-	rs := &appsv1.ReplicaSet{ObjectMeta: metav1.ObjectMeta{Name: "rs", Namespace: "default"}}
-
-	c := fake.NewClientBuilder().WithScheme(s).WithObjects(rs, p1, p2).Build()
-
-	if err := ReplicaSetPods(context.Background(), c, rs, []*corev1.Pod{p1, p2}, "fp-1"); err != nil {
-		t.Fatalf("restart: %v", err)
-	}
-
-	for _, name := range []string{"p1", "p2"} {
-		err := c.Get(context.Background(), types.NamespacedName{Name: name, Namespace: "default"}, &corev1.Pod{})
-		if !apierrors.IsNotFound(err) {
-			t.Errorf("pod %s expected NotFound, got %v", name, err)
-		}
-	}
-
-	fresh := &appsv1.ReplicaSet{}
-	if err := c.Get(context.Background(), types.NamespacedName{Name: "rs", Namespace: "default"}, fresh); err != nil {
-		t.Fatalf("get rs: %v", err)
-	}
-	if fresh.Spec.Template.Annotations[HashAnnotation] != "fp-1" {
-		t.Errorf("fingerprint annotation = %q, want %q", fresh.Spec.Template.Annotations[HashAnnotation], "fp-1")
-	}
-	assertRestartAnnotationRecent(t, fresh.Spec.Template.Annotations[RestartAnnotation])
-}
-
-func TestRestartReplicaSetPods_IgnoresNotFound(t *testing.T) {
-	s := runtime.NewScheme()
-	_ = corev1.AddToScheme(s)
-	_ = appsv1.AddToScheme(s)
-	rs := &appsv1.ReplicaSet{ObjectMeta: metav1.ObjectMeta{Name: "rs", Namespace: "default"}}
-	c := fake.NewClientBuilder().WithScheme(s).WithObjects(rs).Build()
-
-	ghost := &corev1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "gone", Namespace: "default"}}
-	if err := ReplicaSetPods(context.Background(), c, rs, []*corev1.Pod{ghost}, "fp-1"); err != nil {
-		t.Errorf("expected nil for already-missing pod, got %v", err)
-	}
-}
-
-func TestDeployment(t *testing.T) {
-	s := runtime.NewScheme()
-	_ = appsv1.AddToScheme(s)
-
-	d := &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Name: "d", Namespace: "default"}}
-	c := fake.NewClientBuilder().WithScheme(s).WithObjects(d).Build()
-
-	if err := Deployment(context.Background(), c, d, "fp-dep"); err != nil {
-		t.Fatalf("Deployment: %v", err)
-	}
-
-	fresh := &appsv1.Deployment{}
-	if err := c.Get(context.Background(), client.ObjectKeyFromObject(d), fresh); err != nil {
-		t.Fatalf("get: %v", err)
-	}
-	if fresh.Spec.Template.Annotations[HashAnnotation] != "fp-dep" {
-		t.Errorf("hash annotation = %q, want %q", fresh.Spec.Template.Annotations[HashAnnotation], "fp-dep")
-	}
-	assertRestartAnnotationRecent(t, fresh.Spec.Template.Annotations[RestartAnnotation])
-}
-
 func TestStatefulSet(t *testing.T) {
-	s := runtime.NewScheme()
-	_ = appsv1.AddToScheme(s)
-
-	sts := &appsv1.StatefulSet{ObjectMeta: metav1.ObjectMeta{Name: "s", Namespace: "default"}}
-	c := fake.NewClientBuilder().WithScheme(s).WithObjects(sts).Build()
-
-	if err := StatefulSet(context.Background(), c, sts, "fp-sts"); err != nil {
-		t.Fatalf("StatefulSet: %v", err)
+	tests := []struct {
+		name        string
+		fingerprint string
+	}{
+		{name: "stamps restart and hash", fingerprint: "fp-sts"},
 	}
 
-	fresh := &appsv1.StatefulSet{}
-	if err := c.Get(context.Background(), client.ObjectKeyFromObject(sts), fresh); err != nil {
-		t.Fatalf("get: %v", err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := runtime.NewScheme()
+			_ = appsv1.AddToScheme(s)
+
+			sts := &appsv1.StatefulSet{ObjectMeta: metav1.ObjectMeta{Name: "s", Namespace: "default"}}
+			c := fake.NewClientBuilder().WithScheme(s).WithObjects(sts).Build()
+
+			if err := StatefulSet(context.Background(), c, sts, tt.fingerprint); err != nil {
+				t.Fatalf("StatefulSet: %v", err)
+			}
+
+			fresh := &appsv1.StatefulSet{}
+			if err := c.Get(context.Background(), client.ObjectKeyFromObject(sts), fresh); err != nil {
+				t.Fatalf("get: %v", err)
+			}
+			if fresh.Spec.Template.Annotations[HashAnnotation] != tt.fingerprint {
+				t.Errorf("hash annotation = %q, want %q", fresh.Spec.Template.Annotations[HashAnnotation], tt.fingerprint)
+			}
+			assertRestartAnnotationRecent(t, fresh.Spec.Template.Annotations[RestartAnnotation])
+		})
 	}
-	if fresh.Spec.Template.Annotations[HashAnnotation] != "fp-sts" {
-		t.Errorf("hash annotation = %q, want %q", fresh.Spec.Template.Annotations[HashAnnotation], "fp-sts")
-	}
-	assertRestartAnnotationRecent(t, fresh.Spec.Template.Annotations[RestartAnnotation])
 }
 
 func TestDaemonSet(t *testing.T) {
-	s := runtime.NewScheme()
-	_ = appsv1.AddToScheme(s)
-
-	ds := &appsv1.DaemonSet{ObjectMeta: metav1.ObjectMeta{Name: "ds", Namespace: "default"}}
-	c := fake.NewClientBuilder().WithScheme(s).WithObjects(ds).Build()
-
-	if err := DaemonSet(context.Background(), c, ds, "fp-ds"); err != nil {
-		t.Fatalf("DaemonSet: %v", err)
+	tests := []struct {
+		name        string
+		fingerprint string
+	}{
+		{name: "stamps restart and hash", fingerprint: "fp-ds"},
 	}
 
-	fresh := &appsv1.DaemonSet{}
-	if err := c.Get(context.Background(), client.ObjectKeyFromObject(ds), fresh); err != nil {
-		t.Fatalf("get: %v", err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := runtime.NewScheme()
+			_ = appsv1.AddToScheme(s)
+
+			ds := &appsv1.DaemonSet{ObjectMeta: metav1.ObjectMeta{Name: "ds", Namespace: "default"}}
+			c := fake.NewClientBuilder().WithScheme(s).WithObjects(ds).Build()
+
+			if err := DaemonSet(context.Background(), c, ds, tt.fingerprint); err != nil {
+				t.Fatalf("DaemonSet: %v", err)
+			}
+
+			fresh := &appsv1.DaemonSet{}
+			if err := c.Get(context.Background(), client.ObjectKeyFromObject(ds), fresh); err != nil {
+				t.Fatalf("get: %v", err)
+			}
+			if fresh.Spec.Template.Annotations[HashAnnotation] != tt.fingerprint {
+				t.Errorf("hash annotation = %q, want %q", fresh.Spec.Template.Annotations[HashAnnotation], tt.fingerprint)
+			}
+			assertRestartAnnotationRecent(t, fresh.Spec.Template.Annotations[RestartAnnotation])
+		})
 	}
-	if fresh.Spec.Template.Annotations[HashAnnotation] != "fp-ds" {
-		t.Errorf("hash annotation = %q, want %q", fresh.Spec.Template.Annotations[HashAnnotation], "fp-ds")
+}
+
+func TestReplicaSetPods(t *testing.T) {
+	tests := []struct {
+		name        string
+		podNames    []string
+		targetNames []string
+		wantDeleted []string
+		checkStamp  bool
+	}{
+		{
+			name:        "deletes all targeted pods and stamps replicaset",
+			podNames:    []string{"p1", "p2"},
+			targetNames: []string{"p1", "p2"},
+			wantDeleted: []string{"p1", "p2"},
+			checkStamp:  true,
+		},
+		{
+			name:        "ignores already-missing pod",
+			podNames:    nil,
+			targetNames: []string{"gone"},
+			wantDeleted: nil,
+			checkStamp:  false,
+		},
 	}
-	assertRestartAnnotationRecent(t, fresh.Spec.Template.Annotations[RestartAnnotation])
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := runtime.NewScheme()
+			_ = corev1.AddToScheme(s)
+			_ = appsv1.AddToScheme(s)
+
+			rs := &appsv1.ReplicaSet{ObjectMeta: metav1.ObjectMeta{Name: "rs", Namespace: "default"}}
+			objs := []client.Object{rs}
+			byName := map[string]*corev1.Pod{}
+			for _, name := range tt.podNames {
+				p := &corev1.Pod{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: "default"}}
+				byName[name] = p
+				objs = append(objs, p)
+			}
+
+			c := fake.NewClientBuilder().WithScheme(s).WithObjects(objs...).Build()
+
+			targets := make([]*corev1.Pod, 0, len(tt.targetNames))
+			for _, name := range tt.targetNames {
+				if p, ok := byName[name]; ok {
+					targets = append(targets, p)
+					continue
+				}
+				targets = append(targets, &corev1.Pod{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: "default"}})
+			}
+
+			if err := ReplicaSetPods(context.Background(), c, rs, targets, "fp-1"); err != nil {
+				t.Fatalf("ReplicaSetPods: %v", err)
+			}
+
+			for _, name := range tt.wantDeleted {
+				err := c.Get(context.Background(), types.NamespacedName{Name: name, Namespace: "default"}, &corev1.Pod{})
+				if !apierrors.IsNotFound(err) {
+					t.Errorf("pod %s expected NotFound, got %v", name, err)
+				}
+			}
+
+			if tt.checkStamp {
+				fresh := &appsv1.ReplicaSet{}
+				if err := c.Get(context.Background(), types.NamespacedName{Name: "rs", Namespace: "default"}, fresh); err != nil {
+					t.Fatalf("get rs: %v", err)
+				}
+				if fresh.Spec.Template.Annotations[HashAnnotation] != "fp-1" {
+					t.Errorf("fingerprint annotation = %q, want %q", fresh.Spec.Template.Annotations[HashAnnotation], "fp-1")
+				}
+				assertRestartAnnotationRecent(t, fresh.Spec.Template.Annotations[RestartAnnotation])
+			}
+		})
+	}
 }
 
 func TestAlreadyRestartedForConfig(t *testing.T) {

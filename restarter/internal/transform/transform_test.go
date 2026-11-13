@@ -11,51 +11,38 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func TestStripForRestart(t *testing.T) {
-	strip := StripForRestart()
+func objectWithManagedFieldsAndOwnerRefs(name string, pod bool) metav1.Object {
+	om := metav1.ObjectMeta{
+		Name:        name,
+		Namespace:   "ns",
+		Labels:      map[string]string{"app": "x"},
+		Annotations: map[string]string{"a": "b"},
+		ManagedFields: []metav1.ManagedFieldsEntry{
+			{Manager: "m"},
+		},
+		OwnerReferences: []metav1.OwnerReference{
+			{Name: "owner", APIVersion: "v1", Kind: "Deployment", UID: "uid"},
+		},
+		Finalizers: []string{"protect.me"},
+	}
+	if pod {
+		return &corev1.Pod{ObjectMeta: om}
+	}
+	return &appsv1.Deployment{ObjectMeta: om}
+}
 
+func TestStripForRestart(t *testing.T) {
 	tests := []struct {
-		name string
-		in   any
+		name        string
+		in          any
+		passthrough bool
 	}{
-		{
-			name: "deployment",
-			in: &appsv1.Deployment{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:        "dep",
-					Namespace:   "ns",
-					Labels:      map[string]string{"app": "x"},
-					Annotations: map[string]string{"a": "b"},
-					ManagedFields: []metav1.ManagedFieldsEntry{
-						{Manager: "m"},
-					},
-					OwnerReferences: []metav1.OwnerReference{
-						{Name: "owner", APIVersion: "v1", Kind: "Deployment", UID: "uid"},
-					},
-					Finalizers: []string{"protect.me"},
-				},
-			},
-		},
-		{
-			name: "pod",
-			in: &corev1.Pod{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:        "pod",
-					Namespace:   "ns",
-					Labels:      map[string]string{"app": "x"},
-					Annotations: map[string]string{"a": "b"},
-					ManagedFields: []metav1.ManagedFieldsEntry{
-						{Manager: "m"},
-					},
-					OwnerReferences: []metav1.OwnerReference{
-						{Name: "owner", APIVersion: "apps/v1", Kind: "ReplicaSet", UID: "uid"},
-					},
-					Finalizers: []string{"protect.me"},
-				},
-			},
-		},
+		{name: "deployment", in: objectWithManagedFieldsAndOwnerRefs("dep", false)},
+		{name: "pod", in: objectWithManagedFieldsAndOwnerRefs("pod", true)},
+		{name: "non-object passthrough", in: "not-a-k8s-object", passthrough: true},
 	}
 
+	strip := StripForRestart()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			out, err := strip(tt.in)
@@ -63,11 +50,17 @@ func TestStripForRestart(t *testing.T) {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
+			if tt.passthrough {
+				if out != tt.in {
+					t.Errorf("non-object should pass through unchanged, got %v", out)
+				}
+				return
+			}
+
 			acc, err := meta.Accessor(out)
 			if err != nil {
 				t.Fatalf("output not a metav1.Object: %v", err)
 			}
-
 			if len(acc.GetManagedFields()) != 0 {
 				t.Errorf("managedFields not stripped: %v", acc.GetManagedFields())
 			}
@@ -90,24 +83,61 @@ func TestStripForRestart(t *testing.T) {
 	}
 }
 
-func TestStripForRestart_NonObjectPassthrough(t *testing.T) {
-	strip := StripForRestart()
-	in := "not-a-k8s-object"
-
-	out, err := strip(in)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+func TestStripForRestartKeepOwnerRefs(t *testing.T) {
+	tests := []struct {
+		name        string
+		in          any
+		passthrough bool
+	}{
+		{name: "deployment", in: objectWithManagedFieldsAndOwnerRefs("dep", false)},
+		{name: "pod", in: objectWithManagedFieldsAndOwnerRefs("pod", true)},
+		{name: "non-object passthrough", in: "not-a-k8s-object", passthrough: true},
 	}
-	if out != in {
-		t.Errorf("non-object should pass through unchanged, got %v", out)
+
+	strip := StripForRestartKeepOwnerRefs()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			out, err := strip(tt.in)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			if tt.passthrough {
+				if out != tt.in {
+					t.Errorf("non-object should pass through unchanged, got %v", out)
+				}
+				return
+			}
+
+			acc, err := meta.Accessor(out)
+			if err != nil {
+				t.Fatalf("output not a metav1.Object: %v", err)
+			}
+			if len(acc.GetManagedFields()) != 0 {
+				t.Errorf("managedFields not stripped: %v", acc.GetManagedFields())
+			}
+			if len(acc.GetOwnerReferences()) != 1 {
+				t.Errorf("ownerReferences must be retained, got %v", acc.GetOwnerReferences())
+			}
+			if len(acc.GetFinalizers()) == 0 {
+				t.Errorf("finalizers must be retained, got none")
+			}
+			if acc.GetName() == "" || acc.GetNamespace() == "" {
+				t.Errorf("name/namespace must be retained, got name=%q ns=%q", acc.GetName(), acc.GetNamespace())
+			}
+			if acc.GetLabels()["app"] != "x" {
+				t.Errorf("labels not retained: %v", acc.GetLabels())
+			}
+			if acc.GetAnnotations()["a"] != "b" {
+				t.Errorf("annotations not retained: %v", acc.GetAnnotations())
+			}
+		})
 	}
 }
 
-func TestStripForPod(t *testing.T) {
-	strip := StripForPod()
-
+func fullPod() *corev1.Pod {
 	trueBool := true
-	pod := &corev1.Pod{
+	return &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        "pod",
 			Namespace:   "ns",
@@ -194,170 +224,180 @@ func TestStripForPod(t *testing.T) {
 			},
 		},
 	}
-
-	out, err := strip(pod)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	gotPod, ok := out.(*corev1.Pod)
-	if !ok {
-		t.Fatalf("output is not a *corev1.Pod: %T", out)
-	}
-	if gotPod != pod {
-		t.Errorf("expected the same pod pointer returned")
-	}
-
-	if gotPod.ManagedFields != nil {
-		t.Errorf("managedFields not stripped: %v", gotPod.ManagedFields)
-	}
-
-	emptyStatus := corev1.PodStatus{}
-	if !reflect.DeepEqual(gotPod.Status, emptyStatus) {
-		t.Errorf("status not zeroed: %+v", gotPod.Status)
-	}
-
-	if len(gotPod.Spec.Volumes) != 0 {
-		t.Errorf("volumes not dropped: %v", gotPod.Spec.Volumes)
-	}
-	if gotPod.Spec.NodeName != "" {
-		t.Errorf("nodeName not dropped: %q", gotPod.Spec.NodeName)
-	}
-
-	// InitContainers: length and pruning.
-	if len(gotPod.Spec.InitContainers) != 1 {
-		t.Fatalf("initContainers not retained, got %d", len(gotPod.Spec.InitContainers))
-	}
-	initC := gotPod.Spec.InitContainers[0]
-	if initC.Name != "istio-init" {
-		t.Errorf("init container name = %q, want %q", initC.Name, "istio-init")
-	}
-	if initC.Image != "init:1" {
-		t.Errorf("init container image = %q, want %q", initC.Image, "init:1")
-	}
-	// Extra fields must be dropped from init container.
-	if len(initC.Env) != 0 {
-		t.Errorf("init container Env not dropped: %v", initC.Env)
-	}
-	if len(initC.VolumeMounts) != 0 {
-		t.Errorf("init container VolumeMounts not dropped: %v", initC.VolumeMounts)
-	}
-	if len(initC.Ports) != 0 {
-		t.Errorf("init container Ports not dropped: %v", initC.Ports)
-	}
-	if initC.SecurityContext != nil {
-		t.Errorf("init container SecurityContext not dropped: %v", initC.SecurityContext)
-	}
-	if len(initC.Command) != 0 {
-		t.Errorf("init container Command not dropped: %v", initC.Command)
-	}
-	if len(initC.Args) != 0 {
-		t.Errorf("init container Args not dropped: %v", initC.Args)
-	}
-
-	// Containers: length and pruning.
-	if len(gotPod.Spec.Containers) != 2 {
-		t.Fatalf("containers not retained, got %d", len(gotPod.Spec.Containers))
-	}
-	var proxy *corev1.Container
-	for i := range gotPod.Spec.Containers {
-		if gotPod.Spec.Containers[i].Name == "istio-proxy" {
-			proxy = &gotPod.Spec.Containers[i]
-		}
-	}
-	if proxy == nil {
-		t.Fatal("istio-proxy container not retained")
-	}
-	if proxy.Image != "proxy:1" {
-		t.Errorf("istio-proxy image = %q, want %q", proxy.Image, "proxy:1")
-	}
-	if proxy.Resources.Requests.Cpu().String() != "100m" {
-		t.Errorf("istio-proxy cpu request = %q, want %q", proxy.Resources.Requests.Cpu().String(), "100m")
-	}
-	if proxy.Resources.Requests.Memory().String() != "128Mi" {
-		t.Errorf("istio-proxy memory request = %q, want %q", proxy.Resources.Requests.Memory().String(), "128Mi")
-	}
-	if proxy.Resources.Limits.Cpu().String() != "200m" {
-		t.Errorf("istio-proxy cpu limit = %q, want %q", proxy.Resources.Limits.Cpu().String(), "200m")
-	}
-	if proxy.Resources.Limits.Memory().String() != "256Mi" {
-		t.Errorf("istio-proxy memory limit = %q, want %q", proxy.Resources.Limits.Memory().String(), "256Mi")
-	}
-	// Extra fields must be dropped from istio-proxy container.
-	if len(proxy.Env) != 0 {
-		t.Errorf("istio-proxy Env not dropped: %v", proxy.Env)
-	}
-	if len(proxy.VolumeMounts) != 0 {
-		t.Errorf("istio-proxy VolumeMounts not dropped: %v", proxy.VolumeMounts)
-	}
-	if len(proxy.Ports) != 0 {
-		t.Errorf("istio-proxy Ports not dropped: %v", proxy.Ports)
-	}
-	if proxy.SecurityContext != nil {
-		t.Errorf("istio-proxy SecurityContext not dropped: %v", proxy.SecurityContext)
-	}
-	if len(proxy.Command) != 0 {
-		t.Errorf("istio-proxy Command not dropped: %v", proxy.Command)
-	}
-	if len(proxy.Args) != 0 {
-		t.Errorf("istio-proxy Args not dropped: %v", proxy.Args)
-	}
-
-	// Check the app container is also pruned (Name/Image kept, extras dropped).
-	var appC *corev1.Container
-	for i := range gotPod.Spec.Containers {
-		if gotPod.Spec.Containers[i].Name == "app" {
-			appC = &gotPod.Spec.Containers[i]
-		}
-	}
-	if appC == nil {
-		t.Fatal("app container not retained")
-	}
-	if appC.Image != "app:1" {
-		t.Errorf("app container image = %q, want %q", appC.Image, "app:1")
-	}
-	if len(appC.Env) != 0 {
-		t.Errorf("app container Env not dropped: %v", appC.Env)
-	}
-	if len(appC.VolumeMounts) != 0 {
-		t.Errorf("app container VolumeMounts not dropped: %v", appC.VolumeMounts)
-	}
-	if len(appC.Command) != 0 {
-		t.Errorf("app container Command not dropped: %v", appC.Command)
-	}
-
-	if len(gotPod.OwnerReferences) != 1 || gotPod.OwnerReferences[0].Name != "owner" {
-		t.Errorf("ownerReferences not retained: %v", gotPod.OwnerReferences)
-	}
-	if gotPod.Annotations["sidecar.istio.io/status"] != "{}" {
-		t.Errorf("annotations not retained: %v", gotPod.Annotations)
-	}
-	if gotPod.Labels["app"] != "x" {
-		t.Errorf("labels not retained: %v", gotPod.Labels)
-	}
 }
 
-func TestStripForPod_NonPodPassthrough(t *testing.T) {
-	strip := StripForPod()
-
-	dep := &appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "dep",
-			Namespace: "ns",
-			ManagedFields: []metav1.ManagedFieldsEntry{
-				{Manager: "m"},
+func TestStripForPod(t *testing.T) {
+	tests := []struct {
+		name        string
+		in          any
+		passthrough bool
+	}{
+		{name: "pod trimmed to minimal fields", in: fullPod()},
+		{
+			name: "non-pod passthrough",
+			in: &appsv1.Deployment{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "dep",
+					Namespace: "ns",
+					ManagedFields: []metav1.ManagedFieldsEntry{
+						{Manager: "m"},
+					},
+				},
 			},
+			passthrough: true,
 		},
 	}
 
-	out, err := strip(dep)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if out != dep {
-		t.Errorf("non-pod should pass through unchanged")
-	}
-	if len(dep.ManagedFields) != 1 {
-		t.Errorf("non-pod should be unmodified, managedFields = %v", dep.ManagedFields)
+	strip := StripForPod()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			out, err := strip(tt.in)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			if tt.passthrough {
+				if out != tt.in {
+					t.Errorf("non-pod should pass through unchanged")
+				}
+				dep := tt.in.(*appsv1.Deployment)
+				if len(dep.ManagedFields) != 1 {
+					t.Errorf("non-pod should be unmodified, managedFields = %v", dep.ManagedFields)
+				}
+				return
+			}
+
+			pod := tt.in.(*corev1.Pod)
+			gotPod, ok := out.(*corev1.Pod)
+			if !ok {
+				t.Fatalf("output is not a *corev1.Pod: %T", out)
+			}
+			if gotPod != pod {
+				t.Errorf("expected the same pod pointer returned")
+			}
+
+			if gotPod.ManagedFields != nil {
+				t.Errorf("managedFields not stripped: %v", gotPod.ManagedFields)
+			}
+
+			emptyStatus := corev1.PodStatus{}
+			if !reflect.DeepEqual(gotPod.Status, emptyStatus) {
+				t.Errorf("status not zeroed: %+v", gotPod.Status)
+			}
+
+			if len(gotPod.Spec.Volumes) != 0 {
+				t.Errorf("volumes not dropped: %v", gotPod.Spec.Volumes)
+			}
+			if gotPod.Spec.NodeName != "" {
+				t.Errorf("nodeName not dropped: %q", gotPod.Spec.NodeName)
+			}
+
+			if len(gotPod.Spec.InitContainers) != 1 {
+				t.Fatalf("initContainers not retained, got %d", len(gotPod.Spec.InitContainers))
+			}
+			initC := gotPod.Spec.InitContainers[0]
+			if initC.Name != "istio-init" {
+				t.Errorf("init container name = %q, want %q", initC.Name, "istio-init")
+			}
+			if initC.Image != "init:1" {
+				t.Errorf("init container image = %q, want %q", initC.Image, "init:1")
+			}
+			if len(initC.Env) != 0 {
+				t.Errorf("init container Env not dropped: %v", initC.Env)
+			}
+			if len(initC.VolumeMounts) != 0 {
+				t.Errorf("init container VolumeMounts not dropped: %v", initC.VolumeMounts)
+			}
+			if len(initC.Ports) != 0 {
+				t.Errorf("init container Ports not dropped: %v", initC.Ports)
+			}
+			if initC.SecurityContext != nil {
+				t.Errorf("init container SecurityContext not dropped: %v", initC.SecurityContext)
+			}
+			if len(initC.Command) != 0 {
+				t.Errorf("init container Command not dropped: %v", initC.Command)
+			}
+			if len(initC.Args) != 0 {
+				t.Errorf("init container Args not dropped: %v", initC.Args)
+			}
+
+			if len(gotPod.Spec.Containers) != 2 {
+				t.Fatalf("containers not retained, got %d", len(gotPod.Spec.Containers))
+			}
+			var proxy *corev1.Container
+			for i := range gotPod.Spec.Containers {
+				if gotPod.Spec.Containers[i].Name == "istio-proxy" {
+					proxy = &gotPod.Spec.Containers[i]
+				}
+			}
+			if proxy == nil {
+				t.Fatal("istio-proxy container not retained")
+			}
+			if proxy.Image != "proxy:1" {
+				t.Errorf("istio-proxy image = %q, want %q", proxy.Image, "proxy:1")
+			}
+			if proxy.Resources.Requests.Cpu().String() != "100m" {
+				t.Errorf("istio-proxy cpu request = %q, want %q", proxy.Resources.Requests.Cpu().String(), "100m")
+			}
+			if proxy.Resources.Requests.Memory().String() != "128Mi" {
+				t.Errorf("istio-proxy memory request = %q, want %q", proxy.Resources.Requests.Memory().String(), "128Mi")
+			}
+			if proxy.Resources.Limits.Cpu().String() != "200m" {
+				t.Errorf("istio-proxy cpu limit = %q, want %q", proxy.Resources.Limits.Cpu().String(), "200m")
+			}
+			if proxy.Resources.Limits.Memory().String() != "256Mi" {
+				t.Errorf("istio-proxy memory limit = %q, want %q", proxy.Resources.Limits.Memory().String(), "256Mi")
+			}
+			if len(proxy.Env) != 0 {
+				t.Errorf("istio-proxy Env not dropped: %v", proxy.Env)
+			}
+			if len(proxy.VolumeMounts) != 0 {
+				t.Errorf("istio-proxy VolumeMounts not dropped: %v", proxy.VolumeMounts)
+			}
+			if len(proxy.Ports) != 0 {
+				t.Errorf("istio-proxy Ports not dropped: %v", proxy.Ports)
+			}
+			if proxy.SecurityContext != nil {
+				t.Errorf("istio-proxy SecurityContext not dropped: %v", proxy.SecurityContext)
+			}
+			if len(proxy.Command) != 0 {
+				t.Errorf("istio-proxy Command not dropped: %v", proxy.Command)
+			}
+			if len(proxy.Args) != 0 {
+				t.Errorf("istio-proxy Args not dropped: %v", proxy.Args)
+			}
+
+			var appC *corev1.Container
+			for i := range gotPod.Spec.Containers {
+				if gotPod.Spec.Containers[i].Name == "app" {
+					appC = &gotPod.Spec.Containers[i]
+				}
+			}
+			if appC == nil {
+				t.Fatal("app container not retained")
+			}
+			if appC.Image != "app:1" {
+				t.Errorf("app container image = %q, want %q", appC.Image, "app:1")
+			}
+			if len(appC.Env) != 0 {
+				t.Errorf("app container Env not dropped: %v", appC.Env)
+			}
+			if len(appC.VolumeMounts) != 0 {
+				t.Errorf("app container VolumeMounts not dropped: %v", appC.VolumeMounts)
+			}
+			if len(appC.Command) != 0 {
+				t.Errorf("app container Command not dropped: %v", appC.Command)
+			}
+
+			if len(gotPod.OwnerReferences) != 1 || gotPod.OwnerReferences[0].Name != "owner" {
+				t.Errorf("ownerReferences not retained: %v", gotPod.OwnerReferences)
+			}
+			if gotPod.Annotations["sidecar.istio.io/status"] != "{}" {
+				t.Errorf("annotations not retained: %v", gotPod.Annotations)
+			}
+			if gotPod.Labels["app"] != "x" {
+				t.Errorf("labels not retained: %v", gotPod.Labels)
+			}
+		})
 	}
 }

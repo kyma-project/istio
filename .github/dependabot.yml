@@ -4,6 +4,8 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 0
     commit-message:
       prefix: "gomod"
       include: "scope"
@@ -19,6 +21,8 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 0
     commit-message:
       prefix: "docker"
       include: "scope"
@@ -27,6 +31,8 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 0
     commit-message:
       prefix: "gomod"
       include: "scope"
@@ -45,6 +51,8 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 0
     commit-message:
       prefix: "docker"
       include: "scope"

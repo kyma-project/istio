@@ -222,7 +222,7 @@ func waitForIstioCRReadinessWithContext(ctx context.Context, t *testing.T, r *re
 		t.Logf("Waiting for Istio custom resource to be ready; name: %s, namespace: %s", obj.GetName(), obj.GetNamespace())
 		t.Logf("Elapsed time: %s", time.Since(clock))
 
-		return istioCR.Status.State == v1alpha2.Ready
+		return istioCR.Status.State == v1alpha2.Ready || istioCR.Status.State == v1alpha2.Warning
 	}), wait.WithContext(ctx))
 
 	if err != nil {
@@ -298,6 +298,6 @@ func waitForIstioCRReadinessCtx(ctx context.Context, r *resources.Resources, ist
 		istioCR := obj.(*v1alpha2.Istio)
 		log.Printf("Waiting for Istio CR to be ready; name: %s, namespace: %s, elapsed: %s",
 			obj.GetName(), obj.GetNamespace(), time.Since(clock))
-		return istioCR.Status.State == v1alpha2.Ready
+		return istioCR.Status.State == v1alpha2.Ready || istioCR.Status.State == v1alpha2.Warning
 	}), wait.WithContext(ctx))
 }

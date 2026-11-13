@@ -21,11 +21,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pkg/errors"
-
 	"github.com/kyma-project/istio/operator/internal/images"
 	istiocrmetrics "github.com/kyma-project/istio/operator/internal/metrics"
 	"github.com/kyma-project/istio/operator/internal/resources"
+	"github.com/pkg/errors"
 
 	"github.com/kyma-project/istio/operator/internal/restarter"
 	"github.com/kyma-project/istio/operator/internal/restarter/predicates"
@@ -73,6 +72,7 @@ type ControllerOptions struct {
 	ReconciliationInterval time.Duration
 	CRMetrics              *istiocrmetrics.IstioCRMetrics
 	IstioImages            images.Images
+	EnableRestart          bool
 }
 
 func NewController(mgr manager.Manager, options ControllerOptions) *IstioReconciler {
@@ -82,17 +82,22 @@ func NewController(mgr manager.Manager, options ControllerOptions) *IstioReconci
 	statusHandler := status.NewStatusHandler(mgr.GetClient())
 	podsLister := pods.NewPods(mgr.GetClient(), &logger)
 	actionRestarter := restart.NewActionRestarter(mgr.GetClient(), &logger)
-	restarters := []restarter.Restarter{
-		restarter.NewIngressGatewayRestarter(mgr.GetClient(), []predicates.IngressGatewayPredicate{}, statusHandler),
-		restarter.NewSidecarsRestarter(
-			mgr.GetLogger(),
-			mgr.GetClient(),
-			&merger,
-			sidecars.NewProxyRestarter(mgr.GetClient(), podsLister, actionRestarter, &logger),
-			statusHandler,
-			options.IstioImages,
-		),
-		restarter.NewForNetworkPolicy(mgr.GetClient(), statusHandler),
+	// When restarting is disabled the slice stays nil, which turns the reconcile
+	// restart step into a no-op (restarter.Restart returns nil for an empty slice).
+	var restarters []restarter.Restarter
+	if options.EnableRestart {
+		restarters = []restarter.Restarter{
+			restarter.NewIngressGatewayRestarter(mgr.GetClient(), []predicates.IngressGatewayPredicate{}, statusHandler),
+			restarter.NewSidecarsRestarter(
+				mgr.GetLogger(),
+				mgr.GetClient(),
+				&merger,
+				sidecars.NewProxyRestarter(mgr.GetClient(), podsLister, actionRestarter, &logger),
+				statusHandler,
+				options.IstioImages,
+			),
+			restarter.NewForNetworkPolicy(mgr.GetClient(), statusHandler),
+		}
 	}
 	userResources := resources.NewUserResources(mgr.GetClient())
 

@@ -1,0 +1,11 @@
+- op: replace
+  path: /spec/template/spec/containers/0/args
+  value:
+    - --metrics-bind-address=:8443
+    - --leader-elect
+    - --health-probe-bind-address=:8081
+    - --zap-log-level=3
+    - --proxy-cpu-limit=1000m
+    - --proxy-memory-limit=1Gi
+    - --proxy-cpu-request=10m
+    - --proxy-memory-request=192Mi

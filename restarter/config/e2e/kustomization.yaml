@@ -1,0 +1,13 @@
+# CI-only overlay for the restarter E2E workflow. It patches in the proxy sidecar
+# resource expectations under test via the required --proxy-* flags
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../default
+
+patches:
+  - path: proxy-flags-patch.yaml
+    target:
+      kind: Deployment
+      name: controller-manager

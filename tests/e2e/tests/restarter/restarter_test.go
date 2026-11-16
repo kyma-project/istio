@@ -30,6 +30,9 @@ var testdata embed.FS
 
 // testing ingressgateway restarts
 func TestRestarter_IngressGateway(t *testing.T) {
+	_, err := modulehelpers.NewIstioCRBuilder().ApplyAndCleanup(t)
+	require.NoError(t, err)
+
 	t.Run("NumTrustedProxies changed, gateway restarted", func(t *testing.T) {
 		c, err := client.ResourcesClient(t)
 		require.NoError(t, err)
@@ -84,6 +87,9 @@ func TestRestarter_IngressGateway(t *testing.T) {
 }
 
 func TestRestarter_Workload(t *testing.T) {
+	_, err := modulehelpers.NewIstioCRBuilder().ApplyAndCleanup(t)
+	require.NoError(t, err)
+
 	t.Run("Sidecar images differ on 62 pods, all workloads restarted", func(t *testing.T) {
 		testNamespace := "test-workload-restart"
 		invalidImage := "europe-docker.pkg.dev/kyma-project/prod/external/istio/proxyv2:1.21.3-distroless"

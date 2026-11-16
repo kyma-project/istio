@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	_ "embed"
-	"log"
 	"testing"
 	"text/template"
 	"time"
@@ -270,34 +269,3 @@ func WaitForIngressGatewayScaled(t *testing.T, r *resources.Resources, expected 
 	)
 }
 
-func InstallDefaultIstio(ctx context.Context, r *resources.Resources) (*v1alpha2.Istio, error) {
-	icr := NewIstioCRBuilder().Build()
-	if err := r.Create(ctx, icr); err != nil {
-		return nil, err
-	}
-	if err := waitForIstioCRReadinessCtx(ctx, r, icr); err != nil {
-		return nil, err
-	}
-	return icr, nil
-}
-
-func UninstallIstio(ctx context.Context, r *resources.Resources, istioCR *v1alpha2.Istio) error {
-	err := r.Delete(ctx, istioCR)
-	if err != nil && !k8serrors.IsNotFound(err) {
-		return err
-	}
-	return wait.For(conditions.New(r).ResourceDeleted(istioCR),
-		wait.WithContext(ctx),
-		wait.WithTimeout(istioCRDeletionTimeout),
-	)
-}
-
-func waitForIstioCRReadinessCtx(ctx context.Context, r *resources.Resources, istio *v1alpha2.Istio) error {
-	clock := time.Now()
-	return wait.For(conditions.New(r).ResourceMatch(istio, func(obj k8s.Object) bool {
-		istioCR := obj.(*v1alpha2.Istio)
-		log.Printf("Waiting for Istio CR to be ready; name: %s, namespace: %s, elapsed: %s",
-			obj.GetName(), obj.GetNamespace(), time.Since(clock))
-		return istioCR.Status.State == v1alpha2.Ready || istioCR.Status.State == v1alpha2.Warning
-	}), wait.WithContext(ctx))
-}

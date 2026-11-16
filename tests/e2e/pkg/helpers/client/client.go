@@ -34,22 +34,6 @@ func GetKubeConfig(t *testing.T) *rest.Config {
 	return wrapTestLog(t, cfg.Client().RESTConfig())
 }
 
-func ResourcesClientFromConfig() (*resources.Resources, error) {
-	path := conf.ResolveKubeConfigFile()
-	cfg := envconf.NewWithKubeConfig(path)
-
-	r, err := resources.New(cfg.Client().RESTConfig())
-	if err != nil {
-		return nil, err
-	}
-
-	if err := registerSchemes(r); err != nil {
-		return nil, err
-	}
-
-	return r, nil
-}
-
 func ResourcesClient(t *testing.T) (*resources.Resources, error) {
 	path := conf.ResolveKubeConfigFile()
 	cfg := envconf.NewWithKubeConfig(path)

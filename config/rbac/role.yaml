@@ -232,8 +232,8 @@ rules:
 - apiGroups:
   - gateway.networking.x-k8s.io
   resources:
+  - xbackends/status
   - xbackendtrafficpolicies/status
-  - xlistenersets/status
   verbs:
   - patch
   - update

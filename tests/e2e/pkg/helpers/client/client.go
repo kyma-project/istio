@@ -45,36 +45,46 @@ func ResourcesClient(t *testing.T) (*resources.Resources, error) {
 	}
 
 	if !isInitialized.Load() {
-		if err := registerSchemes(r); err != nil {
-			t.Logf("Failed to register schemes: %v", err)
+		err = v1alpha2.AddToScheme(r.GetScheme())
+		if err != nil {
+			t.Logf("Failed to add v1alpha2 scheme: %v", err)
 			return nil, err
 		}
+
+		err = v1alpha3.AddToScheme(r.GetScheme())
+		if err != nil {
+			t.Logf("Failed to add v1alpha3 scheme: %v", err)
+			return nil, err
+		}
+
+		err = v1beta1.AddToScheme(r.GetScheme())
+		if err != nil {
+			t.Logf("Failed to add v1beta1 scheme: %v", err)
+			return nil, err
+		}
+
+		err = telemetryv1.AddToScheme(r.GetScheme())
+		if err != nil {
+			t.Logf("Failed to add Istio telemetry v1 scheme: %v", err)
+			return nil, err
+		}
+
+		err = securityv1.AddToScheme(r.GetScheme())
+		if err != nil {
+			t.Logf("Failed to add Istio security v1 scheme: %v", err)
+			return nil, err
+		}
+
+		err = networkingv1.AddToScheme(r.GetScheme())
+		if err != nil {
+			t.Logf("Failed to add Istio networking v1 scheme: %v", err)
+			return nil, err
+		}
+
 		isInitialized.Store(true)
 	}
 
 	return r, nil
-}
-
-func registerSchemes(r *resources.Resources) error {
-	if err := v1alpha2.AddToScheme(r.GetScheme()); err != nil {
-		return err
-	}
-	if err := v1alpha3.AddToScheme(r.GetScheme()); err != nil {
-		return err
-	}
-	if err := v1beta1.AddToScheme(r.GetScheme()); err != nil {
-		return err
-	}
-	if err := telemetryv1.AddToScheme(r.GetScheme()); err != nil {
-		return err
-	}
-	if err := securityv1.AddToScheme(r.GetScheme()); err != nil {
-		return err
-	}
-	if err := networkingv1.AddToScheme(r.GetScheme()); err != nil {
-		return err
-	}
-	return nil
 }
 
 func wrapTestLog(t *testing.T, cfg *rest.Config) *rest.Config {

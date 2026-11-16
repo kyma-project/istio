@@ -14,6 +14,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/discovery"
+	"sigs.k8s.io/e2e-framework/klient/k8s/resources"
 	"sigs.k8s.io/yaml"
 
 	"github.com/kyma-project/istio/operator/tests/e2e/pkg/artifacts"
@@ -24,6 +25,33 @@ const (
 	podLogsDir     = "pod-logs"
 	podLogFileName = "%s-%s@%s.log"
 )
+
+// knownDeprecatedResources lists resources that are deprecated at the Kubernetes
+// level and have no non-deprecated alternative. Skipping them keeps DumpClusterResources
+// from triggering the deprecated-API detector, while still keeping the detector strict
+// for resources we actually control.
+// Key format: "<group>/<resource>"; core-group resources use "core/<resource>".
+// NOTE: keep this list in sync with the CI compatibility-check allowlist in
+// .github/actions/k8s-compatibility-test-*/action.yaml.
+var knownDeprecatedResources = map[string]string{
+	// Deprecated since k8s v1.19, no replacement.
+	"core/componentstatuses": "deprecated since k8s v1.19, no replacement",
+	// Deprecated since k8s v1.33; used internally by k3d/Gardener, not our code.
+	"core/endpoints": "deprecated since k8s v1.33, used internally by k3d/Gardener (https://github.com/gardener/gardener/issues/12154)",
+}
+
+func isKnownDeprecated(groupVersion, resource string) (bool, string) {
+	gv, err := schema.ParseGroupVersion(groupVersion)
+	if err != nil {
+		return false, ""
+	}
+	group := gv.Group
+	if group == "" {
+		group = "core"
+	}
+	reason, deprecated := knownDeprecatedResources[group+"/"+resource]
+	return deprecated, reason
+}
 
 func DumpClusterResources(t *testing.T) {
 	t.Helper()
@@ -57,6 +85,10 @@ func DumpClusterResources(t *testing.T) {
 	for _, serverPreferredResource := range serverPreferredResources {
 		for _, apiResource := range serverPreferredResource.APIResources {
 			resourceName := apiResource.Name
+			if deprecated, reason := isKnownDeprecated(serverPreferredResource.GroupVersion, resourceName); deprecated {
+				t.Logf("Skipping deprecated resource %s/%s: %s", serverPreferredResource.GroupVersion, resourceName, reason)
+				continue
+			}
 			var unstructuredList = &unstructured.UnstructuredList{}
 			groupVersion, err := schema.ParseGroupVersion(serverPreferredResource.GroupVersion)
 			if err != nil {
@@ -118,6 +150,11 @@ func storeLogsFromAllPods(t *testing.T, basePath string) {
 		t.Logf("Could not list pods: err=%s", err)
 		return
 	}
+	kwokNodes, err := listKwokNodes(r)
+	if err != nil {
+		t.Logf("Could not list kwok nodes: err=%s", err)
+		return
+	}
 	p := path.Join(basePath, artifacts.TestRunTimestamp(), artifacts.SanitizePathComponent(t.Name()), podLogsDir)
 	err = os.MkdirAll(p, 0o755)
 	if err != nil {
@@ -125,11 +162,30 @@ func storeLogsFromAllPods(t *testing.T, basePath string) {
 		return
 	}
 	for _, pod := range podList.Items {
+		// kwok nodes are simulated and have no kubelet, so any log request
+		// against a pod scheduled on one returns 502 Bad Gateway.
+		if kwokNodes[pod.Spec.NodeName] {
+			continue
+		}
 		err := storeLogsFromPodToFile(t, basePath, pod.Namespace, pod.Name)
 		if err != nil {
 			t.Logf("Could not get logs from pod %s in namespace %s: err=%s", pod.Name, pod.Namespace, err)
 		}
 	}
+}
+
+// listKwokNodes returns the set of node names simulated by kwok. Pods scheduled
+// on them cannot serve logs (no kubelet), so they are skipped during log dump.
+func listKwokNodes(r *resources.Resources) (map[string]bool, error) {
+	nodeList := &corev1.NodeList{}
+	if err := r.List(context.Background(), nodeList, resources.WithLabelSelector("type=kwok")); err != nil {
+		return nil, err
+	}
+	kwokNodes := make(map[string]bool, len(nodeList.Items))
+	for _, node := range nodeList.Items {
+		kwokNodes[node.Name] = true
+	}
+	return kwokNodes, nil
 }
 
 func storeLogsFromPodToFile(t *testing.T, basePath, namespace, podName string) error {

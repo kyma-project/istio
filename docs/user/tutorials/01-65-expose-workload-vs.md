@@ -9,7 +9,7 @@ Learn how to expose a workload with Istio [VirtualService](https://istio.io/late
   >[!TIP]
   > To get the default domain of your Kyma cluster, run the following command:
   >```yaml
-  >kubectl get gateway -n kyma-system kyma-gateway -o jsonpath='{.spec.servers[0].hosts}'
+  kubectl get gateways.networking.istio.io -n kyma-system kyma-gateway -o jsonpath='{.spec.servers[0].hosts}'
   >```
 
 ## Context

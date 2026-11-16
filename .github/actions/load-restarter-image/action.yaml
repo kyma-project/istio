@@ -1,0 +1,14 @@
+name: 'Load Istio Restarter Image'
+description: 'Load the Istio restarter image from a tar archive in the artifacts'
+runs:
+  using: "composite"
+  steps:
+    - name: Download artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: restarter-image
+        path: /tmp
+    - name: Load image
+      shell: bash
+      run: |
+        docker load --input /tmp/restarter-image.tar

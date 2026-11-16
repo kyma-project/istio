@@ -1,0 +1,76 @@
+name: 'Istio Restarter E2E test'
+description: 'Provisions a k3d cluster, deploys the base istio controller with restarts disabled and the standalone restarter controller, then runs the restarter E2E tests. Self-contained; does not reuse the generic e2e-test-k3d action.'
+inputs:
+  operator-image-name:
+    description: 'Base istio-manager image used for the test'
+    required: true
+  restarter-image-name:
+    description: 'Restarter image used for the test'
+    required: true
+  operator-version:
+    description: 'Version of the operator image'
+    required: true
+  test_make_target:
+    description: 'Make target for the restarter e2e tests to run'
+    required: true
+  k3d_configuration:
+    description: "Configuration preset (selects hack/ci/k3d/configurations/<k3d_configuration>)"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-go@v5
+      with:
+        go-version-file: "go.mod"
+    - name: Provision cluster
+      shell: bash
+      env:
+        K3D_CONFIGURATION: ${{ inputs.k3d_configuration }}
+      run: "${{ github.workspace }}/hack/ci/k3d/provision.sh"
+    - name: Import images when they are built locally on pull request
+      shell: bash
+      if: github.event_name == 'pull_request'
+      run: |
+        k3d image import ${{ inputs.operator-image-name }}
+        k3d image import ${{ inputs.restarter-image-name }}
+    - name: Run e2e tests
+      shell: bash
+      env:
+        IMG: ${{ inputs.operator-image-name }}
+        RESTARTER_IMG: ${{ inputs.restarter-image-name }}
+        OPERATOR_VERSION: ${{ inputs.operator-version }}
+        K3D_CONFIGURATION: ${{ inputs.k3d_configuration }}
+        TEST_ARTIFACTS_DIR: ${{ github.workspace }}/test-artifacts
+        DEPLOY_RESTARTER: "true"
+      run: |
+        "${{ github.workspace }}/hack/ci/k3d/e2e-test.sh" ${{ inputs.test_make_target }}
+    - name: Gather cluster artifacts
+      shell: bash
+      if: always()
+      run: |
+        mkdir -p cluster-artifacts
+        (kubectl logs -n kyma-system deployments/istio-controller-manager || true) > cluster-artifacts/istio-controller-manager.log
+        (kubectl logs -n restarter-system deployments/restarter-controller-manager || true) > cluster-artifacts/restarter-controller-manager.log
+        (kubectl logs -n istio-system deployments/istiod || true) > cluster-artifacts/istiod.log
+    - name: Upload cluster artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: cluster-artifacts-${{ github.job }}-${{ inputs.test_make_target }}
+        path: cluster-artifacts/
+        if-no-files-found: ignore
+    - name: Upload test artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-artifacts-${{ github.job }}-${{ inputs.test_make_target }}
+        path: test-artifacts/
+        if-no-files-found: ignore
+    - name: Upload test reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-reports-${{ github.job }}-${{ inputs.test_make_target }}
+        path: tests/e2e/tests/**/report.xml
+        if-no-files-found: ignore

@@ -23,7 +23,7 @@ We chose this way instead of managing the version in the custom resource because
 that safety-critical versions are rolled out as quickly as possible.
 
 ### Istio Installation
-The `Install` function of the [Istio Go module] (https://github.com/istio/istio) is used to install Istio as suggested.  
+The `Install` function of the [Istio Go module] (https://github.com/istio/istio) is used to install Istio.  
 Although the `Install` function blocks, it is the supported way to install Istio, as it is also used by `istioctl`.  
 We also evaluated using the [IstioOperator](https://istio.io/latest/docs/setup/install/operator/) for installation, but we did not think it was a good option for the following reasons:
 - Using the operator is discouraged by Istio

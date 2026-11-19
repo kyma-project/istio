@@ -234,6 +234,7 @@ rules:
   resources:
   - xbackends/status
   - xbackendtrafficpolicies/status
+  - xlistenersets/status
   verbs:
   - patch
   - update

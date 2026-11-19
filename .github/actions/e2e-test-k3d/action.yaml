@@ -47,6 +47,9 @@ runs:
         (kubectl logs -n kyma-system deployments/istio-controller-manager || true) > cluster-artifacts/istio-controller-manager.log
         (kubectl logs -n istio-system deployments/istio-ingressgateway || true) > cluster-artifacts/istio-ingressgateway.log
         (kubectl logs -n istio-system deployments/istiod || true) > cluster-artifacts/istiod.log
+        (kubectl logs -n istio-system -l k8s-app=istio-cni-node --prefix || true) > cluster-artifacts/istio-cni-node.log
+        (kubectl describe daemonset/istio-cni-node -n istio-system || true) > cluster-artifacts/istio-cni-node-describe.log
+        (kubectl get pods -n istio-system -o wide || true) > cluster-artifacts/istio-system-pods.log
     - name: Upload cluster artifacts
       uses: actions/upload-artifact@v4
       if: always()

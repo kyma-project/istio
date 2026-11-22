@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
-
 # Perform the Istio upgrade after the external and FIPS images have been
 # synced by update-istio-images.sh (and its PR merged). This script:
 #   1. reads the target Istio version from the in-repo synced manifests
@@ -16,6 +14,14 @@ set -euo pipefail
 # It never queries a registry: the target version is whatever the image-update
 # automation already chose. If env-images.yaml is already at (or newer than)
 # that version, the script is a no-op.
+
+set -euo pipefail
+
+# shellcheck source=hack/ci/common.sh
+source "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/common.sh"
+
+require_bash 4
+require_tools yq go git sed
 
 ENV_IMAGES="config/manager/env-images.yaml"
 EXTERNAL_IMAGES="external-images.yaml"
@@ -37,13 +43,6 @@ declare -A FIPS_VAR_TO_IMG=(
 DISTROLESS_VARS=(install-cni proxyv2 pilot ztunnel)
 
 set_output() { [ -n "${GITHUB_OUTPUT:-}" ] && echo "$1=$2" >> "${GITHUB_OUTPUT}" || true; }
-
-ensure_tools() {
-  local cmd
-  for cmd in yq go git sed; do
-    command -v "${cmd}" >/dev/null 2>&1 || { echo "Required command not found: ${cmd}" >&2; exit 1; }
-  done
-}
 
 # Value of a named env var in the manager container of env-images.yaml.
 env_value() {
@@ -130,20 +129,25 @@ update_component_config() {
 }
 
 main() {
-  ensure_tools
-
   local current minor target highest
   current="$(env_value pilot | sed -nE 's#.*:([0-9]+\.[0-9]+\.[0-9]+)-distroless$#\1#p')"
   [ -n "${current}" ] || { echo "Could not read current Istio version from ${ENV_IMAGES}" >&2; exit 1; }
   minor="${current%.*}"
+  echo "Current version: ${current}, minor: ${minor}"
 
   target="$(target_distroless_version "${minor}")"
   [ -n "${target}" ] || { echo "No distroless target for minor ${minor} in ${EXTERNAL_IMAGES}" >&2; exit 1; }
+  echo "Target version from ${EXTERNAL_IMAGES}: ${target}"
 
   # Never downgrade: no-op unless target is strictly newer than current.
   highest="$(printf '%s\n%s\n' "${current}" "${target}" | sort -V | tail -1)"
-  if [ "${target}" = "${current}" ] || [ "${highest}" = "${current}" ]; then
-    echo "env-images.yaml at ${current}, target ${target} is not newer; nothing to upgrade."
+  echo "Highest of current/target: ${highest}"
+  if [ "${target}" = "${current}" ]; then
+    echo "Current version ${current} matches target; nothing to upgrade."
+    set_output has_changes false
+    exit 0
+  elif [ "${highest}" = "${current}" ]; then
+    echo "Current version ${current} is ahead of target ${target}; nothing to upgrade."
     set_output has_changes false
     exit 0
   fi
@@ -156,6 +160,7 @@ main() {
   local fv ftag
   for fv in "${!FIPS_VAR_TO_IMG[@]}"; do
     ftag="$(fips_target_tag "${FIPS_VAR_TO_IMG[${fv}]}" "${minor}")"
+    echo "FIPS check: ${fv} (${FIPS_VAR_TO_IMG[${fv}]}) -> tag: ${ftag:-<none>}"
     case "${ftag}" in
       "${target}-"*) : ;;
       *)
@@ -165,12 +170,14 @@ main() {
         ;;
     esac
   done
+  echo "All FIPS images are in sync with target ${target}"
 
   # Distroless images: keep the registry path, swap the tag.
   local v cur repo tag
   for v in "${DISTROLESS_VARS[@]}"; do
     cur="$(env_value "${v}")"; repo="${cur%:*}"
     set_env_value "${v}" "${repo}:${target}-distroless"
+    echo "Updated distroless ${v}: ${cur} -> ${repo}:${target}-distroless"
   done
 
   # FIPS images: tag comes verbatim from fips-images.yaml target.tag.
@@ -179,6 +186,7 @@ main() {
     tag="$(fips_target_tag "${FIPS_VAR_TO_IMG[${v}]}" "${minor}")"
     [ -n "${tag}" ] || { echo "No FIPS tag for ${v} (${FIPS_VAR_TO_IMG[${v}]}) minor ${minor}" >&2; exit 1; }
     set_env_value "${v}" "${repo}:${tag}"
+    echo "Updated FIPS ${v}: ${cur} -> ${repo}:${tag}"
   done
 
   # Operator manifests (regular + light; the experimental profile reuses these).

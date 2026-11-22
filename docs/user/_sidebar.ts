@@ -23,7 +23,7 @@ export default [
     { text: 'Expose Workloads Using oauth2-proxy', link: './tutorials/01-10-external-authorization-provider' },
     { text: 'Set a Custom Error Status Code for an External Authorizer', link: './tutorials/01-11-extauth-custom-error-status' },
     { text: 'Expose Workloads Using Gateway API', link: './tutorials/01-20-expose-httbin-gateway-api' },
-    { text: 'Expose a TCP Service Using Gateway API Alpha Support', link: './tutorials/01-30-expose-tcp-gateway-api' },
+    { text: 'Expose a TCP Service Using Gateway API', link: './tutorials/01-30-expose-tcp-gateway-api' },
     { text: 'Exposing Workloads Using Istio VirtualService', link: './tutorials/01-65-expose-workload-vs' },
     { text: 'Send Requests Using Istio Egress Gateway', link: './tutorials/01-50-send-requests-using-egress' },
     { text: 'Send mTLS Requests Using Istio Egress Gateway', link: './tutorials/01-55-send-requests-using-egress-and-mtls' },

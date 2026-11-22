@@ -17,6 +17,11 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Increase inotify limits
+      shell: bash
+      run: |
+        sudo sysctl -w fs.inotify.max_user_instances=524288
+        sudo sysctl -w fs.inotify.max_user_watches=524288
     - uses: actions/setup-go@v5
       with:
         go-version-file: "go.mod"

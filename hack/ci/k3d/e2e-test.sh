@@ -23,11 +23,9 @@ require_positional make_target "$1"
 require_vars K3D_CONFIGURATION IMG
 
 load_configuration "${K3D_CONFIGURATION}"
+setup_local_bin
 
 export IS_GARDENER=false
-
-# Add pwd to path to be able to use binaries downloaded in scripts
-export PATH="${PATH}:${PWD}"
 
 start_group "Creating kyma-system namespace"
 make create-namespace

@@ -6,8 +6,9 @@
 
 set -euo pipefail
 
+script_dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 # shellcheck source=hack/ci/common.sh
-source "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/common.sh"
+source "${script_dir}/common.sh"
 
 require_tools curl jq yq
 require_vars REGCERT_JSON

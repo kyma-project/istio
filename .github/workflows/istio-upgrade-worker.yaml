@@ -35,9 +35,22 @@ jobs:
       - name: Perform Istio upgrade
         id: upgrade
         shell: bash
-        env:
-          BASE_BRANCH: ${{ github.ref_name }}
-        run: bash ./hack/ci/upgrade-istio.sh
+        run: |
+          istio_version_file=$(mktemp)
+          pr_body_file=$(mktemp)
+          echo "istio_version_file=${istio_version_file}" >> "${GITHUB_OUTPUT}"
+          echo "pr_body_file=${pr_body_file}"             >> "${GITHUB_OUTPUT}"
+
+          bash ./hack/ci/upgrade-istio.sh \
+            "${istio_version_file}" "${pr_body_file}"
+
+          if [ -s "${pr_body_file}" ]; then
+            echo "Istio has been upgraded to $(cat "${istio_version_file}")"
+            echo "has_changes=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "Istio is already up to date, nothing to do"
+            echo "has_changes=false" >> "${GITHUB_OUTPUT}"
+          fi
 
       - name: Commit and create pull request
         if: steps.upgrade.outputs.has_changes == 'true'
@@ -45,13 +58,14 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           USERNAME: ${{ vars.ACTIONS_BOT_NAME }}
           EMAIL: ${{ vars.ACTIONS_BOT_EMAIL }}
-          ISTIO_VERSION: ${{ steps.upgrade.outputs.istio_version }}
-          ANNOUNCE_URL: ${{ steps.upgrade.outputs.announce_url }}
+          ISTIO_VERSION_FILE: ${{ steps.upgrade.outputs.istio_version_file }}
+          PR_BODY_FILE: ${{ steps.upgrade.outputs.pr_body_file }}
         shell: bash
         run: |
           set -euo pipefail
 
           base="${{ github.ref_name }}"
+          ISTIO_VERSION=$(cat "${ISTIO_VERSION_FILE}")
           branch="autobump/istio-upgrade-${base}"
           title="Bump Istio to ${ISTIO_VERSION} (${base})"
 
@@ -64,30 +78,17 @@ jobs:
                   internal/istiooperator/istio-operator-light.yaml \
                   internal/reconciliations/istioresources/gateway_api_crds/ \
                   component-config.yaml \
-                  docs/release-notes go.mod go.sum
+                  go.mod go.sum
           git commit -m "Bump Istio to ${ISTIO_VERSION}"
           git push -f -u origin "${branch}"
 
-          {
-            echo '## Automated Istio version upgrade'
-            echo
-            echo "- Base branch: \`${base}\`"
-            echo "- Istio version: \`${ISTIO_VERSION}\`"
-            echo "- Istio changelog: ${ANNOUNCE_URL}"
-            echo "- Workflow run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-            echo
-            echo 'Repoints `env-images.yaml`, the operator manifests, and `component-config.yaml` at the synced images, bumps the `istio.io/istio` Go dependency, and adds a release note.'
-          } > istio-upgrade-pr-body.md
-
-          # Match only an OPEN PR for this head: a merged/closed one for the
-          # reused branch must not divert us into editing a merged PR.
           existing="$(gh pr list --head "${branch}" --base "${base}" --state open --json number --jq '.[0].number')"
           if [ -n "${existing}" ]; then
-            gh pr edit "${existing}" --title "${title}" --body-file istio-upgrade-pr-body.md
+            gh pr edit "${existing}" --title "${title}" --body-file "${PR_BODY_FILE}"
           else
             gh pr create \
               --base "${base}" \
               --head "${branch}" \
               --title "${title}" \
-              --body-file istio-upgrade-pr-body.md
+              --body-file "${PR_BODY_FILE}"
           fi

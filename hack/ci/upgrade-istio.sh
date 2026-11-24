@@ -7,9 +7,12 @@
 #   2. repoints config/manager/env-images.yaml, the operator manifests, and
 #      component-config.yaml at it,
 #   3. bumps the istio.io/istio Go dependency (go get -u -t + go mod tidy),
-#   4. appends an "Istio Updated to Version X.Y.Z" section to the current
-#      release-notes draft, or creates the next-version note file if the current
-#      one is already released (has a matching git tag).
+#   4. writes the new Istio version and PR body to the caller-supplied output files.
+#
+# Usage: upgrade-istio.sh <istio-version-file> <pr-body-file>
+#
+# Exit 0: script completed (files written only if an upgrade was performed).
+# Exit non-zero: unexpected error.
 #
 # It never queries a registry: the target version is whatever the image-update
 # automation already chose. If env-images.yaml is already at (or newer than)
@@ -17,17 +20,23 @@
 
 set -euo pipefail
 
+script_dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 # shellcheck source=hack/ci/common.sh
-source "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/common.sh"
+source "${script_dir}/common.sh"
 
 require_bash 4
-require_tools yq go git sed
+require_tools yq go git sed envsubst
+require_positional istio_version_file "$1"
+require_positional pr_body_file "$2"
+
+# All relative paths in this script (env-images.yaml, go.mod, etc.) are
+# relative to the repo root, so cd there unconditionally.
+cd "${script_dir}/../.."
 
 ENV_IMAGES="config/manager/env-images.yaml"
 EXTERNAL_IMAGES="external-images.yaml"
 FIPS_IMAGES="fips-images.yaml"
 COMPONENT_CONFIG="component-config.yaml"
-RELEASE_NOTES_DIR="docs/release-notes"
 OPERATOR_YAMLS=(
   "internal/istiooperator/istio-operator.yaml"
   "internal/istiooperator/istio-operator-light.yaml"
@@ -41,8 +50,6 @@ declare -A FIPS_VAR_TO_IMG=(
   [ztunnel-fips]="ztunnel-fips"
 )
 DISTROLESS_VARS=(install-cni proxyv2 pilot ztunnel)
-
-set_output() { [ -n "${GITHUB_OUTPUT:-}" ] && echo "$1=$2" >> "${GITHUB_OUTPUT}" || true; }
 
 # Value of a named env var in the manager container of env-images.yaml.
 env_value() {
@@ -72,41 +79,6 @@ fips_target_tag() {
     | select(.target.name == strenv(IMG)) | .target.tag' "${FIPS_IMAGES}" \
     | sed -nE "s#^(${minor//./\\.}\.[0-9]+-[0-9]+)\$#\1#p" \
     | sort -V | tail -1
-}
-
-# Highest docs/release-notes/X.Y.Z.md whose version has no matching git tag:
-# the accumulating draft for the next release. Empty if all are released.
-draft_release_note() {
-  local f v
-  while IFS= read -r f; do
-    v="$(basename "${f}" .md)"
-    [[ "${v}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || continue
-    git rev-parse -q --verify "refs/tags/${v}" >/dev/null 2>&1 && continue
-    echo "${f}"; return 0
-  done < <(printf '%s\n' "${RELEASE_NOTES_DIR}"/*.md | sort -Vr)
-  return 1
-}
-
-# Path of the next release-note file to create when the current one is released.
-# main         -> next minor:  highest X.Y.Z tag -> X.(Y+1).0.md
-# release-X.Y  -> next patch:   highest X.Y.Z tag -> X.Y.(Z+1).md
-next_release_note_path() {
-  local base minor latest maj min pat
-  base="${BASE_BRANCH:-$(git rev-parse --abbrev-ref HEAD)}"
-  if [[ "${base}" == release-* ]]; then
-    minor="${base#release-}" # X.Y
-    latest="$(git tag --list | grep -E "^${minor//./\\.}\.[0-9]+$" | sort -V | tail -1)"
-    if [ -n "${latest}" ]; then
-      pat="${latest##*.}"
-      echo "${RELEASE_NOTES_DIR}/${minor}.$((pat + 1)).md"
-    else
-      echo "${RELEASE_NOTES_DIR}/${minor}.0.md"
-    fi
-  else
-    latest="$(git tag --list | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)"
-    maj="${latest%%.*}"; min="${latest#*.}"; min="${min%%.*}"
-    echo "${RELEASE_NOTES_DIR}/${maj}.$((min + 1)).0.md"
-  fi
 }
 
 # component-config.yaml lists the images shipped on the branch for main-branch
@@ -144,11 +116,9 @@ main() {
   echo "Highest of current/target: ${highest}"
   if [ "${target}" = "${current}" ]; then
     echo "Current version ${current} matches target; nothing to upgrade."
-    set_output has_changes false
     exit 0
   elif [ "${highest}" = "${current}" ]; then
     echo "Current version ${current} is ahead of target ${target}; nothing to upgrade."
-    set_output has_changes false
     exit 0
   fi
   echo "Upgrading Istio ${current} -> ${target} (minor ${minor})"
@@ -165,7 +135,6 @@ main() {
       "${target}-"*) : ;;
       *)
         echo "FIPS image ${FIPS_VAR_TO_IMG[${fv}]} at '${ftag:-<none>}' has not caught up to distroless target ${target}; skipping until synced."
-        set_output has_changes false
         exit 0
         ;;
     esac
@@ -208,30 +177,18 @@ main() {
 
   # Gateway API CRDs sync with Istio
   echo "Syncing Gateway API CRDs with Istio"
-  ./hack/update-gateway-api-crds.sh
+  "${script_dir}/../update-gateway-api-crds.sh"
 
-  # Release note: append to the current draft, or create the next-version file.
-  local note heading announce
-  heading="## Istio Updated to Version ${target}"
+  # Write output files for the caller.
+  local announce
   announce="https://istio.io/latest/news/releases/${minor}.x/announcing-${target}/"
-  if note="$(draft_release_note)"; then
-    if grep -qF "${heading}" "${note}"; then
-      echo "Release note already mentions ${target} in ${note}"
-    else
-      printf '\n%s\n\nWe'\''ve updated the Istio version to %s. See [Announcing Istio %s](%s).\n' \
-        "${heading}" "${target}" "${target}" "${announce}" >> "${note}"
-      echo "Added Istio ${target} section to ${note}"
-    fi
-  else
-    note="$(next_release_note_path)"
-    printf '%s\n\nWe'\''ve updated the Istio version to %s. See [Announcing Istio %s](%s).\n' \
-      "${heading}" "${target}" "${target}" "${announce}" > "${note}"
-    echo "Created ${note} with Istio ${target} section"
-  fi
 
-  set_output has_changes true
-  set_output istio_version "${target}"
-  set_output announce_url "${announce}"
+  echo "${target}" > "${istio_version_file}"
+
+  ISTIO_VERSION="${target}" ANNOUNCE_URL="${announce}" \
+    envsubst '$ISTIO_VERSION $ANNOUNCE_URL' \
+    < "${script_dir}/istio-upgrade-pr-body.md.tmpl" \
+    > "${pr_body_file}"
 }
 
 main

@@ -1,0 +1,39 @@
+name: Schedule Auto Patch Release
+
+# Orchestrator for the scheduled auto patch release. It does no release work
+# itself: each week it discovers the supported release-X.Y branches and
+# dispatches the worker workflow once per branch with --ref <branch>. Running
+# with --ref makes the worker execute entirely in that branch's context — its
+# own workflow file and its own hack/ci scripts — so no branch is ever checked
+# out or evaluated from another branch's context.
+#
+# workflow_dispatch is one of the two events (with repository_dispatch) that
+# GITHUB_TOKEN is allowed to trigger, so the default token is enough to fan out.
+
+permissions:
+  actions: write
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  dispatch-workers:
+    name: Dispatch workers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Dispatch auto patch release worker for each release branch
+        env:
+          MAINTAINED_RELEASE_BRANCHES_COUNT: ${{ vars.MAINTAINED_RELEASE_BRANCHES_COUNT }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for branch in $(bash hack/ci/find-maintained-release-branches.sh); do
+            echo "Dispatching auto-patch-release-worker for ${branch}"
+            gh workflow run auto-patch-release-worker.yaml --ref "${branch}" \
+              || echo "WARNING: failed to dispatch auto-patch-release-worker for ${branch}"
+          done

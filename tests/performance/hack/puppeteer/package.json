@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "puppeteer": "^22.6.1"
+    "puppeteer": "^25.18.1"
   },
   "name": "export-dashboard",
   "version": "1.0.0",

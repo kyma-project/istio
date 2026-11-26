@@ -41,7 +41,7 @@ updates:
       - dependency-name: "sigs.k8s.io/controller-runtime"
       - dependency-name: "sigs.k8s.io/yaml"
   - package-ecosystem: "docker"
-    target-branch: "release-1.33"
+    target-branch: "release-1.34"
     directory: "/"
     schedule:
       interval: "daily"
@@ -52,7 +52,7 @@ updates:
       - dependency-name: "*"
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
   - package-ecosystem: "gomod"
-    target-branch: "release-1.34"
+    target-branch: "release-1.33"
     directory: "/"
     schedule:
       interval: "daily"

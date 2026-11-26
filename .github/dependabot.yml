@@ -41,7 +41,7 @@ updates:
       - dependency-name: "sigs.k8s.io/controller-runtime"
       - dependency-name: "sigs.k8s.io/yaml"
   - package-ecosystem: "docker"
-    target-branch: "release-1.34"
+    target-branch: "release-1.33"
     directory: "/"
     schedule:
       interval: "daily"
@@ -51,6 +51,24 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
+  - package-ecosystem: "gomod"
+    target-branch: "release-1.34"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "gomod"
+      include: "scope"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      # We want to ignore istio dependencies, since the upgrade process is always a manual process, and we never used the dependabot PRs.
+      - dependency-name: "istio.io/client-go"
+      - dependency-name: "istio.io/api"
+      - dependency-name: "istio.io/istio"
+      - dependency-name: "k8s.io/*"
+      - dependency-name: "sigs.k8s.io/controller-runtime"
+      - dependency-name: "sigs.k8s.io/yaml"
   - package-ecosystem: "docker"
     target-branch: "release-1.33"
     directory: "/"

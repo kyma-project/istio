@@ -30,7 +30,7 @@ jobs:
       image: "${{ steps.get-image.outputs.image }}"
       operator_version: "${{ steps.get-image.outputs.operator_version }}"
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
       - id: get-image
@@ -72,7 +72,7 @@ jobs:
           - "networkpolicy-e2e-test"
           - "dnsproxying-e2e-test"
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: ./.github/actions/e2e-test-gardener
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

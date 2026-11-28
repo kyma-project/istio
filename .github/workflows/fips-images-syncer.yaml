@@ -48,7 +48,7 @@ jobs:
 
   build-istiod:
     name: Build istiod image
-    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main
+    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@9573e9cfdb9e9a933a1b0cfdfd067f8ba465093c # main
     needs: parse-images
     with:
       name: ${{ needs.parse-images.outputs.istio-pilot-fips-name }}
@@ -61,7 +61,7 @@ jobs:
 
   build-proxy:
     name: Build proxy image
-    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main
+    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@9573e9cfdb9e9a933a1b0cfdfd067f8ba465093c # main
     needs: parse-images
     with:
       name: ${{ needs.parse-images.outputs.istio-proxy-fips-name }}
@@ -74,7 +74,7 @@ jobs:
 
   build-cni:
     name: Build CNI image
-    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main
+    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@9573e9cfdb9e9a933a1b0cfdfd067f8ba465093c # main
     needs: parse-images
     with:
       name: ${{ needs.parse-images.outputs.istio-install-cni-fips-name }}
@@ -87,7 +87,7 @@ jobs:
 
   build-ztunnel:
     name: Build ztunnel image
-    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main
+    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@9573e9cfdb9e9a933a1b0cfdfd067f8ba465093c # main
     needs: parse-images
     with:
       name: ${{ needs.parse-images.outputs.ztunnel-fips-name }}

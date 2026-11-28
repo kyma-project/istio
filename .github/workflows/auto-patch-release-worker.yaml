@@ -1,0 +1,82 @@
+name: Auto Patch Release Worker
+
+# Branch-context worker for the scheduled auto patch release. It is never run
+# directly on a schedule; the schedule-auto-patch-release.yaml orchestrator
+# dispatches it once per release branch with --ref <branch>. Because of that
+# --ref, this workflow file and all hack/ci scripts run in that branch's own
+# context. It can also be dispatched by hand to test a single branch.
+
+permissions:
+  actions: write  # required to dispatch release-istio.yaml
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run (print what would be released without triggering anything)"
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  auto-patch-release:
+    name: Auto patch release on ${{ github.ref_name }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # fetch-depth: 0 is required by check-meaningful-changes.sh which uses
+          # git diff and git tag --merged against origin/<branch>.
+          fetch-depth: 0
+
+      - name: Fetch all tags
+        # Tags are required by check-meaningful-changes.sh and compute-next-patch.sh.
+        run: git fetch --tags --quiet
+
+      - name: Check meaningful changes
+        id: check
+        run: |
+          set -euo pipefail
+          check_exit=0
+          bash hack/ci/check-meaningful-changes.sh "${{ github.ref_name }}" || check_exit=$?
+          if [[ "${check_exit}" -eq 1 ]]; then
+            echo "skip=true" >> "${GITHUB_OUTPUT}"
+            echo "No meaningful changes — skipping release"
+          elif [[ "${check_exit}" -ne 0 ]]; then
+            exit "${check_exit}"
+          else
+            echo "skip=false" >> "${GITHUB_OUTPUT}"
+            echo "Meaningful changes found — proceeding with release"
+          fi
+
+      - name: Compute next patch version
+        id: version
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          version=$(bash hack/ci/compute-next-patch.sh)
+          echo "Next patch version: ${version}"
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+
+      - name: Trigger release workflow
+        if: steps.check.outputs.skip == 'false' && !inputs.dry_run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run release-istio.yaml \
+            --repo "${{ github.repository }}" \
+            --ref "${{ github.ref_name }}" \
+            --field "version=${{ steps.version.outputs.version }}"
+          echo "Triggered release-istio.yaml for ${{ github.ref_name }} version ${{ steps.version.outputs.version }}"
+
+      - name: "[DRY RUN] Summary"
+        if: steps.check.outputs.skip == 'false' && inputs.dry_run
+        run: |
+          echo "[DRY RUN] Would trigger:"
+          echo "  gh workflow run release-istio.yaml \\"
+          echo "    --repo ${{ github.repository }} \\"
+          echo "    --ref ${{ github.ref_name }} \\"
+          echo "    --field version=${{ steps.version.outputs.version }}"

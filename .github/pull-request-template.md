@@ -16,7 +16,7 @@ Changes proposed in this pull request:
 Consider all the following items. If your contribution violates any of them, or you are not sure about it, add a comment to the PR.
 
 - [ ] The code coverage is acceptable.
-- [ ] Release notes for the introduced changes are created.
+- [ ] Release notes for user-facing changes are filled in the relevant `release-notes-*` blocks below (leave empty if none).
 - [ ] If Kubebuilder changes were made, you ran `make manifests` and committed the changes before the merge.
 - [ ] Pre-existing managed resources are correctly handled.
 - [ ] The change works on all hyperscalers supported by SAP BTP, Kyma runtime.
@@ -28,6 +28,22 @@ Consider all the following items. If your contribution violates any of them, or 
 - [ ] The configuration does not introduce any additional latency.
 - [ ] You checked if Busola updates are needed.
 - [ ] If you added a predicate for restarters, check if the **lastAppliedConfiguration** annotation is properly updated after the given restart is executed.
+
+**Release Notes**
+
+<!-- Fill in the relevant sections for user-facing changes. Leave blocks empty for no release note. -->
+
+```release-notes-new-features
+
+```
+
+```release-notes-bug-fixes
+
+```
+
+```release-notes-istio-updates
+
+```
 
 **Related issues**
 <!-- If you refer to a particular issue, provide its number. For example, `Resolves #123`, `Fixes #43`, or `See also #33`. -->

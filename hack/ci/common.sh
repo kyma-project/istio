@@ -85,6 +85,13 @@ require_files() {
 start_group() { [ "${GITHUB_ACTIONS}" = "true" ] && echo "::group::$1" || echo "$1"; }
 end_group()   { [ "${GITHUB_ACTIONS}" = "true" ] && echo "::endgroup::" || true; }
 
+# log <message>
+# Prints a message with the current log indent level (managed by increase/decrease_log_indent).
+log_indent=0
+increase_log_indent() { ((log_indent++)) || true; }
+decrease_log_indent() { ((log_indent--)) || true; }
+log() { printf '%*s%s\n' "$((log_indent * 2))" "" "$*"; }
+
 # require_positional <var_name> <value>
 # Assigns <value> to <var_name> and exits if it is empty.
 require_positional() {

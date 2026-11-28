@@ -95,7 +95,7 @@ jobs:
 
   build-image:
     name: Build manager image
-    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main
+    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@9573e9cfdb9e9a933a1b0cfdfd067f8ba465093c # main
     needs: [ check-prerequisites ]
     with:
       name: istio/releases/istio-manager
@@ -107,7 +107,7 @@ jobs:
 
   build-image-experimental:
     name: Build manager image - experimental
-    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@main
+    uses: kyma-project/test-infra/.github/workflows/image-builder.yml@9573e9cfdb9e9a933a1b0cfdfd067f8ba465093c # main
     needs: [ check-prerequisites ]
     with:
       name: istio/releases/istio-manager
@@ -410,7 +410,7 @@ jobs:
   upload-release-report:
     name: Upload release report
     needs: [ check-prerequisites, publish-release ]
-    uses: kyma-project/compliancy/.github/workflows/notify-release-report.yml@main
+    uses: kyma-project/compliancy/.github/workflows/notify-release-report.yml@16b6996e7cfb9877993696d792692f3ed309d7b2 # main
     secrets: inherit
     with:
       release_version: ${{ inputs.version }}
@@ -420,7 +420,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    uses: kyma-project/compliancy/.github/workflows/notify-component-sbom.yml@main
+    uses: kyma-project/compliancy/.github/workflows/notify-component-sbom.yml@16b6996e7cfb9877993696d792692f3ed309d7b2 # main
     secrets: inherit
     with:
       component: kyma-project.io/module/istio

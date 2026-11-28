@@ -17,7 +17,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - uses: actions/setup-go@v5
+    - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
       with:
         go-version-file: "go.mod"
     - name: Install k3d
@@ -59,28 +59,28 @@ runs:
         (kubectl logs -n istio-system deployments/istio-ingressgateway || true) > cluster-artifacts/istio-ingressgateway.log
         (kubectl logs -n istio-system deployments/istiod || true) > cluster-artifacts/istiod.log
     - name: Upload cluster artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
       if: always()
       with:
         name: cluster-artifacts-${{ github.job }}-${{ inputs.test_make_target }}
         path: cluster-artifacts/
         if-no-files-found: ignore
     - name: Upload test artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
       if: always()
       with:
         name: test-artifacts-${{ github.job }}-${{ inputs.test_make_target }}
         path: test-artifacts/
         if-no-files-found: ignore
     - name: Upload test reports
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
       if: always()
       with:
         name: test-reports-${{ github.job }}-${{ inputs.test_make_target }}
         path: tests/e2e/tests/**/report.xml
         if-no-files-found: ignore
     - name: Upload deprecation report
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
       if: always()
       with:
         name: deprecation-report-${{ github.job }}-${{ inputs.test_make_target }}
